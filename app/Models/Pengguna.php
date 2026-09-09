@@ -1,0 +1,220 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Notifications\Notifiable;
+
+class Pengguna extends Model implements AuthenticatableContract
+{
+    use Authenticatable, Notifiable;
+
+    protected $table = 'tb_pengguna';
+    protected $primaryKey = 'kode_pengguna';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'kode_pengguna',
+        'kode_karyawan',
+        'kode_level',
+        'username',
+        'password',
+        'status_aktif',
+        'as_sales',
+        'last_ip',
+        'las_login',
+        'remember_token',
+        'date_create',
+        'user_create',
+        'date_update',
+        'user_update',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the name of the unique identifier for the user.
+     */
+    public function getAuthIdentifierName(): string
+    {
+        return 'kode_pengguna';
+    }
+
+    /**
+     * Get the unique identifier for the user.
+     */
+    public function getAuthIdentifier(): mixed
+    {
+        return $this->getAttribute($this->getAuthIdentifierName());
+    }
+
+    /**
+     * Get the password for the user.
+     */
+    public function getAuthPassword(): string
+    {
+        return (string) $this->password;
+    }
+
+    /**
+     * Relation to Level Pengguna
+     */
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(LevelPengguna::class, 'kode_level', 'kode_level');
+    }
+
+    /**
+     * Relation to Karyawan
+     */
+    public function karyawan(): BelongsTo
+    {
+        return $this->belongsTo(Karyawan::class, 'kode_karyawan', 'kode_karyawan');
+    }
+
+    /**
+     * Check if user is active (status_aktif == '1')
+     */
+    public function isActive(): bool
+    {
+        return (string) $this->status_aktif === '1';
+    }
+
+    /**
+     * Get Display Name (from Karyawan or Username)
+     */
+    public function getNamaAttribute(): string
+    {
+        return $this->karyawan?->nama_karyawan ?? $this->username ?? $this->kode_pengguna;
+    }
+
+    /**
+     * Get Role Name
+     */
+    public function getNamaLevelAttribute(): string
+    {
+        return $this->level?->nama_level ?? 'Pengguna';
+    }
+
+    /**
+     * Check if user is Teknik (Level 4 / lv9812 / Teknik)
+     */
+    public function isTeknik(): bool
+    {
+        $namaLevel = strtolower($this->level?->nama_level ?? '');
+        $kodeLevel = $this->kode_level;
+
+        return str_contains($namaLevel, 'teknik') || $kodeLevel === 'lv9812' || $this->level?->level === 4;
+    }
+
+    /**
+     * Check if user is NOC (Level 3 / lv68132 / NOC)
+     */
+    public function isNoc(): bool
+    {
+        $namaLevel = strtolower($this->level?->nama_level ?? '');
+        $kodeLevel = $this->kode_level;
+
+        return str_contains($namaLevel, 'noc') || $kodeLevel === 'lv68132' || $this->level?->level === 3;
+    }
+
+    /**
+     * Check if user is Finance (Level 6 / lv33501 / Finance)
+     */
+    public function isFinance(): bool
+    {
+        $namaLevel = strtolower($this->level?->nama_level ?? '');
+        $kodeLevel = $this->kode_level;
+
+        return str_contains($namaLevel, 'finance') || $kodeLevel === 'lv33501' || $this->level?->level === 6;
+    }
+
+    /**
+     * Check if user is Direktur / Superadmin (Level 1 / lv67752 / DIREKTUR)
+     */
+    public function isDirektur(): bool
+    {
+        $namaLevel = strtolower($this->level?->nama_level ?? '');
+        $kodeLevel = $this->kode_level;
+
+        return str_contains($namaLevel, 'direktur') || $kodeLevel === 'lv67752' || $this->level?->level === 1;
+    }
+
+    /**
+     * Check multiple roles
+     */
+    public function hasRole(string|array $roles): bool
+    {
+        if (is_string($roles)) {
+            $roles = [$roles];
+        }
+
+        foreach ($roles as $role) {
+            $roleLower = strtolower(trim($role));
+            if ($roleLower === 'teknik' && $this->isTeknik()) {
+                return true;
+            }
+            if ($roleLower === 'noc' && $this->isNoc()) {
+                return true;
+            }
+            if ($roleLower === 'finance' && $this->isFinance()) {
+                return true;
+            }
+            if (($roleLower === 'direktur' || $roleLower === 'admin') && $this->isDirektur()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Badge CSS classes based on role
+     */
+    public function getRoleBadgeClassesAttribute(): string
+    {
+        if ($this->isTeknik()) {
+            return 'bg-sky-500/10 text-sky-400 border-sky-500/30';
+        }
+        if ($this->isNoc()) {
+            return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+        }
+        if ($this->isFinance()) {
+            return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+        }
+        if ($this->isDirektur()) {
+            return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        }
+
+        return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
+    }
+
+    /**
+     * Role short description
+     */
+    public function getRoleDescriptionAttribute(): string
+    {
+        if ($this->isTeknik()) {
+            return 'Drafter & Pendaftaran Pelanggan Baru';
+        }
+        if ($this->isNoc()) {
+            return 'Eksekusi Jaringan, Aktivasi, Suspend, & Terminasi';
+        }
+        if ($this->isFinance()) {
+            return 'Manajemen Keuangan, Billing Tagihan, & Request Suspend';
+        }
+        if ($this->isDirektur()) {
+            return 'Direktur & Akses Penuh Sistem';
+        }
+
+        return 'Pengguna Sistem IMS';
+    }
+}

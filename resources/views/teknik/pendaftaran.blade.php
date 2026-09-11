@@ -31,6 +31,51 @@
         </div>
     </div>
 
+    {{-- Banner Notifikasi Registrasi Baru dengan Tombol Cetak Form Berlangganan Langsung --}}
+    @if(session('nomor_internet_baru'))
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-blue-900/60 via-indigo-900/60 to-slate-900/80 border border-blue-500/40 shadow-xl shadow-blue-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Registrasi Baru Berhasil Disimpan!</span>
+                        <span class="px-2 py-0.5 rounded text-[11px] bg-blue-500/20 text-blue-300 font-mono">No. Internet: {{ session('nomor_internet_baru') }}</span>
+                    </h4>
+                    <p class="text-xs text-slate-300 mt-0.5">
+                        Dokumen Form Berlangganan untuk <strong class="text-white">{{ session('nama_pelanggan_baru') }}</strong> telah terbuat secara otomatis dan siap dicetak.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                <a href="{{ route('teknik.dokumen.langganan', session('nomor_internet_baru')) }}?download=pdf" target="_blank" 
+                   class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-600/30 transition">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    <span>Unduh PDF</span>
+                </a>
+                <a href="{{ route('teknik.dokumen.langganan', session('nomor_internet_baru')) }}?download=word" target="_blank" 
+                   class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                    <span>Unduh Word (.doc)</span>
+                </a>
+                <a href="{{ route('teknik.dokumen.langganan', session('nomor_internet_baru')) }}" target="_blank" 
+                   class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/30 transition">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
+                    </svg>
+                    <span>Cetak Form</span>
+                </a>
+            </div>
+        </div>
+    @endif
+
     <!-- Filter Card Container -->
     <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-5 shadow-xl shadow-black/20">
         <form method="GET" action="{{ route('teknik.pendaftaran') }}" id="filterForm">
@@ -276,17 +321,26 @@
                                         </button>
                                     @endif
 
-                                    {{-- Tahap 2: Jadwal Survey Terbit (#13, #13.1) --}}
+                                    {{-- Tahap 2: Jadwal Survey Terbit (#13, #13.1) -> Siap Input Report Hasil Survey --}}
                                     @if(in_array($item->status_reg, ['13', '13.1']))
                                         <button type="button" 
                                                 @click="openReportSurveyModal({{ json_encode($item) }})"
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 text-white text-[11px] font-semibold transition shadow-sm cursor-pointer"
-                                                title="Input Hasil Laporan Survey">
+                                                title="Input Laporan Hasil Survey Lokasi">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
                                             <span>Report Survey</span>
                                         </button>
+                                        <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
+                                           target="_blank"
+                                           class="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-[11px] transition font-semibold"
+                                           title="Cetak Surat Tugas Survey untuk Tim Teknisi">
+                                            <svg class="w-3.5 h-3.5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                            </svg>
+                                            <span>Surat Tugas</span>
+                                        </a>
                                         <button type="button" 
                                                 @click="openScheduleSurveyModal({{ json_encode($item) }})"
                                                 class="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 text-[11px] transition">
@@ -308,6 +362,15 @@
                                             </svg>
                                             <span>Schedule Instalasi</span>
                                         </button>
+                                        <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
+                                           target="_blank"
+                                           class="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-[11px] transition font-semibold"
+                                           title="Cetak Surat Tugas Survey">
+                                            <svg class="w-3.5 h-3.5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                            </svg>
+                                            <span>Surat Tugas</span>
+                                        </a>
                                         <button type="button" 
                                                 @click="openReportSurveyModal({{ json_encode($item) }})"
                                                 class="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-[11px] transition">
@@ -329,6 +392,15 @@
                                             </svg>
                                             <span>Report Instalasi</span>
                                         </button>
+                                        <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
+                                           target="_blank"
+                                           class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition font-semibold"
+                                           title="Cetak Surat Tugas Instalasi untuk Tim Teknisi">
+                                            <svg class="w-3.5 h-3.5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                            </svg>
+                                            <span>Surat Tugas</span>
+                                        </a>
                                         <button type="button" 
                                                 @click="openScheduleInstalasiModal({{ json_encode($item) }})"
                                                 class="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 text-[11px] transition">
@@ -350,6 +422,15 @@
                                             </svg>
                                             <span>Request Aktivasi NOC</span>
                                         </button>
+                                        <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
+                                           target="_blank"
+                                           class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition font-semibold"
+                                           title="Cetak Surat Tugas Instalasi">
+                                            <svg class="w-3.5 h-3.5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                            </svg>
+                                            <span>Surat Tugas</span>
+                                        </a>
                                         <button type="button" 
                                                 @click="openReportInstalasiModal({{ json_encode($item) }})"
                                                 class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition">
@@ -388,6 +469,29 @@
                                             <span>Batal Pasang</span>
                                         </button>
                                     @endif
+
+                                    {{-- Tombol Dokumen Form Berlangganan & Download --}}
+                                    <div class="inline-flex items-center gap-1.5">
+                                        <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}?download=pdf" 
+                                           target="_blank"
+                                           class="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-[11px] transition font-semibold"
+                                           title="Download PDF Form Berlangganan">
+                                            <svg class="w-3.5 h-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                            </svg>
+                                            <span>Unduh PDF</span>
+                                        </a>
+                                        <span class="text-slate-600">|</span>
+                                        <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}" 
+                                           target="_blank"
+                                           class="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 text-[11px] transition font-semibold"
+                                           title="Buka & Cetak Form Berlangganan Pelanggan Ini">
+                                            <svg class="w-3.5 h-3.5 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                            </svg>
+                                            <span>Form</span>
+                                        </a>
+                                    </div>
 
                                     {{-- Tombol Edit Pendaftaran Pelanggan --}}
                                     <button type="button" 
@@ -1438,7 +1542,7 @@
                                             class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-1 focus:ring-blue-500">
                                         @foreach($olts as $o)
                                             <option value="{{ $o->kode_olt }}">
-                                                {{ $o->nama_olt }} ({{ $o->kode_olt }})
+                                                {{ $o->name_olt ?? ($o->nama_olt ?? $o->kode_olt) }} ({{ $o->kode_olt }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -1466,10 +1570,10 @@
                                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                                                 @foreach($allPorts as $port)
                                                     @php
-                                                        $stats = $portStats[$port] ?? ['total' => 128, 'occupied' => 0, 'available' => 128];
+                                                        $stats = $portStats[$port] ?? ['total' => 128, 'used' => 0, 'free' => 128, 'available' => 128];
                                                     @endphp
                                                     <option value="{{ $port }}">
-                                                        {{ $port }} ({{ $stats['available'] }} Slot Sisa)
+                                                        {{ $port }} ({{ $stats['free'] ?? ($stats['available'] ?? 128) }} Slot Sisa)
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -1727,7 +1831,7 @@
                                             class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-1 focus:ring-blue-500">
                                         @foreach($olts as $o)
                                             <option value="{{ $o->kode_olt }}">
-                                                {{ $o->nama_olt }} ({{ $o->kode_olt }})
+                                                {{ $o->name_olt ?? ($o->nama_olt ?? $o->kode_olt) }} ({{ $o->kode_olt }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -1755,10 +1859,10 @@
                                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                                                 @foreach($allPorts as $port)
                                                     @php
-                                                        $stats = $portStats[$port] ?? ['total' => 128, 'occupied' => 0, 'available' => 128];
+                                                        $stats = $portStats[$port] ?? ['total' => 128, 'used' => 0, 'free' => 128, 'available' => 128];
                                                     @endphp
                                                     <option value="{{ $port }}">
-                                                        {{ $port }} ({{ $stats['available'] }} Slot Sisa)
+                                                        {{ $port }} ({{ $stats['free'] ?? ($stats['available'] ?? 128) }} Slot Sisa)
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -2107,7 +2211,7 @@
                                             class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-1 focus:ring-blue-500">
                                         @foreach($olts as $o)
                                             <option value="{{ $o->kode_olt }}">
-                                                {{ $o->nama_olt }} ({{ $o->kode_olt }})
+                                                {{ $o->name_olt ?? ($o->nama_olt ?? $o->kode_olt) }} ({{ $o->kode_olt }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -2135,10 +2239,10 @@
                                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                                                 @foreach($allPorts as $port)
                                                     @php
-                                                        $stats = $portStats[$port] ?? ['total' => 128, 'occupied' => 0, 'available' => 128];
+                                                        $stats = $portStats[$port] ?? ['total' => 128, 'used' => 0, 'free' => 128, 'available' => 128];
                                                     @endphp
                                                     <option value="{{ $port }}">
-                                                        {{ $port }} ({{ $stats['available'] }} Slot Sisa)
+                                                        {{ $port }} ({{ $stats['free'] ?? ($stats['available'] ?? 128) }} Slot Sisa)
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -2451,7 +2555,7 @@
                                             class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-1 focus:ring-blue-500">
                                         @foreach($olts as $o)
                                             <option value="{{ $o->kode_olt }}">
-                                                {{ $o->nama_olt }} ({{ $o->kode_olt }})
+                                                {{ $o->name_olt ?? ($o->nama_olt ?? $o->kode_olt) }} ({{ $o->kode_olt }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -2479,10 +2583,10 @@
                                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                                                 @foreach($allPorts as $port)
                                                     @php
-                                                        $stats = $portStats[$port] ?? ['total' => 128, 'occupied' => 0, 'available' => 128];
+                                                        $stats = $portStats[$port] ?? ['total' => 128, 'used' => 0, 'free' => 128, 'available' => 128];
                                                     @endphp
                                                     <option value="{{ $port }}">
-                                                        {{ $port }} ({{ $stats['available'] }} Slot Sisa)
+                                                        {{ $port }} ({{ $stats['free'] ?? ($stats['available'] ?? 128) }} Slot Sisa)
                                                     </option>
                                                 @endforeach
                                             </select>

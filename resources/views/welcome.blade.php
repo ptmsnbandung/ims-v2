@@ -6,6 +6,11 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="{{ asset('assets/images/logo.png') }}">
+        <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+        <link rel="apple-touch-icon" href="{{ asset('assets/images/logo.png') }}">
+
         @fonts
 
         <!-- Styles / Scripts -->

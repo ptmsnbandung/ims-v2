@@ -479,46 +479,59 @@
                     
                     <!-- ================= SECTION 1: FOTO ================= -->
                     <div class="space-y-3">
-                        <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
-                            FOTO
-                        </h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                                    Dokumen Persyaratan (Foto)
+                                </h3>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Foto identitas pelanggan, denah lokasi, dan dokumentasi tempat tinggal.
+                                </p>
+                            </div>
+                        </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             
                             <!-- 1. KTP.jpeg -->
                             @php
                                 $ktpFile = $customer->foto_ktp;
                                 $ktpUrl = $ktpFile ? asset('uploads/registrasi/' . $ktpFile) : null;
                             @endphp
-                            <div class="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[140px] group">
-                                <!-- Download / Action top right -->
-                                <div class="absolute top-3 right-3">
-                                    @if($ktpUrl)
-                                        <a href="{{ $ktpUrl }}" download target="_blank" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Download KTP">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                            </svg>
-                                        </a>
-                                    @else
-                                        <button type="button" @click="openUploadModal('foto_ktp', 'Foto KTP')" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Upload Foto KTP">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                                            </svg>
-                                        </button>
-                                    @endif
+                            <div class="p-4 rounded-2xl border {{ $ktpFile ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                                <div class="w-full flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $ktpFile ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
+                                        {{ $ktpFile ? 'Tersedia' : 'Belum Ada' }}
+                                    </span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">JPG</span>
                                 </div>
-                                <!-- Image Document Icon -->
-                                <div class="pt-2">
-                                    <svg class="w-10 h-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                
+                                <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 my-1 group-hover:scale-105 transition">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.364a4.125 4.125 0 0 0-6.338 0 .375.375 0 0 0 .28.611h5.778a.375.375 0 0 0 .28-.611Z" />
                                     </svg>
                                 </div>
-                                <div class="pt-2">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">KTP.jpeg</span>
-                                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                        {{ $ktpFile ? 'Tersedia' : 'Hak akses dibatasi' }}
-                                    </span>
+
+                                <div class="my-1 space-y-0.5">
+                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Foto KTP</span>
+                                    <span class="block text-[10px] text-slate-400">KTP.jpeg</span>
+                                </div>
+
+                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                    @if($ktpUrl)
+                                        <a href="{{ $ktpUrl }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh KTP">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                        <button type="button" @click="openUploadModal('foto_ktp', 'Foto KTP')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Foto KTP">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Ganti</span>
+                                        </button>
+                                    @else
+                                        <button type="button" @click="openUploadModal('foto_ktp', 'Foto KTP')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Foto KTP">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Upload Foto KTP</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
@@ -527,32 +540,41 @@
                                 $rumahFile = $customer->foto_rumah;
                                 $rumahUrl = $rumahFile ? asset('uploads/registrasi/' . $rumahFile) : null;
                             @endphp
-                            <div class="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[140px] group">
-                                <div class="absolute top-3 right-3">
-                                    @if($rumahUrl)
-                                        <a href="{{ $rumahUrl }}" download target="_blank" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Download Foto Rumah">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                            </svg>
-                                        </a>
-                                    @else
-                                        <button type="button" @click="openUploadModal('foto_rumah', 'Foto Rumah')" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Upload Foto Rumah">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                                            </svg>
-                                        </button>
-                                    @endif
+                            <div class="p-4 rounded-2xl border {{ $rumahFile ? 'border-amber-500/30 bg-amber-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                                <div class="w-full flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $rumahFile ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
+                                        {{ $rumahFile ? 'Tersedia' : 'Belum Ada' }}
+                                    </span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">JPG</span>
                                 </div>
-                                <div class="pt-2">
-                                    <svg class="w-10 h-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                
+                                <div class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 my-1 group-hover:scale-105 transition">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                                     </svg>
                                 </div>
-                                <div class="pt-2">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Rumah.jpeg</span>
-                                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                        {{ $rumahFile ? 'Tersedia' : 'Hak akses dibatasi' }}
-                                    </span>
+
+                                <div class="my-1 space-y-0.5">
+                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Foto Rumah / Lokasi</span>
+                                    <span class="block text-[10px] text-slate-400">Rumah.jpeg</span>
+                                </div>
+
+                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                    @if($rumahUrl)
+                                        <a href="{{ $rumahUrl }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Foto Rumah">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                        <button type="button" @click="openUploadModal('foto_rumah', 'Foto Rumah')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Foto Rumah">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Ganti</span>
+                                        </button>
+                                    @else
+                                        <button type="button" @click="openUploadModal('foto_rumah', 'Foto Rumah')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Foto Rumah">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Upload Foto Rumah</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
@@ -561,32 +583,41 @@
                                 $petaFile = $customer->foto_peta;
                                 $petaUrl = $petaFile ? asset('uploads/registrasi/' . $petaFile) : null;
                             @endphp
-                            <div class="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[140px] group">
-                                <div class="absolute top-3 right-3">
-                                    @if($petaUrl)
-                                        <a href="{{ $petaUrl }}" download target="_blank" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Download Peta">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                            </svg>
-                                        </a>
-                                    @else
-                                        <button type="button" @click="openUploadModal('foto_peta', 'Foto Denah Peta')" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Upload Denah Peta">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                                            </svg>
-                                        </button>
-                                    @endif
+                            <div class="p-4 rounded-2xl border {{ $petaFile ? 'border-teal-500/30 bg-teal-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                                <div class="w-full flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $petaFile ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
+                                        {{ $petaFile ? 'Tersedia' : 'Belum Ada' }}
+                                    </span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">JPG</span>
                                 </div>
-                                <div class="pt-2">
-                                    <svg class="w-10 h-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                
+                                <div class="w-11 h-11 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-500 my-1 group-hover:scale-105 transition">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
                                     </svg>
                                 </div>
-                                <div class="pt-2">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">PETA.jpeg</span>
-                                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                        {{ $petaFile ? 'Tersedia' : 'Hak akses dibatasi' }}
-                                    </span>
+
+                                <div class="my-1 space-y-0.5">
+                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Denah Peta Lokasi</span>
+                                    <span class="block text-[10px] text-slate-400">PETA.jpeg</span>
+                                </div>
+
+                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                    @if($petaUrl)
+                                        <a href="{{ $petaUrl }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Denah Peta">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                        <button type="button" @click="openUploadModal('foto_peta', 'Foto Denah Peta')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Foto Denah Peta">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Ganti</span>
+                                        </button>
+                                    @else
+                                        <button type="button" @click="openUploadModal('foto_peta', 'Foto Denah Peta')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Foto Peta">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Upload Denah Peta</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
@@ -598,10 +629,10 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
-                                    Scan Dokumen
+                                    Scan Dokumen Legalisir
                                 </h3>
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Dokumen master yang sudah ditandatangani dan dilegalisir basah/digital.
+                                    Dokumen fisik/digital resmi yang sudah ditandatangani dan dilegalisir basah.
                                 </p>
                             </div>
                         </div>
@@ -612,31 +643,41 @@
                             @php
                                 $docLangganan = $customer->doc_berlangganan ?? null;
                             @endphp
-                            <div class="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[145px] group">
-                                <div class="absolute top-3 right-3 flex items-center gap-1">
-                                    @if($docLangganan)
-                                        <a href="{{ asset('uploads/registrasi/' . $docLangganan) }}" download target="_blank" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Download Dokumen Berlangganan">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                            </svg>
-                                        </a>
-                                    @endif
-                                    <button type="button" @click="openUploadModal('doc_berlangganan', 'Scan Dokumen Berlangganan Legalisir')" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Upload Scan Dokumen Berlangganan">
-                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                                        </svg>
-                                    </button>
+                            <div class="p-4 rounded-2xl border {{ $docLangganan ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                                <div class="w-full flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $docLangganan ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
+                                        {{ $docLangganan ? 'Tersedia' : 'Belum Ada' }}
+                                    </span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">SCAN</span>
                                 </div>
-                                <div class="pt-2">
-                                    <svg class="w-10 h-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                
+                                <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 my-1 group-hover:scale-105 transition">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                     </svg>
                                 </div>
-                                <div class="pt-2">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Berlangganan</span>
-                                    <span class="block text-[10px] {{ $docLangganan ? 'text-emerald-500 font-bold' : 'text-slate-500 dark:text-slate-400' }} mt-0.5">
-                                        {{ $docLangganan ? 'Tersedia' : 'Belum Tersedia' }}
-                                    </span>
+
+                                <div class="my-1 space-y-0.5">
+                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Form Berlangganan</span>
+                                    <span class="block text-[10px] text-slate-400">Scan Legalisir</span>
+                                </div>
+
+                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                    @if($docLangganan)
+                                        <a href="{{ asset('uploads/registrasi/' . $docLangganan) }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Dokumen">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                        <button type="button" @click="openUploadModal('doc_berlangganan', 'Scan Dokumen Berlangganan Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Berkas">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Ganti</span>
+                                        </button>
+                                    @else
+                                        <button type="button" @click="openUploadModal('doc_berlangganan', 'Scan Dokumen Berlangganan Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Scan Dokumen">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Upload Scan</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
@@ -644,31 +685,41 @@
                             @php
                                 $docSurvey = $customer->doc_survey ?? null;
                             @endphp
-                            <div class="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[145px] group">
-                                <div class="absolute top-3 right-3 flex items-center gap-1">
-                                    @if($docSurvey)
-                                        <a href="{{ asset('uploads/registrasi/' . $docSurvey) }}" download target="_blank" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Download Dokumen Survey">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                            </svg>
-                                        </a>
-                                    @endif
-                                    <button type="button" @click="openUploadModal('doc_survey', 'Scan Dokumen Survey Legalisir')" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Upload Scan Dokumen Survey">
-                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                                        </svg>
-                                    </button>
+                            <div class="p-4 rounded-2xl border {{ $docSurvey ? 'border-amber-500/30 bg-amber-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                                <div class="w-full flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $docSurvey ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
+                                        {{ $docSurvey ? 'Tersedia' : 'Belum Ada' }}
+                                    </span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">SCAN</span>
                                 </div>
-                                <div class="pt-2">
-                                    <svg class="w-10 h-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                
+                                <div class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 my-1 group-hover:scale-105 transition">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                     </svg>
                                 </div>
-                                <div class="pt-2">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Survey</span>
-                                    <span class="block text-[10px] {{ $docSurvey ? 'text-emerald-500 font-bold' : 'text-slate-500 dark:text-slate-400' }} mt-0.5">
-                                        {{ $docSurvey ? 'Tersedia' : 'Belum Tersedia' }}
-                                    </span>
+
+                                <div class="my-1 space-y-0.5">
+                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Surat Tugas Survey</span>
+                                    <span class="block text-[10px] text-slate-400">Scan Legalisir</span>
+                                </div>
+
+                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                    @if($docSurvey)
+                                        <a href="{{ asset('uploads/registrasi/' . $docSurvey) }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Dokumen">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                        <button type="button" @click="openUploadModal('doc_survey', 'Scan Dokumen Survey Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Berkas">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Ganti</span>
+                                        </button>
+                                    @else
+                                        <button type="button" @click="openUploadModal('doc_survey', 'Scan Dokumen Survey Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Scan Dokumen">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Upload Scan</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
@@ -676,31 +727,41 @@
                             @php
                                 $docInstalasi = $customer->doc_instalasi ?? null;
                             @endphp
-                            <div class="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[145px] group">
-                                <div class="absolute top-3 right-3 flex items-center gap-1">
-                                    @if($docInstalasi)
-                                        <a href="{{ asset('uploads/registrasi/' . $docInstalasi) }}" download target="_blank" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Download Dokumen Instalasi">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                            </svg>
-                                        </a>
-                                    @endif
-                                    <button type="button" @click="openUploadModal('doc_instalasi', 'Scan Dokumen Instalasi Legalisir')" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Upload Scan Dokumen Instalasi">
-                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                                        </svg>
-                                    </button>
+                            <div class="p-4 rounded-2xl border {{ $docInstalasi ? 'border-teal-500/30 bg-teal-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                                <div class="w-full flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $docInstalasi ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
+                                        {{ $docInstalasi ? 'Tersedia' : 'Belum Ada' }}
+                                    </span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20">SCAN</span>
                                 </div>
-                                <div class="pt-2">
-                                    <svg class="w-10 h-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                
+                                <div class="w-11 h-11 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-500 my-1 group-hover:scale-105 transition">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                     </svg>
                                 </div>
-                                <div class="pt-2">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Instalasi</span>
-                                    <span class="block text-[10px] {{ $docInstalasi ? 'text-emerald-500 font-bold' : 'text-slate-500 dark:text-slate-400' }} mt-0.5">
-                                        {{ $docInstalasi ? 'Tersedia' : 'Belum Tersedia' }}
-                                    </span>
+
+                                <div class="my-1 space-y-0.5">
+                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Surat Instalasi</span>
+                                    <span class="block text-[10px] text-slate-400">Scan Legalisir</span>
+                                </div>
+
+                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                    @if($docInstalasi)
+                                        <a href="{{ asset('uploads/registrasi/' . $docInstalasi) }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Dokumen">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                        <button type="button" @click="openUploadModal('doc_instalasi', 'Scan Dokumen Instalasi Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Berkas">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Ganti</span>
+                                        </button>
+                                    @else
+                                        <button type="button" @click="openUploadModal('doc_instalasi', 'Scan Dokumen Instalasi Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Scan Dokumen">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Upload Scan</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
@@ -708,31 +769,41 @@
                             @php
                                 $docAktivasi = $customer->doc_aktivasi ?? null;
                             @endphp
-                            <div class="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[145px] group">
-                                <div class="absolute top-3 right-3 flex items-center gap-1">
-                                    @if($docAktivasi)
-                                        <a href="{{ asset('uploads/registrasi/' . $docAktivasi) }}" download target="_blank" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Download Dokumen Aktivasi">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                            </svg>
-                                        </a>
-                                    @endif
-                                    <button type="button" @click="openUploadModal('doc_aktivasi', 'Scan Dokumen Aktivasi Legalisir')" class="p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Upload Scan Dokumen Aktivasi">
-                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                                        </svg>
-                                    </button>
+                            <div class="p-4 rounded-2xl border {{ $docAktivasi ? 'border-purple-500/30 bg-purple-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                                <div class="w-full flex items-center justify-between mb-2">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $docAktivasi ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
+                                        {{ $docAktivasi ? 'Tersedia' : 'Belum Ada' }}
+                                    </span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">SCAN</span>
                                 </div>
-                                <div class="pt-2">
-                                    <svg class="w-10 h-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                
+                                <div class="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 my-1 group-hover:scale-105 transition">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                     </svg>
                                 </div>
-                                <div class="pt-2">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Aktivasi</span>
-                                    <span class="block text-[10px] {{ $docAktivasi ? 'text-emerald-500 font-bold' : 'text-slate-500 dark:text-slate-400' }} mt-0.5">
-                                        {{ $docAktivasi ? 'Tersedia' : 'Belum Tersedia' }}
-                                    </span>
+
+                                <div class="my-1 space-y-0.5">
+                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Berita Acara Aktivasi</span>
+                                    <span class="block text-[10px] text-slate-400">Scan Legalisir</span>
+                                </div>
+
+                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                    @if($docAktivasi)
+                                        <a href="{{ asset('uploads/registrasi/' . $docAktivasi) }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Dokumen">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                        <button type="button" @click="openUploadModal('doc_aktivasi', 'Scan Dokumen Aktivasi Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Berkas">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Ganti</span>
+                                        </button>
+                                    @else
+                                        <button type="button" @click="openUploadModal('doc_aktivasi', 'Scan Dokumen Aktivasi Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Scan Dokumen">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
+                                            <span>Upload Scan</span>
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
@@ -741,45 +812,126 @@
 
                     <!-- ================= SECTION 3: MASTER DOKUMEN (DOCX TEMPLATES) ================= -->
                     <div class="space-y-3 pt-2">
-                        <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
-                            Master Dokumen
-                        </h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                                    Master Dokumen
+                                </h3>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Dokumen resmi otomatis per-user siap cetak & ekspor ke format PDF atau Word (.doc).
+                                </p>
+                            </div>
+                        </div>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-7 gap-3.5">
                             
                             @php
                                 $masterTemplates = [
-                                    ['name' => 'langganan.docx', 'label' => 'langganan.docx'],
-                                    ['name' => 'Survey.docx', 'label' => 'Survey.docx'],
-                                    ['name' => 'instalasi.docx', 'label' => 'instalasi.docx'],
-                                    ['name' => 'aktivasi.docx', 'label' => 'aktivasi.docx'],
-                                    ['name' => 'terminasi.docx', 'label' => 'terminasi.docx'],
-                                    ['name' => 'ubah_layanan.docx', 'label' => 'ubah_layanan.docx'],
-                                    ['name' => 'mapping.docx', 'label' => 'mapping.docx'],
+                                    [
+                                        'name' => 'langganan.docx', 
+                                        'label' => 'langganan.docx',
+                                        'desc' => 'Form Berlangganan',
+                                        'url' => route('teknik.dokumen.langganan', $customer->nomor_internet),
+                                        'active' => true,
+                                    ],
+                                    [
+                                        'name' => 'Survey.docx', 
+                                        'label' => 'Survey.docx', 
+                                        'desc' => 'Surat Tugas Survey', 
+                                        'url' => route('teknik.dokumen.survey', $customer->nomor_internet), 
+                                        'active' => true,
+                                    ],
+                                    [
+                                        'name' => 'instalasi.docx', 
+                                        'label' => 'instalasi.docx', 
+                                        'desc' => 'Surat Tugas Instalasi', 
+                                        'url' => route('teknik.dokumen.instalasi', $customer->nomor_internet), 
+                                        'active' => true,
+                                    ],
+                                    ['name' => 'aktivasi.docx', 'label' => 'aktivasi.docx', 'desc' => 'Form Aktivasi', 'url' => 'javascript:void(0)', 'active' => false],
+                                    ['name' => 'terminasi.docx', 'label' => 'terminasi.docx', 'desc' => 'Form Terminasi', 'url' => 'javascript:void(0)', 'active' => false],
+                                    ['name' => 'ubah_layanan.docx', 'label' => 'ubah_layanan.docx', 'desc' => 'Form Ubah Layanan', 'url' => 'javascript:void(0)', 'active' => false],
+                                    ['name' => 'mapping.docx', 'label' => 'mapping.docx', 'desc' => 'Form Mapping', 'url' => 'javascript:void(0)', 'active' => false],
                                 ];
                             @endphp
 
                             @foreach($masterTemplates as $tmpl)
-                                <div class="relative p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[125px] group">
-                                    <!-- Download Icon -->
-                                    <a href="javascript:void(0)" class="absolute top-2.5 right-2.5 p-1 rounded-lg text-slate-400 hover:text-blue-500 transition" title="Download Template {{ $tmpl['name'] }}">
-                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                        </svg>
-                                    </a>
-
-                                    <!-- Word Doc Icon -->
-                                    <div class="pt-2">
-                                        <svg class="w-8 h-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                        </svg>
+                                <div class="p-3.5 rounded-2xl border {{ $tmpl['active'] ? 'border-blue-500/40 bg-blue-500/[0.03] hover:border-blue-500/70 shadow-sm' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm' }} transition flex flex-col items-center justify-between text-center min-h-[195px] group">
+                                    
+                                    <!-- Top Status & Format Badges -->
+                                    <div class="w-full flex items-center justify-between mb-1.5">
+                                        @if($tmpl['active'])
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                <span>Siap Cetak</span>
+                                            </span>
+                                            <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">DOCX</span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800 text-slate-400 border border-slate-700/50">
+                                                Template
+                                            </span>
+                                            <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-700/50">DOCX</span>
+                                        @endif
                                     </div>
 
-                                    <div class="pt-1.5">
-                                        <span class="block text-[11px] font-medium text-slate-700 dark:text-slate-300 truncate max-w-[90px]">
+                                    <!-- Clean Document Icon -->
+                                    <div class="my-1">
+                                        @if($tmpl['active'])
+                                            <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-sm group-hover:scale-105 transition duration-200">
+                                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                                </svg>
+                                            </div>
+                                        @else
+                                            <div class="w-11 h-11 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center text-slate-500">
+                                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                                </svg>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Label & Desc -->
+                                    <div class="my-1 space-y-0.5 w-full px-1">
+                                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $tmpl['label'] }}">
                                             {{ $tmpl['label'] }}
                                         </span>
+                                        <span class="block text-[10px] text-slate-400 truncate" title="{{ $tmpl['desc'] }}">
+                                            {{ $tmpl['desc'] }}
+                                        </span>
                                     </div>
+
+                                    <!-- Bottom Action Buttons (Clean & Structured) -->
+                                    <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 mt-1">
+                                        @if($tmpl['active'])
+                                            <div class="space-y-1.5 w-full">
+                                                <!-- Primary View / Print Button -->
+                                                <a href="{{ $tmpl['url'] }}" target="_blank" class="w-full py-1.5 px-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm shadow-blue-500/20" title="Buka & Cetak Dokumen">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                                    <span>Buka / Cetak</span>
+                                                </a>
+
+                                                <!-- Secondary Format Download Buttons -->
+                                                <div class="grid grid-cols-2 gap-1 w-full">
+                                                    <a href="{{ $tmpl['url'] }}?download=pdf" target="_blank" class="py-1 px-1 rounded-md bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-emerald-500/25" title="Download PDF">
+                                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                                        <span>PDF</span>
+                                                    </a>
+                                                    <a href="{{ $tmpl['url'] }}?download=word" target="_blank" class="py-1 px-1 rounded-md bg-indigo-500/15 hover:bg-indigo-600 text-indigo-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-indigo-500/25" title="Download Word (.doc)">
+                                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                                        <span>Word</span>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="w-full py-2.5 flex items-center justify-center">
+                                                <span class="text-[10px] text-slate-500 font-medium bg-slate-800/60 border border-slate-700/50 px-2.5 py-1 rounded-lg">
+                                                    Draft Master
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+
                                 </div>
                             @endforeach
 

@@ -1273,7 +1273,10 @@ class TeknikController extends Controller
             'user_update' => $currentUser,
         ]);
 
-        return redirect()->route('teknik.pendaftaran')->with('success', "Pendaftaran pelanggan baru '{$request->nama_pelanggan}' dengan Nomor Internet {$nomorInternet} berhasil disimpan!");
+        return redirect()->route('teknik.pendaftaran')
+            ->with('success', "Pendaftaran pelanggan baru '{$request->nama_pelanggan}' dengan Nomor Internet {$nomorInternet} berhasil disimpan!")
+            ->with('nomor_internet_baru', $nomorInternet)
+            ->with('nama_pelanggan_baru', $request->nama_pelanggan);
     }
 
     /**
@@ -1884,6 +1887,7 @@ class TeknikController extends Controller
                 'name' => $port,
                 'used' => $usedCount,
                 'free' => 128 - $usedCount,
+                'available' => 128 - $usedCount,
                 'total' => 128,
             ];
         }
@@ -2045,6 +2049,217 @@ class TeknikController extends Controller
         }
 
         return redirect()->back()->with('success', 'Dokumen / Berkas scan legalisir berhasil diunggah!');
+    }
+
+    /**
+     * Tampilan Master Dokumen Formulir Berlangganan Per-User / Pelanggan
+     * Menghasilkan dokumen resmi Form Berlangganan PT Media Solusi Network
+     */
+    public function dokumenLangganan(Request $request, string $nomorInternet): View
+    {
+        // 1. Ambil dari view_batchjob jika sudah ada
+        $customer = DB::table('view_batchjob')
+            ->where('nomor_internet', $nomorInternet)
+            ->first();
+
+        // 2. Jika belum ada di view_batchjob (misal registrasi baru), query langsung tabel terkait
+        if (!$customer) {
+            $customer = DB::table('trx_batchjob_register')
+                ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
+                ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
+                ->leftJoin('m_kategori_bandwith', 'm_bandwith.kode_kategori_bandwith', '=', 'm_kategori_bandwith.kode_kategori_bandwith')
+                ->leftJoin('m_pop', 'trx_batchjob_register.kode_pop', '=', 'm_pop.kode_pop')
+                ->where('trx_batchjob_register.nomor_internet', $nomorInternet)
+                ->select(
+                    'trx_batchjob_register.*',
+                    'm_pelanggan.nama_penduduk',
+                    'm_pelanggan.jenis_kelamin',
+                    'm_pelanggan.tanggal_lahir',
+                    'm_pelanggan.pic',
+                    'm_pelanggan.email',
+                    'm_pelanggan.nomor_hp',
+                    'm_pelanggan.nomor_hp_2',
+                    'm_pelanggan.alamat_ktp',
+                    'm_pelanggan.rt_ktp',
+                    'm_pelanggan.rw_ktp',
+                    'm_bandwith.nominal_bandwith',
+                    'm_bandwith.harga_bandwith',
+                    'm_kategori_bandwith.nama_kategori_bandwith',
+                    'm_kategori_bandwith.alias_nama_kategori',
+                    'm_kategori_bandwith.biaya_reg',
+                    'm_pop.nama_pop'
+                )
+                ->first();
+        }
+
+        if (!$customer) {
+            abort(404, "Dokumen Form Berlangganan untuk nomor internet {$nomorInternet} tidak ditemukan.");
+        }
+
+        // Perangkat / Material jika ada
+        $perangkats = Schema::hasTable('trx_instalasi_barang')
+            ? DB::table('trx_instalasi_barang')
+                ->leftJoin('view_barang', 'trx_instalasi_barang.kode_barang', '=', 'view_barang.kode_barang')
+                ->where('trx_instalasi_barang.nomor_internet', $nomorInternet)
+                ->where('trx_instalasi_barang.hide', 0)
+                ->select('trx_instalasi_barang.*', 'view_barang.nama_barang', 'view_barang.tipe_barang')
+                ->get()
+            : collect();
+
+        // Data instalasi
+        $instalasi = Schema::hasTable('trx_instalasi')
+            ? DB::table('trx_instalasi')->where('nomor_internet', $nomorInternet)->first()
+            : null;
+
+        return view('teknik.dokumen.langganan', [
+            'user' => $request->user(),
+            'customer' => $customer,
+            'perangkats' => $perangkats,
+            'instalasi' => $instalasi,
+        ]);
+    }
+
+    /**
+     * Tampilan Master Dokumen Surat Tugas Survey Per-User / Pelanggan
+     * Menghasilkan dokumen resmi Surat Tugas Survey PT Media Solusi Network
+     */
+    public function dokumenSurvey(Request $request, string $nomorInternet): View
+    {
+        // 1. Ambil dari view_batchjob jika sudah ada
+        $customer = DB::table('view_batchjob')
+            ->where('nomor_internet', $nomorInternet)
+            ->first();
+
+        // 2. Jika belum ada di view_batchjob (misal registrasi baru), query langsung tabel terkait
+        if (!$customer) {
+            $customer = DB::table('trx_batchjob_register')
+                ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
+                ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
+                ->leftJoin('m_kategori_bandwith', 'm_bandwith.kode_kategori_bandwith', '=', 'm_kategori_bandwith.kode_kategori_bandwith')
+                ->leftJoin('m_pop', 'trx_batchjob_register.kode_pop', '=', 'm_pop.kode_pop')
+                ->where('trx_batchjob_register.nomor_internet', $nomorInternet)
+                ->select(
+                    'trx_batchjob_register.*',
+                    'm_pelanggan.nama_penduduk',
+                    'm_pelanggan.jenis_kelamin',
+                    'm_pelanggan.tanggal_lahir',
+                    'm_pelanggan.pic',
+                    'm_pelanggan.email',
+                    'm_pelanggan.nomor_hp',
+                    'm_pelanggan.nomor_hp_2',
+                    'm_pelanggan.alamat_ktp',
+                    'm_pelanggan.rt_ktp',
+                    'm_pelanggan.rw_ktp',
+                    'm_bandwith.nominal_bandwith',
+                    'm_bandwith.harga_bandwith',
+                    'm_kategori_bandwith.nama_kategori_bandwith',
+                    'm_kategori_bandwith.alias_nama_kategori',
+                    'm_kategori_bandwith.biaya_reg',
+                    'm_pop.nama_pop'
+                )
+                ->first();
+        }
+
+        if (!$customer) {
+            abort(404, "Dokumen Surat Tugas Survey untuk nomor internet {$nomorInternet} tidak ditemukan.");
+        }
+
+        // Data instalasi & survey
+        $instalasi = Schema::hasTable('trx_instalasi')
+            ? DB::table('trx_instalasi')->where('nomor_internet', $nomorInternet)->first()
+            : null;
+
+        // Tim Teknisi Survey dari trx_instalasi_team (kat_team = 10)
+        $teamSurvey = Schema::hasTable('trx_instalasi_team')
+            ? DB::table('trx_instalasi_team')
+                ->where('nomor_internet', $nomorInternet)
+                ->where('kat_team', '10')
+                ->get()
+            : collect();
+
+        return view('teknik.dokumen.survey', [
+            'user' => $request->user(),
+            'customer' => $customer,
+            'instalasi' => $instalasi,
+            'teamSurvey' => $teamSurvey,
+        ]);
+    }
+
+    /**
+     * Tampilan Master Dokumen Surat Tugas Instalasi Per-User / Pelanggan
+     * Menghasilkan dokumen resmi Surat Tugas Instalasi PT Media Solusi Network
+     */
+    public function dokumenInstalasi(Request $request, string $nomorInternet): View
+    {
+        // 1. Ambil dari view_batchjob jika sudah ada
+        $customer = DB::table('view_batchjob')
+            ->where('nomor_internet', $nomorInternet)
+            ->first();
+
+        // 2. Jika belum ada di view_batchjob (misal registrasi baru), query langsung tabel terkait
+        if (!$customer) {
+            $customer = DB::table('trx_batchjob_register')
+                ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
+                ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
+                ->leftJoin('m_kategori_bandwith', 'm_bandwith.kode_kategori_bandwith', '=', 'm_kategori_bandwith.kode_kategori_bandwith')
+                ->leftJoin('m_pop', 'trx_batchjob_register.kode_pop', '=', 'm_pop.kode_pop')
+                ->where('trx_batchjob_register.nomor_internet', $nomorInternet)
+                ->select(
+                    'trx_batchjob_register.*',
+                    'm_pelanggan.nama_penduduk',
+                    'm_pelanggan.jenis_kelamin',
+                    'm_pelanggan.tanggal_lahir',
+                    'm_pelanggan.pic',
+                    'm_pelanggan.email',
+                    'm_pelanggan.nomor_hp',
+                    'm_pelanggan.nomor_hp_2',
+                    'm_pelanggan.alamat_ktp',
+                    'm_pelanggan.rt_ktp',
+                    'm_pelanggan.rw_ktp',
+                    'm_bandwith.nominal_bandwith',
+                    'm_bandwith.harga_bandwith',
+                    'm_kategori_bandwith.nama_kategori_bandwith',
+                    'm_kategori_bandwith.alias_nama_kategori',
+                    'm_kategori_bandwith.biaya_reg',
+                    'm_pop.nama_pop'
+                )
+                ->first();
+        }
+
+        if (!$customer) {
+            abort(404, "Dokumen Surat Tugas Instalasi untuk nomor internet {$nomorInternet} tidak ditemukan.");
+        }
+
+        // Data instalasi dari trx_instalasi
+        $instalasi = Schema::hasTable('trx_instalasi')
+            ? DB::table('trx_instalasi')->where('nomor_internet', $nomorInternet)->first()
+            : null;
+
+        // Tim Teknisi Instalasi dari trx_instalasi_team (kat_team = 11)
+        $teamInstalasi = Schema::hasTable('trx_instalasi_team')
+            ? DB::table('trx_instalasi_team')
+                ->where('nomor_internet', $nomorInternet)
+                ->where('kat_team', '11')
+                ->get()
+            : collect();
+
+        // Perangkat / Material instalasi jika ada
+        $perangkats = Schema::hasTable('trx_instalasi_barang')
+            ? DB::table('trx_instalasi_barang')
+                ->leftJoin('view_barang', 'trx_instalasi_barang.kode_barang', '=', 'view_barang.kode_barang')
+                ->where('trx_instalasi_barang.nomor_internet', $nomorInternet)
+                ->where('trx_instalasi_barang.hide', 0)
+                ->select('trx_instalasi_barang.*', 'view_barang.nama_barang', 'view_barang.tipe_barang')
+                ->get()
+            : collect();
+
+        return view('teknik.dokumen.instalasi', [
+            'user' => $request->user(),
+            'customer' => $customer,
+            'instalasi' => $instalasi,
+            'teamInstalasi' => $teamInstalasi,
+            'perangkats' => $perangkats,
+        ]);
     }
 
     /**

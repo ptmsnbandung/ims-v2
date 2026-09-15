@@ -17,6 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Sesi kedaluwarsa atau token CSRF tidak cocok. Silakan refresh halaman.',
+                ], 419);
+            }
+
+            return redirect()->route('login')->with('error', 'Sesi Anda telah kedaluwarsa. Silakan masuk kembali.');
+        });
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

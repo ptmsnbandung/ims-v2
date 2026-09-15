@@ -26,6 +26,15 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="mb-5 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-center gap-3">
+            <svg class="w-5 h-5 flex-shrink-0 text-rose-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+            </svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
     @if(session('info'))
         <div class="mb-5 p-4 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 text-sm flex items-center gap-3">
             <svg class="w-5 h-5 flex-shrink-0 text-sky-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

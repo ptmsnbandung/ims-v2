@@ -15,7 +15,7 @@
                         {{ $summary->nama_barang }}
                     </span>
                     <div class="text-xl font-black text-slate-900 dark:text-white mt-1 font-mono">
-                        {{ number_format($summary->total_terpasang, 0, ',', '.') }}
+                        {{ number_format((float) ($summary->total_terpasang ?? 0), 0, ',', '.') }}
                     </div>
                     <span class="text-[10px] text-emerald-500 font-medium">Unit Terpasang di Pelanggan</span>
                 </div>
@@ -82,7 +82,7 @@
                                 {{ $b->tipe_barang ?: ($b->kode_jns_barang ?: 'Perangkat FTTH') }}
                             </td>
                             <td class="py-4 px-5 font-mono font-semibold text-slate-900 dark:text-white">
-                                Rp {{ number_format($b->biaya_kelebihan ?: 0, 0, ',', '.') }}
+                                Rp {{ number_format((float) ($b->biaya_kelebihan ?? 0), 0, ',', '.') }}
                             </td>
                             <td class="py-4 px-5 text-center">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/20">

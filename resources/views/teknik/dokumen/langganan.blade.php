@@ -846,7 +846,7 @@
                     <div class="row-item">
                         <div class="cell-label"><span>Biaya Layanan</span><span>:</span></div>
                         <div class="cell-value">
-                            ( Rp {{ number_format($customer->harga_bandwith ?: 0, 0, ',', '.') }} )
+                            ( Rp {{ number_format((float) ($customer->harga_bandwith ?? 0), 0, ',', '.') }} )
                         </div>
                     </div>
 
@@ -854,7 +854,7 @@
                     <div class="row-item">
                         <div class="cell-label"><span>Biaya Registrasi</span><span>:</span></div>
                         <div class="cell-value">
-                            ( Rp {{ number_format($customer->biaya_reg ?: 0, 0, ',', '.') }} )
+                            ( Rp {{ number_format((float) ($customer->biaya_reg ?? 0), 0, ',', '.') }} )
                         </div>
                     </div>
 

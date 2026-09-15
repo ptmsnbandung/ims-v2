@@ -555,25 +555,25 @@
                         <td class="py-3.5 px-4 align-top">
                             <div class="space-y-0.5">
                                 <div class="text-xs font-semibold text-slate-300">
-                                    Tagihan: <span class="text-white font-bold">Rp {{ number_format($inv->total_layanan ?? $inv->harga_bandwith, 0, ',', '.') }}</span>
+                                    Tagihan: <span class="text-white font-bold">Rp {{ number_format((float) ($inv->total_layanan ?? ($inv->harga_bandwith ?? 0)), 0, ',', '.') }}</span>
                                 </div>
                                 
                                 @if((float)($inv->potongan ?? 0) > 0)
                                 <div class="text-[10px] text-emerald-400">
-                                    Diskon: -Rp {{ number_format($inv->potongan, 0, ',', '.') }}
+                                    Diskon: -Rp {{ number_format((float) ($inv->potongan ?? 0), 0, ',', '.') }}
                                 </div>
                                 @endif
 
                                 @if((float)($inv->denda ?? 0) > 0)
                                 <div class="text-[10px] text-rose-400">
-                                    Denda: +Rp {{ number_format($inv->denda, 0, ',', '.') }}
+                                    Denda: +Rp {{ number_format((float) ($inv->denda ?? 0), 0, ',', '.') }}
                                 </div>
                                 @endif
 
                                 <div class="text-[11px] font-medium text-slate-400 flex items-center gap-1 pt-0.5">
                                     <span>Dibayar:</span>
                                     <span class="{{ $inv->status_bill_lay == '15' ? 'text-emerald-400 font-bold' : 'text-slate-400' }}">
-                                        Rp {{ number_format($inv->amount_paid ?? 0, 0, ',', '.') }}
+                                        Rp {{ number_format((float) ($inv->amount_paid ?? 0), 0, ',', '.') }}
                                     </span>
                                     @if($inv->status_bill_lay == '15')
                                     <svg class="w-3.5 h-3.5 text-emerald-400 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -600,7 +600,7 @@
                             if (str_starts_with($cleanHp, '0')) {
                                 $cleanHp = '62' . substr($cleanHp, 1);
                             }
-                            $nominalFormatted = number_format($inv->total_layanan ?? $inv->harga_bandwith, 0, ',', '.');
+                            $nominalFormatted = number_format((float) ($inv->total_layanan ?? ($inv->harga_bandwith ?? 0)), 0, ',', '.');
                             $expiryFormatted = $inv->expiry ? \Carbon\Carbon::parse($inv->expiry)->translatedFormat('d M Y H:i') : 'Jatuh Tempo';
                             
                             $waText = "Halo Pelanggan Yth. {$inv->nama_pelanggan},\nTagihan Internet IMS Periode {$inv->periode_tagihan} sebesar Rp {$nominalFormatted} telah terbit (No Inv: {$inv->kode_billing_layanan}).";

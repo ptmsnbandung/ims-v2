@@ -954,7 +954,7 @@
                                 @endif
                             </div>
                             <div class="text-slate-600 dark:text-slate-400">
-                                Harga Bulanan: <strong class="text-slate-800 dark:text-slate-200 font-mono">Rp {{ number_format($customer->harga_bandwith ?: 0, 0, ',', '.') }}</strong>
+                                Harga Bulanan: <strong class="text-slate-800 dark:text-slate-200 font-mono">Rp {{ number_format((float) ($customer->harga_bandwith ?? 0), 0, ',', '.') }}</strong>
                             </div>
                         </div>
 
@@ -1030,7 +1030,7 @@
                                     <tr>
                                         <td class="py-3 px-4 font-mono font-bold">{{ $b->kode_billing_registrasi }}</td>
                                         <td class="py-3 px-4">Registrasi</td>
-                                        <td class="py-3 px-4 font-mono font-bold">Rp {{ number_format($b->total_reg, 0, ',', '.') }}</td>
+                                        <td class="py-3 px-4 font-mono font-bold">Rp {{ number_format((float) ($b->total_reg ?? 0), 0, ',', '.') }}</td>
                                         <td class="py-3 px-4">
                                             <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $b->status_bill_reg == '14' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500' }}">
                                                 {{ $b->status_bill_reg == '14' ? 'LUNAS' : 'DRAFT' }}

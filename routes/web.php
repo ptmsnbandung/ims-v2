@@ -165,9 +165,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/billing-registrasi/{kode_billing}/change-payment-method', [FinanceController::class, 'changePaymentMethodRegistrasi'])->name('billing-registrasi.change-payment-method')->where('kode_billing', '.*');
         Route::get('/billing-registrasi/export', [FinanceController::class, 'exportBillingRegistrasi'])->name('billing-registrasi.export');
         Route::get('/api/billing-registrasi-detail', [FinanceController::class, 'getBillingRegistrasiDetail'])->name('billing-registrasi.detail.query');
-        Route::get('/api/billing-registrasi/{kode_billing}', [FinanceController::class, 'getBillingRegistrasiDetail'])->name('billing-registrasi.detail')->where('kode_billing', '.*');
+        // 3. Master Paket Internet & Layanan Bandwidth (Finance)
+        Route::get('/paket', [FinanceController::class, 'paket'])->name('paket');
+        Route::post('/paket/store', [FinanceController::class, 'storePaket'])->name('paket.store');
+        Route::post('/paket/{kode_bandwith}/delete', [FinanceController::class, 'deletePaket'])->name('paket.delete')->where('kode_bandwith', '.*');
 
-        // 3. Permintaan ke NOC: UP / Downgrade Bandwidth Layanan
+        // 4. Permintaan ke NOC: UP / Downgrade Bandwidth Layanan
         Route::get('/permintaan/up-downgrade', [FinanceController::class, 'upDowngrade'])->name('permintaan.up-downgrade');
         Route::post('/permintaan/up-downgrade', [FinanceController::class, 'storeUpDowngrade'])->name('permintaan.up-downgrade.store');
         Route::post('/permintaan/up-downgrade/{kode_trx}/cancel', [FinanceController::class, 'cancelUpDowngrade'])->name('permintaan.up-downgrade.cancel')->where('kode_trx', '.*');

@@ -1582,6 +1582,361 @@ class FinanceController extends Controller
     }
 
     /**
+     * Memastikan struktur tabel m_bandwith dan m_bandwith_kategori tersedia di database
+     */
+    protected function ensurePaketTableColumns(): void
+    {
+        try {
+            if (!Schema::hasTable('m_bandwith_kategori')) {
+                Schema::create('m_bandwith_kategori', function (Blueprint $table) {
+                    $table->string('kode_kategori_bandwith', 50)->primary();
+                    $table->string('nama_kategori_bandwith', 100);
+                    $table->string('alias_nama_kategori', 100)->nullable();
+                    $table->decimal('biaya_reg', 15, 2)->default(0);
+                    $table->tinyInteger('disable')->default(0);
+                    $table->timestamps();
+                });
+
+                // Seed Kategori Awal
+                DB::table('m_bandwith_kategori')->insert([
+                    ['kode_kategori_bandwith' => 'KB01', 'nama_kategori_bandwith' => 'CORPORATE', 'alias_nama_kategori' => 'Corporate Dedicated', 'biaya_reg' => 500000, 'disable' => 0],
+                    ['kode_kategori_bandwith' => 'KB02', 'nama_kategori_bandwith' => 'LAST MILE', 'alias_nama_kategori' => 'Last Mile FTTH', 'biaya_reg' => 250000, 'disable' => 0],
+                    ['kode_kategori_bandwith' => 'KB03', 'nama_kategori_bandwith' => 'BROADBAND', 'alias_nama_kategori' => 'Broadband Internet', 'biaya_reg' => 150000, 'disable' => 0],
+                    ['kode_kategori_bandwith' => 'KB04', 'nama_kategori_bandwith' => 'HOME', 'alias_nama_kategori' => 'Home Fiber', 'biaya_reg' => 100000, 'disable' => 0],
+                    ['kode_kategori_bandwith' => 'KB05', 'nama_kategori_bandwith' => 'DEDICATED', 'alias_nama_kategori' => '1:1 Symmetrical Dedicated', 'biaya_reg' => 1000000, 'disable' => 0],
+                    ['kode_kategori_bandwith' => 'KB06', 'nama_kategori_bandwith' => 'BUSINESS', 'alias_nama_kategori' => 'SOHO & Business', 'biaya_reg' => 300000, 'disable' => 0],
+                    ['kode_kategori_bandwith' => 'KB07', 'nama_kategori_bandwith' => 'CUSTOM', 'alias_nama_kategori' => 'Custom SLA Bandwidth', 'biaya_reg' => 500000, 'disable' => 0],
+                    ['kode_kategori_bandwith' => 'KB08', 'nama_kategori_bandwith' => 'EVENT', 'alias_nama_kategori' => 'Temporary / Event Bandwidth', 'biaya_reg' => 750000, 'disable' => 0],
+                ]);
+            }
+
+            if (!Schema::hasTable('m_bandwith')) {
+                Schema::create('m_bandwith', function (Blueprint $table) {
+                    $table->string('kode_bandwith', 50)->primary();
+                    $table->string('nama_bandwith', 150)->nullable();
+                    $table->string('kode_kategori_bandwith', 50)->nullable();
+                    $table->integer('nominal_bandwith')->default(0);
+                    $table->decimal('harga_bandwith', 15, 2)->default(0);
+                    $table->string('peruntukan_bangunan', 255)->nullable();
+                    $table->string('kategori_bangunan', 100)->nullable();
+                    $table->tinyInteger('disable')->default(0);
+                    $table->char('hide', 1)->default('0');
+                    $table->dateTime('date_create')->nullable();
+                    $table->string('user_create', 100)->nullable();
+                    $table->dateTime('date_update')->nullable();
+                    $table->string('user_update', 100)->nullable();
+                    $table->timestamps();
+                });
+            } else {
+                Schema::table('m_bandwith', function (Blueprint $table) {
+                    if (!Schema::hasColumn('m_bandwith', 'nama_bandwith')) {
+                        $table->string('nama_bandwith', 150)->nullable();
+                    }
+                    if (!Schema::hasColumn('m_bandwith', 'peruntukan_bangunan')) {
+                        $table->string('peruntukan_bangunan', 255)->nullable();
+                    }
+                    if (!Schema::hasColumn('m_bandwith', 'kategori_bangunan')) {
+                        $table->string('kategori_bangunan', 100)->nullable();
+                    }
+                    if (!Schema::hasColumn('m_bandwith', 'disable')) {
+                        $table->tinyInteger('disable')->default(0);
+                    }
+                    if (!Schema::hasColumn('m_bandwith', 'hide')) {
+                        $table->char('hide', 1)->default('0');
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Auto-ensure m_bandwith columns: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Master Data Paket Internet & Layanan Bandwidth (Finance)
+     */
+    public function paket(Request $request): View
+    {
+        $this->ensurePaketTableColumns();
+
+        $search = $request->query('search');
+        $selectedBangunan = $request->query('bangunan', 'all');
+        $selectedKategori = $request->query('kategori', 'all');
+
+        $query = DB::table('m_bandwith as b')
+            ->leftJoin('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
+            ->select(
+                'b.*',
+                'k.nama_kategori_bandwith',
+                'k.alias_nama_kategori'
+            )
+            ->where('b.hide', '0');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('b.kode_bandwith', 'like', "%{$search}%")
+                  ->orWhere('b.nama_bandwith', 'like', "%{$search}%")
+                  ->orWhere('k.nama_kategori_bandwith', 'like', "%{$search}%")
+                  ->orWhere('b.peruntukan_bangunan', 'like', "%{$search}%")
+                  ->orWhere('b.nominal_bandwith', 'like', "%{$search}%");
+            });
+        }
+
+        if ($selectedBangunan !== 'all' && !empty($selectedBangunan)) {
+            $query->where(function($q) use ($selectedBangunan) {
+                $q->where('b.peruntukan_bangunan', 'like', "%{$selectedBangunan}%")
+                  ->orWhere('b.kategori_bangunan', 'like', "%{$selectedBangunan}%");
+            });
+        }
+
+        if ($selectedKategori !== 'all' && !empty($selectedKategori)) {
+            $query->where(function($q) use ($selectedKategori) {
+                $q->where('b.kode_kategori_bandwith', $selectedKategori)
+                  ->orWhere('k.nama_kategori_bandwith', $selectedKategori);
+            });
+        }
+
+        $pakets = $query->orderBy('b.nominal_bandwith', 'asc')
+            ->orderBy('b.kode_bandwith', 'asc')
+            ->paginate(15)
+            ->withQueryString();
+
+        // Attach default name_bandwith jika masih kosong
+        foreach ($pakets as $p) {
+            if (empty($p->nama_bandwith)) {
+                $p->nama_bandwith = "Paket {$p->nominal_bandwith} Mbps";
+            }
+            if (empty($p->peruntukan_bangunan)) {
+                $p->peruntukan_bangunan = 'RUMAH-KANTOR';
+            }
+        }
+
+        // List Kategori untuk dropdown
+        $kategoriList = DB::table('m_bandwith_kategori')->where('disable', 0)->get();
+
+        // 1. KPI Counters
+        $totalPaket = DB::table('m_bandwith')->where('hide', '0')->count();
+        $totalAktif = DB::table('m_bandwith')->where('hide', '0')->where('disable', 0)->count();
+        $totalKategori = DB::table('m_bandwith_kategori')->where('disable', 0)->count();
+        $minSpeed = DB::table('m_bandwith')->where('hide', '0')->min('nominal_bandwith') ?: 1;
+        $maxSpeed = DB::table('m_bandwith')->where('hide', '0')->max('nominal_bandwith') ?: 1000;
+
+        // 2. Count per Building Types
+        $buildingTypes = [
+            'KOS-KOSAN' => 'KOS-KOSAN',
+            'RUMAH-PRIBADI' => 'RUMAH-PRIBADI',
+            'RUMAH-KANTOR' => 'RUMAH-KANTOR',
+            'RUKO' => 'RUKO',
+            'APARTEMEN' => 'APARTEMEN',
+            'GEDUNG' => 'GEDUNG',
+            'OUTDOOR/EVENT' => 'OUTDOOR/EVENT',
+        ];
+
+        $buildingCounts = [];
+        foreach ($buildingTypes as $key => $label) {
+            $buildingCounts[$key] = DB::table('m_bandwith')
+                ->where('hide', '0')
+                ->where(function($q) use ($key) {
+                    $q->where('peruntukan_bangunan', 'like', "%{$key}%")
+                      ->orWhere('kategori_bangunan', 'like', "%{$key}%");
+                })
+                ->count();
+        }
+
+        return view('finance.paket', [
+            'user' => $request->user(),
+            'pakets' => $pakets,
+            'kategoriList' => $kategoriList,
+            'totalPaket' => $totalPaket,
+            'totalAktif' => $totalAktif,
+            'totalKategori' => $totalKategori,
+            'minSpeed' => $minSpeed,
+            'maxSpeed' => $maxSpeed,
+            'buildingTypes' => $buildingTypes,
+            'buildingCounts' => $buildingCounts,
+            'selectedBangunan' => $selectedBangunan,
+            'selectedKategori' => $selectedKategori,
+            'search' => $search,
+        ]);
+    }
+
+    /**
+     * Store / Update Master Paket Bandwidth
+     * Otomatis mengupdate data tarif pelanggan aktif dan tagihan billing berjalan
+     */
+    public function storePaket(Request $request): RedirectResponse
+    {
+        $this->ensurePaketTableColumns();
+
+        $request->validate([
+            'kode_bandwith' => 'required|string|max:50',
+            'nama_bandwith' => 'required|string|max:150',
+            'kode_kategori_bandwith' => 'required|string|max:50',
+            'nominal_bandwith' => 'required|numeric|min:1',
+            'harga_bandwith' => 'required|numeric|min:0',
+            'peruntukan_bangunan' => 'nullable|array',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $now = Carbon::now()->toDateTimeString();
+        $currentUser = Auth::user()?->nama ?? 'FINANCE';
+        $kodeBandwith = trim($request->kode_bandwith);
+
+        $peruntukanString = 'RUMAH-KANTOR';
+        if ($request->has('peruntukan_bangunan') && is_array($request->peruntukan_bangunan)) {
+            $peruntukanString = implode(', ', $request->peruntukan_bangunan);
+        } elseif ($request->filled('peruntukan_bangunan_text')) {
+            $peruntukanString = $request->peruntukan_bangunan_text;
+        }
+
+        $disable = $request->has('is_active') && $request->is_active ? 0 : 0;
+        if ($request->has('status_aktif')) {
+            $disable = $request->status_aktif == '1' ? 0 : 1;
+        }
+
+        $newHarga = (float) $request->harga_bandwith;
+        $newSpeed = (int) $request->nominal_bandwith;
+
+        $existing = DB::table('m_bandwith')->where('kode_bandwith', $kodeBandwith)->first();
+
+        DB::beginTransaction();
+        try {
+            if ($existing) {
+                // UPDATE Paket
+                DB::table('m_bandwith')->where('kode_bandwith', $kodeBandwith)->update([
+                    'nama_bandwith' => $request->nama_bandwith,
+                    'kode_kategori_bandwith' => $request->kode_kategori_bandwith,
+                    'nominal_bandwith' => $newSpeed,
+                    'harga_bandwith' => $newHarga,
+                    'peruntukan_bangunan' => $peruntukanString,
+                    'kategori_bangunan' => is_array($request->peruntukan_bangunan) ? ($request->peruntukan_bangunan[0] ?? 'RUMAH-KANTOR') : $peruntukanString,
+                    'disable' => $disable,
+                    'hide' => '0',
+                    'date_update' => $now,
+                    'user_update' => $currentUser,
+                ]);
+            } else {
+                // INSERT Paket Baru
+                DB::table('m_bandwith')->insert([
+                    'kode_bandwith' => $kodeBandwith,
+                    'nama_bandwith' => $request->nama_bandwith,
+                    'kode_kategori_bandwith' => $request->kode_kategori_bandwith,
+                    'nominal_bandwith' => $newSpeed,
+                    'harga_bandwith' => $newHarga,
+                    'peruntukan_bangunan' => $peruntukanString,
+                    'kategori_bangunan' => is_array($request->peruntukan_bangunan) ? ($request->peruntukan_bangunan[0] ?? 'RUMAH-KANTOR') : $peruntukanString,
+                    'disable' => $disable,
+                    'hide' => '0',
+                    'date_create' => $now,
+                    'user_create' => $currentUser,
+                    'date_update' => $now,
+                    'user_update' => $currentUser,
+                ]);
+            }
+
+            // ===================================================================
+            // CASCADING AUTO-UPDATE: Update Pelanggan & Billing Terkait
+            // ===================================================================
+            $updatedCustomerCount = 0;
+            $updatedBillingCount = 0;
+
+            // 1. Update data master tarif di trx_batchjob_register (Pelanggan)
+            if (Schema::hasTable('trx_batchjob_register')) {
+                $updatedCustomerCount = DB::table('trx_batchjob_register')
+                    ->where('kode_bandwith', $kodeBandwith)
+                    ->update([
+                        'harga_bandwith' => (string) $newHarga,
+                        'nominal_bandwith' => (string) $newSpeed,
+                        'user_update' => $currentUser,
+                        'date_update' => $now,
+                    ]);
+            }
+
+            // 2. Update tagihan billing berjalan yang belum lunas (status 11, 12, 13, 14)
+            if (Schema::hasTable('trx_billing_layanan')) {
+                $unpaidBillings = DB::table('trx_billing_layanan')
+                    ->where('kode_bandwith', $kodeBandwith)
+                    ->whereIn('status_bill_lay', ['11', '12', '13', '14']) // Draft, Published Unpaid, Overdue, Partial
+                    ->get();
+
+                foreach ($unpaidBillings as $bill) {
+                    $potongan = (float) ($bill->potongan ?? 0);
+                    $totalLayanan = max(0, $newHarga - $potongan);
+
+                    DB::table('trx_billing_layanan')
+                        ->where('kode_billing_layanan', $bill->kode_billing_layanan)
+                        ->update([
+                            'nominal_bandwith' => (string) $newSpeed,
+                            'total_layanan' => (string) $totalLayanan,
+                            'user_update' => $currentUser,
+                            'date_update' => $now,
+                        ]);
+
+                    // Update detail invoice item T11
+                    if (Schema::hasTable('trx_billing_layanan_detail')) {
+                        DB::table('trx_billing_layanan_detail')
+                            ->where('kode_billing_layanan', $bill->kode_billing_layanan)
+                            ->where('kode_item', 'T11')
+                            ->update([
+                                'biaya' => (string) $newHarga,
+                                'user_update' => $currentUser,
+                            ]);
+                    }
+
+                    // Log audit trail
+                    if (Schema::hasTable('trx_billing_layanan_log')) {
+                        DB::table('trx_billing_layanan_log')->insert([
+                            'kode_billing_lay_log' => "LOG-TARIFF-" . substr(md5($bill->kode_billing_layanan . microtime()), 0, 16),
+                            'kode_billing_layanan' => $bill->kode_billing_layanan,
+                            'status_bill_lay' => $bill->status_bill_lay,
+                            'note_billing_lay' => "Tarif paket diubah otomatis dari Master Paket menjadi Rp " . number_format($newHarga, 0, ',', '.') . " oleh {$currentUser}",
+                            'date_create' => $now,
+                            'user_create' => $currentUser,
+                            'hide' => '0',
+                        ]);
+                    }
+
+                    $updatedBillingCount++;
+                }
+            }
+
+            DB::commit();
+
+            $msg = "Paket {$request->nama_bandwith} ({$kodeBandwith}) berhasil disimpan!";
+            if ($updatedCustomerCount > 0 || $updatedBillingCount > 0) {
+                $msg .= " Otomatis memperbarui {$updatedCustomerCount} data pelanggan aktif dan {$updatedBillingCount} invoice tagihan berjalan.";
+            }
+
+            return redirect()->route('finance.paket')->with('success', $msg);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', "Gagal menyimpan paket: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus Master Paket Bandwidth
+     */
+    public function deletePaket(Request $request, string $kode_bandwith): RedirectResponse
+    {
+        // Cek jika ada pelanggan aktif yang masih berlangganan paket ini
+        $activeCustomerCount = 0;
+        if (Schema::hasTable('trx_batchjob_register')) {
+            $activeCustomerCount = DB::table('trx_batchjob_register')
+                ->where('kode_bandwith', $kode_bandwith)
+                ->whereNotIn('status_reg', ['23', '23.1', '15']) // Bukan terminasi
+                ->count();
+        }
+
+        if ($activeCustomerCount > 0) {
+            return redirect()->route('finance.paket')->with('error', "Gagal menghapus paket {$kode_bandwith}. Terdapat {$activeCustomerCount} pelanggan aktif yang masih menggunakan paket ini.");
+        }
+
+        DB::table('m_bandwith')->where('kode_bandwith', $kode_bandwith)->delete();
+
+        return redirect()->route('finance.paket')->with('success', "Paket {$kode_bandwith} berhasil dihapus.");
+    }
+
+    /**
      * API Search Pelanggan Aktif (Autocomplete untuk Modal Permintaan)
      */
     public function apiPelangganSearch(Request $request): JsonResponse

@@ -64,21 +64,6 @@
                     </button>
                 </div>
 
-                <!-- Active User Summary Card -->
-                <div class="p-3 mx-3 my-3 rounded-xl bg-slate-950/70 border border-slate-800">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-sm text-blue-400 flex-shrink-0">
-                            {{ substr(auth()->user()->nama, 0, 1) }}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs font-semibold text-white truncate">{{ auth()->user()->nama }}</p>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border mt-0.5 {{ auth()->user()->role_badge_classes }}">
-                                {{ auth()->user()->nama_level }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Sidebar Navigation Menu -->
                 <nav class="flex-1 px-3 py-2 space-y-1.5 overflow-y-auto"
                      x-data="{

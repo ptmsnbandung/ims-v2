@@ -245,24 +245,26 @@ class OltConnectionService
     /**
      * Read stream buffer until any of given prompt delimiters appears
      */
-    private function readUntilPrompt($socket, array $prompts, int $maxWaitSeconds = 3): string
+    private function readUntilPrompt($socket, array $prompts, int $maxWaitSeconds = 4): string
     {
         $buffer = '';
-        $start = time();
+        $start = microtime(true);
 
-        while (!feof($socket) && (time() - $start) < $maxWaitSeconds) {
-            $char = fgetc($socket);
-            if ($char === false) {
-                usleep(50000);
-                continue;
-            }
-            $buffer .= $char;
+        while (!feof($socket) && (microtime(true) - $start) < $maxWaitSeconds) {
+            $chunk = @fread($socket, 256);
+            if ($chunk !== false && strlen($chunk) > 0) {
+                // Strip Telnet negotiation IAC bytes (0xFF 0xFB/0xFC/0xFD/0xFE ...)
+                $clean = preg_replace('/\xFF[\xFB-\xFE]./s', '', $chunk);
+                $buffer .= $clean;
 
-            foreach ($prompts as $prompt) {
-                if (str_ends_with(trim($buffer), $prompt)) {
-                    return $buffer;
+                $trimmed = trim($buffer);
+                foreach ($prompts as $prompt) {
+                    if (str_ends_with($trimmed, $prompt) || str_contains($trimmed, $prompt)) {
+                        return $buffer;
+                    }
                 }
             }
+            usleep(25000); // 25ms sleep
         }
 
         return $buffer;

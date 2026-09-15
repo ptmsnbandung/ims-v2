@@ -1262,8 +1262,6 @@ class TeknikController extends Controller
             'status_reg' => '11', // Menunggu verifikasi
             'group_layanan' => $request->group_layanan ?: 'MEDIANET',
             'nama_sales' => $request->nama_sales,
-            'foto_ktp' => $fotoKtpName,
-            'foto_rumah' => $fotoRumahName,
             'islock' => '0',
             'prorate' => '0',
             'hide' => '0',
@@ -1272,6 +1270,21 @@ class TeknikController extends Controller
             'date_update' => $now,
             'user_update' => $currentUser,
         ]);
+
+        // 3. Inisialisasi trx_instalasi (menyimpan foto KTP & foto Rumah)
+        DB::table('trx_instalasi')->updateOrInsert(
+            ['nomor_internet' => $nomorInternet],
+            [
+                'kode_instalasi' => 'INS-' . $nomorInternet,
+                'foto_ktp' => $fotoKtpName,
+                'foto_rumah' => $fotoRumahName,
+                'user_create' => $currentUser,
+                'date_create' => $now,
+                'date_update' => $now,
+                'user_update' => $currentUser,
+                'hide' => '0',
+            ]
+        );
 
         return redirect()->route('teknik.pendaftaran')
             ->with('success', "Pendaftaran pelanggan baru '{$request->nama_pelanggan}' dengan Nomor Internet {$nomorInternet} berhasil disimpan!")
@@ -1351,21 +1364,34 @@ class TeknikController extends Controller
             'user_update' => $currentUser,
         ];
 
+        $instalasiPayload = [
+            'kode_instalasi' => 'INS-' . $nomorInternet,
+            'date_update' => $now,
+            'user_update' => $currentUser,
+            'hide' => '0',
+        ];
+
         if ($request->hasFile('foto_ktp')) {
             $fotoKtpName = 'ktp_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_ktp')->getClientOriginalExtension();
             $request->file('foto_ktp')->move(public_path('uploads/registrasi'), $fotoKtpName);
-            $updatePayload['foto_ktp'] = $fotoKtpName;
+            $instalasiPayload['foto_ktp'] = $fotoKtpName;
         }
 
         if ($request->hasFile('foto_rumah')) {
             $fotoRumahName = 'rumah_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_rumah')->getClientOriginalExtension();
             $request->file('foto_rumah')->move(public_path('uploads/registrasi'), $fotoRumahName);
-            $updatePayload['foto_rumah'] = $fotoRumahName;
+            $instalasiPayload['foto_rumah'] = $fotoRumahName;
         }
 
         DB::table('trx_batchjob_register')
             ->where('nomor_internet', $nomorInternet)
             ->update($updatePayload);
+
+        DB::table('trx_instalasi')
+            ->updateOrInsert(
+                ['nomor_internet' => $nomorInternet],
+                $instalasiPayload
+            );
 
         return redirect()->route('teknik.pendaftaran')->with('success', "Data pendaftaran pelanggan '{$request->nama_pelanggan}' ({$nomorInternet}) berhasil diperbarui!");
     }

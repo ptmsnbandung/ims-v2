@@ -1185,13 +1185,17 @@ class NocController extends Controller
 
         // 2. Update trx_instalasi (doc_aktivasi & tanggal selesai aktivasi)
         $instalasiData = [
+            'kode_instalasi' => 'INS-' . $nomorInternet,
             'aktivasi_date_start' => $request->jadwal_aktivasi ?: now()->format('Y-m-d'),
             'aktivasi_date_finish' => now()->format('Y-m-d'),
             'aktivasi_time' => $request->waktu_aktivasi ?: now()->format('H:i:s'),
             'aktivasi_team' => $teamAktivasi,
             'aktivasi_note_finish' => $request->catatan_aktivasi ?: ($request->catatan ?: $request->sn_modem),
+            'date_create' => $now,
+            'user_create' => $currentUser,
             'date_update' => $now,
             'user_update' => $currentUser,
+            'hide' => '0',
         ];
         if ($fileName) {
             $instalasiData['doc_aktivasi'] = $fileName;
@@ -1302,9 +1306,13 @@ class NocController extends Controller
             ->updateOrInsert(
                 ['nomor_internet' => $nomorInternet],
                 [
+                    'kode_instalasi' => 'INS-' . $nomorInternet,
                     'aktivasi_date_finish' => now()->format('Y-m-d'),
+                    'date_create' => $now,
+                    'user_create' => $currentUser,
                     'date_update' => $now,
                     'user_update' => $currentUser,
+                    'hide' => '0',
                 ]
             );
 

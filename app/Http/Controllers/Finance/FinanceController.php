@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Services\MidtransService;
+use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -1558,6 +1559,8 @@ class FinanceController extends Controller
             'collect_payment' => '0',
             'date_create' => $now,
             'user_create' => $currentUser,
+            'date_update' => $now,
+            'user_update' => $currentUser,
             'hide' => '0',
         ]);
 
@@ -1870,7 +1873,7 @@ class FinanceController extends Controller
         ]);
 
         $now = Carbon::now()->toDateTimeString();
-        $currentUser = Auth::user()?->nama ?? 'FINANCE';
+        $currentUser = substr(Auth::user()?->username ?? (Auth::user()?->nama ?? 'FINANCE'), 0, 20);
         $kodeBandwith = trim($request->kode_bandwith);
 
         $peruntukanString = 'RUMAH-KANTOR';
@@ -1933,14 +1936,19 @@ class FinanceController extends Controller
 
             // 1. Update data master tarif di trx_batchjob_register (Pelanggan)
             if (Schema::hasTable('trx_batchjob_register')) {
+                $custUpdate = [
+                    'user_update' => $currentUser,
+                    'date_update' => $now,
+                ];
+                if (Schema::hasColumn('trx_batchjob_register', 'harga_bandwith')) {
+                    $custUpdate['harga_bandwith'] = (string) $newHarga;
+                }
+                if (Schema::hasColumn('trx_batchjob_register', 'nominal_bandwith')) {
+                    $custUpdate['nominal_bandwith'] = (string) $newSpeed;
+                }
                 $updatedCustomerCount = DB::table('trx_batchjob_register')
                     ->where('kode_bandwith', $kodeBandwith)
-                    ->update([
-                        'harga_bandwith' => (string) $newHarga,
-                        'nominal_bandwith' => (string) $newSpeed,
-                        'user_update' => $currentUser,
-                        'date_update' => $now,
-                    ]);
+                    ->update($custUpdate);
             }
 
             // 2. Update tagihan billing berjalan yang belum lunas (status 11, 12, 13, 14)

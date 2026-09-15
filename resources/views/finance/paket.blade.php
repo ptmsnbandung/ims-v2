@@ -252,13 +252,14 @@
                     @forelse($pakets as $paket)
                         @php
                             $katName = $paket->nama_kategori_bandwith ?: ($paket->alias_nama_kategori ?: 'BROADBAND');
-                            $peruntukanList = explode(',', $paket->peruntukan_bangunan ?: 'RUMAH-KANTOR');
+                            $rawPeruntukan = $paket->peruntukan_bangunan ?: ($paket->kategori_bangunan ?: 'RUMAH-KANTOR');
+                            $peruntukanList = array_filter(array_map('trim', explode(',', $rawPeruntukan)));
                         @endphp
                         <tr class="hover:bg-slate-800/50 transition">
                             <!-- 1. Kode Paket -->
                             <td class="py-4 px-5">
                                 <span class="font-mono font-bold text-white text-xs tracking-wide">
-                                    {{ $paket->kode_bandwith }}
+                                     {{ $paket->kode_bandwith }}
                                 </span>
                             </td>
 
@@ -288,12 +289,22 @@
                             <td class="py-4 px-5">
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     @foreach($peruntukanList as $pTag)
-                                        @php $pTag = trim($pTag); @endphp
-                                        @if(!empty($pTag))
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                                {{ $pTag }}
-                                            </span>
-                                        @endif
+                                        @php
+                                            $tagUpper = strtoupper(trim($pTag));
+                                            $badgeClass = match($tagUpper) {
+                                                'KOS-KOSAN' => 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+                                                'RUMAH-PRIBADI' => 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+                                                'RUMAH-KANTOR' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                                                'RUKO' => 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+                                                'APARTEMEN' => 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+                                                'GEDUNG' => 'bg-teal-500/15 text-teal-300 border-teal-500/30',
+                                                'OUTDOOR/EVENT' => 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+                                                default => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                            };
+                                        @endphp
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide border {{ $badgeClass }}">
+                                            {{ $tagUpper }}
+                                        </span>
                                     @endforeach
                                 </div>
                             </td>

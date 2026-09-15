@@ -1647,6 +1647,87 @@ class FinanceController extends Controller
                     }
                 });
             }
+
+            // Auto-populate peruntukan_bangunan for existing packages if empty
+            if (Schema::hasTable('m_bandwith')) {
+                $emptyPackages = DB::table('m_bandwith')
+                    ->where(function($q) {
+                        $q->whereNull('peruntukan_bangunan')
+                          ->orWhere('peruntukan_bangunan', '')
+                          ->orWhere('peruntukan_bangunan', 'RUMAH-KANTOR'); // re-evaluate default fallback
+                    })
+                    ->get();
+
+                if ($emptyPackages->isNotEmpty()) {
+                    // Check actual building usage in customer registers
+                    $regBuildings = [];
+                    if (Schema::hasTable('trx_batchjob_register') && Schema::hasColumn('trx_batchjob_register', 'jenis_bangunan')) {
+                        $usage = DB::table('trx_batchjob_register')
+                            ->select('kode_bandwith', 'jenis_bangunan')
+                            ->whereNotNull('jenis_bangunan')
+                            ->where('jenis_bangunan', '!=', '')
+                            ->distinct()
+                            ->get();
+
+                        foreach ($usage as $u) {
+                            $regBuildings[$u->kode_bandwith][] = strtoupper(trim($u->jenis_bangunan));
+                        }
+                    }
+
+                    foreach ($emptyPackages as $pkg) {
+                        $assigned = [];
+                        if (!empty($regBuildings[$pkg->kode_bandwith])) {
+                            $assigned = array_values(array_unique($regBuildings[$pkg->kode_bandwith]));
+                        } else {
+                            // Smart assignment based on category and nominal speed
+                            $kat = strtoupper($pkg->kode_kategori_bandwith ?? '');
+                            $speed = (int) ($pkg->nominal_bandwith ?? 0);
+
+                            if (str_contains($kat, 'KB02') || str_contains($kat, 'LAST') || $speed >= 1000) {
+                                $assigned = ['RUMAH-KANTOR', 'GEDUNG', 'OUTDOOR/EVENT'];
+                            } elseif (str_contains($kat, 'KB01') || str_contains($kat, 'CORP') || str_contains($kat, 'DEDICATED')) {
+                                if ($speed >= 100) {
+                                    $assigned = ['RUMAH-KANTOR', 'GEDUNG'];
+                                } elseif ($speed >= 50) {
+                                    $assigned = ['RUMAH-KANTOR', 'RUKO'];
+                                } else {
+                                    $assigned = ['RUMAH-KANTOR'];
+                                }
+                            } elseif (str_contains($kat, 'KB04') || str_contains($kat, 'HOME')) {
+                                $assigned = ['RUMAH-PRIBADI', 'KOS-KOSAN'];
+                            } elseif (str_contains($kat, 'KB03') || str_contains($kat, 'BROAD')) {
+                                if ($speed <= 30) {
+                                    $assigned = ['RUMAH-PRIBADI', 'KOS-KOSAN'];
+                                } else {
+                                    $assigned = ['RUMAH-PRIBADI', 'APARTEMEN'];
+                                }
+                            } elseif (str_contains($kat, 'KB06') || str_contains($kat, 'BUSI')) {
+                                $assigned = ['RUMAH-KANTOR', 'RUKO', 'GEDUNG'];
+                            } elseif (str_contains($kat, 'KB08') || str_contains($kat, 'EVENT')) {
+                                $assigned = ['OUTDOOR/EVENT', 'GEDUNG'];
+                            } else {
+                                if ($speed >= 100) {
+                                    $assigned = ['RUMAH-KANTOR', 'GEDUNG'];
+                                } elseif ($speed >= 50) {
+                                    $assigned = ['RUMAH-PRIBADI', 'RUMAH-KANTOR'];
+                                } else {
+                                    $assigned = ['RUMAH-PRIBADI', 'KOS-KOSAN'];
+                                }
+                            }
+                        }
+
+                        $cleanName = $pkg->nama_bandwith ?: ("Paket " . ($pkg->nominal_bandwith ?: 50) . " Mbps");
+
+                        DB::table('m_bandwith')
+                            ->where('kode_bandwith', $pkg->kode_bandwith)
+                            ->update([
+                                'peruntukan_bangunan' => implode(',', $assigned),
+                                'kategori_bangunan' => $assigned[0] ?? 'RUMAH-KANTOR',
+                                'nama_bandwith' => $cleanName,
+                            ]);
+                    }
+                }
+            }
         } catch (\Throwable $e) {
             Log::warning("Auto-ensure m_bandwith columns: " . $e->getMessage());
         }
@@ -1708,9 +1789,6 @@ class FinanceController extends Controller
             if (empty($p->nama_bandwith)) {
                 $p->nama_bandwith = "Paket {$p->nominal_bandwith} Mbps";
             }
-            if (empty($p->peruntukan_bangunan)) {
-                $p->peruntukan_bangunan = 'RUMAH-KANTOR';
-            }
         }
 
         // List Kategori untuk dropdown
@@ -1733,6 +1811,17 @@ class FinanceController extends Controller
             'GEDUNG' => 'GEDUNG',
             'OUTDOOR/EVENT' => 'OUTDOOR/EVENT',
         ];
+
+        // Merge extra types from database if exists
+        if (Schema::hasTable('m_jns_bangunan')) {
+            $dbBangunan = DB::table('m_jns_bangunan')->where('hide', '0')->pluck('jenis_bangunan')->filter();
+            foreach ($dbBangunan as $b) {
+                $bUpper = strtoupper(trim($b));
+                if (!empty($bUpper) && !isset($buildingTypes[$bUpper])) {
+                    $buildingTypes[$bUpper] = $bUpper;
+                }
+            }
+        }
 
         $buildingCounts = [];
         foreach ($buildingTypes as $key => $label) {

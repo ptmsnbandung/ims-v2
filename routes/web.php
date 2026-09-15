@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\FinanceController;
@@ -18,6 +19,23 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Routes Role Master Admin & Direktur
+    Route::middleware('role:admin,direktur')->prefix('admin')->name('admin.')->group(function () {
+        // 1. User Management & Access Rights
+        Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+        Route::match(['POST', 'PUT'], '/users/{kode_pengguna}/update', [AdminController::class, 'updateUser'])->name('users.update');
+        Route::match(['POST', 'PUT'], '/users/{kode_pengguna}', [AdminController::class, 'updateUser']);
+        Route::match(['POST', 'PATCH'], '/users/{kode_pengguna}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
+        Route::match(['POST', 'DELETE'], '/users/{kode_pengguna}/delete', [AdminController::class, 'deleteUser'])->name('users.delete');
+        Route::match(['POST', 'DELETE'], '/users/{kode_pengguna}', [AdminController::class, 'deleteUser']);
+
+        // 2. Master Paket Internet & Layanan Bandwidth
+        Route::get('/paket', [AdminController::class, 'paket'])->name('paket');
+        Route::post('/paket/store', [AdminController::class, 'storePaket'])->name('paket.store');
+        Route::match(['POST', 'DELETE'], '/paket/{kode_bandwith}/delete', [AdminController::class, 'deletePaket'])->name('paket.delete')->where('kode_bandwith', '.*');
+    });
 
     // Routes Role Teknik & NOC & Direktur
     Route::middleware('role:teknik,noc,direktur')->prefix('teknik')->name('teknik.')->group(function () {
@@ -165,10 +183,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/billing-registrasi/{kode_billing}/change-payment-method', [FinanceController::class, 'changePaymentMethodRegistrasi'])->name('billing-registrasi.change-payment-method')->where('kode_billing', '.*');
         Route::get('/billing-registrasi/export', [FinanceController::class, 'exportBillingRegistrasi'])->name('billing-registrasi.export');
         Route::get('/api/billing-registrasi-detail', [FinanceController::class, 'getBillingRegistrasiDetail'])->name('billing-registrasi.detail.query');
-        // 3. Master Paket Internet & Layanan Bandwidth (Finance)
-        Route::get('/paket', [FinanceController::class, 'paket'])->name('paket');
-        Route::post('/paket/store', [FinanceController::class, 'storePaket'])->name('paket.store');
-        Route::post('/paket/{kode_bandwith}/delete', [FinanceController::class, 'deletePaket'])->name('paket.delete')->where('kode_bandwith', '.*');
+
+        // 3. Master Paket Internet & Layanan Bandwidth (Redirect to Admin)
+        Route::get('/paket', fn() => redirect()->route('admin.paket'))->name('paket');
+        Route::post('/paket/store', [AdminController::class, 'storePaket'])->name('paket.store');
+        Route::post('/paket/{kode_bandwith}/delete', [AdminController::class, 'deletePaket'])->name('paket.delete')->where('kode_bandwith', '.*');
 
         // 4. Permintaan ke NOC: UP / Downgrade Bandwidth Layanan
         Route::get('/permintaan/up-downgrade', [FinanceController::class, 'upDowngrade'])->name('permintaan.up-downgrade');
@@ -190,3 +209,4 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/pelanggan-search', [FinanceController::class, 'apiPelangganSearch'])->name('api.pelanggan-search');
     });
 });
+

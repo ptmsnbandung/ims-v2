@@ -145,7 +145,15 @@ class Pengguna extends Model implements AuthenticatableContract
         $namaLevel = strtolower($this->level?->nama_level ?? '');
         $kodeLevel = $this->kode_level;
 
-        return str_contains($namaLevel, 'direktur') || $kodeLevel === 'lv67752' || $this->level?->level === 1;
+        return str_contains($namaLevel, 'direktur') || str_contains($namaLevel, 'admin') || $kodeLevel === 'lv67752' || $this->level?->level === 1;
+    }
+
+    /**
+     * Check if user is Admin / Master Admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->isDirektur() || str_contains(strtolower($this->username ?? ''), 'admin');
     }
 
     /**
@@ -168,7 +176,7 @@ class Pengguna extends Model implements AuthenticatableContract
             if ($roleLower === 'finance' && $this->isFinance()) {
                 return true;
             }
-            if (($roleLower === 'direktur' || $roleLower === 'admin') && $this->isDirektur()) {
+            if (($roleLower === 'direktur' || $roleLower === 'admin' || $roleLower === 'administrator') && $this->isAdmin()) {
                 return true;
             }
         }
@@ -181,17 +189,25 @@ class Pengguna extends Model implements AuthenticatableContract
      */
     public function getRoleBadgeClassesAttribute(): string
     {
-        if ($this->isTeknik()) {
-            return 'bg-sky-500/10 text-sky-400 border-sky-500/30';
-        }
-        if ($this->isNoc()) {
-            return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+        if ($this->isAdmin()) {
+            return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
         }
         if ($this->isFinance()) {
+            return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        }
+        if ($this->isNoc()) {
+            return 'bg-sky-500/10 text-sky-400 border-sky-500/30';
+        }
+        if ($this->isTeknik()) {
+            return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
+        }
+
+        $namaLevel = strtolower($this->level?->nama_level ?? '');
+        if (str_contains($namaLevel, 'sales') || str_contains($namaLevel, 'salses')) {
             return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
         }
-        if ($this->isDirektur()) {
-            return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+        if (str_contains($namaLevel, 'legal') || str_contains($namaLevel, 'customer')) {
+            return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
         }
 
         return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
@@ -202,19 +218,19 @@ class Pengguna extends Model implements AuthenticatableContract
      */
     public function getRoleDescriptionAttribute(): string
     {
-        if ($this->isTeknik()) {
-            return 'Drafter & Pendaftaran Pelanggan Baru';
+        if ($this->isAdmin()) {
+            return 'Master Admin & Akses Penuh Sistem';
+        }
+        if ($this->isFinance()) {
+            return 'Manajemen Keuangan, Billing Tagihan, & Invoicing';
         }
         if ($this->isNoc()) {
             return 'Eksekusi Jaringan, Aktivasi, Suspend, & Terminasi';
         }
-        if ($this->isFinance()) {
-            return 'Manajemen Keuangan, Billing Tagihan, & Request Suspend';
-        }
-        if ($this->isDirektur()) {
-            return 'Direktur & Akses Penuh Sistem';
+        if ($this->isTeknik()) {
+            return 'Drafter & Pendaftaran Pelanggan Baru';
         }
 
-        return 'Pengguna Sistem IMS';
+        return $this->nama_level ?? 'Pengguna Sistem IMS';
     }
 }

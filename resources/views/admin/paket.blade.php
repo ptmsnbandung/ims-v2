@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Master Paket Internet & Layanan Bandwidth - Finance IMS')
+@section('title', 'Master Paket Internet & Layanan Bandwidth - Master Admin IMS')
 @section('page_title', 'Master Paket Internet')
 
 @section('content')
@@ -70,7 +70,7 @@
 
         confirmDelete(kode, name) {
             this.paketToDelete = { kode: kode, name: name };
-            this.deleteActionUrl = '{{ url('/finance/paket') }}/' + encodeURIComponent(kode) + '/delete';
+            this.deleteActionUrl = '{{ url('/admin/paket') }}/' + encodeURIComponent(kode) + '/delete';
             this.deleteModalOpen = true;
         }
      }">
@@ -163,7 +163,7 @@
         <div class="inline-flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl backdrop-blur-xl max-w-full">
             
             <!-- All -->
-            <a href="{{ route('finance.paket', array_merge(request()->query(), ['bangunan' => 'all'])) }}"
+            <a href="{{ route('admin.paket', array_merge(request()->query(), ['bangunan' => 'all'])) }}"
                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedBangunan === 'all' || empty($selectedBangunan) ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                 <span>Semua Bangunan</span>
             </a>
@@ -171,7 +171,7 @@
             <!-- Each Building Category -->
             @foreach($buildingTypes as $bKey => $bLabel)
                 @php $cnt = $buildingCounts[$bKey] ?? 0; @endphp
-                <a href="{{ route('finance.paket', array_merge(request()->query(), ['bangunan' => $bKey])) }}"
+                <a href="{{ route('admin.paket', array_merge(request()->query(), ['bangunan' => $bKey])) }}"
                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap {{ $selectedBangunan === $bKey ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                     <span>{{ $bLabel }}</span>
                     <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $selectedBangunan === $bKey ? 'bg-white/20 text-white' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20' }}">
@@ -190,7 +190,7 @@
         
         <!-- Search Bar Top Right -->
         <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 border-b border-slate-800 bg-slate-900/60">
-            <form method="GET" action="{{ route('finance.paket') }}" class="relative w-full sm:w-80">
+            <form method="GET" action="{{ route('admin.paket') }}" class="relative w-full sm:w-80">
                 @if($selectedBangunan !== 'all')
                     <input type="hidden" name="bangunan" value="{{ $selectedBangunan }}">
                 @endif
@@ -402,7 +402,7 @@
             </div>
 
             <!-- Form -->
-            <form action="{{ route('finance.paket.store') }}" method="POST" class="space-y-4">
+            <form action="{{ route('admin.paket.store') }}" method="POST" class="space-y-4">
                 @csrf
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

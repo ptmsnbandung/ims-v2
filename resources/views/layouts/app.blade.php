@@ -386,16 +386,6 @@
                         <span>Billing Registrasi</span>
                     </a>
 
-                    <!-- Master Paket Internet & Bandwidth -->
-                    <a href="{{ route('finance.paket') }}"
-                       class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition {{ request()->routeIs('finance.paket*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-slate-300 hover:bg-slate-800/60 hover:text-white' }}">
-                        <!-- Wifi / Signal Icon -->
-                        <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.paket*') ? 'text-white' : 'text-slate-400' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
-                        </svg>
-                        <span>Master Paket</span>
-                    </a>
-
                     <!-- Permintaan ke NOC (Accordion) -->
                     <div x-data="{ permintaanFinanceOpen: {{ request()->routeIs('finance.permintaan.*') ? 'true' : 'false' }} }">
                         <button type="button"
@@ -438,6 +428,38 @@
                     </div>
                     @endif
 
+                    @if(auth()->user()?->hasRole(['admin', 'direktur']))
+                    <!-- ============================================== -->
+                    <!-- MASTER ADMIN SECTION                           -->
+                    <!-- ============================================== -->
+                    <div class="pt-3 pb-1">
+                        <div class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                            <span>Master Admin</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                        </div>
+                    </div>
+
+                    <!-- 1. Manajemen User -->
+                    <a href="{{ route('admin.users') }}"
+                       class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition {{ request()->routeIs('admin.users*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-slate-300 hover:bg-slate-800/60 hover:text-white' }}">
+                        <!-- Users Shield / Management Icon -->
+                        <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.users*') ? 'text-white' : 'text-slate-400' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                        </svg>
+                        <span>Manajemen User</span>
+                    </a>
+
+                    <!-- 2. Master Paket Internet -->
+                    <a href="{{ route('admin.paket') }}"
+                       class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition {{ request()->routeIs('admin.paket*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25' : 'text-slate-300 hover:bg-slate-800/60 hover:text-white' }}">
+                        <!-- Wifi / Signal Icon -->
+                        <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.paket*') ? 'text-white' : 'text-slate-400' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
+                        </svg>
+                        <span>Master Paket</span>
+                    </a>
+                    @endif
+
                     <!-- 6. Keluar -->
                     <div class="pt-2">
                         <form action="{{ route('logout') }}" method="POST">
@@ -456,7 +478,9 @@
 
                 <!-- Sidebar Footer Info -->
                 <div class="p-3 border-t border-slate-800/80 text-center">
-                    @if(auth()->user()?->isFinance())
+                    @if(auth()->user()?->isAdmin() || auth()->user()?->isDirektur())
+                        <span class="text-[11px] text-rose-400/90 font-medium">Master Admin &middot; v1.0</span>
+                    @elseif(auth()->user()?->isFinance())
                         <span class="text-[11px] text-amber-400/90 font-medium">Modul Finance &middot; v1.0</span>
                     @elseif(auth()->user()?->isNoc())
                         <span class="text-[11px] text-indigo-400/90 font-medium">Modul NOC &middot; v1.0</span>

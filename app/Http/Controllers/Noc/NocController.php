@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Noc;
 
 use App\Http\Controllers\Controller;
+use App\Services\Olt\OltConnectionService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -365,51 +368,270 @@ class NocController extends Controller
     {
         $search = $request->query('search');
 
-        $query = DB::table('m_olt');
+        $query = DB::table('m_olt')
+            ->leftJoin('m_pop', 'm_olt.kode_pop', '=', 'm_pop.kode_pop')
+            ->select('m_olt.*', 'm_pop.nama_pop');
+
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('name_olt', 'like', "%{$search}%")
-                  ->orWhere('kode_olt', 'like', "%{$search}%")
-                  ->orWhere('note_olt', 'like', "%{$search}%");
+                $q->where('m_olt.name_olt', 'like', "%{$search}%")
+                  ->orWhere('m_olt.kode_olt', 'like', "%{$search}%")
+                  ->orWhere('m_olt.brand', 'like', "%{$search}%")
+                  ->orWhere('m_olt.ip_address', 'like', "%{$search}%")
+                  ->orWhere('m_pop.nama_pop', 'like', "%{$search}%");
             });
         }
+
         $olts = $query->paginate(10)->withQueryString();
+
+        // Hitung total OLT & total PON Port & Registered PON
+        $totalOlt = DB::table('m_olt')->count();
+        $totalPonPort = DB::table('m_olt')->sum('capacity_olt') ?: 0;
+        if ($totalPonPort == 0 && $totalOlt > 0) {
+            $totalPonPort = $totalOlt * 8; // fallback default 8 port/olt
+        }
+
+        // Hitung status PON aktif / terdaftar per OLT
+        $registeredPonCounts = [];
+        foreach ($olts as $olt) {
+            $count = DB::table('trx_batchjob_register')
+                ->where(function($q) use ($olt) {
+                    $q->where('olt', $olt->kode_olt)
+                      ->orWhere('kode_pop', $olt->kode_pop ?? 'non_existent');
+                })
+                ->whereNotNull('index_olt')
+                ->where('index_olt', '!=', '')
+                ->whereNotIn('status_reg', ['23', '23.1', '15'])
+                ->count();
+
+            $registeredPonCounts[$olt->kode_olt] = $count;
+        }
 
         $gpons = Schema::hasTable('m_gpon') ? DB::table('m_gpon')->get() : collect();
         $pons = Schema::hasTable('m_pon') ? DB::table('m_pon')->get() : collect();
+        $pops = DB::table('m_pop')->where('hide', '!=', '1')->get();
 
         return view('noc.olt', [
             'user' => $request->user(),
             'olts' => $olts,
+            'totalOlt' => $totalOlt,
+            'totalPonPort' => $totalPonPort,
+            'registeredPonCounts' => $registeredPonCounts,
             'gpons' => $gpons,
             'pons' => $pons,
+            'pops' => $pops,
             'search' => $search,
         ]);
     }
 
     /**
-     * Store OLT Baru
+     * Form Tambah OLT Baru
+     */
+    public function oltCreate(Request $request): View
+    {
+        $pops = DB::table('m_pop')->where('hide', '!=', '1')->orderBy('nama_pop')->get();
+
+        return view('noc.olt-create', [
+            'user' => $request->user(),
+            'pops' => $pops,
+        ]);
+    }
+
+    /**
+     * Form Edit OLT
+     */
+    public function oltEdit(Request $request, string $kode_olt): View
+    {
+        $olt = DB::table('m_olt')->where('kode_olt', $kode_olt)->first();
+
+        if (!$olt) {
+            abort(404, 'Data OLT tidak ditemukan.');
+        }
+
+        $pops = DB::table('m_pop')->where('hide', '!=', '1')->orderBy('nama_pop')->get();
+
+        return view('noc.olt-edit', [
+            'user' => $request->user(),
+            'olt' => $olt,
+            'pops' => $pops,
+        ]);
+    }
+
+    /**
+     * Store / Update OLT
      */
     public function storeOlt(Request $request): RedirectResponse
     {
         $request->validate([
-            'kode_olt' => 'required|string|max:50',
             'name_olt' => 'required|string|max:150',
+            'kode_olt' => 'nullable|string|max:50',
+            'hostname' => 'nullable|string|max:100',
+            'ip_address' => 'required|string|max:50',
+            'brand' => 'nullable|string|max:100',
+            'model' => 'nullable|string|max:100',
+            'kode_pop' => 'nullable|string|max:50',
             'capacity_olt' => 'nullable|integer',
+            'snmp_port' => 'nullable|integer',
+            'snmp_version' => 'nullable|string|max:10',
+            'snmp_community' => 'nullable|string|max:50',
+            'protocol' => 'nullable|string|in:telnet,ssh',
+            'port' => 'nullable|integer',
+            'username' => 'nullable|string|max:100',
+            'password' => 'nullable|string',
+            'enable_password' => 'nullable|string',
             'note_olt' => 'nullable|string',
         ]);
 
+        // Generate kode_olt jika kosong berdasarkan hostname atau name
+        $kodeOlt = $request->kode_olt;
+        if (empty($kodeOlt)) {
+            $kodeOlt = !empty($request->hostname) ? strtoupper(str_replace(' ', '-', $request->hostname)) : 'OLT-' . strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $request->name_olt), 0, 10));
+        }
+
+        $data = [
+            'name_olt' => $request->name_olt,
+            'hostname' => $request->hostname,
+            'ip_address' => $request->ip_address,
+            'brand' => $request->brand,
+            'model' => $request->model,
+            'kode_pop' => $request->kode_pop,
+            'capacity_olt' => $request->capacity_olt ?? 8,
+            'snmp_port' => $request->snmp_port ?? 161,
+            'snmp_version' => $request->snmp_version ?? 'v2c',
+            'snmp_community' => $request->snmp_community ?? 'public',
+            'protocol' => $request->protocol ?? 'telnet',
+            'port' => $request->port ?? ($request->protocol === 'ssh' ? 22 : 23),
+            'username' => $request->username,
+            'note_olt' => $request->note_olt,
+            'kode_w' => $request->kode_w ?? 'W1',
+        ];
+
+        // Enkripsi password jika diisi
+        if ($request->filled('password')) {
+            $data['password'] = Crypt::encryptString($request->password);
+        }
+
+        if ($request->filled('enable_password')) {
+            $data['enable_password'] = Crypt::encryptString($request->enable_password);
+        }
+
         DB::table('m_olt')->updateOrInsert(
-            ['kode_olt' => $request->kode_olt],
-            [
-                'name_olt' => $request->name_olt,
-                'capacity_olt' => $request->capacity_olt ?? 0,
-                'note_olt' => $request->note_olt,
-                'kode_w' => $request->kode_w ?? 'W1',
-            ]
+            ['kode_olt' => $kodeOlt],
+            $data
         );
 
-        return redirect()->route('noc.olt')->with('success', 'Data OLT berhasil disimpan!');
+        if ($request->input('action') === 'create_and_another') {
+            return redirect()->route('noc.olt.create')->with('success', "OLT {$request->name_olt} berhasil disimpan! Silakan input OLT berikutnya.");
+        }
+
+        return redirect()->route('noc.olt')->with('success', "Data OLT {$request->name_olt} berhasil disimpan!");
+    }
+
+    /**
+     * Hapus OLT
+     */
+    public function deleteOlt(Request $request, string $kode_olt): RedirectResponse
+    {
+        // Cek jika ada pelanggan yang terhubung
+        $attachedCount = DB::table('trx_batchjob_register')
+            ->where('olt', $kode_olt)
+            ->whereNotNull('index_olt')
+            ->where('index_olt', '!=', '')
+            ->whereNotIn('status_reg', ['23', '23.1', '15'])
+            ->count();
+
+        if ($attachedCount > 0) {
+            return redirect()->route('noc.olt')->with('error', "Gagal menghapus OLT {$kode_olt}. Terdapat {$attachedCount} pelanggan aktif yang masih terhubung pada OLT ini.");
+        }
+
+        DB::table('m_olt')->where('kode_olt', $kode_olt)->delete();
+
+        return redirect()->route('noc.olt')->with('success', "Data OLT {$kode_olt} berhasil dihapus.");
+    }
+
+    /**
+     * AJAX: Test Koneksi ke OLT (Ping / Socket Handshake)
+     */
+    public function testOltConnection(Request $request, OltConnectionService $oltService): JsonResponse
+    {
+        $request->validate([
+            'ip_address' => 'required|string',
+            'port' => 'nullable|integer',
+            'protocol' => 'nullable|string',
+            'username' => 'nullable|string',
+            'password' => 'nullable|string',
+            'enable_password' => 'nullable|string',
+        ]);
+
+        $ip = trim($request->ip_address);
+        $port = (int)($request->port ?: ($request->protocol === 'ssh' ? 22 : 23));
+        $protocol = $request->protocol ?: 'telnet';
+
+        $res = $oltService->testConnection([
+            'ip_address' => $ip,
+            'port' => $port,
+            'protocol' => $protocol,
+            'username' => $request->username,
+            'password' => $request->password,
+            'enable_password' => $request->enable_password,
+        ]);
+
+        return response()->json($res);
+    }
+
+    /**
+     * AJAX: Live Sync Status Port GPON dari OLT Fisik
+     */
+    public function syncLiveGpon(Request $request, OltConnectionService $oltService): JsonResponse
+    {
+        $request->validate([
+            'kode_olt' => 'required|string',
+            'port' => 'required|string',
+        ]);
+
+        $olt = DB::table('m_olt')->where('kode_olt', $request->kode_olt)->first();
+
+        if (!$olt) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data OLT tidak ditemukan di database.',
+            ], 404);
+        }
+
+        $res = $oltService->getLivePortSlots($olt, $request->port);
+
+        // Update timestamp sync pada tabel m_olt jika berhasil
+        if ($res['success']) {
+            DB::table('m_olt')->where('kode_olt', $request->kode_olt)->update([
+                'last_sync_at' => now(),
+                'last_status' => 'online',
+            ]);
+        }
+
+        return response()->json($res);
+    }
+
+    /**
+     * AJAX: Scan ONU Unconfigured (Modem Baru) dari OLT
+     */
+    public function scanUncfgOnu(Request $request, OltConnectionService $oltService): JsonResponse
+    {
+        $request->validate([
+            'kode_olt' => 'required|string',
+        ]);
+
+        $olt = DB::table('m_olt')->where('kode_olt', $request->kode_olt)->first();
+
+        if (!$olt) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data OLT tidak ditemukan.',
+            ], 404);
+        }
+
+        $res = $oltService->scanUnconfiguredOnu($olt);
+
+        return response()->json($res);
     }
 
     /**

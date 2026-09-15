@@ -88,8 +88,14 @@ Route::middleware('auth')->group(function () {
 
         // 2. Infrastruktur: OLT, GPON, & Port PON
         Route::get('/olt', [NocController::class, 'olt'])->name('olt');
-        Route::get('/gpon', [NocController::class, 'gponTopology'])->name('gpon');
+        Route::get('/olt/create', [NocController::class, 'oltCreate'])->name('olt.create');
+        Route::get('/olt/{kode_olt}/edit', [NocController::class, 'oltEdit'])->name('olt.edit');
         Route::post('/olt/store', [NocController::class, 'storeOlt'])->name('olt.store');
+        Route::post('/olt/{kode_olt}/delete', [NocController::class, 'deleteOlt'])->name('olt.delete');
+        Route::post('/olt/test-connection', [NocController::class, 'testOltConnection'])->name('olt.test-connection');
+        Route::post('/olt/sync-live', [NocController::class, 'syncLiveGpon'])->name('olt.sync-live');
+        Route::post('/olt/scan-uncfg', [NocController::class, 'scanUncfgOnu'])->name('olt.scan-uncfg');
+        Route::get('/gpon', [NocController::class, 'gponTopology'])->name('gpon');
         Route::post('/pon/store', [NocController::class, 'storePon'])->name('pon.store');
 
         // 3. Infrastruktur: ODP (Optical Distribution Point)

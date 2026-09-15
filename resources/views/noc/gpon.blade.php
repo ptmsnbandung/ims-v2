@@ -6,15 +6,70 @@
 @section('content')
 <div class="space-y-6"
      x-data="{
-         slotDetailModalOpen: false,
-         selectedSlotData: null,
+        slotDetailModalOpen: false,
+        selectedSlotData: null,
+        syncingLive: false,
+        liveSyncStatus: null,
+        uncfgModalOpen: false,
+        scanningUncfg: false,
+        uncfgList: [],
 
-         openSlotDetail(slot) {
-             if (slot.customer) {
-                 this.selectedSlotData = slot;
-                 this.slotDetailModalOpen = true;
-             }
-         }
+        openSlotDetail(slot) {
+            if (slot.customer) {
+                this.selectedSlotData = slot;
+                this.slotDetailModalOpen = true;
+            }
+        },
+
+        async syncLiveOlt() {
+            this.syncingLive = true;
+            this.liveSyncStatus = null;
+            try {
+                const res = await fetch('{{ route('noc.olt.sync-live') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        kode_olt: '{{ $selectedOlt }}',
+                        port: '{{ $selectedPort }}'
+                    })
+                });
+                const data = await res.json();
+                this.liveSyncStatus = data;
+            } catch (e) {
+                this.liveSyncStatus = { success: false, message: 'Koneksi error: ' + e.message };
+            } finally {
+                this.syncingLive = false;
+            }
+        },
+
+        async scanUncfg() {
+            this.uncfgModalOpen = true;
+            this.scanningUncfg = true;
+            this.uncfgList = [];
+            try {
+                const res = await fetch('{{ route('noc.olt.scan-uncfg') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        kode_olt: '{{ $selectedOlt }}'
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.uncfgList = data.data || [];
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.scanningUncfg = false;
+            }
+        }
      }">
 
     <!-- Top Hero Banner -->
@@ -34,17 +89,52 @@
                 </p>
             </div>
 
-            <!-- Quick Links -->
-            <div class="flex items-center gap-2.5">
-                <a href="{{ route('noc.olt') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition">
-                    <span>Master OLT Gateway</span>
-                </a>
-                <a href="{{ route('noc.aktivasi') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition">
-                    <span>Aktivasi Jaringan</span>
+            <!-- Quick Links & Live Actions -->
+            <div class="flex flex-wrap items-center gap-2">
+                @if($selectedOlt !== 'all')
+                    <button type="button" 
+                            @click="syncLiveOlt()"
+                            :disabled="syncingLive"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-500/25 transition cursor-pointer disabled:opacity-50">
+                        <template x-if="!syncingLive">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                            </svg>
+                        </template>
+                        <template x-if="syncingLive">
+                            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        </template>
+                        <span x-text="syncingLive ? 'Syncing...' : '⚡ Sync Live OLT'"></span>
+                    </button>
+
+                    <button type="button" 
+                            @click="scanUncfg()"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-500/25 transition cursor-pointer">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                        <span>🔍 Scan ONU Baru</span>
+                    </button>
+                @endif
+
+                <a href="{{ route('noc.olt') }}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition">
+                    <span>Master OLT</span>
                 </a>
             </div>
         </div>
     </div>
+
+    <!-- Live Sync Alert Feedback -->
+    <template x-if="liveSyncStatus">
+        <div :class="liveSyncStatus.success ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'"
+             class="p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between shadow-lg">
+            <div class="flex items-center gap-2.5">
+                <span :class="liveSyncStatus.success ? 'bg-emerald-400' : 'bg-rose-400'" class="w-2.5 h-2.5 rounded-full animate-ping"></span>
+                <span x-text="liveSyncStatus.message"></span>
+            </div>
+            <button type="button" @click="liveSyncStatus = null" class="text-slate-400 hover:text-white font-bold text-sm">&times;</button>
+        </div>
+    </template>
 
     <!-- =================================================================== -->
     <!-- STEP 1 & 2: HIERARCHICAL DRILL-DOWN (OLT -> SLOT CARD -> PON PORT) -->
@@ -444,6 +534,94 @@
                         </div>
                     </div>
                 </template>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL: SCAN UNCONFIGURED / NEW ONU                                  -->
+    <!-- =================================================================== -->
+    <div x-show="uncfgModalOpen" 
+         x-cloak 
+         class="fixed inset-0 z-50 overflow-y-auto" 
+         role="dialog">
+        
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" 
+             @click="uncfgModalOpen = false"></div>
+        
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4 text-xs"
+                 @click.away="uncfgModalOpen = false">
+                
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping"></span>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                            Hasil Scan ONU Baru (Unconfigured) di OLT
+                        </h3>
+                    </div>
+                    <button type="button" @click="uncfgModalOpen = false" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+                </div>
+
+                <div class="space-y-3">
+                    <template x-if="scanningUncfg">
+                        <div class="py-8 text-center space-y-2">
+                            <span class="inline-block w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></span>
+                            <div class="text-xs text-slate-400 font-semibold">Sedang mengeksekusi perintah scan ke OLT...</div>
+                        </div>
+                    </template>
+
+                    <template x-if="!scanningUncfg && uncfgList.length === 0">
+                        <div class="py-8 text-center text-slate-400">
+                            <svg class="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                            </svg>
+                            <span class="font-bold block">Tidak ada ONU baru (Unconfigured) yang ditemukan.</span>
+                            <span class="text-[11px] text-slate-500">Semua ONU yang tertancap di OLT sudah terkonfigurasi.</span>
+                        </div>
+                    </template>
+
+                    <template x-if="!scanningUncfg && uncfgList.length > 0">
+                        <div class="space-y-2">
+                            <div class="text-[11px] text-purple-400 font-semibold" x-text="'Ditemukan ' + uncfgList.length + ' ONU baru yang belum didaftarkan:'"></div>
+                            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-50 dark:bg-slate-950 text-[10px] font-bold uppercase text-slate-400">
+                                        <tr>
+                                            <th class="py-2.5 px-3">Port PON</th>
+                                            <th class="py-2.5 px-3">Serial Number (SN)</th>
+                                            <th class="py-2.5 px-3 text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                                        <template x-for="(item, idx) in uncfgList" :key="idx">
+                                            <tr>
+                                                <td class="py-2.5 px-3 font-bold text-blue-500" x-text="item.port"></td>
+                                                <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white" x-text="item.sn"></td>
+                                                <td class="py-2.5 px-3 text-right">
+                                                    <a :href="'{{ url('/noc/aktivasi') }}?sn=' + encodeURIComponent(item.sn)" 
+                                                       class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-sans text-[10px] font-bold">
+                                                        Aktivasi
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                        <button type="button" @click="scanUncfg()" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer">
+                            <span>🔄 Scan Ulang</span>
+                        </button>
+                        <button type="button" @click="uncfgModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
 
             </div>
         </div>

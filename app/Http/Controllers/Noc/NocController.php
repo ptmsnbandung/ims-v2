@@ -400,17 +400,32 @@ class NocController extends Controller
 
         $olts = $query->paginate(10)->withQueryString();
 
-        // Attach nama_pop jika belum ada dari query join
+        // Attach default values and nama_pop jika belum ada dari query join
         $pops = Schema::hasTable('m_pop') ? DB::table('m_pop')->where('hide', '!=', '1')->get() : collect();
         $popByKodePop = $pops->keyBy('kode_pop');
         $popByKodeOlt = $pops->keyBy('kode_olt');
 
         foreach ($olts as $olt) {
+            $olt->kode_pop = $olt->kode_pop ?? null;
+            $olt->ip_address = $olt->ip_address ?? '10.10.10.1';
+            $olt->brand = $olt->brand ?? 'ZTE C320';
+            $olt->model = $olt->model ?? 'C320';
+            $olt->hostname = $olt->hostname ?? $olt->kode_olt;
+            $olt->capacity_olt = $olt->capacity_olt ?? 8;
+            $olt->protocol = $olt->protocol ?? 'telnet';
+            $olt->port = $olt->port ?? 23;
+            $olt->username = $olt->username ?? 'admin';
+            $olt->snmp_port = $olt->snmp_port ?? 161;
+            $olt->snmp_version = $olt->snmp_version ?? 'v2c';
+            $olt->snmp_community = $olt->snmp_community ?? 'public';
+
             if (!isset($olt->nama_pop) || empty($olt->nama_pop)) {
-                if (isset($olt->kode_pop) && isset($popByKodePop[$olt->kode_pop])) {
+                if (!empty($olt->kode_pop) && isset($popByKodePop[$olt->kode_pop])) {
                     $olt->nama_pop = $popByKodePop[$olt->kode_pop]->nama_pop;
                 } elseif (isset($popByKodeOlt[$olt->kode_olt])) {
                     $olt->nama_pop = $popByKodeOlt[$olt->kode_olt]->nama_pop;
+                } else {
+                    $olt->nama_pop = 'POP Utama MSN';
                 }
             }
         }
@@ -477,6 +492,19 @@ class NocController extends Controller
         if (!$olt) {
             abort(404, 'Data OLT tidak ditemukan.');
         }
+
+        $olt->kode_pop = $olt->kode_pop ?? null;
+        $olt->ip_address = $olt->ip_address ?? '';
+        $olt->brand = $olt->brand ?? '';
+        $olt->model = $olt->model ?? '';
+        $olt->hostname = $olt->hostname ?? $olt->kode_olt;
+        $olt->capacity_olt = $olt->capacity_olt ?? 8;
+        $olt->protocol = $olt->protocol ?? 'telnet';
+        $olt->port = $olt->port ?? 23;
+        $olt->username = $olt->username ?? '';
+        $olt->snmp_port = $olt->snmp_port ?? 161;
+        $olt->snmp_version = $olt->snmp_version ?? 'v2c';
+        $olt->snmp_community = $olt->snmp_community ?? 'public';
 
         $pops = DB::table('m_pop')->where('hide', '!=', '1')->orderBy('nama_pop')->get();
 

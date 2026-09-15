@@ -151,10 +151,10 @@
                     @forelse($olts as $olt)
                         @php
                             $activeCount = $registeredPonCounts[$olt->kode_olt] ?? 0;
-                            $popName = $olt->nama_pop ?? ($olt->kode_pop ? $olt->kode_pop : 'POP Utama MSN');
-                            $ipAddr = $olt->ip_address ?: '10.10.10.1';
-                            $brandName = $olt->brand ?: 'ZTE C320';
-                            $capacity = $olt->capacity_olt ?: 8;
+                            $popName = $olt->nama_pop ?? ($olt->kode_pop ?? 'POP Utama MSN');
+                            $ipAddr = !empty($olt->ip_address) ? $olt->ip_address : '10.10.10.1';
+                            $brandName = !empty($olt->brand) ? $olt->brand : 'ZTE C320';
+                            $capacity = !empty($olt->capacity_olt) ? $olt->capacity_olt : 8;
                         @endphp
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                             <!-- 1. Kode OLT -->

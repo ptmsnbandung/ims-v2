@@ -178,7 +178,12 @@ class OltConnectionService
     {
         $socket = @fsockopen($ip, $port, $errno, $errstr, 4);
         if (!$socket) {
-            throw new Exception("Tidak dapat membuka sesi Telnet ke {$ip}:{$port} ({$errstr})");
+            $errDetail = $errstr ?: 'Connection timed out / Host Unreachable';
+            $hint = '';
+            if (str_starts_with($ip, '172.168.') || str_starts_with($ip, '192.168.') || str_starts_with($ip, '10.') || str_starts_with($ip, '172.16.')) {
+                $hint = " | Petunjuk: {$ip} adalah IP LAN/Privat. Pastikan server web hosting terhubung VPN ke Router NOC atau gunakan IP Publik NAT Forwarding, dan pastikan Telnet Port {$port} aktif di OLT.";
+            }
+            throw new Exception("Tidak dapat membuka sesi Telnet ke {$ip}:{$port} ({$errDetail}){$hint}");
         }
 
         stream_set_timeout($socket, 3);

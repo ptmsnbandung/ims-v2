@@ -281,7 +281,7 @@
 
                             <!-- 5. Harga Bulanan -->
                             <td class="py-4 px-5 font-mono font-bold text-white">
-                                Rp {{ number_format($paket->harga_bandwith, 0, ',', '.') }}
+                                Rp {{ number_format((float) ($paket->harga_bandwith ?? 0), 0, ',', '.') }}
                             </td>
 
                             <!-- 6. Peruntukan Bangunan -->

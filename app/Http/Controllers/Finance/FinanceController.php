@@ -1701,8 +1701,10 @@ class FinanceController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Attach default name_bandwith jika masih kosong
+        // Attach default name_bandwith jika masih kosong & cast data types
         foreach ($pakets as $p) {
+            $p->harga_bandwith = (float) ($p->harga_bandwith ?? 0);
+            $p->nominal_bandwith = (int) ($p->nominal_bandwith ?? 0);
             if (empty($p->nama_bandwith)) {
                 $p->nama_bandwith = "Paket {$p->nominal_bandwith} Mbps";
             }

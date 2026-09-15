@@ -368,21 +368,52 @@ class NocController extends Controller
     {
         $search = $request->query('search');
 
-        $query = DB::table('m_olt')
-            ->leftJoin('m_pop', 'm_olt.kode_pop', '=', 'm_pop.kode_pop')
-            ->select('m_olt.*', 'm_pop.nama_pop');
+        $query = DB::table('m_olt');
+
+        // Pengecekan kolom secara aman agar tidak error jika tabel di hosting belum dimigrasi
+        $hasKodePop = Schema::hasTable('m_olt') && Schema::hasColumn('m_olt', 'kode_pop');
+        $hasBrand = Schema::hasTable('m_olt') && Schema::hasColumn('m_olt', 'brand');
+        $hasIpAddress = Schema::hasTable('m_olt') && Schema::hasColumn('m_olt', 'ip_address');
+
+        if ($hasKodePop) {
+            $query->leftJoin('m_pop', 'm_olt.kode_pop', '=', 'm_pop.kode_pop')
+                  ->select('m_olt.*', 'm_pop.nama_pop');
+        } else {
+            $query->select('m_olt.*');
+        }
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function($q) use ($search, $hasBrand, $hasIpAddress, $hasKodePop) {
                 $q->where('m_olt.name_olt', 'like', "%{$search}%")
-                  ->orWhere('m_olt.kode_olt', 'like', "%{$search}%")
-                  ->orWhere('m_olt.brand', 'like', "%{$search}%")
-                  ->orWhere('m_olt.ip_address', 'like', "%{$search}%")
-                  ->orWhere('m_pop.nama_pop', 'like', "%{$search}%");
+                  ->orWhere('m_olt.kode_olt', 'like', "%{$search}%");
+                if ($hasBrand) {
+                    $q->orWhere('m_olt.brand', 'like', "%{$search}%");
+                }
+                if ($hasIpAddress) {
+                    $q->orWhere('m_olt.ip_address', 'like', "%{$search}%");
+                }
+                if ($hasKodePop) {
+                    $q->orWhere('m_pop.nama_pop', 'like', "%{$search}%");
+                }
             });
         }
 
         $olts = $query->paginate(10)->withQueryString();
+
+        // Attach nama_pop jika belum ada dari query join
+        $pops = Schema::hasTable('m_pop') ? DB::table('m_pop')->where('hide', '!=', '1')->get() : collect();
+        $popByKodePop = $pops->keyBy('kode_pop');
+        $popByKodeOlt = $pops->keyBy('kode_olt');
+
+        foreach ($olts as $olt) {
+            if (!isset($olt->nama_pop) || empty($olt->nama_pop)) {
+                if (isset($olt->kode_pop) && isset($popByKodePop[$olt->kode_pop])) {
+                    $olt->nama_pop = $popByKodePop[$olt->kode_pop]->nama_pop;
+                } elseif (isset($popByKodeOlt[$olt->kode_olt])) {
+                    $olt->nama_pop = $popByKodeOlt[$olt->kode_olt]->nama_pop;
+                }
+            }
+        }
 
         // Hitung total OLT & total PON Port & Registered PON
         $totalOlt = DB::table('m_olt')->count();
@@ -409,7 +440,6 @@ class NocController extends Controller
 
         $gpons = Schema::hasTable('m_gpon') ? DB::table('m_gpon')->get() : collect();
         $pons = Schema::hasTable('m_pon') ? DB::table('m_pon')->get() : collect();
-        $pops = DB::table('m_pop')->where('hide', '!=', '1')->get();
 
         return view('noc.olt', [
             'user' => $request->user(),
@@ -488,7 +518,7 @@ class NocController extends Controller
             $kodeOlt = !empty($request->hostname) ? strtoupper(str_replace(' ', '-', $request->hostname)) : 'OLT-' . strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $request->name_olt), 0, 10));
         }
 
-        $data = [
+        $allData = [
             'name_olt' => $request->name_olt,
             'hostname' => $request->hostname,
             'ip_address' => $request->ip_address,
@@ -508,11 +538,20 @@ class NocController extends Controller
 
         // Enkripsi password jika diisi
         if ($request->filled('password')) {
-            $data['password'] = Crypt::encryptString($request->password);
+            $allData['password'] = Crypt::encryptString($request->password);
         }
 
         if ($request->filled('enable_password')) {
-            $data['enable_password'] = Crypt::encryptString($request->enable_password);
+            $allData['enable_password'] = Crypt::encryptString($request->enable_password);
+        }
+
+        // Filter hanya kolom yang benar-benar ada di tabel m_olt database saat ini
+        $existingColumns = Schema::hasTable('m_olt') ? Schema::getColumnListing('m_olt') : [];
+        $data = [];
+        foreach ($allData as $col => $val) {
+            if (empty($existingColumns) || in_array($col, $existingColumns)) {
+                $data[$col] = $val;
+            }
         }
 
         DB::table('m_olt')->updateOrInsert(

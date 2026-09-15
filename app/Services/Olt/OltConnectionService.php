@@ -34,10 +34,16 @@ class OltConnectionService
             $socket = @fsockopen($ip, $port, $errno, $errstr, $timeout);
 
             if (!$socket) {
+                $isPrivateIp = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
+                $hint = '';
+                if ($isPrivateIp) {
+                    $hint = " (Catatan: {$ip} adalah IP LAN Privat. Jika web server berada di Cloud/Hosting, pastikan server terhubung VPN ke NOC atau gunakan IP Publik/NAT Forwarding).";
+                }
+
                 return [
                     'success' => false,
                     'latency' => 0,
-                    'message' => "Gagal terhubung ke {$ip}:{$port}. " . ($errstr ? "({$errstr})" : "Host tidak merespon / timeout."),
+                    'message' => "Gagal terhubung ke {$ip}:{$port}. " . ($errstr ? "({$errstr})" : "Host tidak merespon / timeout.") . $hint,
                 ];
             }
 

@@ -362,10 +362,74 @@ class NocController extends Controller
     }
 
     /**
+     * Memastikan semua kolom tabel m_olt sudah tersedia di database secara otomatis
+     */
+    protected function ensureOltTableColumns(): void
+    {
+        try {
+            if (!Schema::hasTable('m_olt')) {
+                return;
+            }
+
+            $columnsToAdd = [
+                'hostname' => ['type' => 'string', 'length' => 150, 'nullable' => true],
+                'ip_address' => ['type' => 'string', 'length' => 50, 'nullable' => true],
+                'brand' => ['type' => 'string', 'length' => 100, 'nullable' => true],
+                'model' => ['type' => 'string', 'length' => 100, 'nullable' => true],
+                'kode_pop' => ['type' => 'string', 'length' => 50, 'nullable' => true],
+                'protocol' => ['type' => 'string', 'length' => 20, 'nullable' => true, 'default' => 'telnet'],
+                'port' => ['type' => 'integer', 'nullable' => true, 'default' => 23],
+                'username' => ['type' => 'string', 'length' => 100, 'nullable' => true],
+                'password' => ['type' => 'text', 'nullable' => true],
+                'enable_password' => ['type' => 'text', 'nullable' => true],
+                'snmp_port' => ['type' => 'integer', 'nullable' => true, 'default' => 161],
+                'snmp_version' => ['type' => 'string', 'length' => 20, 'nullable' => true, 'default' => 'v2c'],
+                'snmp_community' => ['type' => 'string', 'length' => 50, 'nullable' => true, 'default' => 'public'],
+                'is_active' => ['type' => 'boolean', 'nullable' => true, 'default' => true],
+                'last_sync_at' => ['type' => 'timestamp', 'nullable' => true],
+                'last_status' => ['type' => 'string', 'length' => 50, 'nullable' => true],
+            ];
+
+            $missing = [];
+            foreach ($columnsToAdd as $col => $spec) {
+                if (!Schema::hasColumn('m_olt', $col)) {
+                    $missing[$col] = $spec;
+                }
+            }
+
+            if (!empty($missing)) {
+                Schema::table('m_olt', function (\Illuminate\Database\Schema\Blueprint $table) use ($missing) {
+                    foreach ($missing as $col => $spec) {
+                        if ($spec['type'] === 'string') {
+                            $column = $table->string($col, $spec['length'] ?? 150)->nullable();
+                        } elseif ($spec['type'] === 'text') {
+                            $column = $table->text($col)->nullable();
+                        } elseif ($spec['type'] === 'integer') {
+                            $column = $table->integer($col)->nullable();
+                        } elseif ($spec['type'] === 'boolean') {
+                            $column = $table->boolean($col)->nullable();
+                        } elseif ($spec['type'] === 'timestamp') {
+                            $column = $table->timestamp($col)->nullable();
+                        }
+
+                        if (isset($spec['default']) && isset($column)) {
+                            $column->default($spec['default']);
+                        }
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Auto-ensure m_olt columns notice: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Manajemen Master OLT, GPON, dan Port PON
      */
     public function olt(Request $request): View
     {
+        $this->ensureOltTableColumns();
+
         $search = $request->query('search');
 
         $query = DB::table('m_olt');
@@ -474,6 +538,8 @@ class NocController extends Controller
      */
     public function oltCreate(Request $request): View
     {
+        $this->ensureOltTableColumns();
+
         $pops = DB::table('m_pop')->where('hide', '!=', '1')->orderBy('nama_pop')->get();
 
         return view('noc.olt-create', [
@@ -487,6 +553,8 @@ class NocController extends Controller
      */
     public function oltEdit(Request $request, string $kode_olt): View
     {
+        $this->ensureOltTableColumns();
+
         $olt = DB::table('m_olt')->where('kode_olt', $kode_olt)->first();
 
         if (!$olt) {
@@ -520,6 +588,8 @@ class NocController extends Controller
      */
     public function storeOlt(Request $request): RedirectResponse
     {
+        $this->ensureOltTableColumns();
+
         $request->validate([
             'name_olt' => 'required|string|max:150',
             'kode_olt' => 'nullable|string|max:50',
@@ -548,7 +618,7 @@ class NocController extends Controller
 
         $allData = [
             'name_olt' => $request->name_olt,
-            'hostname' => $request->hostname,
+            'hostname' => $request->hostname ?: $kodeOlt,
             'ip_address' => $request->ip_address,
             'brand' => $request->brand,
             'model' => $request->model,
@@ -582,10 +652,21 @@ class NocController extends Controller
             }
         }
 
-        DB::table('m_olt')->updateOrInsert(
-            ['kode_olt' => $kodeOlt],
-            $data
-        );
+        // Cek apakah data OLT sudah ada (berdasarkan kode_olt atau id)
+        $existing = null;
+        if ($request->filled('id') && Schema::hasColumn('m_olt', 'id')) {
+            $existing = DB::table('m_olt')->where('id', $request->id)->first();
+        }
+        if (!$existing && !empty($kodeOlt)) {
+            $existing = DB::table('m_olt')->where('kode_olt', $kodeOlt)->first();
+        }
+
+        if ($existing) {
+            DB::table('m_olt')->where('kode_olt', $existing->kode_olt)->update($data);
+        } else {
+            $data['kode_olt'] = $kodeOlt;
+            DB::table('m_olt')->insert($data);
+        }
 
         if ($request->input('action') === 'create_and_another') {
             return redirect()->route('noc.olt.create')->with('success', "OLT {$request->name_olt} berhasil disimpan! Silakan input OLT berikutnya.");

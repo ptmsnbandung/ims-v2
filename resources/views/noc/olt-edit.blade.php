@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit OLT - ' . $olt->name_olt . ' - NOC IMS')
+@section('title', 'Edit OLT - ' . ($olt->name_olt ?? $olt->kode_olt) . ' - NOC IMS')
 @section('page_title', 'Edit OLT')
 
 @section('content')
@@ -59,33 +59,35 @@
 
     <!-- Breadcrumb -->
     <div class="flex items-center gap-2 text-xs font-semibold text-slate-400">
-        <a href="{{ route('noc.olt') }}" class="hover:text-blue-500 transition">Master Input OLT</a>
+        <a href="{{ route('noc.olt') }}" class="hover:text-blue-400 transition">Master Input OLT</a>
         <span>&gt;</span>
-        <span class="text-slate-800 dark:text-slate-200">Edit: {{ $olt->name_olt }}</span>
+        <span class="text-white">Edit: {{ $olt->name_olt ?? $olt->kode_olt }}</span>
     </div>
 
     <!-- Page Title -->
     <div>
-        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            Edit OLT: {{ $olt->name_olt }}
+        <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+            Edit OLT: {{ $olt->name_olt ?? $olt->kode_olt }}
         </h1>
     </div>
 
-    <!-- Main Form Card -->
+    <!-- Main Form Card (Dark Command Center Theme) -->
     <form action="{{ route('noc.olt.store') }}" method="POST" class="space-y-6">
         @csrf
+        <input type="hidden" name="id" value="{{ $olt->id ?? '' }}">
+        <input type="hidden" name="kode_olt" value="{{ $olt->kode_olt }}">
 
-        <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-7 shadow-xl shadow-black/5 space-y-8">
+        <div class="bg-slate-900/90 border border-slate-800 backdrop-blur-xl rounded-2xl p-6 sm:p-7 shadow-xl shadow-black/20 space-y-8 text-slate-100">
             
             <!-- =============================================================== -->
-            <!-- 1. DEVICE INFORMATION SECTION (EXACT MOCKUP)                    -->
+            <!-- 1. DEVICE INFORMATION SECTION                                   -->
             <!-- =============================================================== -->
             <div class="space-y-4">
                 <div>
-                    <h3 class="font-bold text-slate-900 dark:text-white text-sm">
+                    <h3 class="font-bold text-white text-sm">
                         Device Information
                     </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p class="text-xs text-slate-400 mt-0.5">
                         Konfigurasi spesifikasi perangkat OLT (Optical Line Terminal) dan integrasi POP server FTTH.
                     </p>
                 </div>
@@ -94,7 +96,7 @@
                     
                     <!-- Row 1: Name * & Hostname -->
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             Name <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" 
@@ -102,26 +104,26 @@
                                value="{{ old('name_olt', $olt->name_olt) }}"
                                required
                                placeholder="OLT Jakarta 01" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                         @error('name_olt')
                             <span class="text-[11px] text-rose-500 font-semibold">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             Hostname
                         </label>
                         <input type="text" 
                                name="hostname" 
                                value="{{ old('hostname', $olt->hostname ?? $olt->kode_olt) }}"
                                placeholder="olt-jkt-01" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                     <!-- Row 2: IP Address * & Vendor * -->
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             IP Address <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" 
@@ -129,41 +131,41 @@
                                x-model="ipAddress"
                                required
                                placeholder="192.168.1.1" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                         @error('ip_address')
                             <span class="text-[11px] text-rose-500 font-semibold">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             Vendor <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" 
                                name="brand" 
                                value="{{ old('brand', $olt->brand) }}"
                                placeholder="ZTE, Huawei, Fiberhome..." 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                     <!-- Row 3: Model & POP Server -->
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             Model
                         </label>
                         <input type="text" 
                                name="model" 
                                value="{{ old('model', $olt->model) }}"
                                placeholder="C320, MA5608T..." 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             POP Server / Lokasi
                         </label>
                         <select name="kode_pop" 
-                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                             <option value="">Select an option</option>
                             @foreach($pops as $pop)
                                 <option value="{{ $pop->kode_pop }}" {{ old('kode_pop', $olt->kode_pop) == $pop->kode_pop ? 'selected' : '' }}>
@@ -175,7 +177,7 @@
 
                     <!-- Row 4: Jumlah Port PON -->
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             Jumlah Port PON <span class="text-rose-500">*</span>
                         </label>
                         <input type="number" 
@@ -185,21 +187,21 @@
                                placeholder="8" 
                                min="1"
                                max="64"
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                 </div>
             </div>
 
             <!-- =============================================================== -->
-            <!-- 2. SNMP CONFIGURATION SECTION (EXACT MOCKUP)                   -->
+            <!-- 2. SNMP CONFIGURATION SECTION                                   -->
             <!-- =============================================================== -->
-            <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4">
+            <div class="pt-6 border-t border-slate-800 space-y-4">
                 <div>
-                    <h3 class="font-bold text-slate-900 dark:text-white text-sm">
+                    <h3 class="font-bold text-white text-sm">
                         SNMP Configuration
                     </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p class="text-xs text-slate-400 mt-0.5">
                         Digunakan untuk monitoring status OLT secara berkala
                     </p>
                 </div>
@@ -208,7 +210,7 @@
                     
                     <!-- SNMP Port * -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             SNMP Port <span class="text-rose-500">*</span>
                         </label>
                         <input type="number" 
@@ -216,28 +218,28 @@
                                x-model="snmpPort"
                                required
                                placeholder="161" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
-                        <span class="text-[11px] text-slate-400 block mt-1">Default: 161</span>
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                        <span class="text-[11px] text-slate-500 block mt-1">Default: 161</span>
                     </div>
 
                     <!-- SNMP Version * -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             SNMP Version <span class="text-rose-500">*</span>
                         </label>
                         <select name="snmp_version" 
                                 x-model="snmpVersion"
-                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                             <option value="v1">v1</option>
                             <option value="v2c">v2c</option>
                             <option value="v3">v3</option>
                         </select>
-                        <span class="text-[11px] text-slate-400 block mt-1">Rekomendasi: v2c</span>
+                        <span class="text-[11px] text-slate-500 block mt-1">Rekomendasi: v2c</span>
                     </div>
 
                     <!-- SNMP Community * -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        <label class="block text-xs font-bold text-slate-300">
                             SNMP Community <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" 
@@ -245,8 +247,8 @@
                                x-model="snmpCommunity"
                                required
                                placeholder="public" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
-                        <span class="text-[11px] text-slate-400 block mt-1">Contoh: public, private</span>
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                        <span class="text-[11px] text-slate-500 block mt-1">Contoh: public, private</span>
                     </div>
 
                 </div>
@@ -255,28 +257,28 @@
             <!-- =============================================================== -->
             <!-- 3. CLI / TELNET / SSH ACCESS & LIVE TEST                       -->
             <!-- =============================================================== -->
-            <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4" x-data="{ expanded: true }">
+            <div class="pt-6 border-t border-slate-800 space-y-4" x-data="{ expanded: true }">
                 <div class="flex items-center justify-between cursor-pointer" @click="expanded = !expanded">
                     <div>
-                        <h3 class="font-bold text-slate-900 dark:text-white text-sm">
+                        <h3 class="font-bold text-white text-sm">
                             CLI Management & Direct Connection (Telnet / SSH)
                         </h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        <p class="text-xs text-slate-400 mt-0.5">
                             Digunakan untuk live sync slot GPON, profiling bandwidth, dan scan ONU unconfigured (Kredensial terenkripsi aman)
                         </p>
                     </div>
-                    <span class="text-xs text-blue-500 font-semibold" x-text="expanded ? 'Tutup Pengaturan' : 'Buka Pengaturan'"></span>
+                    <span class="text-xs text-blue-400 font-semibold" x-text="expanded ? 'Tutup Pengaturan' : 'Buka Pengaturan'"></span>
                 </div>
 
                 <div x-show="expanded" class="space-y-4 pt-2">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <!-- Protokol -->
                         <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400">Protokol Akses</label>
+                            <label class="block text-[11px] font-bold text-slate-400">Protokol Akses</label>
                             <select name="protocol" 
                                     x-model="protocol" 
                                     @change="port = (protocol === 'ssh' ? 22 : 23)"
-                                    class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                    class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
                                 <option value="telnet">Telnet (Port 23)</option>
                                 <option value="ssh">SSH (Port 22)</option>
                             </select>
@@ -284,41 +286,41 @@
 
                         <!-- Port -->
                         <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400">Port CLI</label>
+                            <label class="block text-[11px] font-bold text-slate-400">Port CLI</label>
                             <input type="number" 
                                    name="port" 
                                    x-model="port"
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
                         </div>
 
                         <!-- Username -->
                         <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400">Username Login</label>
+                            <label class="block text-[11px] font-bold text-slate-400">Username Login</label>
                             <input type="text" 
                                    name="username" 
                                    x-model="username"
                                    placeholder="zte / admin" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
                         </div>
 
                         <!-- Password -->
                         <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400">Password Baru</label>
+                            <label class="block text-[11px] font-bold text-slate-400">Password Baru</label>
                             <input type="password" 
                                    name="password" 
                                    x-model="password"
                                    placeholder="(Kosongkan jika tidak diubah)" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
                         </div>
 
                         <!-- Enable / Super Password -->
                         <div class="space-y-1 sm:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400">Enable Password (ZTE/Cisco Privilege)</label>
+                            <label class="block text-[11px] font-bold text-slate-400">Enable Password (ZTE/Cisco Privilege)</label>
                             <input type="password" 
                                    name="enable_password" 
                                    x-model="enablePassword"
                                    placeholder="(Kosongkan jika tidak diubah)" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
                         </div>
 
                         <!-- Test Connection Button -->

@@ -2695,11 +2695,20 @@ class TeknikController extends Controller
 
         $ubahLayanans = $query->orderBy('u.date_create', 'desc')->paginate(10)->withQueryString();
 
-        // 4 KPI Counters (matching screenshot)
-        $count11 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '11')->count();
-        $count12 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '12')->count();
-        $count13 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '13')->count();
-        $count14 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '14')->count();
+        // HIGH PERFORMANCE: Single aggregated query for UP/Downgrade KPIs
+        $counts = DB::table('trx_ubah_layanan')
+            ->selectRaw("
+                COUNT(CASE WHEN status_ubah_layanan = '11' THEN 1 END) as c11,
+                COUNT(CASE WHEN status_ubah_layanan = '12' THEN 1 END) as c12,
+                COUNT(CASE WHEN status_ubah_layanan = '13' THEN 1 END) as c13,
+                COUNT(CASE WHEN status_ubah_layanan = '14' THEN 1 END) as c14
+            ")
+            ->first();
+
+        $count11 = (int) ($counts->c11 ?? 0);
+        $count12 = (int) ($counts->c12 ?? 0);
+        $count13 = (int) ($counts->c13 ?? 0);
+        $count14 = (int) ($counts->c14 ?? 0);
 
         // 1. Kategori Layanan (m_bandwith_kategori)
         $layananKategoriList = Schema::hasTable('m_bandwith_kategori')
@@ -2956,15 +2965,28 @@ class TeknikController extends Controller
 
         $terminasis = $query->orderBy('date_create', 'desc')->paginate(10)->withQueryString();
 
-        // 8 KPI Counters (matching screenshot)
-        $count11 = DB::table('view_terminasi')->where('status_terminasi', '11')->count();
-        $count12 = DB::table('view_terminasi')->where('status_terminasi', '12')->count();
-        $count12_1 = DB::table('view_terminasi')->where('status_terminasi', '12.1')->count();
-        $count13 = DB::table('view_terminasi')->where('status_terminasi', '13')->count();
-        $count14 = DB::table('view_terminasi')->where('status_terminasi', '14')->count();
-        $count15 = DB::table('view_terminasi')->where('status_terminasi', '15')->count();
-        $count16 = DB::table('view_terminasi')->where('status_terminasi', '16')->count();
-        $count17 = DB::table('view_terminasi')->where('status_terminasi', '17')->count();
+        // HIGH PERFORMANCE: Single aggregated query for Terminasi KPIs
+        $counts = DB::table('trx_terminasi')
+            ->selectRaw("
+                COUNT(CASE WHEN status_terminasi = '11' THEN 1 END) as c11,
+                COUNT(CASE WHEN status_terminasi = '12' THEN 1 END) as c12,
+                COUNT(CASE WHEN status_terminasi = '12.1' THEN 1 END) as c12_1,
+                COUNT(CASE WHEN status_terminasi = '13' THEN 1 END) as c13,
+                COUNT(CASE WHEN status_terminasi = '14' THEN 1 END) as c14,
+                COUNT(CASE WHEN status_terminasi = '15' THEN 1 END) as c15,
+                COUNT(CASE WHEN status_terminasi = '16' THEN 1 END) as c16,
+                COUNT(CASE WHEN status_terminasi = '17' THEN 1 END) as c17
+            ")
+            ->first();
+
+        $count11 = (int) ($counts->c11 ?? 0);
+        $count12 = (int) ($counts->c12 ?? 0);
+        $count12_1 = (int) ($counts->c12_1 ?? 0);
+        $count13 = (int) ($counts->c13 ?? 0);
+        $count14 = (int) ($counts->c14 ?? 0);
+        $count15 = (int) ($counts->c15 ?? 0);
+        $count16 = (int) ($counts->c16 ?? 0);
+        $count17 = (int) ($counts->c17 ?? 0);
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
         $karyawans = DB::table('tb_m_karyawan')->where('status_aktif', 1)->orderBy('nama_karyawan')->get();

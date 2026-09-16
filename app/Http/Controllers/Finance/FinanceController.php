@@ -67,8 +67,19 @@ class FinanceController extends Controller
             });
         }
 
-        // Clone query for KPI statistics based on current month/year filter
-        $kpiQuery = DB::table('view_billing_layanan');
+        // HIGH PERFORMANCE: 1 SINGLE AGGREGATED QUERY instead of 8 separate full-view scans
+        $kpiQuery = DB::table('trx_billing_layanan')
+            ->selectRaw("
+                COUNT(CASE WHEN status_bill_lay IN ('11', '12') THEN 1 END) as generating_count,
+                COALESCE(SUM(CASE WHEN status_bill_lay IN ('11', '12') THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as generating_amount,
+                COUNT(CASE WHEN status_bill_lay = '13' THEN 1 END) as publish_count,
+                COALESCE(SUM(CASE WHEN status_bill_lay = '13' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as publish_amount,
+                COUNT(CASE WHEN status_bill_lay = '14' THEN 1 END) as waiting_count,
+                COALESCE(SUM(CASE WHEN status_bill_lay = '14' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as waiting_amount,
+                COUNT(CASE WHEN status_bill_lay = '15' THEN 1 END) as paid_count,
+                COALESCE(SUM(CASE WHEN status_bill_lay = '15' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as paid_amount
+            ");
+
         if ($selectedBulan !== '' && $selectedBulan !== null) {
             $kpiQuery->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
         }
@@ -76,33 +87,23 @@ class FinanceController extends Controller
             $kpiQuery->where('tahun_tagihan', $selectedTahun);
         }
 
-        // 4 KPI Summary Cards
-        // 1. Generating... Auto Publish (11 Draft / 12 Generating)
-        $kpiGenerating = (clone $kpiQuery)->whereIn('status_bill_lay', ['11', '12']);
-        $generatingCount = $kpiGenerating->count();
-        $generatingAmount = $kpiGenerating->sum('total_layanan');
+        $kpi = $kpiQuery->first();
 
-        // 2. Publish Billing (13)
-        $kpiPublish = (clone $kpiQuery)->where('status_bill_lay', '13');
-        $publishCount = $kpiPublish->count();
-        $publishAmount = $kpiPublish->sum('total_layanan');
+        $generatingCount = (int) ($kpi->generating_count ?? 0);
+        $generatingAmount = (float) ($kpi->generating_amount ?? 0);
+        $publishCount = (int) ($kpi->publish_count ?? 0);
+        $publishAmount = (float) ($kpi->publish_amount ?? 0);
+        $waitingCount = (int) ($kpi->waiting_count ?? 0);
+        $waitingAmount = (float) ($kpi->waiting_amount ?? 0);
+        $paidCount = (int) ($kpi->paid_count ?? 0);
+        $paidAmount = (float) ($kpi->paid_amount ?? 0);
 
-        // 3. Waiting Payment (14)
-        $kpiWaiting = (clone $kpiQuery)->where('status_bill_lay', '14');
-        $waitingCount = $kpiWaiting->count();
-        $waitingAmount = $kpiWaiting->sum('total_layanan');
-
-        // 4. Paid (15)
-        $kpiPaid = (clone $kpiQuery)->where('status_bill_lay', '15');
-        $paidCount = $kpiPaid->count();
-        $paidAmount = $kpiPaid->sum('total_layanan');
-
-        // Fetch Paginated Invoices
+        // Fetch Paginated Invoices (Efficient Indexed Pagination)
         $invoices = $query->orderBy('date_create', 'desc')
             ->paginate($perPage)
             ->withQueryString();
 
-        // Master Dropdown Data
+        // Master Dropdown Data (Optimized to fast master tables)
         $bulanList = [
             '01' => 'Januari',
             '02' => 'Februari',
@@ -118,35 +119,36 @@ class FinanceController extends Controller
             '12' => 'Desember',
         ];
 
-        $tahunList = DB::table('view_billing_layanan')
-            ->select('tahun_tagihan')
-            ->distinct()
-            ->whereNotNull('tahun_tagihan')
-            ->orderBy('tahun_tagihan', 'desc')
-            ->pluck('tahun_tagihan')
-            ->toArray();
+        $tahunList = Schema::hasTable('trx_billing_layanan')
+            ? DB::table('trx_billing_layanan')
+                ->select('tahun_tagihan')
+                ->distinct()
+                ->whereNotNull('tahun_tagihan')
+                ->orderBy('tahun_tagihan', 'desc')
+                ->limit(5)
+                ->pluck('tahun_tagihan')
+                ->toArray()
+            : [];
 
         if (empty($tahunList)) {
-            $tahunList = [(string) date('Y'), (string) (date('Y') - 1)];
+            $tahunList = [(string) date('Y'), (string) (date('Y') - 1), (string) (date('Y') - 2)];
         }
 
-        $layananList = DB::table('view_billing_layanan')
-            ->select('nama_kategori_bandwith')
-            ->distinct()
-            ->whereNotNull('nama_kategori_bandwith')
-            ->pluck('nama_kategori_bandwith')
-            ->toArray();
+        $layananList = Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique()->toArray()
+            : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
 
-        $wilayahList = DB::table('view_billing_layanan')
-            ->select('nama_kota_pasang')
-            ->distinct()
-            ->whereNotNull('nama_kota_pasang')
-            ->pluck('nama_kota_pasang')
-            ->toArray();
+        $wilayahList = Schema::hasTable('m_wilayah_perangkat')
+            ? DB::table('m_wilayah_perangkat')->pluck('nama_wilayah_perangkat')->filter()->unique()->toArray()
+            : [];
 
-        $statusBillList = DB::table('m_status_bill_lay')
-            ->where('hide', '0')
-            ->get();
+        if (empty($wilayahList) && Schema::hasTable('m_wilayah')) {
+            $wilayahList = DB::table('m_wilayah')->limit(50)->pluck('nama_kota')->filter()->unique()->toArray();
+        }
+
+        $statusBillList = Schema::hasTable('m_status_bill_lay')
+            ? DB::table('m_status_bill_lay')->where('hide', '0')->get()
+            : collect();
 
         $statusUserList = [
             '20' => 'User Aktif',
@@ -834,38 +836,42 @@ class FinanceController extends Controller
             });
         }
 
-        // Summary Counts for Billing Registrasi
-        $kpiTotal = (clone $query)->count();
-        $kpiDraft = (clone $query)->where(function($q) {
-            $q->whereIn('status_bill_reg', ['11', '11.1'])->orWhereNull('status_bill_reg');
-        })->whereNull('payment_publish')->count();
-        $kpiPublished = (clone $query)->where(function($q) {
-            $q->where('status_bill_reg', '12')->orWhereNotNull('payment_publish');
-        })->count();
-        $kpiMidtrans = (clone $query)->where('payment_type', '1')->count();
-        $kpiManual = (clone $query)->whereIn('payment_type', ['2', '3'])->count();
+        // HIGH PERFORMANCE: 1 SINGLE AGGREGATED QUERY for Billing Registrasi KPIs
+        $kpi = DB::table('trx_billing_registrasi')
+            ->selectRaw("
+                COUNT(*) as total_count,
+                COUNT(CASE WHEN (status_bill_reg IN ('11', '11.1') OR status_bill_reg IS NULL) AND payment_publish IS NULL THEN 1 END) as draft_count,
+                COUNT(CASE WHEN status_bill_reg = '12' OR payment_publish IS NOT NULL THEN 1 END) as published_count,
+                COUNT(CASE WHEN payment_type = '1' THEN 1 END) as midtrans_count,
+                COUNT(CASE WHEN payment_type IN ('2', '3') THEN 1 END) as manual_count
+            ")
+            ->first();
+
+        $kpiTotal = (int) ($kpi->total_count ?? 0);
+        $kpiDraft = (int) ($kpi->draft_count ?? 0);
+        $kpiPublished = (int) ($kpi->published_count ?? 0);
+        $kpiMidtrans = (int) ($kpi->midtrans_count ?? 0);
+        $kpiManual = (int) ($kpi->manual_count ?? 0);
 
         $registrations = $query->orderBy('date_create', 'desc')
             ->paginate($perPage)
             ->withQueryString();
 
-        $layananList = DB::table('view_billing_reg')
-            ->select('nama_kategori_bandwith')
-            ->distinct()
-            ->whereNotNull('nama_kategori_bandwith')
-            ->pluck('nama_kategori_bandwith')
-            ->toArray();
+        $layananList = Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique()->toArray()
+            : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
 
-        $wilayahList = DB::table('view_batchjob')
-            ->select('nama_kota_pasang')
-            ->distinct()
-            ->whereNotNull('nama_kota_pasang')
-            ->pluck('nama_kota_pasang')
-            ->toArray();
+        $wilayahList = Schema::hasTable('m_wilayah_perangkat')
+            ? DB::table('m_wilayah_perangkat')->pluck('nama_wilayah_perangkat')->filter()->unique()->toArray()
+            : [];
 
-        $statusBillRegList = DB::table('m_status_bill_reg')
-            ->where('hide', '0')
-            ->get();
+        if (empty($wilayahList) && Schema::hasTable('m_wilayah')) {
+            $wilayahList = DB::table('m_wilayah')->limit(50)->pluck('nama_kota')->filter()->unique()->toArray();
+        }
+
+        $statusBillRegList = Schema::hasTable('m_status_bill_reg')
+            ? DB::table('m_status_bill_reg')->where('hide', '0')->get()
+            : collect();
 
         return view('finance.billing-registrasi', [
             'user' => $request->user(),
@@ -1245,11 +1251,20 @@ class FinanceController extends Controller
 
         $ubahLayanans = $query->orderBy('u.date_create', 'desc')->paginate(10)->withQueryString();
 
-        // 4 KPI Counters
-        $count11 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '11')->count();
-        $count12 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '12')->count();
-        $count13 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '13')->count();
-        $count14 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '14')->count();
+        // HIGH PERFORMANCE: Single aggregated query for UP/Downgrade KPIs
+        $counts = DB::table('trx_ubah_layanan')
+            ->selectRaw("
+                COUNT(CASE WHEN status_ubah_layanan = '11' THEN 1 END) as c11,
+                COUNT(CASE WHEN status_ubah_layanan = '12' THEN 1 END) as c12,
+                COUNT(CASE WHEN status_ubah_layanan = '13' THEN 1 END) as c13,
+                COUNT(CASE WHEN status_ubah_layanan = '14' THEN 1 END) as c14
+            ")
+            ->first();
+
+        $count11 = (int) ($counts->c11 ?? 0);
+        $count12 = (int) ($counts->c12 ?? 0);
+        $count13 = (int) ($counts->c13 ?? 0);
+        $count14 = (int) ($counts->c14 ?? 0);
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
 
@@ -1370,11 +1385,20 @@ class FinanceController extends Controller
 
         $suspends = $query->orderBy('date_create', 'desc')->paginate(10)->withQueryString();
 
-        // 4 KPI Counters
-        $countRequest = DB::table('view_suspend')->where('status_suspend', '11')->count();
-        $countSuspend = DB::table('view_suspend')->where('status_suspend', '12')->count();
-        $countReqUnsuspend = DB::table('view_suspend')->where('status_suspend', '18')->count();
-        $countUnsuspend = DB::table('view_suspend')->where('status_suspend', '13')->count();
+        // HIGH PERFORMANCE: Single aggregated query for Suspend KPIs
+        $counts = DB::table('trx_suspend')
+            ->selectRaw("
+                COUNT(CASE WHEN status_suspend = '11' THEN 1 END) as cRequest,
+                COUNT(CASE WHEN status_suspend = '12' THEN 1 END) as cSuspend,
+                COUNT(CASE WHEN status_suspend = '18' THEN 1 END) as cReqUnsuspend,
+                COUNT(CASE WHEN status_suspend = '13' THEN 1 END) as cUnsuspend
+            ")
+            ->first();
+
+        $countRequest = (int) ($counts->cRequest ?? 0);
+        $countSuspend = (int) ($counts->cSuspend ?? 0);
+        $countReqUnsuspend = (int) ($counts->cReqUnsuspend ?? 0);
+        $countUnsuspend = (int) ($counts->cUnsuspend ?? 0);
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
 
@@ -1506,11 +1530,20 @@ class FinanceController extends Controller
 
         $terminasis = $query->orderBy('date_create', 'desc')->paginate(10)->withQueryString();
 
-        // 4 Key KPI Counters
-        $count11 = DB::table('view_terminasi')->where('status_terminasi', '11')->count();
-        $count12 = DB::table('view_terminasi')->whereIn('status_terminasi', ['12', '12.1'])->count();
-        $count13 = DB::table('view_terminasi')->where('status_terminasi', '13')->count();
-        $count16 = DB::table('view_terminasi')->where('status_terminasi', '16')->count();
+        // HIGH PERFORMANCE: Single aggregated query for Terminasi KPIs
+        $counts = DB::table('trx_terminasi')
+            ->selectRaw("
+                COUNT(CASE WHEN status_terminasi = '11' THEN 1 END) as c11,
+                COUNT(CASE WHEN status_terminasi IN ('12', '12.1') THEN 1 END) as c12,
+                COUNT(CASE WHEN status_terminasi = '13' THEN 1 END) as c13,
+                COUNT(CASE WHEN status_terminasi = '16' THEN 1 END) as c16
+            ")
+            ->first();
+
+        $count11 = (int) ($counts->c11 ?? 0);
+        $count12 = (int) ($counts->c12 ?? 0);
+        $count13 = (int) ($counts->c13 ?? 0);
+        $count16 = (int) ($counts->c16 ?? 0);
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
 

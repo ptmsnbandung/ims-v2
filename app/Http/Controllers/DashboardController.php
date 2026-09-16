@@ -45,28 +45,30 @@ class DashboardController extends Controller
                 $totalRegPending = 0;
                 $recentInvoices = collect([]);
 
-                // Hitung statistik invoice bulanan
-                if (DB::getSchemaBuilder()->hasTable('view_billing_layanan') || DB::getSchemaBuilder()->hasTable('trx_billing_layanan')) {
-                    $table = DB::getSchemaBuilder()->hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
-                    
-                    $kpiQuery = DB::table($table);
-                    if (DB::getSchemaBuilder()->hasColumn($table, 'bulan_tagihan')) {
-                        $kpiQuery->where('bulan_tagihan', $currentMonth);
-                    }
-                    if (DB::getSchemaBuilder()->hasColumn($table, 'tahun_tagihan')) {
-                        $kpiQuery->where('tahun_tagihan', $currentYear);
-                    }
+                // Hitung statistik invoice bulanan (High performance single query)
+                if (DB::getSchemaBuilder()->hasTable('trx_billing_layanan')) {
+                    $kpi = DB::table('trx_billing_layanan')
+                        ->where('bulan_tagihan', $currentMonth)
+                        ->where('tahun_tagihan', $currentYear)
+                        ->selectRaw("
+                            COUNT(CASE WHEN status_bill_lay IN ('11', '12') THEN 1 END) as draft_count,
+                            COALESCE(SUM(CASE WHEN status_bill_lay IN ('11', '12') THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as draft_amount,
+                            COUNT(CASE WHEN status_bill_lay = '13' THEN 1 END) as publish_count,
+                            COALESCE(SUM(CASE WHEN status_bill_lay = '13' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as publish_amount,
+                            COUNT(CASE WHEN status_bill_lay = '15' THEN 1 END) as paid_count,
+                            COALESCE(SUM(CASE WHEN status_bill_lay = '15' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as paid_amount
+                        ")
+                        ->first();
 
-                    $draftCount = (clone $kpiQuery)->whereIn('status_bill_lay', ['11', '12'])->count();
-                    $draftAmount = (clone $kpiQuery)->whereIn('status_bill_lay', ['11', '12'])->sum('total_layanan');
+                    $draftCount = (int) ($kpi->draft_count ?? 0);
+                    $draftAmount = (float) ($kpi->draft_amount ?? 0);
+                    $publishCount = (int) ($kpi->publish_count ?? 0);
+                    $publishAmount = (float) ($kpi->publish_amount ?? 0);
+                    $paidCount = (int) ($kpi->paid_count ?? 0);
+                    $paidAmount = (float) ($kpi->paid_amount ?? 0);
 
-                    $publishCount = (clone $kpiQuery)->where('status_bill_lay', '13')->count();
-                    $publishAmount = (clone $kpiQuery)->where('status_bill_lay', '13')->sum('total_layanan');
-
-                    $paidCount = (clone $kpiQuery)->where('status_bill_lay', '15')->count();
-                    $paidAmount = (clone $kpiQuery)->where('status_bill_lay', '15')->sum('total_layanan');
-
-                    $recentInvoices = DB::table($table)
+                    $viewTable = DB::getSchemaBuilder()->hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
+                    $recentInvoices = DB::table($viewTable)
                         ->orderBy('date_create', 'desc')
                         ->limit(5)
                         ->get();

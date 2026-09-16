@@ -6,6 +6,7 @@
 @section('content')
 <div class="space-y-5"
      x-data="{
+         items: {{ Js::from($tikets->items()) }},
          detailModalOpen: false,
          scheduleModalOpen: false,
          resolveModalOpen: false,
@@ -70,7 +71,9 @@
              }
          },
 
-         openDetailModal(item) {
+         openDetailModal(idx) {
+             const item = this.items[idx];
+             if (!item) return;
              this.selectedTiket = item;
              this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
              this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
@@ -84,7 +87,9 @@
              this.detailModalOpen = true;
          },
 
-         openScheduleModal(item) {
+         openScheduleModal(idx) {
+             const item = this.items[idx];
+             if (!item) return;
              this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
              this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
              this.modalNomorInternet = item.nomor_internet || '-';
@@ -96,7 +101,9 @@
              this.scheduleModalOpen = true;
          },
 
-         openResolveModal(item) {
+         openResolveModal(idx) {
+             const item = this.items[idx];
+             if (!item) return;
              this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
              this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
              this.modalNomorInternet = item.nomor_internet || '-';
@@ -105,7 +112,9 @@
              this.resolveModalOpen = true;
          },
 
-         openCancelModal(item) {
+         openCancelModal(idx) {
+             const item = this.items[idx];
+             if (!item) return;
              this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
              this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
              this.modalNomorInternet = item.nomor_internet || '-';
@@ -336,8 +345,23 @@
                             $passPppoe = ($item->pass_pppoe ?? null) ?: (($item->password ?? null) ?: '-');
                             $mediaAkses = ($item->media_akses ?? null) ?: 'FTTH';
                             $popName = ($item->nama_pop ?? null) ?: 'MediaNet FTTH (jaringan FTTH Media Solusi Network)';
-                            $passLama = ($item->password_lama ?? null) ?: (($item->keluhan ?? null) ?: '-');
-                            $passBaru = ($item->password_baru ?? null) ?: (($item->solusi ?? null) ?: 'tim customer care kami akan segera menghubungi anda');
+
+                            $keluhanClean = str_replace(["\r\n", "\\r\\n", "\r", "\\r", "\\n"], "\n", $item->keluhan ?? '');
+                            $passLama = '-';
+                            $passBaru = $item->solusi ?: 'tim customer care kami akan segera menghubungi anda';
+
+                            if (stripos($keluhanClean, 'Password Lama :') !== false || stripos($keluhanClean, 'password Baru :') !== false) {
+                                $parts = preg_split('/password\s*baru\s*:\s*/i', $keluhanClean);
+                                if (isset($parts[0])) {
+                                    $passLama = trim(preg_replace('/^password\s*lama\s*:\s*/i', '', trim($parts[0])));
+                                }
+                                if (isset($parts[1]) && !empty(trim($parts[1]))) {
+                                    $passBaru = trim($parts[1]);
+                                }
+                            } else {
+                                $passLama = $keluhanClean ?: ($item->password_lama ?? '-');
+                            }
+
                             $dateCreateFormatted = !empty($item->date_create) ? date('d F Y H:i', strtotime($item->date_create)) . ' WIB' : '-';
                             $dateUpdateFormatted = !empty($item->date_update) ? date('d F Y H:i', strtotime($item->date_update)) . ' WIB' : $dateCreateFormatted;
                         @endphp
@@ -408,7 +432,7 @@
 
                                         <div class="pt-1.5 flex items-center gap-1.5">
                                             <button type="button"
-                                                    @click="openDetailModal({{ json_encode($item) }})"
+                                                    @click="openDetailModal({{ $loop->index }})"
                                                     class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-semibold text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 transition cursor-pointer">
                                                 <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
@@ -527,7 +551,7 @@
                                     <div class="flex items-center justify-center gap-1.5">
                                         <!-- View Detail Button -->
                                         <button type="button"
-                                                @click="openDetailModal({{ json_encode($item) }})"
+                                                @click="openDetailModal({{ $loop->index }})"
                                                 class="p-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white transition"
                                                 title="Lihat Detail Tiket">
                                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
@@ -540,7 +564,7 @@
                                             @if($statusVal === '11')
                                                 <!-- Schedule / On Schedule Button -->
                                                 <button type="button"
-                                                        @click="openScheduleModal({{ json_encode($item) }})"
+                                                        @click="openScheduleModal({{ $loop->index }})"
                                                         class="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-900 transition"
                                                         title="Jadwalkan Penanganan (KD12)">
                                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
@@ -552,7 +576,7 @@
                                             @if($statusVal === '11' || $statusVal === '12')
                                                 <!-- Resolve / Selesai Button -->
                                                 <button type="button"
-                                                        @click="openResolveModal({{ json_encode($item) }})"
+                                                        @click="openResolveModal({{ $loop->index }})"
                                                         class="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white transition"
                                                         title="Selesaikan Tiket (KD13)">
                                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
@@ -562,7 +586,7 @@
 
                                                 <!-- Cancel Button -->
                                                 <button type="button"
-                                                        @click="openCancelModal({{ json_encode($item) }})"
+                                                        @click="openCancelModal({{ $loop->index }})"
                                                         class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition"
                                                         title="Batalkan Tiket (KD14)">
                                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">

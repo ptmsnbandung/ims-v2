@@ -348,7 +348,7 @@
 
                             $keluhanClean = str_replace(["\r\n", "\\r\\n", "\r", "\\r", "\\n"], "\n", $item->keluhan ?? '');
                             $passLama = '-';
-                            $passBaru = $item->solusi ?: 'tim customer care kami akan segera menghubungi anda';
+                            $passBaru = ($item->solusi ?? null) ?: 'tim customer care kami akan segera menghubungi anda';
 
                             if (stripos($keluhanClean, 'Password Lama :') !== false || stripos($keluhanClean, 'password Baru :') !== false) {
                                 $parts = preg_split('/password\s*baru\s*:\s*/i', $keluhanClean);

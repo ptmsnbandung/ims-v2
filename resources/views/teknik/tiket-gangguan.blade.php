@@ -4,125 +4,7 @@
 @section('page_title', 'Tiket Gangguan & Pengaduan')
 
 @section('content')
-<div class="space-y-5"
-     x-data="{
-         items: {{ Js::from($tikets->items()) }},
-         detailModalOpen: false,
-         scheduleModalOpen: false,
-         resolveModalOpen: false,
-         cancelModalOpen: false,
-         createModalOpen: false,
-         
-         selectedTiket: null,
-         modalId: '',
-         modalKodeTiket: '',
-         modalNomorInternet: '',
-         modalNamaPelanggan: '',
-         modalKeluhan: '',
-         modalKatTiket: '',
-         modalStatus: '',
-         modalDateSchedule: '{{ date('Y-m-d') }}',
-         modalTimeSchedule: '09:00 - 12:00 WIB',
-         modalTeamTeknisi: '',
-         modalSolusi: '',
-         modalNoteCancel: '',
-
-         // Create Modal State
-         createNomorInternet: '',
-         createPerubahan: 'Password Lama :\n[ketikdisini]',
-         createCustomerData: null,
-         createLoading: false,
-         createError: '',
-
-         openCreateModal() {
-             this.createNomorInternet = '';
-             this.createPerubahan = 'Password Lama :\n[ketikdisini]';
-             this.createCustomerData = null;
-             this.createError = '';
-             this.createLoading = false;
-             this.createModalOpen = true;
-         },
-
-         async checkCustomer() {
-             const noInt = this.createNomorInternet.trim();
-             if (!noInt) {
-                 this.createError = 'Silakan masukkan nomor internet.';
-                 return;
-             }
-             this.createLoading = true;
-             this.createError = '';
-             try {
-                 const res = await fetch(`{{ route('teknik.tiket.gangguan.check-customer') }}?nomor_internet=` + encodeURIComponent(noInt));
-                 const json = await res.json();
-                 if (json.success && json.data) {
-                     this.createCustomerData = json.data;
-                     if (json.data.pass_pppoe) {
-                         this.createPerubahan = `Password Lama :\n${json.data.pass_pppoe}`;
-                     }
-                 } else {
-                     this.createCustomerData = null;
-                     this.createError = json.message || 'Nomor internet tidak ditemukan.';
-                 }
-             } catch (e) {
-                 this.createCustomerData = null;
-                 this.createError = 'Gagal menghubungi server untuk cek data.';
-             } finally {
-                 this.createLoading = false;
-             }
-         },
-
-         openDetailModal(idx) {
-             const item = this.items[idx];
-             if (!item) return;
-             this.selectedTiket = item;
-             this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
-             this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
-             this.modalNomorInternet = item.nomor_internet || '-';
-             this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
-             this.modalKeluhan = item.keluhan || '-';
-             this.modalKatTiket = (item.kat_tiket == '12') ? 'Ubah Password' : 'Gangguan Layanan';
-             this.modalStatus = item.status || '11';
-             this.modalSolusi = item.solusi || '';
-             this.modalTeamTeknisi = item.team_teknisi || '';
-             this.detailModalOpen = true;
-         },
-
-         openScheduleModal(idx) {
-             const item = this.items[idx];
-             if (!item) return;
-             this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
-             this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
-             this.modalNomorInternet = item.nomor_internet || '-';
-             this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
-             this.modalKeluhan = item.keluhan || '';
-             this.modalDateSchedule = item.date_schedule ? item.date_schedule.substring(0, 10) : '{{ date('Y-m-d') }}';
-             this.modalTimeSchedule = item.time_schedule || '09:00 - 12:00 WIB';
-             this.modalTeamTeknisi = item.team_teknisi || '';
-             this.scheduleModalOpen = true;
-         },
-
-         openResolveModal(idx) {
-             const item = this.items[idx];
-             if (!item) return;
-             this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
-             this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
-             this.modalNomorInternet = item.nomor_internet || '-';
-             this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
-             this.modalSolusi = item.solusi || '';
-             this.resolveModalOpen = true;
-         },
-
-         openCancelModal(idx) {
-             const item = this.items[idx];
-             if (!item) return;
-             this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
-             this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
-             this.modalNomorInternet = item.nomor_internet || '-';
-             this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
-             this.modalNoteCancel = '';
-             this.cancelModalOpen = true;
-         }
-     }">
+<div class="space-y-5" x-data="tiketGangguanApp()">
 
     <!-- Breadcrumbs & Header Actions -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
@@ -967,4 +849,129 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+function tiketGangguanApp() {
+    return {
+        items: @json($tikets->items()),
+        detailModalOpen: false,
+        scheduleModalOpen: false,
+        resolveModalOpen: false,
+        cancelModalOpen: false,
+        createModalOpen: false,
+        
+        selectedTiket: null,
+        modalId: '',
+        modalKodeTiket: '',
+        modalNomorInternet: '',
+        modalNamaPelanggan: '',
+        modalKeluhan: '',
+        modalKatTiket: '',
+        modalStatus: '',
+        modalDateSchedule: '{{ date("Y-m-d") }}',
+        modalTimeSchedule: '09:00 - 12:00 WIB',
+        modalTeamTeknisi: '',
+        modalSolusi: '',
+        modalNoteCancel: '',
+
+        // Create Modal State
+        createNomorInternet: '',
+        createPerubahan: "Password Lama :\n[ketikdisini]",
+        createCustomerData: null,
+        createLoading: false,
+        createError: '',
+
+        openCreateModal() {
+            this.createNomorInternet = '';
+            this.createPerubahan = "Password Lama :\n[ketikdisini]";
+            this.createCustomerData = null;
+            this.createError = '';
+            this.createLoading = false;
+            this.createModalOpen = true;
+        },
+
+        async checkCustomer() {
+            const noInt = this.createNomorInternet.trim();
+            if (!noInt) {
+                this.createError = 'Silakan masukkan nomor internet.';
+                return;
+            }
+            this.createLoading = true;
+            this.createError = '';
+            try {
+                const res = await fetch(`{{ route('teknik.tiket.gangguan.check-customer') }}?nomor_internet=` + encodeURIComponent(noInt));
+                const json = await res.json();
+                if (json.success && json.data) {
+                    this.createCustomerData = json.data;
+                    if (json.data.pass_pppoe) {
+                        this.createPerubahan = "Password Lama :\n" + json.data.pass_pppoe;
+                    }
+                } else {
+                    this.createCustomerData = null;
+                    this.createError = json.message || 'Nomor internet tidak ditemukan.';
+                }
+            } catch (e) {
+                this.createCustomerData = null;
+                this.createError = 'Gagal menghubungi server untuk cek data.';
+            } finally {
+                this.createLoading = false;
+            }
+        },
+
+        openDetailModal(idx) {
+            const item = this.items[idx];
+            if (!item) return;
+            this.selectedTiket = item;
+            this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
+            this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
+            this.modalNomorInternet = item.nomor_internet || '-';
+            this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
+            this.modalKeluhan = item.keluhan || '-';
+            this.modalKatTiket = (item.kat_tiket == '12') ? 'Ubah Password' : 'Gangguan Layanan';
+            this.modalStatus = item.status || '11';
+            this.modalSolusi = item.solusi || '';
+            this.modalTeamTeknisi = item.team_teknisi || '';
+            this.detailModalOpen = true;
+        },
+
+        openScheduleModal(idx) {
+            const item = this.items[idx];
+            if (!item) return;
+            this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
+            this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
+            this.modalNomorInternet = item.nomor_internet || '-';
+            this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
+            this.modalKeluhan = item.keluhan || '';
+            this.modalDateSchedule = item.date_schedule ? item.date_schedule.substring(0, 10) : '{{ date("Y-m-d") }}';
+            this.modalTimeSchedule = item.time_schedule || '09:00 - 12:00 WIB';
+            this.modalTeamTeknisi = item.team_teknisi || '';
+            this.scheduleModalOpen = true;
+        },
+
+        openResolveModal(idx) {
+            const item = this.items[idx];
+            if (!item) return;
+            this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
+            this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
+            this.modalNomorInternet = item.nomor_internet || '-';
+            this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
+            this.modalSolusi = item.solusi || '';
+            this.resolveModalOpen = true;
+        },
+
+        openCancelModal(idx) {
+            const item = this.items[idx];
+            if (!item) return;
+            this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
+            this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
+            this.modalNomorInternet = item.nomor_internet || '-';
+            this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
+            this.modalNoteCancel = '';
+            this.cancelModalOpen = true;
+        }
+    };
+}
+</script>
+@endpush
 @endsection

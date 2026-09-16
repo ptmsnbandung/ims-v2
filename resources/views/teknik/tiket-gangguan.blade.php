@@ -281,11 +281,20 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
                     @forelse($tikets as $item)
                         @php
-                            $namaPel = $item->nama_pelanggan ?: ($item->batch_nama ?: 'Pelanggan');
-                            $nomorInternet = $item->nomor_internet ?: '-';
-                            $alamat = $item->alamat_pasang ?: ($item->alamat_p ?: '-');
-                            $katText = ($item->kat_tiket == '12') ? 'Ubah Password' : 'Gangguan Layanan';
+                            $namaPel = ($item->nama_pelanggan ?? null) ?: (($item->batch_nama ?? null) ?: 'Pelanggan');
+                            $nomorInternet = $item->nomor_internet ?? '-';
+                            $alamat = ($item->alamat_pasang ?? null) ?: (($item->alamat_p ?? null) ?: '-');
+                            $katText = (($item->kat_tiket ?? null) == '12') ? 'Ubah Password' : 'Gangguan Layanan';
                             $statusVal = (string) ($item->status ?? '11');
+                            $kodeTiket = ($item->kode_trx_tiket ?? null) ?: (($item->id_tiket ?? null) ?: (($item->id ?? null) ?: '-'));
+                            $userPppoe = ($item->user_pppoe ?? null) ?: $nomorInternet;
+                            $passPppoe = ($item->pass_pppoe ?? null) ?: (($item->password ?? null) ?: '-');
+                            $mediaAkses = ($item->media_akses ?? null) ?: 'FTTH';
+                            $popName = ($item->nama_pop ?? null) ?: 'MediaNet FTTH (jaringan FTTH Media Solusi Network)';
+                            $passLama = ($item->password_lama ?? null) ?: (($item->keluhan ?? null) ?: '-');
+                            $passBaru = ($item->password_baru ?? null) ?: (($item->solusi ?? null) ?: 'tim customer care kami akan segera menghubungi anda');
+                            $dateCreateFormatted = !empty($item->date_create) ? date('d F Y H:i', strtotime($item->date_create)) . ' WIB' : '-';
+                            $dateUpdateFormatted = !empty($item->date_update) ? date('d F Y H:i', strtotime($item->date_update)) . ' WIB' : $dateCreateFormatted;
                         @endphp
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                             
@@ -293,10 +302,10 @@
                                 <!-- 1. Tiket -->
                                 <td class="py-4 px-4 align-top">
                                     <div class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">
-                                        #{{ $item->kode_trx_tiket ?: ($item->id_tiket ?: '-') }}
+                                        #{{ $kodeTiket }}
                                     </div>
                                     <div class="text-[11px] text-slate-400 mt-0.5 font-sans">
-                                        {{ $item->date_create ? date('d F Y H:i', strtotime($item->date_create)) . ' WIB' : '-' }}
+                                        {{ $dateCreateFormatted }}
                                     </div>
                                 </td>
 
@@ -314,14 +323,14 @@
                                 <!-- 3. Info -->
                                 <td class="py-4 px-4 align-top text-[11px] space-y-1">
                                     <div class="text-slate-700 dark:text-slate-300">
-                                        <span class="text-slate-400">User :</span> <strong class="font-mono text-blue-500">{{ $item->user_pppoe ?: $nomorInternet }}</strong> 
-                                        <span class="text-slate-400 ml-1.5">Pass :</span> <strong class="font-mono text-amber-500">{{ $item->pass_pppoe ?: ($item->password ?? '-') }}</strong>
+                                        <span class="text-slate-400">User :</span> <strong class="font-mono text-blue-500">{{ $userPppoe }}</strong> 
+                                        <span class="text-slate-400 ml-1.5">Pass :</span> <strong class="font-mono text-amber-500">{{ $passPppoe }}</strong>
                                     </div>
                                     <div class="text-slate-600 dark:text-slate-400">
-                                        <span class="text-slate-400">MediaAkses :</span> <strong>{{ $item->media_akses ?: 'FTTH' }}</strong>
+                                        <span class="text-slate-400">MediaAkses :</span> <strong>{{ $mediaAkses }}</strong>
                                     </div>
                                     <div class="text-slate-600 dark:text-slate-400">
-                                        <span class="text-slate-400">POP :</span> {{ $item->nama_pop ?: 'MediaNet FTTH (jaringan FTTH Media Solusi Network)' }}
+                                        <span class="text-slate-400">POP :</span> {{ $popName }}
                                     </div>
                                 </td>
 
@@ -329,11 +338,11 @@
                                 <td class="py-4 px-4 align-top text-[11px] space-y-1">
                                     <div>
                                         <span class="text-slate-400">Password Lama :</span>
-                                        <div class="font-mono text-slate-800 dark:text-slate-200 mt-0.5">{{ $item->password_lama ?: ($item->keluhan ?: '-') }}</div>
+                                        <div class="font-mono text-slate-800 dark:text-slate-200 mt-0.5">{{ $passLama }}</div>
                                     </div>
                                     <div class="pt-1">
                                         <span class="text-slate-400">password Baru :</span>
-                                        <div class="font-medium text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">{{ $item->password_baru ?: ($item->solusi ?: 'tim customer care kami akan segera menghubungi anda') }}</div>
+                                        <div class="font-medium text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">{{ $passBaru }}</div>
                                     </div>
                                 </td>
 
@@ -344,7 +353,7 @@
                                             {{ $statusVal === '11' ? 'ANTRIAN' : ($statusVal === '12' ? 'KONFIRMASI PENANGANAN' : ($statusVal === '13' || $statusVal === 'Selesai' ? 'KONFIRMASI PENANGANAN' : 'DIBATALKAN')) }}
                                         </div>
                                         <div class="text-[10px] text-slate-400">
-                                            {{ $item->date_update ? date('d F Y H:i', strtotime($item->date_update)) . ' WIB' : ($item->date_create ? date('d F Y H:i', strtotime($item->date_create)) . ' WIB' : '-') }}
+                                            {{ $dateUpdateFormatted }}
                                         </div>
                                         @if(!empty($item->user_update))
                                             <div class="text-[10px] text-slate-500 uppercase font-semibold">
@@ -374,9 +383,9 @@
                                     <div class="text-[11px] font-mono text-blue-500 font-semibold mt-0.5">
                                         {{ $nomorInternet }}
                                     </div>
-                                    @if(!empty($item->kode_trx_tiket) || !empty($item->id_tiket))
+                                    @if(!empty($kodeTiket) && $kodeTiket !== '-')
                                         <div class="text-[10px] text-slate-400 font-mono">
-                                            #{{ $item->kode_trx_tiket ?: $item->id_tiket }}
+                                            #{{ $kodeTiket }}
                                         </div>
                                     @endif
                                 </td>
@@ -395,7 +404,7 @@
 
                                 <!-- Kategori Tiket -->
                                 <td class="py-3 px-4">
-                                    @if($item->kat_tiket == '12')
+                                    @if(($item->kat_tiket ?? null) == '12')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
                                             <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
@@ -422,7 +431,7 @@
                                 <!-- Keluhan / Catatan -->
                                 <td class="py-3 px-4">
                                     <div class="text-xs text-slate-800 dark:text-slate-200 line-clamp-2">
-                                        {{ $item->keluhan ?: '-' }}
+                                        {{ $item->keluhan ?? '-' }}
                                     </div>
                                     @if(!empty($item->solusi))
                                         <div class="mt-1 text-[11px] text-emerald-400 font-medium line-clamp-1">
@@ -464,7 +473,7 @@
                                         </span>
                                     @endif
                                     <div class="text-[10px] text-slate-500 mt-1">
-                                        {{ $item->date_create ? date('d M Y H:i', strtotime($item->date_create)) : '-' }}
+                                        {{ !empty($item->date_create) ? date('d M Y H:i', strtotime($item->date_create)) : '-' }}
                                     </div>
                                 </td>
 

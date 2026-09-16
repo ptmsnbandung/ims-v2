@@ -139,7 +139,7 @@ class FinanceController extends Controller
             : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
 
         $wilayahList = Schema::hasTable('m_wilayah_perangkat')
-            ? DB::table('m_wilayah_perangkat')->pluck('nama_wilayah_perangkat')->filter()->unique()->toArray()
+            ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->toArray()
             : [];
 
         if (empty($wilayahList) && Schema::hasTable('m_wilayah')) {
@@ -862,7 +862,7 @@ class FinanceController extends Controller
             : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
 
         $wilayahList = Schema::hasTable('m_wilayah_perangkat')
-            ? DB::table('m_wilayah_perangkat')->pluck('nama_wilayah_perangkat')->filter()->unique()->toArray()
+            ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->toArray()
             : [];
 
         if (empty($wilayahList) && Schema::hasTable('m_wilayah')) {

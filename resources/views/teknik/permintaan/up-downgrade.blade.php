@@ -7,12 +7,17 @@
 <div class="space-y-5"
      x-data="{
          scheduleModalOpen: false,
+         executeModalOpen: false,
          modalKodeTrx: '',
          modalNomorInternet: '',
          modalNamaPelanggan: '',
+         modalPaketLama: '',
          modalPaketBaru: '',
+         modalKodeBandwithBaru: '',
          modalDateSchedule: '{{ date('Y-m-d') }}',
          modalNoteSchedule: '',
+         modalDateEksekusi: '{{ date('Y-m-d') }}',
+         modalNoteEksekusi: '',
 
          openScheduleModal(item) {
              this.modalKodeTrx = item.kode_trx_ubah_layanan;
@@ -26,12 +31,33 @@
              this.modalDateSchedule = item.date_schedule ? item.date_schedule.substring(0, 10) : '{{ date('Y-m-d') }}';
              this.modalNoteSchedule = item.note_schedule || '';
              this.scheduleModalOpen = true;
+         },
+
+         openExecuteModal(item) {
+             this.modalKodeTrx = item.kode_trx_ubah_layanan;
+             this.modalNomorInternet = item.nomor_internet;
+             this.modalNamaPelanggan = item.nama_pelanggan || '';
+             
+             let paketLama = (item.nama_kategori_bandwith_lama || item.alias_nama_kategori_lama || 'BROADBAND');
+             let speedLama = item.nominal_bandwith_lama ? (' ' + item.nominal_bandwith_lama + ' Mbps') : '';
+             this.modalPaketLama = paketLama + speedLama;
+
+             let paketBaru = (item.nama_kategori_bandwith_baru || item.alias_nama_kategori_baru || 'BROADBAND');
+             let speedBaru = item.nominal_bandwith_baru ? (' ' + item.nominal_bandwith_baru + ' Mbps') : '';
+             this.modalPaketBaru = paketBaru + speedBaru;
+
+             this.modalKodeBandwithBaru = item.kode_bandwith_baru || '';
+             this.modalDateEksekusi = '{{ date('Y-m-d') }}';
+             this.modalNoteEksekusi = 'Eksekusi UP/Downgrade bandwidth profil pelanggan berhasil diselesaikan.';
+             this.executeModalOpen = true;
          }
      }">
 
     <!-- Breadcrumbs -->
     <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
         <span>IMS</span>
+        <span>&gt;</span>
+        <a href="{{ route('teknik.tiket') }}" class="hover:text-blue-500 transition">Tiket</a>
         <span>&gt;</span>
         <span class="text-blue-500 font-semibold">Ubah Layanan</span>
     </div>
@@ -108,13 +134,13 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 2. STATUS PILL 4 KPI BANNERS GRID (MATCHING SCREENSHOT)             -->
+    <!-- 2. STATUS PILL 4 KPI BANNERS GRID (EXACT MATCHING SCREENSHOT)       -->
     <!-- =================================================================== -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         <!-- Card 1: (KD11) Request : X User (Pink / Rose Gradient) -->
         <a href="{{ route('teknik.permintaan.up-downgrade', ['status' => '11']) }}" 
-           class="p-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition flex items-center justify-between cursor-pointer group">
+           class="p-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition flex items-center justify-between cursor-pointer group {{ request('status') === '11' ? 'ring-2 ring-white/60 scale-[1.02]' : '' }}">
             <span class="tracking-wide text-[11px]">(KD11) Request : {{ $count11 ?? 0 }} User</span>
             <svg class="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -123,7 +149,7 @@
 
         <!-- Card 2: (KD12) On Schedule : X User (Gold / Yellow Gradient) -->
         <a href="{{ route('teknik.permintaan.up-downgrade', ['status' => '12']) }}" 
-           class="p-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-bold text-xs shadow-md shadow-amber-500/20 transition flex items-center justify-between cursor-pointer group">
+           class="p-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-bold text-xs shadow-md shadow-amber-500/20 transition flex items-center justify-between cursor-pointer group {{ request('status') === '12' ? 'ring-2 ring-slate-900/60 scale-[1.02]' : '' }}">
             <span class="tracking-wide text-[11px]">(KD12) On Schedule : {{ $count12 ?? 0 }} User</span>
             <svg class="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -132,7 +158,7 @@
 
         <!-- Card 3: (KD13) Success : X User (Teal / Emerald Gradient) -->
         <a href="{{ route('teknik.permintaan.up-downgrade', ['status' => '13']) }}" 
-           class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition flex items-center justify-between cursor-pointer group">
+           class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition flex items-center justify-between cursor-pointer group {{ request('status') === '13' ? 'ring-2 ring-white/60 scale-[1.02]' : '' }}">
             <span class="tracking-wide text-[11px]">(KD13) Success : {{ $count13 ?? 0 }} User</span>
             <svg class="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -141,7 +167,7 @@
 
         <!-- Card 4: (KD14) Canceled : X User (Teal / Cyan Gradient) -->
         <a href="{{ route('teknik.permintaan.up-downgrade', ['status' => '14']) }}" 
-           class="p-3.5 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-500 hover:to-cyan-600 text-white font-bold text-xs shadow-md shadow-teal-500/20 transition flex items-center justify-between cursor-pointer group">
+           class="p-3.5 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-500 hover:to-cyan-600 text-white font-bold text-xs shadow-md shadow-teal-500/20 transition flex items-center justify-between cursor-pointer group {{ request('status') === '14' ? 'ring-2 ring-white/60 scale-[1.02]' : '' }}">
             <span class="tracking-wide text-[11px]">(KD14) Canceled : {{ $count14 ?? 0 }} User</span>
             <svg class="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -157,7 +183,7 @@
         
         <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <div>
-                show <span class="font-bold text-slate-800 dark:text-slate-200">10</span> entries
+                Show <span class="font-bold text-slate-800 dark:text-slate-200">10</span> entries
             </div>
             <div class="font-mono">
                 Total: <strong class="text-slate-800 dark:text-slate-200">{{ $ubahLayanans->total() }}</strong> Data
@@ -173,7 +199,7 @@
                         <th class="py-3.5 px-4 min-w-[120px]">Old</th>
                         <th class="py-3.5 px-4 min-w-[140px]">New</th>
                         <th class="py-3.5 px-4 min-w-[130px]">State</th>
-                        <th class="py-3.5 px-4 text-center min-w-[130px]">Action</th>
+                        <th class="py-3.5 px-4 text-center min-w-[140px]">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
@@ -237,7 +263,7 @@
                             <td class="py-4 px-4 align-top">
                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide
                                     @if(in_array($item->status_ubah_layanan, ['11']))
-                                        bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30
+                                        bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
                                     @elseif(in_array($item->status_ubah_layanan, ['12']))
                                         bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30
                                     @elseif(in_array($item->status_ubah_layanan, ['13']))
@@ -254,19 +280,18 @@
                                 </div>
                             </td>
 
-                            <!-- 6. Action Column (Schedule & Canceled Buttons) -->
+                            <!-- 6. Action Column (Schedule, UP/Downgrade & Cancel Buttons) -->
                             <td class="py-4 px-4 align-top text-center">
                                 @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
-                                    @if(in_array($item->status_ubah_layanan, ['11', '12']))
+                                    @if($item->status_ubah_layanan === '11')
+                                        <!-- Status 11 (KD11 Request): Tombol Schedule & Cancel -->
                                         <div class="flex flex-col items-center justify-center gap-1.5">
-                                            
-                                            <!-- Open Schedule Modal Button -->
                                             <button type="button" 
                                                     @click="openScheduleModal({{ json_encode($item) }})"
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white dark:hover:text-white text-[11px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold shadow-sm shadow-blue-500/20 transition cursor-pointer"
                                                     title="Jadwalkan Ubah Layanan">
-                                                <svg class="w-3.5 h-3.5 text-blue-500 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
                                                 </svg>
                                                 <span>Schedule</span>
                                             </button>
@@ -275,15 +300,49 @@
                                             <form action="{{ route('teknik.permintaan.up-downgrade.cancel', $item->kode_trx_ubah_layanan) }}" method="POST" onsubmit="return confirm('Batalkan permohonan ubah layanan {{ $item->nomor_internet }}?');">
                                                 @csrf
                                                 <button type="submit" 
-                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[11px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[10px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
                                                         title="Batalkan Permintaan">
-                                                    <svg class="w-3.5 h-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <svg class="w-3 h-3 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                                     </svg>
-                                                    <span>Canceled</span>
+                                                    <span>Cancel</span>
                                                 </button>
                                             </form>
+                                        </div>
+                                    @elseif($item->status_ubah_layanan === '12')
+                                        <!-- Status 12 (KD12 On Schedule): Tombol berubah menjadi UP/Downgrade dan opsi Reschedule -->
+                                        <div class="flex flex-col items-center justify-center gap-1.5">
+                                            
+                                            <!-- Button UP / Downgrade (Emerald Gradient) -->
+                                            <button type="button" 
+                                                    @click="openExecuteModal({{ json_encode($item) }})"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-[11px] font-bold shadow-md shadow-emerald-500/25 transition cursor-pointer hover:scale-[1.02]"
+                                                    title="Eksekusi UP / Downgrade Paket">
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                                                </svg>
+                                                <span>UP/Downgrade</span>
+                                            </button>
 
+                                            <div class="flex items-center gap-1">
+                                                <!-- Reschedule Option -->
+                                                <button type="button" 
+                                                        @click="openScheduleModal({{ json_encode($item) }})"
+                                                        class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] text-amber-500 hover:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition cursor-pointer"
+                                                        title="Ubah Jadwal Schedule">
+                                                    <span>Reschedule</span>
+                                                </button>
+
+                                                <!-- Cancel Option -->
+                                                <form action="{{ route('teknik.permintaan.up-downgrade.cancel', $item->kode_trx_ubah_layanan) }}" method="POST" onsubmit="return confirm('Batalkan permohonan ubah layanan {{ $item->nomor_internet }}?');">
+                                                    @csrf
+                                                    <button type="submit" 
+                                                            class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] text-rose-400 hover:text-white hover:bg-rose-600 transition cursor-pointer"
+                                                            title="Batalkan Permintaan">
+                                                        &times;
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
                                     @elseif($item->status_ubah_layanan == '13')
                                         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
@@ -297,7 +356,7 @@
                                             <span>Dibatalkan</span>
                                         </div>
                                     @else
-                                        <span class="text-slate-400 text-xs">-</span>
+                                        <span class="text-slate-400 text-xs font-mono">-</span>
                                     @endif
                                 @else
                                     <!-- Role Read-only mode -->
@@ -428,9 +487,128 @@
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                         </svg>
-                        <span>Update</span>
+                        <span>Update Schedule</span>
                     </button>
 
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 5. MODAL: EKSEKUSI UP / DOWNGRADE LAYANAN & PILIHAN PAKET BARU      -->
+    <!-- =================================================================== -->
+    <div x-show="executeModalOpen" 
+         x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+        
+        <div @click.away="executeModalOpen = false"
+             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col text-slate-800 dark:text-white">
+            
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-50 to-emerald-50/30 dark:from-slate-950 dark:to-emerald-950/20 shrink-0">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2 truncate">
+                    <span class="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-500">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                        </svg>
+                    </span>
+                    <span>Eksekusi UP / Downgrade An/</span>
+                    <span class="text-emerald-500 uppercase font-extrabold" x-text="modalNamaPelanggan"></span>
+                </h3>
+                <button type="button" 
+                        @click="executeModalOpen = false" 
+                        class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition">
+                    &times;
+                </button>
+            </div>
+
+            <form :action="'{{ url('/teknik/permintaan/up-downgrade') }}/' + modalKodeTrx + '/execute'" 
+                  method="POST" 
+                  class="flex flex-col flex-1">
+                @csrf
+
+                <div class="p-5 space-y-4 text-xs">
+                    
+                    <!-- Customer Summary Info Card -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-3">
+                        <div>
+                            <span class="text-[11px] text-slate-400 block">Nomor Internet:</span>
+                            <span class="font-mono font-bold text-blue-500" x-text="modalNomorInternet"></span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-400 block">Paket Saat Ini (Lama):</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-200" x-text="modalPaketLama"></span>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Pilihan Paket Baru (Dapat di UP/DOWN) -->
+                    <div class="space-y-1.5">
+                        <label class="block font-bold text-slate-700 dark:text-slate-200 text-xs">
+                            Pilih Paket Tujuan (UP / Downgrade): <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="kode_bandwith_baru" 
+                                x-model="modalKodeBandwithBaru"
+                                required
+                                class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="">-- PILIH PAKET INTERNET / BANDWIDTH --</option>
+                            @if(isset($paketList))
+                                @foreach($paketList as $pkt)
+                                    <option value="{{ $pkt->kode_bandwith }}">
+                                        [{{ strtoupper($pkt->nama_kategori_bandwith ?: ($pkt->alias_nama_kategori ?: 'BROADBAND')) }}] 
+                                        {{ $pkt->nama_bandwith ?: ($pkt->nominal_bandwith . ' Mbps') }} 
+                                        - Rp {{ number_format((float)($pkt->harga_bandwith ?? 0), 0, ',', '.') }} / bln
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        <p class="text-[11px] text-slate-400">
+                            Pilih paket baru yang akan diterapkan pada profil pelanggan ini (Upgrade / Downgrade).
+                        </p>
+                    </div>
+
+                    <!-- Tanggal Eksekusi -->
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Tanggal Eksekusi Perubahan Profil: <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" 
+                               name="date_eksekusi" 
+                               x-model="modalDateEksekusi" 
+                               required 
+                               class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <!-- Catatan / Note Eksekusi -->
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Catatan Eksekusi Teknis:
+                        </label>
+                        <textarea name="note_eksekusi" 
+                                  x-model="modalNoteEksekusi" 
+                                  rows="3" 
+                                  placeholder="Contoh: Profil paket pada MikroTik / OLT berhasil diubah ke 50 Mbps."
+                                  class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+                    </div>
+
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+                    <button type="button" 
+                            @click="executeModalOpen = false" 
+                            class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer">
+                        Batal
+                    </button>
+
+                    <button type="submit" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/25 transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                        <span>Eksekusi UP/Downgrade (KD13 Success)</span>
+                    </button>
                 </div>
             </form>
 

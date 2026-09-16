@@ -2703,6 +2703,15 @@ class TeknikController extends Controller
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
 
+        $paketList = Schema::hasTable('m_bandwith')
+            ? DB::table('m_bandwith as b')
+                ->leftJoin('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
+                ->where('b.disable', 0)
+                ->select('b.*', 'k.nama_kategori_bandwith', 'k.alias_nama_kategori')
+                ->orderBy('b.nominal_bandwith', 'asc')
+                ->get()
+            : collect();
+
         return view('teknik.permintaan.up-downgrade', [
             'user' => $request->user(),
             'ubahLayanans' => $ubahLayanans,
@@ -2715,6 +2724,7 @@ class TeknikController extends Controller
             'count13' => $count13,
             'count14' => $count14,
             'layananList' => $layananList,
+            'paketList' => $paketList,
         ]);
     }
 
@@ -2739,6 +2749,68 @@ class TeknikController extends Controller
         ]);
 
         return redirect()->back()->with('success', "Permintaan ubah layanan {$kodeTrx} telah dijadwalkan (On Schedule)!");
+    }
+
+    /**
+     * Eksekusi UP / Downgrade Layanan (KD13 Success) & Pilihan Paket Baru
+     */
+    public function executeUpDowngrade(Request $request, string $kodeTrx): RedirectResponse
+    {
+        if (!auth()->user()?->hasRole(['noc', 'direktur', 'admin'])) {
+            abort(403, 'Role Teknik hanya memiliki hak akses melihat data (View Only).');
+        }
+
+        $now = now()->format('Y-m-d H:i:s');
+        $currentUser = auth()->user()->nama ?? 'NOC';
+
+        $trx = DB::table('trx_ubah_layanan')->where('kode_trx_ubah_layanan', $kodeTrx)->first();
+        if (!$trx) {
+            return redirect()->back()->with('error', "Data transaksi {$kodeTrx} tidak ditemukan.");
+        }
+
+        $kodeBandwithBaru = $request->input('kode_bandwith_baru', $trx->kode_bandwith_baru ?? null);
+        $paketData = null;
+        if ($kodeBandwithBaru && Schema::hasTable('m_bandwith')) {
+            $paketData = DB::table('m_bandwith as b')
+                ->leftJoin('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
+                ->where('b.kode_bandwith', $kodeBandwithBaru)
+                ->select('b.*', 'k.nama_kategori_bandwith', 'k.alias_nama_kategori')
+                ->first();
+        }
+
+        $updateTrx = [
+            'status_ubah_layanan' => '13', // KD13 Success
+            'date_finish' => $request->date_eksekusi ?: now()->format('Y-m-d'),
+            'note_finish' => $request->note_eksekusi ?? 'Eksekusi UP/Downgrade bandwidth berhasil dilakukan.',
+            'date_update' => $now,
+            'user_update' => $currentUser,
+        ];
+
+        if ($paketData) {
+            $updateTrx['kode_bandwith_baru'] = $paketData->kode_bandwith;
+            $updateTrx['nama_kategori_bandwith_baru'] = $paketData->nama_kategori_bandwith ?? $paketData->alias_nama_kategori;
+            $updateTrx['nominal_bandwith_baru'] = $paketData->nominal_bandwith;
+        }
+
+        DB::table('trx_ubah_layanan')->where('kode_trx_ubah_layanan', $kodeTrx)->update($updateTrx);
+
+        // Update active package in customer record (trx_batchjob_register)
+        if ($trx->nomor_internet && Schema::hasTable('trx_batchjob_register')) {
+            $custUpdate = [
+                'date_update' => $now,
+                'user_update' => $currentUser,
+            ];
+            if ($paketData) {
+                $custUpdate['kode_bandwith'] = $paketData->kode_bandwith;
+                $custUpdate['kode_kategori_bandwith'] = $paketData->kode_kategori_bandwith;
+            }
+            DB::table('trx_batchjob_register')
+                ->where('nomor_internet', $trx->nomor_internet)
+                ->update($custUpdate);
+        }
+
+        $paketName = $paketData ? ($paketData->nama_bandwith ?? (($paketData->nama_kategori_bandwith ?? 'Paket') . ' ' . ($paketData->nominal_bandwith ?? '') . ' Mbps')) : ($trx->nama_kategori_bandwith_baru ?? 'Paket Baru');
+        return redirect()->back()->with('success', "Layanan pelanggan {$trx->nomor_internet} berhasil di-UP/Downgrade ke {$paketName} (KD13 Success)!");
     }
 
     /**

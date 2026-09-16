@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('permintaan')->name('permintaan.')->group(function () {
             Route::get('/up-downgrade', [TeknikController::class, 'upDowngrade'])->name('up-downgrade');
             Route::post('/up-downgrade/{kode_trx}/schedule', [TeknikController::class, 'scheduleUpDowngrade'])->name('up-downgrade.schedule');
+            Route::post('/up-downgrade/{kode_trx}/execute', [TeknikController::class, 'executeUpDowngrade'])->name('up-downgrade.execute');
             Route::post('/up-downgrade/{kode_trx}/cancel', [TeknikController::class, 'cancelUpDowngrade'])->name('up-downgrade.cancel');
             Route::get('/terminasi', [TeknikController::class, 'terminasi'])->name('terminasi');
             Route::get('/suspend', [TeknikController::class, 'suspend'])->name('suspend');

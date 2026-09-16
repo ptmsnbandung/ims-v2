@@ -22,6 +22,8 @@ class TeknikController extends Controller
      */
     public function tiket(Request $request): View
     {
+        $user = $request->user();
+
         $counts = [
             // 1. Gangguan Layanan (kat_tiket != 12 dan status = 11 [Request/Belum Selesai])
             'gangguan' => Schema::hasTable('trx_tiket_gangguan')
@@ -77,10 +79,369 @@ class TeknikController extends Controller
                 : 0,
         ];
 
+        // Dynamic Role-Aware Destination URLs for all 7 cards
+        $destinations = [
+            'gangguan' => route('teknik.tiket.gangguan', ['kategori' => 'gangguan']),
+            'ubah_password' => route('teknik.tiket.gangguan', ['kategori' => 'ubah_password']),
+            'coverage' => route('teknik.coverage'),
+            'terminasi' => ($user?->isNoc()) 
+                ? route('noc.terminasi') 
+                : (($user?->isFinance()) ? route('finance.permintaan.terminasi') : route('teknik.permintaan.terminasi')),
+            'suspend' => ($user?->isNoc()) 
+                ? route('noc.suspend') 
+                : (($user?->isFinance()) ? route('finance.permintaan.suspend') : route('teknik.permintaan.suspend')),
+            'pemasangan_baru' => ($user?->isNoc()) 
+                ? route('noc.aktivasi') 
+                : (($user?->isFinance()) ? route('finance.billing-registrasi') : route('teknik.pendaftaran')),
+            'ubah_layanan' => ($user?->isFinance()) 
+                ? route('finance.permintaan.up-downgrade') 
+                : route('teknik.permintaan.up-downgrade'),
+        ];
+
         return view('teknik.tiket', [
-            'user' => $request->user(),
+            'user' => $user,
             'counts' => $counts,
+            'destinations' => $destinations,
         ]);
+    }
+
+    /**
+     * Dashboard Tiket Gangguan & Ubah Password (Matching Screenshot IMS Layout)
+     */
+    public function tiketGangguan(Request $request): View
+    {
+        $search = $request->query('search');
+        $kategori = $request->query('kategori'); // 'gangguan', 'ubah_password', or specific kat_tiket
+        $layanan = $request->query('layanan');
+        $wilayah = $request->query('wilayah');
+        $status = $request->query('status'); // '11', '12', '13', '14'
+
+        $hasTable = Schema::hasTable('trx_tiket_gangguan');
+
+        if ($hasTable) {
+            $query = DB::table('trx_tiket_gangguan as t');
+
+            // Join view_batchjob or trx_batchjob_register for customer details if available
+            if (Schema::hasTable('view_batchjob')) {
+                $query->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet')
+                    ->select(
+                        't.*',
+                        DB::raw('COALESCE(t.nama_pelanggan, b.nama_pelanggan) as nama_pelanggan'),
+                        'b.alamat_p',
+                        'b.alamat_pasang',
+                        'b.nama_kategori_bandwith',
+                        'b.telepon_1',
+                        'b.hp',
+                        'b.nama_pop',
+                        'b.kode_pop'
+                    );
+            } elseif (Schema::hasTable('trx_batchjob_register')) {
+                $query->leftJoin('trx_batchjob_register as b', 't.nomor_internet', '=', 'b.nomor_internet')
+                    ->select(
+                        't.*',
+                        DB::raw('COALESCE(t.nama_pelanggan, b.nama_pelanggan) as nama_pelanggan'),
+                        'b.alamat_p',
+                        'b.alamat_pasang',
+                        'b.nama_kategori_bandwith',
+                        'b.telepon_1',
+                        'b.hp',
+                        'b.nama_pop',
+                        'b.kode_pop'
+                    );
+            } else {
+                $query->select('t.*');
+            }
+
+            // Filter Kategori (Gangguan Layanan vs Ubah Password)
+            if ($kategori === 'gangguan') {
+                if (Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
+                    $query->where('t.kat_tiket', '!=', '12');
+                }
+            } elseif ($kategori === 'ubah_password') {
+                if (Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
+                    $query->where('t.kat_tiket', '12');
+                }
+            } elseif (!empty($kategori)) {
+                if (Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
+                    $query->where('t.kat_tiket', $kategori);
+                }
+            }
+
+            // Filter Layanan / Bandwidth Category
+            if ($layanan && Schema::hasTable('view_batchjob')) {
+                $query->where('b.nama_kategori_bandwith', $layanan);
+            }
+
+            // Filter Search (nomor_internet, nama_pelanggan, kode_trx_tiket, id_tiket, keluhan)
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('t.nomor_internet', 'like', "%{$search}%");
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+                        $q->orWhere('t.kode_trx_tiket', 'like', "%{$search}%");
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+                        $q->orWhere('t.id_tiket', 'like', "%{$search}%");
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'nama_pelanggan')) {
+                        $q->orWhere('t.nama_pelanggan', 'like', "%{$search}%");
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'keluhan')) {
+                        $q->orWhere('t.keluhan', 'like', "%{$search}%");
+                    }
+                    if (Schema::hasTable('view_batchjob') && Schema::hasColumn('view_batchjob', 'nama_pelanggan')) {
+                        $q->orWhere('b.nama_pelanggan', 'like', "%{$search}%");
+                    }
+                });
+            }
+
+            // Filter Wilayah
+            if ($wilayah) {
+                $query->where(function ($q) use ($wilayah) {
+                    if (Schema::hasTable('view_batchjob')) {
+                        $q->where('b.alamat_p', 'like', "%{$wilayah}%")
+                          ->orWhere('b.alamat_pasang', 'like', "%{$wilayah}%")
+                          ->orWhere('b.nama_pop', 'like', "%{$wilayah}%");
+                    }
+                });
+            }
+
+            // Filter Status (11, 12, 13, 14)
+            if ($status) {
+                if (Schema::hasColumn('trx_tiket_gangguan', 'status')) {
+                    if ($status === '13') {
+                        $query->where(function ($q) {
+                            $q->where('t.status', '13')->orWhere('t.status', 'Selesai');
+                        });
+                    } elseif ($status === '14') {
+                        $query->where(function ($q) {
+                            $q->where('t.status', '14')->orWhere('t.status', 'Cancel')->orWhere('t.status', 'Dibatalkan');
+                        });
+                    } else {
+                        $query->where('t.status', $status);
+                    }
+                }
+            }
+
+            $orderCol = Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 't.date_create' : 't.created_at';
+            $tikets = $query->orderBy($orderCol, 'desc')->paginate(10)->withQueryString();
+
+            // Status Counters (KD11, KD12, KD13, KD14)
+            $countQuery = DB::table('trx_tiket_gangguan');
+            if ($kategori === 'gangguan' && Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
+                $countQuery->where('kat_tiket', '!=', '12');
+            } elseif ($kategori === 'ubah_password' && Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
+                $countQuery->where('kat_tiket', '12');
+            }
+
+            $count11 = (clone $countQuery)->where('status', '11')->count();
+            $count12 = (clone $countQuery)->where('status', '12')->count();
+            $count13 = (clone $countQuery)->where(function($q) {
+                $q->where('status', '13')->orWhere('status', 'Selesai');
+            })->count();
+            $count14 = (clone $countQuery)->where(function($q) {
+                $q->where('status', '14')->orWhere('status', 'Cancel')->orWhere('status', 'Dibatalkan');
+            })->count();
+        } else {
+            $tikets = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+            $count11 = 0;
+            $count12 = 0;
+            $count13 = 0;
+            $count14 = 0;
+        }
+
+        $layananList = Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique()
+            : collect();
+
+        $karyawanTeknisi = Schema::hasTable('tb_m_karyawan')
+            ? DB::table('tb_m_karyawan')->where('status_aktif', 1)->orderBy('nama_karyawan')->get(['kode_karyawan', 'nama_karyawan'])
+            : collect();
+
+        return view('teknik.tiket-gangguan', [
+            'user' => $request->user(),
+            'tikets' => $tikets,
+            'search' => $search,
+            'kategori' => $kategori,
+            'layanan' => $layanan,
+            'wilayah' => $wilayah,
+            'status' => $status,
+            'count11' => $count11,
+            'count12' => $count12,
+            'count13' => $count13,
+            'count14' => $count14,
+            'layananList' => $layananList,
+            'karyawanTeknisi' => $karyawanTeknisi,
+        ]);
+    }
+
+    /**
+     * Export Tiket Gangguan ke format CSV
+     */
+    public function exportTiketGangguan(Request $request): StreamedResponse
+    {
+        $search = $request->query('search');
+        $kategori = $request->query('kategori');
+        $layanan = $request->query('layanan');
+        $wilayah = $request->query('wilayah');
+        $status = $request->query('status');
+
+        $query = DB::table('trx_tiket_gangguan as t');
+
+        if (Schema::hasTable('view_batchjob')) {
+            $query->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet')
+                ->select(
+                    't.*',
+                    DB::raw('COALESCE(t.nama_pelanggan, b.nama_pelanggan) as nama_pelanggan'),
+                    'b.alamat_p',
+                    'b.alamat_pasang',
+                    'b.nama_kategori_bandwith',
+                    'b.telepon_1',
+                    'b.hp',
+                    'b.nama_pop'
+                );
+        }
+
+        if ($kategori === 'gangguan') {
+            $query->where('t.kat_tiket', '!=', '12');
+        } elseif ($kategori === 'ubah_password') {
+            $query->where('t.kat_tiket', '12');
+        }
+
+        if ($status) {
+            $query->where('t.status', $status);
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('t.nomor_internet', 'like', "%{$search}%");
+                if (Schema::hasColumn('trx_tiket_gangguan', 'nama_pelanggan')) {
+                    $q->orWhere('t.nama_pelanggan', 'like', "%{$search}%");
+                }
+            });
+        }
+
+        $filename = 'Export_Tiket_Gangguan_' . date('Ymd_His') . '.csv';
+
+        return response()->stream(function () use ($query) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['No Tiket', 'Nomor Internet', 'Nama Pelanggan', 'Kategori Tiket', 'Status', 'Keluhan', 'Solusi', 'Teknisi', 'Jadwal', 'Tanggal Buat']);
+
+            $query->chunk(200, function ($rows) use ($handle) {
+                foreach ($rows as $r) {
+                    $katLabel = ($r->kat_tiket == '12') ? 'Ubah Password' : 'Gangguan Layanan';
+                    $statusLabel = match ($r->status) {
+                        '11' => 'Request',
+                        '12' => 'On Schedule',
+                        '13', 'Selesai' => 'Success / Selesai',
+                        '14', 'Cancel', 'Dibatalkan' => 'Canceled',
+                        default => $r->status ?? '-',
+                    };
+
+                    fputcsv($handle, [
+                        $r->kode_trx_tiket ?? $r->id_tiket ?? '-',
+                        $r->nomor_internet ?? '-',
+                        $r->nama_pelanggan ?? '-',
+                        $katLabel,
+                        $statusLabel,
+                        $r->keluhan ?? '-',
+                        $r->solusi ?? '-',
+                        $r->team_teknisi ?? '-',
+                        $r->date_schedule ? ($r->date_schedule . ' ' . ($r->time_schedule ?? '')) : '-',
+                        $r->date_create ?? $r->created_at ?? '-',
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    /**
+     * Jadwalkan Penanganan Tiket Gangguan (KD12)
+     */
+    public function scheduleTiketGangguan(Request $request, string $id): RedirectResponse
+    {
+        if (!auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin'])) {
+            abort(403, 'Role Anda hanya memiliki hak akses melihat data (View Only).');
+        }
+
+        $now = now()->format('Y-m-d H:i:s');
+        $currentUser = auth()->user()->nama ?? 'Teknisi';
+        $team = is_array($request->team_teknisi) ? implode(', ', $request->team_teknisi) : ($request->team_teknisi ?? '');
+
+        $idColumn = Schema::hasColumn('trx_tiket_gangguan', 'id_tiket') ? 'id_tiket' : 'id';
+        if (!Schema::hasColumn('trx_tiket_gangguan', $idColumn) && Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+            $idColumn = 'kode_trx_tiket';
+        }
+
+        DB::table('trx_tiket_gangguan')->where($idColumn, $id)->update([
+            'status' => '12', // (KD12) On Schedule / Diproses
+            'date_schedule' => $request->date_schedule ?: now()->format('Y-m-d'),
+            'time_schedule' => $request->time_schedule ?: '09:00 - 12:00 WIB',
+            'team_teknisi' => $team,
+            'keluhan' => $request->keluhan ?: DB::raw('keluhan'),
+            'date_update' => $now,
+            'user_update' => $currentUser,
+        ]);
+
+        return redirect()->back()->with('success', "Tiket {$id} berhasil dijadwalkan ke status (KD12) On Schedule!");
+    }
+
+    /**
+     * Selesaikan Tiket Gangguan (KD13)
+     */
+    public function resolveTiketGangguan(Request $request, string $id): RedirectResponse
+    {
+        if (!auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin'])) {
+            abort(403, 'Role Anda hanya memiliki hak akses melihat data (View Only).');
+        }
+
+        $now = now()->format('Y-m-d H:i:s');
+        $currentUser = auth()->user()->nama ?? 'Teknisi';
+
+        $idColumn = Schema::hasColumn('trx_tiket_gangguan', 'id_tiket') ? 'id_tiket' : 'id';
+        if (!Schema::hasColumn('trx_tiket_gangguan', $idColumn) && Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+            $idColumn = 'kode_trx_tiket';
+        }
+
+        DB::table('trx_tiket_gangguan')->where($idColumn, $id)->update([
+            'status' => '13', // (KD13) Success / Selesai
+            'solusi' => $request->solusi ?: 'Kendala gangguan telah diselesaikan oleh teknisi/NOC.',
+            'date_update' => $now,
+            'user_update' => $currentUser,
+        ]);
+
+        return redirect()->back()->with('success', "Tiket {$id} berhasil diselesaikan (KD13 Success)!");
+    }
+
+    /**
+     * Batalkan Tiket Gangguan (KD14)
+     */
+    public function cancelTiketGangguan(Request $request, string $id): RedirectResponse
+    {
+        if (!auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin'])) {
+            abort(403, 'Role Anda hanya memiliki hak akses melihat data (View Only).');
+        }
+
+        $now = now()->format('Y-m-d H:i:s');
+        $currentUser = auth()->user()->nama ?? 'Operator';
+
+        $idColumn = Schema::hasColumn('trx_tiket_gangguan', 'id_tiket') ? 'id_tiket' : 'id';
+        if (!Schema::hasColumn('trx_tiket_gangguan', $idColumn) && Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+            $idColumn = 'kode_trx_tiket';
+        }
+
+        DB::table('trx_tiket_gangguan')->where($idColumn, $id)->update([
+            'status' => '14', // (KD14) Canceled
+            'solusi' => $request->note_cancel ? ('Dibatalkan: ' . $request->note_cancel) : 'Dibatalkan oleh operator',
+            'date_update' => $now,
+            'user_update' => $currentUser,
+        ]);
+
+        return redirect()->back()->with('success', "Tiket {$id} berhasil dibatalkan (KD14 Canceled)!");
     }
 
     /**

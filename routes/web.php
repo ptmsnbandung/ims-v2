@@ -37,9 +37,18 @@ Route::middleware('auth')->group(function () {
         Route::match(['POST', 'DELETE'], '/paket/{kode_bandwith}/delete', [AdminController::class, 'deletePaket'])->name('paket.delete')->where('kode_bandwith', '.*');
     });
 
-    // Routes Role Teknik & NOC & Direktur
-    Route::middleware('role:teknik,noc,direktur')->prefix('teknik')->name('teknik.')->group(function () {
+    // Routes Shared Ticket Hub & Tiket Gangguan (Teknik, NOC, Direktur, Admin, Finance)
+    Route::middleware('role:teknik,noc,direktur,admin,finance')->prefix('teknik')->name('teknik.')->group(function () {
         Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');
+        Route::get('/tiket/gangguan', [TeknikController::class, 'tiketGangguan'])->name('tiket.gangguan');
+        Route::get('/tiket/gangguan/export', [TeknikController::class, 'exportTiketGangguan'])->name('tiket.gangguan.export');
+        Route::post('/tiket/gangguan/{id}/schedule', [TeknikController::class, 'scheduleTiketGangguan'])->name('tiket.gangguan.schedule');
+        Route::post('/tiket/gangguan/{id}/resolve', [TeknikController::class, 'resolveTiketGangguan'])->name('tiket.gangguan.resolve');
+        Route::post('/tiket/gangguan/{id}/cancel', [TeknikController::class, 'cancelTiketGangguan'])->name('tiket.gangguan.cancel');
+    });
+
+    // Routes Role Teknik & NOC & Direktur
+    Route::middleware('role:teknik,noc,direktur,admin')->prefix('teknik')->name('teknik.')->group(function () {
         
         // Pendaftaran Pelanggan Baru & Edit Pendaftaran
         Route::get('/pendaftaran', [TeknikController::class, 'pendaftaran'])->name('pendaftaran');

@@ -127,13 +127,9 @@ class TeknikController extends Controller
                     'b.alamat_p',
                     'b.alamat_pasang',
                     'b.nama_kategori_bandwith',
-                    'b.telepon_1',
-                    'b.hp',
+                    'b.nomor_hp',
                     'b.nama_pop',
                     'b.kode_pop',
-                    'b.user_pppoe',
-                    'b.pass_pppoe',
-                    'b.media_akses',
                 ]);
 
             // Filter Kategori (Gangguan Layanan vs Ubah Password)
@@ -273,9 +269,9 @@ class TeknikController extends Controller
                 'b.alamat_p',
                 'b.alamat_pasang',
                 'b.nama_kategori_bandwith',
-                'b.telepon_1',
-                'b.hp',
-                'b.nama_pop'
+                'b.nomor_hp',
+                'b.nama_pop',
+                'b.kode_pop'
             ]);
 
         if ($kategori === 'gangguan') {

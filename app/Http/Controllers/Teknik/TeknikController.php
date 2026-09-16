@@ -2701,16 +2701,64 @@ class TeknikController extends Controller
         $count13 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '13')->count();
         $count14 = DB::table('view_ubah_layanan')->where('status_ubah_layanan', '14')->count();
 
-        $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
+        // 1. Kategori Layanan (m_bandwith_kategori)
+        $layananKategoriList = Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith_kategori')
+                ->where(function($q) {
+                    $q->where('disable', 0)->orWhereNull('disable');
+                })
+                ->orderBy('nama_kategori_bandwith', 'asc')
+                ->get()
+            : collect();
 
+        if ($layananKategoriList->isEmpty()) {
+            $layananKategoriList = collect([
+                (object)['kode_kategori_bandwith' => 'BROADBAND', 'nama_kategori_bandwith' => 'BROADBAND', 'alias_nama_kategori' => 'BROADBAND'],
+                (object)['kode_kategori_bandwith' => 'DEDICATED', 'nama_kategori_bandwith' => 'DEDICATED', 'alias_nama_kategori' => 'DEDICATED'],
+                (object)['kode_kategori_bandwith' => 'SOHO', 'nama_kategori_bandwith' => 'SOHO', 'alias_nama_kategori' => 'SOHO'],
+                (object)['kode_kategori_bandwith' => 'CORPORATE', 'nama_kategori_bandwith' => 'CORPORATE', 'alias_nama_kategori' => 'CORPORATE'],
+            ]);
+        }
+
+        // 2. Daftar Paket Lengkap (m_bandwith)
         $paketList = Schema::hasTable('m_bandwith')
             ? DB::table('m_bandwith as b')
                 ->leftJoin('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
-                ->where('b.disable', 0)
-                ->select('b.*', 'k.nama_kategori_bandwith', 'k.alias_nama_kategori')
+                ->where(function($q) {
+                    $q->where('b.disable', 0)->orWhereNull('b.disable');
+                })
+                ->where(function($q) {
+                    $q->where('b.hide', '0')->orWhereNull('b.hide');
+                })
+                ->select(
+                    'b.kode_bandwith',
+                    'b.kode_kategori_bandwith',
+                    'b.nama_bandwith',
+                    'b.nominal_bandwith',
+                    'b.harga_bandwith',
+                    'k.nama_kategori_bandwith',
+                    'k.alias_nama_kategori'
+                )
                 ->orderBy('b.nominal_bandwith', 'asc')
                 ->get()
             : collect();
+
+        if ($paketList->isEmpty()) {
+            $paketList = collect([
+                (object)['kode_bandwith' => 'BB10', 'kode_kategori_bandwith' => 'BROADBAND', 'nama_bandwith' => 'BROADBAND 10 Mbps', 'nominal_bandwith' => 10, 'harga_bandwith' => 150000, 'nama_kategori_bandwith' => 'BROADBAND'],
+                (object)['kode_bandwith' => 'BB20', 'kode_kategori_bandwith' => 'BROADBAND', 'nama_bandwith' => 'BROADBAND 20 Mbps', 'nominal_bandwith' => 20, 'harga_bandwith' => 200000, 'nama_kategori_bandwith' => 'BROADBAND'],
+                (object)['kode_bandwith' => 'BB30', 'kode_kategori_bandwith' => 'BROADBAND', 'nama_bandwith' => 'BROADBAND 30 Mbps', 'nominal_bandwith' => 30, 'harga_bandwith' => 250000, 'nama_kategori_bandwith' => 'BROADBAND'],
+                (object)['kode_bandwith' => 'BB50', 'kode_kategori_bandwith' => 'BROADBAND', 'nama_bandwith' => 'BROADBAND 50 Mbps', 'nominal_bandwith' => 50, 'harga_bandwith' => 350000, 'nama_kategori_bandwith' => 'BROADBAND'],
+                (object)['kode_bandwith' => 'BB100', 'kode_kategori_bandwith' => 'BROADBAND', 'nama_bandwith' => 'BROADBAND 100 Mbps', 'nominal_bandwith' => 100, 'harga_bandwith' => 500000, 'nama_kategori_bandwith' => 'BROADBAND'],
+                (object)['kode_bandwith' => 'DED50', 'kode_kategori_bandwith' => 'DEDICATED', 'nama_bandwith' => 'DEDICATED 50 Mbps', 'nominal_bandwith' => 50, 'harga_bandwith' => 1500000, 'nama_kategori_bandwith' => 'DEDICATED'],
+                (object)['kode_bandwith' => 'DED100', 'kode_kategori_bandwith' => 'DEDICATED', 'nama_bandwith' => 'DEDICATED 100 Mbps', 'nominal_bandwith' => 100, 'harga_bandwith' => 2500000, 'nama_kategori_bandwith' => 'DEDICATED'],
+                (object)['kode_bandwith' => 'SOHO30', 'kode_kategori_bandwith' => 'SOHO', 'nama_bandwith' => 'SOHO 30 Mbps', 'nominal_bandwith' => 30, 'harga_bandwith' => 400000, 'nama_kategori_bandwith' => 'SOHO'],
+                (object)['kode_bandwith' => 'SOHO50', 'kode_kategori_bandwith' => 'SOHO', 'nama_bandwith' => 'SOHO 50 Mbps', 'nominal_bandwith' => 50, 'harga_bandwith' => 600000, 'nama_kategori_bandwith' => 'SOHO'],
+                (object)['kode_bandwith' => 'CORP100', 'kode_kategori_bandwith' => 'CORPORATE', 'nama_bandwith' => 'CORPORATE 100 Mbps', 'nominal_bandwith' => 100, 'harga_bandwith' => 3000000, 'nama_kategori_bandwith' => 'CORPORATE'],
+            ]);
+        }
+
+        $layananList = $layananKategoriList->pluck('nama_kategori_bandwith')->filter()->unique();
 
         return view('teknik.permintaan.up-downgrade', [
             'user' => $request->user(),
@@ -2724,6 +2772,7 @@ class TeknikController extends Controller
             'count13' => $count13,
             'count14' => $count14,
             'layananList' => $layananList,
+            'layananKategoriList' => $layananKategoriList,
             'paketList' => $paketList,
         ]);
     }
@@ -2769,7 +2818,9 @@ class TeknikController extends Controller
         }
 
         $kodeBandwithBaru = $request->input('kode_bandwith_baru', $trx->kode_bandwith_baru ?? null);
+        $groupLayanan = $request->input('group_layanan');
         $paketData = null;
+
         if ($kodeBandwithBaru && Schema::hasTable('m_bandwith')) {
             $paketData = DB::table('m_bandwith as b')
                 ->leftJoin('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
@@ -2790,6 +2841,12 @@ class TeknikController extends Controller
             $updateTrx['kode_bandwith_baru'] = $paketData->kode_bandwith;
             $updateTrx['nama_kategori_bandwith_baru'] = $paketData->nama_kategori_bandwith ?? $paketData->alias_nama_kategori;
             $updateTrx['nominal_bandwith_baru'] = $paketData->nominal_bandwith;
+        } elseif ($kodeBandwithBaru) {
+            $updateTrx['kode_bandwith_baru'] = $kodeBandwithBaru;
+        }
+
+        if ($groupLayanan && Schema::hasColumn('trx_ubah_layanan', 'group_layanan')) {
+            $updateTrx['group_layanan'] = $groupLayanan;
         }
 
         DB::table('trx_ubah_layanan')->where('kode_trx_ubah_layanan', $kodeTrx)->update($updateTrx);
@@ -2804,9 +2861,28 @@ class TeknikController extends Controller
                 $custUpdate['kode_bandwith'] = $paketData->kode_bandwith;
                 $custUpdate['kode_kategori_bandwith'] = $paketData->kode_kategori_bandwith;
             }
+            if ($groupLayanan && Schema::hasColumn('trx_batchjob_register', 'group_layanan')) {
+                $custUpdate['group_layanan'] = $groupLayanan;
+            }
             DB::table('trx_batchjob_register')
                 ->where('nomor_internet', $trx->nomor_internet)
                 ->update($custUpdate);
+        }
+
+        // Update in trx_pelanggan if exists
+        if ($trx->nomor_internet && Schema::hasTable('trx_pelanggan')) {
+            $pelangganUpdate = [];
+            if ($paketData && Schema::hasColumn('trx_pelanggan', 'kode_bandwith')) {
+                $pelangganUpdate['kode_bandwith'] = $paketData->kode_bandwith;
+            }
+            if ($groupLayanan && Schema::hasColumn('trx_pelanggan', 'group_layanan')) {
+                $pelangganUpdate['group_layanan'] = $groupLayanan;
+            }
+            if (!empty($pelangganUpdate)) {
+                DB::table('trx_pelanggan')
+                    ->where('nomor_internet', $trx->nomor_internet)
+                    ->update($pelangganUpdate);
+            }
         }
 
         $paketName = $paketData ? ($paketData->nama_bandwith ?? (($paketData->nama_kategori_bandwith ?? 'Paket') . ' ' . ($paketData->nominal_bandwith ?? '') . ' Mbps')) : ($trx->nama_kategori_bandwith_baru ?? 'Paket Baru');

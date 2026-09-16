@@ -13,11 +13,38 @@
          modalNamaPelanggan: '',
          modalPaketLama: '',
          modalPaketBaru: '',
+         modalKodeKategori: '',
          modalKodeBandwithBaru: '',
+         modalGroupLayanan: 'MEDIANET',
          modalDateSchedule: '{{ date('Y-m-d') }}',
          modalNoteSchedule: '',
          modalDateEksekusi: '{{ date('Y-m-d') }}',
          modalNoteEksekusi: '',
+         allPaketList: {{ Js::from($paketList ?? []) }},
+         filteredPaketList: [],
+
+         onLayananChange() {
+             this.modalKodeBandwithBaru = '';
+             if (!this.modalKodeKategori) {
+                 this.filteredPaketList = [];
+                 return;
+             }
+             this.filteredPaketList = this.allPaketList.filter(p => 
+                 p.kode_kategori_bandwith === this.modalKodeKategori || 
+                 p.nama_kategori_bandwith === this.modalKodeKategori ||
+                 p.alias_nama_kategori === this.modalKodeKategori
+             );
+             if (this.filteredPaketList.length === 0) {
+                 fetch(`/teknik/api/paket/${encodeURIComponent(this.modalKodeKategori)}`)
+                     .then(res => res.json())
+                     .then(data => {
+                         if (Array.isArray(data) && data.length > 0) {
+                             this.filteredPaketList = data;
+                         }
+                     })
+                     .catch(() => {});
+             }
+         },
 
          openScheduleModal(item) {
              this.modalKodeTrx = item.kode_trx_ubah_layanan;
@@ -46,9 +73,30 @@
              let speedBaru = item.nominal_bandwith_baru ? (' ' + item.nominal_bandwith_baru + ' Mbps') : '';
              this.modalPaketBaru = paketBaru + speedBaru;
 
-             this.modalKodeBandwithBaru = item.kode_bandwith_baru || '';
+             this.modalGroupLayanan = item.group_layanan || 'MEDIANET';
              this.modalDateEksekusi = '{{ date('Y-m-d') }}';
              this.modalNoteEksekusi = 'Eksekusi UP/Downgrade bandwidth profil pelanggan berhasil diselesaikan.';
+
+             // Pre-select matching category
+             this.modalKodeKategori = item.kode_kategori_bandwith_baru || '';
+             if (!this.modalKodeKategori && (item.nama_kategori_bandwith_baru || item.alias_nama_kategori_baru)) {
+                 let catName = item.nama_kategori_bandwith_baru || item.alias_nama_kategori_baru;
+                 let found = this.allPaketList.find(p => p.nama_kategori_bandwith === catName || p.kode_kategori_bandwith === catName || p.alias_nama_kategori === catName);
+                 if (found) {
+                     this.modalKodeKategori = found.kode_kategori_bandwith;
+                 } else {
+                     this.modalKodeKategori = catName;
+                 }
+             }
+
+             if (this.modalKodeKategori) {
+                 this.onLayananChange();
+                 this.modalKodeBandwithBaru = item.kode_bandwith_baru || '';
+             } else {
+                 this.filteredPaketList = [];
+                 this.modalKodeBandwithBaru = '';
+             }
+
              this.executeModalOpen = true;
          }
      }">
@@ -543,29 +591,66 @@
                         </div>
                     </div>
 
-                    <!-- Dropdown Pilihan Paket Baru (Dapat di UP/DOWN) -->
-                    <div class="space-y-1.5">
-                        <label class="block font-bold text-slate-700 dark:text-slate-200 text-xs">
-                            Pilih Paket Tujuan (UP / Downgrade): <span class="text-rose-500">*</span>
-                        </label>
-                        <select name="kode_bandwith_baru" 
-                                x-model="modalKodeBandwithBaru"
-                                required
-                                class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <option value="">-- PILIH PAKET INTERNET / BANDWIDTH --</option>
-                            @if(isset($paketList))
-                                @foreach($paketList as $pkt)
-                                    <option value="{{ $pkt->kode_bandwith }}">
-                                        [{{ strtoupper($pkt->nama_kategori_bandwith ?: ($pkt->alias_nama_kategori ?: 'BROADBAND')) }}] 
-                                        {{ $pkt->nama_bandwith ?: ($pkt->nominal_bandwith . ' Mbps') }} 
-                                        - Rp {{ number_format((float)($pkt->harga_bandwith ?? 0), 0, ',', '.') }} / bln
-                                    </option>
-                                @endforeach
-                            @endif
-                        </select>
-                        <p class="text-[11px] text-slate-400">
-                            Pilih paket baru yang akan diterapkan pada profil pelanggan ini (Upgrade / Downgrade).
-                        </p>
+                    <!-- Dropdown Pilihan Layanan, Paket & Group Layanan (Exact Matching User Spec) -->
+                    <div class="space-y-3.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800">
+                        
+                        <!-- Row 1: Layanan * & Paket * -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <!-- 1. Layanan * -->
+                            <div>
+                                <label class="block font-medium text-slate-700 dark:text-slate-300 text-xs mb-1">
+                                    Layanan <span class="text-rose-500 font-bold">*</span>
+                                </label>
+                                <select x-model="modalKodeKategori"
+                                        @change="onLayananChange()"
+                                        name="kode_kategori_bandwith"
+                                        required
+                                        class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Pilih Layanan</option>
+                                    @if(isset($layananKategoriList))
+                                        @foreach($layananKategoriList as $kat)
+                                            <option value="{{ $kat->kode_kategori_bandwith }}">
+                                                {{ $kat->nama_kategori_bandwith ?: ($kat->alias_nama_kategori ?: $kat->kode_kategori_bandwith) }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+
+                            <!-- 2. Paket * -->
+                            <div>
+                                <label class="block font-medium text-slate-700 dark:text-slate-300 text-xs mb-1">
+                                    Paket <span class="text-rose-500 font-bold">*</span>
+                                </label>
+                                <select x-model="modalKodeBandwithBaru"
+                                        name="kode_bandwith_baru"
+                                        required
+                                        class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">Pilih Paket Layanan</option>
+                                    <template x-for="p in (filteredPaketList.length > 0 ? filteredPaketList : allPaketList)" :key="p.kode_bandwith">
+                                        <option :value="p.kode_bandwith" 
+                                                x-text="(p.nama_bandwith ? (p.nama_bandwith + ' - ') : '') + (p.nominal_bandwith ? (p.nominal_bandwith + ' Mbps') : '') + (p.harga_bandwith ? (' - Rp ' + Number(p.harga_bandwith).toLocaleString('id-ID')) : '')">
+                                        </option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Group Layanan -->
+                        <div>
+                            <label class="block font-medium text-slate-700 dark:text-slate-300 text-xs mb-1">
+                                Group Layanan
+                            </label>
+                            <select x-model="modalGroupLayanan"
+                                    name="group_layanan"
+                                    class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="">-- Pilih Group Layanan --</option>
+                                <option value="MEDIANET">MEDIANET</option>
+                                <option value="DNET">DNET</option>
+                                <option value="CORPORATE">CORPORATE</option>
+                            </select>
+                        </div>
+
                     </div>
 
                     <!-- Tanggal Eksekusi -->

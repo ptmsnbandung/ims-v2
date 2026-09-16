@@ -122,35 +122,42 @@ class TeknikController extends Controller
             $query = DB::table('trx_tiket_gangguan as t');
 
             // Join view_batchjob or trx_batchjob_register for customer details if available
+            $selectCols = ['t.*'];
             if (Schema::hasTable('view_batchjob')) {
-                $query->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet')
-                    ->select(
-                        't.*',
-                        DB::raw('COALESCE(t.nama_pelanggan, b.nama_pelanggan) as nama_pelanggan'),
-                        'b.alamat_p',
-                        'b.alamat_pasang',
-                        'b.nama_kategori_bandwith',
-                        'b.telepon_1',
-                        'b.hp',
-                        'b.nama_pop',
-                        'b.kode_pop'
-                    );
+                $query->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet');
+                $selectCols = array_merge($selectCols, [
+                    'b.nama_pelanggan',
+                    'b.alamat_p',
+                    'b.alamat_pasang',
+                    'b.nama_kategori_bandwith',
+                    'b.telepon_1',
+                    'b.hp',
+                    'b.nama_pop',
+                    'b.kode_pop'
+                ]);
+                if (Schema::hasColumn('view_batchjob', 'user_pppoe')) {
+                    $selectCols[] = 'b.user_pppoe';
+                }
+                if (Schema::hasColumn('view_batchjob', 'pass_pppoe')) {
+                    $selectCols[] = 'b.pass_pppoe';
+                }
+                if (Schema::hasColumn('view_batchjob', 'media_akses')) {
+                    $selectCols[] = 'b.media_akses';
+                }
             } elseif (Schema::hasTable('trx_batchjob_register')) {
-                $query->leftJoin('trx_batchjob_register as b', 't.nomor_internet', '=', 'b.nomor_internet')
-                    ->select(
-                        't.*',
-                        DB::raw('COALESCE(t.nama_pelanggan, b.nama_pelanggan) as nama_pelanggan'),
-                        'b.alamat_p',
-                        'b.alamat_pasang',
-                        'b.nama_kategori_bandwith',
-                        'b.telepon_1',
-                        'b.hp',
-                        'b.nama_pop',
-                        'b.kode_pop'
-                    );
-            } else {
-                $query->select('t.*');
+                $query->leftJoin('trx_batchjob_register as b', 't.nomor_internet', '=', 'b.nomor_internet');
+                $selectCols = array_merge($selectCols, [
+                    'b.nama_pelanggan',
+                    'b.alamat_p',
+                    'b.alamat_pasang',
+                    'b.nama_kategori_bandwith',
+                    'b.telepon_1',
+                    'b.hp',
+                    'b.nama_pop',
+                    'b.kode_pop'
+                ]);
             }
+            $query->select($selectCols);
 
             // Filter Kategori (Gangguan Layanan vs Ubah Password)
             if ($kategori === 'gangguan') {
@@ -189,6 +196,8 @@ class TeknikController extends Controller
                         $q->orWhere('t.keluhan', 'like', "%{$search}%");
                     }
                     if (Schema::hasTable('view_batchjob') && Schema::hasColumn('view_batchjob', 'nama_pelanggan')) {
+                        $q->orWhere('b.nama_pelanggan', 'like', "%{$search}%");
+                    } elseif (Schema::hasTable('trx_batchjob_register') && Schema::hasColumn('trx_batchjob_register', 'nama_pelanggan')) {
                         $q->orWhere('b.nama_pelanggan', 'like', "%{$search}%");
                     }
                 });
@@ -233,14 +242,17 @@ class TeknikController extends Controller
                 $countQuery->where('kat_tiket', '12');
             }
 
-            $count11 = (clone $countQuery)->where('status', '11')->count();
-            $count12 = (clone $countQuery)->where('status', '12')->count();
-            $count13 = (clone $countQuery)->where(function($q) {
-                $q->where('status', '13')->orWhere('status', 'Selesai');
-            })->count();
-            $count14 = (clone $countQuery)->where(function($q) {
-                $q->where('status', '14')->orWhere('status', 'Cancel')->orWhere('status', 'Dibatalkan');
-            })->count();
+            $counts = $countQuery->selectRaw("
+                COUNT(CASE WHEN status = '11' THEN 1 END) as c11,
+                COUNT(CASE WHEN status = '12' THEN 1 END) as c12,
+                COUNT(CASE WHEN status = '13' OR status = 'Selesai' THEN 1 END) as c13,
+                COUNT(CASE WHEN status = '14' OR status = 'Cancel' OR status = 'Dibatalkan' THEN 1 END) as c14
+            ")->first();
+
+            $count11 = (int) ($counts->c11 ?? 0);
+            $count12 = (int) ($counts->c12 ?? 0);
+            $count13 = (int) ($counts->c13 ?? 0);
+            $count14 = (int) ($counts->c14 ?? 0);
         } else {
             $tikets = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
             $count11 = 0;
@@ -287,19 +299,31 @@ class TeknikController extends Controller
 
         $query = DB::table('trx_tiket_gangguan as t');
 
+        $selectCols = ['t.*'];
         if (Schema::hasTable('view_batchjob')) {
-            $query->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet')
-                ->select(
-                    't.*',
-                    DB::raw('COALESCE(t.nama_pelanggan, b.nama_pelanggan) as nama_pelanggan'),
-                    'b.alamat_p',
-                    'b.alamat_pasang',
-                    'b.nama_kategori_bandwith',
-                    'b.telepon_1',
-                    'b.hp',
-                    'b.nama_pop'
-                );
+            $query->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet');
+            $selectCols = array_merge($selectCols, [
+                'b.nama_pelanggan',
+                'b.alamat_p',
+                'b.alamat_pasang',
+                'b.nama_kategori_bandwith',
+                'b.telepon_1',
+                'b.hp',
+                'b.nama_pop'
+            ]);
+        } elseif (Schema::hasTable('trx_batchjob_register')) {
+            $query->leftJoin('trx_batchjob_register as b', 't.nomor_internet', '=', 'b.nomor_internet');
+            $selectCols = array_merge($selectCols, [
+                'b.nama_pelanggan',
+                'b.alamat_p',
+                'b.alamat_pasang',
+                'b.nama_kategori_bandwith',
+                'b.telepon_1',
+                'b.hp',
+                'b.nama_pop'
+            ]);
         }
+        $query->select($selectCols);
 
         if ($kategori === 'gangguan') {
             $query->where('t.kat_tiket', '!=', '12');

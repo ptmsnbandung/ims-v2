@@ -119,13 +119,10 @@ class TeknikController extends Controller
         $hasTable = Schema::hasTable('trx_tiket_gangguan');
 
         if ($hasTable) {
-            $query = DB::table('trx_tiket_gangguan as t');
-
-            // Join view_batchjob or trx_batchjob_register for customer details if available
-            $selectCols = ['t.*'];
-            if (Schema::hasTable('view_batchjob')) {
-                $query->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet');
-                $selectCols = array_merge($selectCols, [
+            $query = DB::table('trx_tiket_gangguan as t')
+                ->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet')
+                ->select([
+                    't.*',
                     'b.nama_pelanggan',
                     'b.alamat_p',
                     'b.alamat_pasang',
@@ -133,31 +130,11 @@ class TeknikController extends Controller
                     'b.telepon_1',
                     'b.hp',
                     'b.nama_pop',
-                    'b.kode_pop'
+                    'b.kode_pop',
+                    'b.user_pppoe',
+                    'b.pass_pppoe',
+                    'b.media_akses',
                 ]);
-                if (Schema::hasColumn('view_batchjob', 'user_pppoe')) {
-                    $selectCols[] = 'b.user_pppoe';
-                }
-                if (Schema::hasColumn('view_batchjob', 'pass_pppoe')) {
-                    $selectCols[] = 'b.pass_pppoe';
-                }
-                if (Schema::hasColumn('view_batchjob', 'media_akses')) {
-                    $selectCols[] = 'b.media_akses';
-                }
-            } elseif (Schema::hasTable('trx_batchjob_register')) {
-                $query->leftJoin('trx_batchjob_register as b', 't.nomor_internet', '=', 'b.nomor_internet');
-                $selectCols = array_merge($selectCols, [
-                    'b.nama_pelanggan',
-                    'b.alamat_p',
-                    'b.alamat_pasang',
-                    'b.nama_kategori_bandwith',
-                    'b.telepon_1',
-                    'b.hp',
-                    'b.nama_pop',
-                    'b.kode_pop'
-                ]);
-            }
-            $query->select($selectCols);
 
             // Filter Kategori (Gangguan Layanan vs Ubah Password)
             if ($kategori === 'gangguan') {
@@ -175,30 +152,23 @@ class TeknikController extends Controller
             }
 
             // Filter Layanan / Bandwidth Category
-            if ($layanan && Schema::hasTable('view_batchjob')) {
+            if ($layanan) {
                 $query->where('b.nama_kategori_bandwith', $layanan);
             }
 
             // Filter Search (nomor_internet, nama_pelanggan, kode_trx_tiket, id_tiket, keluhan)
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('t.nomor_internet', 'like', "%{$search}%");
+                    $q->where('t.nomor_internet', 'like', "%{$search}%")
+                      ->orWhere('b.nama_pelanggan', 'like', "%{$search}%");
                     if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
                         $q->orWhere('t.kode_trx_tiket', 'like', "%{$search}%");
                     }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
                         $q->orWhere('t.id_tiket', 'like', "%{$search}%");
                     }
-                    if (Schema::hasColumn('trx_tiket_gangguan', 'nama_pelanggan')) {
-                        $q->orWhere('t.nama_pelanggan', 'like', "%{$search}%");
-                    }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'keluhan')) {
                         $q->orWhere('t.keluhan', 'like', "%{$search}%");
-                    }
-                    if (Schema::hasTable('view_batchjob') && Schema::hasColumn('view_batchjob', 'nama_pelanggan')) {
-                        $q->orWhere('b.nama_pelanggan', 'like', "%{$search}%");
-                    } elseif (Schema::hasTable('trx_batchjob_register') && Schema::hasColumn('trx_batchjob_register', 'nama_pelanggan')) {
-                        $q->orWhere('b.nama_pelanggan', 'like', "%{$search}%");
                     }
                 });
             }
@@ -206,11 +176,9 @@ class TeknikController extends Controller
             // Filter Wilayah
             if ($wilayah) {
                 $query->where(function ($q) use ($wilayah) {
-                    if (Schema::hasTable('view_batchjob')) {
-                        $q->where('b.alamat_p', 'like', "%{$wilayah}%")
-                          ->orWhere('b.alamat_pasang', 'like', "%{$wilayah}%")
-                          ->orWhere('b.nama_pop', 'like', "%{$wilayah}%");
-                    }
+                    $q->where('b.alamat_p', 'like', "%{$wilayah}%")
+                      ->orWhere('b.alamat_pasang', 'like', "%{$wilayah}%")
+                      ->orWhere('b.nama_pop', 'like', "%{$wilayah}%");
                 });
             }
 
@@ -297,12 +265,10 @@ class TeknikController extends Controller
         $wilayah = $request->query('wilayah');
         $status = $request->query('status');
 
-        $query = DB::table('trx_tiket_gangguan as t');
-
-        $selectCols = ['t.*'];
-        if (Schema::hasTable('view_batchjob')) {
-            $query->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet');
-            $selectCols = array_merge($selectCols, [
+        $query = DB::table('trx_tiket_gangguan as t')
+            ->leftJoin('view_batchjob as b', 't.nomor_internet', '=', 'b.nomor_internet')
+            ->select([
+                't.*',
                 'b.nama_pelanggan',
                 'b.alamat_p',
                 'b.alamat_pasang',
@@ -311,19 +277,6 @@ class TeknikController extends Controller
                 'b.hp',
                 'b.nama_pop'
             ]);
-        } elseif (Schema::hasTable('trx_batchjob_register')) {
-            $query->leftJoin('trx_batchjob_register as b', 't.nomor_internet', '=', 'b.nomor_internet');
-            $selectCols = array_merge($selectCols, [
-                'b.nama_pelanggan',
-                'b.alamat_p',
-                'b.alamat_pasang',
-                'b.nama_kategori_bandwith',
-                'b.telepon_1',
-                'b.hp',
-                'b.nama_pop'
-            ]);
-        }
-        $query->select($selectCols);
 
         if ($kategori === 'gangguan') {
             $query->where('t.kat_tiket', '!=', '12');

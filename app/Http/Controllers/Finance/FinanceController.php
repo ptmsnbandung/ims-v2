@@ -28,9 +28,9 @@ class FinanceController extends Controller
             $perPage = 10;
         }
 
-        // Default or Filtered Month & Year
-        $selectedBulan = $request->input('bulan', '');
-        $selectedTahun = $request->input('tahun', '');
+        // Default or Filtered Month & Year (Default to current month and year to avoid massive full-history scan timeouts)
+        $selectedBulan = $request->has('bulan') ? (string)$request->input('bulan') : date('m');
+        $selectedTahun = $request->has('tahun') ? (string)$request->input('tahun') : (string) date('Y');
 
         // Query view_billing_layanan
         $query = DB::table('view_billing_layanan');
@@ -119,20 +119,8 @@ class FinanceController extends Controller
             '12' => 'Desember',
         ];
 
-        $tahunList = Schema::hasTable('trx_billing_layanan')
-            ? DB::table('trx_billing_layanan')
-                ->select('tahun_tagihan')
-                ->distinct()
-                ->whereNotNull('tahun_tagihan')
-                ->orderBy('tahun_tagihan', 'desc')
-                ->limit(5)
-                ->pluck('tahun_tagihan')
-                ->toArray()
-            : [];
-
-        if (empty($tahunList)) {
-            $tahunList = [(string) date('Y'), (string) (date('Y') - 1), (string) (date('Y') - 2)];
-        }
+        $currentYear = (int) date('Y');
+        $tahunList = [(string) ($currentYear + 1), (string) $currentYear, (string) ($currentYear - 1), (string) ($currentYear - 2), (string) ($currentYear - 3)];
 
         $layananList = Schema::hasTable('m_bandwith_kategori')
             ? DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique()->toArray()

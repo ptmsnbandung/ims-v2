@@ -447,7 +447,9 @@ class TeknikController extends Controller
 
         DB::table('trx_tiket_gangguan')->insert($payload);
 
-        return redirect()->back()->with('success', "Tiket #{$generatedCode} untuk nomor internet {$nomorInternet} berhasil dibuat!");
+        return redirect()->back()
+            ->with('success', "Tiket #{$generatedCode} untuk nomor internet {$nomorInternet} berhasil dibuat!")
+            ->with('tiket_created', true);
     }
 
     /**

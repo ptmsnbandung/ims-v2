@@ -10,6 +10,7 @@
          scheduleModalOpen: false,
          resolveModalOpen: false,
          cancelModalOpen: false,
+         createModalOpen: false,
          
          selectedTiket: null,
          modalId: '',
@@ -24,6 +25,50 @@
          modalTeamTeknisi: '',
          modalSolusi: '',
          modalNoteCancel: '',
+
+         // Create Modal State
+         createNomorInternet: '',
+         createPerubahan: 'Password Lama :\n[ketikdisini]',
+         createCustomerData: null,
+         createLoading: false,
+         createError: '',
+
+         openCreateModal() {
+             this.createNomorInternet = '';
+             this.createPerubahan = 'Password Lama :\n[ketikdisini]';
+             this.createCustomerData = null;
+             this.createError = '';
+             this.createLoading = false;
+             this.createModalOpen = true;
+         },
+
+         async checkCustomer() {
+             const noInt = this.createNomorInternet.trim();
+             if (!noInt) {
+                 this.createError = 'Silakan masukkan nomor internet.';
+                 return;
+             }
+             this.createLoading = true;
+             this.createError = '';
+             try {
+                 const res = await fetch(`{{ route('teknik.tiket.gangguan.check-customer') }}?nomor_internet=` + encodeURIComponent(noInt));
+                 const json = await res.json();
+                 if (json.success && json.data) {
+                     this.createCustomerData = json.data;
+                     if (json.data.pass_pppoe) {
+                         this.createPerubahan = `Password Lama :\n${json.data.pass_pppoe}`;
+                     }
+                 } else {
+                     this.createCustomerData = null;
+                     this.createError = json.message || 'Nomor internet tidak ditemukan.';
+                 }
+             } catch (e) {
+                 this.createCustomerData = null;
+                 this.createError = 'Gagal menghubungi server untuk cek data.';
+             } finally {
+                 this.createLoading = false;
+             }
+         },
 
          openDetailModal(item) {
              this.selectedTiket = item;
@@ -768,6 +813,131 @@
                         Batalkan Tiket (KD14)
                     </button>
                 </div>
+    <!-- =================================================================== -->
+    <!-- MODAL 5: BUAT TIKET GANTI PASSWORD / GANGGUAN (MATCHING SCREENSHOT) -->
+    <!-- =================================================================== -->
+    <div x-show="createModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl p-6 text-slate-900 dark:text-white space-y-5"
+             @click.away="createModalOpen = false">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-base font-bold text-slate-800 dark:text-white">
+                    @if(request('kategori') === 'ubah_password')
+                        Tiket Ganti Password
+                    @else
+                        Buat Tiket Gangguan & Pengaduan
+                    @endif
+                </h3>
+                <button type="button" @click="createModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Form Body -->
+            <form action="{{ route('teknik.tiket.gangguan.store') }}" method="POST" class="space-y-5 text-xs">
+                @csrf
+                <input type="hidden" name="kat_tiket" value="{{ request('kategori') === 'ubah_password' ? '12' : '11' }}">
+
+                <div class="p-4 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4">
+                    
+                    <!-- 1. Nomor Internet + CEK Button -->
+                    <div>
+                        <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
+                            Nomor Internet<span class="text-rose-500">*</span>
+                        </label>
+                        <div class="flex items-center gap-3">
+                            <div class="flex-1">
+                                <input type="text" 
+                                       name="nomor_internet" 
+                                       x-model="createNomorInternet" 
+                                       @keydown.enter.prevent="checkCustomer()"
+                                       placeholder="Search" 
+                                       class="w-full text-xs px-3.5 py-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium" 
+                                       required>
+                            </div>
+                            <button type="button" 
+                                    @click="checkCustomer()"
+                                    :disabled="createLoading"
+                                    class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-xs tracking-wider shadow-md shadow-blue-600/30 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50">
+                                <template x-if="createLoading">
+                                    <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </template>
+                                <span>CEK</span>
+                            </button>
+                        </div>
+
+                        <!-- Customer Info Alert / Chip -->
+                        <template x-if="createCustomerData">
+                            <div class="mt-2.5 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[11px] text-blue-900 dark:text-blue-200 space-y-1">
+                                <div class="font-bold flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                    <span x-text="createCustomerData.nama_pelanggan"></span>
+                                    <span class="text-slate-400 font-mono" x-text="'(' + createCustomerData.nomor_internet + ')'"></span>
+                                </div>
+                                <div class="text-slate-600 dark:text-slate-400" x-text="createCustomerData.alamat"></div>
+                                <div class="text-[10px] text-slate-500" x-text="'POP: ' + (createCustomerData.nama_pop || '-') + ' | Media: ' + (createCustomerData.media_akses || 'FTTH')"></div>
+                            </div>
+                        </template>
+
+                        <!-- Error alert -->
+                        <template x-if="createError">
+                            <div class="mt-2 text-rose-500 text-xs font-semibold flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                </svg>
+                                <span x-text="createError"></span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- 2. Perubahan (Textarea) -->
+                    <div>
+                        <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
+                            @if(request('kategori') === 'ubah_password')
+                                Perubahan<span class="text-rose-500">*</span>
+                            @else
+                                Keluhan / Gangguan<span class="text-rose-500">*</span>
+                            @endif
+                        </label>
+                        <textarea name="perubahan" 
+                                  x-model="createPerubahan" 
+                                  rows="4" 
+                                  class="w-full text-xs p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed" 
+                                  required></textarea>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer Buttons -->
+                <div class="pt-2 flex items-center justify-end gap-2.5">
+                    <!-- Tutup Button (Cyan with cross icon) -->
+                    <button type="button" 
+                            @click="createModalOpen = false" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs shadow-md shadow-cyan-500/20 transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                        <span>Tutup</span>
+                    </button>
+
+                    <!-- Update / Simpan Button (Blue with save icon) -->
+                    <button type="submit" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                        </svg>
+                        <span>Update</span>
+                    </button>
+                </div>
+
             </form>
         </div>
     </div>

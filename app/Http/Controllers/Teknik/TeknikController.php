@@ -333,6 +333,124 @@ class TeknikController extends Controller
     }
 
     /**
+     * Check customer data by nomor_internet for ticket creation modal (AJAX)
+     */
+    public function checkCustomerForTiket(Request $request): JsonResponse
+    {
+        $nomorInternet = trim((string) $request->query('nomor_internet'));
+        if (!$nomorInternet) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor internet tidak boleh kosong.',
+            ], 422);
+        }
+
+        $customer = DB::table('view_batchjob')->where('nomor_internet', $nomorInternet)->first();
+
+        if (!$customer && Schema::hasTable('trx_batchjob_register')) {
+            $customer = DB::table('trx_batchjob_register as r')
+                ->leftJoin('m_pelanggan as p', 'r.nik_penduduk', '=', 'p.nik_penduduk')
+                ->leftJoin('m_pop as pop', 'r.kode_pop', '=', 'pop.kode_pop')
+                ->where('r.nomor_internet', $nomorInternet)
+                ->select(
+                    'r.nomor_internet',
+                    'p.nama_penduduk as nama_pelanggan',
+                    'r.alamat_pasang',
+                    'p.alamat_ktp as alamat_p',
+                    'pop.nama_pop'
+                )
+                ->first();
+        }
+
+        if (!$customer) {
+            return response()->json([
+                'success' => false,
+                'message' => "Pelanggan dengan Nomor Internet '{$nomorInternet}' tidak ditemukan.",
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'nomor_internet' => $customer->nomor_internet ?? $nomorInternet,
+                'nama_pelanggan' => $customer->nama_pelanggan ?? ($customer->batch_nama ?? 'Pelanggan'),
+                'alamat' => $customer->alamat_pasang ?? ($customer->alamat_p ?? '-'),
+                'nama_pop' => $customer->nama_pop ?? '-',
+                'media_akses' => $customer->media_akses ?? 'FTTH',
+                'pass_pppoe' => $customer->pass_pppoe ?? ($customer->password ?? null),
+            ],
+        ]);
+    }
+
+    /**
+     * Buat Tiket Baru (Ganti Password / Gangguan)
+     */
+    public function storeTiketGangguan(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'nomor_internet' => 'required|string',
+            'perubahan' => 'nullable|string',
+            'keluhan' => 'nullable|string',
+        ]);
+
+        $nomorInternet = trim($request->nomor_internet);
+        $kategori = $request->input('kat_tiket', $request->input('kategori', '12'));
+        if ($kategori === 'ubah_password') {
+            $kategori = '12';
+        } elseif ($kategori === 'gangguan') {
+            $kategori = '11';
+        }
+
+        $keluhan = $request->filled('perubahan') ? $request->perubahan : ($request->keluhan ?: 'Permintaan Ganti Password');
+        $currentUser = auth()->user()->nama ?? auth()->user()->username ?? 'Staff';
+        $now = now()->format('Y-m-d H:i:s');
+
+        // Generate Ticket Code (e.g. 12 + Ymd + 3-digit sequence)
+        $datePrefix = date('Ymd');
+        $katCode = is_numeric($kategori) ? $kategori : '12';
+        $prefix = $katCode . $datePrefix;
+        
+        $countToday = DB::table('trx_tiket_gangguan')
+            ->where(function($q) use ($prefix) {
+                if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+                    $q->where('kode_trx_tiket', 'like', "{$prefix}%");
+                } elseif (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+                    $q->where('id_tiket', 'like', "{$prefix}%");
+                }
+            })
+            ->count();
+        
+        $generatedCode = $prefix . str_pad((string)($countToday + 1), 3, '0', STR_PAD_LEFT);
+
+        $payload = [
+            'nomor_internet' => $nomorInternet,
+            'kat_tiket' => $kategori,
+            'keluhan' => $keluhan,
+            'solusi' => ($kategori == '12') ? 'tim customer care kami akan segera menghubungi anda' : null,
+            'status' => '11', // (KD11) Antrian / Request
+            'date_create' => $now,
+            'date_update' => $now,
+        ];
+
+        if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+            $payload['kode_trx_tiket'] = $generatedCode;
+        }
+        if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+            $payload['id_tiket'] = $generatedCode;
+        }
+        if (Schema::hasColumn('trx_tiket_gangguan', 'user_create')) {
+            $payload['user_create'] = $currentUser;
+        }
+        if (Schema::hasColumn('trx_tiket_gangguan', 'user_update')) {
+            $payload['user_update'] = $currentUser;
+        }
+
+        DB::table('trx_tiket_gangguan')->insert($payload);
+
+        return redirect()->back()->with('success', "Tiket #{$generatedCode} untuk nomor internet {$nomorInternet} berhasil dibuat!");
+    }
+
+    /**
      * Jadwalkan Penanganan Tiket Gangguan (KD12)
      */
     public function scheduleTiketGangguan(Request $request, string $id): RedirectResponse

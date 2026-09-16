@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:teknik,noc,direktur,admin,finance')->prefix('teknik')->name('teknik.')->group(function () {
         Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');
         Route::get('/tiket/gangguan', [TeknikController::class, 'tiketGangguan'])->name('tiket.gangguan');
+        Route::get('/tiket/gangguan/check-customer', [TeknikController::class, 'checkCustomerForTiket'])->name('tiket.gangguan.check-customer');
+        Route::post('/tiket/gangguan', [TeknikController::class, 'storeTiketGangguan'])->name('tiket.gangguan.store');
         Route::get('/tiket/gangguan/export', [TeknikController::class, 'exportTiketGangguan'])->name('tiket.gangguan.export');
         Route::post('/tiket/gangguan/{id}/schedule', [TeknikController::class, 'scheduleTiketGangguan'])->name('tiket.gangguan.schedule');
         Route::post('/tiket/gangguan/{id}/resolve', [TeknikController::class, 'resolveTiketGangguan'])->name('tiket.gangguan.resolve');

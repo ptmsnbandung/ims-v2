@@ -608,6 +608,11 @@
                                             Teknisi: {{ $item->team_teknisi }}
                                         </div>
                                     @endif
+                                    @if(!empty($item->date_schedule))
+                                        <div class="mt-0.5 text-[10px] text-amber-500 dark:text-amber-400 font-medium">
+                                            Jadwal: {{ date('d M Y', strtotime($item->date_schedule)) }} ({{ $item->time_schedule ?? 'WIB' }})
+                                        </div>
+                                    @endif
                                 </td>
 
                                 <!-- State / Status -->

@@ -3368,6 +3368,139 @@ class TeknikController extends Controller
     }
 
     /**
+     * API: Ambil / Stream Gambar Bukti UP/Downgrade berdasarkan nama file
+     * GET /api/up-downgrade/foto/{filename}
+     */
+    public function apiGetUpDowngradeFoto(string $filename)
+    {
+        $cleanFilename = basename($filename);
+        $filePath = public_path('uploads/up_downgrade/' . $cleanFilename);
+
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => "File foto bukti '{$cleanFilename}' tidak ditemukan di folder uploads/up_downgrade.",
+            ], 404);
+        }
+
+        $mimeType = @mime_content_type($filePath) ?: 'image/jpeg';
+
+        return response()->file($filePath, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $cleanFilename . '"',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    /**
+     * API: Ambil / Stream Gambar Bukti UP/Downgrade berdasarkan Kode Transaksi
+     * GET /api/up-downgrade/{kode_trx}/foto
+     */
+    public function apiGetUpDowngradeFotoByTrx(string $kodeTrx)
+    {
+        $trx = DB::table('trx_ubah_layanan')->where('kode_trx_ubah_layanan', $kodeTrx)->first();
+        if (!$trx) {
+            return response()->json([
+                'success' => false,
+                'message' => "Transaksi {$kodeTrx} tidak ditemukan.",
+            ], 404);
+        }
+
+        $filename = $trx->foto_ss ?? ($trx->foto_bukti ?? null);
+        if (!$filename) {
+            return response()->json([
+                'success' => false,
+                'message' => "Transaksi {$kodeTrx} belum memiliki file foto bukti.",
+            ], 404);
+        }
+
+        return $this->apiGetUpDowngradeFoto($filename);
+    }
+
+    /**
+     * API: Dapatkan Detail Informasi & URL Foto Bukti Eksekusi UP/Downgrade
+     * GET /api/up-downgrade/{kode_trx}/bukti
+     */
+    public function apiGetUpDowngradeBuktiInfo(string $kodeTrx): JsonResponse
+    {
+        $trx = DB::table('trx_ubah_layanan')->where('kode_trx_ubah_layanan', $kodeTrx)->first();
+        if (!$trx) {
+            return response()->json([
+                'success' => false,
+                'message' => "Transaksi {$kodeTrx} tidak ditemukan.",
+            ], 404);
+        }
+
+        $filename = $trx->foto_ss ?? ($trx->foto_bukti ?? null);
+        $filePath = $filename ? public_path('uploads/up_downgrade/' . basename($filename)) : null;
+        $exists = $filePath ? file_exists($filePath) : false;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'kode_trx_ubah_layanan' => $trx->kode_trx_ubah_layanan,
+                'nomor_internet' => $trx->nomor_internet,
+                'nama_pelanggan' => $trx->nama_pelanggan ?? null,
+                'status_ubah_layanan' => $trx->status_ubah_layanan,
+                'filename' => $filename,
+                'file_url' => $filename ? asset('uploads/up_downgrade/' . $filename) : null,
+                'api_foto_url' => $filename ? url('/api/up-downgrade/foto/' . $filename) : null,
+                'exists' => $exists,
+                'file_size' => $exists ? filesize($filePath) : null,
+                'file_size_formatted' => $exists ? (round(filesize($filePath) / 1024, 2) . ' KB') : null,
+                'mime_type' => $exists ? @mime_content_type($filePath) : null,
+                'date_closing' => $trx->date_closing ?? null,
+                'note_closing' => $trx->note_closing ?? null,
+                'date_update' => $trx->date_update ?? null,
+                'user_update' => $trx->user_update ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * API: List Semua File Foto Bukti di Folder uploads/up_downgrade
+     * GET /api/up-downgrade/foto-list
+     */
+    public function apiListUpDowngradeFotos(): JsonResponse
+    {
+        $dirPath = public_path('uploads/up_downgrade');
+        if (!file_exists($dirPath)) {
+            return response()->json([
+                'success' => true,
+                'total' => 0,
+                'data' => [],
+            ]);
+        }
+
+        $files = scandir($dirPath);
+        $result = [];
+
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..' || $file === '.gitignore') {
+                continue;
+            }
+
+            $fullPath = $dirPath . DIRECTORY_SEPARATOR . $file;
+            if (is_file($fullPath)) {
+                $result[] = [
+                    'filename' => $file,
+                    'file_url' => asset('uploads/up_downgrade/' . $file),
+                    'api_url' => url('/api/up-downgrade/foto/' . $file),
+                    'size_bytes' => filesize($fullPath),
+                    'size_formatted' => round(filesize($fullPath) / 1024, 2) . ' KB',
+                    'updated_at' => date('Y-m-d H:i:s', filemtime($fullPath)),
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'total' => count($result),
+            'data' => $result,
+        ]);
+    }
+
+    /**
      * Permintaan: Terminasi
      */
     public function terminasi(Request $request): View

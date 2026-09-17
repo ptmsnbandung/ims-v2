@@ -75,6 +75,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/wilayah/kecamatan/{kota}', [TeknikController::class, 'getKecamatan'])->name('api.kecamatan');
         Route::get('/api/wilayah/kelurahan/{kecamatan}', [TeknikController::class, 'getKelurahan'])->name('api.kelurahan');
 
+        // API Endpoint Foto Bukti / Report UP/Downgrade
+        Route::get('/api/up-downgrade/foto/{filename}', [TeknikController::class, 'apiGetUpDowngradeFoto'])->name('api.up-downgrade.foto')->where('filename', '.*');
+        Route::get('/api/up-downgrade/{kode_trx}/foto', [TeknikController::class, 'apiGetUpDowngradeFotoByTrx'])->name('api.up-downgrade.trx.foto')->where('kode_trx', '.*');
+        Route::get('/api/up-downgrade/{kode_trx}/bukti', [TeknikController::class, 'apiGetUpDowngradeBuktiInfo'])->name('api.up-downgrade.trx.bukti')->where('kode_trx', '.*');
+        Route::get('/api/up-downgrade/foto-list', [TeknikController::class, 'apiListUpDowngradeFotos'])->name('api.up-downgrade.foto-list');
+
         // Group Permintaan
         Route::prefix('permintaan')->name('permintaan.')->group(function () {
             Route::get('/up-downgrade', [TeknikController::class, 'upDowngrade'])->name('up-downgrade');
@@ -220,5 +226,13 @@ Route::middleware('auth')->group(function () {
         // 6. API Helpers
         Route::get('/api/pelanggan-search', [FinanceController::class, 'apiPelangganSearch'])->name('api.pelanggan-search');
     });
+});
+
+// Public API Routes (Dapat diakses oleh Mobile App / Frontend / API Client)
+Route::prefix('api/up-downgrade')->name('public.api.up-downgrade.')->group(function () {
+    Route::get('/foto-list', [TeknikController::class, 'apiListUpDowngradeFotos'])->name('foto-list');
+    Route::get('/foto/{filename}', [TeknikController::class, 'apiGetUpDowngradeFoto'])->name('foto')->where('filename', '.*');
+    Route::get('/{kode_trx}/foto', [TeknikController::class, 'apiGetUpDowngradeFotoByTrx'])->name('trx.foto')->where('kode_trx', '.*');
+    Route::get('/{kode_trx}/bukti', [TeknikController::class, 'apiGetUpDowngradeBuktiInfo'])->name('trx.bukti')->where('kode_trx', '.*');
 });
 

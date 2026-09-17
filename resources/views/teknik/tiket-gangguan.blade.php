@@ -507,20 +507,29 @@
 
                                             @if(auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin']))
                                                 @if($statusVal === '11')
+                                                    <!-- KD11: Jadwalkan Penanganan (KD12) & Batalkan (KD14) -->
                                                     <button type="button"
                                                             @click="openScheduleModal({{ $loop->index }})"
                                                             class="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-900 transition"
-                                                            title="Jadwalkan / Proses">
+                                                            title="Jadwalkan Penanganan (KD12)">
                                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
                                                         </svg>
                                                     </button>
-                                                @endif
-                                                @if($statusVal === '11' || $statusVal === '12')
+                                                    <button type="button"
+                                                            @click="openCancelModal({{ $loop->index }})"
+                                                            class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition"
+                                                            title="Batalkan (KD14)">
+                                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                        </svg>
+                                                    </button>
+                                                @elseif($statusVal === '12')
+                                                    <!-- KD12: ACC / Selesaikan (KD13) & Batalkan (KD14) -->
                                                     <button type="button"
                                                             @click="openResolveModal({{ $loop->index }})"
                                                             class="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white transition"
-                                                            title="Selesaikan">
+                                                            title="ACC / Selesaikan (KD13)">
                                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                         </svg>
@@ -528,7 +537,7 @@
                                                     <button type="button"
                                                             @click="openCancelModal({{ $loop->index }})"
                                                             class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition"
-                                                            title="Batalkan">
+                                                            title="Batalkan (KD14)">
                                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                         </svg>
@@ -663,7 +672,7 @@
 
                                         @if(auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin']))
                                             @if($statusVal === '11')
-                                                <!-- Schedule / On Schedule Button -->
+                                                <!-- KD11: Jadwalkan Penanganan (KD12) & Batalkan (KD14) -->
                                                 <button type="button"
                                                         @click="openScheduleModal({{ $loop->index }})"
                                                         class="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-900 transition"
@@ -672,20 +681,24 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
                                                     </svg>
                                                 </button>
-                                            @endif
-
-                                            @if($statusVal === '11' || $statusVal === '12')
-                                                <!-- Resolve / Selesai Button -->
+                                                <button type="button"
+                                                        @click="openCancelModal({{ $loop->index }})"
+                                                        class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition"
+                                                        title="Batalkan Tiket (KD14)">
+                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                    </svg>
+                                                </button>
+                                            @elseif($statusVal === '12')
+                                                <!-- KD12: ACC / Selesaikan Tiket (KD13) & Batalkan (KD14) -->
                                                 <button type="button"
                                                         @click="openResolveModal({{ $loop->index }})"
                                                         class="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white transition"
-                                                        title="Selesaikan Tiket (KD13)">
+                                                        title="ACC / Selesaikan Tiket (KD13)">
                                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                     </svg>
                                                 </button>
-
-                                                <!-- Cancel Button -->
                                                 <button type="button"
                                                         @click="openCancelModal({{ $loop->index }})"
                                                         class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition"
@@ -781,10 +794,41 @@
                 </template>
             </div>
 
-            <div class="pt-2 flex justify-end">
+            <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
                 <button type="button" @click="detailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold">
                     Tutup
                 </button>
+
+                @if(auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin']))
+                    <div class="flex items-center gap-2">
+                        <!-- If KD11: Show Schedule button -->
+                        <template x-if="modalStatus === '11'">
+                            <button type="button"
+                                    @click="detailModalOpen = false; scheduleModalOpen = true;"
+                                    class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold shadow-md shadow-amber-500/20">
+                                Jadwalkan Penanganan (KD12)
+                            </button>
+                        </template>
+
+                        <!-- If KD12: Show ACC/Selesaikan button -->
+                        <template x-if="modalStatus === '12'">
+                            <button type="button"
+                                    @click="detailModalOpen = false; resolveModalOpen = true;"
+                                    class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20">
+                                ACC / Selesaikan (KD13)
+                            </button>
+                        </template>
+
+                        <!-- If KD11 or KD12: Show Batalkan button -->
+                        <template x-if="modalStatus === '11' || modalStatus === '12'">
+                            <button type="button"
+                                    @click="detailModalOpen = false; cancelModalOpen = true;"
+                                    class="px-3.5 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 text-xs font-semibold transition">
+                                Batalkan (KD14)
+                            </button>
+                        </template>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

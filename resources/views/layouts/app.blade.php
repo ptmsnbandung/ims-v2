@@ -138,17 +138,53 @@
         .ims-sidebar.collapsed .ims-nav-wrapper:hover .ims-tooltip {
             display: block;
         }
+        .ims-sidebar.collapsed .ims-has-flyout:hover .ims-tooltip {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="h-full font-sans antialiased selection:bg-blue-500 selection:text-white bg-slate-950"
       x-data="{ 
           sidebarCollapsed: false,
           mobileSidebarOpen: false,
+          activeFlyout: null,
+          flyoutTop: 0,
+          flyoutTitle: '',
+          flyoutItems: [],
+          flyoutTimeout: null,
           toggleSidebar() {
               if (window.innerWidth < 1024) {
                   this.mobileSidebarOpen = !this.mobileSidebarOpen;
               } else {
                   this.sidebarCollapsed = !this.sidebarCollapsed;
+                  if (!this.sidebarCollapsed) {
+                      this.activeFlyout = null;
+                  }
+              }
+          },
+          openFlyout(el, title, items) {
+              if (!this.sidebarCollapsed || window.innerWidth < 1024) return;
+              if (this.flyoutTimeout) {
+                  clearTimeout(this.flyoutTimeout);
+                  this.flyoutTimeout = null;
+              }
+              const rect = el.getBoundingClientRect();
+              const maxTop = window.innerHeight - 280;
+              this.flyoutTop = Math.max(12, Math.min(rect.top - 6, maxTop));
+              this.flyoutTitle = title;
+              this.flyoutItems = items;
+              this.activeFlyout = title;
+          },
+          closeFlyoutWithDelay() {
+              if (this.flyoutTimeout) clearTimeout(this.flyoutTimeout);
+              this.flyoutTimeout = setTimeout(() => {
+                  this.activeFlyout = null;
+              }, 180);
+          },
+          cancelFlyoutClose() {
+              if (this.flyoutTimeout) {
+                  clearTimeout(this.flyoutTimeout);
+                  this.flyoutTimeout = null;
               }
           }
       }">
@@ -251,7 +287,16 @@
                     @endif
 
                     <!-- 4. Permintaan -->
-                    <div class="ims-nav-wrapper">
+                    <div class="ims-nav-wrapper ims-has-flyout"
+                         @mouseenter="openFlyout($el, 'Permintaan Layanan', [
+                             @if(auth()->user()?->hasRole(['noc', 'direktur']))
+                             { label: 'Aktivasi Jaringan', url: '{{ route('noc.aktivasi') }}', active: {{ request()->routeIs('noc.aktivasi*') ? 'true' : 'false' }} },
+                             @endif
+                             { label: 'UP / Downgrade', url: '{{ route('teknik.permintaan.up-downgrade') }}', active: {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'true' : 'false' }} },
+                             { label: 'Terminasi', url: '{{ route('teknik.permintaan.terminasi') }}', active: {{ request()->routeIs('teknik.permintaan.terminasi*') ? 'true' : 'false' }} },
+                             { label: 'Suspend', url: '{{ route('teknik.permintaan.suspend') }}', active: {{ request()->routeIs('teknik.permintaan.suspend*') ? 'true' : 'false' }} }
+                         ])"
+                         @mouseleave="closeFlyoutWithDelay()">
                         <button type="button"
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, permintaanOpen = true) : (permintaanOpen = !permintaanOpen)"
                                 class="w-full ims-nav-item {{ request()->routeIs('teknik.permintaan.*', 'noc.aktivasi*') ? 'active' : '' }} justify-between"
@@ -370,7 +415,15 @@
                     </div>
 
                     <!-- 2. Permintaan NOC Dropdown -->
-                    <div class="ims-nav-wrapper" x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }">
+                    <div class="ims-nav-wrapper ims-has-flyout"
+                         x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }"
+                         @mouseenter="openFlyout($el, 'Permintaan NOC', [
+                             { label: 'Aktivasi Jaringan', url: '{{ route('noc.aktivasi') }}', active: {{ request()->routeIs('noc.aktivasi*') ? 'true' : 'false' }} },
+                             { label: 'UP / Downgrade', url: '{{ route('teknik.permintaan.up-downgrade') }}', active: {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'true' : 'false' }} },
+                             { label: 'Suspend (Isolir)', url: '{{ route('noc.suspend') }}', active: {{ request()->routeIs('noc.suspend*') ? 'true' : 'false' }} },
+                             { label: 'Terminasi', url: '{{ route('noc.terminasi') }}', active: {{ request()->routeIs('noc.terminasi*') ? 'true' : 'false' }} }
+                         ])"
+                         @mouseleave="closeFlyoutWithDelay()">
                         <button type="button"
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, permintaanNocOpen = true) : (permintaanNocOpen = !permintaanNocOpen)"
                                 class="w-full ims-nav-item {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'active' : '' }} justify-between"
@@ -414,7 +467,16 @@
                     </div>
 
                     <!-- 3. Infrastruktur Dropdown -->
-                    <div class="ims-nav-wrapper" x-data="{ infraOpen: {{ request()->routeIs('noc.olt*', 'noc.gpon*', 'noc.odp*', 'noc.pop*', 'noc.wilayah*') ? 'true' : 'false' }} }">
+                    <div class="ims-nav-wrapper ims-has-flyout"
+                         x-data="{ infraOpen: {{ request()->routeIs('noc.olt*', 'noc.gpon*', 'noc.odp*', 'noc.pop*', 'noc.wilayah*') ? 'true' : 'false' }} }"
+                         @mouseenter="openFlyout($el, 'Infrastruktur Jaringan', [
+                             { label: 'Topologi & GPON Port', url: '{{ route('noc.gpon') }}', active: {{ request()->routeIs('noc.gpon*') ? 'true' : 'false' }} },
+                             { label: 'OLT & Master Node', url: '{{ route('noc.olt') }}', active: {{ request()->routeIs('noc.olt*') ? 'true' : 'false' }} },
+                             { label: 'ODP (Distribution)', url: '{{ route('noc.odp') }}', active: {{ request()->routeIs('noc.odp*') ? 'true' : 'false' }} },
+                             { label: 'POP (Point of Presence)', url: '{{ route('noc.pop') }}', active: {{ request()->routeIs('noc.pop*') ? 'true' : 'false' }} },
+                             { label: 'Wilayah Perangkat', url: '{{ route('noc.wilayah') }}', active: {{ request()->routeIs('noc.wilayah*') ? 'true' : 'false' }} }
+                         ])"
+                         @mouseleave="closeFlyoutWithDelay()">
                         <button type="button"
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, infraOpen = true) : (infraOpen = !infraOpen)"
                                 class="w-full ims-nav-item {{ request()->routeIs('noc.olt*', 'noc.gpon*', 'noc.odp*', 'noc.pop*', 'noc.wilayah*') ? 'active' : '' }} justify-between"
@@ -539,7 +601,14 @@
                     </div>
 
                     <!-- Permintaan Finance Dropdown -->
-                    <div class="ims-nav-wrapper" x-data="{ permintaanFinanceOpen: {{ request()->routeIs('finance.permintaan.*') ? 'true' : 'false' }} }">
+                    <div class="ims-nav-wrapper ims-has-flyout"
+                         x-data="{ permintaanFinanceOpen: {{ request()->routeIs('finance.permintaan.*') ? 'true' : 'false' }} }"
+                         @mouseenter="openFlyout($el, 'Permintaan ke NOC', [
+                             { label: 'UP / Downgrade', url: '{{ route('finance.permintaan.up-downgrade') }}', active: {{ request()->routeIs('finance.permintaan.up-downgrade*') ? 'true' : 'false' }} },
+                             { label: 'Suspend (Isolir)', url: '{{ route('finance.permintaan.suspend') }}', active: {{ request()->routeIs('finance.permintaan.suspend*') ? 'true' : 'false' }} },
+                             { label: 'Terminasi', url: '{{ route('finance.permintaan.terminasi') }}', active: {{ request()->routeIs('finance.permintaan.terminasi*') ? 'true' : 'false' }} }
+                         ])"
+                         @mouseleave="closeFlyoutWithDelay()">
                         <button type="button"
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, permintaanFinanceOpen = true) : (permintaanFinanceOpen = !permintaanFinanceOpen)"
                                 class="w-full ims-nav-item {{ request()->routeIs('finance.permintaan.*') ? 'active' : '' }} justify-between"
@@ -656,6 +725,40 @@
                     </div>
                 </div>
             </aside>
+
+            <!-- Collapsed Sidebar Floating Flyout Submenu Portal -->
+            <div x-show="sidebarCollapsed && activeFlyout"
+                 x-cloak
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 translate-x-1"
+                 x-transition:enter-end="opacity-100 translate-x-0"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 translate-x-0"
+                 x-transition:leave-end="opacity-0 translate-x-1"
+                 @mouseenter="cancelFlyoutClose()"
+                 @mouseleave="closeFlyoutWithDelay()"
+                 class="fixed z-[99999] w-56 rounded-2xl bg-slate-900/95 border border-slate-700/80 shadow-2xl shadow-black/90 backdrop-blur-xl p-2.5 space-y-1"
+                 :style="`top: ${flyoutTop}px; left: 4.85rem;`">
+                
+                <!-- Flyout Header / Title -->
+                <div class="px-3 py-1.5 mb-1 border-b border-slate-800/80 flex items-center justify-between">
+                    <span class="text-xs font-bold text-white tracking-wide" x-text="flyoutTitle"></span>
+                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                </div>
+
+                <!-- Flyout Menu Items -->
+                <div class="space-y-0.5">
+                    <template x-for="(item, idx) in flyoutItems" :key="idx">
+                        <a :href="item.url"
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition duration-150"
+                           :class="item.active ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-600/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/90 font-medium'">
+                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                  :class="item.active ? 'bg-white shadow-sm shadow-white' : 'bg-slate-500'"></span>
+                            <span class="truncate" x-text="item.label"></span>
+                        </a>
+                    </template>
+                </div>
+            </div>
 
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">

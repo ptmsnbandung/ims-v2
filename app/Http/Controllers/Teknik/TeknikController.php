@@ -3286,6 +3286,20 @@ class TeknikController extends Controller
             $updateTrx['group_layanan'] = $groupLayanan;
         }
 
+        // Upload Foto Bukti Eksekusi (foto_ss / Screenshot)
+        if ($request->hasFile('foto_ss') || $request->hasFile('foto_bukti')) {
+            $file = $request->file('foto_ss') ?: $request->file('foto_bukti');
+            $fileName = 'UPDOWN_' . $trx->nomor_internet . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/up_downgrade');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $file->move($destinationPath, $fileName);
+            if (Schema::hasColumn('trx_ubah_layanan', 'foto_ss')) {
+                $updateTrx['foto_ss'] = $fileName;
+            }
+        }
+
         DB::table('trx_ubah_layanan')->where('kode_trx_ubah_layanan', $kodeTrx)->update($updateTrx);
 
         // Update active package in customer record (trx_batchjob_register)

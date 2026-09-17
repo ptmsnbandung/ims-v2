@@ -76,6 +76,8 @@
              this.modalGroupLayanan = item.group_layanan || 'MEDIANET';
              this.modalDateEksekusi = '{{ date('Y-m-d') }}';
              this.modalNoteEksekusi = 'Eksekusi UP/Downgrade bandwidth profil pelanggan berhasil diselesaikan.';
+             this.fotoPreview = null;
+             this.fotoFileName = '';
 
              // Pre-select matching category
              this.modalKodeKategori = item.kode_kategori_bandwith_baru || '';
@@ -98,6 +100,21 @@
              }
 
              this.executeModalOpen = true;
+         },
+
+         onFotoChange(event) {
+             const file = event.target.files[0];
+             if (file) {
+                 this.fotoFileName = file.name;
+                 const reader = new FileReader();
+                 reader.onload = (e) => {
+                     this.fotoPreview = e.target.result;
+                 };
+                 reader.readAsDataURL(file);
+             } else {
+                 this.fotoPreview = null;
+                 this.fotoFileName = '';
+             }
          }
      }">
 
@@ -393,11 +410,23 @@
                                             </div>
                                         </div>
                                     @elseif($item->status_ubah_layanan == '13')
-                                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
-                                            <svg class="w-3.5 h-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                            </svg>
-                                            <span>Berhasil Diubah</span>
+                                        <div class="flex flex-col items-center gap-1">
+                                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
+                                                <svg class="w-3.5 h-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                                </svg>
+                                                <span>Berhasil Diubah</span>
+                                            </div>
+                                            @if(!empty($item->foto_ss))
+                                                <a href="{{ asset('uploads/up_downgrade/' . $item->foto_ss) }}" 
+                                                   target="_blank"
+                                                   class="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-500 hover:text-blue-400 hover:underline mt-0.5">
+                                                    <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                                    </svg>
+                                                    <span>Lihat Foto Bukti</span>
+                                                </a>
+                                            @endif
                                         </div>
                                     @elseif($item->status_ubah_layanan == '14')
                                         <div class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 text-[11px] font-medium">
@@ -574,6 +603,7 @@
 
             <form :action="'{{ url('/teknik/permintaan/up-downgrade') }}/' + modalKodeTrx + '/execute'" 
                   method="POST" 
+                  enctype="multipart/form-data"
                   class="flex flex-col flex-1">
                 @csrf
 
@@ -610,7 +640,7 @@
                                     @if(isset($layananKategoriList))
                                         @foreach($layananKategoriList as $kat)
                                             <option value="{{ $kat->kode_kategori_bandwith }}">
-                                                {{ $kat->nama_kategori_bandwith ?: ($kat->alias_nama_kategori ?: $kat->kode_kategori_bandwith) }}
+                                                 {{ $kat->nama_kategori_bandwith ?: ($kat->alias_nama_kategori ?: $kat->kode_kategori_bandwith) }}
                                             </option>
                                         @endforeach
                                     @endif
@@ -672,9 +702,54 @@
                         </label>
                         <textarea name="note_eksekusi" 
                                   x-model="modalNoteEksekusi" 
-                                  rows="3" 
+                                  rows="2" 
                                   placeholder="Contoh: Profil paket pada MikroTik / OLT berhasil diubah ke 50 Mbps."
                                   class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+                    </div>
+
+                    <!-- Upload Foto Bukti Eksekusi (Screenshot Speedtest / Config / OLT) -->
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Foto Bukti Eksekusi / Screenshot:
+                        </label>
+                        <div class="mt-1 flex justify-center px-4 pt-3.5 pb-3.5 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 rounded-xl transition bg-slate-50/50 dark:bg-slate-950/50 relative group">
+                            <div class="space-y-1.5 text-center w-full">
+                                <template x-if="!fotoPreview">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="mx-auto h-8 w-8 text-slate-400 group-hover:text-emerald-400 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                        </svg>
+                                        <div class="flex text-xs text-slate-600 dark:text-slate-400 justify-center mt-1">
+                                            <label class="relative cursor-pointer rounded-md font-bold text-emerald-500 hover:text-emerald-400 focus-within:outline-none">
+                                                <span>Pilih file foto / screenshot</span>
+                                                <input type="file" name="foto_ss" accept="image/*" @change="onFotoChange" class="sr-only">
+                                            </label>
+                                        </div>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">PNG, JPG, JPEG, WEBP up to 5MB</p>
+                                    </div>
+                                </template>
+                                
+                                <template x-if="fotoPreview">
+                                    <div class="flex flex-col items-center gap-2">
+                                        <div class="relative rounded-lg overflow-hidden border border-slate-700 max-h-36 max-w-full">
+                                            <img :src="fotoPreview" class="h-32 object-contain mx-auto rounded" alt="Preview Bukti">
+                                            <button type="button" 
+                                                    @click="fotoPreview = null; fotoFileName = ''; $el.closest('.group').querySelector('input[type=file]').value = ''"
+                                                    class="absolute top-1 right-1 p-1 bg-rose-600/80 hover:bg-rose-600 text-white rounded-full text-xs">
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <span class="text-[11px] font-mono text-emerald-400 truncate max-w-xs" x-text="fotoFileName"></span>
+                                        <label class="cursor-pointer text-[10px] text-slate-400 hover:text-emerald-400 underline">
+                                            Ganti Foto
+                                            <input type="file" name="foto_ss" accept="image/*" @change="onFotoChange" class="sr-only">
+                                        </label>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

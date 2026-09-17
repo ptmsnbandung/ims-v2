@@ -469,7 +469,15 @@
                                 <!-- 2. Pelanggan -->
                                 <td class="py-4 px-4 align-top">
                                     <div class="font-bold text-slate-900 dark:text-white uppercase text-xs">
-                                        <span class="font-mono text-blue-500 mr-1">{{ $nomorInternet }}</span>
+                                        @if($nomorInternet && $nomorInternet !== '-')
+                                            <a href="{{ route('teknik.pelanggan.profile', $nomorInternet) }}" 
+                                               class="font-mono text-blue-500 hover:text-blue-400 hover:underline mr-1"
+                                               title="Buka Profile Pelanggan">
+                                                {{ $nomorInternet }}
+                                            </a>
+                                        @else
+                                            <span class="font-mono text-slate-400 mr-1">{{ $nomorInternet }}</span>
+                                        @endif
                                         <span>{{ $namaPel }}</span>
                                     </div>
                                     <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase leading-relaxed font-sans">
@@ -578,8 +586,16 @@
                                     <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                                         <span>{{ $namaPel }}</span>
                                     </div>
-                                    <div class="text-[11px] font-mono text-blue-500 font-semibold mt-0.5">
-                                        {{ $nomorInternet }}
+                                    <div class="text-[11px] font-mono mt-0.5">
+                                        @if($nomorInternet && $nomorInternet !== '-')
+                                            <a href="{{ route('teknik.pelanggan.profile', $nomorInternet) }}" 
+                                               class="text-blue-500 hover:text-blue-400 hover:underline font-semibold"
+                                               title="Buka Profile Pelanggan">
+                                                {{ $nomorInternet }}
+                                            </a>
+                                        @else
+                                            <span class="text-slate-400">{{ $nomorInternet }}</span>
+                                        @endif
                                     </div>
                                     @if(!empty($kodeTiket) && $kodeTiket !== '-')
                                         <div class="text-[10px] text-slate-400 font-mono">

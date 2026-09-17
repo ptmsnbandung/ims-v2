@@ -211,16 +211,12 @@
                             <!-- 1. Pelanggan -->
                             <td class="py-4 px-4 align-top">
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                   class="font-bold text-blue-400 hover:text-blue-300 underline tracking-wide text-sm"
+                                   class="font-bold font-mono text-blue-400 hover:text-blue-300 underline tracking-wide text-xs inline-block"
                                    title="Buka Profile Pelanggan">
                                     {{ $item->nomor_internet }}
                                 </a>
                                 <div class="mt-1 font-semibold text-white uppercase text-xs">
-                                    <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                       class="hover:text-blue-300 transition"
-                                       title="Buka Profile Pelanggan">
-                                        {{ $item->nama_pelanggan }} 
-                                    </a>
+                                    <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-400 font-normal">
                                         ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
                                     </span>

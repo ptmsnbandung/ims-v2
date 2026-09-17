@@ -207,7 +207,9 @@
                             <!-- Pelanggan -->
                             <td class="py-3.5 px-4">
                                 <div class="font-bold text-white">{{ $u->nama_pelanggan ?? '-' }}</div>
-                                <div class="text-[11px] font-mono text-slate-400">No: {{ $u->nomor_internet }}</div>
+                                <div class="text-[11px] font-mono text-slate-400">
+                                    No: <a href="{{ route('teknik.pelanggan.profile', $u->nomor_internet) }}" class="text-blue-400 hover:underline" title="Buka Profile Pelanggan">{{ $u->nomor_internet }}</a>
+                                </div>
                                 <div class="text-[10px] text-slate-500 max-w-[200px] truncate mt-0.5">{{ $u->alamat_p ?? '-' }}</div>
                             </td>
 

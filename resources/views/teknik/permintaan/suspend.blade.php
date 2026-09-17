@@ -169,15 +169,13 @@
                             <!-- 1. Customer Column -->
                             <td class="py-4 px-5 align-top">
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                   class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline tracking-wide text-xs"
+                                   class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline tracking-wide text-xs inline-block"
                                    title="Buka Profile Pelanggan">
                                     {{ $item->nomor_internet }}
                                 </a>
 
                                 <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-xs mt-0.5">
-                                    <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" class="hover:text-blue-500 transition">
-                                        {{ $item->nama_pelanggan }}
-                                    </a>
+                                    <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 font-normal">
                                         ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
                                     </span>

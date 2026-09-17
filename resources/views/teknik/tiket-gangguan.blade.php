@@ -75,14 +75,14 @@
              const item = this.items[idx];
              if (!item) return;
              this.selectedTiket = item;
-             this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
-             this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
+             this.modalId = item.tiket || item.kode_trx_tiket || item.id_tiket || item.id;
+             this.modalKodeTiket = item.tiket || item.kode_trx_tiket || item.id_tiket || item.id || '-';
              this.modalNomorInternet = item.nomor_internet || '-';
              this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
              this.modalKeluhan = item.keluhan || '-';
              this.modalKatTiket = (item.kat_tiket == '12') ? 'Ubah Password' : 'Gangguan Layanan';
              this.modalStatus = item.status || '11';
-             this.modalSolusi = item.solusi || '';
+             this.modalSolusi = item.solusi || item.penanganan || '';
              this.modalTeamTeknisi = item.team_teknisi || '';
              this.detailModalOpen = true;
          },
@@ -90,8 +90,8 @@
          openScheduleModal(idx) {
              const item = this.items[idx];
              if (!item) return;
-             this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
-             this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
+             this.modalId = item.tiket || item.kode_trx_tiket || item.id_tiket || item.id;
+             this.modalKodeTiket = item.tiket || item.kode_trx_tiket || item.id_tiket || item.id || '-';
              this.modalNomorInternet = item.nomor_internet || '-';
              this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
              this.modalKeluhan = item.keluhan || '';
@@ -104,19 +104,19 @@
          openResolveModal(idx) {
              const item = this.items[idx];
              if (!item) return;
-             this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
-             this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
+             this.modalId = item.tiket || item.kode_trx_tiket || item.id_tiket || item.id;
+             this.modalKodeTiket = item.tiket || item.kode_trx_tiket || item.id_tiket || item.id || '-';
              this.modalNomorInternet = item.nomor_internet || '-';
              this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
-             this.modalSolusi = item.solusi || '';
+             this.modalSolusi = item.solusi || item.penanganan || '';
              this.resolveModalOpen = true;
          },
 
          openCancelModal(idx) {
              const item = this.items[idx];
              if (!item) return;
-             this.modalId = item.id_tiket || item.id || item.kode_trx_tiket;
-             this.modalKodeTiket = item.kode_trx_tiket || item.id_tiket || item.id || '-';
+             this.modalId = item.tiket || item.kode_trx_tiket || item.id_tiket || item.id;
+             this.modalKodeTiket = item.tiket || item.kode_trx_tiket || item.id_tiket || item.id || '-';
              this.modalNomorInternet = item.nomor_internet || '-';
              this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
              this.modalNoteCancel = '';
@@ -404,7 +404,7 @@
                             $alamat = ($item->alamat_pasang ?? null) ?: (($item->alamat_p ?? null) ?: '-');
                             $katText = (($item->kat_tiket ?? null) == '12') ? 'Ubah Password' : 'Gangguan Layanan';
                             $statusVal = (string) ($item->status ?? '11');
-                            $kodeTiket = ($item->kode_trx_tiket ?? null) ?: (($item->id_tiket ?? null) ?: (($item->id ?? null) ?: '-'));
+                            $kodeTiket = ($item->tiket ?? null) ?: (($item->kode_trx_tiket ?? null) ?: (($item->id_tiket ?? null) ?: (($item->id ?? null) ?: '-')));
                             $userPppoe = ($item->user_pppoe ?? null) ?: $nomorInternet;
                             $passPppoe = ($item->pass_pppoe ?? null) ?: (($item->password ?? null) ?: '-');
                             $mediaAkses = ($item->media_akses ?? null) ?: 'FTTH';
@@ -412,7 +412,7 @@
 
                             $keluhanClean = str_replace(["\r\n", "\\r\\n", "\r", "\\r", "\\n"], "\n", $item->keluhan ?? '');
                             $passLama = '-';
-                            $passBaru = ($item->solusi ?? null) ?: 'tim customer care kami akan segera menghubungi anda';
+                            $passBaru = ($item->solusi ?? null) ?: (($item->penanganan ?? null) ?: 'tim customer care kami akan segera menghubungi anda');
 
                             if (stripos($keluhanClean, 'Password Lama :') !== false || stripos($keluhanClean, 'password Baru :') !== false) {
                                 $parts = preg_split('/password\s*baru\s*:\s*/i', $keluhanClean);
@@ -598,9 +598,9 @@
                                     <div class="text-xs text-slate-800 dark:text-slate-200 line-clamp-2">
                                         {{ $item->keluhan ?? '-' }}
                                     </div>
-                                    @if(!empty($item->solusi))
+                                    @if(!empty($item->solusi) || !empty($item->penanganan))
                                         <div class="mt-1 text-[11px] text-emerald-400 font-medium line-clamp-1">
-                                            Solusi: {{ $item->solusi }}
+                                            Solusi: {{ $item->solusi ?? $item->penanganan }}
                                         </div>
                                     @endif
                                     @if(!empty($item->team_teknisi))

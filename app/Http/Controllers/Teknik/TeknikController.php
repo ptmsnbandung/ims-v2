@@ -155,11 +155,14 @@ class TeknikController extends Controller
                 $query->where('b.nama_kategori_bandwith', $layanan);
             }
 
-            // Filter Search (nomor_internet, nama_pelanggan, kode_trx_tiket, id_tiket, keluhan)
+            // Filter Search (nomor_internet, nama_pelanggan, tiket, kode_trx_tiket, id_tiket, keluhan)
             if ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('t.nomor_internet', 'like', "%{$search}%")
                       ->orWhere('b.nama_pelanggan', 'like', "%{$search}%");
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'tiket')) {
+                        $q->orWhere('t.tiket', 'like', "%{$search}%");
+                    }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
                         $q->orWhere('t.kode_trx_tiket', 'like', "%{$search}%");
                     }
@@ -314,13 +317,13 @@ class TeknikController extends Controller
                     };
 
                     fputcsv($handle, [
-                        $r->kode_trx_tiket ?? $r->id_tiket ?? '-',
+                        $r->tiket ?? $r->kode_trx_tiket ?? $r->id_tiket ?? '-',
                         $r->nomor_internet ?? '-',
                         $r->nama_pelanggan ?? '-',
                         $katLabel,
                         $statusLabel,
                         $r->keluhan ?? '-',
-                        $r->solusi ?? '-',
+                        $r->solusi ?? $r->penanganan ?? '-',
                         $r->team_teknisi ?? '-',
                         $r->date_schedule ? ($r->date_schedule . ' ' . ($r->time_schedule ?? '')) : '-',
                         $r->date_create ?? $r->created_at ?? '-',
@@ -494,10 +497,13 @@ class TeknikController extends Controller
         
         $countToday = DB::table('trx_tiket_gangguan')
             ->where(function($q) use ($prefix) {
+                if (Schema::hasColumn('trx_tiket_gangguan', 'tiket')) {
+                    $q->where('tiket', 'like', "{$prefix}%");
+                }
                 if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
-                    $q->where('kode_trx_tiket', 'like', "{$prefix}%");
+                    $q->orWhere('kode_trx_tiket', 'like', "{$prefix}%");
                 } elseif (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
-                    $q->where('id_tiket', 'like', "{$prefix}%");
+                    $q->orWhere('id_tiket', 'like', "{$prefix}%");
                 }
             })
             ->count();
@@ -510,14 +516,22 @@ class TeknikController extends Controller
             'nomor_internet' => $nomorInternet,
             'kat_tiket' => $kategori,
             'keluhan' => $keluhan,
-            'solusi' => ($kategori == '12') ? 'tim customer care kami akan segera menghubungi anda' : null,
             'status' => '11', // (KD11) Antrian / Request
             'date_create' => $now,
             'date_update' => $now,
         ];
 
+        if (Schema::hasColumn('trx_tiket_gangguan', 'solusi')) {
+            $payload['solusi'] = ($kategori == '12') ? 'tim customer care kami akan segera menghubungi anda' : null;
+        }
+        if (Schema::hasColumn('trx_tiket_gangguan', 'penanganan')) {
+            $payload['penanganan'] = ($kategori == '12') ? 'tim customer care kami akan segera menghubungi anda' : null;
+        }
         if ($customer && Schema::hasColumn('trx_tiket_gangguan', 'nama_pelanggan')) {
             $payload['nama_pelanggan'] = $customer->nama_pelanggan ?? null;
+        }
+        if (Schema::hasColumn('trx_tiket_gangguan', 'tiket')) {
+            $payload['tiket'] = $generatedCode;
         }
         if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
             $payload['kode_trx_tiket'] = $generatedCode;
@@ -587,9 +601,16 @@ class TeknikController extends Controller
             $affected = DB::table('trx_tiket_gangguan')
                 ->where(function($q) use ($id, $kodeTrx) {
                     $hasClause = false;
-                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
-                        $q->where('id_tiket', $id);
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'tiket')) {
+                        $q->where('tiket', $id);
+                        if (!empty($kodeTrx) && $kodeTrx !== '-') {
+                            $q->orWhere('tiket', $kodeTrx);
+                        }
                         $hasClause = true;
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+                        if ($hasClause) $q->orWhere('id_tiket', $id);
+                        else { $q->where('id_tiket', $id); $hasClause = true; }
                     }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
                         if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
@@ -610,7 +631,7 @@ class TeknikController extends Controller
                 DB::table('trx_tiket_gangguan')
                     ->where('nomor_internet', $noInternet)
                     ->where('status', '11')
-                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : 'id_tiket', 'desc')
+                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : (Schema::hasColumn('trx_tiket_gangguan', 'tiket') ? 'tiket' : 'id_tiket'), 'desc')
                     ->limit(1)
                     ->update($updateData);
             }
@@ -642,8 +663,12 @@ class TeknikController extends Controller
                 'status' => '13', // (KD13) Success / Selesai
             ];
 
+            $solusiText = $request->solusi ?: 'Kendala gangguan telah diselesaikan oleh teknisi/NOC.';
             if (Schema::hasColumn('trx_tiket_gangguan', 'solusi')) {
-                $updateData['solusi'] = $request->solusi ?: 'Kendala gangguan telah diselesaikan oleh teknisi/NOC.';
+                $updateData['solusi'] = $solusiText;
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'penanganan')) {
+                $updateData['penanganan'] = $solusiText;
             }
             if (Schema::hasColumn('trx_tiket_gangguan', 'date_update')) {
                 $updateData['date_update'] = $now;
@@ -655,9 +680,16 @@ class TeknikController extends Controller
             $affected = DB::table('trx_tiket_gangguan')
                 ->where(function($q) use ($id, $kodeTrx) {
                     $hasClause = false;
-                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
-                        $q->where('id_tiket', $id);
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'tiket')) {
+                        $q->where('tiket', $id);
+                        if (!empty($kodeTrx) && $kodeTrx !== '-') {
+                            $q->orWhere('tiket', $kodeTrx);
+                        }
                         $hasClause = true;
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+                        if ($hasClause) $q->orWhere('id_tiket', $id);
+                        else { $q->where('id_tiket', $id); $hasClause = true; }
                     }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
                         if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
@@ -678,7 +710,7 @@ class TeknikController extends Controller
                 DB::table('trx_tiket_gangguan')
                     ->where('nomor_internet', $noInternet)
                     ->whereIn('status', ['11', '12'])
-                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : 'id_tiket', 'desc')
+                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : (Schema::hasColumn('trx_tiket_gangguan', 'tiket') ? 'tiket' : 'id_tiket'), 'desc')
                     ->limit(1)
                     ->update($updateData);
             }
@@ -710,8 +742,12 @@ class TeknikController extends Controller
                 'status' => '14', // (KD14) Canceled
             ];
 
+            $cancelText = $request->note_cancel ? ('Dibatalkan: ' . $request->note_cancel) : 'Dibatalkan oleh operator';
             if (Schema::hasColumn('trx_tiket_gangguan', 'solusi')) {
-                $updateData['solusi'] = $request->note_cancel ? ('Dibatalkan: ' . $request->note_cancel) : 'Dibatalkan oleh operator';
+                $updateData['solusi'] = $cancelText;
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'penanganan')) {
+                $updateData['penanganan'] = $cancelText;
             }
             if (Schema::hasColumn('trx_tiket_gangguan', 'date_update')) {
                 $updateData['date_update'] = $now;
@@ -723,9 +759,16 @@ class TeknikController extends Controller
             $affected = DB::table('trx_tiket_gangguan')
                 ->where(function($q) use ($id, $kodeTrx) {
                     $hasClause = false;
-                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
-                        $q->where('id_tiket', $id);
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'tiket')) {
+                        $q->where('tiket', $id);
+                        if (!empty($kodeTrx) && $kodeTrx !== '-') {
+                            $q->orWhere('tiket', $kodeTrx);
+                        }
                         $hasClause = true;
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+                        if ($hasClause) $q->orWhere('id_tiket', $id);
+                        else { $q->where('id_tiket', $id); $hasClause = true; }
                     }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
                         if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
@@ -746,7 +789,7 @@ class TeknikController extends Controller
                 DB::table('trx_tiket_gangguan')
                     ->where('nomor_internet', $noInternet)
                     ->whereIn('status', ['11', '12'])
-                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : 'id_tiket', 'desc')
+                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : (Schema::hasColumn('trx_tiket_gangguan', 'tiket') ? 'tiket' : 'id_tiket'), 'desc')
                     ->limit(1)
                     ->update($updateData);
             }

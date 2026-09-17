@@ -13,7 +13,7 @@ return new class extends Migration
     {
         if (!Schema::hasTable('trx_tiket_gangguan')) {
             Schema::create('trx_tiket_gangguan', function (Blueprint $table) {
-                $table->id('id_tiket');
+                $table->string('tiket', 100)->primary();
                 $table->string('kode_trx_tiket', 50)->nullable()->index();
                 $table->string('nomor_internet', 50)->index();
                 $table->string('nama_pelanggan', 150)->nullable();

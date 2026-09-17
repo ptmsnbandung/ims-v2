@@ -3257,17 +3257,28 @@ class TeknikController extends Controller
 
         $updateTrx = [
             'status_ubah_layanan' => '13', // KD13 Success
-            'date_finish' => $request->date_eksekusi ?: now()->format('Y-m-d'),
-            'note_finish' => $request->note_eksekusi ?? 'Eksekusi UP/Downgrade bandwidth berhasil dilakukan.',
             'date_update' => $now,
             'user_update' => $currentUser,
         ];
 
+        if (Schema::hasColumn('trx_ubah_layanan', 'date_closing')) {
+            $updateTrx['date_closing'] = $request->date_eksekusi ?: now()->format('Y-m-d');
+        }
+        if (Schema::hasColumn('trx_ubah_layanan', 'note_closing')) {
+            $updateTrx['note_closing'] = $request->note_eksekusi ?? 'Eksekusi UP/Downgrade bandwidth profil pelanggan berhasil diselesaikan.';
+        }
+
         if ($paketData) {
-            $updateTrx['kode_bandwith_baru'] = $paketData->kode_bandwith;
-            $updateTrx['nama_kategori_bandwith_baru'] = $paketData->nama_kategori_bandwith ?? $paketData->alias_nama_kategori;
-            $updateTrx['nominal_bandwith_baru'] = $paketData->nominal_bandwith;
-        } elseif ($kodeBandwithBaru) {
+            if (Schema::hasColumn('trx_ubah_layanan', 'kode_bandwith_baru')) {
+                $updateTrx['kode_bandwith_baru'] = $paketData->kode_bandwith;
+            }
+            if (Schema::hasColumn('trx_ubah_layanan', 'nama_kategori_bandwith_baru')) {
+                $updateTrx['nama_kategori_bandwith_baru'] = $paketData->nama_kategori_bandwith ?? $paketData->alias_nama_kategori;
+            }
+            if (Schema::hasColumn('trx_ubah_layanan', 'nominal_bandwith_baru')) {
+                $updateTrx['nominal_bandwith_baru'] = $paketData->nominal_bandwith;
+            }
+        } elseif ($kodeBandwithBaru && Schema::hasColumn('trx_ubah_layanan', 'kode_bandwith_baru')) {
             $updateTrx['kode_bandwith_baru'] = $kodeBandwithBaru;
         }
 

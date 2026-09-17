@@ -557,6 +557,8 @@ class TeknikController extends Controller
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? auth()->user()->username ?? 'Teknisi';
         $team = is_array($request->team_teknisi) ? implode(', ', $request->team_teknisi) : ($request->team_teknisi ?? '');
+        $noInternet = trim($request->input('nomor_internet', ''));
+        $kodeTrx = trim($request->input('kode_trx_tiket', ''));
 
         try {
             $updateData = [
@@ -583,7 +585,7 @@ class TeknikController extends Controller
             }
 
             $affected = DB::table('trx_tiket_gangguan')
-                ->where(function($q) use ($id) {
+                ->where(function($q) use ($id, $kodeTrx) {
                     $hasClause = false;
                     if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
                         $q->where('id_tiket', $id);
@@ -592,6 +594,10 @@ class TeknikController extends Controller
                     if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
                         if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
                         else { $q->where('kode_trx_tiket', $id); $hasClause = true; }
+
+                        if (!empty($kodeTrx) && $kodeTrx !== '-') {
+                            $q->orWhere('kode_trx_tiket', $kodeTrx);
+                        }
                     }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'id')) {
                         if ($hasClause) $q->orWhere('id', $id);
@@ -599,6 +605,15 @@ class TeknikController extends Controller
                     }
                 })
                 ->update($updateData);
+
+            if ($affected === 0 && !empty($noInternet) && $noInternet !== '-') {
+                DB::table('trx_tiket_gangguan')
+                    ->where('nomor_internet', $noInternet)
+                    ->where('status', '11')
+                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : 'id_tiket', 'desc')
+                    ->limit(1)
+                    ->update($updateData);
+            }
 
             return redirect()->back()->with('success', "Tiket #{$id} berhasil dijadwalkan ke status (KD12) On Schedule!");
         } catch (\Throwable $e) {
@@ -619,6 +634,8 @@ class TeknikController extends Controller
 
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? auth()->user()->username ?? 'Teknisi';
+        $noInternet = trim($request->input('nomor_internet', ''));
+        $kodeTrx = trim($request->input('kode_trx_tiket', ''));
 
         try {
             $updateData = [
@@ -635,8 +652,8 @@ class TeknikController extends Controller
                 $updateData['user_update'] = $currentUser;
             }
 
-            DB::table('trx_tiket_gangguan')
-                ->where(function($q) use ($id) {
+            $affected = DB::table('trx_tiket_gangguan')
+                ->where(function($q) use ($id, $kodeTrx) {
                     $hasClause = false;
                     if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
                         $q->where('id_tiket', $id);
@@ -645,6 +662,10 @@ class TeknikController extends Controller
                     if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
                         if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
                         else { $q->where('kode_trx_tiket', $id); $hasClause = true; }
+
+                        if (!empty($kodeTrx) && $kodeTrx !== '-') {
+                            $q->orWhere('kode_trx_tiket', $kodeTrx);
+                        }
                     }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'id')) {
                         if ($hasClause) $q->orWhere('id', $id);
@@ -652,6 +673,15 @@ class TeknikController extends Controller
                     }
                 })
                 ->update($updateData);
+
+            if ($affected === 0 && !empty($noInternet) && $noInternet !== '-') {
+                DB::table('trx_tiket_gangguan')
+                    ->where('nomor_internet', $noInternet)
+                    ->whereIn('status', ['11', '12'])
+                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : 'id_tiket', 'desc')
+                    ->limit(1)
+                    ->update($updateData);
+            }
 
             return redirect()->back()->with('success', "Tiket #{$id} berhasil diselesaikan (KD13 Success)!");
         } catch (\Throwable $e) {
@@ -672,6 +702,8 @@ class TeknikController extends Controller
 
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? auth()->user()->username ?? 'Operator';
+        $noInternet = trim($request->input('nomor_internet', ''));
+        $kodeTrx = trim($request->input('kode_trx_tiket', ''));
 
         try {
             $updateData = [
@@ -688,8 +720,8 @@ class TeknikController extends Controller
                 $updateData['user_update'] = $currentUser;
             }
 
-            DB::table('trx_tiket_gangguan')
-                ->where(function($q) use ($id) {
+            $affected = DB::table('trx_tiket_gangguan')
+                ->where(function($q) use ($id, $kodeTrx) {
                     $hasClause = false;
                     if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
                         $q->where('id_tiket', $id);
@@ -698,6 +730,10 @@ class TeknikController extends Controller
                     if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
                         if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
                         else { $q->where('kode_trx_tiket', $id); $hasClause = true; }
+
+                        if (!empty($kodeTrx) && $kodeTrx !== '-') {
+                            $q->orWhere('kode_trx_tiket', $kodeTrx);
+                        }
                     }
                     if (Schema::hasColumn('trx_tiket_gangguan', 'id')) {
                         if ($hasClause) $q->orWhere('id', $id);
@@ -705,6 +741,15 @@ class TeknikController extends Controller
                     }
                 })
                 ->update($updateData);
+
+            if ($affected === 0 && !empty($noInternet) && $noInternet !== '-') {
+                DB::table('trx_tiket_gangguan')
+                    ->where('nomor_internet', $noInternet)
+                    ->whereIn('status', ['11', '12'])
+                    ->orderBy(Schema::hasColumn('trx_tiket_gangguan', 'date_create') ? 'date_create' : 'id_tiket', 'desc')
+                    ->limit(1)
+                    ->update($updateData);
+            }
 
             return redirect()->back()->with('success', "Tiket #{$id} berhasil dibatalkan (KD14 Canceled)!");
         } catch (\Throwable $e) {

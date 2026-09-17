@@ -807,6 +807,8 @@
 
             <form :action="'{{ url('/teknik/tiket/gangguan') }}/' + modalId + '/schedule'" method="POST" class="space-y-4 text-xs">
                 @csrf
+                <input type="hidden" name="nomor_internet" :value="modalNomorInternet">
+                <input type="hidden" name="kode_trx_tiket" :value="modalKodeTiket">
                 <div class="p-3 bg-slate-800/50 rounded-xl space-y-1">
                     <div class="flex justify-between">
                         <span class="text-slate-400">Customer:</span>
@@ -868,6 +870,8 @@
 
             <form :action="'{{ url('/teknik/tiket/gangguan') }}/' + modalId + '/resolve'" method="POST" class="space-y-4 text-xs">
                 @csrf
+                <input type="hidden" name="nomor_internet" :value="modalNomorInternet">
+                <input type="hidden" name="kode_trx_tiket" :value="modalKodeTiket">
                 <div class="p-3 bg-slate-800/50 rounded-xl space-y-1">
                     <div class="flex justify-between">
                         <span class="text-slate-400">Customer:</span>
@@ -914,6 +918,8 @@
 
             <form :action="'{{ url('/teknik/tiket/gangguan') }}/' + modalId + '/cancel'" method="POST" class="space-y-4 text-xs">
                 @csrf
+                <input type="hidden" name="nomor_internet" :value="modalNomorInternet">
+                <input type="hidden" name="kode_trx_tiket" :value="modalKodeTiket">
                 <div class="p-3 bg-slate-800/50 rounded-xl space-y-1">
                     <div class="flex justify-between">
                         <span class="text-slate-400">Customer:</span>

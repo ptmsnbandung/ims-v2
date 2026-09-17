@@ -103,7 +103,23 @@
          },
 
          onFotoChange(event) {
-             const file = event.target.files[0];
+             const file = event.target.files ? event.target.files[0] : null;
+             this.handleFile(file);
+         },
+
+         handleDrop(event) {
+             const file = event.dataTransfer && event.dataTransfer.files ? event.dataTransfer.files[0] : null;
+             if (file && this.$refs.fileInput) {
+                 try {
+                     const dataTransfer = new DataTransfer();
+                     dataTransfer.items.add(file);
+                     this.$refs.fileInput.files = dataTransfer.files;
+                 } catch (e) {}
+             }
+             this.handleFile(file);
+         },
+
+         handleFile(file) {
              if (file) {
                  this.fotoFileName = file.name;
                  const reader = new FileReader();
@@ -712,43 +728,57 @@
                         <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                             Foto Bukti Eksekusi / Screenshot:
                         </label>
-                        <div class="mt-1 flex justify-center px-4 pt-3.5 pb-3.5 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 rounded-xl transition bg-slate-50/50 dark:bg-slate-950/50 relative group">
-                            <div class="space-y-1.5 text-center w-full">
-                                <template x-if="!fotoPreview">
-                                    <div class="flex flex-col items-center">
-                                        <svg class="mx-auto h-8 w-8 text-slate-400 group-hover:text-emerald-400 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <input type="file" 
+                               name="foto_ss" 
+                               x-ref="fileInput" 
+                               accept="image/*" 
+                               @change="onFotoChange($event)" 
+                               class="hidden">
+
+                        <!-- Dropzone Container (Clicking anywhere opens file picker) -->
+                        <div @click="$refs.fileInput.click()"
+                             @dragover.prevent
+                             @drop.prevent="handleDrop($event)"
+                             class="mt-1 flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 rounded-xl transition bg-slate-50/50 dark:bg-slate-950/50 cursor-pointer group">
+                            
+                            <template x-if="!fotoPreview">
+                                <div class="flex flex-col items-center text-center space-y-1.5 pointer-events-none">
+                                    <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition">
+                                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                         </svg>
-                                        <div class="flex text-xs text-slate-600 dark:text-slate-400 justify-center mt-1">
-                                            <label class="relative cursor-pointer rounded-md font-bold text-emerald-500 hover:text-emerald-400 focus-within:outline-none">
-                                                <span>Pilih file foto / screenshot</span>
-                                                <input type="file" name="foto_ss" accept="image/*" @change="onFotoChange" class="sr-only">
-                                            </label>
-                                        </div>
-                                        <p class="text-[10px] text-slate-400 mt-0.5">PNG, JPG, JPEG, WEBP up to 5MB</p>
                                     </div>
-                                </template>
-                                
-                                <template x-if="fotoPreview">
-                                    <div class="flex flex-col items-center gap-2">
-                                        <div class="relative rounded-lg overflow-hidden border border-slate-700 max-h-36 max-w-full">
-                                            <img :src="fotoPreview" class="h-32 object-contain mx-auto rounded" alt="Preview Bukti">
-                                            <button type="button" 
-                                                    @click="fotoPreview = null; fotoFileName = ''; $el.closest('.group').querySelector('input[type=file]').value = ''"
-                                                    class="absolute top-1 right-1 p-1 bg-rose-600/80 hover:bg-rose-600 text-white rounded-full text-xs">
-                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
+                                    <span class="text-xs font-bold text-emerald-500 group-hover:underline">
+                                        Klik untuk memilih foto / screenshot bukti
+                                    </span>
+                                    <p class="text-[10px] text-slate-400">PNG, JPG, JPEG, WEBP (Maksimal 5MB)</p>
+                                </div>
+                            </template>
+
+                            <template x-if="fotoPreview">
+                                <div class="flex flex-col items-center gap-2 text-center w-full" @click.stop>
+                                    <div class="relative rounded-lg overflow-hidden border border-slate-700 bg-slate-900 shadow-md">
+                                        <img :src="fotoPreview" class="h-36 max-w-full object-contain rounded" alt="Preview Bukti">
+                                        <button type="button" 
+                                                @click.stop="fotoPreview = null; fotoFileName = ''; $refs.fileInput.value = ''"
+                                                class="absolute top-1.5 right-1.5 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow transition"
+                                                title="Hapus Foto">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center gap-2">
                                         <span class="text-[11px] font-mono text-emerald-400 truncate max-w-xs" x-text="fotoFileName"></span>
-                                        <label class="cursor-pointer text-[10px] text-slate-400 hover:text-emerald-400 underline">
+                                        <button type="button" 
+                                                @click.stop="$refs.fileInput.click()" 
+                                                class="text-[11px] font-semibold text-blue-400 hover:underline">
                                             Ganti Foto
-                                            <input type="file" name="foto_ss" accept="image/*" @change="onFotoChange" class="sr-only">
-                                        </label>
+                                        </button>
                                     </div>
-                                </template>
-                            </div>
+                                </div>
+                            </template>
+
                         </div>
                     </div>
 

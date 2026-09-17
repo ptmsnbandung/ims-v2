@@ -34,9 +34,18 @@
     <!-- Ticket Category Cards Grid (Semua dapat ditekan dan menuju ke dashboard masing-masing) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
         
-        <!-- 1. Gangguan Layanan (Blue Card -> Dashboard Tiket Gangguan) -->
+        <!-- 1. Gangguan Layanan (Royal Blue Card -> Dashboard Tiket Gangguan) -->
         <a href="{{ $destinations['gangguan'] ?? route('teknik.tiket.gangguan', ['kategori' => 'gangguan']) }}"
-           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20 hover:shadow-2xl hover:shadow-indigo-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-lg shadow-blue-500/20 hover:shadow-2xl hover:shadow-blue-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            
+            @if(($counts['gangguan'] ?? 0) > 0)
+                <!-- Red Notification Badge (Top Right) -->
+                <span class="absolute top-3.5 right-3.5 flex h-3.5 w-3.5 z-10" title="{{ $counts['gangguan'] }} tiket perlu dieksekusi">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-md"></span>
+                </span>
+            @endif
+
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">
@@ -45,7 +54,7 @@
                     <p class="mt-1.5 text-xs sm:text-sm font-medium text-white/90">
                         {{ $counts['gangguan'] ?? 0 }} Tiket
                     </p>
-                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-indigo-600 transition-colors">
+                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-blue-600 transition-colors">
                         <span>Buka Dashboard</span>
                         <svg class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -61,9 +70,18 @@
             </div>
         </a>
 
-        <!-- 2. Ubah Password (Pink / Coral Red Card -> Dashboard Ubah Password) -->
+        <!-- 2. Ubah Password (Rose Pink Card -> Dashboard Ubah Password) -->
         <a href="{{ $destinations['ubah_password'] ?? route('teknik.tiket.gangguan', ['kategori' => 'ubah_password']) }}"
-           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/20 hover:shadow-2xl hover:shadow-rose-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white shadow-lg shadow-rose-500/20 hover:shadow-2xl hover:shadow-rose-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            
+            @if(($counts['ubah_password'] ?? 0) > 0)
+                <!-- Red Notification Badge (Top Right) -->
+                <span class="absolute top-3.5 right-3.5 flex h-3.5 w-3.5 z-10" title="{{ $counts['ubah_password'] }} tiket perlu dieksekusi">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-md"></span>
+                </span>
+            @endif
+
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">
@@ -88,9 +106,18 @@
             </div>
         </a>
 
-        <!-- 3. Relokasi Layanan (Purple / Violet Gradient Card -> Dashboard Relokasi) -->
+        <!-- 3. Relokasi Layanan (Deep Violet / Purple Card -> Dashboard Relokasi) -->
         <a href="{{ $destinations['relokasi'] ?? route('teknik.tiket.gangguan', ['kategori' => 'relokasi']) }}"
-           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20 hover:shadow-2xl hover:shadow-purple-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700 text-white shadow-lg shadow-purple-500/20 hover:shadow-2xl hover:shadow-purple-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            
+            @if(($counts['relokasi'] ?? 0) > 0)
+                <!-- Red Notification Badge (Top Right) -->
+                <span class="absolute top-3.5 right-3.5 flex h-3.5 w-3.5 z-10" title="{{ $counts['relokasi'] }} tiket perlu dieksekusi">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-md"></span>
+                </span>
+            @endif
+
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">
@@ -116,9 +143,18 @@
             </div>
         </a>
 
-        <!-- 4. Cek Coverage Area (Amber / Yellow Gold Card -> Dashboard Coverage) -->
+        <!-- 4. Cek Coverage Area (Amber / Gold Sun Card -> Dashboard Coverage) -->
         <a href="{{ $destinations['coverage'] ?? route('teknik.coverage') }}"
-           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-2xl hover:shadow-amber-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white shadow-lg shadow-amber-500/20 hover:shadow-2xl hover:shadow-amber-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            
+            @if(($counts['coverage'] ?? 0) > 0)
+                <!-- Red Notification Badge (Top Right) -->
+                <span class="absolute top-3.5 right-3.5 flex h-3.5 w-3.5 z-10" title="{{ $counts['coverage'] }} data coverage perlu diproses">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-md"></span>
+                </span>
+            @endif
+
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">
@@ -144,9 +180,18 @@
             </div>
         </a>
 
-        <!-- 4. Terminasi (Blue Card -> Dashboard Terminasi Role-Aware) -->
+        <!-- 5. Terminasi (Crimson Ruby Red Card -> Dashboard Terminasi Role-Aware) -->
         <a href="{{ $destinations['terminasi'] ?? route('teknik.permintaan.terminasi') }}"
-           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/20 hover:shadow-2xl hover:shadow-indigo-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-red-600 via-rose-700 to-red-800 text-white shadow-lg shadow-red-600/25 hover:shadow-2xl hover:shadow-red-600/40 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            
+            @if(($counts['terminasi'] ?? 0) > 0)
+                <!-- Red Notification Badge (Top Right) -->
+                <span class="absolute top-3.5 right-3.5 flex h-3.5 w-3.5 z-10" title="{{ $counts['terminasi'] }} tiket terminasi perlu dieksekusi">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-md"></span>
+                </span>
+            @endif
+
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">
@@ -155,7 +200,7 @@
                     <p class="mt-1.5 text-xs sm:text-sm font-medium text-white/90">
                         {{ $counts['terminasi'] ?? 0 }} Tiket
                     </p>
-                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-indigo-600 transition-colors">
+                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-red-700 transition-colors">
                         <span>Buka Dashboard</span>
                         <svg class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -171,9 +216,18 @@
             </div>
         </a>
 
-        <!-- 5. Suspend Layanan (Pink / Coral Red Card -> Dashboard Suspend Role-Aware) -->
+        <!-- 6. Suspend Layanan (Tangerine Sunset Coral Card -> Dashboard Suspend Role-Aware) -->
         <a href="{{ $destinations['suspend'] ?? route('teknik.permintaan.suspend') }}"
-           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/20 hover:shadow-2xl hover:shadow-rose-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-orange-500 via-orange-600 to-red-500 text-white shadow-lg shadow-orange-500/20 hover:shadow-2xl hover:shadow-orange-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            
+            @if(($counts['suspend'] ?? 0) > 0)
+                <!-- Red Notification Badge (Top Right) -->
+                <span class="absolute top-3.5 right-3.5 flex h-3.5 w-3.5 z-10" title="{{ $counts['suspend'] }} tiket suspend perlu diproses">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-md"></span>
+                </span>
+            @endif
+
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">
@@ -182,7 +236,7 @@
                     <p class="mt-1.5 text-xs sm:text-sm font-medium text-white/90">
                         {{ $counts['suspend'] ?? 0 }} Tiket
                     </p>
-                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-rose-600 transition-colors">
+                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-orange-600 transition-colors">
                         <span>Buka Dashboard</span>
                         <svg class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -198,9 +252,18 @@
             </div>
         </a>
 
-        <!-- 6. Pemasangan Baru (Amber / Yellow Gold Card -> Dashboard Pendaftaran / Aktivasi Role-Aware) -->
+        <!-- 7. Pemasangan Baru (Emerald Mint Green Card -> Dashboard Pendaftaran / Aktivasi Role-Aware) -->
         <a href="{{ $destinations['pemasangan_baru'] ?? route('teknik.pendaftaran') }}"
-           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-2xl hover:shadow-amber-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-2xl hover:shadow-emerald-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            
+            @if(($counts['pemasangan_baru'] ?? 0) > 0)
+                <!-- Red Notification Badge (Top Right) -->
+                <span class="absolute top-3.5 right-3.5 flex h-3.5 w-3.5 z-10" title="{{ $counts['pemasangan_baru'] }} pendaftaran perlu diproses">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-md"></span>
+                </span>
+            @endif
+
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">
@@ -209,7 +272,7 @@
                     <p class="mt-1.5 text-xs sm:text-sm font-medium text-white/90">
                         {{ $counts['pemasangan_baru'] ?? 0 }} Tiket
                     </p>
-                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-amber-600 transition-colors">
+                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-emerald-600 transition-colors">
                         <span>Buka Dashboard</span>
                         <svg class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -225,9 +288,18 @@
             </div>
         </a>
 
-        <!-- 7. Ubah Layanan (Cyan Card -> Dashboard Ubah Layanan / UP-Downgrade Sesuai Screenshot) -->
+        <!-- 8. Ubah Layanan (Sky Cyan Card -> Dashboard Ubah Layanan / UP-Downgrade) -->
         <a href="{{ $destinations['ubah_layanan'] ?? route('teknik.permintaan.up-downgrade') }}"
-           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/20 hover:shadow-2xl hover:shadow-cyan-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-sky-500 via-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/20 hover:shadow-2xl hover:shadow-cyan-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            
+            @if(($counts['ubah_layanan'] ?? 0) > 0)
+                <!-- Red Notification Badge (Top Right) -->
+                <span class="absolute top-3.5 right-3.5 flex h-3.5 w-3.5 z-10" title="{{ $counts['ubah_layanan'] }} permintaan ubah layanan perlu dieksekusi">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-white shadow-md"></span>
+                </span>
+            @endif
+
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">

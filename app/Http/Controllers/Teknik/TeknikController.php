@@ -3294,8 +3294,12 @@ class TeknikController extends Controller
                 'date_update' => $now,
                 'user_update' => $currentUser,
             ];
-            if ($paketData) {
+            if ($paketData && Schema::hasColumn('trx_batchjob_register', 'kode_bandwith')) {
                 $custUpdate['kode_bandwith'] = $paketData->kode_bandwith;
+            } elseif ($kodeBandwithBaru && Schema::hasColumn('trx_batchjob_register', 'kode_bandwith')) {
+                $custUpdate['kode_bandwith'] = $kodeBandwithBaru;
+            }
+            if ($paketData && Schema::hasColumn('trx_batchjob_register', 'kode_kategori_bandwith')) {
                 $custUpdate['kode_kategori_bandwith'] = $paketData->kode_kategori_bandwith;
             }
             if ($groupLayanan && Schema::hasColumn('trx_batchjob_register', 'group_layanan')) {

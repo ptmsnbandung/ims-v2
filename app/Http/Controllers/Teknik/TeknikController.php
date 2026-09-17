@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Teknik;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -116,6 +118,7 @@ class TeknikController extends Controller
         $wilayah = $request->query('wilayah');
         $status = $request->query('status'); // '11', '12', '13', '14'
 
+        $this->ensureTiketGangguanColumns();
         $hasTable = Schema::hasTable('trx_tiket_gangguan');
 
         if ($hasTable) {
@@ -383,10 +386,89 @@ class TeknikController extends Controller
     }
 
     /**
+     * Ensure table trx_tiket_gangguan and all required columns exist
+     */
+    protected function ensureTiketGangguanColumns(): void
+    {
+        try {
+            if (!Schema::hasTable('trx_tiket_gangguan')) {
+                Schema::create('trx_tiket_gangguan', function (Blueprint $table) {
+                    $table->id('id_tiket');
+                    $table->string('kode_trx_tiket', 50)->nullable()->index();
+                    $table->string('nomor_internet', 50)->index();
+                    $table->string('nama_pelanggan', 150)->nullable();
+                    $table->string('kat_tiket', 20)->default('11');
+                    $table->string('status', 20)->default('11');
+                    $table->text('keluhan')->nullable();
+                    $table->string('prioritas', 20)->default('Normal');
+                    $table->string('team_teknisi', 100)->nullable();
+                    $table->date('date_schedule')->nullable();
+                    $table->string('time_schedule', 50)->nullable();
+                    $table->text('solusi')->nullable();
+                    $table->dateTime('date_create')->nullable();
+                    $table->string('user_create', 100)->nullable();
+                    $table->dateTime('date_update')->nullable();
+                    $table->string('user_update', 100)->nullable();
+                    $table->timestamps();
+                });
+            } else {
+                Schema::table('trx_tiket_gangguan', function (Blueprint $table) {
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+                        $table->string('kode_trx_tiket', 50)->nullable()->index();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'nama_pelanggan')) {
+                        $table->string('nama_pelanggan', 150)->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
+                        $table->string('kat_tiket', 20)->default('11');
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'status')) {
+                        $table->string('status', 20)->default('11');
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'keluhan')) {
+                        $table->text('keluhan')->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'prioritas')) {
+                        $table->string('prioritas', 20)->default('Normal');
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'team_teknisi')) {
+                        $table->string('team_teknisi', 100)->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'date_schedule')) {
+                        $table->date('date_schedule')->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'time_schedule')) {
+                        $table->string('time_schedule', 50)->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'solusi')) {
+                        $table->text('solusi')->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'date_create')) {
+                        $table->dateTime('date_create')->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'user_create')) {
+                        $table->string('user_create', 100)->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'date_update')) {
+                        $table->dateTime('date_update')->nullable();
+                    }
+                    if (!Schema::hasColumn('trx_tiket_gangguan', 'user_update')) {
+                        $table->string('user_update', 100)->nullable();
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning("ensureTiketGangguanColumns notice: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Buat Tiket Baru (Ganti Password / Gangguan)
      */
     public function storeTiketGangguan(Request $request): RedirectResponse
     {
+        $this->ensureTiketGangguanColumns();
+
         $request->validate([
             'nomor_internet' => 'required|string',
             'perubahan' => 'nullable|string',
@@ -422,6 +504,8 @@ class TeknikController extends Controller
         
         $generatedCode = $prefix . str_pad((string)($countToday + 1), 3, '0', STR_PAD_LEFT);
 
+        $customer = DB::table('view_batchjob')->where('nomor_internet', $nomorInternet)->first();
+
         $payload = [
             'nomor_internet' => $nomorInternet,
             'kat_tiket' => $kategori,
@@ -432,10 +516,13 @@ class TeknikController extends Controller
             'date_update' => $now,
         ];
 
+        if ($customer && Schema::hasColumn('trx_tiket_gangguan', 'nama_pelanggan')) {
+            $payload['nama_pelanggan'] = $customer->nama_pelanggan ?? null;
+        }
         if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
             $payload['kode_trx_tiket'] = $generatedCode;
         }
-        if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+        if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket') && !Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
             $payload['id_tiket'] = $generatedCode;
         }
         if (Schema::hasColumn('trx_tiket_gangguan', 'user_create')) {
@@ -445,11 +532,15 @@ class TeknikController extends Controller
             $payload['user_update'] = $currentUser;
         }
 
-        DB::table('trx_tiket_gangguan')->insert($payload);
+        try {
+            DB::table('trx_tiket_gangguan')->insert($payload);
 
-        return redirect()->back()
-            ->with('success', "Tiket #{$generatedCode} untuk nomor internet {$nomorInternet} berhasil dibuat!")
-            ->with('tiket_created', true);
+            return redirect()->back()
+                ->with('success', "Tiket #{$generatedCode} untuk nomor internet {$nomorInternet} berhasil dibuat!")
+                ->with('tiket_created', true);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal membuat tiket: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -461,26 +552,58 @@ class TeknikController extends Controller
             abort(403, 'Role Anda hanya memiliki hak akses melihat data (View Only).');
         }
 
+        $this->ensureTiketGangguanColumns();
+
         $now = now()->format('Y-m-d H:i:s');
-        $currentUser = auth()->user()->nama ?? 'Teknisi';
+        $currentUser = auth()->user()->nama ?? auth()->user()->username ?? 'Teknisi';
         $team = is_array($request->team_teknisi) ? implode(', ', $request->team_teknisi) : ($request->team_teknisi ?? '');
 
-        $idColumn = Schema::hasColumn('trx_tiket_gangguan', 'id_tiket') ? 'id_tiket' : 'id';
-        if (!Schema::hasColumn('trx_tiket_gangguan', $idColumn) && Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
-            $idColumn = 'kode_trx_tiket';
+        try {
+            $updateData = [
+                'status' => '12', // (KD12) On Schedule / Diproses
+            ];
+
+            if (Schema::hasColumn('trx_tiket_gangguan', 'date_schedule')) {
+                $updateData['date_schedule'] = $request->date_schedule ?: now()->format('Y-m-d');
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'time_schedule')) {
+                $updateData['time_schedule'] = $request->time_schedule ?: '09:00 - 12:00 WIB';
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'team_teknisi')) {
+                $updateData['team_teknisi'] = $team;
+            }
+            if ($request->filled('keluhan') && Schema::hasColumn('trx_tiket_gangguan', 'keluhan')) {
+                $updateData['keluhan'] = $request->keluhan;
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'date_update')) {
+                $updateData['date_update'] = $now;
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'user_update')) {
+                $updateData['user_update'] = $currentUser;
+            }
+
+            $affected = DB::table('trx_tiket_gangguan')
+                ->where(function($q) use ($id) {
+                    $hasClause = false;
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+                        $q->where('id_tiket', $id);
+                        $hasClause = true;
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+                        if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
+                        else { $q->where('kode_trx_tiket', $id); $hasClause = true; }
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id')) {
+                        if ($hasClause) $q->orWhere('id', $id);
+                        else { $q->where('id', $id); $hasClause = true; }
+                    }
+                })
+                ->update($updateData);
+
+            return redirect()->back()->with('success', "Tiket #{$id} berhasil dijadwalkan ke status (KD12) On Schedule!");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal menjadwalkan tiket: ' . $e->getMessage());
         }
-
-        DB::table('trx_tiket_gangguan')->where($idColumn, $id)->update([
-            'status' => '12', // (KD12) On Schedule / Diproses
-            'date_schedule' => $request->date_schedule ?: now()->format('Y-m-d'),
-            'time_schedule' => $request->time_schedule ?: '09:00 - 12:00 WIB',
-            'team_teknisi' => $team,
-            'keluhan' => $request->keluhan ?: DB::raw('keluhan'),
-            'date_update' => $now,
-            'user_update' => $currentUser,
-        ]);
-
-        return redirect()->back()->with('success', "Tiket {$id} berhasil dijadwalkan ke status (KD12) On Schedule!");
     }
 
     /**
@@ -492,22 +615,48 @@ class TeknikController extends Controller
             abort(403, 'Role Anda hanya memiliki hak akses melihat data (View Only).');
         }
 
+        $this->ensureTiketGangguanColumns();
+
         $now = now()->format('Y-m-d H:i:s');
-        $currentUser = auth()->user()->nama ?? 'Teknisi';
+        $currentUser = auth()->user()->nama ?? auth()->user()->username ?? 'Teknisi';
 
-        $idColumn = Schema::hasColumn('trx_tiket_gangguan', 'id_tiket') ? 'id_tiket' : 'id';
-        if (!Schema::hasColumn('trx_tiket_gangguan', $idColumn) && Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
-            $idColumn = 'kode_trx_tiket';
+        try {
+            $updateData = [
+                'status' => '13', // (KD13) Success / Selesai
+            ];
+
+            if (Schema::hasColumn('trx_tiket_gangguan', 'solusi')) {
+                $updateData['solusi'] = $request->solusi ?: 'Kendala gangguan telah diselesaikan oleh teknisi/NOC.';
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'date_update')) {
+                $updateData['date_update'] = $now;
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'user_update')) {
+                $updateData['user_update'] = $currentUser;
+            }
+
+            DB::table('trx_tiket_gangguan')
+                ->where(function($q) use ($id) {
+                    $hasClause = false;
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+                        $q->where('id_tiket', $id);
+                        $hasClause = true;
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+                        if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
+                        else { $q->where('kode_trx_tiket', $id); $hasClause = true; }
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id')) {
+                        if ($hasClause) $q->orWhere('id', $id);
+                        else { $q->where('id', $id); $hasClause = true; }
+                    }
+                })
+                ->update($updateData);
+
+            return redirect()->back()->with('success', "Tiket #{$id} berhasil diselesaikan (KD13 Success)!");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal menyelesaikan tiket: ' . $e->getMessage());
         }
-
-        DB::table('trx_tiket_gangguan')->where($idColumn, $id)->update([
-            'status' => '13', // (KD13) Success / Selesai
-            'solusi' => $request->solusi ?: 'Kendala gangguan telah diselesaikan oleh teknisi/NOC.',
-            'date_update' => $now,
-            'user_update' => $currentUser,
-        ]);
-
-        return redirect()->back()->with('success', "Tiket {$id} berhasil diselesaikan (KD13 Success)!");
     }
 
     /**
@@ -519,22 +668,48 @@ class TeknikController extends Controller
             abort(403, 'Role Anda hanya memiliki hak akses melihat data (View Only).');
         }
 
+        $this->ensureTiketGangguanColumns();
+
         $now = now()->format('Y-m-d H:i:s');
-        $currentUser = auth()->user()->nama ?? 'Operator';
+        $currentUser = auth()->user()->nama ?? auth()->user()->username ?? 'Operator';
 
-        $idColumn = Schema::hasColumn('trx_tiket_gangguan', 'id_tiket') ? 'id_tiket' : 'id';
-        if (!Schema::hasColumn('trx_tiket_gangguan', $idColumn) && Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
-            $idColumn = 'kode_trx_tiket';
+        try {
+            $updateData = [
+                'status' => '14', // (KD14) Canceled
+            ];
+
+            if (Schema::hasColumn('trx_tiket_gangguan', 'solusi')) {
+                $updateData['solusi'] = $request->note_cancel ? ('Dibatalkan: ' . $request->note_cancel) : 'Dibatalkan oleh operator';
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'date_update')) {
+                $updateData['date_update'] = $now;
+            }
+            if (Schema::hasColumn('trx_tiket_gangguan', 'user_update')) {
+                $updateData['user_update'] = $currentUser;
+            }
+
+            DB::table('trx_tiket_gangguan')
+                ->where(function($q) use ($id) {
+                    $hasClause = false;
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id_tiket')) {
+                        $q->where('id_tiket', $id);
+                        $hasClause = true;
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'kode_trx_tiket')) {
+                        if ($hasClause) $q->orWhere('kode_trx_tiket', $id);
+                        else { $q->where('kode_trx_tiket', $id); $hasClause = true; }
+                    }
+                    if (Schema::hasColumn('trx_tiket_gangguan', 'id')) {
+                        if ($hasClause) $q->orWhere('id', $id);
+                        else { $q->where('id', $id); $hasClause = true; }
+                    }
+                })
+                ->update($updateData);
+
+            return redirect()->back()->with('success', "Tiket #{$id} berhasil dibatalkan (KD14 Canceled)!");
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal membatalkan tiket: ' . $e->getMessage());
         }
-
-        DB::table('trx_tiket_gangguan')->where($idColumn, $id)->update([
-            'status' => '14', // (KD14) Canceled
-            'solusi' => $request->note_cancel ? ('Dibatalkan: ' . $request->note_cancel) : 'Dibatalkan oleh operator',
-            'date_update' => $now,
-            'user_update' => $currentUser,
-        ]);
-
-        return redirect()->back()->with('success', "Tiket {$id} berhasil dibatalkan (KD14 Canceled)!");
     }
 
     /**

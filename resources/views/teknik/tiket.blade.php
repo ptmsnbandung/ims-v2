@@ -88,7 +88,35 @@
             </div>
         </a>
 
-        <!-- 3. Cek Coverage Area (Amber / Yellow Gold Card -> Dashboard Coverage) -->
+        <!-- 3. Relokasi Layanan (Purple / Violet Gradient Card -> Dashboard Relokasi) -->
+        <a href="{{ $destinations['relokasi'] ?? route('teknik.tiket.gangguan', ['kategori' => 'relokasi']) }}"
+           class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20 hover:shadow-2xl hover:shadow-purple-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-base sm:text-lg font-bold tracking-tight text-white group-hover:translate-x-1 transition-transform">
+                        Relokasi Layanan
+                    </h3>
+                    <p class="mt-1.5 text-xs sm:text-sm font-medium text-white/90">
+                        {{ $counts['relokasi'] ?? 0 }} Tiket
+                    </p>
+                    <span class="inline-flex items-center gap-1 text-[11px] bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded-full mt-3 font-medium text-white group-hover:bg-white group-hover:text-purple-600 transition-colors">
+                        <span>Buka Dashboard</span>
+                        <svg class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </span>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 text-white shadow-inner group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                    <!-- Map Pin / Move Location Icon -->
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                </div>
+            </div>
+        </a>
+
+        <!-- 4. Cek Coverage Area (Amber / Yellow Gold Card -> Dashboard Coverage) -->
         <a href="{{ $destinations['coverage'] ?? route('teknik.coverage') }}"
            class="group block relative overflow-hidden rounded-2xl p-5 sm:p-6 bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/20 hover:shadow-2xl hover:shadow-amber-500/35 hover:-translate-y-0.5 hover:scale-[1.015] transition-all duration-200 cursor-pointer">
             <div class="flex items-center justify-between">

@@ -27,10 +27,10 @@ class TeknikController extends Controller
         $user = $request->user();
 
         $counts = [
-            // 1. Gangguan Layanan (kat_tiket != 12 dan status = 11 [Request/Belum Selesai])
+            // 1. Gangguan Layanan (kat_tiket not in [12, 13] dan status = 11 [Request/Belum Selesai])
             'gangguan' => Schema::hasTable('trx_tiket_gangguan')
                 ? DB::table('trx_tiket_gangguan')
-                    ->where('kat_tiket', '!=', '12')
+                    ->whereNotIn('kat_tiket', ['12', '13'])
                     ->where('status', '11')
                     ->count()
                 : 0,
@@ -43,7 +43,15 @@ class TeknikController extends Controller
                     ->count()
                 : 0,
 
-            // 3. Cek Coverage Area (Data request coverage yang belum diproses)
+            // 3. Relokasi Layanan (kat_tiket = 13 dan status = 11 [Request/Belum Selesai])
+            'relokasi' => Schema::hasTable('trx_tiket_gangguan')
+                ? DB::table('trx_tiket_gangguan')
+                    ->where('kat_tiket', '13')
+                    ->where('status', '11')
+                    ->count()
+                : 0,
+
+            // 4. Cek Coverage Area (Data request coverage yang belum diproses)
             'coverage' => Schema::hasTable('trx_coverage_area')
                 ? DB::table('trx_coverage_area')
                     ->when(Schema::hasColumn('trx_coverage_area', 'status'), function ($q) {
@@ -52,28 +60,28 @@ class TeknikController extends Controller
                     ->count()
                 : 0,
 
-            // 4. Terminasi (status_terminasi = 11 [Request Terminasi Baru])
+            // 5. Terminasi (status_terminasi = 11 [Request Terminasi Baru])
             'terminasi' => Schema::hasTable('trx_terminasi')
                 ? DB::table('trx_terminasi')
                     ->where('status_terminasi', '11')
                     ->count()
                 : 0,
 
-            // 5. Suspend Layanan (status_suspend = 11 [Request Suspend] atau 18 [Req Unsuspend])
+            // 6. Suspend Layanan (status_suspend = 11 [Request Suspend] atau 18 [Req Unsuspend])
             'suspend' => Schema::hasTable('trx_suspend')
                 ? DB::table('trx_suspend')
                     ->whereIn('status_suspend', ['11', '18'])
                     ->count()
                 : 0,
 
-            // 6. Pemasangan Baru (status_reg proses pendaftaran baru)
+            // 7. Pemasangan Baru (status_reg proses pendaftaran baru)
             'pemasangan_baru' => Schema::hasTable('trx_batchjob_register')
                 ? DB::table('trx_batchjob_register')
                     ->whereIn('status_reg', ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'])
                     ->count()
                 : 0,
 
-            // 7. Ubah Layanan (status_ubah_layanan = 11 [Request] atau 12 [On Schedule])
+            // 8. Ubah Layanan (status_ubah_layanan = 11 [Request] atau 12 [On Schedule])
             'ubah_layanan' => Schema::hasTable('trx_ubah_layanan')
                 ? DB::table('trx_ubah_layanan')
                     ->whereIn('status_ubah_layanan', ['11', '12'])
@@ -81,10 +89,11 @@ class TeknikController extends Controller
                 : 0,
         ];
 
-        // Dynamic Role-Aware Destination URLs for all 7 cards
+        // Dynamic Role-Aware Destination URLs for all 8 cards
         $destinations = [
             'gangguan' => route('teknik.tiket.gangguan', ['kategori' => 'gangguan']),
             'ubah_password' => route('teknik.tiket.gangguan', ['kategori' => 'ubah_password']),
+            'relokasi' => route('teknik.tiket.gangguan', ['kategori' => 'relokasi']),
             'coverage' => route('teknik.coverage'),
             'terminasi' => ($user?->isNoc()) 
                 ? route('noc.terminasi') 
@@ -135,14 +144,18 @@ class TeknikController extends Controller
                     'b.kode_pop',
                 ]);
 
-            // Filter Kategori (Gangguan Layanan vs Ubah Password)
+            // Filter Kategori (Gangguan Layanan vs Ubah Password vs Relokasi)
             if ($kategori === 'gangguan') {
                 if (Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
-                    $query->where('t.kat_tiket', '!=', '12');
+                    $query->whereNotIn('t.kat_tiket', ['12', '13']);
                 }
             } elseif ($kategori === 'ubah_password') {
                 if (Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
                     $query->where('t.kat_tiket', '12');
+                }
+            } elseif ($kategori === 'relokasi' || $kategori === '13') {
+                if (Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
+                    $query->where('t.kat_tiket', '13');
                 }
             } elseif (!empty($kategori)) {
                 if (Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
@@ -207,9 +220,11 @@ class TeknikController extends Controller
             // Status Counters (KD11, KD12, KD13, KD14)
             $countQuery = DB::table('trx_tiket_gangguan');
             if ($kategori === 'gangguan' && Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
-                $countQuery->where('kat_tiket', '!=', '12');
+                $countQuery->whereNotIn('kat_tiket', ['12', '13']);
             } elseif ($kategori === 'ubah_password' && Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
                 $countQuery->where('kat_tiket', '12');
+            } elseif (($kategori === 'relokasi' || $kategori === '13') && Schema::hasColumn('trx_tiket_gangguan', 'kat_tiket')) {
+                $countQuery->where('kat_tiket', '13');
             }
 
             $counts = $countQuery->selectRaw("
@@ -307,7 +322,11 @@ class TeknikController extends Controller
 
             $query->chunk(200, function ($rows) use ($handle) {
                 foreach ($rows as $r) {
-                    $katLabel = ($r->kat_tiket == '12') ? 'Ubah Password' : 'Gangguan Layanan';
+                    $katLabel = match ($r->kat_tiket) {
+                        '12' => 'Ubah Password',
+                        '13' => 'Relokasi Layanan',
+                        default => 'Gangguan Layanan',
+                    };
                     $statusLabel = match ($r->status) {
                         '11' => 'Request',
                         '12' => 'On Schedule',
@@ -479,14 +498,37 @@ class TeknikController extends Controller
         ]);
 
         $nomorInternet = trim($request->nomor_internet);
-        $kategori = $request->input('kat_tiket', $request->input('kategori', '12'));
+        $kategori = $request->input('kat_tiket', $request->input('kategori', '11'));
         if ($kategori === 'ubah_password') {
             $kategori = '12';
+        } elseif ($kategori === 'relokasi') {
+            $kategori = '13';
         } elseif ($kategori === 'gangguan') {
             $kategori = '11';
         }
 
-        $keluhan = $request->filled('perubahan') ? $request->perubahan : ($request->keluhan ?: 'Permintaan Ganti Password');
+        if ($kategori === '13') {
+            // Relokasi Format
+            $jenisRelokasi = $request->input('jenis_relokasi', 'Eksternal');
+            $alamatBaru = trim($request->input('alamat_baru', ''));
+            $picBaru = trim($request->input('pic_baru', ''));
+            $catatanRelokasi = trim($request->input('catatan_relokasi', $request->input('keluhan', '')));
+
+            $keluhanParts = ["[PERMINTAAN RELOKASI LAYANAN]"];
+            $keluhanParts[] = "• Jenis Relokasi : " . $jenisRelokasi;
+            if (!empty($alamatBaru)) {
+                $keluhanParts[] = "• Alamat Baru : " . $alamatBaru;
+            }
+            if (!empty($picBaru)) {
+                $keluhanParts[] = "• Kontak PIC : " . $picBaru;
+            }
+            if (!empty($catatanRelokasi)) {
+                $keluhanParts[] = "• Keterangan : " . $catatanRelokasi;
+            }
+            $keluhan = implode(" \n", $keluhanParts);
+        } else {
+            $keluhan = $request->filled('perubahan') ? $request->perubahan : ($request->keluhan ?: 'Permintaan Pelanggan');
+        }
         $currentUser = auth()->user()->nama ?? auth()->user()->username ?? 'Staff';
         $now = now()->format('Y-m-d H:i:s');
 
@@ -664,6 +706,25 @@ class TeknikController extends Controller
             ];
 
             $solusiText = $request->solusi ?: 'Kendala gangguan telah diselesaikan oleh teknisi/NOC.';
+            
+            // Format Technical Report jika ada field teknis tambahan
+            $reportExtra = [];
+            if ($request->filled('odp_baru')) {
+                $reportExtra[] = "ODP: " . trim($request->odp_baru);
+            }
+            if ($request->filled('redaman')) {
+                $reportExtra[] = "Redaman: " . trim($request->redaman) . " dBm";
+            }
+            if ($request->filled('panjang_kabel')) {
+                $reportExtra[] = "Kabel: " . trim($request->panjang_kabel) . "m";
+            }
+            if ($request->filled('sn_ont')) {
+                $reportExtra[] = "SN ONT: " . trim($request->sn_ont);
+            }
+            if (!empty($reportExtra)) {
+                $solusiText = implode(' | ', $reportExtra) . " \nCatatan: " . $solusiText;
+            }
+
             if (Schema::hasColumn('trx_tiket_gangguan', 'solusi')) {
                 $updateData['solusi'] = $solusiText;
             }

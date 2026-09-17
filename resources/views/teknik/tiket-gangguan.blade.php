@@ -29,14 +29,24 @@
 
          // Create Modal State
          createNomorInternet: '',
+         createKatTiket: '{{ request('kategori') === 'ubah_password' ? '12' : (request('kategori') === 'relokasi' ? '13' : '11') }}',
          createPerubahan: 'Password Lama :\n[ketikdisini]',
+         createJenisRelokasi: 'Eksternal',
+         createAlamatBaru: '',
+         createPicBaru: '',
+         createCatatanRelokasi: '',
          createCustomerData: null,
          createLoading: false,
          createError: '',
 
-         openCreateModal() {
+         openCreateModal(defaultKat = null) {
              this.createNomorInternet = '';
+             this.createKatTiket = defaultKat || '{{ request('kategori') === 'ubah_password' ? '12' : (request('kategori') === 'relokasi' ? '13' : '11') }}';
              this.createPerubahan = 'Password Lama :\n[ketikdisini]';
+             this.createJenisRelokasi = 'Eksternal';
+             this.createAlamatBaru = '';
+             this.createPicBaru = '';
+             this.createCatatanRelokasi = '';
              this.createCustomerData = null;
              this.createError = '';
              this.createLoading = false;
@@ -80,7 +90,7 @@
              this.modalNomorInternet = item.nomor_internet || '-';
              this.modalNamaPelanggan = item.nama_pelanggan || item.batch_nama || 'Pelanggan';
              this.modalKeluhan = item.keluhan || '-';
-             this.modalKatTiket = (item.kat_tiket == '12') ? 'Ubah Password' : 'Gangguan Layanan';
+             this.modalKatTiket = (item.kat_tiket == '12') ? 'Ubah Password' : ((item.kat_tiket == '13') ? 'Relokasi Layanan' : 'Gangguan Layanan');
              this.modalStatus = item.status || '11';
              this.modalSolusi = item.solusi || item.penanganan || '';
              this.modalTeamTeknisi = item.team_teknisi || '';
@@ -167,6 +177,10 @@
             <span>&gt;</span>
             @if(request('kategori') === 'ubah_password')
                 <span class="text-blue-500 font-semibold">Ganti Password</span>
+            @elseif(request('kategori') === 'relokasi')
+                <a href="{{ route('teknik.tiket') }}" class="hover:text-blue-400 transition">Tiket</a>
+                <span>&gt;</span>
+                <span class="text-purple-400 font-semibold">Relokasi Layanan</span>
             @else
                 <a href="{{ route('teknik.tiket') }}" class="hover:text-blue-400 transition">Tiket</a>
                 <span>&gt;</span>
@@ -174,7 +188,7 @@
                     @if(request('kategori') === 'gangguan')
                         Gangguan Layanan
                     @else
-                        Tiket Gangguan
+                        Tiket Gangguan & Relokasi
                     @endif
                 </span>
             @endif
@@ -214,6 +228,16 @@
                 Tiket Permintaan Ganti Password
             </h2>
         </div>
+    @elseif(request('kategori') === 'relokasi')
+        <div class="pt-1">
+            <h2 class="text-base font-extrabold text-purple-400 flex items-center gap-2">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                </svg>
+                <span>Tiket Permintaan Relokasi Layanan</span>
+            </h2>
+        </div>
     @endif
 
     <!-- Alert Flash Notifications -->
@@ -251,7 +275,7 @@
                         <option value="">SEMUA KATEGORI TIKET</option>
                         <option value="gangguan" {{ request('kategori') === 'gangguan' ? 'selected' : '' }}>GANGGUAN LAYANAN</option>
                         <option value="ubah_password" {{ request('kategori') === 'ubah_password' ? 'selected' : '' }}>UBAH PASSWORD</option>
-                        <option value="13" {{ request('kategori') === '13' ? 'selected' : '' }}>GANGGUAN FISIK / KABEL</option>
+                        <option value="relokasi" {{ request('kategori') === 'relokasi' || request('kategori') === '13' ? 'selected' : '' }}>RELOKASI LAYANAN</option>
                         <option value="14" {{ request('kategori') === '14' ? 'selected' : '' }}>LAIN-LAIN</option>
                     </select>
                 </div>
@@ -402,7 +426,7 @@
                             $namaPel = ($item->nama_pelanggan ?? null) ?: (($item->batch_nama ?? null) ?: 'Pelanggan');
                             $nomorInternet = $item->nomor_internet ?? '-';
                             $alamat = ($item->alamat_pasang ?? null) ?: (($item->alamat_p ?? null) ?: '-');
-                            $katText = (($item->kat_tiket ?? null) == '12') ? 'Ubah Password' : 'Gangguan Layanan';
+                            $katText = match((string)($item->kat_tiket ?? '')) { '12' => 'Ubah Password', '13' => 'Relokasi Layanan', default => 'Gangguan Layanan' };
                             $statusVal = (string) ($item->status ?? '11');
                             $kodeTiket = ($item->tiket ?? null) ?: (($item->kode_trx_tiket ?? null) ?: (($item->id_tiket ?? null) ?: (($item->id ?? null) ?: '-')));
                             $userPppoe = ($item->user_pppoe ?? null) ?: $nomorInternet;
@@ -584,6 +608,14 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
                                             </svg>
                                             <span>Ubah Password</span>
+                                        </span>
+                                    @elseif(($item->kat_tiket ?? null) == '13')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                            </svg>
+                                            <span>Relokasi Layanan</span>
                                         </span>
                                     @else
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
@@ -928,8 +960,36 @@
                 </div>
 
                 <div>
-                    <label class="block text-slate-300 font-semibold mb-1">Catatan Solusi / Tindakan Penyelesaian:</label>
-                    <textarea name="solusi" x-model="modalSolusi" rows="3" placeholder="Jelaskan tindakan teknis yang telah dilakukan (contoh: Redaman diperbaiki dari -28dBm menjadi -19dBm / Kabel dropcore disambung ulang)" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" required></textarea>
+                    <label class="block text-slate-300 font-semibold mb-1">Catatan Solusi / Tindakan Penyelesaian:<span class="text-rose-500">*</span></label>
+                    <textarea name="solusi" x-model="modalSolusi" rows="3" placeholder="Jelaskan tindakan teknis yang telah dilakukan (contoh: Redaman diperbaiki dari -28dBm menjadi -19dBm / Kabel dropcore disambung ulang / Relokasi ke titik baru selesai)" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" required></textarea>
+                </div>
+
+                <!-- Technical Report Fields (Optional / Relokasi & Gangguan) -->
+                <div class="p-3.5 bg-slate-800/40 border border-slate-700/60 rounded-xl space-y-2.5">
+                    <div class="text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.67 2.67 0 0 0 21 17.25l-5.87-5.87m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                        <span>Laporan Teknis Lapangan (Technical Report)</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-slate-400 text-[10px] font-semibold mb-1">ODP Baru / Port:</label>
+                            <input type="text" name="odp_baru" placeholder="Contoh: ODP-BBR-01 / Port 4" class="w-full text-xs px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 text-[10px] font-semibold mb-1">Redaman Rx (dBm):</label>
+                            <input type="text" name="redaman" placeholder="Contoh: -18.50" class="w-full text-xs px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 text-[10px] font-semibold mb-1">Panjang Kabel Dropcore (Meter):</label>
+                            <input type="number" name="panjang_kabel" placeholder="Contoh: 75" class="w-full text-xs px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 text-[10px] font-semibold mb-1">SN / MAC ONT:</label>
+                            <input type="text" name="sn_ont" placeholder="Contoh: ZTEGC1234567" class="w-full text-xs px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="pt-2 flex justify-end gap-2">
@@ -1018,7 +1078,30 @@
             <!-- Form Body -->
             <form action="{{ route('teknik.tiket.gangguan.store') }}" method="POST" class="space-y-5 text-xs">
                 @csrf
-                <input type="hidden" name="kat_tiket" value="{{ request('kategori') === 'ubah_password' ? '12' : '11' }}">
+                
+                <!-- Pilihan Kategori Tiket -->
+                <div>
+                    <label class="block text-slate-700 dark:text-slate-300 font-bold mb-2">
+                        Pilih Kategori Tiket<span class="text-rose-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col items-center gap-1 text-center"
+                               :class="createKatTiket === '11' ? 'bg-indigo-500/15 border-indigo-500 text-indigo-400 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-400'">
+                            <input type="radio" name="kat_tiket" value="11" x-model="createKatTiket" class="hidden">
+                            <span class="text-xs">🔧 Gangguan</span>
+                        </label>
+                        <label class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col items-center gap-1 text-center"
+                               :class="createKatTiket === '12' ? 'bg-rose-500/15 border-rose-500 text-rose-400 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-400'">
+                            <input type="radio" name="kat_tiket" value="12" x-model="createKatTiket" class="hidden">
+                            <span class="text-xs">🔑 Ganti Password</span>
+                        </label>
+                        <label class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col items-center gap-1 text-center"
+                               :class="createKatTiket === '13' ? 'bg-purple-500/15 border-purple-500 text-purple-400 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-400'">
+                            <input type="radio" name="kat_tiket" value="13" x-model="createKatTiket" class="hidden">
+                            <span class="text-xs">📍 Relokasi</span>
+                        </label>
+                    </div>
+                </div>
 
                 <div class="p-4 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4">
                     
@@ -1061,7 +1144,7 @@
                                     <span x-text="createCustomerData.nama_pelanggan"></span>
                                     <span class="text-slate-400 font-mono" x-text="'(' + createCustomerData.nomor_internet + ')'"></span>
                                 </div>
-                                <div class="text-slate-600 dark:text-slate-400" x-text="createCustomerData.alamat"></div>
+                                <div class="text-slate-600 dark:text-slate-400" x-text="'Alamat Asal: ' + createCustomerData.alamat"></div>
                                 <div class="text-[10px] text-slate-500" x-text="'POP: ' + (createCustomerData.nama_pop || '-') + ' | Media: ' + (createCustomerData.media_akses || 'FTTH')"></div>
                             </div>
                         </template>
@@ -1077,43 +1160,99 @@
                         </template>
                     </div>
 
-                    <!-- 2. Perubahan (Textarea) -->
-                    <div>
-                        <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
-                            @if(request('kategori') === 'ubah_password')
-                                Perubahan<span class="text-rose-500">*</span>
-                            @else
-                                Keluhan / Gangguan<span class="text-rose-500">*</span>
-                            @endif
-                        </label>
-                        <textarea name="perubahan" 
-                                  x-model="createPerubahan" 
-                                  rows="4" 
-                                  class="w-full text-xs p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed" 
-                                  required></textarea>
-                    </div>
+                    <!-- 2A. Field Khusus Relokasi (Kat 13) -->
+                    <template x-if="createKatTiket === '13'">
+                        <div class="space-y-3.5 pt-1">
+                            <div>
+                                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                                    Jenis Relokasi<span class="text-rose-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <label class="p-2 rounded-lg border text-center cursor-pointer text-xs"
+                                           :class="createJenisRelokasi === 'Eksternal' ? 'bg-purple-500/20 border-purple-500 text-purple-400 font-bold' : 'bg-slate-900 border-slate-700 text-slate-400'">
+                                        <input type="radio" name="jenis_relokasi" value="Eksternal" x-model="createJenisRelokasi" class="hidden">
+                                        <span>Pindah Alamat (Eksternal)</span>
+                                    </label>
+                                    <label class="p-2 rounded-lg border text-center cursor-pointer text-xs"
+                                           :class="createJenisRelokasi === 'Internal' ? 'bg-purple-500/20 border-purple-500 text-purple-400 font-bold' : 'bg-slate-900 border-slate-700 text-slate-400'">
+                                        <input type="radio" name="jenis_relokasi" value="Internal" x-model="createJenisRelokasi" class="hidden">
+                                        <span>Pindah Titik Ruangan (Internal)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                                    Alamat Tujuan Baru<span class="text-rose-500">*</span>
+                                </label>
+                                <textarea name="alamat_baru" 
+                                          x-model="createAlamatBaru" 
+                                          rows="2" 
+                                          placeholder="Tuliskan alamat lengkap baru (Jalan, RT/RW, No. Rumah, Kelurahan, Kecamatan)" 
+                                          class="w-full text-xs p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          :required="createKatTiket === '13'"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                                        Kontak / PIC di Lokasi Baru:
+                                    </label>
+                                    <input type="text" 
+                                           name="pic_baru" 
+                                           x-model="createPicBaru" 
+                                           placeholder="Contoh: Bpk. Ahmad (08123456789)" 
+                                           class="w-full text-xs px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                                        Keterangan Relokasi:
+                                    </label>
+                                    <input type="text" 
+                                           name="catatan_relokasi" 
+                                           x-model="createCatatanRelokasi" 
+                                           placeholder="Alasan pindah / catatan waktu" 
+                                           class="w-full text-xs px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- 2B. Field Umum / Ubah Password / Gangguan -->
+                    <template x-if="createKatTiket !== '13'">
+                        <div>
+                            <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
+                                <span x-text="createKatTiket === '12' ? 'Perubahan Password' : 'Keluhan / Gangguan'"></span><span class="text-rose-500">*</span>
+                            </label>
+                            <textarea name="perubahan" 
+                                      x-model="createPerubahan" 
+                                      rows="4" 
+                                      class="w-full text-xs p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed" 
+                                      :required="createKatTiket !== '13'"></textarea>
+                        </div>
+                    </template>
 
                 </div>
 
                 <!-- Modal Footer Buttons -->
                 <div class="pt-2 flex items-center justify-end gap-2.5">
-                    <!-- Tutup Button (Cyan with cross icon) -->
+                    <!-- Tutup Button -->
                     <button type="button" 
                             @click="createModalOpen = false" 
-                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs shadow-md shadow-cyan-500/20 transition cursor-pointer">
+                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-md transition cursor-pointer">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                         <span>Tutup</span>
                     </button>
 
-                    <!-- Update / Simpan Button (Blue with save icon) -->
+                    <!-- Simpan Button -->
                     <button type="submit" 
-                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition cursor-pointer">
+                            class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition cursor-pointer">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
                         </svg>
-                        <span>Update</span>
+                        <span>Simpan Tiket</span>
                     </button>
                 </div>
 

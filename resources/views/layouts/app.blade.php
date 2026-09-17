@@ -141,6 +141,10 @@
         .ims-sidebar.collapsed .ims-has-flyout:hover .ims-tooltip {
             display: none !important;
         }
+        .ims-flyout-portal {
+            position: fixed !important;
+            z-index: 9999999 !important;
+        }
     </style>
 </head>
 <body class="h-full font-sans antialiased selection:bg-blue-500 selection:text-white bg-slate-950"
@@ -726,40 +730,6 @@
                 </div>
             </aside>
 
-            <!-- Collapsed Sidebar Floating Flyout Submenu Portal -->
-            <div x-show="sidebarCollapsed && activeFlyout"
-                 x-cloak
-                 x-transition:enter="transition ease-out duration-150"
-                 x-transition:enter-start="opacity-0 translate-x-1"
-                 x-transition:enter-end="opacity-100 translate-x-0"
-                 x-transition:leave="transition ease-in duration-100"
-                 x-transition:leave-start="opacity-100 translate-x-0"
-                 x-transition:leave-end="opacity-0 translate-x-1"
-                 @mouseenter="cancelFlyoutClose()"
-                 @mouseleave="closeFlyoutWithDelay()"
-                 class="fixed z-[99999] w-56 rounded-2xl bg-slate-900/95 border border-slate-700/80 shadow-2xl shadow-black/90 backdrop-blur-xl p-2.5 space-y-1"
-                 :style="`top: ${flyoutTop}px; left: 4.85rem;`">
-                
-                <!-- Flyout Header / Title -->
-                <div class="px-3 py-1.5 mb-1 border-b border-slate-800/80 flex items-center justify-between">
-                    <span class="text-xs font-bold text-white tracking-wide" x-text="flyoutTitle"></span>
-                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                </div>
-
-                <!-- Flyout Menu Items -->
-                <div class="space-y-0.5">
-                    <template x-for="(item, idx) in flyoutItems" :key="idx">
-                        <a :href="item.url"
-                           class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition duration-150"
-                           :class="item.active ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-600/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/90 font-medium'">
-                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                  :class="item.active ? 'bg-white shadow-sm shadow-white' : 'bg-slate-500'"></span>
-                            <span class="truncate" x-text="item.label"></span>
-                        </a>
-                    </template>
-                </div>
-            </div>
-
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
                 <!-- Top Navbar -->
@@ -889,6 +859,41 @@
             </div>
         </div>
     </div>
+
+    <!-- Collapsed Sidebar Floating Flyout Submenu Portal (Root of Body) -->
+    <div x-show="sidebarCollapsed && activeFlyout"
+         x-cloak
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 translate-x-1"
+         x-transition:enter-end="opacity-100 translate-x-0"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100 translate-x-0"
+         x-transition:leave-end="opacity-0 translate-x-1"
+         @mouseenter="cancelFlyoutClose()"
+         @mouseleave="closeFlyoutWithDelay()"
+         class="ims-flyout-portal w-56 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl shadow-black p-2.5 space-y-1"
+         :style="`top: ${flyoutTop}px; left: 4.85rem; position: fixed !important; z-index: 9999999 !important;`">
+        
+        <!-- Flyout Header / Title -->
+        <div class="px-3 py-1.5 mb-1 border-b border-slate-800 flex items-center justify-between">
+            <span class="text-xs font-bold text-white tracking-wide" x-text="flyoutTitle"></span>
+            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+        </div>
+
+        <!-- Flyout Menu Items -->
+        <div class="space-y-0.5">
+            <template x-for="(item, idx) in flyoutItems" :key="idx">
+                <a :href="item.url"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition duration-150"
+                   :class="item.active ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-600/30' : 'text-slate-300 hover:text-white hover:bg-slate-800 font-medium'">
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          :class="item.active ? 'bg-white shadow-sm shadow-white' : 'bg-slate-500'"></span>
+                    <span class="truncate" x-text="item.label"></span>
+                </a>
+            </template>
+        </div>
+    </div>
+
     @stack('scripts')
 </body>
 </html>

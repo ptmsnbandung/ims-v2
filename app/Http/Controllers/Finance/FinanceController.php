@@ -458,6 +458,9 @@ class FinanceController extends Controller
         $catatan = $request->input('catatan', 'Pembayaran Tagihan Bulanan Terverifikasi');
 
         try {
+            $inv = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $decodedKode)->first();
+            $nomorInternet = $inv?->nomor_internet;
+
             DB::table('trx_billing_layanan')
                 ->where('kode_billing_layanan', $decodedKode)
                 ->update([
@@ -480,7 +483,46 @@ class FinanceController extends Controller
                 'hide' => '0',
             ]);
 
-            return redirect()->back()->with('success', "Pembayaran invoice {$decodedKode} sebesar Rp " . number_format($nominal, 0, ',', '.') . " berhasil diverifikasi.");
+            // Auto Req Unsuspend ke NOC jika pelanggan sedang dalam status Suspend/Terisolir
+            $unsuspendInfo = '';
+            if ($nomorInternet && Schema::hasTable('trx_suspend')) {
+                $activeSuspend = DB::table('trx_suspend')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->whereIn('status_suspend', ['11', '12'])
+                    ->orderBy('date_create', 'desc')
+                    ->first();
+
+                $customerReg = DB::table('trx_batchjob_register')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->first();
+
+                if ($activeSuspend) {
+                    DB::table('trx_suspend')
+                        ->where('kode_suspend', $activeSuspend->kode_suspend)
+                        ->update([
+                            'status_suspend' => '18', // 18: Request Unsuspend ke NOC
+                            'desc_suspend_cancel' => "Otomatis diajukan buka isolir: Pelanggan telah membayar lunas tagihan {$decodedKode} ({$bank})",
+                            'date_update' => Carbon::now()->toDateTimeString(),
+                            'user_update' => $user,
+                        ]);
+                    $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
+                } elseif ($customerReg && $customerReg->is_suspend == '1') {
+                    $kodeSuspend = $nomorInternet . '-' . rand(1000000, 9999999);
+                    DB::table('trx_suspend')->insert([
+                        'kode_suspend' => $kodeSuspend,
+                        'nomor_internet' => $nomorInternet,
+                        'suspend_start' => now()->format('Y-m-d'),
+                        'status_suspend' => '18', // 18: Request Unsuspend ke NOC
+                        'desc_suspend' => "Otomatis Req Unsuspend: Pelanggan telah melunasi tagihan {$decodedKode} ({$bank})",
+                        'date_create' => Carbon::now()->toDateTimeString(),
+                        'user_create' => $user,
+                        'hide' => '0',
+                    ]);
+                    $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
+                }
+            }
+
+            return redirect()->back()->with('success', "Pembayaran invoice {$decodedKode} sebesar Rp " . number_format($nominal, 0, ',', '.') . " berhasil diverifikasi{$unsuspendInfo}");
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal konfirmasi pembayaran: ' . $e->getMessage());
         }
@@ -1083,6 +1125,9 @@ class FinanceController extends Controller
         $catatan = $request->input('catatan', 'Pembayaran Registrasi Terverifikasi');
 
         try {
+            $reg = DB::table('trx_billing_registrasi')->where('kode_billing_registrasi', $decodedKode)->first();
+            $nomorInternet = $reg?->nomor_internet;
+
             DB::table('trx_billing_registrasi')
                 ->where('kode_billing_registrasi', $decodedKode)
                 ->update([
@@ -1105,7 +1150,29 @@ class FinanceController extends Controller
                 'hide' => '0',
             ]);
 
-            return redirect()->back()->with('success', "Pembayaran Registrasi {$decodedKode} sebesar Rp " . number_format($nominal, 0, ',', '.') . " berhasil diverifikasi.");
+            // Auto Req Unsuspend ke NOC jika pelanggan sedang dalam status Suspend/Terisolir
+            $unsuspendInfo = '';
+            if ($nomorInternet && Schema::hasTable('trx_suspend')) {
+                $activeSuspend = DB::table('trx_suspend')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->whereIn('status_suspend', ['11', '12'])
+                    ->orderBy('date_create', 'desc')
+                    ->first();
+
+                if ($activeSuspend) {
+                    DB::table('trx_suspend')
+                        ->where('kode_suspend', $activeSuspend->kode_suspend)
+                        ->update([
+                            'status_suspend' => '18', // 18: Request Unsuspend ke NOC
+                            'desc_suspend_cancel' => "Otomatis diajukan buka isolir: Pelanggan telah membayar lunas registrasi {$decodedKode} ({$bank})",
+                            'date_update' => Carbon::now()->toDateTimeString(),
+                            'user_update' => $user,
+                        ]);
+                    $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
+                }
+            }
+
+            return redirect()->back()->with('success', "Pembayaran Registrasi {$decodedKode} sebesar Rp " . number_format($nominal, 0, ',', '.') . " berhasil diverifikasi{$unsuspendInfo}");
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal konfirmasi pembayaran registrasi: ' . $e->getMessage());
         }

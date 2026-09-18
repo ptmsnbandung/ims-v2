@@ -786,95 +786,14 @@
                                     </svg>
                                 </button>
 
-                                <!-- Dropdown Menu Popover -->
+                                <!-- Dropdown Menu Popover (Hanya Approve, Change Payment, Lihat Detail) -->
                                 <div x-show="actionOpen"
                                      x-cloak
-                                     class="absolute right-0 top-full mt-1.5 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 py-1.5 text-left divide-y divide-slate-800">
+                                     class="absolute right-0 top-full mt-1.5 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 py-1.5 text-left divide-y divide-slate-800">
                                     
-                                    <!-- Group 1: View & Publish -->
                                     <div class="py-1">
-                                        <!-- Detail Breakdown -->
-                                        <button type="button"
-                                                @click="openDetailModalFromEl($el); actionOpen = false;"
-                                                data-kode="{{ $inv->kode_billing_layanan }}"
-                                                class="w-full px-3.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            </svg>
-                                            <span>Detail Breakdown Tagihan</span>
-                                        </button>
-
-                                        @if(in_array($inv->status_bill_lay, ['11', '12']))
-                                        <!-- Publish Action Form -->
-                                        <form method="POST" action="{{ route('finance.billing-layanan.publish.post') }}" onsubmit="return confirm('Publish invoice {{ $inv->kode_billing_layanan }}?')">
-                                            @csrf
-                                            <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
-                                            <button type="submit"
-                                                    class="w-full px-3.5 py-2 text-xs font-medium text-emerald-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                                <svg class="w-4 h-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                                                </svg>
-                                                <span>Publish Tagihan</span>
-                                            </button>
-                                        </form>
-                                        @endif
-                                    </div>
-
-                                    <!-- Group 2: Midtrans Actions -->
-                                    @if($inv->payment_type == 1 || $snapUrl)
-                                    <div class="py-1">
-                                        @if($snapUrl)
-                                        <!-- Lihat & Salin Link Midtrans -->
-                                        <button type="button"
-                                                @click="openMidtransModalFromEl($el); actionOpen = false;"
-                                                data-kode="{{ $inv->kode_billing_layanan }}"
-                                                data-nama="{{ $inv->nama_pelanggan }}"
-                                                data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
-                                                data-midtrans-url="{{ $snapUrl }}"
-                                                data-expiry="{{ $expiryFormatted }}"
-                                                data-is-expired="{{ $isSnapExpired ? '1' : '0' }}"
-                                                data-wa-url="{{ $waUrl }}"
-                                                class="w-full px-3.5 py-2 text-xs font-medium text-indigo-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-                                            </svg>
-                                            <span>Lihat / Salin Link Midtrans</span>
-                                        </button>
-
-                                        <!-- Renew Link Midtrans -->
-                                        <form method="POST" action="{{ route('finance.billing-layanan.renew-midtrans.post') }}" onsubmit="return confirm('Renew link pembayaran Midtrans untuk invoice {{ $inv->kode_billing_layanan }}?')">
-                                            @csrf
-                                            <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
-                                            <button type="submit"
-                                                    class="w-full px-3.5 py-2 text-xs font-medium {{ $isSnapExpired ? 'text-rose-400 font-bold' : 'text-amber-400' }} hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                                </svg>
-                                                <span>{{ $isSnapExpired ? 'Renew Link (Kadaluarsa)' : 'Renew Link Midtrans' }}</span>
-                                            </button>
-                                        </form>
-                                        @else
-                                        <!-- Generate Link Midtrans -->
-                                        <form method="POST" action="{{ route('finance.billing-layanan.generate-midtrans.post') }}">
-                                            @csrf
-                                            <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
-                                            <button type="submit"
-                                                    class="w-full px-3.5 py-2 text-xs font-medium text-indigo-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                                <svg class="w-4 h-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                                </svg>
-                                                <span>Generate Link Midtrans</span>
-                                            </button>
-                                        </form>
-                                        @endif
-                                    </div>
-                                    @endif
-
-                                    <!-- Group 3: Payment & Adjustment -->
-                                    <div class="py-1">
+                                        <!-- 1. Approve / Konfirmasi Bayar Lunas -->
                                         @if($inv->status_bill_lay != '15')
-                                        <!-- Approve / Konfirmasi Bayar -->
                                         <button type="button"
                                                 @click="openPayModalFromEl($el); actionOpen = false;"
                                                 data-kode="{{ $inv->kode_billing_layanan }}"
@@ -885,28 +804,11 @@
                                             <svg class="w-4 h-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
-                                            <span>Approve Lunas ({{ $inv->payment_type == 2 ? 'Transfer' : ($inv->payment_type == 3 ? 'Cash' : 'Manual') }})</span>
+                                            <span>Approve Lunas</span>
                                         </button>
                                         @endif
 
-                                        <!-- Adjustment Diskon/Denda -->
-                                        <button type="button"
-                                                @click="openAdjustModalFromEl($el); actionOpen = false;"
-                                                data-kode="{{ $inv->kode_billing_layanan }}"
-                                                data-internet="{{ $inv->nomor_internet }}"
-                                                data-nama="{{ $inv->nama_pelanggan }}"
-                                                data-subtotal="{{ (float)($inv->harga_bandwith ?? $inv->total_layanan ?? 0) }}"
-                                                data-potongan="{{ (float)($inv->potongan ?? 0) }}"
-                                                data-desc-potongan="{{ $inv->desc_potongan ?? '' }}"
-                                                data-denda="{{ (float)($inv->denda ?? 0) }}"
-                                                class="w-full px-3.5 py-2 text-xs font-medium text-amber-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                            </svg>
-                                            <span>Penyesuaian (Adjustment)</span>
-                                        </button>
-
-                                        <!-- Change Payment Method -->
+                                        <!-- 2. Change Payment Method -->
                                         <button type="button"
                                                 @click="openChangePayModalFromEl($el); actionOpen = false;"
                                                 data-kode="{{ $inv->kode_billing_layanan }}"
@@ -916,62 +818,20 @@
                                             <svg class="w-4 h-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                                             </svg>
-                                            <span>Change Payment Method</span>
+                                            <span>Change Payment</span>
                                         </button>
-                                    </div>
 
-                                    <!-- Group 4: WhatsApp & Rollback -->
-                                    <div class="py-1">
-                                        @if($inv->nomor_hp)
-                                        <a href="{{ $waUrl }}" target="_blank"
-                                           class="w-full px-3.5 py-2 text-xs font-medium text-emerald-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-1.074-.865 5.25 5.25 0 0 0 1.4-2.84C4.12 15.842 3 14.034 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-                                            </svg>
-                                            <span>Kirim Reminder WA</span>
-                                        </a>
-                                        @endif
-
+                                        <!-- 3. Lihat Detail (Detail Breakdown) -->
                                         <button type="button"
-                                                @click="openRollbackModalFromEl($el); actionOpen = false;"
+                                                @click="openDetailModalFromEl($el); actionOpen = false;"
                                                 data-kode="{{ $inv->kode_billing_layanan }}"
-                                                data-nama="{{ $inv->nama_pelanggan }}"
-                                                class="w-full px-3.5 py-2 text-xs font-medium text-rose-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
-                                            </svg>
-                                            <span>Rollback ke Draft</span>
-                                        </button>
-                                    </div>
-
-                                    <!-- Group 5: Permintaan ke NOC (Suspend / Up-Downgrade / Terminasi) -->
-                                    <div class="py-1">
-                                        <!-- Ajukan Suspend (Jatuh Tempo) -->
-                                        <a href="{{ route('finance.permintaan.suspend', ['search' => $inv->nomor_internet]) }}"
-                                           class="w-full px-3.5 py-2 text-xs font-medium text-rose-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-                                            </svg>
-                                            <span>Ajukan Suspend (Jatuh Tempo)</span>
-                                        </a>
-
-                                        <!-- Ajukan Ubah Bandwidth -->
-                                        <a href="{{ route('finance.permintaan.up-downgrade', ['search' => $inv->nomor_internet]) }}"
-                                           class="w-full px-3.5 py-2 text-xs font-medium text-blue-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                                            </svg>
-                                            <span>Ajukan Ubah Bandwidth</span>
-                                        </a>
-
-                                        <!-- Ajukan Terminasi -->
-                                        <a href="{{ route('finance.permintaan.terminasi', ['search' => $inv->nomor_internet]) }}"
-                                           class="w-full px-3.5 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 flex items-center gap-2.5 transition">
+                                                class="w-full px-3.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white flex items-center gap-2.5 transition">
                                             <svg class="w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                             </svg>
-                                            <span>Ajukan Terminasi</span>
-                                        </a>
+                                            <span>Lihat Detail</span>
+                                        </button>
                                     </div>
 
                                 </div>

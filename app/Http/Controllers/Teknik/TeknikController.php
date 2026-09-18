@@ -2092,6 +2092,49 @@ class TeknikController extends Controller
             ]
         );
 
+        // 4. Inisialisasi Billing Registrasi dengan Metode Pembayaran Default Midtrans (payment_type = 1)
+        if (Schema::hasTable('trx_billing_registrasi')) {
+            $bw = DB::table('m_bandwith')->where('kode_bandwith', $bandwithKode)->first();
+            $biayaReg = (float) ($bw->biaya_reg ?? 500000);
+            $kodeBillingReg = 'REG-' . $nomorInternet;
+
+            DB::table('trx_billing_registrasi')->updateOrInsert(
+                ['nomor_internet' => $nomorInternet],
+                [
+                    'kode_billing_registrasi' => $kodeBillingReg,
+                    'kode_bandwith' => $bandwithKode,
+                    'nominal_bandwith' => $bw->nominal_bandwith ?? '0',
+                    'potongan' => '0',
+                    'desc_potongan' => '-',
+                    'ppn' => '0.11',
+                    'tax' => '2',
+                    'voucher' => '-',
+                    'total_reg' => (string) $biayaReg,
+                    'notif_mail' => '0',
+                    'notif_wa' => '0',
+                    'status_bill_reg' => '11', // Draft
+                    'payment_type' => '1', // Default Midtrans
+                    'date_create' => $now,
+                    'user_create' => $currentUser,
+                    'date_update' => $now,
+                    'user_update' => $currentUser,
+                    'hide' => '0',
+                ]
+            );
+
+            if (Schema::hasTable('trx_billing_registrasi_log')) {
+                DB::table('trx_billing_registrasi_log')->insert([
+                    'kode_billing_regis_log' => 'LOG-REG-' . uniqid(),
+                    'kode_billing_registrasi' => $kodeBillingReg,
+                    'status_bill_reg' => '11',
+                    'note_billing_reg' => "Billing Registrasi dibuat otomatis saat pendaftaran pelanggan baru (Metode Pembayaran: Midtrans)",
+                    'date_create' => $now,
+                    'user_create' => $currentUser,
+                    'hide' => '0',
+                ]);
+            }
+        }
+
         return redirect()->route('teknik.pendaftaran')
             ->with('success', "Pendaftaran pelanggan baru '{$request->nama_pelanggan}' dengan Nomor Internet {$nomorInternet} berhasil disimpan!")
             ->with('nomor_internet_baru', $nomorInternet)

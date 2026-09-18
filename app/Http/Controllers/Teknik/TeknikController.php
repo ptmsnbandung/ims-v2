@@ -1219,8 +1219,12 @@ class TeknikController extends Controller
         // Upload foto mapping jika ada
         $fotoMappingName = null;
         if ($request->hasFile('foto_mapping')) {
+            $uploadDir = public_path('uploads/registrasi');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
             $fotoMappingName = 'mapping_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_mapping')->getClientOriginalExtension();
-            $request->file('foto_mapping')->move(public_path('uploads/registrasi'), $fotoMappingName);
+            $request->file('foto_mapping')->move($uploadDir, $fotoMappingName);
         }
 
         // Get names of selected team
@@ -1350,8 +1354,12 @@ class TeknikController extends Controller
         // Upload foto mapping jika ada
         $fotoMappingName = null;
         if ($request->hasFile('update_foto_mapping')) {
+            $uploadDir = public_path('uploads/registrasi');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
             $fotoMappingName = 'mapping_' . $nomorInternet . '_' . time() . '.' . $request->file('update_foto_mapping')->getClientOriginalExtension();
-            $request->file('update_foto_mapping')->move(public_path('uploads/registrasi'), $fotoMappingName);
+            $request->file('update_foto_mapping')->move($uploadDir, $fotoMappingName);
         }
 
         // Get names of selected team
@@ -1515,8 +1523,12 @@ class TeknikController extends Controller
         // Upload foto mapping jika ada
         $fotoMappingName = null;
         if ($request->hasFile('update_foto_mapping')) {
+            $uploadDir = public_path('uploads/registrasi');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
             $fotoMappingName = 'mapping_' . $nomorInternet . '_' . time() . '.' . $request->file('update_foto_mapping')->getClientOriginalExtension();
-            $request->file('update_foto_mapping')->move(public_path('uploads/registrasi'), $fotoMappingName);
+            $request->file('update_foto_mapping')->move($uploadDir, $fotoMappingName);
         }
 
         // Get names of selected team
@@ -1667,8 +1679,12 @@ class TeknikController extends Controller
         // Upload foto mapping/instalasi jika ada
         $fotoMappingName = null;
         if ($request->hasFile('update_foto_mapping')) {
+            $uploadDir = public_path('uploads/registrasi');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
             $fotoMappingName = 'instalasi_' . $nomorInternet . '_' . time() . '.' . $request->file('update_foto_mapping')->getClientOriginalExtension();
-            $request->file('update_foto_mapping')->move(public_path('uploads/registrasi'), $fotoMappingName);
+            $request->file('update_foto_mapping')->move($uploadDir, $fotoMappingName);
         }
 
         // Get names of selected team
@@ -1981,22 +1997,53 @@ class TeknikController extends Controller
 
         $nomorInternet = $this->generateNomorInternet();
 
+        // Ensure upload directory exists
+        $uploadDir = public_path('uploads/registrasi');
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
         // Upload files if provided
         $fotoKtpName = null;
         $fotoRumahName = null;
 
         if ($request->hasFile('foto_ktp')) {
             $fotoKtpName = 'ktp_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_ktp')->getClientOriginalExtension();
-            $request->file('foto_ktp')->move(public_path('uploads/registrasi'), $fotoKtpName);
+            $request->file('foto_ktp')->move($uploadDir, $fotoKtpName);
         }
 
         if ($request->hasFile('foto_rumah')) {
             $fotoRumahName = 'rumah_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_rumah')->getClientOriginalExtension();
-            $request->file('foto_rumah')->move(public_path('uploads/registrasi'), $fotoRumahName);
+            $request->file('foto_rumah')->move($uploadDir, $fotoRumahName);
         }
 
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'TEKNIK';
+
+        // Safe Foreign Key resolutions
+        $kelurahanPasang = $request->filled('kode_wilayah_kelurahan_pasang') ? trim($request->kode_wilayah_kelurahan_pasang) : null;
+        if ($kelurahanPasang === '' || ($kelurahanPasang && !DB::table('m_wilayah')->where('kode_wilayah_kelurahan', $kelurahanPasang)->exists())) {
+            $kelurahanPasang = null;
+        }
+
+        $kelurahanKtp = $request->filled('kode_wilayah_kelurahan_ktp') ? trim($request->kode_wilayah_kelurahan_ktp) : null;
+        if ($kelurahanKtp === '' || ($kelurahanKtp && !DB::table('m_wilayah')->where('kode_wilayah_kelurahan', $kelurahanKtp)->exists())) {
+            $kelurahanKtp = null;
+        }
+        if (!$kelurahanKtp) {
+            $kelurahanKtp = $kelurahanPasang;
+        }
+
+        $popKode = $request->filled('kode_pop') ? trim($request->kode_pop) : null;
+        if ($popKode === '' || ($popKode && !DB::table('m_pop')->where('kode_pop', $popKode)->exists())) {
+            $popKode = null;
+        }
+
+        $bandwithKode = $request->filled('kode_bandwith') ? trim($request->kode_bandwith) : null;
+        if (!$bandwithKode || !DB::table('m_bandwith')->where('kode_bandwith', $bandwithKode)->exists()) {
+            $firstBw = DB::table('m_bandwith')->where('disable', 0)->first();
+            $bandwithKode = $firstBw ? $firstBw->kode_bandwith : $bandwithKode;
+        }
 
         // 1. Simpan / Perbarui m_pelanggan
         DB::table('m_pelanggan')->updateOrInsert(
@@ -2009,7 +2056,7 @@ class TeknikController extends Controller
                 'email' => $request->email ?: '-',
                 'nomor_hp' => $request->nomor_hp,
                 'nomor_hp_2' => $request->nomor_hp_2 ?: null,
-                'kode_wilayah_kelurahan_ktp' => $request->kode_wilayah_kelurahan_ktp ?: $request->kode_wilayah_kelurahan_pasang,
+                'kode_wilayah_kelurahan_ktp' => $kelurahanKtp,
                 'rt_ktp' => str_pad($request->rt_ktp ?: '00', 2, '0', STR_PAD_LEFT),
                 'rw_ktp' => str_pad($request->rw_ktp ?: '00', 2, '0', STR_PAD_LEFT),
                 'alamat_ktp' => $request->alamat_ktp ?: $request->alamat_pasang,
@@ -2030,13 +2077,13 @@ class TeknikController extends Controller
             'rw_pasang' => str_pad($request->rw_pasang ?: '00', 2, '0', STR_PAD_LEFT),
             'nomor_bangunan' => $request->nomor_bangunan ?: '00',
             'alamat_pasang' => $request->alamat_pasang,
-            'kode_wilayah_kelurahan_pasang' => $request->kode_wilayah_kelurahan_pasang,
+            'kode_wilayah_kelurahan_pasang' => $kelurahanPasang,
             'jenis_bangunan' => $request->jenis_bangunan,
             'lon_lat' => $request->lon_lat ?: null,
             'loc_maps' => $request->loc_maps ?: null,
             'note_request' => $request->note_request ?: null,
-            'kode_bandwith' => $request->kode_bandwith,
-            'kode_pop' => $request->kode_pop ?: 'POP001',
+            'kode_bandwith' => $bandwithKode,
+            'kode_pop' => $popKode,
             'status_reg' => '11', // Menunggu verifikasi
             'group_layanan' => $request->group_layanan ?: 'MEDIANET',
             'nama_sales' => $request->nama_sales,
@@ -2102,6 +2149,32 @@ class TeknikController extends Controller
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'TEKNIK';
 
+        // Ensure upload directory exists
+        $uploadDir = public_path('uploads/registrasi');
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Safe FK resolutions
+        $kelurahanPasang = $request->filled('kode_wilayah_kelurahan_pasang') ? trim($request->kode_wilayah_kelurahan_pasang) : null;
+        if ($kelurahanPasang === '' || ($kelurahanPasang && !DB::table('m_wilayah')->where('kode_wilayah_kelurahan', $kelurahanPasang)->exists())) {
+            $kelurahanPasang = null;
+        }
+
+        $kelurahanKtp = $request->filled('kode_wilayah_kelurahan_ktp') ? trim($request->kode_wilayah_kelurahan_ktp) : null;
+        if ($kelurahanKtp === '' || ($kelurahanKtp && !DB::table('m_wilayah')->where('kode_wilayah_kelurahan', $kelurahanKtp)->exists())) {
+            $kelurahanKtp = null;
+        }
+        if (!$kelurahanKtp) {
+            $kelurahanKtp = $kelurahanPasang;
+        }
+
+        $bandwithKode = $request->filled('kode_bandwith') ? trim($request->kode_bandwith) : null;
+        if (!$bandwithKode || !DB::table('m_bandwith')->where('kode_bandwith', $bandwithKode)->exists()) {
+            $firstBw = DB::table('m_bandwith')->where('disable', 0)->first();
+            $bandwithKode = $firstBw ? $firstBw->kode_bandwith : $bandwithKode;
+        }
+
         // 1. Update m_pelanggan
         DB::table('m_pelanggan')->updateOrInsert(
             ['nik_penduduk' => $request->nik_penduduk],
@@ -2113,7 +2186,7 @@ class TeknikController extends Controller
                 'email' => $request->email ?: '-',
                 'nomor_hp' => $request->nomor_hp,
                 'nomor_hp_2' => $request->nomor_hp_2 ?: null,
-                'kode_wilayah_kelurahan_ktp' => $request->kode_wilayah_kelurahan_ktp ?: $request->kode_wilayah_kelurahan_pasang,
+                'kode_wilayah_kelurahan_ktp' => $kelurahanKtp,
                 'rt_ktp' => str_pad($request->rt_ktp ?: '00', 2, '0', STR_PAD_LEFT),
                 'rw_ktp' => str_pad($request->rw_ktp ?: '00', 2, '0', STR_PAD_LEFT),
                 'alamat_ktp' => $request->alamat_ktp ?: $request->alamat_pasang,
@@ -2130,12 +2203,12 @@ class TeknikController extends Controller
             'rw_pasang' => str_pad($request->rw_pasang ?: '00', 2, '0', STR_PAD_LEFT),
             'nomor_bangunan' => $request->nomor_bangunan ?: '00',
             'alamat_pasang' => $request->alamat_pasang,
-            'kode_wilayah_kelurahan_pasang' => $request->kode_wilayah_kelurahan_pasang,
+            'kode_wilayah_kelurahan_pasang' => $kelurahanPasang,
             'jenis_bangunan' => $request->jenis_bangunan,
             'lon_lat' => $request->lon_lat ?: null,
             'loc_maps' => $request->loc_maps ?: null,
             'note_request' => $request->note_request ?: null,
-            'kode_bandwith' => $request->kode_bandwith,
+            'kode_bandwith' => $bandwithKode,
             'group_layanan' => $request->group_layanan ?: 'MEDIANET',
             'nama_sales' => $request->nama_sales,
             'date_update' => $now,
@@ -2151,13 +2224,13 @@ class TeknikController extends Controller
 
         if ($request->hasFile('foto_ktp')) {
             $fotoKtpName = 'ktp_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_ktp')->getClientOriginalExtension();
-            $request->file('foto_ktp')->move(public_path('uploads/registrasi'), $fotoKtpName);
+            $request->file('foto_ktp')->move($uploadDir, $fotoKtpName);
             $instalasiPayload['foto_ktp'] = $fotoKtpName;
         }
 
         if ($request->hasFile('foto_rumah')) {
             $fotoRumahName = 'rumah_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_rumah')->getClientOriginalExtension();
-            $request->file('foto_rumah')->move(public_path('uploads/registrasi'), $fotoRumahName);
+            $request->file('foto_rumah')->move($uploadDir, $fotoRumahName);
             $instalasiPayload['foto_rumah'] = $fotoRumahName;
         }
 
@@ -2215,10 +2288,20 @@ class TeknikController extends Controller
 
         if ($lastRow && is_numeric($lastRow->nomor_internet)) {
             $next = ((int) $lastRow->nomor_internet) + 1;
+            while (DB::table('trx_batchjob_register')->where('nomor_internet', (string) $next)->exists()) {
+                $next++;
+            }
             return (string) $next;
         }
 
-        return '1' . str_pad((string) (DB::table('trx_batchjob_register')->count() + 1), 6, '0', STR_PAD_LEFT) . date('y');
+        $count = DB::table('trx_batchjob_register')->count() + 1;
+        $num = '1' . str_pad((string) $count, 6, '0', STR_PAD_LEFT) . date('y');
+        while (DB::table('trx_batchjob_register')->where('nomor_internet', $num)->exists()) {
+            $count++;
+            $num = '1' . str_pad((string) $count, 6, '0', STR_PAD_LEFT) . date('y');
+        }
+
+        return $num;
     }
 
     /**

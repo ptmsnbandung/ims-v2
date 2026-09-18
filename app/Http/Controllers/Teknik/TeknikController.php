@@ -972,27 +972,6 @@ class TeknikController extends Controller
             ? DB::table('view_barang')->where('hide', '0')->get()
             : (Schema::hasTable('m_barang') ? DB::table('m_barang')->where('hide', '0')->get() : collect());
 
-        // Master POP/ODN & OLT Slots for Workflow Scheduling
-        $pops = Schema::hasTable('m_pop')
-            ? DB::table('m_pop')->where('hide', '!=', '1')->orderBy('nama_pop')->get()
-            : collect();
-
-        $olts = Schema::hasTable('m_olt')
-            ? DB::table('m_olt')->get()
-            : collect();
-
-        $indexOltData = $this->getIndexOltSlots();
-
-        // Attach olt safely to $registrasi if missing
-        if ($registrasi->isNotEmpty()) {
-            $oltMap = DB::table('trx_batchjob_register')
-                ->whereIn('nomor_internet', $registrasi->pluck('nomor_internet'))
-                ->pluck('olt', 'nomor_internet');
-            foreach ($registrasi as $r) {
-                $r->olt = $oltMap[$r->nomor_internet] ?? 'O1';
-            }
-        }
-
         // Suggested new nomor_internet
         $suggestedNomorInternet = $this->generateNomorInternet();
 
@@ -1009,12 +988,6 @@ class TeknikController extends Controller
             'timeJobs' => $timeJobs,
             'barangList' => $barangList,
             'suggestedNomorInternet' => $suggestedNomorInternet,
-            'pops' => $pops,
-            'olts' => $olts,
-            'indexOltSlots' => $indexOltData['slots'],
-            'occupiedIndexOlts' => $indexOltData['occupied'],
-            'allPorts' => $indexOltData['allPorts'],
-            'portStats' => $indexOltData['portStats'],
             'filters' => $request->only(['layanan', 'nama', 'alamat', 'status', 'wilayah', 'per_page']),
         ]);
     }

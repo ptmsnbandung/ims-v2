@@ -1490,112 +1490,7 @@
                                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500"></textarea>
                                 </div>
 
-                                <!-- Row POP & Media Akses -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                            POP/ODN
-                                        </label>
-                                        <select name="kode_pop" 
-                                                x-model="surveyForm.kode_pop" 
-                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500">
-                                            <option value="">-- Pilih POP --</option>
-                                            @foreach($pops as $pop)
-                                                <option value="{{ $pop->kode_pop }}">{{ $pop->nama_pop }} ({{ $pop->kode_pop }})</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                            Media Akses
-                                        </label>
-                                        <select name="media_akses" 
-                                                x-model="surveyForm.media_akses" 
-                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500">
-                                            <option value="FTTH">FTTH</option>
-                                            <option value="FTTH MSN">FTTH MSN</option>
-                                            <option value="PTP FO">PTP FO</option>
-                                            <option value="WIRELESS">WIRELESS</option>
-                                            <option value="GPON">GPON</option>
-                                        </select>
-                                    </div>
-                                </div>
 
-                                <!-- Pilih Server OLT (FTTH) -->
-                                <div x-show="surveyForm.media_akses === 'FTTH' || surveyForm.media_akses === 'FTTH MSN'" 
-                                     x-transition 
-                                     class="p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-blue-500/30 rounded-xl space-y-2">
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                            Pilih Server OLT (FTTH)
-                                        </label>
-                                        <span class="text-[11px] font-mono font-bold text-blue-400">
-                                            {{ count($olts) }} OLT Tersedia
-                                        </span>
-                                    </div>
-                                    <select name="olt" 
-                                            x-model="surveyForm.olt" 
-                                            class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-1 focus:ring-blue-500">
-                                        @foreach($olts as $o)
-                                            <option value="{{ $o->kode_olt }}">
-                                                {{ $o->name_olt ?? ($o->nama_olt ?? $o->kode_olt) }} ({{ $o->kode_olt }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Index OLT (Port GPON + Slot 1..128) -->
-                                <div x-show="surveyForm.media_akses !== 'PTP FO'" 
-                                     x-transition 
-                                     class="p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-300 dark:border-slate-800 rounded-xl space-y-2.5">
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                            Index OLT
-                                        </label>
-                                        <span class="text-[11px] font-mono font-bold text-blue-400" x-text="surveyForm.index_olt || 'Belum dipilih'"></span>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                        <!-- Pilih Port GPON -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                                Pilih Port GPON:
-                                            </label>
-                                            <select x-model="surveyForm.selectedGponPort" 
-                                                    @change="updateIndexOlt(surveyForm)"
-                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                                                @foreach($allPorts as $port)
-                                                    @php
-                                                        $stats = $portStats[$port] ?? ['total' => 128, 'used' => 0, 'free' => 128, 'available' => 128];
-                                                    @endphp
-                                                    <option value="{{ $port }}">
-                                                        {{ $port }} ({{ $stats['free'] ?? ($stats['available'] ?? 128) }} Slot Sisa)
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <!-- Pilih Index Slot (1..128) -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                                Pilih Index:
-                                            </label>
-                                            <select x-model="surveyForm.selectedOnuSlot" 
-                                                    @change="updateIndexOlt(surveyForm)"
-                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                                                <option value="">-- Pilih Index (1..128) --</option>
-                                                <template x-for="slot in getSlotsForPort(surveyForm.selectedGponPort)" :key="slot.key">
-                                                    <option :value="slot.slot" 
-                                                            :disabled="slot.is_occupied && slot.occupied_by !== surveyForm.nomor_internet"
-                                                            :class="slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'"
-                                                            x-text="(slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? ' (Pelanggan Ini)' : (slot.occupied_name ? ' - ' + slot.occupied_name : ' - Terpakai')) : ' (Tersedia)')">
-                                                    </option>
-                                                </template>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="index_olt" :value="surveyForm.index_olt">
-                                </div>
 
                                 <!-- Foto Mapping Upload Area -->
                                 <div>
@@ -1779,112 +1674,7 @@
                                     </div>
                                 </template>
 
-                                <!-- Row POP & Media Akses -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                            POP/ODN
-                                        </label>
-                                        <select name="kode_pop" 
-                                                x-model="reportSurveyForm.kode_pop" 
-                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500">
-                                            <option value="">-- Pilih POP --</option>
-                                            @foreach($pops as $pop)
-                                                <option value="{{ $pop->kode_pop }}">{{ $pop->nama_pop }} ({{ $pop->kode_pop }})</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                            Media Akses
-                                        </label>
-                                        <select name="media_akses" 
-                                                x-model="reportSurveyForm.media_akses" 
-                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500">
-                                            <option value="FTTH">FTTH</option>
-                                            <option value="FTTH MSN">FTTH MSN</option>
-                                            <option value="PTP FO">PTP FO</option>
-                                            <option value="WIRELESS">WIRELESS</option>
-                                            <option value="GPON">GPON</option>
-                                        </select>
-                                    </div>
-                                </div>
 
-                                <!-- Pilih Server OLT (FTTH) -->
-                                <div x-show="reportSurveyForm.media_akses === 'FTTH' || reportSurveyForm.media_akses === 'FTTH MSN'" 
-                                     x-transition 
-                                     class="p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-blue-500/30 rounded-xl space-y-2">
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                            Pilih Server OLT (FTTH)
-                                        </label>
-                                        <span class="text-[11px] font-mono font-bold text-blue-400">
-                                            {{ count($olts) }} OLT Tersedia
-                                        </span>
-                                    </div>
-                                    <select name="olt" 
-                                            x-model="reportSurveyForm.olt" 
-                                            class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-1 focus:ring-blue-500">
-                                        @foreach($olts as $o)
-                                            <option value="{{ $o->kode_olt }}">
-                                                {{ $o->name_olt ?? ($o->nama_olt ?? $o->kode_olt) }} ({{ $o->kode_olt }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Index OLT (Port GPON + Slot 1..128) -->
-                                <div x-show="reportSurveyForm.media_akses !== 'PTP FO'" 
-                                     x-transition 
-                                     class="p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-300 dark:border-slate-800 rounded-xl space-y-2.5">
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                            Index OLT
-                                        </label>
-                                        <span class="text-[11px] font-mono font-bold text-blue-400" x-text="reportSurveyForm.index_olt || 'Belum dipilih'"></span>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                        <!-- Pilih Port GPON -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                                Pilih Port GPON:
-                                            </label>
-                                            <select x-model="reportSurveyForm.selectedGponPort" 
-                                                    @change="updateIndexOlt(reportSurveyForm)"
-                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                                                @foreach($allPorts as $port)
-                                                    @php
-                                                        $stats = $portStats[$port] ?? ['total' => 128, 'used' => 0, 'free' => 128, 'available' => 128];
-                                                    @endphp
-                                                    <option value="{{ $port }}">
-                                                        {{ $port }} ({{ $stats['free'] ?? ($stats['available'] ?? 128) }} Slot Sisa)
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <!-- Pilih Index Slot (1..128) -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                                Pilih Index:
-                                            </label>
-                                            <select x-model="reportSurveyForm.selectedOnuSlot" 
-                                                    @change="updateIndexOlt(reportSurveyForm)"
-                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                                                <option value="">-- Pilih Index (1..128) --</option>
-                                                <template x-for="slot in getSlotsForPort(reportSurveyForm.selectedGponPort)" :key="slot.key">
-                                                    <option :value="slot.slot" 
-                                                            :disabled="slot.is_occupied && slot.occupied_by !== reportSurveyForm.nomor_internet"
-                                                            :class="slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'"
-                                                            x-text="(slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? ' (Pelanggan Ini)' : (slot.occupied_name ? ' - ' + slot.occupied_name : ' - Terpakai')) : ' (Tersedia)')">
-                                                    </option>
-                                                </template>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="index_olt" :value="reportSurveyForm.index_olt">
-                                </div>
 
                                 <!-- Update Foto Mapping -->
                                 <div>
@@ -2159,112 +1949,7 @@
                                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500"></textarea>
                                 </div>
 
-                                <!-- Row POP & Media Akses -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                            POP/ODN <span class="text-rose-500">*</span>
-                                        </label>
-                                        <select name="kode_pop" 
-                                                x-model="instalasiForm.kode_pop" 
-                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500">
-                                            <option value="">-- Pilih POP --</option>
-                                            @foreach($pops as $pop)
-                                                <option value="{{ $pop->kode_pop }}">{{ $pop->nama_pop }} ({{ $pop->kode_pop }})</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                            Media Akses <span class="text-rose-500">*</span>
-                                        </label>
-                                        <select name="media_akses" 
-                                                x-model="instalasiForm.media_akses" 
-                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500">
-                                            <option value="FTTH">FTTH</option>
-                                            <option value="FTTH MSN">FTTH MSN</option>
-                                            <option value="PTP FO">PTP FO</option>
-                                            <option value="WIRELESS">WIRELESS</option>
-                                            <option value="GPON">GPON</option>
-                                        </select>
-                                    </div>
-                                </div>
 
-                                <!-- Pilih Server OLT (FTTH) -->
-                                <div x-show="instalasiForm.media_akses === 'FTTH' || instalasiForm.media_akses === 'FTTH MSN'" 
-                                     x-transition 
-                                     class="p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-blue-500/30 rounded-xl space-y-2">
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                            Pilih Server OLT (FTTH) <span class="text-rose-500">*</span>
-                                        </label>
-                                        <span class="text-[11px] font-mono font-bold text-blue-400">
-                                            {{ count($olts) }} OLT Tersedia
-                                        </span>
-                                    </div>
-                                    <select name="olt" 
-                                            x-model="instalasiForm.olt" 
-                                            class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-1 focus:ring-blue-500">
-                                        @foreach($olts as $o)
-                                            <option value="{{ $o->kode_olt }}">
-                                                {{ $o->name_olt ?? ($o->nama_olt ?? $o->kode_olt) }} ({{ $o->kode_olt }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Index OLT (Port GPON + Slot 1..128) -->
-                                <div x-show="instalasiForm.media_akses !== 'PTP FO'" 
-                                     x-transition 
-                                     class="p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-300 dark:border-slate-800 rounded-xl space-y-2.5">
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                            Index OLT <span class="text-rose-500">*</span>
-                                        </label>
-                                        <span class="text-[11px] font-mono font-bold text-blue-400" x-text="instalasiForm.index_olt || 'Belum dipilih'"></span>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                        <!-- Pilih Port GPON -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                                Pilih Port GPON:
-                                            </label>
-                                            <select x-model="instalasiForm.selectedGponPort" 
-                                                    @change="updateIndexOlt(instalasiForm)"
-                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                                                @foreach($allPorts as $port)
-                                                    @php
-                                                        $stats = $portStats[$port] ?? ['total' => 128, 'used' => 0, 'free' => 128, 'available' => 128];
-                                                    @endphp
-                                                    <option value="{{ $port }}">
-                                                        {{ $port }} ({{ $stats['free'] ?? ($stats['available'] ?? 128) }} Slot Sisa)
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <!-- Pilih Index Slot (1..128) -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                                Pilih Index:
-                                            </label>
-                                            <select x-model="instalasiForm.selectedOnuSlot" 
-                                                    @change="updateIndexOlt(instalasiForm)"
-                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                                                <option value="">-- Pilih Index (1..128) --</option>
-                                                <template x-for="slot in getSlotsForPort(instalasiForm.selectedGponPort)" :key="slot.key">
-                                                    <option :value="slot.slot" 
-                                                            :disabled="slot.is_occupied && slot.occupied_by !== instalasiForm.nomor_internet"
-                                                            :class="slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'"
-                                                            x-text="(slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? ' (Pelanggan Ini)' : (slot.occupied_name ? ' - ' + slot.occupied_name : ' - Terpakai')) : ' (Tersedia)')">
-                                                    </option>
-                                                </template>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="index_olt" :value="instalasiForm.index_olt">
-                                </div>
                             </div>
 
                             <!-- Right Column: Perangkat & Foto Mapping -->
@@ -2503,112 +2188,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Row POP & Media Akses -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                            POP/ODN
-                                        </label>
-                                        <select name="kode_pop" 
-                                                x-model="reportInstalasiForm.kode_pop" 
-                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500">
-                                            <option value="">-- Pilih POP --</option>
-                                            @foreach($pops as $pop)
-                                                <option value="{{ $pop->kode_pop }}">{{ $pop->nama_pop }} ({{ $pop->kode_pop }})</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                            Media Akses
-                                        </label>
-                                        <select name="media_akses" 
-                                                x-model="reportInstalasiForm.media_akses" 
-                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500">
-                                            <option value="FTTH">FTTH</option>
-                                            <option value="FTTH MSN">FTTH MSN</option>
-                                            <option value="PTP FO">PTP FO</option>
-                                            <option value="WIRELESS">WIRELESS</option>
-                                            <option value="GPON">GPON</option>
-                                        </select>
-                                    </div>
-                                </div>
 
-                                <!-- Pilih Server OLT (FTTH) -->
-                                <div x-show="reportInstalasiForm.media_akses === 'FTTH' || reportInstalasiForm.media_akses === 'FTTH MSN'" 
-                                     x-transition 
-                                     class="p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-blue-500/30 rounded-xl space-y-2">
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                            Pilih Server OLT (FTTH)
-                                        </label>
-                                        <span class="text-[11px] font-mono font-bold text-blue-400">
-                                            {{ count($olts) }} OLT Tersedia
-                                        </span>
-                                    </div>
-                                    <select name="olt" 
-                                            x-model="reportInstalasiForm.olt" 
-                                            class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-1 focus:ring-blue-500">
-                                        @foreach($olts as $o)
-                                            <option value="{{ $o->kode_olt }}">
-                                                {{ $o->name_olt ?? ($o->nama_olt ?? $o->kode_olt) }} ({{ $o->kode_olt }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Index OLT (Port GPON + Slot 1..128) -->
-                                <div x-show="reportInstalasiForm.media_akses !== 'PTP FO'" 
-                                     x-transition 
-                                     class="p-3.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-300 dark:border-slate-800 rounded-xl space-y-2.5">
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                            Index OLT
-                                        </label>
-                                        <span class="text-[11px] font-mono font-bold text-blue-400" x-text="reportInstalasiForm.index_olt || 'Belum dipilih'"></span>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                        <!-- Pilih Port GPON -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                                Pilih Port GPON:
-                                            </label>
-                                            <select x-model="reportInstalasiForm.selectedGponPort" 
-                                                    @change="updateIndexOlt(reportInstalasiForm)"
-                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                                                @foreach($allPorts as $port)
-                                                    @php
-                                                        $stats = $portStats[$port] ?? ['total' => 128, 'used' => 0, 'free' => 128, 'available' => 128];
-                                                    @endphp
-                                                    <option value="{{ $port }}">
-                                                        {{ $port }} ({{ $stats['free'] ?? ($stats['available'] ?? 128) }} Slot Sisa)
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <!-- Pilih Index Slot (1..128) -->
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                                Pilih Index:
-                                            </label>
-                                            <select x-model="reportInstalasiForm.selectedOnuSlot" 
-                                                    @change="updateIndexOlt(reportInstalasiForm)"
-                                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
-                                                <option value="">-- Pilih Index (1..128) --</option>
-                                                <template x-for="slot in getSlotsForPort(reportInstalasiForm.selectedGponPort)" :key="slot.key">
-                                                    <option :value="slot.slot" 
-                                                            :disabled="slot.is_occupied && slot.occupied_by !== reportInstalasiForm.nomor_internet"
-                                                            :class="slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'"
-                                                            x-text="(slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? ' (Pelanggan Ini)' : (slot.occupied_name ? ' - ' + slot.occupied_name : ' - Terpakai')) : ' (Tersedia)')">
-                                                    </option>
-                                                </template>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="index_olt" :value="reportInstalasiForm.index_olt">
-                                </div>
 
                                 <!-- Update Foto Mapping -->
                                 <div>
@@ -2844,34 +2424,6 @@ function pendaftaranWorkflowComponent() {
         allBarangList: @json($barangList ?? []),
         allKaryawanList: @json($karyawanTeknisi ?? []),
         allTimeJobs: @json($timeJobs ?? []),
-        allIndexSlots: @json($indexOltSlots ?? []),
-
-        getSlotsForPort(port) {
-            return this.allIndexSlots[port] || [];
-        },
-        updateIndexOlt(formObj) {
-            if (formObj.selectedGponPort && formObj.selectedOnuSlot) {
-                formObj.index_olt = formObj.selectedGponPort + ':' + formObj.selectedOnuSlot;
-            } else {
-                formObj.index_olt = '';
-            }
-        },
-        parseIndexOltInto(val, formObj) {
-            if (val && val.includes(':')) {
-                let parts = val.trim().split(':');
-                let portPart = parts[0];
-                if (!portPart.startsWith('gpon-onu_') && portPart.startsWith('1/')) {
-                    portPart = 'gpon-onu_' + portPart;
-                }
-                formObj.selectedGponPort = portPart;
-                formObj.selectedOnuSlot = parts[1];
-                formObj.index_olt = portPart + ':' + parts[1];
-            } else {
-                formObj.selectedGponPort = 'gpon-onu_1/1/1';
-                formObj.selectedOnuSlot = '';
-                formObj.index_olt = '';
-            }
-        },
 
         // Workflow Modals Visibility
         scheduleSurveyModalOpen: false,
@@ -2888,12 +2440,6 @@ function pendaftaranWorkflowComponent() {
             survey_date_start: '{{ date('Y-m-d') }}',
             survey_time: '',
             survey_note: '',
-            kode_pop: '',
-            media_akses: 'FTTH',
-            olt: 'O1',
-            selectedGponPort: 'gpon-onu_1/1/1',
-            selectedOnuSlot: '',
-            index_olt: '',
             team_survey: [],
             foto_mapping_preview: null
         },
@@ -2906,12 +2452,6 @@ function pendaftaranWorkflowComponent() {
             survey_date_finish: '{{ date('Y-m-d') }}',
             survey_note_finish: '',
             bisa_pasang: 'YA',
-            kode_pop: '',
-            media_akses: 'FTTH',
-            olt: 'O1',
-            selectedGponPort: 'gpon-onu_1/1/1',
-            selectedOnuSlot: '',
-            index_olt: '',
             team_survey: [],
             perangkat_list: [],
             foto_mapping_preview: null
@@ -2927,12 +2467,6 @@ function pendaftaranWorkflowComponent() {
             instalasi_date_start: '{{ date('Y-m-d') }}',
             instalasi_time: '',
             instalasi_note: '',
-            kode_pop: '',
-            media_akses: 'FTTH',
-            olt: 'O1',
-            selectedGponPort: 'gpon-onu_1/1/1',
-            selectedOnuSlot: '',
-            index_olt: '',
             team_instalasi: [],
             perangkat_list: [],
             foto_mapping_preview: null
@@ -2947,12 +2481,6 @@ function pendaftaranWorkflowComponent() {
             is_reschedule: false,
             instalasi_date_finish: '{{ date('Y-m-d') }}',
             instalasi_note_finish: '',
-            kode_pop: '',
-            media_akses: 'FTTH',
-            olt: 'O1',
-            selectedGponPort: 'gpon-onu_1/1/1',
-            selectedOnuSlot: '',
-            index_olt: '',
             team_instalasi: [],
             perangkat_list: [],
             foto_mapping_preview: null
@@ -3048,12 +2576,6 @@ function pendaftaranWorkflowComponent() {
             this.surveyForm.survey_date_start = '{{ date('Y-m-d') }}';
             this.surveyForm.survey_time = this.allTimeJobs[0] ? this.allTimeJobs[0].time_job : '';
             this.surveyForm.survey_note = '';
-            this.surveyForm.kode_pop = '';
-            this.surveyForm.media_akses = 'FTTH';
-            this.surveyForm.olt = 'O1';
-            this.surveyForm.selectedGponPort = 'gpon-onu_1/1/1';
-            this.surveyForm.selectedOnuSlot = '';
-            this.surveyForm.index_olt = '';
             this.surveyForm.team_survey = [];
             this.surveyForm.foto_mapping_preview = null;
             this.scheduleSurveyModalOpen = true;
@@ -3067,10 +2589,6 @@ function pendaftaranWorkflowComponent() {
                     }
                     if (data.register) {
                         if (data.register.nama_pelanggan) this.surveyForm.nama_pelanggan = data.register.nama_pelanggan;
-                        if (data.register.kode_pop) this.surveyForm.kode_pop = data.register.kode_pop;
-                        if (data.register.media_akses) this.surveyForm.media_akses = data.register.media_akses;
-                        if (data.register.olt) this.surveyForm.olt = data.register.olt;
-                        if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.surveyForm);
                     }
                     if (data.instalasi) {
                         if (data.instalasi.survey_date_start) this.surveyForm.survey_date_start = data.instalasi.survey_date_start.substring(0, 10);
@@ -3096,12 +2614,6 @@ function pendaftaranWorkflowComponent() {
             this.reportSurveyForm.survey_date_finish = '{{ date('Y-m-d') }}';
             this.reportSurveyForm.survey_note_finish = '';
             this.reportSurveyForm.bisa_pasang = 'YA';
-            this.reportSurveyForm.kode_pop = '';
-            this.reportSurveyForm.media_akses = 'FTTH';
-            this.reportSurveyForm.olt = 'O1';
-            this.reportSurveyForm.selectedGponPort = 'gpon-onu_1/1/1';
-            this.reportSurveyForm.selectedOnuSlot = '';
-            this.reportSurveyForm.index_olt = '';
             this.reportSurveyForm.team_survey = [];
             this.reportSurveyForm.perangkat_list = [];
             this.reportSurveyForm.foto_mapping_preview = null;
@@ -3119,10 +2631,6 @@ function pendaftaranWorkflowComponent() {
                     }
                     if (data.register) {
                         if (data.register.nama_pelanggan) this.reportSurveyForm.nama_pelanggan = data.register.nama_pelanggan;
-                        if (data.register.kode_pop) this.reportSurveyForm.kode_pop = data.register.kode_pop;
-                        if (data.register.media_akses) this.reportSurveyForm.media_akses = data.register.media_akses;
-                        if (data.register.olt) this.reportSurveyForm.olt = data.register.olt;
-                        if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.reportSurveyForm);
                     }
                     if (data.instalasi) {
                         if (data.instalasi.survey_date_finish) this.reportSurveyForm.survey_date_finish = data.instalasi.survey_date_finish.substring(0, 10);
@@ -3147,12 +2655,6 @@ function pendaftaranWorkflowComponent() {
             this.instalasiForm.instalasi_date_start = '{{ date('Y-m-d') }}';
             this.instalasiForm.instalasi_time = this.allTimeJobs[1] ? this.allTimeJobs[1].time_job : (this.allTimeJobs[0] ? this.allTimeJobs[0].time_job : '');
             this.instalasiForm.instalasi_note = '';
-            this.instalasiForm.kode_pop = '';
-            this.instalasiForm.media_akses = 'FTTH';
-            this.instalasiForm.olt = 'O1';
-            this.instalasiForm.selectedGponPort = 'gpon-onu_1/1/1';
-            this.instalasiForm.selectedOnuSlot = '';
-            this.instalasiForm.index_olt = '';
             this.instalasiForm.team_instalasi = [];
             this.instalasiForm.perangkat_list = [];
             this.instalasiForm.foto_mapping_preview = null;
@@ -3172,10 +2674,6 @@ function pendaftaranWorkflowComponent() {
                     }
                     if (data.register) {
                         if (data.register.nama_pelanggan) this.instalasiForm.nama_pelanggan = data.register.nama_pelanggan;
-                        if (data.register.kode_pop) this.instalasiForm.kode_pop = data.register.kode_pop;
-                        if (data.register.media_akses) this.instalasiForm.media_akses = data.register.media_akses;
-                        if (data.register.olt) this.instalasiForm.olt = data.register.olt;
-                        if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.instalasiForm);
                     }
                     if (data.instalasi) {
                         if (data.instalasi.instalasi_date_start) this.instalasiForm.instalasi_date_start = data.instalasi.instalasi_date_start.substring(0, 10);
@@ -3200,12 +2698,6 @@ function pendaftaranWorkflowComponent() {
             this.reportInstalasiForm.is_reschedule = false;
             this.reportInstalasiForm.instalasi_date_finish = '{{ date('Y-m-d') }}';
             this.reportInstalasiForm.instalasi_note_finish = '';
-            this.reportInstalasiForm.kode_pop = '';
-            this.reportInstalasiForm.media_akses = 'FTTH';
-            this.reportInstalasiForm.olt = 'O1';
-            this.reportInstalasiForm.selectedGponPort = 'gpon-onu_1/1/1';
-            this.reportInstalasiForm.selectedOnuSlot = '';
-            this.reportInstalasiForm.index_olt = '';
             this.reportInstalasiForm.team_instalasi = [];
             this.reportInstalasiForm.perangkat_list = [];
             this.reportInstalasiForm.foto_mapping_preview = null;
@@ -3225,10 +2717,6 @@ function pendaftaranWorkflowComponent() {
                     }
                     if (data.register) {
                         if (data.register.nama_pelanggan) this.reportInstalasiForm.nama_pelanggan = data.register.nama_pelanggan;
-                        if (data.register.kode_pop) this.reportInstalasiForm.kode_pop = data.register.kode_pop;
-                        if (data.register.media_akses) this.reportInstalasiForm.media_akses = data.register.media_akses;
-                        if (data.register.olt) this.reportInstalasiForm.olt = data.register.olt;
-                        if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.reportInstalasiForm);
                     }
                     if (data.instalasi) {
                         if (data.instalasi.instalasi_date_finish) this.reportInstalasiForm.instalasi_date_finish = data.instalasi.instalasi_date_finish.substring(0, 10);

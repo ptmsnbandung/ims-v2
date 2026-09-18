@@ -190,27 +190,27 @@ class Pengguna extends Model implements AuthenticatableContract
     public function getRoleBadgeClassesAttribute(): string
     {
         if ($this->isAdmin()) {
-            return 'bg-rose-50 text-rose-700 border-rose-200';
+            return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
         }
         if ($this->isFinance()) {
-            return 'bg-amber-50 text-amber-700 border-amber-200';
+            return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
         }
         if ($this->isNoc()) {
-            return 'bg-sky-50 text-sky-700 border-sky-200';
+            return 'bg-sky-500/10 text-sky-400 border-sky-500/30';
         }
         if ($this->isTeknik()) {
-            return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+            return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30';
         }
 
         $namaLevel = strtolower($this->level?->nama_level ?? '');
         if (str_contains($namaLevel, 'sales') || str_contains($namaLevel, 'salses')) {
-            return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
         }
         if (str_contains($namaLevel, 'legal') || str_contains($namaLevel, 'customer')) {
-            return 'bg-purple-50 text-purple-700 border-purple-200';
+            return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
         }
 
-        return 'bg-slate-100 text-slate-700 border-slate-200';
+        return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
     }
 
     /**

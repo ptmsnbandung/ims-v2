@@ -117,14 +117,14 @@
                     
                     <!-- Stats Badges Bar -->
                     <div class="flex flex-wrap items-center gap-2 mt-3">
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold bg-slate-800/80 text-slate-200 border border-slate-200/60 shadow-sm">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold bg-slate-800/80 text-slate-200 border border-slate-700/60 shadow-sm">
                             <svg class="w-3.5 h-3.5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
                             </svg>
                             <span>Kategori: {{ $totalKategori }}</span>
                         </div>
 
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold bg-slate-800/80 text-slate-200 border border-slate-200/60 shadow-sm">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold bg-slate-800/80 text-slate-200 border border-slate-700/60 shadow-sm">
                             <span class="text-amber-400">✦</span>
                             <span>Total Paket: {{ $totalPaket }}</span>
                         </div>
@@ -134,7 +134,7 @@
                             <span>Aktif: {{ $totalAktif }}</span>
                         </div>
 
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold bg-slate-800/80 text-slate-200 border border-slate-200/60 shadow-sm">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold bg-slate-800/80 text-slate-200 border border-slate-700/60 shadow-sm">
                             <span class="text-rose-400">🚀</span>
                             <span>Speed: {{ $minSpeed }} - {{ $maxSpeed }} Mbps</span>
                         </div>
@@ -160,11 +160,11 @@
     <!-- 2. FILTER PILL TABS PER PERUNTUKAN BANGUNAN (MATCHING MOCKUP)      -->
     <!-- =================================================================== -->
     <div class="flex items-center justify-center overflow-x-auto py-1">
-        <div class="inline-flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-xl backdrop-blur-xl max-w-full">
+        <div class="inline-flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl backdrop-blur-xl max-w-full">
             
             <!-- All -->
             <a href="{{ route('finance.paket', array_merge(request()->query(), ['bangunan' => 'all'])) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedBangunan === 'all' || empty($selectedBangunan) ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-50/80' }}">
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedBangunan === 'all' || empty($selectedBangunan) ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                 <span>Semua Bangunan</span>
             </a>
 
@@ -172,7 +172,7 @@
             @foreach($buildingTypes as $bKey => $bLabel)
                 @php $cnt = $buildingCounts[$bKey] ?? 0; @endphp
                 <a href="{{ route('finance.paket', array_merge(request()->query(), ['bangunan' => $bKey])) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap {{ $selectedBangunan === $bKey ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-50/80' }}">
+                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap {{ $selectedBangunan === $bKey ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
                     <span>{{ $bLabel }}</span>
                     <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $selectedBangunan === $bKey ? 'bg-white/20 text-white' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20' }}">
                         {{ $cnt }}
@@ -186,10 +186,10 @@
     <!-- =================================================================== -->
     <!-- 3. TABLE MASTER PAKET (DARK COMMAND CENTER THEME)                   -->
     <!-- =================================================================== -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden backdrop-blur-xl">
+    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl shadow-black/20 overflow-hidden backdrop-blur-xl">
         
         <!-- Search Bar Top Right -->
-        <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 border-b border-slate-200 bg-slate-50">
+        <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 border-b border-slate-800 bg-slate-900/60">
             <form method="GET" action="{{ route('finance.paket') }}" class="relative w-full sm:w-80">
                 @if($selectedBangunan !== 'all')
                     <input type="hidden" name="bangunan" value="{{ $selectedBangunan }}">
@@ -201,7 +201,7 @@
                        name="search" 
                        value="{{ $search }}"
                        placeholder="Search paket / kode / kecepatan..." 
-                       class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                       class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
             </form>
         </div>
 
@@ -209,7 +209,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                    <tr class="bg-slate-100 text-slate-300 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr class="bg-slate-950/80 text-slate-300 text-[11px] font-bold uppercase tracking-wider border-b border-slate-800">
                         <th class="py-3.5 px-5">
                             <div class="flex items-center gap-1.5 cursor-pointer">
                                 <span>KODE PAKET</span>
@@ -248,14 +248,14 @@
                         <th class="py-3.5 px-5 text-right">AKSI</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 bg-slate-50 text-slate-200">
+                <tbody class="divide-y divide-slate-800/80 bg-slate-900/40 text-slate-200">
                     @forelse($pakets as $paket)
                         @php
                             $katName = $paket->nama_kategori_bandwith ?: ($paket->alias_nama_kategori ?: 'BROADBAND');
                             $rawPeruntukan = $paket->peruntukan_bangunan ?: ($paket->kategori_bangunan ?: 'RUMAH-KANTOR');
                             $peruntukanList = array_filter(array_map('trim', explode(',', $rawPeruntukan)));
                         @endphp
-                        <tr class="hover:bg-slate-50/80 transition">
+                        <tr class="hover:bg-slate-800/50 transition">
                             <!-- 1. Kode Paket -->
                             <td class="py-4 px-5">
                                 <span class="font-mono font-bold text-white text-xs tracking-wide">
@@ -318,7 +318,7 @@
                                         </svg>
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 border border-slate-200 text-slate-500 shadow-sm" title="Paket Non-Aktif">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-500 shadow-sm" title="Paket Non-Aktif">
                                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                         </svg>
@@ -358,7 +358,7 @@
         </div>
 
         <!-- Table Footer / Pagination -->
-        <div class="px-5 py-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-400">
+        <div class="px-5 py-4 border-t border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-400">
             <div>
                 Showing {{ $pakets->firstItem() ?? 0 }} to {{ $pakets->lastItem() ?? 0 }} of {{ $pakets->total() }} results
             </div>
@@ -373,12 +373,12 @@
     <!-- =================================================================== -->
     <div x-show="modalOpen" 
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm overflow-y-auto">
-        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-6 text-slate-100 my-8"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-6 text-slate-100 my-8"
              @click.away="modalOpen = false">
             
             <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div>
                     <h3 class="font-bold text-white text-base" x-text="isEdit ? 'Edit Paket Internet & Tarif' : 'Tambah Paket Internet Baru'"></h3>
                     <p class="text-xs text-slate-400 mt-0.5">Konfigurasi spesifikasi kecepatan, kategori, dan tarif bulanan.</p>
@@ -414,7 +414,7 @@
                                x-model="form.kode_bandwith" 
                                required
                                placeholder="Contoh: AG0001" 
-                               class="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                     <!-- Kategori Bandwidth -->
@@ -423,7 +423,7 @@
                         <select name="kode_kategori_bandwith" 
                                 x-model="form.kode_kategori_bandwith"
                                 required
-                                class="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                class="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                             @foreach($kategoriList as $kat)
                                 <option value="{{ $kat->kode_kategori_bandwith }}">
                                     {{ $kat->nama_kategori_bandwith }}
@@ -441,7 +441,7 @@
                            x-model="form.nama_bandwith" 
                            required
                            placeholder="Contoh: Paket 75 Mbps" 
-                           class="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                           class="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -455,7 +455,7 @@
                                    required
                                    min="1"
                                    placeholder="75" 
-                                   class="w-full pl-3.5 pr-12 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                   class="w-full pl-3.5 pr-12 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                             <span class="absolute right-3.5 top-2 text-xs text-slate-400 font-bold">Mbps</span>
                         </div>
                     </div>
@@ -472,7 +472,7 @@
                                    min="0"
                                    step="1"
                                    placeholder="3500000" 
-                                   class="w-full pl-10 pr-3.5 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white font-mono font-bold text-amber-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                   class="w-full pl-10 pr-3.5 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono font-bold text-amber-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                         </div>
                     </div>
                 </div>
@@ -484,7 +484,7 @@
                         @foreach($buildingTypes as $bKey => $bLabel)
                             <button type="button" 
                                     @click="togglePeruntukan('{{ $bKey }}')"
-                                    :class="form.peruntukan.includes('{{ $bKey }}') ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20' : 'bg-white text-slate-400 border-slate-200 hover:text-slate-200'"
+                                    :class="form.peruntukan.includes('{{ $bKey }}') ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20' : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'"
                                     class="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer flex items-center gap-1.5">
                                 <span x-show="form.peruntukan.includes('{{ $bKey }}')">✓</span>
                                 <span>{{ $bLabel }}</span>
@@ -498,7 +498,7 @@
                 </div>
 
                 <!-- Status Aktif -->
-                <div class="pt-2 flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200">
+                <div class="pt-2 flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
                     <div>
                         <span class="block text-xs font-bold text-white">Status Paket Aktif</span>
                         <span class="block text-[11px] text-slate-400">Paket aktif dapat dipilih untuk registrasi pelanggan baru.</span>
@@ -510,10 +510,10 @@
                 </div>
 
                 <!-- Modal Actions -->
-                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200">
+                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-800">
                     <button type="button" 
                             @click="modalOpen = false"
-                            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-bold transition">
+                            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
                         Batal
                     </button>
                     <button type="submit" 

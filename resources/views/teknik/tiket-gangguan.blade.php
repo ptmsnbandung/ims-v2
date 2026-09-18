@@ -172,7 +172,7 @@
 
     <!-- Breadcrumbs & Header Actions -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
-        <div class="flex items-center gap-2 text-slate-500">
+        <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
             <span>IMS</span>
             <span>&gt;</span>
             @if(request('kategori') === 'ubah_password')
@@ -199,7 +199,7 @@
             <button type="button"
                     @click="playNotificationSound()"
                     title="Tes Notifikasi Suara Tiket"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 hover:text-amber-400 border border-slate-200 text-xs font-semibold transition shadow-sm cursor-pointer">
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-400 border border-slate-700 text-xs font-semibold transition shadow-sm cursor-pointer">
                 <svg class="w-3.5 h-3.5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                 </svg>
@@ -224,7 +224,7 @@
 
     @if(request('kategori') === 'ubah_password')
         <div class="pt-1">
-            <h2 class="text-base font-extrabold text-slate-800">
+            <h2 class="text-base font-extrabold text-slate-800 dark:text-white">
                 Tiket Permintaan Ganti Password
             </h2>
         </div>
@@ -242,7 +242,7 @@
 
     <!-- Alert Flash Notifications -->
     @if(session('success'))
-    <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-semibold flex items-center gap-3 backdrop-blur-md">
+    <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-3 backdrop-blur-md">
         <svg class="w-5 h-5 flex-shrink-0 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
@@ -251,7 +251,7 @@
     @endif
 
     @if(session('error'))
-    <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs font-semibold flex items-center gap-3 backdrop-blur-md">
+    <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-3 backdrop-blur-md">
         <svg class="w-5 h-5 flex-shrink-0 text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
         </svg>
@@ -262,7 +262,7 @@
     <!-- =================================================================== -->
     <!-- 1. TOP FILTER BAR (EXACT MATCHING SCREENSHOT)                       -->
     <!-- =================================================================== -->
-    <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xl shadow-slate-200/40">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/10">
         <form method="GET" action="{{ route('teknik.tiket.gangguan') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
             
             <!-- Hidden Kategori if fixed -->
@@ -271,7 +271,7 @@
             @else
                 <!-- 1. Dropdown Kategori / Layanan -->
                 <div class="lg:col-span-3">
-                    <select name="kategori" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="kategori" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">SEMUA KATEGORI TIKET</option>
                         <option value="gangguan" {{ request('kategori') === 'gangguan' ? 'selected' : '' }}>GANGGUAN LAYANAN</option>
                         <option value="ubah_password" {{ request('kategori') === 'ubah_password' ? 'selected' : '' }}>UBAH PASSWORD</option>
@@ -287,7 +287,7 @@
                        name="search" 
                        value="{{ $search }}"
                        placeholder="nama/internet" 
-                       class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <!-- 3. Dropdown / Input Semua Wilayah -->
@@ -296,12 +296,12 @@
                        name="wilayah" 
                        value="{{ request('wilayah') }}"
                        placeholder="SEMUA WILAYAH" 
-                       class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <!-- 4. Dropdown Semua Status -->
             <div class="{{ request('kategori') ? 'lg:col-span-2' : 'lg:col-span-2' }}">
-                <select name="status" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="status" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">SEMUA STATUS</option>
                     <option value="11" {{ request('status') === '11' ? 'selected' : '' }}>ANTRIAN / Request</option>
                     <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>KONFIRMASI / On Schedule</option>
@@ -389,21 +389,21 @@
     <!-- =================================================================== -->
     <!-- 3. TABLE OF TIKET (MATCHING EXACT SCREENSHOT)                       -->
     <!-- =================================================================== -->
-    <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/40 overflow-hidden">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
         
-        <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <div>
-                Show <span class="font-bold text-slate-800">10</span> entries
+                Show <span class="font-bold text-slate-800 dark:text-slate-200">10</span> entries
             </div>
             <div class="font-mono">
-                Total: <strong class="text-slate-800">{{ $tikets->total() }}</strong> Tiket
+                Total: <strong class="text-slate-800 dark:text-slate-200">{{ $tikets->total() }}</strong> Tiket
             </div>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                         @if(request('kategori') === 'ubah_password')
                             <th class="py-3.5 px-4 min-w-[150px]">Tiket</th>
                             <th class="py-3.5 px-4 min-w-[280px]">Pelanggan</th>
@@ -420,7 +420,7 @@
                         @endif
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
                     @forelse($tikets as $item)
                         @php
                             $namaPel = ($item->nama_pelanggan ?? null) ?: (($item->batch_nama ?? null) ?: 'Pelanggan');
@@ -453,12 +453,12 @@
                             $dateCreateFormatted = !empty($item->date_create) ? date('d F Y H:i', strtotime($item->date_create)) . ' WIB' : '-';
                             $dateUpdateFormatted = !empty($item->date_update) ? date('d F Y H:i', strtotime($item->date_update)) . ' WIB' : $dateCreateFormatted;
                         @endphp
-                        <tr class="hover:bg-slate-50 transition">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                             
                             @if(request('kategori') === 'ubah_password')
                                 <!-- 1. Tiket -->
                                 <td class="py-4 px-4 align-top">
-                                    <div class="font-mono font-bold text-slate-800 text-xs">
+                                    <div class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">
                                         #{{ $kodeTiket }}
                                     </div>
                                     <div class="text-[11px] text-slate-400 mt-0.5 font-sans">
@@ -468,7 +468,7 @@
 
                                 <!-- 2. Pelanggan -->
                                 <td class="py-4 px-4 align-top">
-                                    <div class="font-bold text-slate-900 uppercase text-xs">
+                                    <div class="font-bold text-slate-900 dark:text-white uppercase text-xs">
                                         @if($nomorInternet && $nomorInternet !== '-')
                                             <a href="{{ route('teknik.pelanggan.profile', $nomorInternet) }}" 
                                                class="font-mono text-blue-500 hover:text-blue-400 hover:underline mr-1"
@@ -480,21 +480,21 @@
                                         @endif
                                         <span>{{ $namaPel }}</span>
                                     </div>
-                                    <div class="text-[11px] text-slate-500 mt-1 uppercase leading-relaxed font-sans">
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase leading-relaxed font-sans">
                                         {{ $alamat }}
                                     </div>
                                 </td>
 
                                 <!-- 3. Info -->
                                 <td class="py-4 px-4 align-top text-[11px] space-y-1">
-                                    <div class="text-slate-700">
+                                    <div class="text-slate-700 dark:text-slate-300">
                                         <span class="text-slate-400">User :</span> <strong class="font-mono text-blue-500">{{ $userPppoe }}</strong> 
                                         <span class="text-slate-400 ml-1.5">Pass :</span> <strong class="font-mono text-amber-500">{{ $passPppoe }}</strong>
                                     </div>
-                                    <div class="text-slate-600">
+                                    <div class="text-slate-600 dark:text-slate-400">
                                         <span class="text-slate-400">MediaAkses :</span> <strong>{{ $mediaAkses }}</strong>
                                     </div>
-                                    <div class="text-slate-600">
+                                    <div class="text-slate-600 dark:text-slate-400">
                                         <span class="text-slate-400">POP :</span> {{ $popName }}
                                     </div>
                                 </td>
@@ -503,11 +503,11 @@
                                 <td class="py-4 px-4 align-top text-[11px] space-y-1">
                                     <div>
                                         <span class="text-slate-400">Password Lama :</span>
-                                        <div class="font-mono text-slate-800 mt-0.5">{{ $passLama }}</div>
+                                        <div class="font-mono text-slate-800 dark:text-slate-200 mt-0.5">{{ $passLama }}</div>
                                     </div>
                                     <div class="pt-1">
                                         <span class="text-slate-400">password Baru :</span>
-                                        <div class="font-medium text-slate-600 mt-0.5 leading-relaxed">{{ $passBaru }}</div>
+                                        <div class="font-medium text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">{{ $passBaru }}</div>
                                     </div>
                                 </td>
 
@@ -583,7 +583,7 @@
                             @else
                                 <!-- Standard Layout: Customer & No Layanan -->
                                 <td class="py-3 px-4">
-                                    <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                                    <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                                         <span>{{ $namaPel }}</span>
                                     </div>
                                     <div class="text-[11px] font-mono mt-0.5">
@@ -605,12 +605,12 @@
                                 </td>
 
                                 <!-- Address & Wilayah -->
-                                <td class="py-3 px-4 text-slate-600">
+                                <td class="py-3 px-4 text-slate-600 dark:text-slate-300">
                                     <div class="line-clamp-2 text-xs">
                                         {{ $alamat }}
                                     </div>
                                     @if(!empty($item->nama_pop))
-                                        <div class="mt-1 text-[10px] inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-400">
+                                        <div class="mt-1 text-[10px] inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-400">
                                             <span>POP: {{ $item->nama_pop }}</span>
                                         </div>
                                     @endif
@@ -652,7 +652,7 @@
 
                                 <!-- Keluhan / Catatan -->
                                 <td class="py-3 px-4">
-                                    <div class="text-xs text-slate-800 line-clamp-2">
+                                    <div class="text-xs text-slate-800 dark:text-slate-200 line-clamp-2">
                                         {{ $item->keluhan ?? '-' }}
                                     </div>
                                     @if(!empty($item->solusi) || !empty($item->penanganan))
@@ -666,7 +666,7 @@
                                         </div>
                                     @endif
                                     @if(!empty($item->date_schedule))
-                                        <div class="mt-0.5 text-[10px] text-amber-500 font-medium">
+                                        <div class="mt-0.5 text-[10px] text-amber-500 dark:text-amber-400 font-medium">
                                             Jadwal: {{ date('d M Y', strtotime($item->date_schedule)) }} ({{ $item->time_schedule ?? 'WIB' }})
                                         </div>
                                     @endif
@@ -779,7 +779,7 @@
         </div>
 
         <!-- Pagination Bar -->
-        <div class="px-5 py-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-500">
+        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
             <div>
                 Showing {{ $tikets->firstItem() ?? 0 }} to {{ $tikets->lastItem() ?? 0 }} of {{ $tikets->total() }} entries
             </div>
@@ -795,9 +795,9 @@
     <div x-show="detailModalOpen"
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 text-white space-y-4"
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 text-white space-y-4"
              @click.away="detailModalOpen = false">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
                     <svg class="w-5 h-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
@@ -808,42 +808,42 @@
             </div>
 
             <div class="space-y-3 text-xs">
-                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-200">
+                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-800/60">
                     <span class="text-slate-400">ID / Kode Tiket:</span>
                     <span class="col-span-2 font-mono font-bold text-blue-400" x-text="modalKodeTiket"></span>
                 </div>
-                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-200">
+                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-800/60">
                     <span class="text-slate-400">Nomor Internet:</span>
                     <span class="col-span-2 font-mono font-bold text-white" x-text="modalNomorInternet"></span>
                 </div>
-                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-200">
+                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-800/60">
                     <span class="text-slate-400">Nama Pelanggan:</span>
                     <span class="col-span-2 font-semibold text-white" x-text="modalNamaPelanggan"></span>
                 </div>
-                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-200">
+                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-800/60">
                     <span class="text-slate-400">Kategori Tiket:</span>
                     <span class="col-span-2 font-semibold text-indigo-400" x-text="modalKatTiket"></span>
                 </div>
-                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-200">
+                <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-800/60">
                     <span class="text-slate-400">Keluhan / Pesan:</span>
                     <span class="col-span-2 text-slate-200" x-text="modalKeluhan"></span>
                 </div>
                 <template x-if="modalSolusi">
-                    <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-200">
+                    <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-800/60">
                         <span class="text-slate-400">Solusi / Penanganan:</span>
                         <span class="col-span-2 text-emerald-400" x-text="modalSolusi"></span>
                     </div>
                 </template>
                 <template x-if="modalTeamTeknisi">
-                    <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-200">
+                    <div class="grid grid-cols-3 gap-2 py-1.5 border-b border-slate-800/60">
                         <span class="text-slate-400">Tim Teknisi:</span>
                         <span class="col-span-2 text-amber-400 font-semibold" x-text="modalTeamTeknisi"></span>
                     </div>
                 </template>
             </div>
 
-            <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
-                <button type="button" @click="detailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-white text-xs font-semibold">
+            <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                <button type="button" @click="detailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold">
                     Tutup
                 </button>
 
@@ -887,9 +887,9 @@
     <div x-show="scheduleModalOpen"
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 text-white space-y-4"
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 text-white space-y-4"
              @click.away="scheduleModalOpen = false">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-amber-400"></span>
                     <span>Jadwalkan Penanganan Tiket (KD12)</span>
@@ -914,26 +914,26 @@
 
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">Tanggal Jadwal Penanganan:</label>
-                    <input type="date" name="date_schedule" x-model="modalDateSchedule" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500" required>
+                    <input type="date" name="date_schedule" x-model="modalDateSchedule" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500" required>
                 </div>
 
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">Waktu Penanganan:</label>
-                    <input type="text" name="time_schedule" x-model="modalTimeSchedule" placeholder="Contoh: 09:00 - 12:00 WIB" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500" required>
+                    <input type="text" name="time_schedule" x-model="modalTimeSchedule" placeholder="Contoh: 09:00 - 12:00 WIB" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500" required>
                 </div>
 
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">Tim Teknisi / Personil:</label>
-                    <input type="text" name="team_teknisi" x-model="modalTeamTeknisi" placeholder="Nama Teknisi / Tim yang ditugaskan" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <input type="text" name="team_teknisi" x-model="modalTeamTeknisi" placeholder="Nama Teknisi / Tim yang ditugaskan" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
 
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">Catatan / Detail Keluhan Tambahan:</label>
-                    <textarea name="keluhan" x-model="modalKeluhan" rows="2" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                    <textarea name="keluhan" x-model="modalKeluhan" rows="2" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
                 </div>
 
                 <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" @click="scheduleModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-white font-semibold">
+                    <button type="button" @click="scheduleModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold">
                         Batal
                     </button>
                     <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold shadow-lg shadow-amber-500/20">
@@ -950,9 +950,9 @@
     <div x-show="resolveModalOpen"
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 text-white space-y-4"
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 text-white space-y-4"
              @click.away="resolveModalOpen = false">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
                     <span>Selesaikan Tiket Gangguan (KD13)</span>
@@ -977,11 +977,11 @@
 
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">Catatan Solusi / Tindakan Penyelesaian:<span class="text-rose-500">*</span></label>
-                    <textarea name="solusi" x-model="modalSolusi" rows="3" placeholder="Jelaskan tindakan teknis yang telah dilakukan (contoh: Redaman diperbaiki dari -28dBm menjadi -19dBm / Kabel dropcore disambung ulang / Relokasi ke titik baru selesai)" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" required></textarea>
+                    <textarea name="solusi" x-model="modalSolusi" rows="3" placeholder="Jelaskan tindakan teknis yang telah dilakukan (contoh: Redaman diperbaiki dari -28dBm menjadi -19dBm / Kabel dropcore disambung ulang / Relokasi ke titik baru selesai)" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" required></textarea>
                 </div>
 
                 <!-- Technical Report Fields (Optional / Relokasi & Gangguan) -->
-                <div class="p-3.5 bg-slate-800/40 border border-slate-200/60 rounded-xl space-y-2.5">
+                <div class="p-3.5 bg-slate-800/40 border border-slate-700/60 rounded-xl space-y-2.5">
                     <div class="text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.67 2.67 0 0 0 21 17.25l-5.87-5.87m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -991,25 +991,25 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div>
                             <label class="block text-slate-400 text-[10px] font-semibold mb-1">ODP Baru / Port:</label>
-                            <input type="text" name="odp_baru" placeholder="Contoh: ODP-BBR-01 / Port 4" class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-200 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
+                            <input type="text" name="odp_baru" placeholder="Contoh: ODP-BBR-01 / Port 4" class="w-full text-xs px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px] font-semibold mb-1">Redaman Rx (dBm):</label>
-                            <input type="text" name="redaman" placeholder="Contoh: -18.50" class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-200 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
+                            <input type="text" name="redaman" placeholder="Contoh: -18.50" class="w-full text-xs px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px] font-semibold mb-1">Panjang Kabel Dropcore (Meter):</label>
-                            <input type="number" name="panjang_kabel" placeholder="Contoh: 75" class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-200 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
+                            <input type="number" name="panjang_kabel" placeholder="Contoh: 75" class="w-full text-xs px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px] font-semibold mb-1">SN / MAC ONT:</label>
-                            <input type="text" name="sn_ont" placeholder="Contoh: ZTEGC1234567" class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-200 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
+                            <input type="text" name="sn_ont" placeholder="Contoh: ZTEGC1234567" class="w-full text-xs px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white focus:ring-1 focus:ring-emerald-500 font-medium">
                         </div>
                     </div>
                 </div>
 
                 <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" @click="resolveModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-white font-semibold">
+                    <button type="button" @click="resolveModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold">
                         Batal
                     </button>
                     <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/20">
@@ -1026,9 +1026,9 @@
     <div x-show="cancelModalOpen"
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 text-white space-y-4"
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-6 text-white space-y-4"
              @click.away="cancelModalOpen = false">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
                 <h3 class="text-base font-bold text-white flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-rose-500"></span>
                     <span>Batalkan Tiket (KD14)</span>
@@ -1053,11 +1053,11 @@
 
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">Alasan Pembatalan:</label>
-                    <textarea name="note_cancel" x-model="modalNoteCancel" rows="3" placeholder="Tuliskan alasan pembatalan tiket (contoh: Pelanggan konfirmasi koneksi sudah normal / Tiket duplikat)" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-white focus:outline-none focus:ring-2 focus:ring-rose-500" required></textarea>
+                    <textarea name="note_cancel" x-model="modalNoteCancel" rows="3" placeholder="Tuliskan alasan pembatalan tiket (contoh: Pelanggan konfirmasi koneksi sudah normal / Tiket duplikat)" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-rose-500" required></textarea>
                 </div>
 
                 <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" @click="cancelModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-white font-semibold">
+                    <button type="button" @click="cancelModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold">
                         Batal
                     </button>
                     <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold shadow-lg shadow-rose-600/20">
@@ -1074,19 +1074,19 @@
     <div x-show="createModalOpen"
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl p-6 text-slate-900 space-y-5"
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl p-6 text-slate-900 dark:text-white space-y-5"
              @click.away="createModalOpen = false">
             
             <!-- Modal Header -->
-            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
-                <h3 class="text-base font-bold text-slate-800">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-base font-bold text-slate-800 dark:text-white">
                     @if(request('kategori') === 'ubah_password')
                         Tiket Ganti Password
                     @else
                         Buat Tiket Gangguan & Pengaduan
                     @endif
                 </h3>
-                <button type="button" @click="createModalOpen = false" class="text-slate-400 hover:text-slate-600 text-lg font-bold">
+                <button type="button" @click="createModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold">
                     ✕
                 </button>
             </div>
@@ -1097,33 +1097,33 @@
                 
                 <!-- Pilihan Kategori Tiket -->
                 <div>
-                    <label class="block text-slate-700 font-bold mb-2">
+                    <label class="block text-slate-700 dark:text-slate-300 font-bold mb-2">
                         Pilih Kategori Tiket<span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-3 gap-2">
                         <label class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col items-center gap-1 text-center"
-                               :class="createKatTiket === '11' ? 'bg-indigo-500/15 border-indigo-500 text-indigo-400 font-bold' : 'bg-slate-50 border-slate-300 text-slate-400'">
+                               :class="createKatTiket === '11' ? 'bg-indigo-500/15 border-indigo-500 text-indigo-400 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-400'">
                             <input type="radio" name="kat_tiket" value="11" x-model="createKatTiket" class="hidden">
                             <span class="text-xs">🔧 Gangguan</span>
                         </label>
                         <label class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col items-center gap-1 text-center"
-                               :class="createKatTiket === '12' ? 'bg-rose-500/15 border-rose-500 text-rose-400 font-bold' : 'bg-slate-50 border-slate-300 text-slate-400'">
+                               :class="createKatTiket === '12' ? 'bg-rose-500/15 border-rose-500 text-rose-400 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-400'">
                             <input type="radio" name="kat_tiket" value="12" x-model="createKatTiket" class="hidden">
                             <span class="text-xs">🔑 Ganti Password</span>
                         </label>
                         <label class="p-2.5 rounded-xl border cursor-pointer transition flex flex-col items-center gap-1 text-center"
-                               :class="createKatTiket === '13' ? 'bg-purple-500/15 border-purple-500 text-purple-400 font-bold' : 'bg-slate-50 border-slate-300 text-slate-400'">
+                               :class="createKatTiket === '13' ? 'bg-purple-500/15 border-purple-500 text-purple-400 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-slate-400'">
                             <input type="radio" name="kat_tiket" value="13" x-model="createKatTiket" class="hidden">
                             <span class="text-xs">📍 Relokasi</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
+                <div class="p-4 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4">
                     
                     <!-- 1. Nomor Internet + CEK Button -->
                     <div>
-                        <label class="block text-slate-700 font-semibold mb-1.5">
+                        <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
                             Nomor Internet<span class="text-rose-500">*</span>
                         </label>
                         <div class="flex items-center gap-3">
@@ -1133,7 +1133,7 @@
                                        x-model="createNomorInternet" 
                                        @keydown.enter.prevent="checkCustomer()"
                                        placeholder="Search" 
-                                       class="w-full text-xs px-3.5 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium" 
+                                       class="w-full text-xs px-3.5 py-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium" 
                                        required>
                             </div>
                             <button type="button" 
@@ -1152,7 +1152,7 @@
 
                         <!-- Customer Info Alert / Chip -->
                         <template x-if="createCustomerData">
-                            <div class="mt-2.5 p-3 rounded-lg bg-blue-50 border border-blue-200 text-[11px] text-blue-900 space-y-1">
+                            <div class="mt-2.5 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[11px] text-blue-900 dark:text-blue-200 space-y-1">
                                 <div class="font-bold flex items-center gap-1.5">
                                     <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -1160,7 +1160,7 @@
                                     <span x-text="createCustomerData.nama_pelanggan"></span>
                                     <span class="text-slate-400 font-mono" x-text="'(' + createCustomerData.nomor_internet + ')'"></span>
                                 </div>
-                                <div class="text-slate-600" x-text="'Alamat Asal: ' + createCustomerData.alamat"></div>
+                                <div class="text-slate-600 dark:text-slate-400" x-text="'Alamat Asal: ' + createCustomerData.alamat"></div>
                                 <div class="text-[10px] text-slate-500" x-text="'POP: ' + (createCustomerData.nama_pop || '-') + ' | Media: ' + (createCustomerData.media_akses || 'FTTH')"></div>
                             </div>
                         </template>
@@ -1180,17 +1180,17 @@
                     <template x-if="createKatTiket === '13'">
                         <div class="space-y-3.5 pt-1">
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">
+                                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                                     Jenis Relokasi<span class="text-rose-500">*</span>
                                 </label>
                                 <div class="grid grid-cols-2 gap-2">
                                     <label class="p-2 rounded-lg border text-center cursor-pointer text-xs"
-                                           :class="createJenisRelokasi === 'Eksternal' ? 'bg-purple-500/20 border-purple-500 text-purple-400 font-bold' : 'bg-white border-slate-200 text-slate-400'">
+                                           :class="createJenisRelokasi === 'Eksternal' ? 'bg-purple-500/20 border-purple-500 text-purple-400 font-bold' : 'bg-slate-900 border-slate-700 text-slate-400'">
                                         <input type="radio" name="jenis_relokasi" value="Eksternal" x-model="createJenisRelokasi" class="hidden">
                                         <span>Pindah Alamat (Eksternal)</span>
                                     </label>
                                     <label class="p-2 rounded-lg border text-center cursor-pointer text-xs"
-                                           :class="createJenisRelokasi === 'Internal' ? 'bg-purple-500/20 border-purple-500 text-purple-400 font-bold' : 'bg-white border-slate-200 text-slate-400'">
+                                           :class="createJenisRelokasi === 'Internal' ? 'bg-purple-500/20 border-purple-500 text-purple-400 font-bold' : 'bg-slate-900 border-slate-700 text-slate-400'">
                                         <input type="radio" name="jenis_relokasi" value="Internal" x-model="createJenisRelokasi" class="hidden">
                                         <span>Pindah Titik Ruangan (Internal)</span>
                                     </label>
@@ -1198,37 +1198,37 @@
                             </div>
 
                             <div>
-                                <label class="block text-slate-700 font-semibold mb-1">
+                                <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                                     Alamat Tujuan Baru<span class="text-rose-500">*</span>
                                 </label>
                                 <textarea name="alamat_baru" 
                                           x-model="createAlamatBaru" 
                                           rows="2" 
                                           placeholder="Tuliskan alamat lengkap baru (Jalan, RT/RW, No. Rumah, Kelurahan, Kecamatan)" 
-                                          class="w-full text-xs p-3 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          class="w-full text-xs p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                           :required="createKatTiket === '13'"></textarea>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">
+                                    <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                                         Kontak / PIC di Lokasi Baru:
                                     </label>
                                     <input type="text" 
                                            name="pic_baru" 
                                            x-model="createPicBaru" 
                                            placeholder="Contoh: Bpk. Ahmad (08123456789)" 
-                                           class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                           class="w-full text-xs px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
                                 </div>
                                 <div>
-                                    <label class="block text-slate-700 font-semibold mb-1">
+                                    <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                                         Keterangan Relokasi:
                                     </label>
                                     <input type="text" 
                                            name="catatan_relokasi" 
                                            x-model="createCatatanRelokasi" 
                                            placeholder="Alasan pindah / catatan waktu" 
-                                           class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                           class="w-full text-xs px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
                                 </div>
                             </div>
                         </div>
@@ -1237,13 +1237,13 @@
                     <!-- 2B. Field Umum / Ubah Password / Gangguan -->
                     <template x-if="createKatTiket !== '13'">
                         <div>
-                            <label class="block text-slate-700 font-semibold mb-1.5">
+                            <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1.5">
                                 <span x-text="createKatTiket === '12' ? 'Perubahan Password' : 'Keluhan / Gangguan'"></span><span class="text-rose-500">*</span>
                             </label>
                             <textarea name="perubahan" 
                                       x-model="createPerubahan" 
                                       rows="4" 
-                                      class="w-full text-xs p-3 rounded-lg bg-white border border-slate-300 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed" 
+                                      class="w-full text-xs p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed" 
                                       :required="createKatTiket !== '13'"></textarea>
                         </div>
                     </template>
@@ -1255,7 +1255,7 @@
                     <!-- Tutup Button -->
                     <button type="button" 
                             @click="createModalOpen = false" 
-                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-white font-bold text-xs shadow-md transition cursor-pointer">
+                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-md transition cursor-pointer">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>

@@ -183,7 +183,7 @@
                     </div>
 
                     <!-- Preset Selector from Master Database m_odp -->
-                    <div class="pt-2.5 border-t border-slate-200/80 space-y-1">
+                    <div class="pt-2.5 border-t border-slate-800/80 space-y-1">
                         <label class="text-[11px] font-bold text-slate-300 flex items-center justify-between">
                             <span class="flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-sky-400"></span>
@@ -248,11 +248,11 @@
 
                             <!-- ODP Technical Specifications (matching Database m_odp) -->
                             <div class="ims-inner-box p-3 space-y-2 text-xs text-slate-300">
-                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/80">
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-800/80">
                                     <span class="text-slate-400">Nama ODP (Database):</span>
                                     <strong class="text-white font-bold" x-text="nearestResult.odp.name_odp || nearestResult.odp.name"></strong>
                                 </div>
-                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/80">
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-800/80">
                                     <span class="text-slate-400">Kode ODP (Database):</span>
                                     <span class="text-sky-400 font-mono font-bold px-2 py-0.5 rounded bg-sky-950/60 border border-sky-800/60 text-[11px]" x-text="nearestResult.odp.kode_odp || nearestResult.odp.code"></span>
                                 </div>
@@ -324,7 +324,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-300 p-2.5 rounded-xl border border-slate-200"
+                            <p class="text-xs text-slate-300 p-2.5 rounded-xl border border-slate-800"
                                style="background-color: #020617;">
                                 Lokasi ini membutuhkan penarikan kabel feeder tambahan atau pemasangan tiang/ODP baru sebelum dapat dilakukan aktivasi layanan.
                             </p>
@@ -351,7 +351,7 @@
             <div class="ims-coverage-card overflow-hidden flex flex-col">
                 
                 <!-- Map Header Controls Bar -->
-                <div class="px-4 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs"
+                <div class="px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs"
                      style="background-color: #0f172a;">
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block animate-pulse"></span>
@@ -405,7 +405,7 @@
                 <div id="ims-google-map-canvas" class="ims-google-map-canvas"></div>
 
                 <!-- Map Footer Legend -->
-                <div class="px-4 py-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400"
+                <div class="px-4 py-2.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400"
                      style="background-color: #020617;">
                     <div class="flex items-center gap-3.5 flex-wrap">
                         <span class="flex items-center gap-1.5">
@@ -426,7 +426,7 @@
                         <span>Garis Biru = Jalur kabel dropcore fiber optik (OSRM Street Route)</span>
                     </div>    <!-- ── 3. BOTTOM SECTION: DATABASE MASTER ODP (m_odp) & TIKET WHATSAPP (trx_coverage_area) ── -->
     <div class="ims-coverage-card p-5 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-800">
             <div class="flex items-center gap-2 flex-wrap">
                 <button 
                     type="button" 
@@ -435,7 +435,7 @@
                     class="px-3.5 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-2"
                 >
                     <span>📍 Data Master ODP Database (m_odp)</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-white font-mono font-bold text-sky-300">{{ count($odps) }} Node</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-900/80 font-mono font-bold text-sky-300">{{ count($odps) }} Node</span>
                 </button>
                 <button 
                     type="button" 
@@ -444,7 +444,7 @@
                     class="px-3.5 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-2"
                 >
                     <span>💬 Antrean Tiket WhatsApp (trx_coverage_area)</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-white font-mono font-bold text-amber-300">{{ count($tickets) }} Tiket</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-900/80 font-mono font-bold text-amber-300">{{ count($tickets) }} Tiket</span>
                 </button>
             </div>
             <span class="text-[11px] font-mono text-slate-400">
@@ -461,7 +461,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-200 text-[11px] font-bold text-slate-400"
+                        <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400"
                             style="background-color: #020617;">
                             <th class="py-3 px-4">Kode ODP</th>
                             <th class="py-3 px-4">Nama ODP (Database)</th>
@@ -472,9 +472,9 @@
                             <th class="py-3 px-4 text-center">Aksi Peta</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-300">
+                    <tbody class="divide-y divide-slate-800 text-slate-300">
                         @forelse ($odps as $o)
-                            <tr class="hover:bg-slate-50/80 transition-colors">
+                            <tr class="hover:bg-slate-800/50 transition-colors">
                                 <td class="py-3.5 px-4 align-top font-mono font-bold text-sky-400">
                                     {{ $o['kode_odp'] }}
                                 </td>
@@ -528,7 +528,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-200 text-[11px] font-bold text-slate-400"
+                        <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400"
                             style="background-color: #020617;">
                             <th class="py-3 px-4">ID Tiket / Waktu</th>
                             <th class="py-3 px-4">Kontak / Pengirim</th>
@@ -538,13 +538,13 @@
                             <th class="py-3 px-4 text-center">Aksi Peta</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-300">
+                    <tbody class="divide-y divide-slate-800 text-slate-300">
                         @forelse ($tickets as $t)
                             @php
                                 $hasCoord = !empty($t->latitude) && !empty($t->longitude);
                                 $coordStr = $hasCoord ? "{$t->latitude}, {$t->longitude}" : '';
                             @endphp
-                            <tr class="hover:bg-slate-50/80 transition-colors">
+                            <tr class="hover:bg-slate-800/50 transition-colors">
                                 <td class="py-3.5 px-4 align-top">
                                     <strong class="text-sky-400 font-mono block break-all">
                                         {{ $t->id_message }}

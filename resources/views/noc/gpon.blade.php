@@ -117,7 +117,7 @@
                     </button>
                 @endif
 
-                <a href="{{ route('noc.olt') }}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-200 text-xs font-bold border border-slate-200 transition">
+                <a href="{{ route('noc.olt') }}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition">
                     <span>Master OLT</span>
                 </a>
             </div>
@@ -139,10 +139,10 @@
     <!-- =================================================================== -->
     <!-- STEP 1 & 2: HIERARCHICAL DRILL-DOWN (OLT -> SLOT CARD -> PON PORT) -->
     <!-- =================================================================== -->
-    <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl p-5 shadow-xl shadow-slate-200/40 space-y-5">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/10 space-y-5">
         
         <!-- Drilldown Top Bar: OLT Selector & Slot Tabs -->
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
             
             <!-- 1. OLT Gateway Selector (Dropdown) -->
             <div class="flex items-center gap-3">
@@ -154,7 +154,7 @@
                 <div>
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">1. Pilih Node OLT Gateway</label>
                     <select onchange="window.location.href='{{ url('/noc/gpon') }}?olt=' + this.value"
-                            class="mt-0.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="mt-0.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-bold text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="all" {{ $selectedOlt === 'all' ? 'selected' : '' }}>
                             Semua OLT Gateway ({{ $oltStats['all'] ?? 793 }} Pelanggan)
                         </option>
@@ -171,13 +171,13 @@
             <!-- 2. Slot / Line Card Tabs (Slot 1 vs Slot 2) -->
             <div class="flex items-center gap-2">
                 <span class="text-xs font-semibold text-slate-400 hidden sm:inline">2. Pilih Card / Slot:</span>
-                <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs">
+                <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs">
                     <a href="{{ route('noc.gpon', ['olt' => $selectedOlt, 'slot' => '1', 'port' => 'gpon-onu_1/1/1']) }}"
-                       class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $selectedSlot == '1' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'text-slate-600 hover:text-white' }}">
+                       class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $selectedSlot == '1' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'text-slate-600 dark:text-slate-400 hover:text-white' }}">
                         <span>Slot 1 (PON 1/1/1 - 1/1/16)</span>
                     </a>
                     <a href="{{ route('noc.gpon', ['olt' => $selectedOlt, 'slot' => '2', 'port' => 'gpon-onu_1/2/1']) }}"
-                       class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $selectedSlot == '2' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'text-slate-600 hover:text-white' }}">
+                       class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $selectedSlot == '2' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'text-slate-600 dark:text-slate-400 hover:text-white' }}">
                         <span>Slot 2 (PON 1/2/1 - 1/2/16)</span>
                     </a>
                 </div>
@@ -188,7 +188,7 @@
         <!-- 3. Port GPON Grid Selector (16 Ports on Selected Slot) -->
         <div class="space-y-2">
             <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                <span class="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
                     3. Pilih Port GPON (Slot {{ $selectedSlot }}):
                 </span>
                 <span class="text-slate-400 text-[11px]">Masing-masing port berkapasitas max 128 ONU</span>
@@ -201,7 +201,7 @@
                         $isSelected = ($selectedPort === $pName);
                     @endphp
                     <a href="{{ route('noc.gpon', ['olt' => $selectedOlt, 'slot' => $selectedSlot, 'port' => $pName]) }}"
-                       class="p-2.5 rounded-xl border text-center transition relative overflow-hidden group {{ $isSelected ? 'bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50' : 'bg-slate-50 border-slate-200 hover:border-blue-500/50 text-slate-800 ' }}">
+                       class="p-2.5 rounded-xl border text-center transition relative overflow-hidden group {{ $isSelected ? 'bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50' : 'bg-slate-50 dark:bg-slate-950/70 border-slate-200 dark:border-slate-800/80 hover:border-blue-500/50 text-slate-800 dark:text-slate-200' }}">
                         
                         <div class="font-mono text-xs font-bold truncate">
                             {{ str_replace('gpon-onu_', '', $pName) }}
@@ -227,17 +227,17 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         <!-- 1. Total Terhubung & Utilisasi -->
-        <div class="p-4 rounded-2xl bg-white border border-slate-200 backdrop-blur-xl shadow-xl shadow-slate-200/40">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl shadow-xl shadow-black/10">
             <div class="flex items-center justify-between">
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Port Aktif</span>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-400 font-mono">
                     {{ $activePortStats['port'] }}
                 </span>
             </div>
-            <div class="text-2xl font-black text-slate-900 mt-1 font-mono">
+            <div class="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
                 {{ $activePortStats['used'] }} <span class="text-xs font-normal text-slate-400">/ 128 ONU</span>
             </div>
-            <div class="w-full h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden">
+            <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-2 overflow-hidden">
                 <div class="h-full bg-blue-500 rounded-full" style="width: {{ $activePortStats['utilization'] }}%"></div>
             </div>
             <div class="text-[10px] text-slate-400 mt-1 flex justify-between">
@@ -247,7 +247,7 @@
         </div>
 
         <!-- 2. Pelanggan Online / Terhubung -->
-        <div class="p-4 rounded-2xl bg-white border border-slate-200 backdrop-blur-xl shadow-xl shadow-slate-200/40 flex items-center justify-between">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl shadow-xl shadow-black/10 flex items-center justify-between">
             <div>
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pelanggan Aktif</span>
                 <div class="text-2xl font-black text-emerald-500 mt-1 font-mono">
@@ -261,7 +261,7 @@
         </div>
 
         <!-- 3. Slot Kosong (Available) -->
-        <div class="p-4 rounded-2xl bg-white border border-slate-200 backdrop-blur-xl shadow-xl shadow-slate-200/40 flex items-center justify-between">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl shadow-xl shadow-black/10 flex items-center justify-between">
             <div>
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Slot Kosong (Bebas)</span>
                 <div class="text-2xl font-black text-cyan-500 mt-1 font-mono">
@@ -275,7 +275,7 @@
         </div>
 
         <!-- 4. Total Bandwidth Terdistribusi -->
-        <div class="p-4 rounded-2xl bg-white border border-slate-200 backdrop-blur-xl shadow-xl shadow-slate-200/40 flex items-center justify-between">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl shadow-xl shadow-black/10 flex items-center justify-between">
             <div>
                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Bandwidth</span>
                 <div class="text-2xl font-black text-indigo-400 mt-1 font-mono">
@@ -295,11 +295,11 @@
     <!-- =================================================================== -->
     <!-- VISUAL MATRIX GRID: 128 ONU SLOTS PER PORT                          -->
     <!-- =================================================================== -->
-    <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl p-5 shadow-xl shadow-slate-200/40 space-y-4">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/10 space-y-4">
         
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-3">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
             <div>
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <span>Matriks 128 Slot ONU - {{ $selectedPort }}</span>
                     <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/15 text-blue-400">Klik slot untuk detail</span>
                 </h3>
@@ -321,7 +321,7 @@
                     <span class="text-slate-300">Siap Aktivasi (#18)</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                    <span class="w-3 h-3 rounded bg-slate-200 border border-slate-300"></span>
+                    <span class="w-3 h-3 rounded bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"></span>
                     <span class="text-slate-400">Kosong / Bebas</span>
                 </div>
             </div>
@@ -332,7 +332,7 @@
             @foreach($matrixSlots as $slot)
                 @php
                     $isOccupied = ($slot['status'] !== 'available');
-                    $bgClass = 'bg-slate-100  border-slate-200  text-slate-400 hover:border-slate-500 cursor-default';
+                    $bgClass = 'bg-slate-100 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800/80 text-slate-400 hover:border-slate-500 cursor-default';
                     if ($slot['status'] === 'active') {
                         $bgClass = 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 hover:border-emerald-400 cursor-pointer shadow-sm';
                     } elseif ($slot['status'] === 'suspend') {
@@ -364,10 +364,10 @@
     <!-- =================================================================== -->
     <!-- DETAILED TABLE OF CONNECTED CUSTOMERS ON SELECTED GPON PORT         -->
     <!-- =================================================================== -->
-    <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/40 overflow-hidden">
-        <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div>
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
                     Daftar Pelanggan Terhubung pada Port {{ $selectedPort }}
                 </h3>
                 <p class="text-[11px] text-slate-400 mt-0.5">Total {{ count($connectedCustomersOnPort) }} Pelanggan terhubung ke port ini.</p>
@@ -378,7 +378,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700">
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                         <th class="py-3.5 px-4 w-24">Slot ONU</th>
                         <th class="py-3.5 px-4">No Internet / Pelanggan</th>
                         <th class="py-3.5 px-4">Paket & Bandwidth</th>
@@ -388,10 +388,10 @@
                         <th class="py-3.5 px-4 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
                     @forelse($connectedCustomersOnPort as $item)
                         @php $c = $item['customer']; @endphp
-                        <tr class="hover:bg-slate-50 transition">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                             
                             <!-- 1. Slot ONU -->
                             <td class="py-3.5 px-4 font-mono font-bold text-blue-500">
@@ -406,7 +406,7 @@
                                    class="font-mono font-bold text-blue-500 hover:underline">
                                     {{ $c->nomor_internet }}
                                 </a>
-                                <div class="font-semibold text-slate-800 uppercase mt-0.5">
+                                <div class="font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5">
                                     {{ $c->nama_pelanggan }}
                                 </div>
                                 <div class="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -416,7 +416,7 @@
 
                             <!-- 3. Paket Bandwidth -->
                             <td class="py-3.5 px-4">
-                                <div class="font-medium text-slate-800">
+                                <div class="font-medium text-slate-800 dark:text-slate-200">
                                     {{ $c->nama_kategori_bandwith ?: ($c->alias_nama_kategori ?: 'INTERNET') }}
                                 </div>
                                 <div class="text-[11px] text-blue-400 font-bold font-mono mt-0.5">
@@ -425,13 +425,13 @@
                             </td>
 
                             <!-- 4. Alamat Pemasangan -->
-                            <td class="py-3.5 px-4 text-slate-600 max-w-[220px] truncate">
+                            <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400 max-w-[220px] truncate">
                                 <div>{{ $c->alamat_p ?: ($c->alamat_pasang ?: '-') }}</div>
                             </td>
 
                             <!-- 5. POP Gateway -->
                             <td class="py-3.5 px-4">
-                                <span class="font-semibold text-slate-800">
+                                <span class="font-semibold text-slate-800 dark:text-slate-200">
                                     {{ $c->nama_pop ?: '-' }}
                                 </span>
                             </td>
@@ -456,7 +456,7 @@
                             <!-- 7. Aksi -->
                             <td class="py-3.5 px-4 text-center">
                                 <a href="{{ route('teknik.pelanggan.profile', $c->nomor_internet) }}" 
-                                   class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold border border-slate-200 transition">
+                                   class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 transition">
                                     <span>Detail Pelanggan</span>
                                 </a>
                             </td>
@@ -482,16 +482,16 @@
          class="fixed inset-0 z-50 overflow-y-auto" 
          role="dialog">
         
-        <div class="fixed inset-0 bg-slate-100 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="slotDetailModalOpen = false"></div>
         
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-4 text-xs"
+            <div class="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4 text-xs"
                  @click.away="slotDetailModalOpen = false">
                 
-                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                     <div>
-                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <span>Detail ONU Slot</span>
                             <span class="px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 font-mono" x-text="selectedSlotData ? selectedSlotData.key : ''"></span>
                         </h3>
@@ -501,32 +501,32 @@
 
                 <template x-if="selectedSlotData && selectedSlotData.customer">
                     <div class="space-y-3">
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                             <div class="text-[10px] text-slate-400">ID Pelanggan / Nomor Internet</div>
                             <div class="text-base font-black text-blue-500 font-mono mt-0.5" x-text="selectedSlotData.customer.nomor_internet"></div>
-                            <div class="text-xs font-bold text-slate-800 uppercase mt-1" x-text="selectedSlotData.customer.nama_pelanggan"></div>
+                            <div class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase mt-1" x-text="selectedSlotData.customer.nama_pelanggan"></div>
                             <div class="text-[11px] text-slate-400 mt-0.5" x-text="'📱 ' + (selectedSlotData.customer.nomor_hp || '-')"></div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
                                 <span class="text-[10px] text-slate-400 block">Paket Bandwidth</span>
-                                <span class="font-bold text-slate-800" x-text="selectedSlotData.customer.nama_kategori_bandwith || 'INTERNET'"></span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200" x-text="selectedSlotData.customer.nama_kategori_bandwith || 'INTERNET'"></span>
                                 <span class="text-blue-400 font-mono block text-[11px]" x-text="(selectedSlotData.customer.nominal_bandwith || '') + ' Mbps'"></span>
                             </div>
-                            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                            <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
                                 <span class="text-[10px] text-slate-400 block">Node POP Gateway</span>
-                                <span class="font-bold text-slate-800" x-text="selectedSlotData.customer.nama_pop || '-'"></span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200" x-text="selectedSlotData.customer.nama_pop || '-'"></span>
                             </div>
                         </div>
 
-                        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
                             <span class="text-[10px] text-slate-400 block">Alamat Pemasangan</span>
-                            <span class="text-slate-700" x-text="selectedSlotData.customer.alamat_p || selectedSlotData.customer.alamat_pasang || '-'"></span>
+                            <span class="text-slate-700 dark:text-slate-300" x-text="selectedSlotData.customer.alamat_p || selectedSlotData.customer.alamat_pasang || '-'"></span>
                         </div>
 
-                        <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
-                            <button type="button" @click="slotDetailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold">Tutup</button>
+                        <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+                            <button type="button" @click="slotDetailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">Tutup</button>
                             <a :href="'{{ url('/teknik/pelanggan') }}/' + selectedSlotData.customer.nomor_internet" 
                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md shadow-blue-500/25">
                                 <span>Lihat Profil Lengkap</span>
@@ -547,17 +547,17 @@
          class="fixed inset-0 z-50 overflow-y-auto" 
          role="dialog">
         
-        <div class="fixed inset-0 bg-slate-100 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="uncfgModalOpen = false"></div>
         
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 space-y-4 text-xs"
+            <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4 text-xs"
                  @click.away="uncfgModalOpen = false">
                 
-                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping"></span>
-                        <h3 class="text-sm font-bold text-slate-900">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
                             Hasil Scan ONU Baru (Unconfigured) di OLT
                         </h3>
                     </div>
@@ -574,7 +574,7 @@
 
                     <template x-if="!scanningUncfg && uncfgList.length === 0">
                         <div class="py-8 text-center text-slate-400">
-                            <svg class="w-10 h-10 text-slate-300 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <svg class="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                             </svg>
                             <span class="font-bold block">Tidak ada ONU baru (Unconfigured) yang ditemukan.</span>
@@ -585,20 +585,20 @@
                     <template x-if="!scanningUncfg && uncfgList.length > 0">
                         <div class="space-y-2">
                             <div class="text-[11px] text-purple-400 font-semibold" x-text="'Ditemukan ' + uncfgList.length + ' ONU baru yang belum didaftarkan:'"></div>
-                            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                                 <table class="w-full text-left text-xs">
-                                    <thead class="bg-slate-50 text-[10px] font-bold uppercase text-slate-400">
+                                    <thead class="bg-slate-50 dark:bg-slate-950 text-[10px] font-bold uppercase text-slate-400">
                                         <tr>
                                             <th class="py-2.5 px-3">Port PON</th>
                                             <th class="py-2.5 px-3">Serial Number (SN)</th>
                                             <th class="py-2.5 px-3 text-right">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100 font-mono">
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
                                         <template x-for="(item, idx) in uncfgList" :key="idx">
                                             <tr>
                                                 <td class="py-2.5 px-3 font-bold text-blue-500" x-text="item.port"></td>
-                                                <td class="py-2.5 px-3 font-bold text-slate-900" x-text="item.sn"></td>
+                                                <td class="py-2.5 px-3 font-bold text-slate-900 dark:text-white" x-text="item.sn"></td>
                                                 <td class="py-2.5 px-3 text-right">
                                                     <a :href="'{{ url('/noc/aktivasi') }}?sn=' + encodeURIComponent(item.sn)" 
                                                        class="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-sans text-[10px] font-bold">
@@ -613,11 +613,11 @@
                         </div>
                     </template>
 
-                    <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
+                    <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
                         <button type="button" @click="scanUncfg()" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer">
                             <span>🔄 Scan Ulang</span>
                         </button>
-                        <button type="button" @click="uncfgModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 font-semibold">
+                        <button type="button" @click="uncfgModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
                             Tutup
                         </button>
                     </div>

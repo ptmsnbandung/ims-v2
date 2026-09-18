@@ -36,6 +36,8 @@
         .ims-sidebar {
             width: 16rem;
             transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #0c1322 !important;
+            border-right: 1px solid #1e293b !important;
         }
         .ims-sidebar.collapsed {
             width: 4.75rem !important;
@@ -60,20 +62,20 @@
             border-radius: 0.75rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #475569;
+            color: #94a3b8;
             text-decoration: none;
             transition: all 0.15s ease;
             white-space: nowrap;
             position: relative;
         }
         .ims-nav-item:hover {
-            background-color: #f1f5f9;
-            color: #0f172a;
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #ffffff;
         }
         .ims-nav-item.active {
             background-color: #2563eb !important;
             color: #ffffff !important;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
         }
 
         /* Collapsed Mode Adjustments */
@@ -754,14 +756,12 @@
                     <div class="flex items-center gap-3 sm:gap-4">
                         
                         <!-- Status Gateway & Jam Realtime WIB (Waktu Indonesia Barat) -->
-                        <div class="flex flex-col items-end gap-1"
+                        <div class="flex items-center gap-2"
                              x-data="{
                                  timeWib: '',
                                  dateWib: '',
                                  updateClock() {
                                      const now = new Date();
-                                     
-                                     // Format Waktu WIB (Asia/Jakarta)
                                      const timeFormatter = new Intl.DateTimeFormat('id-ID', {
                                          timeZone: 'Asia/Jakarta',
                                          hour12: false,
@@ -769,52 +769,38 @@
                                          minute: '2-digit',
                                          second: '2-digit',
                                      });
-
-                                     // Format Tanggal
                                      const dateFormatter = new Intl.DateTimeFormat('id-ID', {
                                          timeZone: 'Asia/Jakarta',
                                          weekday: 'short',
                                          day: 'numeric',
                                          month: 'short',
-                                         year: 'numeric',
                                      });
-
-                                     this.timeWib = timeFormatter.format(now).replace(/\./g, ':') + ' WIB';
+                                     this.timeWib = timeFormatter.format(now).replace(/\./g, ':');
                                      this.dateWib = dateFormatter.format(now);
                                  }
                              }"
                              x-init="updateClock(); setInterval(() => updateClock(), 1000)">
                             
-                            <!-- 1. Status Gateway -->
-                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[11px]">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span class="text-slate-600">Status Gateway: <strong class="text-emerald-600 font-semibold">Online</strong></span>
-                            </div>
-
-                            <!-- 2. Jam Realtime WIB (Di Bawah Status Gateway) -->
-                            <div class="flex items-center gap-1 text-[11px] text-slate-600 font-medium tracking-wide">
-                                <svg class="w-3 h-3 text-blue-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/90 text-xs font-medium text-slate-600 shadow-xs">
+                                <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
-                                <span class="font-mono text-slate-900 font-bold" x-text="timeWib">--:--:-- WIB</span>
-                                <span class="text-[10px] text-slate-400 hidden sm:inline" x-text="'&middot; ' + dateWib"></span>
+                                <span class="text-slate-700 font-medium" x-text="dateWib + ' · ' + timeWib"></span>
                             </div>
                         </div>
 
                         <!-- User Profile Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
-                                    class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition cursor-pointer">
-                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 p-0.5 flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
-                                    <div class="w-full h-full bg-blue-600 rounded-[6px] flex items-center justify-center text-white font-bold">
-                                        {{ substr(auth()->user()->nama, 0, 1) }}
-                                    </div>
+                                    class="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+                                <div class="w-9 h-9 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                                    {{ strtoupper(substr(auth()->user()->nama ?? 'AD', 0, 2)) }}
                                 </div>
                                 <div class="text-left hidden md:block">
-                                    <span class="block text-xs font-semibold text-slate-800 leading-tight">{{ auth()->user()->nama }}</span>
-                                    <span class="block text-[10px] text-blue-600 font-medium">{{ auth()->user()->nama_level }}</span>
+                                    <span class="block text-xs font-black text-slate-900 uppercase leading-tight tracking-tight">{{ auth()->user()->nama ?? 'ADMINISTRATOR' }}</span>
+                                    <span class="block text-[10px] text-slate-400 font-bold leading-tight">{{ auth()->user()->nama_level ?? 'Admin' }}</span>
                                 </div>
-                                <svg class="w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </button>

@@ -588,6 +588,35 @@ class FinanceController extends Controller
     }
 
     /**
+     * Hapus Tagihan Billing Layanan
+     */
+    public function deleteBillingLayanan(Request $request, ?string $kodeBilling = null): RedirectResponse
+    {
+        $user = Auth::user()?->nama ?? 'FINANCE';
+        $decodedKode = $request->input('kode_billing') ? trim($request->input('kode_billing')) : urldecode($kodeBilling ?? '');
+
+        try {
+            if (empty($decodedKode)) {
+                return redirect()->back()->with('error', 'Kode billing tidak valid.');
+            }
+
+            if (Schema::hasTable('trx_billing_layanan_detail')) {
+                DB::table('trx_billing_layanan_detail')->where('kode_billing_layanan', $decodedKode)->delete();
+            }
+
+            if (Schema::hasTable('trx_billing_layanan_log')) {
+                DB::table('trx_billing_layanan_log')->where('kode_billing_layanan', $decodedKode)->delete();
+            }
+
+            DB::table('trx_billing_layanan')->where('kode_billing_layanan', $decodedKode)->delete();
+
+            return redirect()->back()->with('success', "Invoice tagihan {$decodedKode} berhasil dihapus!");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus tagihan: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Change Payment Method for Billing Layanan (1: Midtrans, 2: Manual Transfer, 3: Cash To Collector)
      */
     public function changePaymentMethodLayanan(Request $request, ?string $kodeBilling = null): RedirectResponse

@@ -185,6 +185,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/billing-layanan/{kode_billing}/rollback', [FinanceController::class, 'rollbackBillingLayanan'])->name('billing-layanan.rollback')->where('kode_billing', '.*');
         Route::post('/billing-layanan/change-payment-method', [FinanceController::class, 'changePaymentMethodLayanan'])->name('billing-layanan.change-payment-method.post');
         Route::post('/billing-layanan/{kode_billing}/change-payment-method', [FinanceController::class, 'changePaymentMethodLayanan'])->name('billing-layanan.change-payment-method')->where('kode_billing', '.*');
+        Route::post('/billing-layanan/delete', [FinanceController::class, 'deleteBillingLayanan'])->name('billing-layanan.delete.post');
+        Route::post('/billing-layanan/{kode_billing}/delete', [FinanceController::class, 'deleteBillingLayanan'])->name('billing-layanan.delete')->where('kode_billing', '.*');
         Route::get('/billing-layanan/export', [FinanceController::class, 'exportBillingLayanan'])->name('billing-layanan.export');
         Route::get('/api/billing-layanan-detail', [FinanceController::class, 'getBillingLayananDetail'])->name('billing-layanan.detail.query');
         Route::get('/api/billing-layanan/{kode_billing}', [FinanceController::class, 'getBillingLayananDetail'])->name('billing-layanan.detail')->where('kode_billing', '.*');

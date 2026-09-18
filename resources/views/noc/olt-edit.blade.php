@@ -77,7 +77,7 @@
         <input type="hidden" name="id" value="{{ $olt->id ?? '' }}">
         <input type="hidden" name="kode_olt" value="{{ $olt->kode_olt }}">
 
-        <div class="bg-slate-900/90 border border-slate-800 backdrop-blur-xl rounded-2xl p-6 sm:p-7 shadow-xl shadow-black/20 space-y-8 text-slate-100">
+        <div class="bg-white border border-slate-200 backdrop-blur-xl rounded-2xl p-6 sm:p-7 shadow-xl shadow-slate-200/50 space-y-8 text-slate-100">
             
             <!-- =============================================================== -->
             <!-- 1. DEVICE INFORMATION SECTION                                   -->
@@ -104,7 +104,7 @@
                                value="{{ old('name_olt', $olt->name_olt) }}"
                                required
                                placeholder="OLT Jakarta 01" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                         @error('name_olt')
                             <span class="text-[11px] text-rose-500 font-semibold">{{ $message }}</span>
                         @enderror
@@ -118,7 +118,7 @@
                                name="hostname" 
                                value="{{ old('hostname', $olt->hostname ?? $olt->kode_olt) }}"
                                placeholder="olt-jkt-01" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                     <!-- Row 2: IP Address * & Vendor * -->
@@ -131,7 +131,7 @@
                                x-model="ipAddress"
                                required
                                placeholder="192.168.1.1" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white placeholder-slate-400 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                         @error('ip_address')
                             <span class="text-[11px] text-rose-500 font-semibold">{{ $message }}</span>
                         @enderror
@@ -145,7 +145,7 @@
                                name="brand" 
                                value="{{ old('brand', $olt->brand) }}"
                                placeholder="ZTE, Huawei, Fiberhome..." 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                     <!-- Row 3: Model & POP Server -->
@@ -157,7 +157,7 @@
                                name="model" 
                                value="{{ old('model', $olt->model) }}"
                                placeholder="C320, MA5608T..." 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                     <div class="space-y-1.5">
@@ -165,7 +165,7 @@
                             POP Server / Lokasi
                         </label>
                         <select name="kode_pop" 
-                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                             <option value="">Select an option</option>
                             @foreach($pops as $pop)
                                 <option value="{{ $pop->kode_pop }}" {{ old('kode_pop', $olt->kode_pop) == $pop->kode_pop ? 'selected' : '' }}>
@@ -187,7 +187,7 @@
                                placeholder="8" 
                                min="1"
                                max="64"
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                     </div>
 
                 </div>
@@ -196,7 +196,7 @@
             <!-- =============================================================== -->
             <!-- 2. SNMP CONFIGURATION SECTION                                   -->
             <!-- =============================================================== -->
-            <div class="pt-6 border-t border-slate-800 space-y-4">
+            <div class="pt-6 border-t border-slate-200 space-y-4">
                 <div>
                     <h3 class="font-bold text-white text-sm">
                         SNMP Configuration
@@ -218,7 +218,7 @@
                                x-model="snmpPort"
                                required
                                placeholder="161" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                         <span class="text-[11px] text-slate-500 block mt-1">Default: 161</span>
                     </div>
 
@@ -229,7 +229,7 @@
                         </label>
                         <select name="snmp_version" 
                                 x-model="snmpVersion"
-                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                             <option value="v1">v1</option>
                             <option value="v2c">v2c</option>
                             <option value="v3">v3</option>
@@ -247,7 +247,7 @@
                                x-model="snmpCommunity"
                                required
                                placeholder="public" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white border border-slate-200 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                         <span class="text-[11px] text-slate-500 block mt-1">Contoh: public, private</span>
                     </div>
 
@@ -257,7 +257,7 @@
             <!-- =============================================================== -->
             <!-- 3. CLI / TELNET / SSH ACCESS & LIVE TEST                       -->
             <!-- =============================================================== -->
-            <div class="pt-6 border-t border-slate-800 space-y-4" x-data="{ expanded: true }">
+            <div class="pt-6 border-t border-slate-200 space-y-4" x-data="{ expanded: true }">
                 <div class="flex items-center justify-between cursor-pointer" @click="expanded = !expanded">
                     <div>
                         <h3 class="font-bold text-white text-sm">
@@ -278,7 +278,7 @@
                             <select name="protocol" 
                                     x-model="protocol" 
                                     @change="port = (protocol === 'ssh' ? 22 : 23)"
-                                    class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
+                                    class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white">
                                 <option value="telnet">Telnet (Port 23)</option>
                                 <option value="ssh">SSH (Port 22)</option>
                             </select>
@@ -290,7 +290,7 @@
                             <input type="number" 
                                    name="port" 
                                    x-model="port"
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
+                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white">
                         </div>
 
                         <!-- Username -->
@@ -300,7 +300,7 @@
                                    name="username" 
                                    x-model="username"
                                    placeholder="zte / admin" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
+                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white">
                         </div>
 
                         <!-- Password -->
@@ -310,7 +310,7 @@
                                    name="password" 
                                    x-model="password"
                                    placeholder="(Kosongkan jika tidak diubah)" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
+                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white">
                         </div>
 
                         <!-- Enable / Super Password -->
@@ -320,7 +320,7 @@
                                    name="enable_password" 
                                    x-model="enablePassword"
                                    placeholder="(Kosongkan jika tidak diubah)" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white">
+                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-200 text-white">
                         </div>
 
                         <!-- Test Connection Button -->
@@ -328,7 +328,7 @@
                             <button type="button" 
                                     @click="testOltConnection()"
                                     :disabled="testingConnection"
-                                    class="w-full px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                                    class="w-full px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-200 text-xs font-bold border border-slate-200 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
                                 <template x-if="!testingConnection">
                                     <svg class="w-4 h-4 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
@@ -372,7 +372,7 @@
 
             <!-- 2. Cancel -->
             <a href="{{ route('noc.olt') }}" 
-               class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">
+               class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-200 text-xs font-bold transition">
                 Kembali
             </a>
         </div>

@@ -115,33 +115,33 @@
             
             <!-- Profile Title Header -->
             <div class="text-center">
-                <h2 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
+                <h2 class="text-base font-bold text-slate-800 tracking-wide">
                     Profile Pelanggan
                 </h2>
             </div>
 
             <!-- Profile Info Main Card -->
-            <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-5 shadow-xl shadow-black/10 dark:shadow-black/30 space-y-6">
+            <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl p-5 shadow-xl shadow-slate-200/40 space-y-6">
                 
                 <!-- Center Hero Box -->
-                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 text-center space-y-1.5">
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center space-y-1.5">
                     <!-- Nomor Internet / Customer ID -->
-                    <div class="text-xl font-black tracking-wider text-slate-900 dark:text-white font-mono">
+                    <div class="text-xl font-black tracking-wider text-slate-900 font-mono">
                         {{ $customer->nomor_internet }}
                     </div>
 
                     <!-- Nama Pelanggan -->
-                    <div class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase">
+                    <div class="text-sm font-bold text-slate-800 uppercase">
                         {{ $customer->nama_pelanggan }}
                     </div>
 
                     <!-- Jenis Kelamin -->
-                    <div class="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                    <div class="text-xs text-slate-500 font-semibold">
                         ( {{ $customer->jenis_kelamin == 1 ? 'L' : ($customer->jenis_kelamin == 2 ? 'P' : '-') }} )
                     </div>
 
                     <!-- Bandwidth & Package -->
-                    <div class="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase pt-1">
+                    <div class="text-xs text-slate-600 font-medium uppercase pt-1">
                         {{ $customer->nama_kategori_bandwith ?: ($customer->alias_nama_kategori ?: 'LAYANAN INTERNET') }}
                         @if($customer->nominal_bandwith)
                             <span>{{ $customer->nominal_bandwith }} Mbps</span>
@@ -149,7 +149,7 @@
                     </div>
 
                     <!-- Sales / PIC -->
-                    <div class="text-[11px] text-cyan-500 dark:text-cyan-400 font-semibold uppercase">
+                    <div class="text-[11px] text-cyan-500 font-semibold uppercase">
                         PIC SALES : {{ $customer->nama_sales ?: '-' }}
                     </div>
                 </div>
@@ -159,20 +159,20 @@
                     
                     <!-- 1. Tanggal Lahir -->
                     <div class="space-y-1">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                        <div class="flex items-center justify-between text-slate-600">
                             <span>Tanggal lahir</span>
-                            <span class="font-semibold text-slate-800 dark:text-slate-200">
+                            <span class="font-semibold text-slate-800">
                                 {{ $customer->tanggal_lahir && $customer->tanggal_lahir != '0000-00-00' ? \Carbon\Carbon::parse($customer->tanggal_lahir)->translatedFormat('d F Y') : '-' }}
                             </span>
                         </div>
-                        <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-0.5 w-full bg-slate-200 rounded-full overflow-hidden">
                             <div class="h-full bg-cyan-400 w-1/3"></div>
                         </div>
                     </div>
 
                     <!-- 2. Nomor HP (Klik Langsung ke WhatsApp) -->
                     <div class="space-y-1">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                        <div class="flex items-center justify-between text-slate-600">
                             <span>Nomor HP</span>
                             @if($waHp1)
                                 <a href="https://wa.me/{{ $waHp1 }}" 
@@ -185,17 +185,17 @@
                                     <span>{{ $customer->nomor_hp }}</span>
                                 </a>
                             @else
-                                <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">-</span>
+                                <span class="font-semibold text-slate-800 font-mono">-</span>
                             @endif
                         </div>
-                        <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-0.5 w-full bg-slate-200 rounded-full overflow-hidden">
                             <div class="h-full bg-cyan-400 w-full"></div>
                         </div>
                     </div>
 
                     <!-- 3. Nomor HP Keluarga (Klik Langsung ke WhatsApp) -->
                     <div class="space-y-1">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                        <div class="flex items-center justify-between text-slate-600">
                             <span>Nomor HP keluarga</span>
                             @if($waHp2)
                                 <a href="https://wa.me/{{ $waHp2 }}" 
@@ -208,17 +208,17 @@
                                     <span>{{ $customer->nomor_hp_2 }}</span>
                                 </a>
                             @else
-                                <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">-</span>
+                                <span class="font-semibold text-slate-800 font-mono">-</span>
                             @endif
                         </div>
-                        <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-0.5 w-full bg-slate-200 rounded-full overflow-hidden">
                             <div class="h-full bg-cyan-400 w-2/3"></div>
                         </div>
                     </div>
 
                     <!-- 4. Email (Klik Langsung ke Mailto) -->
                     <div class="space-y-1">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+                        <div class="flex items-center justify-between text-slate-600">
                             <span>Email</span>
                             @if($customer->email && $customer->email != '-')
                                 <a href="mailto:{{ $customer->email }}" 
@@ -227,44 +227,44 @@
                                     {{ $customer->email }}
                                 </a>
                             @else
-                                <span class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                                <span class="font-semibold text-slate-800">-</span>
                             @endif
                         </div>
-                        <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-0.5 w-full bg-slate-200 rounded-full overflow-hidden">
                             <div class="h-full bg-cyan-400 w-full"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Address Sections -->
-                <div class="space-y-4 pt-2 text-xs border-t border-slate-200 dark:border-slate-800">
+                <div class="space-y-4 pt-2 text-xs border-t border-slate-200">
                     
                     <!-- ALAMAT KTP -->
                     <div>
-                        <span class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                             ALAMAT KTP
                         </span>
-                        <p class="text-slate-700 dark:text-slate-300 uppercase leading-relaxed font-medium">
+                        <p class="text-slate-700 uppercase leading-relaxed font-medium">
                             {{ trim(str_replace(['Â', 'â', '€', '™'], '', (string)($customer->alamat_k ?: ($customer->alamat_ktp ?: '-')))) }}
                         </p>
                     </div>
 
                     <!-- ALAMAT PEMASANGAN -->
                     <div>
-                        <span class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                             ALAMAT PEMASANGAN
                         </span>
-                        <p class="text-slate-700 dark:text-slate-300 uppercase leading-relaxed font-medium">
+                        <p class="text-slate-700 uppercase leading-relaxed font-medium">
                             {{ trim(str_replace(['Â', 'â', '€', '™'], '', (string)($customer->alamat_p ?: ($customer->alamat_pasang ?: '-')))) }}
                         </p>
                     </div>
 
                     <!-- LOKASI / KOORDINAT / MAPS -->
                     <div>
-                        <span class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                        <span class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                             LOKASI
                         </span>
-                        <div class="space-y-1 font-mono text-slate-700 dark:text-slate-300 text-xs">
+                        <div class="space-y-1 font-mono text-slate-700 text-xs">
                             @if($cleanLonLat)
                                 <div>{{ $cleanLonLat }}</div>
                             @endif
@@ -298,7 +298,7 @@
         <div class="lg:col-span-8 space-y-4">
             
             <!-- Top Tab Switcher Bar & Button Kembali -->
-            <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-3 sm:p-4 shadow-xl shadow-black/10 dark:shadow-black/20">
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-xl shadow-slate-200/40">
                 
                 <!-- Segmented Tabs -->
                 <div class="flex flex-wrap items-center gap-1.5">
@@ -306,7 +306,7 @@
                     <!-- 1. Tab Log -->
                     <button type="button" 
                             @click="activeTab = 'log'"
-                            :class="activeTab === 'log' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            :class="activeTab === 'log' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-100 '"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
                         Log
                     </button>
@@ -314,7 +314,7 @@
                     <!-- 2. Tab Arsip -->
                     <button type="button" 
                             @click="activeTab = 'arsip'"
-                            :class="activeTab === 'arsip' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            :class="activeTab === 'arsip' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-100 '"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
                         Arsip
                     </button>
@@ -322,7 +322,7 @@
                     <!-- 3. Tab Layanan -->
                     <button type="button" 
                             @click="activeTab = 'layanan'"
-                            :class="activeTab === 'layanan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            :class="activeTab === 'layanan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-100 '"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
                         Layanan
                     </button>
@@ -330,7 +330,7 @@
                     <!-- 4. Tab Suspend -->
                     <button type="button" 
                             @click="activeTab = 'suspend'"
-                            :class="activeTab === 'suspend' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            :class="activeTab === 'suspend' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-100 '"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
                         Suspend
                     </button>
@@ -338,7 +338,7 @@
                     <!-- 5. Tab Tagihan -->
                     <button type="button" 
                             @click="activeTab = 'tagihan'"
-                            :class="activeTab === 'tagihan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            :class="activeTab === 'tagihan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-100 '"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
                         Tagihan
                     </button>
@@ -346,7 +346,7 @@
                     <!-- 6. Tab Pengaduan -->
                     <button type="button" 
                             @click="activeTab = 'pengaduan'"
-                            :class="activeTab === 'pengaduan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            :class="activeTab === 'pengaduan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-100 '"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
                         Pengaduan
                     </button>
@@ -354,7 +354,7 @@
                     <!-- 7. Tab Perangkat dsb. -->
                     <button type="button" 
                             @click="activeTab = 'perangkat'"
-                            :class="activeTab === 'perangkat' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            :class="activeTab === 'perangkat' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 hover:text-slate-900 font-medium hover:bg-slate-100 '"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
                         Perangkat dsb.
                     </button>
@@ -373,7 +373,7 @@
             </div>
 
             <!-- Tab Content Container -->
-            <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/20 overflow-hidden">
+            <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/40 overflow-hidden">
                 
                 <!-- ======================================================= -->
                 <!-- 1. TAB CONTENT: LOG (MATCHING SCREENSHOT)              -->
@@ -381,37 +381,26 @@
                 <div x-show="activeTab === 'log'" class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700">
                                 <th class="py-3.5 px-5">Status Order</th>
                                 <th class="py-3.5 px-5">Keterangan</th>
                                 <th class="py-3.5 px-5 min-w-[160px]">Tanggal Update</th>
                                 <th class="py-3.5 px-5 min-w-[140px]">User Update</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
+                        <tbody class="divide-y divide-slate-100">
                             @forelse($logs as $log)
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                                <tr class="hover:bg-slate-50 transition">
                                     
                                     <!-- 1. Status Order -->
                                     <td class="py-4 px-5 align-top space-y-1.5">
                                         <div>
-                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide
-                                                @if(in_array($log->status_reg, ['20']))
-                                                    bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30
-                                                @elseif(in_array($log->status_reg, ['17', '17.1']))
-                                                    bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30
-                                                @elseif(in_array($log->status_reg, ['13', '13.1']))
-                                                    bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30
-                                                @elseif(in_array($log->status_reg, ['23', '23.1']))
-                                                    bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
-                                                @else
-                                                    bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
-                                                @endif">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide @if(in_array($log->status_reg, ['20'])) bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 @elseif(in_array($log->status_reg, ['17', '17.1'])) bg-blue-500/15 text-blue-600 border border-blue-500/30 @elseif(in_array($log->status_reg, ['13', '13.1'])) bg-purple-500/15 text-purple-600 border border-purple-500/30 @elseif(in_array($log->status_reg, ['23', '23.1'])) bg-rose-500/15 text-rose-600 border border-rose-500/30 @else bg-slate-500/15 text-slate-600 border border-slate-500/30 @endif">
                                                 {{ $log->desc_registrasi ?: 'Status #' . $log->status_reg }}
                                             </span>
                                         </div>
                                         @if($log->date_schedule || $log->time_schedule)
-                                            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                            <div class="text-[11px] text-slate-500 font-medium">
                                                 {{ $log->date_schedule ? \Carbon\Carbon::parse($log->date_schedule)->translatedFormat('d F Y') : '' }}
                                                 {{ $log->time_schedule ?: '' }}
                                             </div>
@@ -419,51 +408,51 @@
                                     </td>
 
                                     <!-- 2. Keterangan -->
-                                    <td class="py-4 px-5 align-top space-y-1 text-slate-700 dark:text-slate-300">
-                                        <div class="font-semibold text-slate-800 dark:text-slate-100 uppercase text-[11px]">
+                                    <td class="py-4 px-5 align-top space-y-1 text-slate-700">
+                                        <div class="font-semibold text-slate-800 uppercase text-[11px]">
                                             {{ $log->note_schedule ? 'POSTING ' . strtoupper($log->desc_registrasi) : ($log->kat_log ? 'LOG AKTIVITAS #' . $log->kat_log : 'UPDATE STATUS') }}
                                         </div>
                                         @if($log->note_schedule)
-                                            <div class="text-[11px] text-slate-600 dark:text-slate-400">
-                                                Catatan : <span class="text-slate-800 dark:text-slate-200">{{ $log->note_schedule }}</span>
+                                            <div class="text-[11px] text-slate-600">
+                                                Catatan : <span class="text-slate-800">{{ $log->note_schedule }}</span>
                                             </div>
                                         @endif
                                     </td>
 
                                     <!-- 3. Tanggal Update -->
-                                    <td class="py-4 px-5 align-top text-slate-600 dark:text-slate-400 font-medium text-[11px]">
+                                    <td class="py-4 px-5 align-top text-slate-600 font-medium text-[11px]">
                                         {{ \Carbon\Carbon::parse($log->date_create)->translatedFormat('d F Y H:i') }} WIB
                                     </td>
 
                                     <!-- 4. User Update -->
-                                    <td class="py-4 px-5 align-top font-semibold text-slate-800 dark:text-slate-200 uppercase text-[11px]">
+                                    <td class="py-4 px-5 align-top font-semibold text-slate-800 uppercase text-[11px]">
                                         {{ $log->user_create ?: 'SYSTEM' }}
                                     </td>
                                 </tr>
                             @empty
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                                <tr class="hover:bg-slate-50 transition">
                                     <td class="py-4 px-5 align-top space-y-1.5">
                                         <div>
-                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 border border-blue-500/30">
                                                 {{ $customer->desc_registrasi ?: 'Registrasi' }}
                                             </span>
                                         </div>
-                                        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                        <div class="text-[11px] text-slate-500 font-medium">
                                             {{ $customer->date_create ? \Carbon\Carbon::parse($customer->date_create)->translatedFormat('d F Y') : '-' }}
                                         </div>
                                     </td>
-                                    <td class="py-4 px-5 align-top space-y-1 text-slate-700 dark:text-slate-300">
-                                        <div class="font-semibold text-slate-800 dark:text-slate-100 uppercase text-[11px]">
+                                    <td class="py-4 px-5 align-top space-y-1 text-slate-700">
+                                        <div class="font-semibold text-slate-800 uppercase text-[11px]">
                                             REGISTRASI PELANGGAN BARU
                                         </div>
-                                        <div class="text-[11px] text-slate-600 dark:text-slate-400">
+                                        <div class="text-[11px] text-slate-600">
                                             Sales : {{ $customer->nama_sales ?: '-' }}
                                         </div>
                                     </td>
-                                    <td class="py-4 px-5 align-top text-slate-600 dark:text-slate-400 font-medium text-[11px]">
+                                    <td class="py-4 px-5 align-top text-slate-600 font-medium text-[11px]">
                                         {{ $customer->date_create ? \Carbon\Carbon::parse($customer->date_create)->translatedFormat('d F Y H:i') . ' WIB' : '-' }}
                                     </td>
-                                    <td class="py-4 px-5 align-top font-semibold text-slate-800 dark:text-slate-200 uppercase text-[11px]">
+                                    <td class="py-4 px-5 align-top font-semibold text-slate-800 uppercase text-[11px]">
                                         {{ $customer->user_create ?: 'DRAFFTER' }}
                                     </td>
                                 </tr>
@@ -481,10 +470,10 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
                                     Dokumen Persyaratan (Foto)
                                 </h3>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                <p class="text-[11px] text-slate-500 mt-0.5">
                                     Foto identitas pelanggan, denah lokasi, dan dokumentasi tempat tinggal.
                                 </p>
                             </div>
@@ -497,12 +486,12 @@
                                 $ktpFile = $customer->foto_ktp;
                                 $ktpUrl = $ktpFile ? asset('uploads/registrasi/' . $ktpFile) : null;
                             @endphp
-                            <div class="p-4 rounded-2xl border {{ $ktpFile ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                            <div class="p-4 rounded-2xl border {{ $ktpFile ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 bg-white ' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
                                 <div class="w-full flex items-center justify-between mb-2">
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $ktpFile ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
                                         {{ $ktpFile ? 'Tersedia' : 'Belum Ada' }}
                                     </span>
-                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">JPG</span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-200">JPG</span>
                                 </div>
                                 
                                 <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 my-1 group-hover:scale-105 transition">
@@ -512,22 +501,22 @@
                                 </div>
 
                                 <div class="my-1 space-y-0.5">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Foto KTP</span>
+                                    <span class="block text-xs font-bold text-slate-800">Foto KTP</span>
                                     <span class="block text-[10px] text-slate-400">KTP.jpeg</span>
                                 </div>
 
-                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                <div class="w-full pt-2 border-t border-slate-100 flex items-center justify-center gap-2 mt-1">
                                     @if($ktpUrl)
                                         <a href="{{ $ktpUrl }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh KTP">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                             <span>Unduh</span>
                                         </a>
-                                        <button type="button" @click="openUploadModal('foto_ktp', 'Foto KTP')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Foto KTP">
+                                        <button type="button" @click="openUploadModal('foto_ktp', 'Foto KTP')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-200" title="Ganti Foto KTP">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Ganti</span>
                                         </button>
                                     @else
-                                        <button type="button" @click="openUploadModal('foto_ktp', 'Foto KTP')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Foto KTP">
+                                        <button type="button" @click="openUploadModal('foto_ktp', 'Foto KTP')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200" title="Upload Foto KTP">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Upload Foto KTP</span>
                                         </button>
@@ -540,12 +529,12 @@
                                 $rumahFile = $customer->foto_rumah;
                                 $rumahUrl = $rumahFile ? asset('uploads/registrasi/' . $rumahFile) : null;
                             @endphp
-                            <div class="p-4 rounded-2xl border {{ $rumahFile ? 'border-amber-500/30 bg-amber-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                            <div class="p-4 rounded-2xl border {{ $rumahFile ? 'border-amber-500/30 bg-amber-500/[0.02]' : 'border-slate-200 bg-white ' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
                                 <div class="w-full flex items-center justify-between mb-2">
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $rumahFile ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
                                         {{ $rumahFile ? 'Tersedia' : 'Belum Ada' }}
                                     </span>
-                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">JPG</span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-200">JPG</span>
                                 </div>
                                 
                                 <div class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 my-1 group-hover:scale-105 transition">
@@ -555,22 +544,22 @@
                                 </div>
 
                                 <div class="my-1 space-y-0.5">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Foto Rumah / Lokasi</span>
+                                    <span class="block text-xs font-bold text-slate-800">Foto Rumah / Lokasi</span>
                                     <span class="block text-[10px] text-slate-400">Rumah.jpeg</span>
                                 </div>
 
-                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                <div class="w-full pt-2 border-t border-slate-100 flex items-center justify-center gap-2 mt-1">
                                     @if($rumahUrl)
                                         <a href="{{ $rumahUrl }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Foto Rumah">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                             <span>Unduh</span>
                                         </a>
-                                        <button type="button" @click="openUploadModal('foto_rumah', 'Foto Rumah')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Foto Rumah">
+                                        <button type="button" @click="openUploadModal('foto_rumah', 'Foto Rumah')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-200" title="Ganti Foto Rumah">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Ganti</span>
                                         </button>
                                     @else
-                                        <button type="button" @click="openUploadModal('foto_rumah', 'Foto Rumah')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Foto Rumah">
+                                        <button type="button" @click="openUploadModal('foto_rumah', 'Foto Rumah')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200" title="Upload Foto Rumah">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Upload Foto Rumah</span>
                                         </button>
@@ -583,12 +572,12 @@
                                 $petaFile = $customer->foto_peta;
                                 $petaUrl = $petaFile ? asset('uploads/registrasi/' . $petaFile) : null;
                             @endphp
-                            <div class="p-4 rounded-2xl border {{ $petaFile ? 'border-teal-500/30 bg-teal-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                            <div class="p-4 rounded-2xl border {{ $petaFile ? 'border-teal-500/30 bg-teal-500/[0.02]' : 'border-slate-200 bg-white ' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
                                 <div class="w-full flex items-center justify-between mb-2">
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $petaFile ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
                                         {{ $petaFile ? 'Tersedia' : 'Belum Ada' }}
                                     </span>
-                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">JPG</span>
+                                    <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-200">JPG</span>
                                 </div>
                                 
                                 <div class="w-11 h-11 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-500 my-1 group-hover:scale-105 transition">
@@ -598,22 +587,22 @@
                                 </div>
 
                                 <div class="my-1 space-y-0.5">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Denah Peta Lokasi</span>
+                                    <span class="block text-xs font-bold text-slate-800">Denah Peta Lokasi</span>
                                     <span class="block text-[10px] text-slate-400">PETA.jpeg</span>
                                 </div>
 
-                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                <div class="w-full pt-2 border-t border-slate-100 flex items-center justify-center gap-2 mt-1">
                                     @if($petaUrl)
                                         <a href="{{ $petaUrl }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Denah Peta">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                             <span>Unduh</span>
                                         </a>
-                                        <button type="button" @click="openUploadModal('foto_peta', 'Foto Denah Peta')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Foto Denah Peta">
+                                        <button type="button" @click="openUploadModal('foto_peta', 'Foto Denah Peta')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-200" title="Ganti Foto Denah Peta">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Ganti</span>
                                         </button>
                                     @else
-                                        <button type="button" @click="openUploadModal('foto_peta', 'Foto Denah Peta')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Foto Peta">
+                                        <button type="button" @click="openUploadModal('foto_peta', 'Foto Denah Peta')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200" title="Upload Foto Peta">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Upload Denah Peta</span>
                                         </button>
@@ -628,10 +617,10 @@
                     <div class="space-y-3 pt-2">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
                                     Scan Dokumen Legalisir
                                 </h3>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                <p class="text-[11px] text-slate-500 mt-0.5">
                                     Dokumen fisik/digital resmi yang sudah ditandatangani dan dilegalisir basah.
                                 </p>
                             </div>
@@ -643,7 +632,7 @@
                             @php
                                 $docLangganan = $customer->doc_berlangganan ?? null;
                             @endphp
-                            <div class="p-4 rounded-2xl border {{ $docLangganan ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                            <div class="p-4 rounded-2xl border {{ $docLangganan ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 bg-white ' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
                                 <div class="w-full flex items-center justify-between mb-2">
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $docLangganan ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
                                         {{ $docLangganan ? 'Tersedia' : 'Belum Ada' }}
@@ -658,22 +647,22 @@
                                 </div>
 
                                 <div class="my-1 space-y-0.5">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Form Berlangganan</span>
+                                    <span class="block text-xs font-bold text-slate-800">Form Berlangganan</span>
                                     <span class="block text-[10px] text-slate-400">Scan Legalisir</span>
                                 </div>
 
-                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                <div class="w-full pt-2 border-t border-slate-100 flex items-center justify-center gap-2 mt-1">
                                     @if($docLangganan)
                                         <a href="{{ asset('uploads/registrasi/' . $docLangganan) }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Dokumen">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                             <span>Unduh</span>
                                         </a>
-                                        <button type="button" @click="openUploadModal('doc_berlangganan', 'Scan Dokumen Berlangganan Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Berkas">
+                                        <button type="button" @click="openUploadModal('doc_berlangganan', 'Scan Dokumen Berlangganan Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-200" title="Ganti Berkas">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Ganti</span>
                                         </button>
                                     @else
-                                        <button type="button" @click="openUploadModal('doc_berlangganan', 'Scan Dokumen Berlangganan Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Scan Dokumen">
+                                        <button type="button" @click="openUploadModal('doc_berlangganan', 'Scan Dokumen Berlangganan Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200" title="Upload Scan Dokumen">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Upload Scan</span>
                                         </button>
@@ -685,7 +674,7 @@
                             @php
                                 $docSurvey = $customer->doc_survey ?? null;
                             @endphp
-                            <div class="p-4 rounded-2xl border {{ $docSurvey ? 'border-amber-500/30 bg-amber-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                            <div class="p-4 rounded-2xl border {{ $docSurvey ? 'border-amber-500/30 bg-amber-500/[0.02]' : 'border-slate-200 bg-white ' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
                                 <div class="w-full flex items-center justify-between mb-2">
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $docSurvey ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
                                         {{ $docSurvey ? 'Tersedia' : 'Belum Ada' }}
@@ -700,22 +689,22 @@
                                 </div>
 
                                 <div class="my-1 space-y-0.5">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Surat Tugas Survey</span>
+                                    <span class="block text-xs font-bold text-slate-800">Surat Tugas Survey</span>
                                     <span class="block text-[10px] text-slate-400">Scan Legalisir</span>
                                 </div>
 
-                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                <div class="w-full pt-2 border-t border-slate-100 flex items-center justify-center gap-2 mt-1">
                                     @if($docSurvey)
                                         <a href="{{ asset('uploads/registrasi/' . $docSurvey) }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Dokumen">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                             <span>Unduh</span>
                                         </a>
-                                        <button type="button" @click="openUploadModal('doc_survey', 'Scan Dokumen Survey Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Berkas">
+                                        <button type="button" @click="openUploadModal('doc_survey', 'Scan Dokumen Survey Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-200" title="Ganti Berkas">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Ganti</span>
                                         </button>
                                     @else
-                                        <button type="button" @click="openUploadModal('doc_survey', 'Scan Dokumen Survey Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Scan Dokumen">
+                                        <button type="button" @click="openUploadModal('doc_survey', 'Scan Dokumen Survey Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200" title="Upload Scan Dokumen">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Upload Scan</span>
                                         </button>
@@ -727,7 +716,7 @@
                             @php
                                 $docInstalasi = $customer->doc_instalasi ?? null;
                             @endphp
-                            <div class="p-4 rounded-2xl border {{ $docInstalasi ? 'border-teal-500/30 bg-teal-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                            <div class="p-4 rounded-2xl border {{ $docInstalasi ? 'border-teal-500/30 bg-teal-500/[0.02]' : 'border-slate-200 bg-white ' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
                                 <div class="w-full flex items-center justify-between mb-2">
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $docInstalasi ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
                                         {{ $docInstalasi ? 'Tersedia' : 'Belum Ada' }}
@@ -742,22 +731,22 @@
                                 </div>
 
                                 <div class="my-1 space-y-0.5">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Surat Instalasi</span>
+                                    <span class="block text-xs font-bold text-slate-800">Surat Instalasi</span>
                                     <span class="block text-[10px] text-slate-400">Scan Legalisir</span>
                                 </div>
 
-                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                <div class="w-full pt-2 border-t border-slate-100 flex items-center justify-center gap-2 mt-1">
                                     @if($docInstalasi)
                                         <a href="{{ asset('uploads/registrasi/' . $docInstalasi) }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Dokumen">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                             <span>Unduh</span>
                                         </a>
-                                        <button type="button" @click="openUploadModal('doc_instalasi', 'Scan Dokumen Instalasi Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Berkas">
+                                        <button type="button" @click="openUploadModal('doc_instalasi', 'Scan Dokumen Instalasi Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-200" title="Ganti Berkas">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Ganti</span>
                                         </button>
                                     @else
-                                        <button type="button" @click="openUploadModal('doc_instalasi', 'Scan Dokumen Instalasi Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Scan Dokumen">
+                                        <button type="button" @click="openUploadModal('doc_instalasi', 'Scan Dokumen Instalasi Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200" title="Upload Scan Dokumen">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Upload Scan</span>
                                         </button>
@@ -769,7 +758,7 @@
                             @php
                                 $docAktivasi = $customer->doc_aktivasi ?? null;
                             @endphp
-                            <div class="p-4 rounded-2xl border {{ $docAktivasi ? 'border-purple-500/30 bg-purple-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
+                            <div class="p-4 rounded-2xl border {{ $docAktivasi ? 'border-purple-500/30 bg-purple-500/[0.02]' : 'border-slate-200 bg-white ' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
                                 <div class="w-full flex items-center justify-between mb-2">
                                     <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $docAktivasi ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-400' }}">
                                         {{ $docAktivasi ? 'Tersedia' : 'Belum Ada' }}
@@ -784,22 +773,22 @@
                                 </div>
 
                                 <div class="my-1 space-y-0.5">
-                                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Berita Acara Aktivasi</span>
+                                    <span class="block text-xs font-bold text-slate-800">Berita Acara Aktivasi</span>
                                     <span class="block text-[10px] text-slate-400">Scan Legalisir</span>
                                 </div>
 
-                                <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2 mt-1">
+                                <div class="w-full pt-2 border-t border-slate-100 flex items-center justify-center gap-2 mt-1">
                                     @if($docAktivasi)
                                         <a href="{{ asset('uploads/registrasi/' . $docAktivasi) }}" download target="_blank" class="flex-1 py-1.5 px-2 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-blue-500/30" title="Unduh Dokumen">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                             <span>Unduh</span>
                                         </a>
-                                        <button type="button" @click="openUploadModal('doc_aktivasi', 'Scan Dokumen Aktivasi Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-700/50" title="Ganti Berkas">
+                                        <button type="button" @click="openUploadModal('doc_aktivasi', 'Scan Dokumen Aktivasi Legalisir')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 text-[10px] font-semibold transition flex items-center gap-1 border border-slate-200" title="Ganti Berkas">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Ganti</span>
                                         </button>
                                     @else
-                                        <button type="button" @click="openUploadModal('doc_aktivasi', 'Scan Dokumen Aktivasi Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-700/50" title="Upload Scan Dokumen">
+                                        <button type="button" @click="openUploadModal('doc_aktivasi', 'Scan Dokumen Aktivasi Legalisir')" class="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-300 hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200" title="Upload Scan Dokumen">
                                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></svg>
                                             <span>Upload Scan</span>
                                         </button>
@@ -814,10 +803,10 @@
                     <div class="space-y-3 pt-2">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
                                     Master Dokumen
                                 </h3>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                <p class="text-[11px] text-slate-500 mt-0.5">
                                     Dokumen resmi otomatis per-user siap cetak & ekspor ke format PDF atau Word (.doc).
                                 </p>
                             </div>
@@ -856,7 +845,7 @@
                             @endphp
 
                             @foreach($masterTemplates as $tmpl)
-                                <div class="p-4 rounded-2xl border {{ $tmpl['active'] ? 'border-blue-500/40 bg-blue-500/[0.03] hover:border-blue-500/70 shadow-sm' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm' }} transition flex flex-col items-center justify-between text-center min-h-[210px] group">
+                                <div class="p-4 rounded-2xl border {{ $tmpl['active'] ? 'border-blue-500/40 bg-blue-500/[0.03] hover:border-blue-500/70 shadow-sm' : 'border-slate-200 bg-white shadow-sm' }} transition flex flex-col items-center justify-between text-center min-h-[210px] group">
                                     
                                     <!-- Top Status & Format Badges -->
                                     <div class="w-full flex items-center justify-between gap-2 mb-2">
@@ -867,10 +856,10 @@
                                             </span>
                                             <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">DOCX</span>
                                         @else
-                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700/50 shrink-0">
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-200 shrink-0">
                                                 Template
                                             </span>
-                                            <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-slate-800 text-slate-500 border border-slate-700/50 shrink-0">DOCX</span>
+                                            <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-slate-800 text-slate-500 border border-slate-200 shrink-0">DOCX</span>
                                         @endif
                                     </div>
 
@@ -883,7 +872,7 @@
                                                 </svg>
                                             </div>
                                         @else
-                                            <div class="w-12 h-12 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center text-slate-500">
+                                            <div class="w-12 h-12 rounded-xl bg-slate-800/60 border border-slate-200/60 flex items-center justify-center text-slate-500">
                                                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                 </svg>
@@ -893,16 +882,16 @@
 
                                     <!-- Label & Desc -->
                                     <div class="my-1 space-y-0.5 w-full px-1">
-                                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-100 truncate" title="{{ $tmpl['desc'] }}">
+                                        <span class="block text-xs font-bold text-slate-800 truncate" title="{{ $tmpl['desc'] }}">
                                             {{ $tmpl['desc'] }}
                                         </span>
-                                        <span class="block text-[11px] text-slate-400 dark:text-slate-500 font-mono truncate" title="{{ $tmpl['label'] }}">
+                                        <span class="block text-[11px] text-slate-400 font-mono truncate" title="{{ $tmpl['label'] }}">
                                             {{ $tmpl['label'] }}
                                         </span>
                                     </div>
 
                                     <!-- Bottom Action Buttons (Clean & Structured) -->
-                                    <div class="w-full pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-2">
+                                    <div class="w-full pt-3 border-t border-slate-100 mt-2">
                                         @if($tmpl['active'])
                                             <div class="space-y-1.5 w-full">
                                                 <!-- Primary View / Print Button -->
@@ -925,7 +914,7 @@
                                             </div>
                                         @else
                                             <div class="w-full py-3 flex items-center justify-center">
-                                                <span class="text-[11px] text-slate-500 font-medium bg-slate-800/60 border border-slate-700/50 px-3 py-1 rounded-lg">
+                                                <span class="text-[11px] text-slate-500 font-medium bg-slate-800/60 border border-slate-200 px-3 py-1 rounded-lg">
                                                     Draft Master
                                                 </span>
                                             </div>
@@ -945,26 +934,26 @@
                 <!-- ======================================================= -->
                 <div x-show="activeTab === 'layanan'" x-cloak class="p-6 space-y-4 text-xs">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 space-y-2">
+                        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
                             <span class="text-slate-500 font-semibold uppercase text-[10px]">Paket & Bandwidth</span>
-                            <div class="text-sm font-bold text-slate-900 dark:text-white">
+                            <div class="text-sm font-bold text-slate-900">
                                 {{ $customer->nama_kategori_bandwith ?: $customer->alias_nama_kategori }}
                                 @if($customer->nominal_bandwith)
                                     <span class="text-blue-500">({{ $customer->nominal_bandwith }} Mbps)</span>
                                 @endif
                             </div>
-                            <div class="text-slate-600 dark:text-slate-400">
-                                Harga Bulanan: <strong class="text-slate-800 dark:text-slate-200 font-mono">Rp {{ number_format((float) ($customer->harga_bandwith ?? 0), 0, ',', '.') }}</strong>
+                            <div class="text-slate-600">
+                                Harga Bulanan: <strong class="text-slate-800 font-mono">Rp {{ number_format((float) ($customer->harga_bandwith ?? 0), 0, ',', '.') }}</strong>
                             </div>
                         </div>
 
-                        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 space-y-2">
+                        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
                             <span class="text-slate-500 font-semibold uppercase text-[10px]">Group & Akses</span>
-                            <div class="text-sm font-bold text-slate-900 dark:text-white uppercase">
+                            <div class="text-sm font-bold text-slate-900 uppercase">
                                 {{ $customer->group_layanan ?: 'MEDIANET' }}
                             </div>
-                            <div class="text-slate-600 dark:text-slate-400">
-                                POP: <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $customer->nama_pop ?: ($customer->kode_pop ?: '-') }}</span>
+                            <div class="text-slate-600">
+                                POP: <span class="font-semibold text-slate-800">{{ $customer->nama_pop ?: ($customer->kode_pop ?: '-') }}</span>
                             </div>
                         </div>
                     </div>
@@ -974,7 +963,7 @@
                 <!-- 4. TAB CONTENT: SUSPEND                                -->
                 <!-- ======================================================= -->
                 <div x-show="activeTab === 'suspend'" x-cloak class="p-6 space-y-4">
-                    <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Riwayat Suspend Layanan
                     </h3>
 
@@ -982,14 +971,14 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
-                                    <tr class="bg-slate-100 dark:bg-slate-950/60 text-slate-700 dark:text-slate-300">
+                                    <tr class="bg-slate-100 text-slate-700">
                                         <th class="py-2.5 px-4">Tanggal Suspend</th>
                                         <th class="py-2.5 px-4">Status</th>
                                         <th class="py-2.5 px-4">Alasan</th>
                                         <th class="py-2.5 px-4">User</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                <tbody class="divide-y divide-slate-200">
                                     @foreach($suspendRecords as $s)
                                         <tr>
                                             <td class="py-3 px-4">{{ $s->date_create }}</td>
@@ -1010,14 +999,14 @@
                 <!-- 5. TAB CONTENT: TAGIHAN / BILLINGS                     -->
                 <!-- ======================================================= -->
                 <div x-show="activeTab === 'tagihan'" x-cloak class="p-6 space-y-4">
-                    <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Daftar Tagihan & Pembayaran
                     </h3>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="bg-slate-100 dark:bg-slate-950/60 text-slate-700 dark:text-slate-300">
+                                <tr class="bg-slate-100 text-slate-700">
                                     <th class="py-2.5 px-4">Kode Billing</th>
                                     <th class="py-2.5 px-4">Jenis</th>
                                     <th class="py-2.5 px-4">Total</th>
@@ -1025,7 +1014,7 @@
                                     <th class="py-2.5 px-4">Metode</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                            <tbody class="divide-y divide-slate-200">
                                 @forelse($billingReg as $b)
                                     <tr>
                                         <td class="py-3 px-4 font-mono font-bold">{{ $b->kode_billing_registrasi }}</td>
@@ -1052,7 +1041,7 @@
                 <!-- 6. TAB CONTENT: PENGADUAN                              -->
                 <!-- ======================================================= -->
                 <div x-show="activeTab === 'pengaduan'" x-cloak class="p-6 space-y-4">
-                    <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Riwayat Pengaduan & Tiket Gangguan
                     </h3>
 
@@ -1060,14 +1049,14 @@
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
-                                    <tr class="bg-slate-100 dark:bg-slate-950/60 text-slate-700 dark:text-slate-300">
+                                    <tr class="bg-slate-100 text-slate-700">
                                         <th class="py-2.5 px-4">No Tiket</th>
                                         <th class="py-2.5 px-4">Keluhan</th>
                                         <th class="py-2.5 px-4">Status</th>
                                         <th class="py-2.5 px-4">Tanggal</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                <tbody class="divide-y divide-slate-200">
                                     @foreach($tickets as $t)
                                         <tr>
                                             <td class="py-3 px-4 font-mono font-bold">{{ $t->tiket ?? '-' }}</td>
@@ -1091,7 +1080,7 @@
                     
                     <!-- Header with Title & [Tambah] Button -->
                     <div class="flex items-center justify-between">
-                        <h2 class="text-2xl font-bold text-[#1e293b] dark:text-white tracking-tight">
+                        <h2 class="text-2xl font-bold text-[#1e293b] tracking-tight">
                             Perangkat .dsb
                         </h2>
 
@@ -1109,12 +1098,12 @@
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         
                         <!-- Left Column: Config Cards (ID PPOE, POP/ODN, Media Akses, Index OLT, Catatan) -->
-                        <div class="lg:col-span-5 space-y-6 text-xs text-slate-700 dark:text-slate-300">
+                        <div class="lg:col-span-5 space-y-6 text-xs text-slate-700">
                             
                             <!-- 1. ID PPOE (with small [Ubah] button) -->
                             <div class="space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                                    <h4 class="text-sm font-bold text-slate-900">
                                         ID PPOE
                                     </h4>
                                     <button type="button" 
@@ -1123,36 +1112,36 @@
                                         Ubah
                                     </button>
                                 </div>
-                                <ul class="space-y-1 text-slate-600 dark:text-slate-400 font-sans">
-                                    <li>&mdash; Username : <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold">{{ $customer->ont_us ?: $customer->nomor_internet }}</span></li>
-                                    <li>&mdash; Password : <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold">{{ $customer->ont_ps ?: '-' }}</span></li>
+                                <ul class="space-y-1 text-slate-600 font-sans">
+                                    <li>&mdash; Username : <span class="font-mono text-slate-800 font-semibold">{{ $customer->ont_us ?: $customer->nomor_internet }}</span></li>
+                                    <li>&mdash; Password : <span class="font-mono text-slate-800 font-semibold">{{ $customer->ont_ps ?: '-' }}</span></li>
                                 </ul>
                             </div>
 
                             <!-- 2. POP/ODN -->
                             <div class="space-y-1.5">
-                                <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                                <h4 class="text-sm font-bold text-slate-900">
                                     POP/ODN
                                 </h4>
-                                <ul class="space-y-1 text-slate-600 dark:text-slate-400 font-sans">
-                                    <li>&mdash; Nama : <span class="text-slate-800 dark:text-slate-200 font-medium">{{ $customer->nama_pop ?: '-' }}</span></li>
-                                    <li>&mdash; Desc : <span class="text-slate-800 dark:text-slate-200 font-medium">{{ $customer->desc_pop ?: '-' }}</span></li>
+                                <ul class="space-y-1 text-slate-600 font-sans">
+                                    <li>&mdash; Nama : <span class="text-slate-800 font-medium">{{ $customer->nama_pop ?: '-' }}</span></li>
+                                    <li>&mdash; Desc : <span class="text-slate-800 font-medium">{{ $customer->desc_pop ?: '-' }}</span></li>
                                 </ul>
                             </div>
 
                             <!-- 3. Media Akses -->
                             <div class="space-y-1.5">
-                                <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                                <h4 class="text-sm font-bold text-slate-900">
                                     Media Akses
                                 </h4>
-                                <ul class="space-y-1 text-slate-600 dark:text-slate-400 font-sans">
-                                    <li>&mdash; Nama : <span class="text-slate-800 dark:text-slate-200 font-medium">{{ $customer->media_akses ?: 'FTTH' }}</span></li>
+                                <ul class="space-y-1 text-slate-600 font-sans">
+                                    <li>&mdash; Nama : <span class="text-slate-800 font-medium">{{ $customer->media_akses ?: 'FTTH' }}</span></li>
                                     @if(!empty($customer->olt ?? null))
                                         @php
                                             $oltObj = isset($olts) ? $olts->firstWhere('kode_olt', $customer->olt) : null;
                                             $oltName = $oltObj ? $oltObj->name_olt : $customer->olt;
                                         @endphp
-                                        <li>&mdash; Server OLT : <span class="text-blue-600 dark:text-blue-400 font-semibold">{{ $oltName }} ({{ $customer->olt }})</span></li>
+                                        <li>&mdash; Server OLT : <span class="text-blue-600 font-semibold">{{ $oltName }} ({{ $customer->olt }})</span></li>
                                     @endif
                                 </ul>
                             </div>
@@ -1160,22 +1149,22 @@
                             <!-- 4. Index OLT (Sembunyikan jika Media Akses PTP FO) -->
                             @if(($customer->media_akses ?? '') !== 'PTP FO')
                             <div class="space-y-1.5">
-                                <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                                <h4 class="text-sm font-bold text-slate-900">
                                     Index OLT
                                 </h4>
-                                <ul class="space-y-1 text-slate-600 dark:text-slate-400 font-sans">
-                                    <li>&mdash; <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold">{{ $customer->index_olt ?: '-' }}</span></li>
+                                <ul class="space-y-1 text-slate-600 font-sans">
+                                    <li>&mdash; <span class="font-mono text-slate-800 font-semibold">{{ $customer->index_olt ?: '-' }}</span></li>
                                 </ul>
                             </div>
                             @endif
 
                             <!-- 5. SN / Serial Nomor Modem -->
                             <div class="space-y-1.5">
-                                <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+                                <h4 class="text-sm font-bold text-slate-900">
                                     SN / Serial Nomor Modem
                                 </h4>
-                                <ul class="space-y-1 text-slate-600 dark:text-slate-400 font-sans">
-                                    <li>&mdash; <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold">{{ $instalasi->aktivasi_note_finish ?? ($instalasi->aktivasi_note ?? ($customer->note_request ?? '-')) }}</span></li>
+                                <ul class="space-y-1 text-slate-600 font-sans">
+                                    <li>&mdash; <span class="font-mono text-slate-800 font-semibold">{{ $instalasi->aktivasi_note_finish ?? ($instalasi->aktivasi_note ?? ($customer->note_request ?? '-')) }}</span></li>
                                 </ul>
                             </div>
 
@@ -1185,36 +1174,36 @@
                         <div class="lg:col-span-7 overflow-x-auto">
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead>
-                                    <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                                    <tr class="border-b border-slate-200 text-slate-700">
                                         <th class="py-3 px-3 font-bold">Nama Perangkat</th>
                                         <th class="py-3 px-3 font-bold">Quantity</th>
                                         <th class="py-3 px-3 font-bold">Status</th>
                                         <th class="py-3 px-3 font-bold text-center">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                                <tbody class="divide-y divide-slate-100">
                                     @forelse($perangkats as $p)
-                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
+                                        <tr class="hover:bg-slate-50/50 transition">
                                             
                                             <!-- Nama Perangkat & Kode / Model sub-badge -->
                                             <td class="py-3 px-3 align-middle">
-                                                <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-xs">
+                                                <div class="font-bold text-slate-800 uppercase text-xs">
                                                     {{ $p->nama_jns_barang ?: ($p->nama_barang ?: 'PERANGKAT') }}
                                                 </div>
                                                 <div class="mt-0.5">
-                                                    <span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 font-semibold">
+                                                    <span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-mono text-blue-600 bg-blue-50 border border-blue-200 font-semibold">
                                                         {{ $p->kode_barang }}{{ $p->nama_barang ? ', ' . $p->nama_barang : '' }}{{ $p->tipe_barang ? ' ' . $p->tipe_barang : '' }}
                                                     </span>
                                                 </div>
                                             </td>
 
                                             <!-- Quantity & Satuan -->
-                                            <td class="py-3 px-3 align-middle font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs">
+                                            <td class="py-3 px-3 align-middle font-semibold text-slate-700 uppercase text-xs">
                                                 {{ $p->jumlah_barang }} {{ $p->satuan ?: 'UNIT' }}
                                             </td>
 
                                             <!-- Status / Petugas Pemasangan -->
-                                            <td class="py-3 px-3 align-middle text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase">
+                                            <td class="py-3 px-3 align-middle text-[11px] font-semibold text-slate-700 uppercase">
                                                 {{ $p->user_create ?: ($instalasi->aktivasi_team ?? 'NUNU NUGRAHA') }}
                                             </td>
 
@@ -1265,23 +1254,23 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          aria-labelledby="upload-modal-title" role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity" 
+        <div class="fixed inset-0 bg-white/85 backdrop-blur-md transition-opacity" 
              @click="uploadModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-md">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-md">
                 
-                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
                     <div class="flex items-center gap-2">
                         <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                         </svg>
-                        <h3 class="text-sm font-bold text-slate-800 dark:text-white tracking-wide" id="upload-modal-title" x-text="'Upload ' + uploadDocLabel"></h3>
+                        <h3 class="text-sm font-bold text-slate-800 tracking-wide" id="upload-modal-title" x-text="'Upload ' + uploadDocLabel"></h3>
                     </div>
                     
                     <button type="button" 
                             @click="uploadModalOpen = false"
-                            class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+                            class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -1296,21 +1285,21 @@
                     <input type="hidden" name="tipe_dokumen" :value="uploadDocType">
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                             Pilih Berkas Scan (PDF / JPG / PNG / DOCX) <span class="text-rose-500">*</span>
                         </label>
                         <input type="file" 
                                name="file_dokumen" 
                                required
                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                               class="w-full text-xs text-slate-600 dark:text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer border border-slate-300 dark:border-slate-700 rounded-xl p-2 bg-slate-50 dark:bg-slate-950">
+                               class="w-full text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer border border-slate-300 rounded-xl p-2 bg-slate-50">
                         <p class="text-[10px] text-slate-400 mt-1">Maksimal ukuran file: 10 MB</p>
                     </div>
 
-                    <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                    <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-end gap-2.5">
                         <button type="button" 
                                 @click="uploadModalOpen = false"
-                                class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">
+                                class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold transition cursor-pointer">
                             Batal
                         </button>
                         <button type="submit" 
@@ -1336,21 +1325,21 @@
          role="dialog"
          aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-100 backdrop-blur-sm transition-opacity" 
              @click="pppoeModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-2xl bg-[#f4f6f9] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl overflow-hidden my-auto flex flex-col"
+            <div class="relative w-full max-w-2xl bg-[#f4f6f9] border border-slate-200 rounded-lg shadow-2xl overflow-hidden my-auto flex flex-col"
                  @click.away="pppoeModalOpen = false">
                 
                 <!-- Modal Header -->
-                <div class="flex items-center justify-between px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
-                    <h3 class="text-sm font-bold text-slate-800 dark:text-white">
+                <div class="flex items-center justify-between px-6 py-3.5 border-b border-slate-200 bg-white shrink-0">
+                    <h3 class="text-sm font-bold text-slate-800">
                         Form Ubah Data
                     </h3>
                     <button type="button" 
                             @click="pppoeModalOpen = false" 
-                            class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition">
+                            class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1 leading-none transition">
                         &times;
                     </button>
                 </div>
@@ -1359,42 +1348,42 @@
                 <form action="{{ route('teknik.pelanggan.update-pppoe', $customer->nomor_internet) }}" method="POST" class="p-6 space-y-6">
                     @csrf
                     
-                    <div class="bg-white dark:bg-slate-950 p-6 rounded border border-slate-200 dark:border-slate-800 shadow-sm space-y-6 text-xs">
+                    <div class="bg-white p-6 rounded border border-slate-200 shadow-sm space-y-6 text-xs">
                         
                         <!-- Row 1: ID PPOE Username & ID PPOE Password -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                <label class="block font-medium text-slate-700 mb-1.5">
                                     ID PPOE Username<span class="text-rose-500 font-bold">*</span>
                                 </label>
                                 <input type="text" 
                                        name="ont_us" 
                                        x-model="modalOntUs" 
                                        required 
-                                       class="w-full px-3 py-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                       class="w-full px-3 py-2 text-xs rounded border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                             <div>
-                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                <label class="block font-medium text-slate-700 mb-1.5">
                                     ID PPOE Password<span class="text-rose-500 font-bold">*</span>
                                 </label>
                                 <input type="text" 
                                        name="ont_ps" 
                                        x-model="modalOntPs" 
                                        required 
-                                       class="w-full px-3 py-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                       class="w-full px-3 py-2 text-xs rounded border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                         </div>
 
                         <!-- Row 2: POP/ODN & Media Akses -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
-                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                <label class="block font-medium text-slate-700 mb-1.5">
                                     POP/ODN<span class="text-rose-500 font-bold">*</span>
                                 </label>
                                 <select name="kode_pop" 
                                         x-model="modalKodePop" 
                                         required 
-                                        class="w-full px-3 py-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs rounded border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
                                     <option value="">Pilih POP</option>
                                     @foreach($pops as $pop)
                                         <option value="{{ $pop->kode_pop }}">{{ $pop->nama_pop }}</option>
@@ -1402,13 +1391,13 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                <label class="block font-medium text-slate-700 mb-1.5">
                                     Media Akses<span class="text-rose-500 font-bold">*</span>
                                 </label>
                                 <select name="media_akses" 
                                         x-model="modalMediaAkses" 
                                         required 
-                                        class="w-full px-3 py-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 text-xs rounded border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
                                     <option value="">Pilih Media Akses</option>
                                     <option value="FTTH">FTTH</option>
                                     <option value="FTTH MSN">FTTH MSN</option>
@@ -1424,9 +1413,9 @@
                         <!-- Dropdown Pilihan 3 OLT Server (Muncul Jika Media Akses FTTH) -->
                         <div x-show="modalMediaAkses === 'FTTH' || modalMediaAkses === 'FTTH MSN'" 
                              x-transition
-                             class="p-3 rounded bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/70">
+                             class="p-3 rounded bg-blue-50/60 border border-blue-200">
                             <div class="flex items-center justify-between mb-1.5">
-                                <label class="block font-bold text-[11px] text-blue-700 dark:text-blue-300">
+                                <label class="block font-bold text-[11px] text-blue-700">
                                     Pilihan Server OLT (FTTH) <span class="text-rose-500">*</span>
                                 </label>
                                 <span class="text-[10px] font-mono text-blue-500 font-semibold">3 OLT Tersedia</span>
@@ -1434,7 +1423,7 @@
                             <select name="olt" 
                                     x-model="modalOlt"
                                     :required="modalMediaAkses === 'FTTH' || modalMediaAkses === 'FTTH MSN'"
-                                    class="w-full px-3 py-2 text-xs rounded border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    class="w-full px-3 py-2 text-xs rounded border border-blue-300 bg-white text-slate-800 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500">
                                 <option value="">-- Pilih OLT Server --</option>
                                 @if(isset($olts) && count($olts) > 0)
                                     @foreach($olts as $oltItem)
@@ -1453,18 +1442,18 @@
                         <!-- Row 3: catatan & Index OLT (Dropdown matching NOC Aktivasi) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                             <div :class="modalMediaAkses === 'PTP FO' ? 'sm:col-span-2' : ''">
-                                <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                <label class="block font-medium text-slate-700 mb-1.5">
                                     SN / Serial Nomor Modem<span class="text-rose-500 font-bold">*</span>
                                 </label>
                                 <input type="text" 
                                        name="catatan" 
                                        x-model="modalCatatan" 
                                        placeholder="Masukkan nomor seri / SN modem ONT pelanggan..."
-                                       class="w-full px-3 py-2 text-xs rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                       class="w-full px-3 py-2 text-xs rounded border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                             <div x-show="modalMediaAkses !== 'PTP FO'" x-transition>
                                 <div class="flex items-center justify-between mb-1.5">
-                                    <label class="block font-medium text-slate-700 dark:text-slate-300">
+                                    <label class="block font-medium text-slate-700">
                                         Index OLT<span class="text-rose-500 font-bold">*</span>
                                     </label>
                                     <span class="text-[10px] text-blue-500 font-mono font-bold" x-text="modalIndexOlt || 'Belum dipilih'"></span>
@@ -1476,12 +1465,12 @@
                                 <!-- Dynamic GPON Port & ONU Slot selector matching NOC Aktivasi -->
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <div>
-                                        <label class="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-800 mb-1">
                                             Pilih Port GPON:
                                         </label>
                                         <select x-model="selectedGponPort" 
                                                 @change="selectedOnuSlot = ''; updateIndexOlt();"
-                                                class="w-full px-2 py-2 text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-mono">
+                                                class="w-full px-2 py-2 text-[11px] rounded border border-slate-200 bg-white text-slate-800 font-mono">
                                             @if(isset($allPorts))
                                                 @foreach($allPorts as $port)
                                                     @php $stat = $portStats[$port] ?? null; @endphp
@@ -1494,12 +1483,12 @@
                                     </div>
 
                                     <div>
-                                        <label class="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
+                                        <label class="block text-[11px] font-bold text-slate-800 mb-1">
                                             Pilih Index:
                                         </label>
                                         <select x-model="selectedOnuSlot" 
                                                 @change="updateIndexOlt()" 
-                                                class="w-full px-2 py-2 text-[11px] rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-mono">
+                                                class="w-full px-2 py-2 text-[11px] rounded border border-slate-200 bg-white text-slate-800 font-mono">
                                             <option value="">-- Pilih Index (1..128) --</option>
                                             <template x-for="slot in (allSlots[selectedGponPort] || [])" :key="slot.key">
                                                 <option :value="slot.num" 
@@ -1549,18 +1538,18 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog">
         
-        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-100 backdrop-blur-sm transition-opacity" 
              @click="tambahPerangkatModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
+            <div class="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
                  @click.away="tambahPerangkatModalOpen = false">
                 
-                <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
-                    <h3 class="text-sm font-bold text-slate-800 dark:text-white">
+                <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50/80 shrink-0">
+                    <h3 class="text-sm font-bold text-slate-800">
                         Tambah Perangkat / Material
                     </h3>
-                    <button type="button" @click="tambahPerangkatModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition">
+                    <button type="button" @click="tambahPerangkatModalOpen = false" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1 leading-none transition">
                         &times;
                     </button>
                 </div>
@@ -1571,13 +1560,13 @@
                         
                         <!-- Pilihan Barang -->
                         <div>
-                            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            <label class="block font-semibold text-slate-700 mb-1">
                                 Pilih Jenis Barang / Perangkat <span class="text-rose-500 font-bold">*</span>
                             </label>
                             <select name="kode_barang" 
                                     x-model="modalKodeBarang" 
                                     required 
-                                    class="w-full text-xs px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">-- Pilih Barang / Perangkat --</option>
                                 @foreach($masterBarang as $mb)
                                     <option value="{{ $mb->kode_barang }}">
@@ -1589,7 +1578,7 @@
 
                         <!-- Jumlah Barang -->
                         <div>
-                            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            <label class="block font-semibold text-slate-700 mb-1">
                                 Jumlah (Qty) <span class="text-rose-500 font-bold">*</span>
                             </label>
                             <input type="number" 
@@ -1597,24 +1586,24 @@
                                    x-model="modalJumlahBarang" 
                                    min="1" 
                                    required 
-                                   class="w-full text-xs px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                   class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <!-- Catatan / Note -->
                         <div>
-                            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            <label class="block font-semibold text-slate-700 mb-1">
                                 Catatan Pemasangan
                             </label>
                             <input type="text" 
                                    name="note_instalasi_barang" 
                                    x-model="modalNoteBarang" 
                                    placeholder="Contoh: Terpasang di ruang tamu"
-                                   class="w-full text-xs px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                   class="w-full text-xs px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
 
                     </div>
 
-                    <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+                    <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5 shrink-0">
                         <button type="button" 
                                 @click="tambahPerangkatModalOpen = false" 
                                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#00bcd4] hover:bg-[#00acc1] text-white text-xs font-bold shadow-sm transition cursor-pointer">

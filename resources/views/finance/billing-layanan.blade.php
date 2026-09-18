@@ -183,7 +183,7 @@
      }">
 
     <!-- Page Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-800/80 shadow-xl relative overflow-hidden">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white backdrop-blur-xl p-5 rounded-2xl border border-slate-200/80 shadow-xl relative overflow-hidden">
         <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="relative z-10">
             <div class="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">
@@ -202,7 +202,7 @@
         <!-- Top Right Actions -->
         <div class="flex items-center gap-3 relative z-10 flex-wrap">
             <a href="{{ route('finance.billing-layanan.export', request()->query()) }}"
-               class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/80 text-xs font-semibold flex items-center gap-2 shadow-sm transition">
+               class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-200 hover:text-white border border-slate-300 text-xs font-semibold flex items-center gap-2 shadow-sm transition">
                 <svg class="w-4 h-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
@@ -331,14 +331,14 @@
     </div>
 
     <!-- Filter Bar Card -->
-    <div class="bg-slate-900/90 backdrop-blur-xl p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+    <div class="bg-white backdrop-blur-xl p-5 rounded-2xl border border-slate-200 shadow-xl space-y-4">
         <form method="GET" action="{{ route('finance.billing-layanan') }}" class="space-y-4">
             <!-- Row 1: Primary Quick Filters -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <!-- Bulan -->
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Semua Bulan</label>
-                    <select name="bulan" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="bulan" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Bulan</option>
                         @foreach($bulanList as $key => $name)
                         <option value="{{ $key }}" {{ ($selectedBulan ?? '') === (string)$key ? 'selected' : '' }}>{{ $key }} - {{ $name }}</option>
@@ -349,7 +349,7 @@
                 <!-- Tahun -->
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Semua Tahun</label>
-                    <select name="tahun" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="tahun" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Tahun</option>
                         @foreach($tahunList as $thn)
                         <option value="{{ $thn }}" {{ ($selectedTahun ?? '') === (string)$thn ? 'selected' : '' }}>{{ $thn }}</option>
@@ -360,7 +360,7 @@
                 <!-- Layanan / Kategori -->
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Kategori Layanan</label>
-                    <select name="layanan" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="layanan" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Layanan</option>
                         @foreach($layananList as $lay)
                         <option value="{{ $lay }}" {{ request('layanan') === $lay ? 'selected' : '' }}>{{ $lay }}</option>
@@ -371,7 +371,7 @@
                 <!-- Status Bayar -->
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Status Bayar</label>
-                    <select name="status_bayar" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="status_bayar" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Status Bayar</option>
                         @foreach($statusBillList as $sb)
                         <option value="{{ $sb->status_bill_lay }}" {{ request('status_bayar') === (string)$sb->status_bill_lay ? 'selected' : '' }}>{{ $sb->desc_bill_lay }}</option>
@@ -387,7 +387,7 @@
                                name="search"
                                value="{{ request('search') }}"
                                placeholder="Nama / No Layanan / Inv..."
-                               class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-slate-500">
+                               class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-slate-400">
                         <svg class="w-4 h-4 text-slate-500 absolute left-3 top-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                         </svg>
@@ -396,12 +396,12 @@
             </div>
 
             <!-- Row 2: Secondary / Advanced Filters (Collapsible) -->
-            <div x-show="showAdvancedFilters" x-cloak x-collapse class="pt-3 border-t border-slate-800/80">
+            <div x-show="showAdvancedFilters" x-cloak x-collapse class="pt-3 border-t border-slate-200/80">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <!-- Wilayah / Kota -->
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Semua Wilayah</label>
-                        <select name="wilayah" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="wilayah" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Wilayah</option>
                             @foreach($wilayahList as $wil)
                             <option value="{{ $wil }}" {{ request('wilayah') === $wil ? 'selected' : '' }}>{{ $wil }}</option>
@@ -412,7 +412,7 @@
                     <!-- Status User -->
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Status User</label>
-                        <select name="status_user" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="status_user" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Status User</option>
                             @foreach($statusUserList as $code => $label)
                             <option value="{{ $code }}" {{ request('status_user') === (string)$code ? 'selected' : '' }}>{{ $label }}</option>
@@ -423,7 +423,7 @@
                     <!-- Metode Bayar -->
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Metode Bayar</label>
-                        <select name="metode_bayar" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="metode_bayar" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Metode Bayar</option>
                             <option value="1" {{ request('metode_bayar') === '1' ? 'selected' : '' }}>Midtrans Payment Gateway</option>
                             <option value="2" {{ request('metode_bayar') === '2' ? 'selected' : '' }}>Manual Bank Transfer</option>
@@ -446,7 +446,7 @@
 
                 <div class="flex items-center gap-2">
                     <a href="{{ route('finance.billing-layanan') }}"
-                       class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition">
+                       class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-semibold border border-slate-200 transition">
                         Reset
                     </a>
                     <button type="submit"
@@ -459,9 +459,9 @@
     </div>
 
     <!-- Invoices Data Table -->
-    <div class="bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+    <div class="bg-white backdrop-blur-xl rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
         <!-- Table Header Info & Per Page -->
-        <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-950/40">
+        <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50">
             <div class="text-xs text-slate-400 font-medium">
                 Menampilkan <span class="text-white font-bold">{{ $invoices->firstItem() ?? 0 }}</span> sampai <span class="text-white font-bold">{{ $invoices->lastItem() ?? 0 }}</span> dari <span class="text-white font-bold">{{ $invoices->total() }}</span> total invoice
             </div>
@@ -472,7 +472,7 @@
                     <input type="hidden" name="{{ $k }}" value="{{ $v }}">
                 @endforeach
                 <label class="text-xs text-slate-400">Tampilkan:</label>
-                <select name="per_page" onchange="this.form.submit()" class="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-2.5 py-1 focus:border-blue-500">
+                <select name="per_page" onchange="this.form.submit()" class="bg-white border border-slate-200 text-slate-300 text-xs rounded-lg px-2.5 py-1 focus:border-blue-500">
                     <option value="10" {{ $invoices->perPage() == 10 ? 'selected' : '' }}>10</option>
                     <option value="25" {{ $invoices->perPage() == 25 ? 'selected' : '' }}>25</option>
                     <option value="50" {{ $invoices->perPage() == 50 ? 'selected' : '' }}>50</option>
@@ -485,7 +485,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-800/80 bg-slate-950/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <tr class="border-b border-slate-200/80 bg-slate-50 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                         <th class="py-3.5 px-4">Billing Info</th>
                         <th class="py-3.5 px-4">Tanggal & Jatuh Tempo</th>
                         <th class="py-3.5 px-4">Periode</th>
@@ -495,9 +495,9 @@
                         <th class="py-3.5 px-4 text-center">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/60 text-xs">
+                <tbody class="divide-y divide-slate-100/60 text-xs">
                     @forelse($invoices as $inv)
-                    <tr class="hover:bg-slate-800/30 transition duration-150 group">
+                    <tr class="hover:bg-slate-100/30 transition duration-150 group">
                         <!-- 1. Billing Info -->
                         <td class="py-3.5 px-4 align-top">
                             <div class="font-bold text-white tracking-wide text-xs">
@@ -505,7 +505,7 @@
                             </div>
                             <div class="font-semibold text-blue-400 hover:text-blue-300 mt-0.5 flex items-center gap-1.5">
                                 <span>{{ $inv->nama_pelanggan }}</span>
-                                <span class="text-[10px] px-1 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                                <span class="text-[10px] px-1 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-200">
                                     {{ $inv->jenis_kelamin == 2 ? 'P' : 'L' }}
                                 </span>
                             </div>
@@ -546,7 +546,7 @@
 
                         <!-- 3. Periode -->
                         <td class="py-3.5 px-4 align-top">
-                            <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 border border-slate-700 text-xs font-semibold">
+                            <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-800 text-slate-200 border border-slate-200 text-xs font-semibold">
                                 {{ $inv->periode_tagihan ?? ($inv->bulan_tagihan . '/' . $inv->tahun_tagihan) }}
                             </span>
                         </td>
@@ -644,7 +644,7 @@
                                         <span>{{ $inv->desc_bill_lay ?? 'DRAFT' }}</span>
                                     </span>
                                     @else
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-200">
                                         <span>{{ $inv->desc_bill_lay ?? 'Status ' . $inv->status_bill_lay }}</span>
                                     </span>
                                     @endif
@@ -732,10 +732,10 @@
 
                                 <!-- Notification Badges -->
                                 <div class="flex items-center gap-1 text-[10px]">
-                                    <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_wa ?? 0) > 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500' }}">
+                                    <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_wa ?? 0) > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200' }}">
                                         WA: {{ ($inv->notif_wa ?? 0) > 0 ? 'Sent' : 'UnSend' }}
                                     </span>
-                                    <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_mail ?? 0) > 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-slate-800 text-slate-500' }}">
+                                    <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_mail ?? 0) > 0 ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-500 border border-slate-200' }}">
                                         Mail: {{ ($inv->notif_mail ?? 0) > 0 ? 'Sent' : 'UnSend' }}
                                     </span>
                                 </div>
@@ -754,15 +754,15 @@
                                         data-nama="{{ $inv->nama_pelanggan }}"
                                         data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
                                         title="Approve Pembayaran Lunas"
-                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 text-[11px] font-bold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-[11px] font-bold transition shadow-sm cursor-pointer whitespace-nowrap">
                                     <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                     </svg>
                                     <span>Approve</span>
                                 </button>
                                 @else
-                                <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400/70 border border-emerald-500/20 text-[11px] font-semibold opacity-75 select-none">
-                                    <svg class="w-3 h-3 flex-shrink-0 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold opacity-75 select-none">
+                                    <svg class="w-3 h-3 flex-shrink-0 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                     </svg>
                                     <span>Lunas</span>
@@ -776,7 +776,7 @@
                                         data-nama="{{ $inv->nama_pelanggan }}"
                                         data-payment-type="{{ $inv->payment_type ?? 1 }}"
                                         title="Ubah Metode Pembayaran"
-                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
                                     <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                                     </svg>
@@ -788,8 +788,8 @@
                                         @click="openDetailModalFromEl($el)"
                                         data-kode="{{ $inv->kode_billing_layanan }}"
                                         title="Lihat Detail Tagihan"
-                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
-                                    <svg class="w-3 h-3 flex-shrink-0 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                    <svg class="w-3 h-3 flex-shrink-0 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                     </svg>
@@ -802,7 +802,7 @@
                                     <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
                                     <button type="submit"
                                             title="Hapus Tagihan Ini"
-                                            class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                            class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
                                         <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                         </svg>
@@ -829,7 +829,7 @@
 
         <!-- Pagination Bar -->
         @if($invoices->hasPages())
-        <div class="p-4 border-t border-slate-800 bg-slate-950/60">
+        <div class="p-4 border-t border-slate-200 bg-slate-50">
             {{ $invoices->links() }}
         </div>
         @endif
@@ -842,14 +842,14 @@
     <!-- 1. MODAL GENERATE INVOICE BULANAN -->
     <div x-show="generateModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm overflow-y-auto">
         <div @click.away="generateModalOpen = false"
-             class="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto">
             
             <form method="POST" action="{{ route('finance.billing-layanan.generate') }}">
                 @csrf
                 <div class="p-6 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -871,7 +871,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Pilih Bulan Target</label>
-                            <select name="bulan" x-model="generateBulan" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                            <select name="bulan" x-model="generateBulan" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
                                 @foreach($bulanList as $k => $b)
                                 <option value="{{ $k }}">{{ $k }} - {{ $b }}</option>
                                 @endforeach
@@ -879,13 +879,13 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Pilih Tahun Target</label>
-                            <input type="number" name="tahun" x-model="generateTahun" min="2020" max="2035" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                            <input type="number" name="tahun" x-model="generateTahun" min="2020" max="2035" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-slate-950/80 px-6 py-4 border-t border-slate-800 flex justify-end gap-3">
-                    <button type="button" @click="generateModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+                <div class="bg-slate-100 px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+                    <button type="button" @click="generateModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-semibold">
                         Batal
                     </button>
                     <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-blue-500/25">
@@ -899,12 +899,12 @@
     <!-- 2. MODAL DETAIL BREAKDOWN INVOICE -->
     <div x-show="detailModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm overflow-y-auto">
         <div @click.away="detailModalOpen = false"
-             class="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+             class="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
             
             <div class="p-6 space-y-4 overflow-y-auto flex-1">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                     <div>
                         <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Detail Invoice & Rincian Item</span>
                         <h3 class="text-lg font-bold text-white" x-text="detailData.invoice?.kode_billing_layanan || 'Loading...'"></h3>
@@ -923,7 +923,7 @@
 
                 <div x-show="!detailLoading" class="space-y-4">
                     <!-- Customer Summary Card -->
-                    <div class="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+                    <div class="grid grid-cols-2 gap-3 p-3.5 rounded-xl bg-white border border-slate-200 text-xs">
                         <div>
                             <span class="text-slate-400 block text-[11px]">Nama Pelanggan:</span>
                             <span class="font-bold text-white" x-text="detailData.invoice?.nama_pelanggan || '-'"></span>
@@ -939,16 +939,16 @@
                     <!-- Item Breakdown Table -->
                     <div>
                         <span class="text-xs font-bold text-white block mb-2">Komponen Tagihan:</span>
-                        <div class="rounded-xl border border-slate-800 overflow-hidden">
+                        <div class="rounded-xl border border-slate-200 overflow-hidden">
                             <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-950 text-slate-400 font-bold uppercase text-[10px]">
+                                <thead class="bg-white text-slate-400 font-bold uppercase text-[10px]">
                                     <tr>
                                         <th class="py-2.5 px-3">Komponen / Item</th>
                                         <th class="py-2.5 px-3 text-center">Qty</th>
                                         <th class="py-2.5 px-3 text-right">Biaya</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-800">
+                                <tbody class="divide-y divide-slate-100">
                                     <template x-for="item in detailData.items" :key="item.kode_billing_lay_detail">
                                         <tr>
                                             <td class="py-2.5 px-3 text-slate-200" x-text="item.komponen"></td>
@@ -957,7 +957,7 @@
                                         </tr>
                                     </template>
                                 </tbody>
-                                <tfoot class="bg-slate-950/80 text-xs border-t border-slate-800">
+                                <tfoot class="bg-slate-100 text-xs border-t border-slate-200">
                                     <tr>
                                         <td colspan="2" class="py-2 px-3 text-right font-bold text-slate-300">Total Tagihan Pokok:</td>
                                         <td class="py-2 px-3 text-right font-bold text-white" x-text="formatRupiah(detailData.invoice?.total_layanan || detailData.invoice?.harga_bandwith)"></td>
@@ -972,7 +972,7 @@
                         <span class="text-xs font-bold text-white block mb-1.5">Riwayat & Log Transaksi:</span>
                         <div class="max-h-36 overflow-y-auto space-y-1.5 pr-1">
                             <template x-for="log in detailData.logs" :key="log.kode_billing_lay_log">
-                                <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800/80 text-[11px] flex items-center justify-between">
+                                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200/80 text-[11px] flex items-center justify-between">
                                     <div>
                                         <span class="text-slate-300 font-medium" x-text="log.note_billing_lay"></span>
                                         <span class="text-slate-500 block text-[10px]" x-text="'Oleh: ' + (log.user_create || 'System')"></span>
@@ -985,8 +985,8 @@
                 </div>
             </div>
 
-            <div class="bg-slate-950/80 px-6 py-3.5 border-t border-slate-800 flex justify-end">
-                <button type="button" @click="detailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">
+            <div class="bg-slate-100 px-6 py-3.5 border-t border-slate-200 flex justify-end">
+                <button type="button" @click="detailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-200 text-xs font-semibold">
                     Tutup
                 </button>
             </div>
@@ -996,15 +996,15 @@
     <!-- 3. MODAL KONFIRMASI BAYAR MANUAL -->
     <div x-show="payModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm overflow-y-auto">
         <div @click.away="payModalOpen = false"
-             class="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto">
             
             <form action="{{ route('finance.billing-layanan.konfirmasi-bayar.post') }}" method="POST">
                 @csrf
                 <input type="hidden" name="kode_billing" :value="payKodeBilling">
                 <div class="p-6 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -1019,7 +1019,7 @@
                         <button type="button" @click="payModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
                     </div>
 
-                    <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
+                    <div class="p-3 rounded-xl bg-white border border-slate-200 text-xs space-y-1">
                         <div class="flex justify-between">
                             <span class="text-slate-400">No Invoice:</span>
                             <span class="font-bold text-white font-mono" x-text="payKodeBilling"></span>
@@ -1032,20 +1032,20 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nominal Diterima (Rp)</label>
-                        <input type="number" name="nominal_bayar" x-model="payNominal" required min="1" class="w-full bg-slate-950 border border-slate-800 text-white font-bold text-sm rounded-xl px-3 py-2.5 focus:border-emerald-500">
+                        <input type="number" name="nominal_bayar" x-model="payNominal" required min="1" class="w-full bg-white border border-slate-200 text-white font-bold text-sm rounded-xl px-3 py-2.5 focus:border-emerald-500">
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Tipe Pembayaran</label>
-                            <select name="metode_bayar" x-model="payMetode" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
+                            <select name="metode_bayar" x-model="payMetode" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
                                 <option value="transfer">Transfer Bank</option>
                                 <option value="cash">Tunai / Kasir</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Rekening / Kasir</label>
-                            <select name="bank_tujuan" x-model="payBank" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
+                            <select name="bank_tujuan" x-model="payBank" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
                                 <option value="BCA">BCA (PT Medianet)</option>
                                 <option value="Mandiri">Bank Mandiri</option>
                                 <option value="BRI">Bank BRI</option>
@@ -1057,12 +1057,12 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Catatan / Ref Pembayaran</label>
-                        <input type="text" name="catatan" x-model="payCatatan" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
+                        <input type="text" name="catatan" x-model="payCatatan" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
                     </div>
                 </div>
 
-                <div class="bg-slate-950/80 px-6 py-3.5 border-t border-slate-800 flex justify-end gap-3">
-                    <button type="button" @click="payModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+                <div class="bg-slate-100 px-6 py-3.5 border-t border-slate-200 flex justify-end gap-3">
+                    <button type="button" @click="payModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-semibold">
                         Batal
                     </button>
                     <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-500/25">
@@ -1076,15 +1076,15 @@
     <!-- 4. MODAL ADJUSTMENT (PENYESUAIAN DISKON / DENDA) -->
     <div x-show="adjustModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm overflow-y-auto">
         <div @click.away="adjustModalOpen = false"
-             class="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto">
             
             <form action="{{ route('finance.billing-layanan.adjust.post') }}" method="POST">
                 @csrf
                 <input type="hidden" name="kode_billing" :value="adjustKodeBilling">
                 <div class="p-6 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -1099,7 +1099,7 @@
                         <button type="button" @click="adjustModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
                     </div>
 
-                    <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2">
+                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 text-xs space-y-2">
                         <div class="flex justify-between">
                             <span class="text-slate-400">Invoice:</span>
                             <span class="font-bold text-white font-mono" x-text="adjustKodeBilling"></span>
@@ -1108,7 +1108,7 @@
                             <span class="text-slate-400">Subtotal Pokok:</span>
                             <span class="font-bold text-white" x-text="formatRupiah(adjustSubtotal)"></span>
                         </div>
-                        <div class="flex justify-between border-t border-slate-800 pt-1.5">
+                        <div class="flex justify-between border-t border-slate-200 pt-1.5">
                             <span class="text-amber-400 font-semibold">Total Tagihan Baru:</span>
                             <span class="font-bold text-emerald-400 text-sm" x-text="formatRupiah(adjustTotalBaru)"></span>
                         </div>
@@ -1116,27 +1116,27 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Potongan / Diskon Kompensasi (Rp)</label>
-                        <input type="number" name="potongan" x-model="adjustPotongan" min="0" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                        <input type="number" name="potongan" x-model="adjustPotongan" min="0" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Keterangan Diskon</label>
-                        <input type="text" name="desc_potongan" x-model="adjustDescPotongan" placeholder="Kompensasi kendala jaringan..." class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                        <input type="text" name="desc_potongan" x-model="adjustDescPotongan" placeholder="Kompensasi kendala jaringan..." class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Denda Keterlambatan (Rp)</label>
-                        <input type="number" name="denda" x-model="adjustDenda" min="0" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                        <input type="number" name="denda" x-model="adjustDenda" min="0" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Catatan Adjustment</label>
-                        <input type="text" name="note_adjustment" x-model="adjustNote" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                        <input type="text" name="note_adjustment" x-model="adjustNote" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                     </div>
                 </div>
 
-                <div class="bg-slate-950/80 px-6 py-3.5 border-t border-slate-800 flex justify-end gap-3">
-                    <button type="button" @click="adjustModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+                <div class="bg-slate-100 px-6 py-3.5 border-t border-slate-200 flex justify-end gap-3">
+                    <button type="button" @click="adjustModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-semibold">
                         Batal
                     </button>
                     <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-lg shadow-amber-500/25">
@@ -1150,15 +1150,15 @@
     <!-- 5. MODAL ROLLBACK TAGIHAN -->
     <div x-show="rollbackModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm overflow-y-auto">
         <div @click.away="rollbackModalOpen = false"
-             class="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto">
             
             <form action="{{ route('finance.billing-layanan.rollback.post') }}" method="POST">
                 @csrf
                 <input type="hidden" name="kode_billing" :value="rollbackKodeBilling">
                 <div class="p-6 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -1178,8 +1178,8 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-950/80 px-6 py-3.5 border-t border-slate-800 flex justify-end gap-3">
-                    <button type="button" @click="rollbackModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+                <div class="bg-slate-100 px-6 py-3.5 border-t border-slate-200 flex justify-end gap-3">
+                    <button type="button" @click="rollbackModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-semibold">
                         Batal
                     </button>
                     <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/25">
@@ -1193,37 +1193,37 @@
     <!-- 6. MODAL CHANGE PAYMENT METHOD (MATCHING EXACT SCREENSHOT DESIGN) -->
     <div x-show="changePayModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm overflow-y-auto">
         <div @click.away="changePayModalOpen = false"
-             class="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto">
             
             <form action="{{ route('finance.billing-layanan.change-payment-method.post') }}" method="POST">
                 @csrf
                 <input type="hidden" name="kode_billing" :value="changePayKodeBilling">
                 <div class="p-6 space-y-4">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-4">
                         <!-- Title Label matching screenshot -->
-                        <div class="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                        <div class="text-sm font-semibold text-slate-500">
                             Change Payment Method
                         </div>
 
                         <!-- 3 Radio Options matching screenshot -->
-                        <div class="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700 dark:text-slate-200">
+                        <div class="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700">
                             <!-- Option 1: Midtrans -->
                             <label class="inline-flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" name="payment_type" value="1" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                                <input type="radio" name="payment_type" value="1" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 bg-slate-100 cursor-pointer">
                                 <span class="group-hover:text-blue-500 transition">Midtrans</span>
                             </label>
 
                             <!-- Option 2: Manual Transfer -->
                             <label class="inline-flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" name="payment_type" value="2" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                                <input type="radio" name="payment_type" value="2" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 bg-slate-100 cursor-pointer">
                                 <span class="group-hover:text-blue-500 transition">Manual Transfer</span>
                             </label>
 
                             <!-- Option 3: Cash To Collector -->
                             <label class="inline-flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" name="payment_type" value="3" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                                <input type="radio" name="payment_type" value="3" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 bg-slate-100 cursor-pointer">
                                 <span class="group-hover:text-blue-500 transition">Cash To Collector</span>
                             </label>
                         </div>
@@ -1248,8 +1248,8 @@
                         </div>
                     </div>
 
-                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-slate-500">Invoice: <strong class="text-slate-800 dark:text-white font-mono" x-text="changePayKodeBilling"></strong></span>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-slate-500">Invoice: <strong class="text-slate-800 font-mono" x-text="changePayKodeBilling"></strong></span>
                         <span class="text-slate-500">Pelanggan: <strong class="text-blue-500" x-text="changePayNamaPelanggan"></strong></span>
                     </div>
                 </div>
@@ -1260,12 +1260,12 @@
     <!-- 7. MODAL LINK PEMBAYARAN MIDTRANS SNAP -->
     <div x-show="midtransModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm overflow-y-auto">
         <div @click.away="midtransModalOpen = false"
-             class="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto">
             
             <div class="p-6 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                     <div class="flex items-center gap-3">
                         <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -1280,7 +1280,7 @@
                     <button type="button" @click="midtransModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
                 </div>
 
-                <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2">
+                <div class="p-3.5 rounded-xl bg-white border border-slate-200 text-xs space-y-2">
                     <div class="flex justify-between">
                         <span class="text-slate-400">Invoice:</span>
                         <span class="font-bold text-white font-mono" x-text="midtransKode"></span>
@@ -1289,7 +1289,7 @@
                         <span class="text-slate-400">Pelanggan:</span>
                         <span class="font-semibold text-blue-400" x-text="midtransNama"></span>
                     </div>
-                    <div class="flex justify-between border-t border-slate-800 pt-1.5">
+                    <div class="flex justify-between border-t border-slate-200 pt-1.5">
                         <span class="text-slate-400">Total Tagihan:</span>
                         <span class="font-bold text-emerald-400 text-sm" x-text="formatRupiah(midtransNominal)"></span>
                     </div>
@@ -1309,7 +1309,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1.5">URL Pembayaran Online</label>
                     <div class="flex items-center gap-2">
-                        <input type="text" readonly :value="midtransUrl" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 font-mono focus:border-indigo-500 select-all">
+                        <input type="text" readonly :value="midtransUrl" class="w-full bg-white border border-slate-200 text-slate-200 text-xs rounded-xl px-3 py-2.5 font-mono focus:border-indigo-500 select-all">
                         <button type="button"
                                 @click="copyMidtransLink()"
                                 class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shrink-0 shadow-lg shadow-indigo-500/20 flex items-center gap-1.5 transition">
@@ -1324,7 +1324,7 @@
                 <!-- Actions Grid -->
                 <div class="grid grid-cols-2 gap-3 pt-2">
                     <a :href="midtransUrl" target="_blank"
-                       class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold text-center flex items-center justify-center gap-1.5 transition">
+                       class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-white text-xs font-semibold text-center flex items-center justify-center gap-1.5 transition">
                         <svg class="w-4 h-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                         </svg>
@@ -1341,7 +1341,7 @@
                 </div>
 
                 <!-- Renew Button if Expired or Re-request -->
-                <div class="border-t border-slate-800 pt-3">
+                <div class="border-t border-slate-200 pt-3">
                     <form method="POST" action="{{ route('finance.billing-layanan.renew-midtrans.post') }}" onsubmit="return confirm('Buat Order ID dan perbarui link Midtrans baru untuk invoice ini?')">
                         @csrf
                         <input type="hidden" name="kode_billing" :value="midtransKode">
@@ -1356,8 +1356,8 @@
                 </div>
             </div>
 
-            <div class="bg-slate-950/80 px-6 py-3 border-t border-slate-800 flex justify-end">
-                <button type="button" @click="midtransModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+            <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-end">
+                <button type="button" @click="midtransModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-semibold">
                     Tutup
                 </button>
             </div>

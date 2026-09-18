@@ -161,19 +161,19 @@
      }">
 
     <!-- Top Action & Filter Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xl shadow-black/10">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white backdrop-blur-xl border border-slate-200 rounded-2xl p-4 shadow-xl shadow-slate-200/40">
         
         <!-- Segmented Tab Switcher: Permintaan Siap Aktivasi (#18) vs Riwayat Selesai (#20) -->
-        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs">
+        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs">
             <a href="{{ route('noc.aktivasi', ['status' => 'siap_aktivasi']) }}"
-               class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $statusTab === 'siap_aktivasi' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'text-slate-600 dark:text-slate-400 hover:text-white' }}">
+               class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $statusTab === 'siap_aktivasi' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'text-slate-600 hover:text-white' }}">
                 <span>Antrean Siap Aktivasi (#18)</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-mono {{ $statusTab === 'siap_aktivasi' ? 'bg-white/20 text-white' : 'bg-amber-500/20 text-amber-400' }}">
                     {{ $countSiapAktivasi }}
                 </span>
             </a>
             <a href="{{ route('noc.aktivasi', ['status' => 'riwayat_aktif']) }}"
-               class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $statusTab === 'riwayat_aktif' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'text-slate-600 dark:text-slate-400 hover:text-white' }}">
+               class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $statusTab === 'riwayat_aktif' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'text-slate-600 hover:text-white' }}">
                 <span>Riwayat Selesai Aktivasi (#20)</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-mono {{ $statusTab === 'riwayat_aktif' ? 'bg-white/20 text-white' : 'bg-slate-700 text-slate-300' }}">
                     {{ $countRiwayatAktif }}
@@ -188,7 +188,7 @@
                    name="search" 
                    value="{{ $search }}"
                    placeholder="Cari ID, Nama, ONT, HP..." 
-                   class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                   class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
             <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
             </svg>
@@ -196,10 +196,10 @@
     </div>
 
     <!-- Aktivasi Table Card -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
-        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+    <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/40 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
             <div>
-                <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
                     {{ $statusTab === 'siap_aktivasi' ? 'Daftar Antrean Permintaan Aktivasi Jaringan' : 'Daftar Riwayat Pelanggan Aktif' }}
                 </h3>
                 <p class="text-[11px] text-slate-400 mt-0.5">
@@ -212,7 +212,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    <tr class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700">
                         <th class="py-3.5 px-4">No Internet / Pelanggan</th>
                         <th class="py-3.5 px-4">Paket & Bandwidth</th>
                         <th class="py-3.5 px-4">Alamat & Lokasi</th>
@@ -221,9 +221,9 @@
                         <th class="py-3.5 px-4 text-center">Aksi NOC</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
+                <tbody class="divide-y divide-slate-100">
                     @forelse($pelanggans as $p)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <tr class="hover:bg-slate-50 transition">
                             
                             <!-- 1. Pelanggan -->
                             <td class="py-4 px-4 align-top">
@@ -231,7 +231,7 @@
                                    class="font-mono font-bold text-blue-500 hover:underline">
                                     {{ $p->nomor_internet }}
                                 </a>
-                                <div class="font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5">
+                                <div class="font-semibold text-slate-800 uppercase mt-0.5">
                                     {{ $p->nama_pelanggan }}
                                 </div>
                                 <div class="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -241,7 +241,7 @@
 
                             <!-- 2. Paket Bandwidth -->
                             <td class="py-4 px-4 align-top">
-                                <div class="font-medium text-slate-800 dark:text-slate-200">
+                                <div class="font-medium text-slate-800">
                                     {{ $p->nama_kategori_bandwith ?: ($p->alias_nama_kategori ?: 'INTERNET') }}
                                 </div>
                                 <div class="text-[11px] text-blue-400 font-bold font-mono mt-0.5">
@@ -250,7 +250,7 @@
                             </td>
 
                             <!-- 3. Alamat & Lokasi -->
-                            <td class="py-4 px-4 align-top text-slate-600 dark:text-slate-400 max-w-[200px] truncate">
+                            <td class="py-4 px-4 align-top text-slate-600 max-w-[200px] truncate">
                                 <div>{{ $p->alamat_p ?: ($p->alamat_pasang ?: '-') }}</div>
                                 @if($p->loc_maps)
                                     <a href="{{ $p->loc_maps }}" target="_blank" class="text-[10px] text-blue-500 hover:underline block mt-0.5">
@@ -263,11 +263,11 @@
                             <td class="py-4 px-4 align-top space-y-1">
                                 <div>
                                     <span class="text-[10px] text-slate-400">POP:</span>
-                                    <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $p->nama_pop ?: ($p->kode_pop ?: '-') }}</span>
+                                    <span class="font-semibold text-slate-800">{{ $p->nama_pop ?: ($p->kode_pop ?: '-') }}</span>
                                 </div>
                                 <div>
                                     <span class="text-[10px] text-slate-400">OLT:</span>
-                                    <span class="font-mono text-slate-700 dark:text-slate-300">{{ $p->index_olt ?: '-' }}</span>
+                                    <span class="font-mono text-slate-700">{{ $p->index_olt ?: '-' }}</span>
                                 </div>
                             </td>
 
@@ -283,7 +283,7 @@
                                             {{ $p->status_reg == '19.1' ? 'RESCHEDULE (#19.1)' : 'TERJADWAL (#19)' }}
                                         </span>
                                         @if($p->aktivasi_date_start)
-                                            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-semibold">
+                                            <div class="text-[10px] text-slate-500 font-mono font-semibold">
                                                 📅 {{ \Carbon\Carbon::parse($p->aktivasi_date_start)->translatedFormat('d M Y') }}
                                                 @if($p->aktivasi_time)
                                                     • {{ substr($p->aktivasi_time, 0, 5) }}
@@ -339,7 +339,7 @@
                                     </div>
                                 @else
                                     <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
-                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-semibold border border-slate-200 dark:border-slate-700 transition">
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold border border-slate-200 transition">
                                         <span>Lihat Profil</span>
                                     </a>
                                 @endif
@@ -358,7 +358,7 @@
         </div>
 
         @if($pelanggans->hasPages())
-            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+            <div class="p-4 border-t border-slate-200">
                 {{ $pelanggans->links() }}
             </div>
         @endif
@@ -372,23 +372,23 @@
          class="fixed inset-0 z-50 overflow-y-auto" 
          role="dialog">
         
-        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-100 backdrop-blur-sm transition-opacity" 
              @click="scheduleModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
+            <div class="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
                  @click.away="scheduleModalOpen = false">
                 
                 <!-- Modal Header with Cyan Accent -->
-                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-cyan-500/10 via-transparent to-transparent">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-cyan-500/10 via-transparent to-transparent">
                     <div class="flex items-center gap-2.5">
-                        <div class="p-2 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400">
+                        <div class="p-2 rounded-xl bg-cyan-500/15 text-cyan-600">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-sm font-bold text-slate-800 dark:text-white" x-text="isModalReschedule ? 'Reschedule / Ubah Jadwal Aktivasi (NOC)' : 'Jadwalkan Aktivasi Layanan (NOC)'">
+                            <h3 class="text-sm font-bold text-slate-800" x-text="isModalReschedule ? 'Reschedule / Ubah Jadwal Aktivasi (NOC)' : 'Jadwalkan Aktivasi Layanan (NOC)'">
                             </h3>
                             <p class="text-[11px] text-slate-400" x-text="isModalReschedule ? 'Perbarui tanggal, waktu, atau tim aktivasi jika jadwal sebelumnya berhalangan / tertunda.' : 'Tetapkan tanggal, jam, tim NOC & node jaringan sebelum proses aktivasi layanan.'">
                             </p>
@@ -396,7 +396,7 @@
                     </div>
                     <button type="button" 
                             @click="scheduleModalOpen = false" 
-                            class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition">
+                            class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1 leading-none transition">
                         &times;
                     </button>
                 </div>
@@ -408,55 +408,55 @@
                     @csrf
 
                     <!-- Customer Info Header Banner -->
-                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                         <div class="space-y-0.5">
                             <span class="text-[10px] text-slate-400 uppercase font-mono">ID Pelanggan</span>
                             <div class="font-mono font-bold text-blue-500 text-sm" x-text="modalNomorInternet"></div>
-                            <div class="font-semibold text-slate-800 dark:text-slate-200 uppercase" x-text="modalNamaPelanggan"></div>
+                            <div class="font-semibold text-slate-800 uppercase" x-text="modalNamaPelanggan"></div>
                         </div>
                         <div class="text-right space-y-0.5">
                             <span class="text-[10px] text-slate-400 uppercase font-mono">Paket Berlangganan</span>
-                            <div class="font-bold text-blue-600 dark:text-blue-400" x-text="modalPaket"></div>
+                            <div class="font-bold text-blue-600" x-text="modalPaket"></div>
                         </div>
                     </div>
 
                     <!-- 1. Jadwal & Waktu Aktivasi -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                                 <span x-text="isModalReschedule ? 'Tanggal Jadwal Baru' : 'Tanggal Rencana Aktivasi'"></span> <span class="text-rose-500 font-bold">*</span>
                             </label>
                             <input type="date" 
                                    name="jadwal_aktivasi" 
                                    x-model="modalJadwalAktivasi" 
                                    required 
-                                   class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs">
+                                   class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                                 Waktu / Jam Aktivasi <span class="text-rose-500 font-bold">*</span>
                             </label>
                             <input type="time" 
                                    name="waktu_aktivasi" 
                                    x-model="modalWaktuAktivasi" 
                                    required 
-                                   class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs">
+                                   class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs">
                         </div>
                     </div>
 
                     <!-- 2. Petugas / Tim NOC -->
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                             Petugas / Tim NOC Eksekutor <span class="text-rose-500 font-bold">*</span>
                         </label>
-                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 max-h-32 overflow-y-auto space-y-1.5">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-300 max-h-32 overflow-y-auto space-y-1.5">
                             @foreach($karyawans as $karyawan)
-                                <label class="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 hover:text-cyan-500">
+                                <label class="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-cyan-500">
                                     <input type="checkbox" 
                                            name="team_aktivasi[]" 
                                            value="{{ $karyawan->nama_karyawan }}" 
                                            x-model="modalTeamAktivasi" 
-                                           class="rounded border-slate-300 dark:border-slate-700 text-cyan-600 focus:ring-cyan-500">
+                                           class="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500">
                                     <span class="text-xs">{{ $karyawan->nama_karyawan }}</span>
                                 </label>
                             @endforeach
@@ -465,21 +465,21 @@
 
                     <!-- 5. Catatan / Rencana Aktivasi -->
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                             <span x-text="isModalReschedule ? 'Alasan Reschedule / Catatan Baru' : 'Catatan / Instruksi Rencana Aktivasi'"></span>
                         </label>
                         <textarea name="catatan" 
                                   x-model="modalCatatanSchedule" 
                                   rows="2" 
                                   placeholder="Catatan persiapan aktivasi atau alasan penundaan/reschedule..." 
-                                  class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs"></textarea>
+                                  class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs"></textarea>
                     </div>
 
                     <!-- Modal Actions: Batal & Simpan Jadwal -->
-                    <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                         <button type="button" 
                                 @click="scheduleModalOpen = false" 
-                                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
                             <span>Batal</span>
                         </button>
                         <button type="submit" 
@@ -506,21 +506,21 @@
          role="dialog">
         
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-100 backdrop-blur-sm transition-opacity" 
              @click="reportModalOpen = false; aktivasiModalOpen = false;"></div>
         
         <div class="flex min-h-full items-center justify-center p-3 sm:p-5">
-            <div class="relative w-full max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all"
+            <div class="relative w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden transition-all"
                  @click.away="reportModalOpen = false; aktivasiModalOpen = false;">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <div class="space-y-0.5">
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
                             <span>Aktivasi Layanan An/</span>
-                            <span class="text-blue-600 dark:text-blue-400 uppercase font-mono" x-text="modalNamaPelanggan"></span>
+                            <span class="text-blue-600 uppercase font-mono" x-text="modalNamaPelanggan"></span>
                         </h3>
-                        <p class="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <p class="text-[11px] text-emerald-600 flex items-center gap-1">
                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                             </svg>
@@ -529,7 +529,7 @@
                     </div>
                     <button type="button" 
                             @click="reportModalOpen = false; aktivasiModalOpen = false;" 
-                            class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-xl font-bold transition">
+                            class="text-slate-400 hover:text-slate-700 text-xl font-bold transition">
                         &times;
                     </button>
                 </div>
@@ -546,14 +546,14 @@
 
                     <!-- Info Catatan Schedule Aktivasi (Otomatis Masuk dari Tahap Schedule) -->
                     <template x-if="modalCatatanSchedule">
-                        <div class="p-3.5 rounded-xl bg-cyan-50/70 dark:bg-cyan-950/40 border border-cyan-200 dark:border-cyan-800/70 text-xs space-y-1">
-                            <div class="flex items-center gap-1 text-[11px] uppercase font-bold text-cyan-700 dark:text-cyan-400">
+                        <div class="p-3.5 rounded-xl bg-cyan-50/70 border border-cyan-200 text-xs space-y-1">
+                            <div class="flex items-center gap-1 text-[11px] uppercase font-bold text-cyan-700">
                                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                 </svg>
                                 <span>Catatan / Instruksi dari Schedule Aktivasi:</span>
                             </div>
-                            <p class="text-slate-800 dark:text-slate-200 font-medium whitespace-pre-line pl-4.5" x-text="modalCatatanSchedule"></p>
+                            <p class="text-slate-800 font-medium whitespace-pre-line pl-4.5" x-text="modalCatatanSchedule"></p>
                         </div>
                     </template>
 
@@ -566,35 +566,35 @@
                             <!-- 1. Tanggal Selesai & Waktu Aktivasi -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                                         Tanggal Aktivasi <span class="text-rose-500 font-bold">*</span>
                                     </label>
                                     <input type="date" 
                                            name="jadwal_aktivasi" 
                                            x-model="modalJadwalAktivasi" 
                                            required 
-                                           class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+                                           class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                                         Waktu Aktivasi <span class="text-rose-500 font-bold">*</span>
                                     </label>
                                     <input type="time" 
                                            name="waktu_aktivasi" 
                                            x-model="modalWaktuAktivasi" 
                                            required 
-                                           class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+                                           class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                                 </div>
                             </div>
 
                             <!-- 2. Team Aktivasi (Checkbox Grid) -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1.5">
                                     Petugas / Team Aktivasi
                                 </label>
-                                <div class="grid grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-[11px] max-h-32 overflow-y-auto">
+                                <div class="grid grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] max-h-32 overflow-y-auto">
                                     @foreach($karyawans as $tech)
-                                        <label class="flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-300 hover:text-blue-500">
+                                        <label class="flex items-center gap-2 cursor-pointer text-slate-700 hover:text-blue-500">
                                             <input type="checkbox" 
                                                    name="team_aktivasi[]" 
                                                    value="{{ $tech->nama_karyawan }}" 
@@ -609,13 +609,13 @@
                             <!-- 3. POP/ODN & Media Akses -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                                         POP/ODN <span class="text-rose-500 font-bold">*</span>
                                     </label>
                                     <select name="kode_pop" 
                                             x-model="modalKodePop" 
                                             required
-                                            class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+                                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                                         <option value="">-- Pilih POP --</option>
                                         @foreach($pops as $pop)
                                             <option value="{{ $pop->kode_pop }}">{{ $pop->nama_pop }}</option>
@@ -623,13 +623,13 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                                         Media Akses <span class="text-rose-500 font-bold">*</span>
                                     </label>
                                     <select name="media_akses" 
                                             x-model="modalMediaAkses" 
                                             required
-                                            class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+                                            class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                                         <option value="FTTH">FTTH</option>
                                         <option value="FTTH MSN">FTTH MSN</option>
                                         <option value="PTP FO">PTP FO</option>
@@ -642,9 +642,9 @@
                             <!-- 3b. Dropdown Pilihan 3 OLT Server (Muncul Jika Media Akses FTTH) -->
                             <div x-show="modalMediaAkses === 'FTTH' || modalMediaAkses === 'FTTH MSN'" 
                                  x-transition
-                                 class="p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/70">
+                                 class="p-3 rounded-xl bg-blue-50/60 border border-blue-200">
                                 <div class="flex items-center justify-between mb-1.5">
-                                    <label class="block text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                                    <label class="block text-[11px] font-bold text-blue-700">
                                         Pilih Server OLT (FTTH) <span class="text-rose-500">*</span>
                                     </label>
                                     <span class="text-[10px] font-mono text-blue-500 font-semibold">{{ count($olts) }} OLT Tersedia</span>
@@ -652,7 +652,7 @@
                                 <select name="olt" 
                                         x-model="modalOlt"
                                         :required="modalMediaAkses === 'FTTH' || modalMediaAkses === 'FTTH MSN'"
-                                        class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+                                        class="w-full px-3 py-2 rounded-xl bg-white border border-blue-300 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                                     @foreach($olts as $oltItem)
                                         <option value="{{ $oltItem->kode_olt }}">
                                             {{ $oltItem->name_olt ?? ($oltItem->nama_olt ?? $oltItem->kode_olt) }} ({{ $oltItem->kode_olt }})
@@ -664,9 +664,9 @@
                             <!-- 4. Index OLT (Port Selector & Slot 1..128 Selector) - Hidden if PTP FO -->
                             <div x-show="modalMediaAkses !== 'PTP FO'" 
                                  x-transition
-                                 class="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+                                 class="space-y-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                                 <div class="flex items-center justify-between">
-                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                    <label class="block text-[11px] font-semibold text-slate-700">
                                         Index OLT <span class="text-rose-500 font-bold">*</span>
                                     </label>
                                     <span class="text-[10px] text-blue-500 font-mono font-bold" x-text="modalIndexOlt || 'Belum dipilih'"></span>
@@ -675,12 +675,12 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                     <!-- Select GPON Port -->
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                                        <label class="block text-xs font-bold text-slate-800 mb-1">
                                             Pilih Port GPON:
                                         </label>
                                         <select x-model="selectedGponPort" 
                                                 @change="selectedOnuSlot = ''; updateIndexOlt();"
-                                                class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-[11px] font-semibold">
+                                                class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-800 font-mono text-[11px] font-semibold">
                                             @if(isset($allPorts))
                                                 @foreach($allPorts as $port)
                                                     @php $stat = $portStats[$port] ?? null; @endphp
@@ -694,12 +694,12 @@
 
                                     <!-- Select Index (1..128) -->
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
+                                        <label class="block text-xs font-bold text-slate-800 mb-1">
                                             Pilih Index:
                                         </label>
                                         <select x-model="selectedOnuSlot" 
                                                 @change="updateIndexOlt()" 
-                                                class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-[11px] font-semibold">
+                                                class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-800 font-mono text-[11px] font-semibold">
                                             <option value="">-- Pilih Index (1..128) --</option>
                                             <template x-for="slot in (allSlots[selectedGponPort] || [])" :key="slot.key">
                                                 <option :value="slot.num" 
@@ -716,7 +716,7 @@
 
                             <!-- 5. SN / Serial Nomor Modem -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                                     SN / Serial Nomor Modem ONT <span class="text-rose-500 font-bold">*</span>
                                 </label>
                                 <input type="text" 
@@ -724,19 +724,19 @@
                                        x-model="modalSnModem" 
                                        required
                                        placeholder="Contoh: ZTEGC1234567 atau HUAWEI1234..." 
-                                       class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                             </div>
 
                             <!-- 6. Catatan Tambahan Eksekusi Aktivasi -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
                                     Catatan Eksekusi Aktivasi
                                 </label>
                                 <textarea name="catatan_aktivasi" 
                                           x-model="modalCatatanAktivasi" 
                                           rows="2" 
                                           placeholder="Catatan hasil aktivasi teknis atau redaman optik..." 
-                                          class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"></textarea>
+                                          class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"></textarea>
                             </div>
 
                         </div>
@@ -746,15 +746,15 @@
                             
                             <!-- Subheading with blue vertical accent bar -->
                             <div class="flex items-center gap-2">
-                                <span class="w-1 h-5 rounded bg-blue-600 dark:bg-blue-500"></span>
-                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Perangkat/ Peralatan & Bukti Foto</span>
+                                <span class="w-1 h-5 rounded bg-blue-600"></span>
+                                <span class="text-xs font-bold text-slate-800">Perangkat/ Peralatan & Bukti Foto</span>
                             </div>
 
                             <!-- Dynamic Device / Item Adder Row -->
                             <div class="grid grid-cols-12 gap-2 items-end">
                                 <div class="col-span-6">
-                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Perangkat</label>
-                                    <select x-model="selectedBarang" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">Perangkat</label>
+                                    <select x-model="selectedBarang" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                                         <option value="">Pilih Perangkat</option>
                                         @foreach($barangs as $b)
                                             <option value="{{ $b->kode_barang }}">{{ $b->nama_barang }} {{ $b->tipe_barang }}</option>
@@ -762,8 +762,8 @@
                                     </select>
                                 </div>
                                 <div class="col-span-3">
-                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">Jumlah</label>
-                                    <input type="number" min="1" x-model="selectedJumlah" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">Jumlah</label>
+                                    <input type="number" min="1" x-model="selectedJumlah" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
                                 </div>
                                 <div class="col-span-3">
                                     <label class="block text-[11px] font-semibold text-transparent mb-1">action</label>
@@ -776,16 +776,16 @@
                             </div>
 
                             <!-- Table of Added Perangkat Items -->
-                            <div class="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                            <div class="rounded-xl border border-slate-200 overflow-hidden">
                                 <table class="w-full text-left text-xs border-collapse">
                                     <thead>
-                                        <tr class="bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                        <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-700">
                                             <th class="py-2 px-3">Barang</th>
                                             <th class="py-2 px-3 text-center w-20">Jumlah</th>
                                             <th class="py-2 px-3 text-center w-16">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
+                                    <tbody class="divide-y divide-slate-100">
                                         <template x-if="perangkatList.length === 0">
                                             <tr>
                                                 <td colspan="3" class="py-4 text-center text-slate-400 text-xs">
@@ -794,8 +794,8 @@
                                             </tr>
                                         </template>
                                         <template x-for="(item, index) in perangkatList" :key="index">
-                                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                                <td class="py-1.5 px-3 font-medium text-slate-800 dark:text-slate-200" x-text="item.nama"></td>
+                                            <tr class="hover:bg-slate-50 transition">
+                                                <td class="py-1.5 px-3 font-medium text-slate-800" x-text="item.nama"></td>
                                                 <td class="py-1.5 px-3 text-center font-mono font-bold" x-text="item.jumlah"></td>
                                                 <td class="py-1.5 px-3 text-center">
                                                     <button type="button" @click="removePerangkat(index)" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition">
@@ -810,10 +810,10 @@
 
                             <!-- Foto Bukti Aktivasi Upload Area -->
                             <div class="space-y-1.5 pt-2">
-                                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                                <label class="block text-xs font-bold text-slate-800">
                                     Foto Bukti Aktivasi / Hasil Redaman ONT <span class="text-rose-500">*</span>
                                 </label>
-                                <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer bg-slate-50/50 dark:bg-slate-950/40">
+                                <div class="relative border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50/50">
                                     <input type="file" 
                                            name="foto_aktivasi" 
                                            accept="image/*"
@@ -822,11 +822,11 @@
                                     
                                     <template x-if="!fotoAktivasiPreview">
                                         <div class="flex flex-col items-center justify-center py-4">
-                                            <svg class="w-8 h-8 text-slate-400 dark:text-slate-500 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <svg class="w-8 h-8 text-slate-400 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
                                             </svg>
-                                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Klik atau drag foto bukti aktivasi / redaman optik disini</p>
+                                            <p class="text-xs text-slate-500 font-medium">Klik atau drag foto bukti aktivasi / redaman optik disini</p>
                                         </div>
                                     </template>
 
@@ -843,10 +843,10 @@
                     </div>
 
                     <!-- Modal Actions: Batal & Simpan Report Aktivasi -->
-                    <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                         <button type="button" 
                                 @click="reportModalOpen = false; aktivasiModalOpen = false;" 
-                                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
                             <span>Batal</span>
                         </button>
 
@@ -875,15 +875,15 @@
          role="dialog">
         
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity" 
+        <div class="fixed inset-0 bg-white/85 backdrop-blur-md transition-opacity" 
              @click="pppoeModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-5">
-            <div class="relative w-full max-w-2xl bg-[#0b132b] text-slate-100 border border-slate-800/80 rounded-2xl shadow-2xl overflow-hidden transition-all my-auto"
+            <div class="relative w-full max-w-2xl bg-[#0b132b] text-slate-100 border border-slate-200/80 rounded-2xl shadow-2xl overflow-hidden transition-all my-auto"
                  @click.away="pppoeModalOpen = false">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between bg-[#0b132b]/80">
+                <div class="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between bg-[#0b132b]/80">
                     <h3 class="text-base font-bold text-white tracking-wide flex items-center gap-1">
                         <span>Konfigurasi PPPoE & Mulai Aktivasi An/</span>
                         <span class="uppercase text-blue-400" x-text="modalNamaPelanggan"></span>
@@ -915,7 +915,7 @@
                                        name="pppoe_username" 
                                        x-model="pppoeUsername" 
                                        required
-                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-300 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
                             </div>
 
                             <!-- PPPoE Password with Eye Toggle -->
@@ -928,7 +928,7 @@
                                            name="pppoe_password" 
                                            x-model="pppoePassword" 
                                            required
-                                           class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                           class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#091124] border border-slate-300 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
                                     <button type="button" 
                                             @click="showPassword = !showPassword"
                                             class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
@@ -962,7 +962,7 @@
                                 <select name="router_mikrotik" 
                                         x-model="selectedRouter" 
                                         required
-                                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-300 text-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
                                     <option value="Router Core Utama (CCR1036)">Router Core Utama (CCR1036)</option>
                                     <option value="Router Core BBU (CCR1072)">Router Core BBU (CCR1072)</option>
                                     <option value="Router POP Kayu Agung (CCR2004)">Router POP Kayu Agung (CCR2004)</option>
@@ -980,7 +980,7 @@
                                        name="local_address" 
                                        x-model="localAddress" 
                                        required
-                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-300 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
                             </div>
 
                             <!-- Profile PPP -->
@@ -992,7 +992,7 @@
                                        name="ppp_profile" 
                                        x-model="pppProfile" 
                                        required
-                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-300 text-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
                             </div>
 
                             <!-- Remote Address (IP Pelanggan) -->
@@ -1004,13 +1004,13 @@
                                        name="remote_address" 
                                        x-model="remoteAddress" 
                                        placeholder="Contoh: 10.10.10.25 atau pool name"
-                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-mono placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-300 text-white font-mono placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer Actions -->
-                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800/80">
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/80">
                         <button type="submit" 
                                 class="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#0070f3] hover:bg-[#005bb5] text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition cursor-pointer">
                             <span>Buat PPPoE Secret & Mulai Aktivasi</span>

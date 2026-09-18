@@ -40,7 +40,7 @@
     <!-- 4 KPI Stat Cards (Matching Screenshot) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- 1. Total Pengguna -->
-        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl flex items-center justify-between relative overflow-hidden group hover:border-slate-700 transition">
+        <div class="p-5 rounded-2xl bg-white border border-slate-200/80 backdrop-blur-xl flex items-center justify-between relative overflow-hidden group hover:border-slate-200 transition">
             <div class="space-y-1">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pengguna</p>
                 <p class="text-3xl font-extrabold text-white">{{ $totalUsers }}</p>
@@ -55,7 +55,7 @@
         </div>
 
         <!-- 2. Pengguna Aktif -->
-        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl flex items-center justify-between relative overflow-hidden group hover:border-slate-700 transition">
+        <div class="p-5 rounded-2xl bg-white border border-slate-200/80 backdrop-blur-xl flex items-center justify-between relative overflow-hidden group hover:border-slate-200 transition">
             <div class="space-y-1">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengguna Aktif</p>
                 <p class="text-3xl font-extrabold text-emerald-400">{{ $activeUsers }}</p>
@@ -70,7 +70,7 @@
         </div>
 
         <!-- 3. Pengguna Nonaktif -->
-        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl flex items-center justify-between relative overflow-hidden group hover:border-slate-700 transition">
+        <div class="p-5 rounded-2xl bg-white border border-slate-200/80 backdrop-blur-xl flex items-center justify-between relative overflow-hidden group hover:border-slate-200 transition">
             <div class="space-y-1">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pengguna Nonaktif</p>
                 <p class="text-3xl font-extrabold text-rose-400">{{ $inactiveUsers }}</p>
@@ -85,7 +85,7 @@
         </div>
 
         <!-- 4. Level & Role -->
-        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl flex items-center justify-between relative overflow-hidden group hover:border-slate-700 transition">
+        <div class="p-5 rounded-2xl bg-white border border-slate-200/80 backdrop-blur-xl flex items-center justify-between relative overflow-hidden group hover:border-slate-200 transition">
             <div class="space-y-1">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Level &amp; Role</p>
                 <p class="text-3xl font-extrabold text-purple-400">{{ $totalRoles }}</p>
@@ -101,7 +101,7 @@
     </div>
 
     <!-- Filter Bar & Search Box (Matching Screenshot) -->
-    <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl">
+    <div class="p-4 rounded-2xl bg-white border border-slate-200/80 backdrop-blur-xl">
         <form method="GET" action="{{ route('admin.users') }}" class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
                 <!-- Search Input -->
@@ -115,12 +115,12 @@
                            name="search"
                            value="{{ $search }}"
                            placeholder="CARI USERNAME, NAMA, ROLE, ATAU JABATAN..."
-                           class="w-full pl-10 pr-4 py-2 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 uppercase tracking-wide">
+                           class="w-full pl-10 pr-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 uppercase tracking-wide">
                 </div>
 
                 <!-- Role Filter -->
                 <div class="w-full sm:w-44">
-                    <select name="role" class="w-full px-3 py-2 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    <select name="role" class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-blue-500">
                         <option value="all" {{ $selectedRole === 'all' ? 'selected' : '' }}>Semua Role</option>
                         @foreach($levelList as $lvl)
                             <option value="{{ $lvl->kode_level }}" {{ $selectedRole === $lvl->kode_level ? 'selected' : '' }}>
@@ -132,7 +132,7 @@
 
                 <!-- Status Filter -->
                 <div class="w-full sm:w-40">
-                    <select name="status" class="w-full px-3 py-2 bg-slate-950/80 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                    <select name="status" class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-blue-500">
                         <option value="all" {{ $selectedStatus === 'all' ? 'selected' : '' }}>Semua Status</option>
                         <option value="1" {{ $selectedStatus === '1' ? 'selected' : '' }}>Aktif</option>
                         <option value="2" {{ $selectedStatus === '2' ? 'selected' : '' }}>Nonaktif</option>
@@ -140,7 +140,7 @@
                 </div>
 
                 <!-- Filter Submit Button -->
-                <button type="submit" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 shadow-sm">
+                <button type="submit" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-200 border border-slate-200 text-white text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 shadow-sm">
                     <span>Filter</span>
                 </button>
             </div>
@@ -148,7 +148,7 @@
             <!-- Items per Page -->
             <div class="flex items-center justify-end gap-2 text-xs text-slate-400">
                 <span>Tampilkan</span>
-                <select name="per_page" onchange="this.form.submit()" class="px-2.5 py-1.5 bg-slate-950/80 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500">
+                <select name="per_page" onchange="this.form.submit()" class="px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500">
                     <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
                     <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
                     <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
@@ -160,11 +160,11 @@
     </div>
 
     <!-- Data Table Card (Matching Screenshot) -->
-    <div class="rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-xl overflow-hidden shadow-xl shadow-black/20">
+    <div class="rounded-2xl bg-white border border-slate-200/80 backdrop-blur-xl overflow-hidden shadow-xl shadow-slate-200/50">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-800 bg-slate-950/50 text-[11px] uppercase tracking-wider font-semibold text-slate-400">
+                    <tr class="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider font-semibold text-slate-400">
                         <th class="px-5 py-4">PENGGUNA</th>
                         <th class="px-5 py-4">USERNAME</th>
                         <th class="px-5 py-4">ROLE / LEVEL</th>
@@ -173,7 +173,7 @@
                         <th class="px-5 py-4 text-center">AKSI</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/60 text-xs">
+                <tbody class="divide-y divide-slate-100/60 text-xs">
                     @forelse($users as $u)
                         @php
                             $isCurrentUser = auth()->user()->kode_pengguna === $u->kode_pengguna;
@@ -200,12 +200,12 @@
                                 $roleLabel = $u->nama_level;
                             }
                         @endphp
-                        <tr class="hover:bg-slate-800/40 transition">
+                        <tr class="hover:bg-slate-50/80 transition">
                             <!-- PENGGUNA -->
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 p-0.5 flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-md">
-                                        <div class="w-full h-full bg-slate-900 rounded-full flex items-center justify-center font-bold text-sm text-blue-400">
+                                        <div class="w-full h-full bg-white rounded-full flex items-center justify-center font-bold text-sm text-blue-400">
                                             {{ strtoupper(substr($u->nama_karyawan, 0, 1)) }}
                                         </div>
                                     </div>
@@ -227,7 +227,7 @@
 
                             <!-- USERNAME -->
                             <td class="px-5 py-4 whitespace-nowrap">
-                                <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-800 font-mono text-slate-300 text-xs">
+                                <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 font-mono text-slate-300 text-xs">
                                     {{ $u->username }}
                                 </span>
                             </td>
@@ -329,7 +329,7 @@
 
         <!-- Pagination -->
         @if($users->hasPages())
-            <div class="px-5 py-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
+            <div class="px-5 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
                 <p class="text-xs text-slate-400">
                     Menampilkan <strong class="text-white">{{ $users->firstItem() ?? 0 }}</strong> - <strong class="text-white">{{ $users->lastItem() ?? 0 }}</strong> dari <strong class="text-white">{{ $users->total() }}</strong> pengguna
                 </p>
@@ -357,7 +357,7 @@
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
                  @click="isCreateOpen = false"
-                 class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"></div>
+                 class="fixed inset-0 bg-slate-100 backdrop-blur-md transition-opacity"></div>
 
             <!-- Modal Panel -->
             <div x-show="isCreateOpen"
@@ -367,10 +367,10 @@
                  x-transition:leave="ease-in duration-200"
                  x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                  x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="relative bg-slate-900 border border-slate-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full">
+                 class="relative bg-white border border-slate-200 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full">
                 
                 <!-- Modal Header -->
-                <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div class="p-6 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -382,7 +382,7 @@
                             <p class="text-xs text-slate-400 mt-0.5">Buat akun pengguna baru dan tentukan hak akses peran.</p>
                         </div>
                     </div>
-                    <button @click="isCreateOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+                    <button @click="isCreateOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-100 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -400,7 +400,7 @@
                                    name="nama_lengkap"
                                    required
                                    placeholder="Contoh: FARICH AGUSTIAN"
-                                   class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                                   class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500">
                         </div>
 
                         <!-- Username & Role -->
@@ -411,11 +411,11 @@
                                        name="username"
                                        required
                                        placeholder="farich@ptmsn.co.id"
-                                       class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                                       class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-mono text-white placeholder-slate-400 focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Role / Hak Akses <span class="text-rose-400">*</span></label>
-                                <select name="kode_level" required class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
+                                <select name="kode_level" required class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
                                     <option value="" disabled selected>Pilih Role</option>
                                     @foreach($levelList as $lvl)
                                         <option value="{{ $lvl->kode_level }}">{{ $lvl->nama_level }}</option>
@@ -431,11 +431,11 @@
                                 <input type="text"
                                        name="jabatan"
                                        placeholder="STAF / IT SUPPORT"
-                                       class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                                       class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Status Akun <span class="text-rose-400">*</span></label>
-                                <select name="status_aktif" required class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
+                                <select name="status_aktif" required class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
                                     <option value="1" selected>Aktif (Dapat Login)</option>
                                     <option value="2">Nonaktif (Akses Terkunci)</option>
                                 </select>
@@ -443,7 +443,7 @@
                         </div>
 
                         <!-- Card Password -->
-                        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                             <div class="flex items-center gap-2 text-xs font-semibold text-blue-400">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
@@ -458,7 +458,7 @@
                                            required
                                            minlength="6"
                                            placeholder="Minimal 6 karakter"
-                                           class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500">
+                                           class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-medium text-slate-400 mb-1">Ulangi Password Baru <span class="text-rose-400">*</span></label>
@@ -467,15 +467,15 @@
                                            required
                                            minlength="6"
                                            placeholder="Ulangi password"
-                                           class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500">
+                                           class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Modal Footer -->
-                    <div class="p-6 border-t border-slate-800 bg-slate-950/40 flex items-center justify-end gap-3">
-                        <button type="button" @click="isCreateOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold transition">
+                    <div class="p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3">
+                        <button type="button" @click="isCreateOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs sm:text-sm font-semibold transition">
                             Batal
                         </button>
                         <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-blue-600/25 transition">
@@ -507,7 +507,7 @@
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
                  @click="isEditOpen = false"
-                 class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"></div>
+                 class="fixed inset-0 bg-slate-100 backdrop-blur-md transition-opacity"></div>
 
             <!-- Modal Panel -->
             <div x-show="isEditOpen"
@@ -517,10 +517,10 @@
                  x-transition:leave="ease-in duration-200"
                  x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                  x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="relative bg-slate-900 border border-slate-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full">
+                 class="relative bg-white border border-slate-200 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full">
                 
                 <!-- Modal Header -->
-                <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div class="p-6 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -532,7 +532,7 @@
                             <p class="text-xs text-slate-400 font-mono mt-0.5" x-text="editForm.kode_pengguna + ' &bull; ' + (editForm.kode_karyawan || '-')"></p>
                         </div>
                     </div>
-                    <button @click="isEditOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+                    <button @click="isEditOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-100 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -550,7 +550,7 @@
                                    name="nama_lengkap"
                                    x-model="editForm.nama_karyawan"
                                    required
-                                   class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
+                                   class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
                         </div>
 
                         <!-- Username & Role -->
@@ -561,11 +561,11 @@
                                        name="username"
                                        x-model="editForm.username"
                                        required
-                                       class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-blue-500">
+                                       class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Role / Hak Akses <span class="text-rose-400">*</span></label>
-                                <select name="kode_level" x-model="editForm.kode_level" required class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
+                                <select name="kode_level" x-model="editForm.kode_level" required class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
                                     @foreach($levelList as $lvl)
                                         <option value="{{ $lvl->kode_level }}">{{ $lvl->nama_level }}</option>
                                     @endforeach
@@ -580,11 +580,11 @@
                                 <input type="text"
                                        name="jabatan"
                                        x-model="editForm.nama_jabatan"
-                                       class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
+                                       class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Status Akun <span class="text-rose-400">*</span></label>
-                                <select name="status_aktif" x-model="editForm.status_aktif" required class="w-full px-3.5 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
+                                <select name="status_aktif" x-model="editForm.status_aktif" required class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500">
                                     <option value="1">Aktif (Dapat Login)</option>
                                     <option value="2">Nonaktif (Akses Terkunci)</option>
                                 </select>
@@ -592,7 +592,7 @@
                         </div>
 
                         <!-- Card Ubah Password -->
-                        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                             <div class="flex items-center gap-2 text-xs font-semibold text-blue-400">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
@@ -606,7 +606,7 @@
                                            name="password"
                                            minlength="6"
                                            placeholder="Minimal 6 karakter"
-                                           class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500">
+                                           class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-medium text-slate-400 mb-1">Ulangi Password Baru</label>
@@ -614,15 +614,15 @@
                                            name="password_confirmation"
                                            minlength="6"
                                            placeholder="Ulangi password"
-                                           class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500">
+                                           class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500">
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Modal Footer -->
-                    <div class="p-6 border-t border-slate-800 bg-slate-950/40 flex items-center justify-end gap-3">
-                        <button type="button" @click="isEditOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold transition">
+                    <div class="p-6 border-t border-slate-200 bg-slate-50 flex items-center justify-end gap-3">
+                        <button type="button" @click="isEditOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs sm:text-sm font-semibold transition">
                             Batal
                         </button>
                         <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-blue-600/25 transition">

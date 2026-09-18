@@ -137,10 +137,10 @@
     </div>
 
     <!-- Filter Bar -->
-    <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+    <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xl">
         <form method="GET" action="{{ route('finance.permintaan.suspend') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
             <div class="lg:col-span-3">
-                <select name="layanan" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="layanan" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">SEMUA LAYANAN</option>
                     @foreach($layananList as $lay)
                         <option value="{{ $lay }}" {{ request('layanan') === $lay ? 'selected' : '' }}>{{ strtoupper($lay) }}</option>
@@ -153,11 +153,11 @@
                        name="search"
                        value="{{ $search }}"
                        placeholder="Cari Kode Suspend / No. Internet / Nama / Alasan..."
-                       class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 placeholder-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-200 placeholder-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div class="lg:col-span-3">
-                <select name="status" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="status" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">SEMUA STATUS</option>
                     <option value="11" {{ request('status') === '11' ? 'selected' : '' }}>(1011) Request Suspend</option>
                     <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>(1012) Suspend (Isolir)</option>
@@ -169,7 +169,7 @@
 
             <div class="lg:col-span-2 flex items-center gap-2">
                 <a href="{{ route('finance.permintaan.suspend') }}"
-                   class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                   class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-bold transition">
                     <span>Reset</span>
                 </a>
                 <button type="submit"
@@ -181,11 +181,11 @@
     </div>
 
     <!-- Data Table -->
-    <div class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+    <div class="bg-white backdrop-blur-xl border border-slate-200 rounded-2xl overflow-hidden shadow-xl">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                    <tr class="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-semibold">
+                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-400 font-semibold">
                         <th class="py-3.5 px-4">KODE / TANGGAL MULAI</th>
                         <th class="py-3.5 px-4">PELANGGAN</th>
                         <th class="py-3.5 px-4">PAKET</th>
@@ -195,9 +195,9 @@
                         <th class="py-3.5 px-4 text-center">AKSI FINANCE</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                <tbody class="divide-y divide-slate-100/60 text-slate-300">
                     @forelse($suspends as $s)
-                        <tr class="hover:bg-slate-800/40 transition">
+                        <tr class="hover:bg-slate-50/80 transition">
                             <!-- Kode / Tgl -->
                             <td class="py-3.5 px-4">
                                 <span class="font-mono font-bold text-rose-400">{{ $s->kode_suspend }}</span>
@@ -307,7 +307,7 @@
         </div>
 
         @if($suspends->hasPages())
-            <div class="p-4 border-t border-slate-800 bg-slate-950/40 flex justify-end">
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
                 {{ $suspends->links() }}
             </div>
         @endif
@@ -318,11 +318,11 @@
     <!-- ======================================================================= -->
     <div x-show="createModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-100 backdrop-blur-sm">
         <div @click.away="createModalOpen = false"
-             class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+             class="w-full max-w-xl bg-white border border-slate-200 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
             
-            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
                 <div>
                     <h3 class="text-base font-bold text-white flex items-center gap-2">
                         <span>🛑 Ajukan Permintaan Suspend (Isolir) ke NOC</span>
@@ -342,12 +342,12 @@
                            x-model="searchCustomerQuery"
                            @input.debounce.300ms="searchCustomer()"
                            placeholder="Ketik minimal 2 karakter untuk mencari pelanggan..."
-                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium">
+                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium">
 
                     <!-- Dropdown Search Results -->
                     <div x-show="customerResults.length > 0"
                          x-cloak
-                         class="absolute z-20 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-slate-950 border border-slate-700 rounded-xl shadow-xl divide-y divide-slate-800">
+                         class="absolute z-20 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl divide-y divide-slate-100">
                         <template x-for="cust in customerResults" :key="cust.nomor_internet">
                             <div @click="selectCustomer(cust)"
                                  class="p-2.5 hover:bg-rose-600/20 cursor-pointer text-xs transition">
@@ -389,7 +389,7 @@
                            name="suspend_start"
                            value="{{ date('Y-m-d') }}"
                            required
-                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium">
+                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium">
                 </div>
 
                 <!-- 3. Alasan / Keterangan Tunggakan -->
@@ -399,13 +399,13 @@
                               rows="3"
                               required
                               placeholder="Contoh: Melewati batas pembayaran tanggal jatuh tempo periode berjalan..."
-                              class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500">Melewati batas pembayaran yang telah ditentukan</textarea>
+                              class="w-full text-xs px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500">Melewati batas pembayaran yang telah ditentukan</textarea>
                 </div>
 
-                <div class="pt-3 border-t border-slate-800 flex items-center justify-end gap-3">
+                <div class="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
                     <button type="button"
                             @click="createModalOpen = false"
-                            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-300 text-xs font-bold transition">
                         Batal
                     </button>
                     <button type="submit"

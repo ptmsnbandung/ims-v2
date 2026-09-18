@@ -2044,7 +2044,10 @@ class TeknikController extends Controller
             ]
         );
 
-        // 2. Simpan ke trx_batchjob_register
+        // 2. Simpan ke trx_batchjob_register (Generate ID PPPoE Username & Password langsung)
+        $ontUs = substr($nomorInternet, 0, 10);
+        $ontPs = (string) rand(100000, 999999);
+
         DB::table('trx_batchjob_register')->insert([
             'nomor_internet' => $nomorInternet,
             'nik_penduduk' => $request->nik_penduduk,
@@ -2063,6 +2066,8 @@ class TeknikController extends Controller
             'status_reg' => '11', // Menunggu verifikasi
             'group_layanan' => $request->group_layanan ?: 'MEDIANET',
             'nama_sales' => $request->nama_sales,
+            'ont_us' => $ontUs,
+            'ont_ps' => $ontPs,
             'islock' => '0',
             'prorate' => '0',
             'hide' => '0',

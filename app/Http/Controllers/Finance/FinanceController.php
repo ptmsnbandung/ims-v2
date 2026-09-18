@@ -448,14 +448,31 @@ class FinanceController extends Controller
             'nominal_bayar' => 'required|numeric|min:1',
             'metode_bayar' => 'required|string',
             'bank_tujuan' => 'nullable|string',
+            'nama_kolektor' => 'nullable|string',
+            'no_kwitansi' => 'nullable|string',
             'catatan' => 'nullable|string',
         ]);
 
-        $user = Auth::user()?->nama ?? 'FINANCE';
+        $user = Auth::user()?->nama ?? Auth::user()?->name ?? 'FINANCE';
+        $userUpdate = mb_substr($user, 0, 50);
         $decodedKode = $request->input('kode_billing') ? trim($request->input('kode_billing')) : urldecode($kodeBilling ?? '');
         $nominal = $request->input('nominal_bayar');
-        $bank = $request->input('bank_tujuan', 'Manual Transfer');
-        $catatan = $request->input('catatan', 'Pembayaran Tagihan Bulanan Terverifikasi');
+        $metodeBayar = $request->input('metode_bayar');
+        $namaKolektor = trim((string) $request->input('nama_kolektor', ''));
+        $noKwitansi = trim((string) $request->input('no_kwitansi', ''));
+
+        if ($metodeBayar === 'cash' || $metodeBayar === '3') {
+            $paymentType = '3';
+            $penerima = $request->input('bank_tujuan') ?: 'Cash To Collector';
+            $bank = $namaKolektor !== '' ? "{$penerima} ({$namaKolektor})" : $penerima;
+            $catatanDefault = "Pembayaran Cash to Collector Terverifikasi" . ($noKwitansi !== '' ? " [Kwitansi: {$noKwitansi}]" : "");
+        } else {
+            $paymentType = '2';
+            $bank = $request->input('bank_tujuan') ?: 'BCA';
+            $catatanDefault = "Pembayaran Transfer Bank Terverifikasi" . ($noKwitansi !== '' ? " [Ref: {$noKwitansi}]" : "");
+        }
+
+        $catatan = $request->input('catatan') ?: $catatanDefault;
 
         try {
             $inv = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $decodedKode)->first();
@@ -468,18 +485,18 @@ class FinanceController extends Controller
                     'payment_paid' => Carbon::now()->toDateTimeString(),
                     'amount_paid' => (string) $nominal,
                     'merchant_type' => $bank,
-                    'payment_type' => $request->input('metode_bayar') === 'cash' ? '3' : '2',
+                    'payment_type' => $paymentType,
                     'date_update' => Carbon::now()->toDateTimeString(),
-                    'user_update' => $user,
+                    'user_update' => $userUpdate,
                 ]);
 
             DB::table('trx_billing_layanan_log')->insert([
                 'kode_billing_lay_log' => 'LOG-' . uniqid(),
                 'kode_billing_layanan' => $decodedKode,
                 'status_bill_lay' => '15',
-                'note_billing_lay' => "Payment verified ({$bank} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} by {$user}",
+                'note_billing_lay' => "Payment verified ({$bank} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} by {$userUpdate}",
                 'date_create' => Carbon::now()->toDateTimeString(),
-                'user_create' => $user,
+                'user_create' => $userUpdate,
                 'hide' => '0',
             ]);
 
@@ -503,7 +520,7 @@ class FinanceController extends Controller
                             'status_suspend' => '18', // 18: Request Unsuspend ke NOC
                             'desc_suspend_cancel' => "Otomatis diajukan buka isolir: Pelanggan telah membayar lunas tagihan {$decodedKode} ({$bank})",
                             'date_update' => Carbon::now()->toDateTimeString(),
-                            'user_update' => $user,
+                            'user_update' => $userUpdate,
                         ]);
                     $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
                 } elseif ($customerReg && $customerReg->is_suspend == '1') {
@@ -515,7 +532,7 @@ class FinanceController extends Controller
                         'status_suspend' => '18', // 18: Request Unsuspend ke NOC
                         'desc_suspend' => "Otomatis Req Unsuspend: Pelanggan telah melunasi tagihan {$decodedKode} ({$bank})",
                         'date_create' => Carbon::now()->toDateTimeString(),
-                        'user_create' => $user,
+                        'user_create' => $userUpdate,
                         'hide' => '0',
                     ]);
                     $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
@@ -1115,14 +1132,31 @@ class FinanceController extends Controller
             'nominal_bayar' => 'required|numeric|min:1',
             'metode_bayar' => 'required|string',
             'bank_tujuan' => 'nullable|string',
+            'nama_kolektor' => 'nullable|string',
+            'no_kwitansi' => 'nullable|string',
             'catatan' => 'nullable|string',
         ]);
 
-        $user = Auth::user()?->nama ?? 'FINANCE';
+        $user = Auth::user()?->nama ?? Auth::user()?->name ?? 'FINANCE';
+        $userUpdate = mb_substr($user, 0, 50);
         $decodedKode = $request->input('kode_billing') ? trim($request->input('kode_billing')) : urldecode($kodeBilling ?? '');
         $nominal = $request->input('nominal_bayar');
-        $bank = $request->input('bank_tujuan', 'Manual Transfer');
-        $catatan = $request->input('catatan', 'Pembayaran Registrasi Terverifikasi');
+        $metodeBayar = $request->input('metode_bayar');
+        $namaKolektor = trim((string) $request->input('nama_kolektor', ''));
+        $noKwitansi = trim((string) $request->input('no_kwitansi', ''));
+
+        if ($metodeBayar === 'cash' || $metodeBayar === '3') {
+            $paymentType = '3';
+            $penerima = $request->input('bank_tujuan') ?: 'Cash To Collector';
+            $bank = $namaKolektor !== '' ? "{$penerima} ({$namaKolektor})" : $penerima;
+            $catatanDefault = "Pembayaran Registrasi Cash to Collector Terverifikasi" . ($noKwitansi !== '' ? " [Kwitansi: {$noKwitansi}]" : "");
+        } else {
+            $paymentType = '2';
+            $bank = $request->input('bank_tujuan') ?: 'BCA';
+            $catatanDefault = "Pembayaran Registrasi Transfer Bank Terverifikasi" . ($noKwitansi !== '' ? " [Ref: {$noKwitansi}]" : "");
+        }
+
+        $catatan = $request->input('catatan') ?: $catatanDefault;
 
         try {
             $reg = DB::table('trx_billing_registrasi')->where('kode_billing_registrasi', $decodedKode)->first();
@@ -1135,18 +1169,18 @@ class FinanceController extends Controller
                     'payment_paid' => Carbon::now()->toDateTimeString(),
                     'amount_paid' => (string) $nominal,
                     'merchant_type' => $bank,
-                    'payment_type' => $request->input('metode_bayar') === 'cash' ? '3' : '2',
+                    'payment_type' => $paymentType,
                     'date_update' => Carbon::now()->toDateTimeString(),
-                    'user_update' => $user,
+                    'user_update' => $userUpdate,
                 ]);
 
             DB::table('trx_billing_registrasi_log')->insert([
                 'kode_billing_regis_log' => 'LOG-' . uniqid(),
                 'kode_billing_registrasi' => $decodedKode,
                 'status_bill_reg' => '14',
-                'note_billing_reg' => "Registration payment verified ({$bank} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} by {$user}",
+                'note_billing_reg' => "Registration payment verified ({$bank} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} by {$userUpdate}",
                 'date_create' => Carbon::now()->toDateTimeString(),
-                'user_create' => $user,
+                'user_create' => $userUpdate,
                 'hide' => '0',
             ]);
 
@@ -1166,7 +1200,7 @@ class FinanceController extends Controller
                             'status_suspend' => '18', // 18: Request Unsuspend ke NOC
                             'desc_suspend_cancel' => "Otomatis diajukan buka isolir: Pelanggan telah membayar lunas registrasi {$decodedKode} ({$bank})",
                             'date_update' => Carbon::now()->toDateTimeString(),
-                            'user_update' => $user,
+                            'user_update' => $userUpdate,
                         ]);
                     $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
                 }

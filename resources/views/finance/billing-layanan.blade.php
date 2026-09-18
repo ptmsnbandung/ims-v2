@@ -46,26 +46,36 @@
          payNominal: 0,
          payMetode: 'transfer',
          payBank: 'BCA',
+         payNamaKolektor: '',
+         payNoKwitansi: '',
          payCatatan: '',
-         openPayModal(kodeBilling, noInternet, nama, nominal) {
+         openPayModal(kodeBilling, noInternet, nama, nominal, paymentType = '2') {
              this.payKodeBilling = kodeBilling;
              this.payNomorInternet = noInternet;
              this.payNamaPelanggan = nama;
              this.payNominal = parseFloat(nominal) || 0;
-             this.payMetode = 'transfer';
-             this.payBank = 'BCA';
-             this.payCatatan = 'Pembayaran Transfer Terverifikasi';
+             this.payNamaKolektor = '';
+             this.payNoKwitansi = '';
+             const pType = String(paymentType || '2');
+             if (pType === '3' || pType === 'cash') {
+                 this.payMetode = 'cash';
+                 this.payBank = 'Cash To Collector';
+                 this.payCatatan = 'Pembayaran Cash to Collector Terverifikasi';
+             } else {
+                 this.payMetode = 'transfer';
+                 this.payBank = 'BCA';
+                 this.payCatatan = 'Pembayaran Transfer Terverifikasi';
+             }
              this.payModalOpen = true;
          },
          openPayModalFromEl(el) {
-             this.payKodeBilling = el.dataset.kode;
-             this.payNomorInternet = el.dataset.internet;
-             this.payNamaPelanggan = el.dataset.nama;
-             this.payNominal = parseFloat(el.dataset.nominal) || 0;
-             this.payMetode = 'transfer';
-             this.payBank = 'BCA';
-             this.payCatatan = 'Pembayaran Tagihan Bulanan Terverifikasi';
-             this.payModalOpen = true;
+             this.openPayModal(
+                 el.dataset.kode,
+                 el.dataset.internet,
+                 el.dataset.nama,
+                 el.dataset.nominal,
+                 el.dataset.paymentType || '2'
+             );
          },
 
          // Modal Adjustment
@@ -753,6 +763,7 @@
                                         data-internet="{{ $inv->nomor_internet }}"
                                         data-nama="{{ $inv->nama_pelanggan }}"
                                         data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
+                                        data-payment-type="{{ $inv->payment_type ?? 2 }}"
                                         title="Approve Pembayaran Lunas"
                                         class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 text-[11px] font-bold transition shadow-sm cursor-pointer whitespace-nowrap">
                                     <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -993,12 +1004,12 @@
         </div>
     </div>
 
-    <!-- 3. MODAL KONFIRMASI BAYAR MANUAL -->
+    <!-- 3. MODAL KONFIRMASI BAYAR MANUAL / CASH TO COLLECT -->
     <div x-show="payModalOpen"
          x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="payModalOpen = false"
-             class="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
             
             <form action="{{ route('finance.billing-layanan.konfirmasi-bayar.post') }}" method="POST">
                 @csrf
@@ -1006,57 +1017,120 @@
                 <div class="p-6 space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                         <div class="flex items-center gap-3">
-                            <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                </svg>
+                            <div class="p-2.5 rounded-xl" :class="payMetode === 'cash' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'">
+                                <template x-if="payMetode === 'cash'">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                    </svg>
+                                </template>
+                                <template x-if="payMetode !== 'cash'">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </template>
                             </div>
                             <div>
-                                <h3 class="text-base font-bold text-white">Konfirmasi Pembayaran Manual</h3>
-                                <p class="text-xs text-slate-400">Verifikasi pelunasan invoice pelanggan</p>
+                                <h3 class="text-base font-bold text-white" x-text="payMetode === 'cash' ? 'Konfirmasi Bayar: Cash To Collector' : 'Konfirmasi Bayar: Manual Transfer'"></h3>
+                                <p class="text-xs text-slate-400">Verifikasi pelunasan tagihan invoice pelanggan</p>
                             </div>
                         </div>
-                        <button type="button" @click="payModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
+                        <button type="button" @click="payModalOpen = false" class="text-slate-400 hover:text-white text-lg">&times;</button>
                     </div>
 
-                    <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
+                    <!-- Info Ringkasan Invoice -->
+                    <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1.5">
                         <div class="flex justify-between">
-                            <span class="text-slate-400">No Invoice:</span>
+                            <span class="text-slate-400">No. Invoice:</span>
                             <span class="font-bold text-white font-mono" x-text="payKodeBilling"></span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-slate-400">Pelanggan:</span>
+                            <span class="text-slate-400">Nama Pelanggan:</span>
                             <span class="font-semibold text-blue-400" x-text="payNamaPelanggan"></span>
                         </div>
                     </div>
 
+                    <!-- Pilihan Metode Bayar (Radio Tabs) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-2">Metode Pembayaran</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
+                                   :class="payMetode === 'cash' ? 'bg-amber-500/10 border-amber-500/50 text-amber-300' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'">
+                                <input type="radio" name="metode_bayar" value="cash" x-model="payMetode"
+                                       @change="payBank = 'Cash To Collector'; payCatatan = 'Pembayaran Cash to Collector Terverifikasi'"
+                                       class="w-4 h-4 text-amber-500 focus:ring-amber-400">
+                                <div>
+                                    <div class="text-xs font-bold text-white">Cash To Collector</div>
+                                    <div class="text-[11px] text-slate-400">Tunai / Kasir Lapangan</div>
+                                </div>
+                            </label>
+
+                            <label class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
+                                   :class="payMetode === 'transfer' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'">
+                                <input type="radio" name="metode_bayar" value="transfer" x-model="payMetode"
+                                       @change="payBank = 'BCA'; payCatatan = 'Pembayaran Transfer Terverifikasi'"
+                                       class="w-4 h-4 text-emerald-500 focus:ring-emerald-400">
+                                <div>
+                                    <div class="text-xs font-bold text-white">Manual Transfer</div>
+                                    <div class="text-[11px] text-slate-400">Transfer Bank Perusahaan</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Nominal Diterima -->
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nominal Diterima (Rp)</label>
-                        <input type="number" name="nominal_bayar" x-model="payNominal" required min="1" class="w-full bg-slate-950 border border-slate-800 text-white font-bold text-sm rounded-xl px-3 py-2.5 focus:border-emerald-500">
+                        <input type="number" name="nominal_bayar" x-model="payNominal" required min="1" class="w-full bg-slate-950 border border-slate-800 text-emerald-400 font-bold text-base rounded-xl px-3.5 py-2.5 focus:border-emerald-500">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Tipe Pembayaran</label>
-                            <select name="metode_bayar" x-model="payMetode" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
-                                <option value="transfer">Transfer Bank</option>
-                                <option value="cash">Tunai / Kasir</option>
-                            </select>
+                    <!-- Dynamic Fields: Jika CASH TO COLLECT -->
+                    <div x-show="payMetode === 'cash'" class="space-y-3 p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/15">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Tipe Kasir / Kolektor</label>
+                                <select name="bank_tujuan" x-model="payBank" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                                    <option value="Cash To Collector">Cash To Collector</option>
+                                    <option value="Kasir Kantor Pusat">Kasir Kantor Pusat</option>
+                                    <option value="Kasir Cabang">Kasir Cabang</option>
+                                    <option value="Kolektor Lapangan">Kolektor Lapangan</option>
+                                    <option value="Kasir / Tunai">Kasir / Tunai</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nama Petugas Kolektor <span class="text-slate-500 font-normal">(Opsional)</span></label>
+                                <input type="text" name="nama_kolektor" x-model="payNamaKolektor" placeholder="Nama Petugas..." class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Rekening / Kasir</label>
-                            <select name="bank_tujuan" x-model="payBank" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
-                                <option value="BCA">BCA (PT Medianet)</option>
-                                <option value="Mandiri">Bank Mandiri</option>
-                                <option value="BRI">Bank BRI</option>
-                                <option value="BNI">Bank BNI</option>
-                                <option value="Kasir Kantor">Kasir Kantor (Cash)</option>
-                            </select>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1.5">No. Kwitansi / Tanda Terima <span class="text-slate-500 font-normal">(Opsional)</span></label>
+                            <input type="text" name="no_kwitansi" x-model="payNoKwitansi" placeholder="Contoh: KWT-00123" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                         </div>
                     </div>
 
+                    <!-- Dynamic Fields: Jika MANUAL TRANSFER -->
+                    <div x-show="payMetode === 'transfer'" class="space-y-3 p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/15">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Rekening Bank Tujuan</label>
+                                <select name="bank_tujuan" x-model="payBank" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                                    <option value="BCA">BCA (PT Medianet)</option>
+                                    <option value="Mandiri">Bank Mandiri</option>
+                                    <option value="BRI">Bank BRI</option>
+                                    <option value="BNI">Bank BNI</option>
+                                    <option value="BSI">Bank Syariah Indonesia (BSI)</option>
+                                    <option value="Permata">Bank Permata</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1.5">No. Ref Transfer / Rek Pengirim <span class="text-slate-500 font-normal">(Opsional)</span></label>
+                                <input type="text" name="no_kwitansi" x-model="payNoKwitansi" placeholder="Contoh: REF123456 / A.N Budi" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Catatan Verifikasi -->
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Catatan / Ref Pembayaran</label>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Catatan Verifikasi</label>
                         <input type="text" name="catatan" x-model="payCatatan" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
                     </div>
                 </div>
@@ -1065,8 +1139,11 @@
                     <button type="button" @click="payModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
                         Batal
                     </button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-500/25">
-                        Konfirmasi Lunas
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-500/25 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        <span>Konfirmasi & Approve Lunas</span>
                     </button>
                 </div>
             </form>

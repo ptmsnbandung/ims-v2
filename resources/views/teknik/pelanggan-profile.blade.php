@@ -823,7 +823,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-7 gap-3.5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             
                             @php
                                 $masterTemplates = [
@@ -856,35 +856,35 @@
                             @endphp
 
                             @foreach($masterTemplates as $tmpl)
-                                <div class="p-3.5 rounded-2xl border {{ $tmpl['active'] ? 'border-blue-500/40 bg-blue-500/[0.03] hover:border-blue-500/70 shadow-sm' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm' }} transition flex flex-col items-center justify-between text-center min-h-[195px] group">
+                                <div class="p-4 rounded-2xl border {{ $tmpl['active'] ? 'border-blue-500/40 bg-blue-500/[0.03] hover:border-blue-500/70 shadow-sm' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm' }} transition flex flex-col items-center justify-between text-center min-h-[210px] group">
                                     
                                     <!-- Top Status & Format Badges -->
-                                    <div class="w-full flex items-center justify-between mb-1.5">
+                                    <div class="w-full flex items-center justify-between gap-2 mb-2">
                                         @if($tmpl['active'])
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 shrink-0">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                                                 <span>Siap Cetak</span>
                                             </span>
-                                            <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">DOCX</span>
+                                            <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">DOCX</span>
                                         @else
-                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-medium bg-slate-800 text-slate-400 border border-slate-700/50">
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700/50 shrink-0">
                                                 Template
                                             </span>
-                                            <span class="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-700/50">DOCX</span>
+                                            <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-slate-800 text-slate-500 border border-slate-700/50 shrink-0">DOCX</span>
                                         @endif
                                     </div>
 
                                     <!-- Clean Document Icon -->
-                                    <div class="my-1">
+                                    <div class="my-2">
                                         @if($tmpl['active'])
-                                            <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-sm group-hover:scale-105 transition duration-200">
-                                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-sm group-hover:scale-105 group-hover:bg-blue-500/20 transition duration-200">
+                                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                 </svg>
                                             </div>
                                         @else
-                                            <div class="w-11 h-11 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center text-slate-500">
-                                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <div class="w-12 h-12 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center text-slate-500">
+                                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                 </svg>
                                             </div>
@@ -893,39 +893,39 @@
 
                                     <!-- Label & Desc -->
                                     <div class="my-1 space-y-0.5 w-full px-1">
-                                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $tmpl['label'] }}">
-                                            {{ $tmpl['label'] }}
-                                        </span>
-                                        <span class="block text-[10px] text-slate-400 truncate" title="{{ $tmpl['desc'] }}">
+                                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-100 truncate" title="{{ $tmpl['desc'] }}">
                                             {{ $tmpl['desc'] }}
+                                        </span>
+                                        <span class="block text-[11px] text-slate-400 dark:text-slate-500 font-mono truncate" title="{{ $tmpl['label'] }}">
+                                            {{ $tmpl['label'] }}
                                         </span>
                                     </div>
 
                                     <!-- Bottom Action Buttons (Clean & Structured) -->
-                                    <div class="w-full pt-2 border-t border-slate-100 dark:border-slate-800/80 mt-1">
+                                    <div class="w-full pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-2">
                                         @if($tmpl['active'])
                                             <div class="space-y-1.5 w-full">
                                                 <!-- Primary View / Print Button -->
-                                                <a href="{{ $tmpl['url'] }}" target="_blank" class="w-full py-1.5 px-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm shadow-blue-500/20" title="Buka & Cetak Dokumen">
+                                                <a href="{{ $tmpl['url'] }}" target="_blank" class="w-full py-2 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-sm shadow-blue-500/20" title="Buka & Cetak Dokumen">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
                                                     <span>Buka / Cetak</span>
                                                 </a>
 
                                                 <!-- Secondary Format Download Buttons -->
-                                                <div class="grid grid-cols-2 gap-1 w-full">
-                                                    <a href="{{ $tmpl['url'] }}?download=pdf" target="_blank" class="py-1 px-1 rounded-md bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-emerald-500/25" title="Download PDF">
+                                                <div class="grid grid-cols-2 gap-1.5 w-full">
+                                                    <a href="{{ $tmpl['url'] }}?download=pdf" target="_blank" class="py-1.5 px-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[11px] font-semibold transition flex items-center justify-center gap-1 border border-emerald-500/25" title="Download PDF">
                                                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                                         <span>PDF</span>
                                                     </a>
-                                                    <a href="{{ $tmpl['url'] }}?download=word" target="_blank" class="py-1 px-1 rounded-md bg-indigo-500/15 hover:bg-indigo-600 text-indigo-400 hover:text-white text-[10px] font-bold transition flex items-center justify-center gap-1 border border-indigo-500/25" title="Download Word (.doc)">
+                                                    <a href="{{ $tmpl['url'] }}?download=word" target="_blank" class="py-1.5 px-2 rounded-lg bg-indigo-500/15 hover:bg-indigo-600 text-indigo-400 hover:text-white text-[11px] font-semibold transition flex items-center justify-center gap-1 border border-indigo-500/25" title="Download Word (.doc)">
                                                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                                         <span>Word</span>
                                                     </a>
                                                 </div>
                                             </div>
                                         @else
-                                            <div class="w-full py-2.5 flex items-center justify-center">
-                                                <span class="text-[10px] text-slate-500 font-medium bg-slate-800/60 border border-slate-700/50 px-2.5 py-1 rounded-lg">
+                                            <div class="w-full py-3 flex items-center justify-center">
+                                                <span class="text-[11px] text-slate-500 font-medium bg-slate-800/60 border border-slate-700/50 px-3 py-1 rounded-lg">
                                                     Draft Master
                                                 </span>
                                             </div>

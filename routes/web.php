@@ -49,8 +49,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/tiket/gangguan/{id}/cancel', [TeknikController::class, 'cancelTiketGangguan'])->name('tiket.gangguan.cancel');
     });
 
-    // Routes Role Teknik & NOC & Direktur
-    Route::middleware('role:teknik,noc,direktur,admin')->prefix('teknik')->name('teknik.')->group(function () {
+    // Routes Role Teknik, NOC, Direktur, Admin, & Finance
+    Route::middleware('role:teknik,noc,direktur,admin,finance')->prefix('teknik')->name('teknik.')->group(function () {
         
         // Pendaftaran Pelanggan Baru & Edit Pendaftaran
         Route::get('/pendaftaran', [TeknikController::class, 'pendaftaran'])->name('pendaftaran');
@@ -227,6 +227,11 @@ Route::middleware('auth')->group(function () {
 
         // 6. API Helpers
         Route::get('/api/pelanggan-search', [FinanceController::class, 'apiPelangganSearch'])->name('api.pelanggan-search');
+
+        // 7. Data Pelanggan & Profile (Finance)
+        Route::get('/pelanggan', [TeknikController::class, 'pelanggan'])->name('pelanggan');
+        Route::get('/pelanggan/export', [TeknikController::class, 'exportPelanggan'])->name('pelanggan.export');
+        Route::get('/pelanggan/{nomor_internet}', [TeknikController::class, 'profilePelanggan'])->name('pelanggan.profile');
     });
 });
 

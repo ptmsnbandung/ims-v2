@@ -718,22 +718,6 @@
                                         </svg>
                                         <span>Manual Transfer</span>
                                     </span>
-
-                                    @if($inv->status_bill_lay != '15')
-                                    <button type="button"
-                                            @click="openPayModalFromEl($el)"
-                                            data-kode="{{ $inv->kode_billing_layanan }}"
-                                            data-internet="{{ $inv->nomor_internet }}"
-                                            data-nama="{{ $inv->nama_pelanggan }}"
-                                            data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
-                                            title="Approve Pembayaran Transfer Bank"
-                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold hover:bg-emerald-500 hover:text-white transition cursor-pointer">
-                                        <svg class="w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                        </svg>
-                                        <span>Approve Lunas</span>
-                                    </button>
-                                    @endif
                                 </div>
                                 @else
                                 <div class="flex flex-col gap-1 items-start">
@@ -743,22 +727,6 @@
                                         </svg>
                                         <span>Cash To Collector</span>
                                     </span>
-
-                                    @if($inv->status_bill_lay != '15')
-                                    <button type="button"
-                                            @click="openPayModalFromEl($el)"
-                                            data-kode="{{ $inv->kode_billing_layanan }}"
-                                            data-internet="{{ $inv->nomor_internet }}"
-                                            data-nama="{{ $inv->nama_pelanggan }}"
-                                            data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
-                                            title="Approve Pembayaran Tunai (Cash)"
-                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold hover:bg-amber-500 hover:text-white transition cursor-pointer">
-                                        <svg class="w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                        </svg>
-                                        <span>Approve Lunas</span>
-                                    </button>
-                                    @endif
                                 </div>
                                 @endif
 
@@ -774,67 +742,52 @@
                             </div>
                         </td>
 
-                        <!-- 7. Action Dropdown / Buttons -->
-                        <td class="py-3.5 px-4 align-middle text-center" x-data="{ actionOpen: false }">
-                            <div class="relative inline-block text-left">
-                                <button @click="actionOpen = !actionOpen"
-                                        @click.away="actionOpen = false"
-                                        type="button"
-                                        class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition">
-                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                        <!-- 7. Action Buttons (Direct Inline Actions) -->
+                        <td class="py-3.5 px-4 align-middle text-center">
+                            <div class="flex items-center justify-center gap-1.5 flex-nowrap">
+                                <!-- 1. Approve / Konfirmasi Bayar Lunas -->
+                                @if($inv->status_bill_lay != '15')
+                                <button type="button"
+                                        @click="openPayModalFromEl($el)"
+                                        data-kode="{{ $inv->kode_billing_layanan }}"
+                                        data-internet="{{ $inv->nomor_internet }}"
+                                        data-nama="{{ $inv->nama_pelanggan }}"
+                                        data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
+                                        title="Approve Pembayaran Lunas"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                     </svg>
+                                    <span>Approve</span>
+                                </button>
+                                @endif
+
+                                <!-- 2. Change Payment Method -->
+                                <button type="button"
+                                        @click="openChangePayModalFromEl($el)"
+                                        data-kode="{{ $inv->kode_billing_layanan }}"
+                                        data-nama="{{ $inv->nama_pelanggan }}"
+                                        data-payment-type="{{ $inv->payment_type ?? 1 }}"
+                                        title="Ubah Metode Pembayaran"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 text-xs font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                                    </svg>
+                                    <span>Change Payment</span>
                                 </button>
 
-                                <!-- Dropdown Menu Popover (Hanya Approve, Change Payment, Lihat Detail) -->
-                                <div x-show="actionOpen"
-                                     x-cloak
-                                     class="absolute right-0 top-full mt-1.5 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 py-1.5 text-left divide-y divide-slate-800">
-                                    
-                                    <div class="py-1">
-                                        <!-- 1. Approve / Konfirmasi Bayar Lunas -->
-                                        @if($inv->status_bill_lay != '15')
-                                        <button type="button"
-                                                @click="openPayModalFromEl($el); actionOpen = false;"
-                                                data-kode="{{ $inv->kode_billing_layanan }}"
-                                                data-internet="{{ $inv->nomor_internet }}"
-                                                data-nama="{{ $inv->nama_pelanggan }}"
-                                                data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
-                                                class="w-full px-3.5 py-2 text-xs font-bold text-emerald-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                            <span>Approve Lunas</span>
-                                        </button>
-                                        @endif
-
-                                        <!-- 2. Change Payment Method -->
-                                        <button type="button"
-                                                @click="openChangePayModalFromEl($el); actionOpen = false;"
-                                                data-kode="{{ $inv->kode_billing_layanan }}"
-                                                data-nama="{{ $inv->nama_pelanggan }}"
-                                                data-payment-type="{{ $inv->payment_type ?? 1 }}"
-                                                class="w-full px-3.5 py-2 text-xs font-medium text-blue-400 hover:bg-slate-800 flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                                            </svg>
-                                            <span>Change Payment</span>
-                                        </button>
-
-                                        <!-- 3. Lihat Detail (Detail Breakdown) -->
-                                        <button type="button"
-                                                @click="openDetailModalFromEl($el); actionOpen = false;"
-                                                data-kode="{{ $inv->kode_billing_layanan }}"
-                                                class="w-full px-3.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white flex items-center gap-2.5 transition">
-                                            <svg class="w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            </svg>
-                                            <span>Lihat Detail</span>
-                                        </button>
-                                    </div>
-
-                                </div>
+                                <!-- 3. Lihat Detail (Detail Breakdown) -->
+                                <button type="button"
+                                        @click="openDetailModalFromEl($el)"
+                                        data-kode="{{ $inv->kode_billing_layanan }}"
+                                        title="Lihat Detail Tagihan"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                    <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+                                    <span>Lihat Detail</span>
+                                </button>
                             </div>
                         </td>
                     </tr>

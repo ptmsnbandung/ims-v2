@@ -1139,6 +1139,9 @@ class TeknikController extends Controller
     {
         $batch = DB::table('view_batchjob')->where('nomor_internet', $nomorInternet)->first();
         if (!$batch) {
+            $batch = DB::table('trx_batchjob_register')->where('nomor_internet', $nomorInternet)->first();
+        }
+        if (!$batch) {
             return response()->json(['error' => 'Data pendaftaran tidak ditemukan'], 404);
         }
 
@@ -2727,19 +2730,23 @@ class TeknikController extends Controller
     private function getIndexOltSlots(): array
     {
         // 1. Get occupied index_olt from active/non-terminated customers
-        $occupiedRaw = DB::table('trx_batchjob_register')
+        $occupiedData = DB::table('trx_batchjob_register')
             ->whereNotNull('index_olt')
             ->where('index_olt', '!=', '')
             ->whereNotIn('status_reg', ['23', '23.1', '15']) // 23 = Terminasi, 15 = Batal Pasang
-            ->pluck('index_olt');
+            ->select('index_olt', 'nomor_internet', 'nama_pelanggan')
+            ->get();
 
         $occupiedMap = [];
-        foreach ($occupiedRaw as $raw) {
-            $clean = trim($raw);
+        foreach ($occupiedData as $row) {
+            $clean = trim($row->index_olt);
             if (!str_starts_with($clean, 'gpon-onu_') && str_starts_with($clean, '1/')) {
                 $clean = 'gpon-onu_' . $clean;
             }
-            $occupiedMap[$clean] = true;
+            $occupiedMap[$clean] = [
+                'nomor_internet' => $row->nomor_internet,
+                'nama_pelanggan' => $row->nama_pelanggan,
+            ];
         }
 
         // 2. All GPON Ports (Slot 1: 1/1/1 s/d 1/1/16, Slot 2: 1/2/1 s/d 1/2/16)
@@ -2761,13 +2768,17 @@ class TeknikController extends Controller
             $usedCount = 0;
             for ($i = 1; $i <= 128; $i++) {
                 $key = "{$port}:{$i}";
-                $isOccupied = isset($occupiedMap[$key]);
+                $occ = $occupiedMap[$key] ?? null;
+                $isOccupied = !empty($occ);
                 if ($isOccupied) $usedCount++;
 
                 $slots[$port][] = [
                     'key' => $key,
                     'num' => $i,
+                    'slot' => (string) $i,
                     'is_occupied' => $isOccupied,
+                    'occupied_by' => $occ ? $occ['nomor_internet'] : null,
+                    'occupied_name' => $occ ? $occ['nama_pelanggan'] : null,
                 ];
             }
             $portStats[$port] = [

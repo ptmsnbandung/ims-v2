@@ -307,7 +307,7 @@
                                     {{-- Tahap 1: Pendaftaran Baru / Menunggu Verifikasi (#11, #11.1, #12) --}}
                                     @if(in_array($item->status_reg, ['11', '11.1', '12']))
                                         <button type="button" 
-                                                @click="openScheduleSurveyModal({{ json_encode($item) }})"
+                                                @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600/90 hover:bg-blue-500 text-white text-[11px] font-semibold transition shadow-sm cursor-pointer"
                                                 title="Buat Jadwal Survey Lapangan">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -320,7 +320,7 @@
                                     {{-- Tahap 2: Jadwal Survey Terbit (#13, #13.1) -> Siap Input Report Hasil Survey --}}
                                     @if(in_array($item->status_reg, ['13', '13.1']))
                                         <button type="button" 
-                                                @click="openReportSurveyModal({{ json_encode($item) }})"
+                                                @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 text-white text-[11px] font-semibold transition shadow-sm cursor-pointer"
                                                 title="Input Laporan Hasil Survey Lokasi">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -329,16 +329,16 @@
                                             <span>Report Survey</span>
                                         </button>
                                         <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
-                                           target="_blank"
-                                           class="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-[11px] transition font-semibold"
-                                           title="Cetak Surat Tugas Survey untuk Tim Teknisi">
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-[11px] transition font-semibold"
+                                            title="Cetak Surat Tugas Survey untuk Tim Teknisi">
                                             <svg class="w-3.5 h-3.5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
-                                                @click="openScheduleSurveyModal({{ json_encode($item) }})"
+                                                @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 text-[11px] transition">
                                             <svg class="w-3.5 h-3.5 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -350,7 +350,7 @@
                                     {{-- Tahap 3: Selesai Survey (#16) -> Siap Dijadwalkan Instalasi --}}
                                     @if($item->status_reg == '16')
                                         <button type="button" 
-                                                @click="openScheduleInstalasiModal({{ json_encode($item) }})"
+                                                @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-600/90 hover:bg-indigo-500 text-white text-[11px] font-semibold transition shadow-sm cursor-pointer"
                                                 title="Buat Jadwal Instalasi & Pemasangan">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -359,16 +359,16 @@
                                             <span>Schedule Instalasi</span>
                                         </button>
                                         <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
-                                           target="_blank"
-                                           class="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-[11px] transition font-semibold"
-                                           title="Cetak Surat Tugas Survey">
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 text-[11px] transition font-semibold"
+                                            title="Cetak Surat Tugas Survey">
                                             <svg class="w-3.5 h-3.5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
-                                                @click="openReportSurveyModal({{ json_encode($item) }})"
+                                                @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-[11px] transition">
                                             <svg class="w-3.5 h-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
@@ -380,7 +380,7 @@
                                     {{-- Tahap 4: Jadwal Instalasi Terbit (#17, #17.1) --}}
                                     @if(in_array($item->status_reg, ['17', '17.1']))
                                         <button type="button" 
-                                                @click="openReportInstalasiModal({{ json_encode($item) }})"
+                                                @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-teal-600/90 hover:bg-teal-500 text-white text-[11px] font-semibold transition shadow-sm cursor-pointer"
                                                 title="Input Laporan Hasil Instalasi & Barang">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -389,16 +389,16 @@
                                             <span>Report Instalasi</span>
                                         </button>
                                         <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
-                                           target="_blank"
-                                           class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition font-semibold"
-                                           title="Cetak Surat Tugas Instalasi untuk Tim Teknisi">
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition font-semibold"
+                                            title="Cetak Surat Tugas Instalasi untuk Tim Teknisi">
                                             <svg class="w-3.5 h-3.5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
-                                                @click="openScheduleInstalasiModal({{ json_encode($item) }})"
+                                                @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 text-sky-400 hover:text-sky-300 text-[11px] transition">
                                             <svg class="w-3.5 h-3.5 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -410,7 +410,7 @@
                                     {{-- Tahap 5: Selesai Instalasi (#18) -> Kirim Request Aktivasi ke NOC --}}
                                     @if($item->status_reg == '18')
                                         <button type="button" 
-                                                @click="openRequestAktivasiModal({{ json_encode($item) }})"
+                                                @click="openRequestAktivasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white text-[11px] font-bold transition shadow-md shadow-amber-500/20 cursor-pointer animate-pulse"
                                                 title="Kirim Permintaan Aktivasi Layanan ke Tim NOC">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -419,16 +419,16 @@
                                             <span>Request Aktivasi NOC</span>
                                         </button>
                                         <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
-                                           target="_blank"
-                                           class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition font-semibold"
-                                           title="Cetak Surat Tugas Instalasi">
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition font-semibold"
+                                            title="Cetak Surat Tugas Instalasi">
                                             <svg class="w-3.5 h-3.5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
-                                                @click="openReportInstalasiModal({{ json_encode($item) }})"
+                                                @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition">
                                             <svg class="w-3.5 h-3.5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
@@ -444,7 +444,7 @@
                                             <span>Menunggu NOC</span>
                                         </div>
                                         <button type="button" 
-                                                @click="openReportInstalasiModal({{ json_encode($item) }})"
+                                                @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 text-teal-400 hover:text-teal-300 text-[11px] transition">
                                             <svg class="w-3.5 h-3.5 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -1584,11 +1584,11 @@
                                                     @change="updateIndexOlt(surveyForm)"
                                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                                                 <option value="">-- Pilih Index (1..128) --</option>
-                                                <template x-for="slot in getSlotsForPort(surveyForm.selectedGponPort)" :key="slot.slot">
+                                                <template x-for="slot in getSlotsForPort(surveyForm.selectedGponPort)" :key="slot.key">
                                                     <option :value="slot.slot" 
                                                             :disabled="slot.is_occupied && slot.occupied_by !== surveyForm.nomor_internet"
-                                                            :class="slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'">
-                                                        <span x-text="(slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? ' (Pelanggan Ini)' : ' - ' + slot.occupied_name) : ' (Tersedia)')"></span>
+                                                            :class="slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'"
+                                                            x-text="(slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === surveyForm.nomor_internet ? ' (Pelanggan Ini)' : (slot.occupied_name ? ' - ' + slot.occupied_name : ' - Terpakai')) : ' (Tersedia)')">
                                                     </option>
                                                 </template>
                                             </select>
@@ -1873,11 +1873,11 @@
                                                     @change="updateIndexOlt(reportSurveyForm)"
                                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                                                 <option value="">-- Pilih Index (1..128) --</option>
-                                                <template x-for="slot in getSlotsForPort(reportSurveyForm.selectedGponPort)" :key="slot.slot">
+                                                <template x-for="slot in getSlotsForPort(reportSurveyForm.selectedGponPort)" :key="slot.key">
                                                     <option :value="slot.slot" 
                                                             :disabled="slot.is_occupied && slot.occupied_by !== reportSurveyForm.nomor_internet"
-                                                            :class="slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'">
-                                                        <span x-text="(slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? ' (Pelanggan Ini)' : ' - ' + slot.occupied_name) : ' (Tersedia)')"></span>
+                                                            :class="slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'"
+                                                            x-text="(slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === reportSurveyForm.nomor_internet ? ' (Pelanggan Ini)' : (slot.occupied_name ? ' - ' + slot.occupied_name : ' - Terpakai')) : ' (Tersedia)')">
                                                     </option>
                                                 </template>
                                             </select>
@@ -2253,11 +2253,11 @@
                                                     @change="updateIndexOlt(instalasiForm)"
                                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                                                 <option value="">-- Pilih Index (1..128) --</option>
-                                                <template x-for="slot in getSlotsForPort(instalasiForm.selectedGponPort)" :key="slot.slot">
+                                                <template x-for="slot in getSlotsForPort(instalasiForm.selectedGponPort)" :key="slot.key">
                                                     <option :value="slot.slot" 
                                                             :disabled="slot.is_occupied && slot.occupied_by !== instalasiForm.nomor_internet"
-                                                            :class="slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'">
-                                                        <span x-text="(slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? ' (Pelanggan Ini)' : ' - ' + slot.occupied_name) : ' (Tersedia)')"></span>
+                                                            :class="slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'"
+                                                            x-text="(slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === instalasiForm.nomor_internet ? ' (Pelanggan Ini)' : (slot.occupied_name ? ' - ' + slot.occupied_name : ' - Terpakai')) : ' (Tersedia)')">
                                                     </option>
                                                 </template>
                                             </select>
@@ -2597,11 +2597,11 @@
                                                     @change="updateIndexOlt(reportInstalasiForm)"
                                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                                                 <option value="">-- Pilih Index (1..128) --</option>
-                                                <template x-for="slot in getSlotsForPort(reportInstalasiForm.selectedGponPort)" :key="slot.slot">
+                                                <template x-for="slot in getSlotsForPort(reportInstalasiForm.selectedGponPort)" :key="slot.key">
                                                     <option :value="slot.slot" 
                                                             :disabled="slot.is_occupied && slot.occupied_by !== reportInstalasiForm.nomor_internet"
-                                                            :class="slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'">
-                                                        <span x-text="(slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? ' (Pelanggan Ini)' : ' - ' + slot.occupied_name) : ' (Tersedia)')"></span>
+                                                            :class="slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? 'text-blue-500 font-bold' : 'text-rose-500') : 'text-emerald-500'"
+                                                            x-text="(slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? '🔵 Index ' : '🔴 Index ') : '🟢 Index ') + slot.slot + (slot.is_occupied ? (slot.occupied_by === reportInstalasiForm.nomor_internet ? ' (Pelanggan Ini)' : (slot.occupied_name ? ' - ' + slot.occupied_name : ' - Terpakai')) : ' (Tersedia)')">
                                                     </option>
                                                 </template>
                                             </select>
@@ -3041,39 +3041,44 @@ function pendaftaranWorkflowComponent() {
         },
 
         // Modal Openers
-        async openScheduleSurveyModal(item) {
+        async openScheduleSurveyModal(nomorInternet, namaPelanggan) {
             this.isLoadingWorkflow = true;
-            this.surveyForm.nomor_internet = item.nomor_internet;
-            this.surveyForm.nama_pelanggan = item.nama_pelanggan;
-            this.surveyForm.survey_date_start = item.survey_date_start ? item.survey_date_start.substring(0, 10) : '{{ date('Y-m-d') }}';
-            this.surveyForm.survey_time = item.survey_time || (this.allTimeJobs[0] ? this.allTimeJobs[0].time_job : '');
-            this.surveyForm.survey_note = item.survey_note || '';
-            this.surveyForm.kode_pop = item.kode_pop || '';
-            this.surveyForm.media_akses = item.media_akses || 'FTTH';
-            this.surveyForm.olt = item.olt || 'O1';
-            this.parseIndexOltInto(item.index_olt, this.surveyForm);
+            this.surveyForm.nomor_internet = nomorInternet;
+            this.surveyForm.nama_pelanggan = namaPelanggan || '';
+            this.surveyForm.survey_date_start = '{{ date('Y-m-d') }}';
+            this.surveyForm.survey_time = this.allTimeJobs[0] ? this.allTimeJobs[0].time_job : '';
+            this.surveyForm.survey_note = '';
+            this.surveyForm.kode_pop = '';
+            this.surveyForm.media_akses = 'FTTH';
+            this.surveyForm.olt = 'O1';
+            this.surveyForm.selectedGponPort = 'gpon-onu_1/1/1';
+            this.surveyForm.selectedOnuSlot = '';
+            this.surveyForm.index_olt = '';
             this.surveyForm.team_survey = [];
-            this.surveyForm.foto_mapping_preview = item.foto_peta ? `/uploads/registrasi/${item.foto_peta}` : (item.doc_survey ? `/uploads/registrasi/${item.doc_survey}` : null);
+            this.surveyForm.foto_mapping_preview = null;
             this.scheduleSurveyModalOpen = true;
 
             try {
-                const res = await fetch(`/teknik/api/survey-instalasi/${item.nomor_internet}`);
-                const data = await res.json();
-                if (data.team_survey && data.team_survey.length > 0) {
-                    this.surveyForm.team_survey = data.team_survey;
-                }
-                if (data.register) {
-                    if (data.register.kode_pop) this.surveyForm.kode_pop = data.register.kode_pop;
-                    if (data.register.media_akses) this.surveyForm.media_akses = data.register.media_akses;
-                    if (data.register.olt) this.surveyForm.olt = data.register.olt;
-                    if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.surveyForm);
-                }
-                if (data.instalasi) {
-                    if (data.instalasi.survey_date_start) this.surveyForm.survey_date_start = data.instalasi.survey_date_start.substring(0, 10);
-                    if (data.instalasi.survey_time) this.surveyForm.survey_time = data.instalasi.survey_time;
-                    if (data.instalasi.survey_note) this.surveyForm.survey_note = data.instalasi.survey_note;
-                    if (data.instalasi.foto_peta || data.instalasi.doc_survey) {
-                        this.surveyForm.foto_mapping_preview = `/uploads/registrasi/${data.instalasi.foto_peta || data.instalasi.doc_survey}`;
+                const res = await fetch(`/teknik/api/survey-instalasi/${nomorInternet}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.team_survey && data.team_survey.length > 0) {
+                        this.surveyForm.team_survey = data.team_survey;
+                    }
+                    if (data.register) {
+                        if (data.register.nama_pelanggan) this.surveyForm.nama_pelanggan = data.register.nama_pelanggan;
+                        if (data.register.kode_pop) this.surveyForm.kode_pop = data.register.kode_pop;
+                        if (data.register.media_akses) this.surveyForm.media_akses = data.register.media_akses;
+                        if (data.register.olt) this.surveyForm.olt = data.register.olt;
+                        if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.surveyForm);
+                    }
+                    if (data.instalasi) {
+                        if (data.instalasi.survey_date_start) this.surveyForm.survey_date_start = data.instalasi.survey_date_start.substring(0, 10);
+                        if (data.instalasi.survey_time) this.surveyForm.survey_time = data.instalasi.survey_time;
+                        if (data.instalasi.survey_note) this.surveyForm.survey_note = data.instalasi.survey_note;
+                        if (data.instalasi.foto_peta || data.instalasi.doc_survey) {
+                            this.surveyForm.foto_mapping_preview = `/uploads/registrasi/${data.instalasi.foto_peta || data.instalasi.doc_survey}`;
+                        }
                     }
                 }
             } catch(e) {
@@ -3083,43 +3088,48 @@ function pendaftaranWorkflowComponent() {
             }
         },
 
-        async openReportSurveyModal(item) {
+        async openReportSurveyModal(nomorInternet, namaPelanggan) {
             this.isLoadingWorkflow = true;
-            this.reportSurveyForm.nomor_internet = item.nomor_internet;
-            this.reportSurveyForm.nama_pelanggan = item.nama_pelanggan;
+            this.reportSurveyForm.nomor_internet = nomorInternet;
+            this.reportSurveyForm.nama_pelanggan = namaPelanggan || '';
             this.reportSurveyForm.is_reschedule = false;
-            this.reportSurveyForm.survey_date_finish = item.survey_date_finish ? item.survey_date_finish.substring(0, 10) : '{{ date('Y-m-d') }}';
-            this.reportSurveyForm.survey_note_finish = item.survey_note_finish || '';
+            this.reportSurveyForm.survey_date_finish = '{{ date('Y-m-d') }}';
+            this.reportSurveyForm.survey_note_finish = '';
             this.reportSurveyForm.bisa_pasang = 'YA';
-            this.reportSurveyForm.kode_pop = item.kode_pop || '';
-            this.reportSurveyForm.media_akses = item.media_akses || 'FTTH';
-            this.reportSurveyForm.olt = item.olt || 'O1';
-            this.parseIndexOltInto(item.index_olt, this.reportSurveyForm);
+            this.reportSurveyForm.kode_pop = '';
+            this.reportSurveyForm.media_akses = 'FTTH';
+            this.reportSurveyForm.olt = 'O1';
+            this.reportSurveyForm.selectedGponPort = 'gpon-onu_1/1/1';
+            this.reportSurveyForm.selectedOnuSlot = '';
+            this.reportSurveyForm.index_olt = '';
             this.reportSurveyForm.team_survey = [];
             this.reportSurveyForm.perangkat_list = [];
-            this.reportSurveyForm.foto_mapping_preview = item.foto_peta ? `/uploads/registrasi/${item.foto_peta}` : (item.doc_survey ? `/uploads/registrasi/${item.doc_survey}` : null);
+            this.reportSurveyForm.foto_mapping_preview = null;
             this.reportSurveyModalOpen = true;
 
             try {
-                const res = await fetch(`/teknik/api/survey-instalasi/${item.nomor_internet}`);
-                const data = await res.json();
-                if (data.team_survey && data.team_survey.length > 0) {
-                    this.reportSurveyForm.team_survey = data.team_survey;
-                }
-                if (data.perangkat && data.perangkat.length > 0) {
-                    this.reportSurveyForm.perangkat_list = data.perangkat;
-                }
-                if (data.register) {
-                    if (data.register.kode_pop) this.reportSurveyForm.kode_pop = data.register.kode_pop;
-                    if (data.register.media_akses) this.reportSurveyForm.media_akses = data.register.media_akses;
-                    if (data.register.olt) this.reportSurveyForm.olt = data.register.olt;
-                    if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.reportSurveyForm);
-                }
-                if (data.instalasi) {
-                    if (data.instalasi.survey_date_finish) this.reportSurveyForm.survey_date_finish = data.instalasi.survey_date_finish.substring(0, 10);
-                    if (data.instalasi.survey_note_finish) this.reportSurveyForm.survey_note_finish = data.instalasi.survey_note_finish;
-                    if (data.instalasi.foto_peta || data.instalasi.doc_survey) {
-                        this.reportSurveyForm.foto_mapping_preview = `/uploads/registrasi/${data.instalasi.foto_peta || data.instalasi.doc_survey}`;
+                const res = await fetch(`/teknik/api/survey-instalasi/${nomorInternet}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.team_survey && data.team_survey.length > 0) {
+                        this.reportSurveyForm.team_survey = data.team_survey;
+                    }
+                    if (data.perangkat && data.perangkat.length > 0) {
+                        this.reportSurveyForm.perangkat_list = data.perangkat;
+                    }
+                    if (data.register) {
+                        if (data.register.nama_pelanggan) this.reportSurveyForm.nama_pelanggan = data.register.nama_pelanggan;
+                        if (data.register.kode_pop) this.reportSurveyForm.kode_pop = data.register.kode_pop;
+                        if (data.register.media_akses) this.reportSurveyForm.media_akses = data.register.media_akses;
+                        if (data.register.olt) this.reportSurveyForm.olt = data.register.olt;
+                        if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.reportSurveyForm);
+                    }
+                    if (data.instalasi) {
+                        if (data.instalasi.survey_date_finish) this.reportSurveyForm.survey_date_finish = data.instalasi.survey_date_finish.substring(0, 10);
+                        if (data.instalasi.survey_note_finish) this.reportSurveyForm.survey_note_finish = data.instalasi.survey_note_finish;
+                        if (data.instalasi.foto_peta || data.instalasi.doc_survey) {
+                            this.reportSurveyForm.foto_mapping_preview = `/uploads/registrasi/${data.instalasi.foto_peta || data.instalasi.doc_survey}`;
+                        }
                     }
                 }
             } catch(e) {
@@ -3129,46 +3139,51 @@ function pendaftaranWorkflowComponent() {
             }
         },
 
-        async openScheduleInstalasiModal(item) {
+        async openScheduleInstalasiModal(nomorInternet, namaPelanggan) {
             this.isLoadingWorkflow = true;
-            this.instalasiForm.nomor_internet = item.nomor_internet;
-            this.instalasiForm.nama_pelanggan = item.nama_pelanggan;
-            this.instalasiForm.note_request = item.note_request || 'Permintaan instalasi standar';
-            this.instalasiForm.instalasi_date_start = item.instalasi_date_start ? item.instalasi_date_start.substring(0, 10) : '{{ date('Y-m-d') }}';
-            this.instalasiForm.instalasi_time = item.instalasi_time || (this.allTimeJobs[1] ? this.allTimeJobs[1].time_job : (this.allTimeJobs[0] ? this.allTimeJobs[0].time_job : ''));
-            this.instalasiForm.instalasi_note = item.instalasi_note || '';
-            this.instalasiForm.kode_pop = item.kode_pop || '';
-            this.instalasiForm.media_akses = item.media_akses || 'FTTH';
-            this.instalasiForm.olt = item.olt || 'O1';
-            this.parseIndexOltInto(item.index_olt, this.instalasiForm);
+            this.instalasiForm.nomor_internet = nomorInternet;
+            this.instalasiForm.nama_pelanggan = namaPelanggan || '';
+            this.instalasiForm.note_request = 'Permintaan instalasi standar';
+            this.instalasiForm.instalasi_date_start = '{{ date('Y-m-d') }}';
+            this.instalasiForm.instalasi_time = this.allTimeJobs[1] ? this.allTimeJobs[1].time_job : (this.allTimeJobs[0] ? this.allTimeJobs[0].time_job : '');
+            this.instalasiForm.instalasi_note = '';
+            this.instalasiForm.kode_pop = '';
+            this.instalasiForm.media_akses = 'FTTH';
+            this.instalasiForm.olt = 'O1';
+            this.instalasiForm.selectedGponPort = 'gpon-onu_1/1/1';
+            this.instalasiForm.selectedOnuSlot = '';
+            this.instalasiForm.index_olt = '';
             this.instalasiForm.team_instalasi = [];
             this.instalasiForm.perangkat_list = [];
-            this.instalasiForm.foto_mapping_preview = item.foto_peta ? `/uploads/registrasi/${item.foto_peta}` : (item.doc_instalasi ? `/uploads/registrasi/${item.doc_instalasi}` : null);
+            this.instalasiForm.foto_mapping_preview = null;
             this.scheduleInstalasiModalOpen = true;
 
             try {
-                const res = await fetch(`/teknik/api/survey-instalasi/${item.nomor_internet}`);
-                const data = await res.json();
-                if (data.team_instalasi && data.team_instalasi.length > 0) {
-                    this.instalasiForm.team_instalasi = data.team_instalasi;
-                } else if (data.team_survey && data.team_survey.length > 0) {
-                    this.instalasiForm.team_instalasi = data.team_survey;
-                }
-                if (data.perangkat && data.perangkat.length > 0) {
-                    this.instalasiForm.perangkat_list = data.perangkat;
-                }
-                if (data.register) {
-                    if (data.register.kode_pop) this.instalasiForm.kode_pop = data.register.kode_pop;
-                    if (data.register.media_akses) this.instalasiForm.media_akses = data.register.media_akses;
-                    if (data.register.olt) this.instalasiForm.olt = data.register.olt;
-                    if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.instalasiForm);
-                }
-                if (data.instalasi) {
-                    if (data.instalasi.instalasi_date_start) this.instalasiForm.instalasi_date_start = data.instalasi.instalasi_date_start.substring(0, 10);
-                    if (data.instalasi.instalasi_time) this.instalasiForm.instalasi_time = data.instalasi.instalasi_time;
-                    if (data.instalasi.instalasi_note) this.instalasiForm.instalasi_note = data.instalasi.instalasi_note;
-                    if (data.instalasi.foto_peta || data.instalasi.doc_instalasi) {
-                        this.instalasiForm.foto_mapping_preview = `/uploads/registrasi/${data.instalasi.foto_peta || data.instalasi.doc_instalasi}`;
+                const res = await fetch(`/teknik/api/survey-instalasi/${nomorInternet}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.team_instalasi && data.team_instalasi.length > 0) {
+                        this.instalasiForm.team_instalasi = data.team_instalasi;
+                    } else if (data.team_survey && data.team_survey.length > 0) {
+                        this.instalasiForm.team_instalasi = data.team_survey;
+                    }
+                    if (data.perangkat && data.perangkat.length > 0) {
+                        this.instalasiForm.perangkat_list = data.perangkat;
+                    }
+                    if (data.register) {
+                        if (data.register.nama_pelanggan) this.instalasiForm.nama_pelanggan = data.register.nama_pelanggan;
+                        if (data.register.kode_pop) this.instalasiForm.kode_pop = data.register.kode_pop;
+                        if (data.register.media_akses) this.instalasiForm.media_akses = data.register.media_akses;
+                        if (data.register.olt) this.instalasiForm.olt = data.register.olt;
+                        if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.instalasiForm);
+                    }
+                    if (data.instalasi) {
+                        if (data.instalasi.instalasi_date_start) this.instalasiForm.instalasi_date_start = data.instalasi.instalasi_date_start.substring(0, 10);
+                        if (data.instalasi.instalasi_time) this.instalasiForm.instalasi_time = data.instalasi.instalasi_time;
+                        if (data.instalasi.instalasi_note) this.instalasiForm.instalasi_note = data.instalasi.instalasi_note;
+                        if (data.instalasi.foto_peta || data.instalasi.doc_instalasi) {
+                            this.instalasiForm.foto_mapping_preview = `/uploads/registrasi/${data.instalasi.foto_peta || data.instalasi.doc_instalasi}`;
+                        }
                     }
                 }
             } catch(e) {
@@ -3178,44 +3193,49 @@ function pendaftaranWorkflowComponent() {
             }
         },
 
-        async openReportInstalasiModal(item) {
+        async openReportInstalasiModal(nomorInternet, namaPelanggan) {
             this.isLoadingWorkflow = true;
-            this.reportInstalasiForm.nomor_internet = item.nomor_internet;
-            this.reportInstalasiForm.nama_pelanggan = item.nama_pelanggan;
+            this.reportInstalasiForm.nomor_internet = nomorInternet;
+            this.reportInstalasiForm.nama_pelanggan = namaPelanggan || '';
             this.reportInstalasiForm.is_reschedule = false;
-            this.reportInstalasiForm.instalasi_date_finish = item.instalasi_date_finish ? item.instalasi_date_finish.substring(0, 10) : '{{ date('Y-m-d') }}';
-            this.reportInstalasiForm.instalasi_note_finish = item.instalasi_note_finish || '';
-            this.reportInstalasiForm.kode_pop = item.kode_pop || '';
-            this.reportInstalasiForm.media_akses = item.media_akses || 'FTTH';
-            this.reportInstalasiForm.olt = item.olt || 'O1';
-            this.parseIndexOltInto(item.index_olt, this.reportInstalasiForm);
+            this.reportInstalasiForm.instalasi_date_finish = '{{ date('Y-m-d') }}';
+            this.reportInstalasiForm.instalasi_note_finish = '';
+            this.reportInstalasiForm.kode_pop = '';
+            this.reportInstalasiForm.media_akses = 'FTTH';
+            this.reportInstalasiForm.olt = 'O1';
+            this.reportInstalasiForm.selectedGponPort = 'gpon-onu_1/1/1';
+            this.reportInstalasiForm.selectedOnuSlot = '';
+            this.reportInstalasiForm.index_olt = '';
             this.reportInstalasiForm.team_instalasi = [];
             this.reportInstalasiForm.perangkat_list = [];
-            this.reportInstalasiForm.foto_mapping_preview = item.foto_peta ? `/uploads/registrasi/${item.foto_peta}` : (item.doc_instalasi ? `/uploads/registrasi/${item.doc_instalasi}` : null);
+            this.reportInstalasiForm.foto_mapping_preview = null;
             this.reportInstalasiModalOpen = true;
 
             try {
-                const res = await fetch(`/teknik/api/survey-instalasi/${item.nomor_internet}`);
-                const data = await res.json();
-                if (data.team_instalasi && data.team_instalasi.length > 0) {
-                    this.reportInstalasiForm.team_instalasi = data.team_instalasi;
-                } else if (data.team_survey && data.team_survey.length > 0) {
-                    this.reportInstalasiForm.team_instalasi = data.team_survey;
-                }
-                if (data.perangkat && data.perangkat.length > 0) {
-                    this.reportInstalasiForm.perangkat_list = data.perangkat;
-                }
-                if (data.register) {
-                    if (data.register.kode_pop) this.reportInstalasiForm.kode_pop = data.register.kode_pop;
-                    if (data.register.media_akses) this.reportInstalasiForm.media_akses = data.register.media_akses;
-                    if (data.register.olt) this.reportInstalasiForm.olt = data.register.olt;
-                    if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.reportInstalasiForm);
-                }
-                if (data.instalasi) {
-                    if (data.instalasi.instalasi_date_finish) this.reportInstalasiForm.instalasi_date_finish = data.instalasi.instalasi_date_finish.substring(0, 10);
-                    if (data.instalasi.instalasi_note_finish) this.reportInstalasiForm.instalasi_note_finish = data.instalasi.instalasi_note_finish;
-                    if (data.instalasi.foto_peta || data.instalasi.doc_instalasi) {
-                        this.reportInstalasiForm.foto_mapping_preview = `/uploads/registrasi/${data.instalasi.foto_peta || data.instalasi.doc_instalasi}`;
+                const res = await fetch(`/teknik/api/survey-instalasi/${nomorInternet}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.team_instalasi && data.team_instalasi.length > 0) {
+                        this.reportInstalasiForm.team_instalasi = data.team_instalasi;
+                    } else if (data.team_survey && data.team_survey.length > 0) {
+                        this.reportInstalasiForm.team_instalasi = data.team_survey;
+                    }
+                    if (data.perangkat && data.perangkat.length > 0) {
+                        this.reportInstalasiForm.perangkat_list = data.perangkat;
+                    }
+                    if (data.register) {
+                        if (data.register.nama_pelanggan) this.reportInstalasiForm.nama_pelanggan = data.register.nama_pelanggan;
+                        if (data.register.kode_pop) this.reportInstalasiForm.kode_pop = data.register.kode_pop;
+                        if (data.register.media_akses) this.reportInstalasiForm.media_akses = data.register.media_akses;
+                        if (data.register.olt) this.reportInstalasiForm.olt = data.register.olt;
+                        if (data.register.index_olt) this.parseIndexOltInto(data.register.index_olt, this.reportInstalasiForm);
+                    }
+                    if (data.instalasi) {
+                        if (data.instalasi.instalasi_date_finish) this.reportInstalasiForm.instalasi_date_finish = data.instalasi.instalasi_date_finish.substring(0, 10);
+                        if (data.instalasi.instalasi_note_finish) this.reportInstalasiForm.instalasi_note_finish = data.instalasi.instalasi_note_finish;
+                        if (data.instalasi.foto_peta || data.instalasi.doc_instalasi) {
+                            this.reportInstalasiForm.foto_mapping_preview = `/uploads/registrasi/${data.instalasi.foto_peta || data.instalasi.doc_instalasi}`;
+                        }
                     }
                 }
             } catch(e) {
@@ -3225,10 +3245,10 @@ function pendaftaranWorkflowComponent() {
             }
         },
 
-        openRequestAktivasiModal(item) {
-            this.aktivasiForm.nomor_internet = item.nomor_internet;
-            this.aktivasiForm.nama_pelanggan = item.nama_pelanggan;
-            this.aktivasiForm.catatan_aktivasi = 'Request aktivasi layanan pelanggan baru An/ ' + item.nama_pelanggan + ' (' + item.nomor_internet + ') ke tim NOC';
+        openRequestAktivasiModal(nomorInternet, namaPelanggan) {
+            this.aktivasiForm.nomor_internet = nomorInternet;
+            this.aktivasiForm.nama_pelanggan = namaPelanggan || '';
+            this.aktivasiForm.catatan_aktivasi = 'Request aktivasi layanan pelanggan baru An/ ' + (namaPelanggan || '') + ' (' + nomorInternet + ') ke tim NOC';
             this.requestAktivasiModalOpen = true;
         },
 

@@ -827,7 +827,7 @@
                     <!-- Logout / Keluar -->
                     <div class="pt-2">
                         <div class="ims-nav-wrapper">
-                            <form action="{{ route('logout') }}" method="POST">
+                            <form action="{{ route('logout') }}" method="POST" onsubmit="localStorage.removeItem('theme');">
                                 @csrf
                                 <button type="submit"
                                         class="w-full ims-nav-item hover:bg-rose-500/10 hover:text-rose-400 text-[#9CA3AF] cursor-pointer"
@@ -976,7 +976,7 @@
                                     <p class="font-bold text-slate-900 dark:text-white">{{ auth()->user()->nama }}</p>
                                     <p class="text-slate-500 dark:text-slate-400 truncate">{{ auth()->user()->username }}</p>
                                 </div>
-                                <form action="{{ route('logout') }}" method="POST">
+                                <form action="{{ route('logout') }}" method="POST" onsubmit="localStorage.removeItem('theme');">
                                     @csrf
                                     <button type="submit" class="w-full text-left px-4 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2 cursor-pointer transition">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

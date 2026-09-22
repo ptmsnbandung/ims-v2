@@ -12,6 +12,16 @@
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ asset('assets/images/logo.png') }}">
 
+    <!-- Always reset/default theme to Light Mode on login / guest pages -->
+    <script>
+        (function() {
+            try {
+                localStorage.removeItem('theme');
+                document.documentElement.classList.remove('dark');
+            } catch (e) {}
+        })();
+    </script>
+
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>

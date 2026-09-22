@@ -218,9 +218,14 @@
         }
 
         /* Headings & Bold Text (Sharp, readable Slate-900/800) */
-        main h1, main h2, main h3, main h4, main h5, main h6,
-        main .text-slate-100,
-        main .text-slate-200,
+        main h1:not([class*="bg-gradient"] *):not(.ims-banner *), 
+        main h2:not([class*="bg-gradient"] *):not(.ims-banner *), 
+        main h3:not([class*="bg-gradient"] *):not(.ims-banner *), 
+        main h4:not([class*="bg-gradient"] *):not(.ims-banner *), 
+        main h5:not([class*="bg-gradient"] *):not(.ims-banner *), 
+        main h6:not([class*="bg-gradient"] *):not(.ims-banner *),
+        main .text-slate-100:not([class*="bg-gradient"] *):not(.ims-banner *),
+        main .text-slate-200:not([class*="bg-gradient"] *):not(.ims-banner *),
         [role="dialog"] h1, [role="dialog"] h2, [role="dialog"] h3, [role="dialog"] h4,
         [role="dialog"] .text-slate-100,
         [role="dialog"] .text-slate-200,
@@ -229,8 +234,8 @@
             color: #0F172A !important;
         }
 
-        /* General text-white in main unless inside colored buttons or badges */
-        main .text-white:not(button):not(button *):not(a.bg-blue-600):not(a.bg-blue-600 *):not(a.bg-rose-500):not(a.bg-rose-500 *):not(a.bg-rose-600):not(a.bg-rose-600 *):not(a.bg-emerald-600):not(a.bg-emerald-600 *):not(a.bg-amber-500):not(a.bg-amber-500 *):not(a.bg-\[\#00a65a\]):not(a.bg-\[\#00a65a\] *):not(.bg-blue-600 *):not(.bg-rose-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *) {
+        /* General text-white in main unless inside colored buttons, badges, or gradient banners */
+        main .text-white:not(button):not(button *):not(a.bg-blue-600):not(a.bg-blue-600 *):not(a.bg-rose-500):not(a.bg-rose-500 *):not(a.bg-rose-600):not(a.bg-rose-600 *):not(a.bg-emerald-600):not(a.bg-emerald-600 *):not(a.bg-amber-500):not(a.bg-amber-500 *):not(a.bg-\[\#00a65a\]):not(a.bg-\[\#00a65a\] *):not(.bg-blue-600 *):not(.bg-rose-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not([class*="bg-gradient"] *):not(.ims-banner *):not([class*="bg-gradient"]):not(.ims-banner) {
             color: #0F172A !important;
         }
 

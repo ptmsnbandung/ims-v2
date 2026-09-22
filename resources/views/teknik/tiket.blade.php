@@ -115,28 +115,28 @@
 
 <div class="space-y-6">
     <!-- Header with Breadcrumbs & Role Indicator -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-800/80">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200 dark:border-slate-800/80">
         <div>
-            <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2.5">
-                <svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                 </svg>
                 <span>Pusat Tiket & Permintaan</span>
             </h2>
-            <p class="text-xs text-slate-400 mt-1">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Pilih kategori tiket di bawah untuk membuka dashboard masing-masing modul sesuai hak akses role Anda.
             </p>
         </div>
 
         <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400">Hak Akses:</span>
-            <span class="px-2.5 py-1 rounded-lg text-xs font-semibold {{ auth()->user()?->role_badge_classes ?? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' }}">
+            <span class="text-xs text-slate-500 dark:text-slate-400">Hak Akses:</span>
+            <span class="px-2.5 py-1 rounded-lg text-xs font-semibold {{ auth()->user()?->role_badge_classes ?? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' }}">
                 {{ auth()->user()?->nama_level ?? auth()->user()?->role?->label() ?? 'Staff' }}
             </span>
-            <nav class="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 ml-2">
-                <span class="hover:text-slate-200 transition">IMS</span>
-                <span class="text-slate-600">&gt;</span>
-                <span class="text-blue-400 font-medium">Tiket</span>
+            <nav class="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 ml-2">
+                <span class="hover:text-slate-800 dark:hover:text-slate-200 transition">IMS</span>
+                <span class="text-slate-400 dark:text-slate-600">&gt;</span>
+                <span class="text-blue-600 dark:text-blue-400 font-medium">Tiket</span>
             </nav>
         </div>
     </div>

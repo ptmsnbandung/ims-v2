@@ -1,11 +1,20 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#F8FAFC] text-slate-800">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'Dashboard' }} - IMS Router Management</title>
+
+    <!-- Anti-flicker Theme Initialization -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('assets/images/logo.png') }}">
@@ -180,227 +189,144 @@
         }
 
         /* ==========================================================
-           DIRECT LIGHT MODE & HIGH-CONTRAST TYPOGRAPHY RULES
-           (Memastikan seluruh modul, card, tabel putih & teks jelas)
+           DUAL THEME HARMONIZATION: LIGHT & DARK MODE
            ========================================================== */
-        body {
+        
+        /* Light Mode High Contrast */
+        html:not(.dark) body {
             background-color: #F8FAFC !important;
-            color: #1E293B !important;
-        }
-
-        /* All cards, modules, containers, panels in Main & Modals */
-        main .bg-slate-900,
-        main .bg-slate-900\/95,
-        main .bg-slate-900\/90,
-        main .bg-slate-900\/80,
-        main .bg-slate-900\/70,
-        main .bg-slate-900\/60,
-        main .bg-slate-900\/50,
-        main .bg-slate-900\/40,
-        main .bg-slate-900\/30,
-        main .bg-slate-950,
-        main .bg-slate-950\/90,
-        main .bg-slate-950\/80,
-        main .bg-slate-950\/70,
-        main .bg-slate-950\/60,
-        main .bg-slate-950\/50,
-        main .bg-slate-950\/40,
-        main .bg-slate-950\/30,
-        main .bg-slate-950\/20,
-        main .bg-slate-800,
-        main .bg-slate-800\/90,
-        main .bg-slate-800\/80,
-        main .bg-slate-800\/60,
-        main .bg-slate-800\/50,
-        main .bg-slate-800\/40,
-        main .bg-slate-800\/30,
-        [role="dialog"] .bg-slate-900,
-        [role="dialog"] .bg-slate-900\/95,
-        [role="dialog"] .bg-slate-900\/90,
-        [role="dialog"] .bg-slate-900\/80,
-        [role="dialog"] .bg-slate-900\/70,
-        [role="dialog"] .bg-slate-950,
-        [role="dialog"] .bg-slate-950\/90,
-        [role="dialog"] .bg-slate-950\/80,
-        [role="dialog"] .bg-slate-800,
-        [x-show*="Modal"] .bg-slate-900,
-        [x-show*="Modal"] .bg-slate-950,
-        [x-show*="modal"] .bg-slate-900,
-        [x-show*="modal"] .bg-slate-950 {
-            background-color: #FFFFFF !important;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-        }
-
-        /* All borders in main & modals */
-        main .border-slate-800,
-        main .border-slate-800\/90,
-        main .border-slate-800\/80,
-        main .border-slate-800\/70,
-        main .border-slate-800\/60,
-        main .border-slate-800\/50,
-        main .border-slate-700,
-        main .border-slate-700\/80,
-        main .border-slate-700\/60,
-        main .border-slate-700\/50,
-        main .divide-slate-800,
-        main .divide-slate-800\/80,
-        main .divide-slate-800\/60,
-        [role="dialog"] .border-slate-800,
-        [role="dialog"] .border-slate-700,
-        [x-show*="Modal"] .border-slate-800,
-        [x-show*="modal"] .border-slate-800 {
-            border-color: #E2E8F0 !important;
-        }
-
-        /* High Contrast Typography for Tables & Modules */
-        main table tbody td {
-            color: #1E293B !important;
-        }
-        main table tbody td .font-semibold,
-        main table tbody td .font-bold,
-        main table tbody td strong {
             color: #0F172A !important;
         }
-        main table tbody td .text-slate-400,
-        main table tbody td .text-slate-500,
-        main table tbody td .text-slate-600 {
-            color: #475569 !important;
+
+        html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+        html:not(.dark) select,
+        html:not(.dark) textarea {
+            background-color: #FFFFFF !important;
+            border-color: #CBD5E1 !important;
+            color: #0F172A !important;
+        }
+        
+        /* Dark Mode High Contrast */
+        html.dark body {
+            background-color: #071520 !important;
+            color: #F1F5F9 !important;
         }
 
-        /* High Contrast Status Badges */
+        /* Dark Mode Container and Card Overrides */
+        html.dark main {
+            background-color: #071520 !important;
+        }
+
+        html.dark main .bg-white {
+            background-color: #0b2233 !important;
+            border-color: #163d58 !important;
+            color: #F1F5F9 !important;
+        }
+
+        html.dark main .bg-slate-50 {
+            background-color: #081a27 !important;
+            border-color: #163d58 !important;
+        }
+
+        html.dark main .bg-slate-100 {
+            background-color: #0e2d42 !important;
+            border-color: #1a4868 !important;
+        }
+
+        html.dark main .border-slate-200 {
+            border-color: #163d58 !important;
+        }
+
+        html.dark main .border-slate-100 {
+            border-color: #12334a !important;
+        }
+
+        html.dark main .text-slate-900 {
+            color: #FFFFFF !important;
+        }
+
+        html.dark main .text-slate-800 {
+            color: #F1F5F9 !important;
+        }
+
+        html.dark main .text-slate-700 {
+            color: #CBD5E1 !important;
+        }
+
+        html.dark main .text-slate-600 {
+            color: #94A3B8 !important;
+        }
+
+        html.dark main .text-slate-500 {
+            color: #64748B !important;
+        }
+
+        html.dark main .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #163d58 !important;
+        }
+
+        html.dark main .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #12334a !important;
+        }
+
+        /* Dark Mode Form Inputs & Selects */
+        html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+        html.dark select,
+        html.dark textarea {
+            background-color: #071926 !important;
+            border-color: #1c4969 !important;
+            color: #F1F5F9 !important;
+        }
+
+        html.dark input::placeholder,
+        html.dark textarea::placeholder {
+            color: #64748B !important;
+        }
+
+        /* Dark Mode Tables */
+        html.dark table thead th {
+            background-color: #081d2c !important;
+            color: #94A3B8 !important;
+            border-color: #163d58 !important;
+        }
+
+        html.dark table tbody tr {
+            border-color: #12334a !important;
+        }
+
+        html.dark table tbody tr:hover {
+            background-color: rgba(14, 45, 68, 0.45) !important;
+        }
+
+        /* Dark Mode Modals & Dropdowns */
+        html.dark [role="dialog"] .bg-white,
+        html.dark .ims-modal-content {
+            background-color: #0b2233 !important;
+            border-color: #1a4868 !important;
+            color: #F1F5F9 !important;
+        }
+
+        /* Status Badge Utilities */
         span[class*="bg-amber-500/"],
-        span[class*="bg-amber-100"],
-        span[class*="text-amber-500"],
-        span[class*="text-amber-600"],
-        span[class*="text-amber-700"],
-        span[class*="text-amber-800"] {
-            background-color: #FEF3C7 !important;
-            color: #92400E !important;
-            border-color: #FCD34D !important;
+        span[class*="bg-amber-100"] {
             font-weight: 700 !important;
         }
         span[class*="bg-emerald-500/"],
-        span[class*="bg-emerald-100"],
-        span[class*="text-emerald-500"],
-        span[class*="text-emerald-600"],
-        span[class*="text-emerald-700"],
-        span[class*="text-emerald-800"] {
-            background-color: #D1FAE5 !important;
-            color: #065F46 !important;
-            border-color: #6EE7B7 !important;
+        span[class*="bg-emerald-100"] {
             font-weight: 700 !important;
         }
         span[class*="bg-cyan-500/"],
         span[class*="bg-cyan-100"],
         span[class*="bg-sky-500/"],
-        span[class*="bg-sky-100"],
-        span[class*="text-cyan-500"],
-        span[class*="text-cyan-600"],
-        span[class*="text-cyan-700"] {
-            background-color: #E0F2FE !important;
-            color: #0369A1 !important;
-            border-color: #7DD3FC !important;
+        span[class*="bg-sky-100"] {
             font-weight: 700 !important;
         }
         span[class*="bg-rose-500/"],
-        span[class*="bg-rose-100"],
-        span[class*="text-rose-500"],
-        span[class*="text-rose-600"],
-        span[class*="text-rose-700"],
-        span[class*="text-rose-800"] {
-            background-color: #FFE4E6 !important;
-            color: #9F1239 !important;
-            border-color: #FDA4AF !important;
+        span[class*="bg-rose-100"] {
             font-weight: 700 !important;
         }
 
-        /* Headings & Bold Text (Sharp, readable Slate-900/800) */
-        main h1:not([class*="bg-gradient"] *):not(.ims-banner *), 
-        main h2:not([class*="bg-gradient"] *):not(.ims-banner *), 
-        main h3:not([class*="bg-gradient"] *):not(.ims-banner *), 
-        main h4:not([class*="bg-gradient"] *):not(.ims-banner *), 
-        main h5:not([class*="bg-gradient"] *):not(.ims-banner *), 
-        main h6:not([class*="bg-gradient"] *):not(.ims-banner *),
-        main .text-slate-100:not([class*="bg-gradient"] *):not(.ims-banner *),
-        main .text-slate-200:not([class*="bg-gradient"] *):not(.ims-banner *),
-        [role="dialog"] h1, [role="dialog"] h2, [role="dialog"] h3, [role="dialog"] h4,
-        [role="dialog"] .text-slate-100,
-        [role="dialog"] .text-slate-200,
-        [x-show*="Modal"] h1, [x-show*="Modal"] h2, [x-show*="Modal"] h3,
-        [x-show*="modal"] h1, [x-show*="modal"] h2, [x-show*="modal"] h3 {
-            color: #0F172A !important;
-        }
-
-        /* General text-white in main unless inside colored buttons, badges, or gradient banners */
-        main .text-white:not(button):not(button *):not(a.bg-blue-600):not(a.bg-blue-600 *):not(a.bg-cyan-600):not(a.bg-cyan-600 *):not(a.bg-teal-600):not(a.bg-teal-600 *):not(a.bg-rose-500):not(a.bg-rose-500 *):not(a.bg-rose-600):not(a.bg-rose-600 *):not(a.bg-emerald-600):not(a.bg-emerald-600 *):not(a.bg-amber-500):not(a.bg-amber-500 *):not(a.bg-\[\#00a65a\]):not(a.bg-\[\#00a65a\] *):not(a.bg-\[\#00b074\]):not(a.bg-\[\#00b074\] *):not(a.bg-\[\#0891b2\]):not(a.bg-\[\#0891b2\] *):not(.bg-blue-600 *):not(.bg-cyan-600 *):not(.bg-teal-600 *):not(.bg-rose-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not([class*="bg-gradient"] *):not(.ims-banner *):not([class*="bg-gradient"]):not(.ims-banner) {
-            color: #0F172A !important;
-        }
-
-        /* Subtext / Muted Information (Slate-600) */
-        main .text-slate-300,
-        main .text-slate-400:not(.text-blue-400):not(.text-cyan-400):not(.text-teal-400):not(.text-emerald-400):not(.text-amber-400):not(.text-rose-400),
-        [role="dialog"] .text-slate-300,
-        [role="dialog"] .text-slate-400,
-        [x-show*="Modal"] .text-slate-300,
-        [x-show*="Modal"] .text-slate-400,
-        [x-show*="modal"] .text-slate-300,
-        [x-show*="modal"] .text-slate-400 {
-            color: #475569 !important;
-        }
-
-        /* Table Header */
-        main table thead,
-        main table thead tr {
-            background-color: #F8FAFC !important;
-            border-bottom: 2px solid #E2E8F0 !important;
-        }
-        main table thead th {
-            color: #0F172A !important;
-            font-weight: 700 !important;
-        }
-
-        /* Table Rows */
-        main table tbody tr {
-            background-color: #FFFFFF !important;
-            border-bottom: 1px solid #F1F5F9 !important;
-        }
-        main table tbody tr:hover {
-            background-color: #F8FAFC !important;
-        }
-
-        /* Form Inputs & Selects */
-        main input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
-        main select,
-        main textarea,
-        [role="dialog"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
-        [role="dialog"] select,
-        [role="dialog"] textarea,
-        [x-show*="Modal"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
-        [x-show*="Modal"] select,
-        [x-show*="Modal"] textarea {
-            background-color: #FFFFFF !important;
-            border: 1px solid #CBD5E1 !important;
-            color: #0F172A !important;
-            font-weight: 500 !important;
-        }
-        main input::placeholder,
-        main textarea::placeholder,
-        [role="dialog"] input::placeholder,
-        [role="dialog"] textarea::placeholder {
-            color: #94A3B8 !important;
-        }
-        main input:focus,
-        main select:focus,
-        main textarea:focus,
-        [role="dialog"] input:focus,
-        [role="dialog"] select:focus,
-        [role="dialog"] textarea:focus {
-            border-color: #0891B2 !important;
-            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15) !important;
-            outline: none !important;
-        }
-
-        /* Colored buttons protect white text */
+        /* Buttons Keep Sharp Text */
         .btn-primary-theme,
         button[type="submit"].bg-blue-600,
         button[type="submit"].bg-cyan-600,
@@ -410,23 +336,24 @@
         a.bg-cyan-600,
         a.bg-teal-600,
         a.bg-[#0891b2],
-        a.bg-gradient-to-r,
-        .bg-blue-600,
-        .bg-cyan-600,
-        .bg-teal-600,
-        .bg-[#0891b2],
-        .bg-rose-600,
-        .bg-emerald-600,
-        .bg-amber-600,
-        .bg-indigo-600,
-        .bg-[#00a65a],
-        .bg-[#00b074] {
+        a.bg-gradient-to-r {
             color: #FFFFFF !important;
         }
     </style>
 </head>
-<body class="h-full font-sans antialiased selection:bg-blue-600 selection:text-white bg-[#F8FAFC] text-slate-800"
+<body class="h-full font-sans antialiased selection:bg-blue-600 selection:text-white bg-[#F8FAFC] dark:bg-[#071520] text-slate-800 dark:text-slate-100 transition-colors duration-200"
       x-data="{ 
+          isDarkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+          toggleTheme() {
+              this.isDarkMode = !this.isDarkMode;
+              if (this.isDarkMode) {
+                  document.documentElement.classList.add('dark');
+                  localStorage.setItem('theme', 'dark');
+              } else {
+                  document.documentElement.classList.remove('dark');
+                  localStorage.setItem('theme', 'light');
+              }
+          },
           sidebarCollapsed: false,
           mobileSidebarOpen: false,
           activeFlyout: null,
@@ -1019,27 +946,43 @@
 
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
-                <!-- Top Navbar (Pure White) -->
-                <header class="min-h-16 bg-white border-b border-slate-200/90 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30 py-2 shadow-xs">
+                <!-- Top Navbar (Dual Light & Dark Mode) -->
+                <header class="min-h-16 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30 py-2 shadow-xs transition-colors duration-200">
                     <div class="flex items-center gap-3">
                         <!-- Sidebar Toggle Button in Navbar (Tombol Hamburger) -->
                         <button @click="toggleSidebar()" 
                                 :title="sidebarCollapsed ? 'Buka Sidebar Penuh' : 'Tutup Sidebar ke Mode Ikon'"
-                                class="p-2 text-slate-600 hover:text-slate-900 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition flex items-center justify-center flex-shrink-0 cursor-pointer">
+                                class="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer">
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                             </svg>
                         </button>
 
                         <div>
-                            <h1 class="text-base font-bold text-slate-900 leading-tight">@yield('page_title', 'Dashboard')</h1>
-                            <p class="text-xs text-slate-500 hidden sm:block">Internet Management System &middot; Portal</p>
+                            <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">@yield('page_title', 'Dashboard')</h1>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Internet Management System &middot; Portal</p>
                         </div>
                     </div>
 
                     <!-- Right Side Navbar -->
                     <div class="flex items-center gap-3 sm:gap-4">
                         
+                        <!-- Theme Toggle Button (Light / Dark Mode) -->
+                        <button @click="toggleTheme()" 
+                                type="button"
+                                :title="isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'"
+                                class="p-2 text-slate-600 dark:text-amber-400 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs group"
+                                aria-label="Toggle Theme">
+                            <!-- Sun Icon (Active in Dark Mode) -->
+                            <svg x-show="isDarkMode" x-cloak class="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                            </svg>
+                            <!-- Moon Icon (Active in Light Mode) -->
+                            <svg x-show="!isDarkMode" class="w-4 h-4 text-slate-600 group-hover:-rotate-12 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                            </svg>
+                        </button>
+
                         <!-- Status Gateway & Jam Realtime WIB -->
                         <div class="flex flex-col items-end gap-1"
                              x-data="{
@@ -1073,33 +1016,33 @@
                              x-init="updateClock(); setInterval(() => updateClock(), 1000)">
                             
                             <!-- 1. Status Gateway -->
-                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-[11px]">
+                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px]">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span class="text-slate-600">Status Gateway: <strong class="text-emerald-700 font-semibold">Online</strong></span>
+                                <span class="text-slate-600 dark:text-slate-300">Status Gateway: <strong class="text-emerald-700 dark:text-emerald-400 font-semibold">Online</strong></span>
                             </div>
 
                             <!-- 2. Jam Realtime WIB -->
-                            <div class="flex items-center gap-1 text-[11px] text-slate-600 font-medium tracking-wide">
+                            <div class="flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-400 font-medium tracking-wide">
                                 <svg class="w-3.5 h-3.5 text-[#0891b2] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
-                                <span class="font-mono text-slate-900 font-bold" x-text="timeWib">--:--:-- WIB</span>
-                                <span class="text-[10px] text-slate-400 hidden sm:inline" x-text="'&middot; ' + dateWib"></span>
+                                <span class="font-mono text-slate-900 dark:text-slate-100 font-bold" x-text="timeWib">--:--:-- WIB</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline" x-text="'&middot; ' + dateWib"></span>
                             </div>
                         </div>
 
                         <!-- User Profile Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
-                                    class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition cursor-pointer">
+                                    class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
                                     {{ substr(auth()->user()->nama, 0, 1) }}
                                 </div>
                                 <div class="text-left hidden md:block">
-                                    <span class="block text-xs font-bold text-slate-900 leading-tight">{{ auth()->user()->nama }}</span>
+                                    <span class="block text-xs font-bold text-slate-900 dark:text-white leading-tight">{{ auth()->user()->nama }}</span>
                                     <span class="block text-[10px] text-[#0891b2] font-semibold">{{ auth()->user()->nama_level }}</span>
                                 </div>
-                                <svg class="w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </button>
@@ -1108,14 +1051,14 @@
                             <div x-show="open"
                                  x-cloak
                                  @click.away="open = false"
-                                 class="absolute right-0 mt-2 w-56 rounded-xl bg-white border border-slate-200 shadow-xl shadow-slate-200/80 py-1.5 z-50">
-                                <div class="px-4 py-2 border-b border-slate-100 text-xs">
-                                    <p class="font-bold text-slate-900">{{ auth()->user()->nama }}</p>
-                                    <p class="text-slate-500 truncate">{{ auth()->user()->username }}</p>
+                                 class="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/80 dark:shadow-black/60 py-1.5 z-50">
+                                <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700/60 text-xs">
+                                    <p class="font-bold text-slate-900 dark:text-white">{{ auth()->user()->nama }}</p>
+                                    <p class="text-slate-500 dark:text-slate-400 truncate">{{ auth()->user()->username }}</p>
                                 </div>
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer transition">
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2 cursor-pointer transition">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
                                         </svg>
@@ -1127,12 +1070,12 @@
                     </div>
                 </header>
 
-                <!-- Page Content (Light Mode Container) -->
-                <main class="flex-1 p-4 sm:p-6 lg:p-8 bg-[#F8FAFC]">
+                <!-- Page Content (Dual Light & Dark Mode Container) -->
+                <main class="flex-1 p-4 sm:p-6 lg:p-8 bg-[#F8FAFC] dark:bg-[#071520] transition-colors duration-200">
                     <!-- Flash Message -->
                     @if(session('success'))
-                        <div class="mb-6 p-4 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] text-[#047857] text-sm flex items-center gap-3 shadow-xs">
-                            <svg class="w-5 h-5 flex-shrink-0 text-[#059669]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <div class="mb-6 p-4 rounded-xl bg-[#ECFDF5] dark:bg-emerald-950/40 border border-[#A7F3D0] dark:border-emerald-800/60 text-[#047857] dark:text-emerald-300 text-sm flex items-center gap-3 shadow-xs">
+                            <svg class="w-5 h-5 flex-shrink-0 text-[#059669] dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
                             </svg>
                             <span>{{ session('success') }}</span>
@@ -1142,8 +1085,8 @@
                     @yield('content')
                 </main>
 
-                <!-- Light Bottom Footer -->
-                <footer class="mt-auto px-6 py-3.5 border-t border-slate-200/80 bg-white flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+                <!-- Bottom Footer (Dual Light & Dark Mode) -->
+                <footer class="mt-auto px-6 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2 transition-colors duration-200">
                     <div>
                         &copy; {{ date('Y') }} Media Solusi Network
                     </div>

@@ -22,6 +22,11 @@
             overflow: visible !important;
             position: relative;
         }
+        /* Dark mode overrides for Peta Jaringan */
+        .dark .ims-map-card {
+            background: #0b2233 !important;
+            border-color: #163d58 !important;
+        }
         /* ── SIDEBAR DRAWER STYLES ── */
         .ims-drawer-root {
             position: absolute !important;
@@ -39,6 +44,11 @@
             box-sizing: border-box !important;
             overflow: hidden !important;
             pointer-events: auto !important;
+        }
+        .dark .ims-drawer-root {
+            background: #0b2233 !important;
+            border-right-color: #163d58 !important;
+            box-shadow: 10px 0 32px rgba(0,0,0,0.5) !important;
         }
         .ims-drawer-header {
             height: 58px !important;

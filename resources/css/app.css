@@ -22,8 +22,21 @@
     --accent-emerald: #10B981;
 }
 
+.dark {
+    --bg-main: #071520;
+    --bg-card: #0c2333;
+    --text-main: #F1F5F9;
+    --text-muted: #94A3B8;
+    --border-main: #16384f;
+    --primary: #38BDF8;
+    --primary-dark: #0284C7;
+    --accent-cyan: #22D3EE;
+    --accent-emerald: #34D399;
+}
+
 body {
     background-color: var(--bg-main);
     color: var(--text-main);
     font-family: var(--font-sans);
+    transition: background-color 0.2s ease, color 0.2s ease;
 }

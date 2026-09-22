@@ -6,7 +6,7 @@
 <div class="space-y-6">
     <!-- Role Welcome Banner (Deep Oceanic Teal & Cyan Gradient Matching Reference) -->
     <div class="ims-banner relative overflow-hidden rounded-2xl p-6 sm:p-7 shadow-md"
-         style="background: linear-gradient(135deg, #0e5069 0%, #086b86 40%, #05889e 75%, #0694a2 100%);">
+         style="background: linear-gradient(115deg, #052433 0%, #073a4d 28%, #086079 58%, #087f96 82%, #0a97a8 100%);">
         
         <!-- Subtle Glow Effect -->
         <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>

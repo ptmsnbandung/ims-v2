@@ -7,9 +7,9 @@
 
     <title>{{ $title ?? 'Dashboard' }} - IMS Router Management</title>
 
-    <!-- Anti-flicker Theme Initialization -->
+    <!-- Anti-flicker Theme Initialization (Default to Light Mode) -->
     <script>
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
@@ -263,7 +263,7 @@
 </head>
 <body class="h-full font-sans antialiased selection:bg-blue-600 selection:text-white bg-[#F8FAFC] dark:bg-[#071520] text-slate-800 dark:text-slate-100 transition-colors duration-200"
       x-data="{ 
-          isDarkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+          isDarkMode: localStorage.getItem('theme') === 'dark',
           toggleTheme() {
               this.isDarkMode = !this.isDarkMode;
               if (this.isDarkMode) {

@@ -1033,10 +1033,10 @@
                 <!-- Light Bottom Footer -->
                 <footer class="mt-auto px-6 py-3.5 border-t border-slate-200/80 bg-white flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
                     <div>
-                        &copy; {{ date('Y') }} Connecti Jelajah Priangan
+                        &copy; {{ date('Y') }} Media Solusi Network
                     </div>
                     <div>
-                        Connecti Jelajah Priangan <span class="text-rose-500">❤</span> v3.0.1
+                        Media Solusi Network <span class="text-rose-500">❤</span> v3.0.1
                     </div>
                 </footer>
             </div>

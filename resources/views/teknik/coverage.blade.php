@@ -424,7 +424,13 @@
                     <div class="flex items-center gap-1.5 text-sky-400 font-medium">
                         <span class="w-4 h-0.5 bg-sky-400 inline-block border-t border-dashed border-sky-400"></span>
                         <span>Garis Biru = Jalur kabel dropcore fiber optik (OSRM Street Route)</span>
-                    </div>    <!-- ── 3. BOTTOM SECTION: DATABASE MASTER ODP (m_odp) & TIKET WHATSAPP (trx_coverage_area) ── -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 3. BOTTOM SECTION: DATABASE MASTER ODP (m_odp) & TIKET WHATSAPP (trx_coverage_area) ── -->
     <div class="ims-coverage-card p-5 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-800">
             <div class="flex items-center gap-2 flex-wrap">

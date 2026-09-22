@@ -62,14 +62,22 @@
             border-radius: 0.75rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #9CA3AF !important;
+            color: #E2E8F0 !important;
             text-decoration: none;
             transition: all 0.15s ease;
             white-space: nowrap;
             position: relative;
         }
+        .ims-nav-item svg {
+            color: #94A3B8 !important;
+            transition: color 0.15s ease;
+        }
         .ims-nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.05) !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: #FFFFFF !important;
+        }
+        .ims-nav-item:hover svg,
+        .ims-nav-item:hover .ims-nav-arrow {
             color: #FFFFFF !important;
         }
         .ims-nav-item.active {
@@ -78,8 +86,30 @@
             box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4) !important;
         }
         .ims-nav-item.active span,
-        .ims-nav-item.active svg {
+        .ims-nav-item.active svg,
+        .ims-nav-item.active .ims-nav-arrow {
             color: #FFFFFF !important;
+        }
+
+        /* Sidebar Section Header & Submenus */
+        .ims-sidebar .ims-section-header {
+            color: #93C5FD !important;
+            font-weight: 700 !important;
+        }
+        .ims-sidebar .ims-section-title {
+            color: #93C5FD !important;
+            font-weight: 700 !important;
+        }
+        .ims-sidebar .ims-submenu a {
+            color: #CBD5E1 !important;
+            font-weight: 500;
+        }
+        .ims-sidebar .ims-submenu a:hover {
+            color: #FFFFFF !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        .ims-sidebar .ims-logo-text span:last-child {
+            color: #CBD5E1 !important;
         }
 
         /* Collapsed Mode Adjustments */

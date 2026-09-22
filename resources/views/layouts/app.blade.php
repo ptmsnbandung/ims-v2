@@ -1036,7 +1036,7 @@
                         &copy; {{ date('Y') }} Media Solusi Network
                     </div>
                     <div>
-                        Media Solusi Network <span class="text-rose-500">❤</span> v3.0.1
+                        Media Solusi Network &middot; v3.0.1
                     </div>
                 </footer>
             </div>

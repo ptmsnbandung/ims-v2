@@ -7,3 +7,250 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* ==================================================
+   MODERN SLATE & ROYAL BLUE THEME VARIABLES
+   ================================================== */
+:root {
+    /* 1. Global Palette */
+    --bg-app: #F5F6FA;
+    --primary-blue: #2563EB;
+    --primary-blue-light: #3B82F6;
+    --primary-dark: #1D4ED8;
+    --primary-tint: #EFF6FF;
+    --text-main: #1E293B;
+    --text-heading: #0F172A;
+    --text-muted: #64748B;
+    --text-subtle: #94A3B8;
+    --border-standard: #E2E8F0;
+    --border-soft: #F1F5F9;
+
+    /* 2. Sidebar */
+    --sidebar-bg: #111827;
+    --sidebar-text: #9CA3AF;
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+    --sidebar-active-bg: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    --sidebar-glow: 0 4px 18px rgba(37, 99, 235, 0.4);
+    --sidebar-submenu-bg: #0F172A;
+    --sidebar-submenu-border: rgba(255, 255, 255, 0.12);
+
+    /* 3. Navbar */
+    --navbar-bg: #FFFFFF;
+    --navbar-border: #E5E7EB;
+
+    /* 4. Card */
+    --card-bg: #FFFFFF;
+    --card-border: #E2E8F0;
+    --card-hover-border: #93C5FD;
+    --card-topline: linear-gradient(to right, #3B82F6, #6366F1, #06B6D4);
+    --card-icon-bg: #EFF6FF;
+    --card-icon-color: #2563EB;
+    --card-icon-border: #DBEAFE;
+
+    /* 5. Tables */
+    --table-bg: #FFFFFF;
+    --table-thead-bg: #F8FAFC;
+    --table-thead-text: #475569;
+    --table-divider: #F1F5F9;
+    --table-row-hover: #F8FAFC;
+    --table-row-active: rgba(239, 246, 255, 0.4);
+    --table-footer-bg: #F8FAFC;
+
+    /* 6. Buttons */
+    --btn-primary-bg: linear-gradient(to right, #2563EB, #4F46E5);
+    --btn-primary-hover: linear-gradient(to right, #1D4ED8, #4338CA);
+    --btn-primary-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+    --btn-secondary-bg: #FFFFFF;
+    --btn-secondary-border: #E2E8F0;
+    --btn-secondary-text: #334155;
+    --btn-secondary-hover: #F8FAFC;
+    --btn-dark-bg: #1E293B;
+    --btn-dark-hover: #0F172A;
+
+    /* 7. Inputs */
+    --input-bg: #FFFFFF;
+    --input-border: #E2E8F0;
+    --input-text: #1E293B;
+    --input-placeholder: #94A3B8;
+    --input-focus-border: #3B82F6;
+    --input-focus-ring: rgba(59, 130, 246, 0.15);
+
+    /* 8. Status Badges */
+    --badge-sukses-bg: #ECFDF5;
+    --badge-sukses-text: #047857;
+    --badge-sukses-border: #A7F3D0;
+    --badge-bahaya-bg: #FFF1F2;
+    --badge-bahaya-text: #BE123C;
+    --badge-bahaya-border: #FECDD3;
+    --badge-warning-bg: #FFFBEB;
+    --badge-warning-text: #B45309;
+    --badge-warning-border: #FDE68A;
+    --badge-info-bg: #F0F9FF;
+    --badge-info-text: #0369A1;
+    --badge-info-border: #BAE6FD;
+    --badge-neutral-bg: #F1F5F9;
+    --badge-neutral-text: #334155;
+    --badge-neutral-border: #E2E8F0;
+
+    /* Modal Backdrop */
+    --modal-backdrop: rgba(15, 23, 42, 0.6);
+}
+
+/* Base Body Styles */
+body {
+    background-color: #F5F6FA;
+    color: #1E293B;
+}
+
+/* Card utilities */
+.card-theme {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 1rem;
+    transition: all 0.2s ease;
+}
+.card-theme:hover {
+    border-color: #93C5FD;
+}
+.card-topline-accent {
+    position: relative;
+    overflow: hidden;
+}
+.card-topline-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, #3B82F6, #6366F1, #06B6D4);
+}
+.card-icon-wrapper {
+    background-color: #EFF6FF;
+    color: #2563EB;
+    border: 1px solid #DBEAFE;
+}
+
+/* Buttons */
+.btn-primary-theme {
+    background: linear-gradient(to right, #2563EB, #4F46E5);
+    color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s ease;
+}
+.btn-primary-theme:hover {
+    background: linear-gradient(to right, #1D4ED8, #4338CA);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+}
+.btn-secondary-theme {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #334155;
+    transition: all 0.15s ease;
+}
+.btn-secondary-theme:hover {
+    background-color: #F8FAFC;
+    color: #1E293B;
+}
+.btn-dark-theme {
+    background-color: #1E293B;
+    color: #FFFFFF;
+    transition: all 0.15s ease;
+}
+.btn-dark-theme:hover {
+    background-color: #0F172A;
+}
+
+/* Action Icons */
+.btn-action-edit {
+    background-color: #EFF6FF;
+    color: #2563EB;
+    border: 1px solid #BFDBFE;
+}
+.btn-action-delete {
+    background-color: #FFF1F2;
+    color: #E11D48;
+    border: 1px solid #FECDD3;
+}
+.btn-action-success {
+    background-color: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+}
+
+/* Form Inputs */
+.input-theme {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #1E293B;
+    border-radius: 0.75rem;
+    transition: all 0.15s ease;
+}
+.input-theme::placeholder {
+    color: #94A3B8;
+}
+.input-theme:focus {
+    outline: none;
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Data Table utilities */
+.table-container-theme {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+.table-theme thead {
+    background-color: #F8FAFC;
+    color: #475569;
+    border-bottom: 1px solid #F1F5F9;
+}
+.table-theme tbody tr {
+    border-bottom: 1px solid #F1F5F9;
+    transition: background-color 0.15s ease;
+}
+.table-theme tbody tr:hover {
+    background-color: #F8FAFC;
+}
+.table-theme tbody tr.row-selected {
+    background-color: rgba(239, 246, 255, 0.4);
+}
+.table-theme tfoot, .table-pagination-theme {
+    background-color: #F8FAFC;
+    border-top: 1px solid #F1F5F9;
+}
+
+/* Badges */
+.badge-sukses {
+    background-color: #ECFDF5;
+    color: #047857;
+    border: 1px solid #A7F3D0;
+}
+.badge-bahaya {
+    background-color: #FFF1F2;
+    color: #BE123C;
+    border: 1px solid #FECDD3;
+}
+.badge-warning {
+    background-color: #FFFBEB;
+    color: #B45309;
+    border: 1px solid #FDE68A;
+}
+.badge-info {
+    background-color: #F0F9FF;
+    color: #0369A1;
+    border: 1px solid #BAE6FD;
+}
+.badge-neutral {
+    background-color: #F1F5F9;
+    color: #334155;
+    border: 1px solid #E2E8F0;
+}
+
+/* Modal Backdrop */
+.modal-backdrop-theme {
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+}

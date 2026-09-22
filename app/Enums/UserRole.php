@@ -38,9 +38,9 @@ enum UserRole: string
     public function badgeClasses(): string
     {
         return match ($this) {
-            self::TEKNIK => 'bg-sky-500/10 text-sky-400 border-sky-500/30',
-            self::NOC => 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
-            self::FINANCE => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+            self::TEKNIK => 'bg-[#F0F9FF] text-[#0369A1] border-[#BAE6FD]',
+            self::NOC => 'bg-[#EFF6FF] text-[#2563EB] border-[#DBEAFE]',
+            self::FINANCE => 'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]',
         };
     }
 

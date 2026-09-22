@@ -102,15 +102,200 @@ body {
     color: #1E293B;
 }
 
+/* ==================================================
+   GLOBAL LIGHT CARD & MODULE OVERRIDES (NO MORE DARK)
+   ================================================== */
+main, .ims-main-content, .modal-dialog, [role="dialog"], [x-show*="Modal"], [x-show*="modal"] {
+    color: #1E293B;
+}
+
+/* Background dark classes converted to Pure White for cards & modules */
+main .bg-slate-900,
+main .bg-slate-900\/95,
+main .bg-slate-900\/90,
+main .bg-slate-900\/80,
+main .bg-slate-900\/70,
+main .bg-slate-900\/60,
+main .bg-slate-900\/50,
+main .bg-slate-900\/40,
+main .bg-slate-900\/30,
+main .bg-slate-950,
+main .bg-slate-950\/90,
+main .bg-slate-950\/80,
+main .bg-slate-950\/70,
+main .bg-slate-950\/60,
+main .bg-slate-950\/50,
+main .bg-slate-950\/40,
+main .bg-slate-950\/30,
+main .bg-slate-950\/20,
+main .bg-slate-800,
+main .bg-slate-800\/90,
+main .bg-slate-800\/80,
+main .bg-slate-800\/60,
+main .bg-slate-800\/50,
+main .bg-slate-800\/40,
+main .bg-slate-800\/30,
+[role="dialog"] .bg-slate-900,
+[role="dialog"] .bg-slate-900\/95,
+[role="dialog"] .bg-slate-900\/90,
+[role="dialog"] .bg-slate-900\/80,
+[role="dialog"] .bg-slate-900\/70,
+[role="dialog"] .bg-slate-900\/60,
+[role="dialog"] .bg-slate-950,
+[role="dialog"] .bg-slate-950\/90,
+[role="dialog"] .bg-slate-950\/80,
+[role="dialog"] .bg-slate-950\/70,
+[role="dialog"] .bg-slate-950\/60,
+[role="dialog"] .bg-slate-800,
+[role="dialog"] .bg-slate-800\/80,
+[x-show*="Modal"] .bg-slate-900,
+[x-show*="Modal"] .bg-slate-900\/90,
+[x-show*="Modal"] .bg-slate-900\/80,
+[x-show*="Modal"] .bg-slate-950,
+[x-show*="modal"] .bg-slate-900,
+[x-show*="modal"] .bg-slate-950 {
+    background-color: #FFFFFF !important;
+}
+
+/* Dark borders converted to Soft Slate borders */
+main .border-slate-800,
+main .border-slate-800\/90,
+main .border-slate-800\/80,
+main .border-slate-800\/70,
+main .border-slate-800\/60,
+main .border-slate-800\/50,
+main .border-slate-700,
+main .border-slate-700\/80,
+main .border-slate-700\/60,
+main .border-slate-700\/50,
+main .divide-slate-800,
+main .divide-slate-800\/80,
+main .divide-slate-800\/60,
+[role="dialog"] .border-slate-800,
+[role="dialog"] .border-slate-800\/80,
+[role="dialog"] .border-slate-700,
+[x-show*="Modal"] .border-slate-800,
+[x-show*="modal"] .border-slate-800 {
+    border-color: #E2E8F0 !important;
+}
+
+/* Headings and Titles converted to Slate-900 / Slate-800 for strong contrast */
+main h1:not(.text-white-keep),
+main h2:not(.text-white-keep),
+main h3:not(.text-white-keep),
+main h4:not(.text-white-keep),
+main h5:not(.text-white-keep),
+main h6:not(.text-white-keep),
+main .text-white:not(.btn-primary-theme):not(.bg-blue-600):not(.bg-rose-600):not(.bg-emerald-600):not(.bg-amber-600):not(.bg-indigo-600):not(.bg-gradient-to-r),
+main .text-slate-100,
+main .text-slate-200,
+[role="dialog"] h1, [role="dialog"] h2, [role="dialog"] h3, [role="dialog"] h4,
+[role="dialog"] .text-white:not(.btn-primary-theme):not(.bg-blue-600):not(.bg-rose-600):not(.bg-emerald-600):not(.bg-amber-600):not(.bg-indigo-600):not(.bg-gradient-to-r),
+[role="dialog"] .text-slate-100,
+[role="dialog"] .text-slate-200,
+[x-show*="Modal"] h1, [x-show*="Modal"] h2, [x-show*="Modal"] h3, [x-show*="Modal"] h4,
+[x-show*="Modal"] .text-white:not(.btn-primary-theme):not(.bg-blue-600):not(.bg-rose-600):not(.bg-emerald-600):not(.bg-amber-600):not(.bg-indigo-600):not(.bg-gradient-to-r),
+[x-show*="modal"] h1, [x-show*="modal"] h2, [x-show*="modal"] h3, [x-show*="modal"] h4 {
+    color: #1E293B !important;
+}
+
+/* Subtitle and muted text converted to Slate-500 / Slate-600 */
+main .text-slate-300,
+main .text-slate-400:not(.text-blue-400):not(.text-emerald-400):not(.text-amber-400):not(.text-rose-400),
+[role="dialog"] .text-slate-300,
+[role="dialog"] .text-slate-400,
+[x-show*="Modal"] .text-slate-300,
+[x-show*="Modal"] .text-slate-400,
+[x-show*="modal"] .text-slate-300,
+[x-show*="modal"] .text-slate-400 {
+    color: #64748B !important;
+}
+
+/* Table Header styling */
+main table thead tr,
+main thead tr,
+main thead {
+    background-color: #F8FAFC !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+}
+main table thead th,
+main thead th {
+    color: #475569 !important;
+    font-weight: 700 !important;
+}
+
+/* Table Row Styling & Hover */
+main table tbody tr {
+    border-bottom: 1px solid #F1F5F9 !important;
+    background-color: #FFFFFF !important;
+}
+main table tbody tr:hover {
+    background-color: #F8FAFC !important;
+}
+
+/* Form Inputs, Selects, and Textareas in Main & Modals */
+main input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+main select,
+main textarea,
+[role="dialog"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+[role="dialog"] select,
+[role="dialog"] textarea,
+[x-show*="Modal"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+[x-show*="Modal"] select,
+[x-show*="Modal"] textarea {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    color: #1E293B !important;
+}
+main input::placeholder,
+main textarea::placeholder,
+[role="dialog"] input::placeholder,
+[role="dialog"] textarea::placeholder,
+[x-show*="Modal"] input::placeholder,
+[x-show*="Modal"] textarea::placeholder {
+    color: #94A3B8 !important;
+}
+main input:focus,
+main select:focus,
+main textarea:focus,
+[role="dialog"] input:focus,
+[role="dialog"] select:focus,
+[role="dialog"] textarea:focus,
+[x-show*="Modal"] input:focus,
+[x-show*="Modal"] select:focus,
+[x-show*="Modal"] textarea:focus {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    outline: none !important;
+}
+
+/* Preserve White Text for Colored Badges, Solid Buttons, and Active Sidebar */
+.btn-primary-theme,
+button[type="submit"].bg-blue-600,
+button[type="submit"].bg-gradient-to-r,
+a.bg-blue-600,
+a.bg-gradient-to-r,
+.bg-blue-600,
+.bg-rose-600,
+.bg-emerald-600,
+.bg-amber-600,
+.bg-indigo-600,
+.ims-nav-item.active,
+.ims-nav-item.active span,
+.ims-nav-item.active svg {
+    color: #FFFFFF !important;
+}
+
 /* Card utilities */
 .card-theme {
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
     border-radius: 1rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
 }
 .card-theme:hover {
-    border-color: #93C5FD;
+    border-color: #93C5FD !important;
 }
 .card-topline-accent {
     position: relative;
@@ -126,131 +311,131 @@ body {
     background: linear-gradient(to right, #3B82F6, #6366F1, #06B6D4);
 }
 .card-icon-wrapper {
-    background-color: #EFF6FF;
-    color: #2563EB;
-    border: 1px solid #DBEAFE;
+    background-color: #EFF6FF !important;
+    color: #2563EB !important;
+    border: 1px solid #DBEAFE !important;
 }
 
 /* Buttons */
 .btn-primary-theme {
-    background: linear-gradient(to right, #2563EB, #4F46E5);
-    color: #FFFFFF;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+    background: linear-gradient(to right, #2563EB, #4F46E5) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
     transition: all 0.2s ease;
 }
 .btn-primary-theme:hover {
-    background: linear-gradient(to right, #1D4ED8, #4338CA);
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+    background: linear-gradient(to right, #1D4ED8, #4338CA) !important;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35) !important;
 }
 .btn-secondary-theme {
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    color: #334155;
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    color: #334155 !important;
     transition: all 0.15s ease;
 }
 .btn-secondary-theme:hover {
-    background-color: #F8FAFC;
-    color: #1E293B;
+    background-color: #F8FAFC !important;
+    color: #1E293B !important;
 }
 .btn-dark-theme {
-    background-color: #1E293B;
-    color: #FFFFFF;
+    background-color: #1E293B !important;
+    color: #FFFFFF !important;
     transition: all 0.15s ease;
 }
 .btn-dark-theme:hover {
-    background-color: #0F172A;
+    background-color: #0F172A !important;
 }
 
 /* Action Icons */
 .btn-action-edit {
-    background-color: #EFF6FF;
-    color: #2563EB;
-    border: 1px solid #BFDBFE;
+    background-color: #EFF6FF !important;
+    color: #2563EB !important;
+    border: 1px solid #BFDBFE !important;
 }
 .btn-action-delete {
-    background-color: #FFF1F2;
-    color: #E11D48;
-    border: 1px solid #FECDD3;
+    background-color: #FFF1F2 !important;
+    color: #E11D48 !important;
+    border: 1px solid #FECDD3 !important;
 }
 .btn-action-success {
-    background-color: #ECFDF5;
-    color: #059669;
-    border: 1px solid #A7F3D0;
+    background-color: #ECFDF5 !important;
+    color: #059669 !important;
+    border: 1px solid #A7F3D0 !important;
 }
 
 /* Form Inputs */
 .input-theme {
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    color: #1E293B;
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    color: #1E293B !important;
     border-radius: 0.75rem;
     transition: all 0.15s ease;
 }
 .input-theme::placeholder {
-    color: #94A3B8;
+    color: #94A3B8 !important;
 }
 .input-theme:focus {
-    outline: none;
-    border-color: #3B82F6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    outline: none !important;
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
 }
 
 /* Data Table utilities */
 .table-container-theme {
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
+    background-color: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
     border-radius: 1rem;
     overflow: hidden;
 }
 .table-theme thead {
-    background-color: #F8FAFC;
-    color: #475569;
-    border-bottom: 1px solid #F1F5F9;
+    background-color: #F8FAFC !important;
+    color: #475569 !important;
+    border-bottom: 1px solid #F1F5F9 !important;
 }
 .table-theme tbody tr {
-    border-bottom: 1px solid #F1F5F9;
+    border-bottom: 1px solid #F1F5F9 !important;
     transition: background-color 0.15s ease;
 }
 .table-theme tbody tr:hover {
-    background-color: #F8FAFC;
+    background-color: #F8FAFC !important;
 }
 .table-theme tbody tr.row-selected {
-    background-color: rgba(239, 246, 255, 0.4);
+    background-color: rgba(239, 246, 255, 0.4) !important;
 }
 .table-theme tfoot, .table-pagination-theme {
-    background-color: #F8FAFC;
-    border-top: 1px solid #F1F5F9;
+    background-color: #F8FAFC !important;
+    border-top: 1px solid #F1F5F9 !important;
 }
 
 /* Badges */
 .badge-sukses {
-    background-color: #ECFDF5;
-    color: #047857;
-    border: 1px solid #A7F3D0;
+    background-color: #ECFDF5 !important;
+    color: #047857 !important;
+    border: 1px solid #A7F3D0 !important;
 }
 .badge-bahaya {
-    background-color: #FFF1F2;
-    color: #BE123C;
-    border: 1px solid #FECDD3;
+    background-color: #FFF1F2 !important;
+    color: #BE123C !important;
+    border: 1px solid #FECDD3 !important;
 }
 .badge-warning {
-    background-color: #FFFBEB;
-    color: #B45309;
-    border: 1px solid #FDE68A;
+    background-color: #FFFBEB !important;
+    color: #B45309 !important;
+    border: 1px solid #FDE68A !important;
 }
 .badge-info {
-    background-color: #F0F9FF;
-    color: #0369A1;
-    border: 1px solid #BAE6FD;
+    background-color: #F0F9FF !important;
+    color: #0369A1 !important;
+    border: 1px solid #BAE6FD !important;
 }
 .badge-neutral {
-    background-color: #F1F5F9;
-    color: #334155;
-    border: 1px solid #E2E8F0;
+    background-color: #F1F5F9 !important;
+    color: #334155 !important;
+    border: 1px solid #E2E8F0 !important;
 }
 
 /* Modal Backdrop */
 .modal-backdrop-theme {
-    background-color: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(4px) !important;
 }

@@ -7,29 +7,43 @@
 <div 
     x-data="imsTeknikCoverageComponent()" 
     class="space-y-6"
-    style="font-family: 'Plus Jakarta Sans', sans-serif;"
 >
-    <!-- Scoped Dark Theme CSS -->
+    <!-- Scoped Dual-Theme CSS -->
     <style>
         .ims-coverage-card {
-            background-color: #0f172a !important; /* Slate 900 */
-            border: 1px solid #1e293b !important; /* Slate 800 */
-            border-radius: 16px !important;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            color: #0f172a;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        html.dark .ims-coverage-card {
+            background-color: #0f172a !important;
+            border-color: #1e293b !important;
             box-shadow: 0 4px 25px rgba(0, 0, 0, 0.45) !important;
             color: #f8fafc !important;
         }
         .ims-inner-box {
-            background-color: #020617 !important; /* Slate 950 */
-            border: 1px solid #1e293b !important;
-            border-radius: 12px !important;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        html.dark .ims-inner-box {
+            background-color: #020617 !important;
+            border-color: #1e293b !important;
         }
         .ims-google-map-canvas {
             width: 100% !important;
             height: 580px !important;
             min-height: 480px !important;
-            background: #0b1329 !important;
+            background: #e2e8f0 !important;
             display: block !important;
             border-radius: 0 0 16px 16px;
+        }
+        html.dark .ims-google-map-canvas {
+            background: #0b1329 !important;
         }
         .ims-map-type-btn {
             padding: 6px 13px;
@@ -37,20 +51,34 @@
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            border: 1px solid #334155 !important;
-            background-color: #1e293b !important;
-            color: #94a3b8 !important;
+            border: 1px solid #cbd5e1;
+            background-color: #f1f5f9;
+            color: #475569;
             transition: all 0.15s ease;
         }
         .ims-map-type-btn:hover {
-            background-color: #334155 !important;
-            color: #ffffff !important;
+            background-color: #e2e8f0;
+            color: #0f172a;
         }
         .ims-map-type-btn.active {
             background-color: #0284c7 !important;
             color: #ffffff !important;
             border-color: #0284c7 !important;
             box-shadow: 0 2px 10px rgba(2, 132, 199, 0.45) !important;
+        }
+        html.dark .ims-map-type-btn {
+            border-color: #334155;
+            background-color: #1e293b;
+            color: #94a3b8;
+        }
+        html.dark .ims-map-type-btn:hover {
+            background-color: #334155;
+            color: #ffffff;
+        }
+        html.dark .ims-map-type-btn.active {
+            background-color: #0284c7;
+            color: #ffffff;
+            border-color: #0284c7;
         }
         @keyframes pulseTarget {
             0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
@@ -60,47 +88,95 @@
         .user-pulse-pin {
             animation: pulseTarget 1.8s infinite;
         }
-        /* Dark Theme for Leaflet Popups */
+        /* Dynamic Dual Theme for Leaflet Popups */
         .leaflet-popup-content-wrapper {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+        }
+        .leaflet-popup-tip {
+            background: #ffffff !important;
+        }
+        .leaflet-container a.leaflet-popup-close-button {
+            color: #64748b !important;
+        }
+        .leaflet-container a.leaflet-popup-close-button:hover {
+            color: #0f172a !important;
+        }
+        html.dark .leaflet-popup-content-wrapper {
             background: #0f172a !important;
             color: #f8fafc !important;
             border: 1px solid #334155 !important;
-            border-radius: 12px !important;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
         }
-        .leaflet-popup-tip {
+        html.dark .leaflet-popup-tip {
             background: #0f172a !important;
         }
-        .leaflet-container a.leaflet-popup-close-button {
+        html.dark .leaflet-container a.leaflet-popup-close-button {
             color: #94a3b8 !important;
         }
-        .leaflet-container a.leaflet-popup-close-button:hover {
+        html.dark .leaflet-container a.leaflet-popup-close-button:hover {
             color: #ffffff !important;
+        }
+        .ims-popup-title {
+            color: #0f172a !important;
+        }
+        html.dark .ims-popup-title {
+            color: #f8fafc !important;
+        }
+        .ims-popup-muted {
+            color: #64748b !important;
+        }
+        html.dark .ims-popup-muted {
+            color: #94a3b8 !important;
+        }
+        .ims-popup-badge {
+            background: #e0f2fe !important;
+            color: #0284c7 !important;
+            border: 1px solid #bae6fd !important;
+        }
+        html.dark .ims-popup-badge {
+            background: #082f49 !important;
+            color: #38bdf8 !important;
+            border-color: #0369a1 !important;
+        }
+        .ims-popup-divider {
+            border-top: 1px solid #e2e8f0 !important;
+        }
+        html.dark .ims-popup-divider {
+            border-top: 1px solid #334155 !important;
+        }
+        .ims-popup-text {
+            color: #334155 !important;
+        }
+        html.dark .ims-popup-text {
+            color: #e2e8f0 !important;
         }
     </style>
 
-    <!-- ── 1. HEADER BANNER WITH BREADCRUMBS & KPI METRICS (DARK THEME) ── -->
+    <!-- ── 1. HEADER BANNER WITH BREADCRUMBS & KPI METRICS ── -->
     <div class="ims-coverage-card p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner"
-                 style="background: rgba(2, 132, 199, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8;">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-500/30 text-sky-600 dark:text-sky-400">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
             </div>
             <div>
-                <nav class="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest mb-0.5" style="color: #38bdf8;">
+                <nav class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest mb-1 text-sky-600 dark:text-sky-400">
                     <span>IMS</span>
-                    <span style="color: #64748b;">&gt;</span>
+                    <span class="text-slate-400 dark:text-slate-600">&gt;</span>
                     <span>Modul Teknik</span>
-                    <span style="color: #64748b;">&gt;</span>
-                    <span style="color: #94a3b8;">GIS Coverage</span>
+                    <span class="text-slate-400 dark:text-slate-600">&gt;</span>
+                    <span class="text-slate-500 dark:text-slate-300">GIS Coverage</span>
                 </nav>
-                <h1 class="text-lg md:text-xl font-black text-white tracking-tight leading-none">
+                <h1 class="text-lg md:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                     Cek Coverage Lokasi ke ODP Terdekat
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Gunakan peta Google Maps untuk memeriksa kelayakan tarikan kabel dropcore fiber optik ke titik ODP terdekat secara presisi.
                 </p>
             </div>
@@ -108,14 +184,14 @@
 
         <div class="flex items-center gap-2.5 self-start md:self-auto">
             <div class="ims-inner-box px-4 py-2.5 text-left">
-                <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Total ODP Terdata</span>
-                <strong class="text-sm font-black text-sky-400 font-mono block mt-0.5">
+                <span class="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total ODP Terdata</span>
+                <strong class="text-sm font-black text-sky-600 dark:text-sky-400 font-mono block mt-0.5">
                     {{ count($odps) }} Node
                 </strong>
             </div>
             <div class="ims-inner-box px-4 py-2.5 text-left">
-                <span class="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Max Radius Tercover</span>
-                <strong class="text-sm font-black text-emerald-400 font-mono block mt-0.5">
+                <span class="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Max Radius Tercover</span>
+                <strong class="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono block mt-0.5">
                     &le; 300 Meter
                 </strong>
             </div>
@@ -131,13 +207,13 @@
             <!-- Input Card -->
             <div class="ims-coverage-card p-4 space-y-3.5">
                 <div>
-                    <label class="text-xs font-black uppercase tracking-wider text-white flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-sky-500 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                         </svg>
                         <span>Input Titik Koordinat Target</span>
                     </label>
-                    <p class="text-[11px] text-slate-400 mt-0.5">
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                         Gunakan tombol GPS otomatis atau masukkan titik koordinat (Latitude, Longitude):
                     </p>
                 </div>
@@ -148,8 +224,7 @@
                             type="text" 
                             x-model="inputCoordinates"
                             placeholder="-6.936988, 107.5904512" 
-                            class="w-full h-11 pl-10 pr-3 rounded-xl text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-sky-500/50"
-                            style="background-color: #020617 !important; border: 1px solid #334155 !important; color: #ffffff !important;"
+                            class="w-full h-11 pl-10 pr-3 rounded-xl text-xs font-mono bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
                             required
                         />
                         <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,8 +238,7 @@
                             type="button" 
                             @click="getCurrentLocation" 
                             :disabled="isDetectingGps"
-                            class="h-10 px-3 rounded-xl text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-                            style="background-color: #1e293b; border: 1px solid #334155; color: #f1f5f9;"
+                            class="h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
                             <span x-show="!isDetectingGps">📍 Gunakan GPS</span>
                             <span x-show="isDetectingGps" class="animate-pulse">⏳ Mencari GPS...</span>
@@ -172,8 +246,7 @@
 
                         <button 
                             type="submit" 
-                            class="h-10 px-3 rounded-xl text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
-                            style="background-color: #0284c7 !important; border: 1px solid #0284c7 !important; color: #ffffff !important;"
+                            class="h-10 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-sky-600/25"
                         >
                             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -183,18 +256,17 @@
                     </div>
 
                     <!-- Preset Selector from Master Database m_odp -->
-                    <div class="pt-2.5 border-t border-slate-800/80 space-y-1">
-                        <label class="text-[11px] font-bold text-slate-300 flex items-center justify-between">
+                    <div class="pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-1">
+                        <label class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                             <span class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
                                 <span>Pilih ODP dari Database:</span>
                             </span>
-                            <span class="text-[10px] text-sky-400 font-mono">{{ count($odps) }} ODP Aktif</span>
+                            <span class="text-[10px] text-sky-600 dark:text-sky-400 font-mono font-bold">{{ count($odps) }} ODP Aktif</span>
                         </label>
                         <select 
                             @change="selectOdpPreset($event.target.value)" 
-                            class="w-full h-10 px-3 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-sky-500/50 cursor-pointer"
-                            style="background-color: #020617 !important; border: 1px solid #334155 !important; color: #ffffff !important;"
+                            class="w-full h-10 px-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 cursor-pointer"
                         >
                             <option value="">-- Pilih ODP Master Database --</option>
                             @foreach($odps as $o)
@@ -206,8 +278,7 @@
                     </div>
                 </form>
 
-                <div class="p-2.5 rounded-xl flex items-center gap-2 text-[11px]"
-                     style="background: rgba(2, 132, 199, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); color: #7dd3fc;">
+                <div class="p-2.5 rounded-xl flex items-center gap-2 text-[11px] bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-800 dark:text-sky-300">
                     <span class="text-xs">💡</span>
                     <span>Format: <b>Latitude, Longitude</b>, pilih ODP database di atas, atau klik langsung pada peta.</span>
                 </div>
@@ -219,62 +290,61 @@
                     
                     <!-- 1. CASE: COVERED (<= 300m) -->
                     <template x-if="nearestResult.isCovered">
-                        <div class="p-4 rounded-2xl space-y-3.5 transition-all shadow-xl"
-                             style="background-color: #0f172a; border: 2px solid #0284c7; box-shadow: 0 8px 30px rgba(2, 132, 199, 0.25);">
+                        <div class="p-4 rounded-2xl space-y-3.5 transition-all shadow-xl bg-white dark:bg-slate-900 border-2 border-sky-500 dark:border-sky-500 shadow-sky-500/10">
                             
                             <!-- Status Headline -->
                             <div class="flex items-center gap-2.5">
-                                <span class="w-3 h-3 rounded-full bg-sky-400 inline-block shadow-sm shadow-sky-400 animate-pulse"></span>
+                                <span class="w-3 h-3 rounded-full bg-sky-500 inline-block shadow-sm shadow-sky-500 animate-pulse"></span>
                                 <div>
-                                    <strong class="text-sm font-black text-sky-400 block">
+                                    <strong class="text-sm font-black text-sky-600 dark:text-sky-400 block">
                                         ● Area Tercover Fiber Optic
                                     </strong>
-                                    <span class="text-[11px] text-slate-300 block mt-0.5">
+                                    <span class="text-[11px] text-slate-600 dark:text-slate-300 block mt-0.5">
                                         Jaringan kabel distribusi IMS terdeteksi aktif pada radius aman instalasi.
                                     </span>
                                 </div>
                             </div>
 
                             <!-- ODP Node & Calculated Road Dropcore Length -->
-                            <div class="ims-inner-box p-3 text-xs text-sky-400 flex items-center justify-between font-mono font-bold">
+                            <div class="ims-inner-box p-3 text-xs flex items-center justify-between font-mono font-bold text-slate-800 dark:text-white">
                                 <div class="flex items-center gap-2 truncate">
-                                    <span class="text-slate-400">⚡ ODP Terdekat:</span>
-                                    <strong class="text-white truncate" x-text="nearestResult.odp.name_odp || nearestResult.odp.name"></strong>
+                                    <span class="text-slate-500 dark:text-slate-400">⚡ ODP Terdekat:</span>
+                                    <strong class="text-slate-900 dark:text-white truncate" x-text="nearestResult.odp.name_odp || nearestResult.odp.name"></strong>
                                 </div>
-                                <span class="text-sky-300 font-black shrink-0">
+                                <span class="text-sky-600 dark:text-sky-300 font-black shrink-0">
                                     ~<span x-text="nearestResult.roadDistance"></span>m dropcore
                                 </span>
                             </div>
 
                             <!-- ODP Technical Specifications (matching Database m_odp) -->
-                            <div class="ims-inner-box p-3 space-y-2 text-xs text-slate-300">
-                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-800/80">
-                                    <span class="text-slate-400">Nama ODP (Database):</span>
-                                    <strong class="text-white font-bold" x-text="nearestResult.odp.name_odp || nearestResult.odp.name"></strong>
+                            <div class="ims-inner-box p-3 space-y-2 text-xs text-slate-700 dark:text-slate-300">
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                                    <span class="text-slate-500 dark:text-slate-400">Nama ODP (Database):</span>
+                                    <strong class="text-slate-900 dark:text-white font-bold" x-text="nearestResult.odp.name_odp || nearestResult.odp.name"></strong>
                                 </div>
-                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-800/80">
-                                    <span class="text-slate-400">Kode ODP (Database):</span>
-                                    <span class="text-sky-400 font-mono font-bold px-2 py-0.5 rounded bg-sky-950/60 border border-sky-800/60 text-[11px]" x-text="nearestResult.odp.kode_odp || nearestResult.odp.code"></span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-slate-400">Port PON Induk:</span>
-                                    <strong class="text-slate-200 font-mono" x-text="nearestResult.odp.kode_pon || nearestResult.odp.pon_name"></strong>
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200 dark:border-slate-800">
+                                    <span class="text-slate-500 dark:text-slate-400">Kode ODP (Database):</span>
+                                    <span class="text-sky-700 dark:text-sky-300 font-mono font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/60 text-[11px]" x-text="nearestResult.odp.kode_odp || nearestResult.odp.code"></span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-slate-400">Kapasitas Core / Port:</span>
-                                    <span class="font-bold font-mono" :class="nearestResult.odp.has_slot ? 'text-emerald-400' : 'text-rose-400'">
+                                    <span class="text-slate-500 dark:text-slate-400">Port PON Induk:</span>
+                                    <strong class="text-slate-800 dark:text-slate-200 font-mono" x-text="nearestResult.odp.kode_pon || nearestResult.odp.pon_name"></strong>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-500 dark:text-slate-400">Kapasitas Core / Port:</span>
+                                    <span class="font-bold font-mono" :class="nearestResult.odp.has_slot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
                                         <span x-text="(nearestResult.odp.used_ports ?? 0) + ' / ' + (nearestResult.odp.capacity_odp || nearestResult.odp.total_ports) + ' Port'"></span>
-                                        <span x-show="nearestResult.odp.has_slot" class="text-[10px] ml-1 text-emerald-400 font-bold">(Ada Slot)</span>
-                                        <span x-show="!nearestResult.odp.has_slot" class="text-[10px] ml-1 text-rose-400 font-bold">(Penuh)</span>
+                                        <span x-show="nearestResult.odp.has_slot" class="text-[10px] ml-1 text-emerald-600 dark:text-emerald-400 font-bold">(Ada Slot)</span>
+                                        <span x-show="!nearestResult.odp.has_slot" class="text-[10px] ml-1 text-rose-600 dark:text-rose-400 font-bold">(Penuh)</span>
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-slate-400">Jarak Lurus Udara:</span>
-                                    <strong class="text-white font-mono" x-text="nearestResult.distance + ' Meter'"></strong>
+                                    <span class="text-slate-500 dark:text-slate-400">Jarak Lurus Udara:</span>
+                                    <strong class="text-slate-900 dark:text-white font-mono" x-text="nearestResult.distance + ' Meter'"></strong>
                                 </div>
                                 <div class="flex justify-between items-center" x-show="nearestResult.odp.note_odp && nearestResult.odp.note_odp !== '-'">
-                                    <span class="text-slate-400">Keterangan / Lokasi:</span>
-                                    <span class="text-slate-300 italic text-[11px]" x-text="nearestResult.odp.note_odp"></span>
+                                    <span class="text-slate-500 dark:text-slate-400">Keterangan / Lokasi:</span>
+                                    <span class="text-slate-600 dark:text-slate-300 italic text-[11px]" x-text="nearestResult.odp.note_odp"></span>
                                 </div>
                             </div>
 
@@ -283,24 +353,21 @@
                                 <a 
                                     :href="'https://www.google.com/maps/dir/?api=1&destination=' + nearestResult.odp.lat + ',' + nearestResult.odp.lng"
                                     target="_blank" 
-                                    class="flex-1 h-9 rounded-xl text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
-                                    style="background-color: #0284c7 !important; color: #ffffff !important;"
+                                    class="flex-1 h-9 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/25 cursor-pointer"
                                 >
                                     <span>🧭 Buka Navigasi Maps</span>
                                 </a>
                                 <button 
                                     type="button" 
                                     @click="copyCoordinates(nearestResult.odp.lat + ', ' + nearestResult.odp.lng)" 
-                                    class="h-9 px-3 rounded-xl text-slate-200 text-xs font-bold transition cursor-pointer"
-                                    style="background-color: #1e293b; border: 1px solid #334155;"
+                                    class="h-9 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
                                     title="Salin Koordinat ODP"
                                 >
                                     <span>📋 Salin</span>
                                 </button>
                                 <a 
                                     href="{{ route('teknik.pendaftaran') }}" 
-                                    class="h-9 px-3 rounded-xl text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
-                                    style="background-color: #059669 !important; color: #ffffff !important;"
+                                    class="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow-md shadow-emerald-600/25"
                                     title="Lanjut Form Registrasi Pasang Baru"
                                 >
                                     <span>⚡ Pasang Baru</span>
@@ -311,29 +378,26 @@
 
                     <!-- 2. CASE: OUT OF COVERAGE (> 300m) -->
                     <template x-if="!nearestResult.isCovered">
-                        <div class="p-4 rounded-2xl space-y-3"
-                             style="background-color: #0f172a; border: 2px solid #334155;">
+                        <div class="p-4 rounded-2xl space-y-3 bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 shadow-md">
                             <div class="flex items-center gap-2.5">
                                 <span class="w-3 h-3 rounded-full bg-slate-400 inline-block"></span>
                                 <div>
-                                    <strong class="text-sm font-bold text-white block">
+                                    <strong class="text-sm font-bold text-slate-900 dark:text-white block">
                                         Di Luar Radius Coverage (&gt; 300m)
                                     </strong>
-                                    <span class="text-[11px] text-slate-400 block mt-0.5">
-                                        Jarak ODP terdekat adalah <b class="text-rose-400 font-mono" x-text="nearestResult.distance + ' meter'"></b>.
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                                        Jarak ODP terdekat adalah <b class="text-rose-600 dark:text-rose-400 font-mono" x-text="nearestResult.distance + ' meter'"></b>.
                                     </span>
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-300 p-2.5 rounded-xl border border-slate-800"
-                               style="background-color: #020617;">
+                            <p class="text-xs text-slate-600 dark:text-slate-300 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
                                 Lokasi ini membutuhkan penarikan kabel feeder tambahan atau pemasangan tiang/ODP baru sebelum dapat dilakukan aktivasi layanan.
                             </p>
                             <div class="flex gap-2">
                                 <a 
                                     :href="'https://www.google.com/maps/dir/?api=1&destination=' + nearestResult.odp.lat + ',' + nearestResult.odp.lng"
                                     target="_blank" 
-                                    class="flex-1 h-9 rounded-xl text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1"
-                                    style="background-color: #1e293b; border: 1px solid #334155;"
+                                    class="flex-1 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1"
                                 >
                                     <span>Lihat Lokasi ODP Terdekat (<span x-text="(nearestResult.odp.name_odp || nearestResult.odp.name) + ' (' + (nearestResult.odp.kode_odp || nearestResult.odp.code) + ')'"></span>)</span>
                                 </a>
@@ -351,15 +415,13 @@
             <div class="ims-coverage-card overflow-hidden flex flex-col">
                 
                 <!-- Map Header Controls Bar -->
-                <div class="px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs"
-                     style="background-color: #0f172a;">
+                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs bg-slate-50 dark:bg-slate-900">
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block animate-pulse"></span>
-                        <strong class="font-bold text-white">
+                        <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block animate-pulse"></span>
+                        <strong class="font-bold text-slate-900 dark:text-white">
                             Peta Live Network Fiber FTTH
                         </strong>
-                        <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                              style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                             Google GIS
                         </span>
                     </div>
@@ -393,8 +455,7 @@
                         <button 
                             type="button" 
                             @click="resetMapView" 
-                            class="px-2.5 py-1.5 rounded-lg text-sky-400 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
-                            style="background-color: #1e293b; border: 1px solid #334155;"
+                            class="px-2.5 py-1.5 rounded-lg text-sky-600 dark:text-sky-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
                         >
                             <span>🔄 Fit All</span>
                         </button>
@@ -405,24 +466,23 @@
                 <div id="ims-google-map-canvas" class="ims-google-map-canvas"></div>
 
                 <!-- Map Footer Legend -->
-                <div class="px-4 py-2.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400"
-                     style="background-color: #020617;">
+                <div class="px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950">
                     <div class="flex items-center gap-3.5 flex-wrap">
                         <span class="flex items-center gap-1.5">
-                            <span class="w-3 h-3 rounded-full bg-sky-500 border border-slate-900 inline-block"></span>
-                            <span class="text-slate-300">ODP Ada Slot</span>
+                            <span class="w-3 h-3 rounded-full bg-sky-500 border border-white dark:border-slate-900 inline-block shadow-sm"></span>
+                            <span class="text-slate-700 dark:text-slate-300 font-medium">ODP Ada Slot</span>
                         </span>
                         <span class="flex items-center gap-1.5">
-                            <span class="w-3 h-3 rounded-full bg-rose-500 border border-slate-900 inline-block"></span>
-                            <span class="text-slate-300">ODP Port Penuh</span>
+                            <span class="w-3 h-3 rounded-full bg-rose-500 border border-white dark:border-slate-900 inline-block shadow-sm"></span>
+                            <span class="text-slate-700 dark:text-slate-300 font-medium">ODP Port Penuh</span>
                         </span>
                         <span class="flex items-center gap-1.5">
-                            <span class="w-3.5 h-3.5 rounded-full bg-red-600 border border-white inline-block text-[9px] text-white flex items-center justify-center">📍</span>
-                            <span class="text-slate-300">Titik Target</span>
+                            <span class="w-3.5 h-3.5 rounded-full bg-red-600 border border-white inline-block text-[9px] text-white flex items-center justify-center shadow-sm">📍</span>
+                            <span class="text-slate-700 dark:text-slate-300 font-medium">Titik Target</span>
                         </span>
                     </div>
-                    <div class="flex items-center gap-1.5 text-sky-400 font-medium">
-                        <span class="w-4 h-0.5 bg-sky-400 inline-block border-t border-dashed border-sky-400"></span>
+                    <div class="flex items-center gap-1.5 text-sky-600 dark:text-sky-400 font-semibold">
+                        <span class="w-4 h-0.5 bg-sky-500 inline-block border-t border-dashed border-sky-500"></span>
                         <span>Garis Biru = Jalur kabel dropcore fiber optik (OSRM Street Route)</span>
                     </div>
                 </div>
@@ -432,43 +492,42 @@
 
     <!-- ── 3. BOTTOM SECTION: DATABASE MASTER ODP (m_odp) & TIKET WHATSAPP (trx_coverage_area) ── -->
     <div class="ims-coverage-card p-5 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-800">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-2 flex-wrap">
                 <button 
                     type="button" 
                     @click="activeBottomTab = 'odp_master'" 
-                    :class="activeBottomTab === 'odp_master' ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30' : 'bg-slate-800 text-slate-300 hover:text-white'"
+                    :class="activeBottomTab === 'odp_master' ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'"
                     class="px-3.5 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-2"
                 >
                     <span>📍 Data Master ODP Database (m_odp)</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-900/80 font-mono font-bold text-sky-300">{{ count($odps) }} Node</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/80 dark:bg-slate-900/80 font-mono font-bold text-sky-700 dark:text-sky-300">{{ count($odps) }} Node</span>
                 </button>
                 <button 
                     type="button" 
                     @click="activeBottomTab = 'tickets'" 
-                    :class="activeBottomTab === 'tickets' ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30' : 'bg-slate-800 text-slate-300 hover:text-white'"
+                    :class="activeBottomTab === 'tickets' ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'"
                     class="px-3.5 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-2"
                 >
                     <span>💬 Antrean Tiket WhatsApp (trx_coverage_area)</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-900/80 font-mono font-bold text-amber-300">{{ count($tickets) }} Tiket</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/80 dark:bg-slate-900/80 font-mono font-bold text-amber-700 dark:text-amber-300">{{ count($tickets) }} Tiket</span>
                 </button>
             </div>
-            <span class="text-[11px] font-mono text-slate-400">
-                Database: <strong class="text-sky-400">m_odp</strong> &amp; <strong class="text-amber-400">trx_coverage_area</strong>
+            <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                Database: <strong class="text-sky-600 dark:text-sky-400">m_odp</strong> &amp; <strong class="text-amber-600 dark:text-amber-400">trx_coverage_area</strong>
             </span>
         </div>
 
         <!-- TAB 1: DAFTAR MASTER ODP DARI DATABASE m_odp -->
         <div x-show="activeBottomTab === 'odp_master'" class="space-y-2">
-            <div class="flex items-center justify-between text-xs text-slate-400 pb-1">
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pb-1">
                 <span>Daftar seluruh titik ODP yang tersimpan aktif pada tabel database <code>m_odp</code>.</span>
-                <span class="font-mono text-sky-400 font-bold">Total: {{ count($odps) }} Titik ODP</span>
+                <span class="font-mono text-sky-600 dark:text-sky-400 font-bold">Total: {{ count($odps) }} Titik ODP</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400"
-                            style="background-color: #020617;">
+                        <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                             <th class="py-3 px-4">Kode ODP</th>
                             <th class="py-3 px-4">Nama ODP (Database)</th>
                             <th class="py-3 px-4">Port PON Induk</th>
@@ -478,35 +537,34 @@
                             <th class="py-3 px-4 text-center">Aksi Peta</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-800 text-slate-300">
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
                         @forelse ($odps as $o)
-                            <tr class="hover:bg-slate-800/50 transition-colors">
-                                <td class="py-3.5 px-4 align-top font-mono font-bold text-sky-400">
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="py-3.5 px-4 align-top font-mono font-bold text-sky-600 dark:text-sky-400">
                                     {{ $o['kode_odp'] }}
                                 </td>
-                                <td class="py-3.5 px-4 align-top font-bold text-white">
+                                <td class="py-3.5 px-4 align-top font-bold text-slate-900 dark:text-white">
                                     {{ $o['name_odp'] }}
                                 </td>
                                 <td class="py-3.5 px-4 align-top font-mono">
-                                    <span class="px-2 py-0.5 rounded text-[10.5px] bg-sky-950/70 border border-sky-800/50 text-sky-300 font-bold">
+                                    <span class="px-2 py-0.5 rounded text-[10.5px] bg-sky-50 dark:bg-sky-950/70 border border-sky-200 dark:border-sky-800/50 text-sky-700 dark:text-sky-300 font-bold">
                                         {{ $o['kode_pon'] }}
                                     </span>
                                 </td>
                                 <td class="py-3.5 px-4 align-top font-mono">
-                                    <span class="font-bold text-emerald-400">{{ $o['used_ports'] }}</span> / {{ $o['capacity_odp'] }} Port
+                                    <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $o['used_ports'] }}</span> / {{ $o['capacity_odp'] }} Port
                                 </td>
-                                <td class="py-3.5 px-4 align-top font-mono text-sky-400 text-[11px]">
+                                <td class="py-3.5 px-4 align-top font-mono text-sky-600 dark:text-sky-400 text-[11px]">
                                     {{ number_format($o['lat'], 6) }}, {{ number_format($o['lng'], 6) }}
                                 </td>
-                                <td class="py-3.5 px-4 align-top text-slate-400">
+                                <td class="py-3.5 px-4 align-top text-slate-500 dark:text-slate-400">
                                     {{ $o['note_odp'] ?: '-' }}
                                 </td>
                                 <td class="py-3.5 px-4 align-top text-center">
                                     <button 
                                         type="button" 
                                         @click="focusOdpFromDb('{{ $o['kode_odp'] }}', '{{ $o['lat'] }}', '{{ $o['lng'] }}')" 
-                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-white text-[11px] font-bold shadow-sm transition cursor-pointer"
-                                        style="background-color: #0284c7; border: 1px solid #0284c7;"
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold shadow-sm transition cursor-pointer"
                                         title="Sorot ODP ini di peta dan cek coverage"
                                     >
                                         <span>⚡ Sorot di Peta</span>
@@ -515,7 +573,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-8 text-center text-slate-500 text-xs">
+                                <td colspan="7" class="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                                     Tidak ada data ODP di database <code>m_odp</code>.
                                 </td>
                             </tr>
@@ -527,15 +585,14 @@
 
         <!-- TAB 2: ANTREAN TIKET WHATSAPP (trx_coverage_area) -->
         <div x-show="activeBottomTab === 'tickets'" class="space-y-2">
-            <div class="flex items-center justify-between text-xs text-slate-400 pb-1">
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pb-1">
                 <span>Data calon pelanggan yang masuk via WhatsApp Gateway untuk cek coverage.</span>
-                <span class="font-mono text-amber-400 font-bold">Total: {{ count($tickets) }} Tiket</span>
+                <span class="font-mono text-amber-600 dark:text-amber-400 font-bold">Total: {{ count($tickets) }} Tiket</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400"
-                            style="background-color: #020617;">
+                        <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                             <th class="py-3 px-4">ID Tiket / Waktu</th>
                             <th class="py-3 px-4">Kontak / Pengirim</th>
                             <th class="py-3 px-4">Titik Koordinat</th>
@@ -544,57 +601,56 @@
                             <th class="py-3 px-4 text-center">Aksi Peta</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-800 text-slate-300">
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
                         @forelse ($tickets as $t)
                             @php
                                 $hasCoord = !empty($t->latitude) && !empty($t->longitude);
                                 $coordStr = $hasCoord ? "{$t->latitude}, {$t->longitude}" : '';
                             @endphp
-                            <tr class="hover:bg-slate-800/50 transition-colors">
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                                 <td class="py-3.5 px-4 align-top">
-                                    <strong class="text-sky-400 font-mono block break-all">
+                                    <strong class="text-sky-600 dark:text-sky-400 font-mono block break-all">
                                         {{ $t->id_message }}
                                     </strong>
-                                    <span class="text-[10.5px] text-slate-400 block mt-0.5">
+                                    <span class="text-[10.5px] text-slate-500 dark:text-slate-400 block mt-0.5">
                                         {{ $t->date_create ?? $t->created_at ?? '-' }}
                                     </span>
                                 </td>
                                 <td class="py-3.5 px-4 align-top">
-                                    <strong class="text-white block">
+                                    <strong class="text-slate-900 dark:text-white block">
                                         {{ $t->pushname ?: 'Tanpa Nama' }}
                                     </strong>
                                     @if(!empty($t->nomor_hp))
-                                        <span class="text-slate-400 font-mono block text-[11px] mt-0.5">
+                                        <span class="text-slate-500 dark:text-slate-400 font-mono block text-[11px] mt-0.5">
                                             📱 {{ $t->nomor_hp }}
                                         </span>
                                     @endif
                                     @if(!empty($t->group_wa))
-                                        <span class="text-[10px] text-slate-500 block">
+                                        <span class="text-[10px] text-slate-400 dark:text-slate-500 block">
                                             Group: {{ $t->group_wa }}
                                         </span>
                                     @endif
                                 </td>
                                 <td class="py-3.5 px-4 align-top">
                                     @if($hasCoord)
-                                        <span class="font-mono text-xs text-sky-400 px-2 py-0.5 rounded block w-fit"
-                                              style="background-color: #020617; border: 1px solid #1e293b;">
+                                        <span class="font-mono text-xs text-sky-700 dark:text-sky-400 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 px-2 py-0.5 rounded block w-fit">
                                             {{ $t->latitude }}, {{ $t->longitude }}
                                         </span>
                                     @else
-                                        <span class="text-slate-500 text-xs italic">Koordinat belum diisi</span>
+                                        <span class="text-slate-400 dark:text-slate-500 text-xs italic">Koordinat belum diisi</span>
                                     @endif
                                 </td>
                                 <td class="py-3.5 px-4 align-top">
                                     @if(!empty($t->jarak))
-                                        <span class="text-[11px] font-bold text-sky-400 block">Jarak: {{ $t->jarak }}m</span>
+                                        <span class="text-[11px] font-bold text-sky-600 dark:text-sky-400 block">Jarak: {{ $t->jarak }}m</span>
                                     @endif
-                                    <span class="text-slate-400 text-[11px] block mt-0.5">{{ $t->note ?: '-' }}</span>
+                                    <span class="text-slate-500 dark:text-slate-400 text-[11px] block mt-0.5">{{ $t->note ?: '-' }}</span>
                                 </td>
                                 <td class="py-3.5 px-4 align-top">
-                                    <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
-                                          style="@if(in_array($t->status, ['TERCOVER', 'SELESAI', '20', '13'])) background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4);
-                                                 @elseif(in_array($t->status, ['TIDAK_TERCOVER', 'CANCEL', '15'])) background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.4);
-                                                 @else background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); @endif">
+                                    <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase
+                                        @if(in_array($t->status, ['TERCOVER', 'SELESAI', '20', '13'])) bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40
+                                        @elseif(in_array($t->status, ['TIDAK_TERCOVER', 'CANCEL', '15'])) bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/40
+                                        @else bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40 @endif">
                                         {{ $t->status ?: 'ANTRIAN' }}
                                     </span>
                                 </td>
@@ -603,19 +659,18 @@
                                         <button 
                                             type="button" 
                                             @click="focusTicketCoordinate('{{ $t->latitude }}', '{{ $t->longitude }}')" 
-                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-white text-[11px] font-bold shadow-sm transition cursor-pointer"
-                                            style="background-color: #0284c7; border: 1px solid #0284c7;"
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold shadow-sm transition cursor-pointer"
                                         >
                                             <span>⚡ Cek di Peta</span>
                                         </button>
                                     @else
-                                        <span class="text-slate-500 text-[11px]">-</span>
+                                        <span class="text-slate-400 dark:text-slate-500 text-[11px]">-</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-slate-500 text-xs">
+                                <td colspan="6" class="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                                     Belum ada antrean tiket permintaan coverage dari WhatsApp (tabel <code>trx_coverage_area</code>).
                                 </td>
                             </tr>
@@ -773,7 +828,7 @@
                     const customIcon = L.divIcon({
                         className: 'custom-odp-pin',
                         html: `
-                            <div style="width: 28px; height: 28px; border-radius: 50%; background: ${pinColor}; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; background: ${pinColor}; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; cursor: pointer;">
                                 <svg style="width: 13px; height: 13px; color: #ffffff;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             </div>
                         `,
@@ -784,18 +839,18 @@
                     const marker = L.marker([odp.lat, odp.lng], { icon: customIcon });
 
                     marker.bindPopup(`
-                        <div style="font-family: inherit; padding: 6px; color: #f8fafc; min-width: 200px;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px;">
-                                <span style="font-size: 11px; font-weight: 800; color: #38bdf8; font-family: monospace; background: rgba(2,132,199,0.2); padding: 1px 6px; border-radius: 4px;">${odp.kode_odp || odp.code}</span>
-                                <span style="font-size: 10px; font-weight: 700; color: ${isAvailable ? '#34d399' : '#f87171'};">${isAvailable ? '● ADA SLOT' : '● PENUH'}</span>
+                        <div style="font-family: inherit; padding: 4px; min-width: 210px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                                <span class="ims-popup-badge" style="font-size: 11px; font-weight: 800; font-family: monospace; padding: 2px 6px; border-radius: 4px;">${odp.kode_odp || odp.code}</span>
+                                <span style="font-size: 10px; font-weight: 800; color: ${isAvailable ? '#059669' : '#dc2626'};">${isAvailable ? '● ADA SLOT' : '● PENUH'}</span>
                             </div>
-                            <div style="font-size: 13.5px; font-weight: 900; margin: 4px 0 6px; color: #ffffff;">${odp.name_odp || odp.name}</div>
-                            <div style="font-size: 11px; color: #cbd5e1; line-height: 1.5; border-top: 1px solid #334155; padding-top: 5px;">
-                                <div>Port: <b style="color: #ffffff;">${odp.used_ports}/${odp.capacity_odp || odp.total_ports} Port</b> • PON: <b style="color: #ffffff;">${odp.kode_pon || odp.pon_name}</b></div>
-                                ${odp.note_odp && odp.note_odp !== '-' ? `<div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">Ket: ${odp.note_odp}</div>` : ''}
+                            <div class="ims-popup-title" style="font-size: 13px; font-weight: 800; margin: 4px 0 6px;">${odp.name_odp || odp.name}</div>
+                            <div class="ims-popup-divider ims-popup-muted" style="font-size: 11px; line-height: 1.5; padding-top: 5px;">
+                                <div class="ims-popup-text">Port: <b class="ims-popup-title">${odp.used_ports}/${odp.capacity_odp || odp.total_ports} Port</b> • PON: <b class="ims-popup-title">${odp.kode_pon || odp.pon_name}</b></div>
+                                ${odp.note_odp && odp.note_odp !== '-' ? `<div class="ims-popup-muted" style="font-size: 10px; margin-top: 2px;">Ket: ${odp.note_odp}</div>` : ''}
                             </div>
-                            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #334155;">
-                                <a href="https://www.google.com/maps/dir/?api=1&destination=${odp.lat},${odp.lng}" target="_blank" style="display: block; text-align: center; text-decoration: none; background: #0284c7; color: #fff; padding: 5px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 800;">🧭 Rute Google Maps &rarr;</a>
+                            <div class="ims-popup-divider" style="margin-top: 8px; padding-top: 6px;">
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${odp.lat},${odp.lng}" target="_blank" style="display: block; text-align: center; text-decoration: none; background: #0284c7; color: #fff; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">🧭 Rute Google Maps &rarr;</a>
                             </div>
                         </div>
                     `);
@@ -924,13 +979,13 @@
 
                 this.userMarkerLayer = L.marker([userLat, userLng], { icon: userIcon }).addTo(this.mapInstance);
                 this.userMarkerLayer.bindPopup(`
-                    <div style="font-family: inherit; padding: 4px; color: #f8fafc; min-width: 170px;">
-                        <div style="font-size: 10px; font-weight: 800; color: #f87171; text-transform: uppercase;">📍 LOKASI TARGET</div>
-                        <div style="font-size: 12px; font-weight: 800; margin: 2px 0; color: #ffffff;">${userLat.toFixed(6)}, ${userLng.toFixed(6)}</div>
-                        <div style="font-size: 11px; color: ${result.isCovered ? '#38bdf8' : '#f87171'}; font-weight: 700; margin-top: 4px;">
+                    <div style="font-family: inherit; padding: 4px; min-width: 180px;">
+                        <div style="font-size: 10px; font-weight: 800; color: #ef4444; text-transform: uppercase;">📍 LOKASI TARGET</div>
+                        <div class="ims-popup-title" style="font-size: 12px; font-weight: 800; margin: 2px 0; font-family: monospace;">${userLat.toFixed(6)}, ${userLng.toFixed(6)}</div>
+                        <div style="font-size: 11px; color: ${result.isCovered ? '#0284c7' : '#ef4444'}; font-weight: 700; margin-top: 4px;">
                             ${result.isCovered ? '⚡ Tercover Fiber Optic' : '✕ Di Luar Radius (> 300m)'}
                         </div>
-                        <div style="font-size: 10.5px; color: #94a3b8; margin-top: 2px;">Terhubung ke <b style="color: #ffffff;">${odpName}</b> (${odpCode}) ~${result.distance}m</div>
+                        <div class="ims-popup-muted" style="font-size: 10.5px; margin-top: 2px;">Terhubung ke <b class="ims-popup-title">${odpName}</b> (${odpCode}) ~${result.distance}m</div>
                     </div>
                 `).openPopup();
 

@@ -35,8 +35,8 @@
         /* Sidebar Styling & Animation */
         .ims-sidebar {
             width: 16rem;
-            background-color: #111827 !important;
-            border-right: 1px solid #1F2937 !important;
+            background-color: #061d28 !important;
+            border-right: 1px solid #0d2a38 !important;
             transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .ims-sidebar.collapsed {
@@ -62,7 +62,7 @@
             border-radius: 0.75rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #E2E8F0 !important;
+            color: #CBD5E1 !important;
             text-decoration: none;
             transition: all 0.15s ease;
             white-space: nowrap;
@@ -81,9 +81,9 @@
             color: #FFFFFF !important;
         }
         .ims-nav-item.active {
-            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+            background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%) !important;
             color: #FFFFFF !important;
-            box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4) !important;
+            box-shadow: 0 4px 18px rgba(8, 145, 178, 0.35) !important;
         }
         .ims-nav-item.active span,
         .ims-nav-item.active svg,
@@ -93,11 +93,11 @@
 
         /* Sidebar Section Header & Submenus */
         .ims-sidebar .ims-section-header {
-            color: #93C5FD !important;
+            color: #38BDF8 !important;
             font-weight: 700 !important;
         }
         .ims-sidebar .ims-section-title {
-            color: #93C5FD !important;
+            color: #38BDF8 !important;
             font-weight: 700 !important;
         }
         .ims-sidebar .ims-submenu a {
@@ -108,8 +108,13 @@
             color: #FFFFFF !important;
             background-color: rgba(255, 255, 255, 0.08) !important;
         }
+        .ims-sidebar .ims-submenu a.active {
+            background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%) !important;
+            color: #FFFFFF !important;
+            font-weight: 600 !important;
+        }
         .ims-sidebar .ims-logo-text span:last-child {
-            color: #CBD5E1 !important;
+            color: #94A3B8 !important;
         }
 
         /* Collapsed Mode Adjustments */
@@ -170,8 +175,8 @@
         .ims-flyout-portal {
             position: fixed !important;
             z-index: 9999999 !important;
-            background-color: #0F172A !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            background-color: #061d28 !important;
+            border: 1px solid #0d2a38 !important;
         }
 
         /* ==========================================================
@@ -247,6 +252,68 @@
             border-color: #E2E8F0 !important;
         }
 
+        /* High Contrast Typography for Tables & Modules */
+        main table tbody td {
+            color: #1E293B !important;
+        }
+        main table tbody td .font-semibold,
+        main table tbody td .font-bold,
+        main table tbody td strong {
+            color: #0F172A !important;
+        }
+        main table tbody td .text-slate-400,
+        main table tbody td .text-slate-500,
+        main table tbody td .text-slate-600 {
+            color: #475569 !important;
+        }
+
+        /* High Contrast Status Badges */
+        span[class*="bg-amber-500/"],
+        span[class*="bg-amber-100"],
+        span[class*="text-amber-500"],
+        span[class*="text-amber-600"],
+        span[class*="text-amber-700"],
+        span[class*="text-amber-800"] {
+            background-color: #FEF3C7 !important;
+            color: #92400E !important;
+            border-color: #FCD34D !important;
+            font-weight: 700 !important;
+        }
+        span[class*="bg-emerald-500/"],
+        span[class*="bg-emerald-100"],
+        span[class*="text-emerald-500"],
+        span[class*="text-emerald-600"],
+        span[class*="text-emerald-700"],
+        span[class*="text-emerald-800"] {
+            background-color: #D1FAE5 !important;
+            color: #065F46 !important;
+            border-color: #6EE7B7 !important;
+            font-weight: 700 !important;
+        }
+        span[class*="bg-cyan-500/"],
+        span[class*="bg-cyan-100"],
+        span[class*="bg-sky-500/"],
+        span[class*="bg-sky-100"],
+        span[class*="text-cyan-500"],
+        span[class*="text-cyan-600"],
+        span[class*="text-cyan-700"] {
+            background-color: #E0F2FE !important;
+            color: #0369A1 !important;
+            border-color: #7DD3FC !important;
+            font-weight: 700 !important;
+        }
+        span[class*="bg-rose-500/"],
+        span[class*="bg-rose-100"],
+        span[class*="text-rose-500"],
+        span[class*="text-rose-600"],
+        span[class*="text-rose-700"],
+        span[class*="text-rose-800"] {
+            background-color: #FFE4E6 !important;
+            color: #9F1239 !important;
+            border-color: #FDA4AF !important;
+            font-weight: 700 !important;
+        }
+
         /* Headings & Bold Text (Sharp, readable Slate-900/800) */
         main h1:not([class*="bg-gradient"] *):not(.ims-banner *), 
         main h2:not([class*="bg-gradient"] *):not(.ims-banner *), 
@@ -265,30 +332,30 @@
         }
 
         /* General text-white in main unless inside colored buttons, badges, or gradient banners */
-        main .text-white:not(button):not(button *):not(a.bg-blue-600):not(a.bg-blue-600 *):not(a.bg-rose-500):not(a.bg-rose-500 *):not(a.bg-rose-600):not(a.bg-rose-600 *):not(a.bg-emerald-600):not(a.bg-emerald-600 *):not(a.bg-amber-500):not(a.bg-amber-500 *):not(a.bg-\[\#00a65a\]):not(a.bg-\[\#00a65a\] *):not(.bg-blue-600 *):not(.bg-rose-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not([class*="bg-gradient"] *):not(.ims-banner *):not([class*="bg-gradient"]):not(.ims-banner) {
+        main .text-white:not(button):not(button *):not(a.bg-blue-600):not(a.bg-blue-600 *):not(a.bg-cyan-600):not(a.bg-cyan-600 *):not(a.bg-teal-600):not(a.bg-teal-600 *):not(a.bg-rose-500):not(a.bg-rose-500 *):not(a.bg-rose-600):not(a.bg-rose-600 *):not(a.bg-emerald-600):not(a.bg-emerald-600 *):not(a.bg-amber-500):not(a.bg-amber-500 *):not(a.bg-\[\#00a65a\]):not(a.bg-\[\#00a65a\] *):not(a.bg-\[\#00b074\]):not(a.bg-\[\#00b074\] *):not(a.bg-\[\#0891b2\]):not(a.bg-\[\#0891b2\] *):not(.bg-blue-600 *):not(.bg-cyan-600 *):not(.bg-teal-600 *):not(.bg-rose-600 *):not(.bg-emerald-600 *):not(.bg-amber-600 *):not([class*="bg-gradient"] *):not(.ims-banner *):not([class*="bg-gradient"]):not(.ims-banner) {
             color: #0F172A !important;
         }
 
-        /* Subtext / Muted Information (Slate-600 / Slate-500) */
+        /* Subtext / Muted Information (Slate-600) */
         main .text-slate-300,
-        main .text-slate-400:not(.text-blue-400):not(.text-emerald-400):not(.text-amber-400):not(.text-rose-400),
+        main .text-slate-400:not(.text-blue-400):not(.text-cyan-400):not(.text-teal-400):not(.text-emerald-400):not(.text-amber-400):not(.text-rose-400),
         [role="dialog"] .text-slate-300,
         [role="dialog"] .text-slate-400,
         [x-show*="Modal"] .text-slate-300,
         [x-show*="Modal"] .text-slate-400,
         [x-show*="modal"] .text-slate-300,
         [x-show*="modal"] .text-slate-400 {
-            color: #64748B !important;
+            color: #475569 !important;
         }
 
         /* Table Header */
         main table thead,
         main table thead tr {
             background-color: #F8FAFC !important;
-            border-bottom: 1px solid #E2E8F0 !important;
+            border-bottom: 2px solid #E2E8F0 !important;
         }
         main table thead th {
-            color: #334155 !important;
+            color: #0F172A !important;
             font-weight: 700 !important;
         }
 
@@ -314,6 +381,7 @@
             background-color: #FFFFFF !important;
             border: 1px solid #CBD5E1 !important;
             color: #0F172A !important;
+            font-weight: 500 !important;
         }
         main input::placeholder,
         main textarea::placeholder,
@@ -327,23 +395,32 @@
         [role="dialog"] input:focus,
         [role="dialog"] select:focus,
         [role="dialog"] textarea:focus {
-            border-color: #2563EB !important;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+            border-color: #0891B2 !important;
+            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.15) !important;
             outline: none !important;
         }
 
         /* Colored buttons protect white text */
         .btn-primary-theme,
         button[type="submit"].bg-blue-600,
+        button[type="submit"].bg-cyan-600,
+        button[type="submit"].bg-[#0891b2],
         button[type="submit"].bg-gradient-to-r,
         a.bg-blue-600,
+        a.bg-cyan-600,
+        a.bg-teal-600,
+        a.bg-[#0891b2],
         a.bg-gradient-to-r,
         .bg-blue-600,
+        .bg-cyan-600,
+        .bg-teal-600,
+        .bg-[#0891b2],
         .bg-rose-600,
         .bg-emerald-600,
         .bg-amber-600,
         .bg-indigo-600,
-        .bg-[#00a65a] {
+        .bg-[#00a65a],
+        .bg-[#00b074] {
             color: #FFFFFF !important;
         }
     </style>
@@ -401,19 +478,19 @@
                  @click="mobileSidebarOpen = false"
                  class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden transition-opacity"></div>
 
-            <!-- Sidebar (Dark Charcoal & Royal Blue Active Indicator) -->
+            <!-- Sidebar (Deep Oceanic Navy Charcoal & Cyan Highlights) -->
             <aside :class="{ 'collapsed': sidebarCollapsed, 'mobile-open': mobileSidebarOpen }"
-                   class="ims-sidebar fixed inset-y-0 left-0 z-50 bg-[#111827] border-r border-[#1F2937] flex flex-col lg:static shrink-0 overflow-visible">
+                   class="ims-sidebar fixed inset-y-0 left-0 z-50 bg-[#061d28] border-r border-[#0d2a38] flex flex-col lg:static shrink-0 overflow-visible">
                 
                 <!-- Sidebar Header / Logo -->
-                <div class="h-16 px-3.5 flex items-center justify-between border-b border-[#1F2937]">
+                <div class="h-16 px-3.5 flex items-center justify-between border-b border-[#0d2a38]">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 overflow-hidden" title="IMS Router Management">
-                        <div class="w-9 h-9 rounded-xl bg-slate-800/80 border border-blue-500/30 p-1 shadow-md shadow-blue-500/20 flex items-center justify-center flex-shrink-0">
+                        <div class="w-9 h-9 rounded-xl bg-[#0c2f42] border border-cyan-400/30 p-1 shadow-md shadow-cyan-500/20 flex items-center justify-center flex-shrink-0">
                             <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
                         </div>
                         <div class="ims-logo-text whitespace-nowrap">
-                            <span class="font-bold text-white tracking-wide text-base">IMS <span class="text-blue-500">ROUTER</span></span>
-                            <span class="block text-[10px] text-[#9CA3AF] tracking-wider uppercase font-semibold">System Manager</span>
+                            <span class="font-bold text-white tracking-wide text-base">IMS <span class="text-cyan-400">ROUTER</span></span>
+                            <span class="block text-[10px] text-[#94A3B8] tracking-wider uppercase font-semibold">System Manager</span>
                         </div>
                     </a>
                     
@@ -422,7 +499,7 @@
                             x-cloak
                             @click="toggleSidebar()"
                             title="Kecilkan Sidebar (<<)"
-                            class="hidden lg:flex p-2 text-[#9CA3AF] hover:text-white rounded-xl bg-[#1F2937] hover:bg-slate-700 border border-slate-700/80 transition items-center justify-center flex-shrink-0 shadow-sm cursor-pointer">
+                            class="hidden lg:flex p-2 text-[#94A3B8] hover:text-white rounded-xl bg-[#0c2f42] hover:bg-[#12415c] border border-cyan-500/20 transition items-center justify-center flex-shrink-0 shadow-sm cursor-pointer">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
                         </svg>
@@ -440,7 +517,7 @@
                         <a href="{{ route('dashboard') }}"
                            class="ims-nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}"
                            title="Dashboard">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('dashboard') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('dashboard') ? 'text-white' : 'text-[#94A3B8]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
                             </svg>
                             <span class="ims-nav-text">Dashboard</span>
@@ -453,9 +530,9 @@
                     <!-- TEKNIK SECTION                                 -->
                     <!-- ============================================== -->
                     <div class="pt-2.5 pb-1">
-                        <div class="ims-section-header px-3 text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider flex items-center justify-between">
+                        <div class="ims-section-header px-3 text-[10px] font-bold text-[#38BDF8] uppercase tracking-wider flex items-center justify-between">
                             <span class="ims-section-title">Modul Teknik</span>
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
                         </div>
                     </div>
 
@@ -464,7 +541,7 @@
                         <a href="{{ route('teknik.tiket') }}"
                            class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
                            title="Tiket & Permintaan">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#94A3B8]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                             </svg>
                             <span class="ims-nav-text">Tiket</span>
@@ -1003,7 +1080,7 @@
 
                             <!-- 2. Jam Realtime WIB -->
                             <div class="flex items-center gap-1 text-[11px] text-slate-600 font-medium tracking-wide">
-                                <svg class="w-3 h-3 text-blue-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <svg class="w-3.5 h-3.5 text-[#0891b2] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
                                 <span class="font-mono text-slate-900 font-bold" x-text="timeWib">--:--:-- WIB</span>
@@ -1015,12 +1092,12 @@
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
                                     class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition cursor-pointer">
-                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
                                     {{ substr(auth()->user()->nama, 0, 1) }}
                                 </div>
                                 <div class="text-left hidden md:block">
                                     <span class="block text-xs font-bold text-slate-900 leading-tight">{{ auth()->user()->nama }}</span>
-                                    <span class="block text-[10px] text-blue-600 font-medium">{{ auth()->user()->nama_level }}</span>
+                                    <span class="block text-[10px] text-[#0891b2] font-semibold">{{ auth()->user()->nama_level }}</span>
                                 </div>
                                 <svg class="w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -1089,13 +1166,13 @@
          x-transition:leave-end="opacity-0 translate-x-1"
          @mouseenter="cancelFlyoutClose()"
          @mouseleave="closeFlyoutWithDelay()"
-         class="ims-flyout-portal w-56 rounded-2xl bg-[#0F172A] border border-white/12 shadow-2xl shadow-black p-2.5 space-y-1"
+         class="ims-flyout-portal w-56 rounded-2xl bg-[#061d28] border border-[#0d2a38] shadow-2xl shadow-black p-2.5 space-y-1"
          :style="`top: ${flyoutTop}px; left: 4.85rem; position: fixed !important; z-index: 9999999 !important;`">
         
         <!-- Flyout Header / Title -->
-        <div class="px-3 py-1.5 mb-1 border-b border-slate-800 flex items-center justify-between">
+        <div class="px-3 py-1.5 mb-1 border-b border-[#0d2a38] flex items-center justify-between">
             <span class="text-xs font-bold text-white tracking-wide" x-text="flyoutTitle"></span>
-            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
         </div>
 
         <!-- Flyout Menu Items -->
@@ -1103,7 +1180,7 @@
             <template x-for="(item, idx) in flyoutItems" :key="idx">
                 <a :href="item.url"
                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition duration-150"
-                   :class="item.active ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold shadow-md shadow-blue-600/30' : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'">
+                   :class="item.active ? 'bg-gradient-to-r from-[#0891b2] to-[#0284c7] text-white font-semibold shadow-md shadow-cyan-900/40' : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'">
                     <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
                           :class="item.active ? 'bg-white shadow-xs shadow-white' : 'bg-slate-500'"></span>
                     <span class="truncate" x-text="item.label"></span>

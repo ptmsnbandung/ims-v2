@@ -160,32 +160,39 @@
          }
      }">
 
-    <!-- Top Hero Banner: Network Operations Center Live Monitoring -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900/80 via-indigo-900/60 to-slate-900 border border-blue-500/20 p-6 shadow-2xl backdrop-blur-xl">
-        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative z-10">
+    <!-- Top Hero Banner: Network Operations Center Live Monitoring (Oceanic Teal/Cyan Gradient) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-6 sm:p-7 shadow-md"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5 relative z-10">
             <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <span>NOC GATEWAY ONLINE &middot; CORE NETWORK STABLE</span>
+                <div class="flex flex-wrap items-center gap-2.5 mb-3">
+                    <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-800 shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                        <span>ID: &middot; NOC Command Center</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Core Network Stable</span>
+                    </div>
                 </div>
-                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight" style="color: #FFFFFF !important;">
                     Network Operations Center (NOC)
                 </h2>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
+                <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
                     Monitoring infrastruktur FTTH, OLT, utilisasi port ODP, aktivasi provisioning pelanggan, dan manajemen traffic jaringan real-time.
                 </p>
             </div>
 
             <!-- Quick Action Buttons -->
             <div class="flex flex-wrap items-center gap-2.5">
-                <a href="{{ route('noc.aktivasi') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <a href="{{ route('noc.aktivasi') }}" class="px-4 py-2 rounded-full bg-[#00b074] hover:bg-[#009b66] text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-950/20 transition cursor-pointer" style="color: #FFFFFF !important;">
+                    <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                     </svg>
                     <span>Antrean Aktivasi ({{ $antreanAktivasi }})</span>
                 </a>
-                <a href="{{ route('noc.olt') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition">
+                <a href="{{ route('noc.olt') }}" class="px-4 py-2 rounded-full border border-white/50 bg-white/5 backdrop-blur-xs text-white text-xs font-semibold flex items-center gap-2 shadow-xs transition" style="color: #FFFFFF !important;">
                     <span>Manajemen OLT</span>
                 </a>
             </div>
@@ -917,7 +924,7 @@
 
     <!-- =================================================================== -->
     <!-- MODAL: KONFIGURASI PPPOE & MULAI AKTIVASI (REBOOT OLT & MIKROTIK)   -->
-    <!-- EXACT MATCHING DESIGN FROM USER SCREENSHOT                          -->
+    <!-- HIGH CONTRAST PURE-WHITE CLEAN THEME                                -->
     <!-- =================================================================== -->
     <div x-show="pppoeModalOpen" 
          x-cloak 
@@ -925,22 +932,22 @@
          role="dialog">
         
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-950/85 backdrop-blur-md transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" 
              @click="pppoeModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-5">
-            <div class="relative w-full max-w-2xl bg-[#0b132b] text-slate-100 border border-slate-800/80 rounded-2xl shadow-2xl overflow-hidden transition-all my-auto"
+            <div class="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden transition-all my-auto"
                  @click.away="pppoeModalOpen = false">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between bg-[#0b132b]/80">
-                    <h3 class="text-base font-bold text-white tracking-wide flex items-center gap-1">
+                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                    <h3 class="text-sm font-extrabold text-slate-900 tracking-wide flex items-center gap-1.5">
                         <span>Konfigurasi PPPoE & Mulai Aktivasi An/</span>
-                        <span class="uppercase text-blue-400" x-text="modalNamaPelanggan"></span>
+                        <span class="uppercase text-cyan-700 font-mono" x-text="modalNamaPelanggan"></span>
                     </h3>
                     <button type="button" 
                             @click="pppoeModalOpen = false" 
-                            class="text-slate-400 hover:text-white text-xl font-bold p-1 leading-none transition">
+                            class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none transition cursor-pointer">
                         &times;
                     </button>
                 </div>
@@ -952,40 +959,42 @@
                     @csrf
 
                     <!-- 1. Card: Kredensial PPPoE Pelanggan -->
-                    <div class="p-4 rounded-xl bg-[#0d1b3a]/50 border border-blue-900/40 space-y-3">
-                        <h4 class="text-xs font-bold text-white">Kredensial PPPoE Pelanggan</h4>
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                        <h4 class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-cyan-600"></span>
+                            <span>Kredensial PPPoE Pelanggan</span>
+                        </h4>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- PPPoE Username -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-300 mb-1.5">
-                                    PPPoE Username <span class="text-rose-500">*</span>
+                                <label class="block text-[11px] font-bold text-slate-800 mb-1.5">
+                                    PPPoE Username <span class="text-rose-600 font-bold">*</span>
                                 </label>
                                 <input type="text" 
                                        name="pppoe_username" 
                                        x-model="pppoeUsername" 
                                        required
-                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs">
                             </div>
 
                             <!-- PPPoE Password with Eye Toggle -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-300 mb-1.5">
-                                    PPPoE Password <span class="text-rose-500">*</span>
+                                <label class="block text-[11px] font-bold text-slate-800 mb-1.5">
+                                    PPPoE Password <span class="text-rose-600 font-bold">*</span>
                                 </label>
                                 <div class="relative">
                                     <input :type="showPassword ? 'text' : 'password'" 
                                            name="pppoe_password" 
                                            x-model="pppoePassword" 
                                            required
-                                           class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                           class="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs">
                                     <button type="button" 
                                             @click="showPassword = !showPassword"
-                                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
+                                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-800 cursor-pointer">
                                         <template x-if="!showPassword">
                                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                             </svg>
                                         </template>
                                         <template x-if="showPassword">
@@ -1000,19 +1009,22 @@
                     </div>
 
                     <!-- 2. Card: Konfigurasi Router & IP Address -->
-                    <div class="p-4 rounded-xl bg-[#0d1b3a]/50 border border-blue-900/40 space-y-4">
-                        <h4 class="text-xs font-bold text-white">Konfigurasi Router & IP Address</h4>
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
+                        <h4 class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-cyan-600"></span>
+                            <span>Konfigurasi Router & IP Address</span>
+                        </h4>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- Pilih Router MikroTik -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-300 mb-1.5">
-                                    Pilih Router MikroTik <span class="text-rose-500">*</span>
+                                <label class="block text-[11px] font-bold text-slate-800 mb-1.5">
+                                    Pilih Router MikroTik <span class="text-rose-600 font-bold">*</span>
                                 </label>
                                 <select name="router_mikrotik" 
                                         x-model="selectedRouter" 
                                         required
-                                        class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs">
                                     <option value="Router Core Utama (CCR1036)">Router Core Utama (CCR1036)</option>
                                     <option value="Router Core BBU (CCR1072)">Router Core BBU (CCR1072)</option>
                                     <option value="Router POP Kayu Agung (CCR2004)">Router POP Kayu Agung (CCR2004)</option>
@@ -1023,53 +1035,53 @@
 
                             <!-- Local Address (Gateway) -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-300 mb-1.5">
-                                    Local Address (Gateway) <span class="text-rose-500">*</span>
+                                <label class="block text-[11px] font-bold text-slate-800 mb-1.5">
+                                    Local Address (Gateway) <span class="text-rose-600 font-bold">*</span>
                                 </label>
                                 <input type="text" 
                                        name="local_address" 
                                        x-model="localAddress" 
                                        required
-                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs">
                             </div>
 
                             <!-- Profile PPP -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-300 mb-1.5">
-                                    Profile PPP <span class="text-rose-500">*</span>
+                                <label class="block text-[11px] font-bold text-slate-800 mb-1.5">
+                                    Profile PPP <span class="text-rose-600 font-bold">*</span>
                                 </label>
                                 <input type="text" 
                                        name="ppp_profile" 
                                        x-model="pppProfile" 
                                        required
-                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs">
                             </div>
 
                             <!-- Remote Address (IP Pelanggan) -->
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-300 mb-1.5">
-                                    Remote Address (IP Pelanggan) <span class="text-rose-500">*</span>
+                                <label class="block text-[11px] font-bold text-slate-800 mb-1.5">
+                                    Remote Address (IP Pelanggan) <span class="text-rose-600 font-bold">*</span>
                                 </label>
                                 <input type="text" 
                                        name="remote_address" 
                                        x-model="remoteAddress" 
                                        placeholder="Contoh: 10.10.10.25 atau pool name"
-                                       class="w-full px-3.5 py-2.5 rounded-xl bg-[#091124] border border-slate-700/80 text-white font-mono placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs">
+                                       class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs">
                             </div>
                         </div>
                     </div>
 
                     <!-- Footer Actions -->
-                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800/80">
-                        <button type="submit" 
-                                class="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#0070f3] hover:bg-[#005bb5] text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition cursor-pointer">
-                            <span>Buat PPPoE Secret & Mulai Aktivasi</span>
-                        </button>
-                        
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                         <button type="button" 
                                 @click="pppoeModalOpen = false" 
-                                class="px-5 py-2.5 rounded-xl bg-[#1e293b] hover:bg-[#334155] text-slate-200 font-bold text-xs transition cursor-pointer">
-                            <span>Cancel</span>
+                                class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+                            <span>Batal</span>
+                        </button>
+                        
+                        <button type="submit" 
+                                class="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs shadow-lg shadow-cyan-600/25 transition cursor-pointer">
+                            <span>Buat PPPoE Secret & Mulai Aktivasi</span>
                         </button>
                     </div>
 

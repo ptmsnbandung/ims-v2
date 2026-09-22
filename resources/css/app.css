@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
@@ -14,7 +16,10 @@
     --text-main: #0F172A;
     --text-muted: #64748B;
     --border-main: #E2E8F0;
-    --primary: #2563EB;
+    --primary: #0891B2;
+    --primary-dark: #07596A;
+    --accent-cyan: #06B6D4;
+    --accent-emerald: #10B981;
 }
 
 body {

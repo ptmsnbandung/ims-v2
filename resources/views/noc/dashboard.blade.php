@@ -269,7 +269,7 @@
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                     Antrean Aktivasi Layanan Terbaru
                 </h3>
-                <a href="{{ route('noc.aktivasi') }}" class="text-xs font-semibold text-blue-500 hover:underline">
+                <a href="{{ route('noc.aktivasi') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                     Lihat Semua &rarr;
                 </a>
             </div>
@@ -291,29 +291,29 @@
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                                     <td class="py-3.5 px-4">
                                         <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                           class="font-bold text-blue-500 font-mono hover:underline">
+                                           class="font-bold text-blue-600 dark:text-blue-400 font-mono hover:underline">
                                             {{ $item->nomor_internet }}
                                         </a>
                                         <div class="font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5">{{ $item->nama_pelanggan }}</div>
                                     </td>
                                     <td class="py-3.5 px-4">
                                         <div class="font-medium text-slate-700 dark:text-slate-300">{{ $item->nama_kategori_bandwith ?: ($item->alias_nama_kategori ?: 'INTERNET') }}</div>
-                                        <div class="text-[11px] text-blue-500 font-bold font-mono">{{ $item->nominal_bandwith ?: '10' }} Mbps</div>
+                                        <div class="text-[11px] text-blue-600 dark:text-blue-400 font-bold font-mono">{{ $item->nominal_bandwith ?: '10' }} Mbps</div>
                                     </td>
                                     <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400 truncate max-w-[200px]">
                                         {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
                                     </td>
                                     <td class="py-3.5 px-4">
                                         @if(in_array($item->status_reg, ['19', '19.1']))
-                                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-500 border border-cyan-500/20">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30">
                                                 TERJADWAL (#19)
                                             </span>
                                         @elseif(in_array($item->status_reg, ['18', '18.1']))
-                                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
                                                 SIAP JADWAL (#18)
                                             </span>
                                         @else
-                                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/15 text-slate-400 border border-slate-500/20">
+                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/30">
                                                 #{{ $item->status_reg }}
                                             </span>
                                         @endif
@@ -337,14 +337,14 @@
                                                         @click="openReportModal({{ json_encode($item) }})" 
                                                         class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-md shadow-emerald-500/20 transition cursor-pointer"
                                                         title="Lanjut ke Form Eksekusi Aktivasi Layanan (Otomatis Reboot OLT/MikroTik di Background)">
-                                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                                                     </svg>
                                                     <span>Aktivasi</span>
                                                 </button>
                                                 <button type="button" 
                                                         @click="openScheduleModal({{ json_encode($item) }})" 
-                                                        class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-semibold transition cursor-pointer border border-slate-600"
+                                                        class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-700"
                                                         title="Reschedule / Jadwalkan Ulang jika aktivasi tertunda atau berhalangan">
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -378,7 +378,7 @@
             <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xl shadow-black/10 space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                     <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Daftar OLT Gateway</span>
-                    <a href="{{ route('noc.olt') }}" class="text-[11px] text-blue-500 hover:underline">Kelola &rarr;</a>
+                    <a href="{{ route('noc.olt') }}" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">Kelola &rarr;</a>
                 </div>
 
                 <div class="space-y-2.5">
@@ -386,13 +386,13 @@
                         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
                             <div>
                                 <div class="text-xs font-bold text-slate-900 dark:text-white font-mono">{{ $olt->name_olt }}</div>
-                                <div class="text-[10px] text-slate-400 mt-0.5">Kode: {{ $olt->kode_olt }} &middot; Wilayah: {{ $olt->kode_w ?: 'Default' }}</div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Kode: {{ $olt->kode_olt }} &middot; Wilayah: {{ $olt->kode_w ?: 'Default' }}</div>
                             </div>
                             <div class="text-right">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/20">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
                                     ONLINE
                                 </span>
-                                <div class="text-[10px] text-slate-400 mt-1">Kapasitas: {{ $olt->capacity_olt ?: 0 }} Port</div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Kapasitas: {{ $olt->capacity_olt ?: 0 }} Port</div>
                             </div>
                         </div>
                     @empty
@@ -404,7 +404,7 @@
                 <div class="pt-3 border-t border-slate-200 dark:border-slate-800">
                     <div class="flex items-center justify-between pb-2">
                         <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Point of Presence (POP)</span>
-                        <a href="{{ route('noc.pop') }}" class="text-[11px] text-blue-500 hover:underline">Lihat Semua &rarr;</a>
+                        <a href="{{ route('noc.pop') }}" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline">Lihat Semua &rarr;</a>
                     </div>
                     <div class="flex flex-wrap gap-1.5 pt-1">
                         @foreach($pops->take(6) as $pop)

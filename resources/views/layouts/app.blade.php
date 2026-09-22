@@ -194,139 +194,59 @@
         
         /* Light Mode High Contrast */
         html:not(.dark) body {
-            background-color: #F8FAFC !important;
-            color: #0F172A !important;
+            background-color: #F8FAFC;
+            color: #0F172A;
         }
 
         html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
         html:not(.dark) select,
         html:not(.dark) textarea {
-            background-color: #FFFFFF !important;
-            border-color: #CBD5E1 !important;
-            color: #0F172A !important;
+            background-color: #FFFFFF;
+            border-color: #CBD5E1;
+            color: #0F172A;
+        }
+
+        html:not(.dark) input::placeholder,
+        html:not(.dark) textarea::placeholder {
+            color: #94A3B8;
         }
         
         /* Dark Mode High Contrast */
         html.dark body {
-            background-color: #071520 !important;
-            color: #F1F5F9 !important;
+            background-color: #071520;
+            color: #F1F5F9;
         }
 
-        /* Dark Mode Container and Card Overrides */
         html.dark main {
-            background-color: #071520 !important;
-        }
-
-        html.dark main .bg-white {
-            background-color: #0b2233 !important;
-            border-color: #163d58 !important;
-            color: #F1F5F9 !important;
-        }
-
-        html.dark main .bg-slate-50 {
-            background-color: #081a27 !important;
-            border-color: #163d58 !important;
-        }
-
-        html.dark main .bg-slate-100 {
-            background-color: #0e2d42 !important;
-            border-color: #1a4868 !important;
-        }
-
-        html.dark main .border-slate-200 {
-            border-color: #163d58 !important;
-        }
-
-        html.dark main .border-slate-100 {
-            border-color: #12334a !important;
-        }
-
-        html.dark main .text-slate-900 {
-            color: #FFFFFF !important;
-        }
-
-        html.dark main .text-slate-800 {
-            color: #F1F5F9 !important;
-        }
-
-        html.dark main .text-slate-700 {
-            color: #CBD5E1 !important;
-        }
-
-        html.dark main .text-slate-600 {
-            color: #94A3B8 !important;
-        }
-
-        html.dark main .text-slate-500 {
-            color: #64748B !important;
-        }
-
-        html.dark main .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
-            border-color: #163d58 !important;
-        }
-
-        html.dark main .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
-            border-color: #12334a !important;
+            background-color: #071520;
         }
 
         /* Dark Mode Form Inputs & Selects */
         html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
         html.dark select,
         html.dark textarea {
-            background-color: #071926 !important;
-            border-color: #1c4969 !important;
-            color: #F1F5F9 !important;
+            background-color: #071926;
+            border-color: #1c4969;
+            color: #F1F5F9;
         }
 
         html.dark input::placeholder,
         html.dark textarea::placeholder {
-            color: #64748B !important;
+            color: #64748B;
         }
 
-        /* Dark Mode Tables */
-        html.dark table thead th {
-            background-color: #081d2c !important;
-            color: #94A3B8 !important;
-            border-color: #163d58 !important;
+        /* Status Badge Utilities - Bold for maximum legibility */
+        span[class*="bg-amber-"],
+        span[class*="bg-emerald-"],
+        span[class*="bg-cyan-"],
+        span[class*="bg-sky-"],
+        span[class*="bg-blue-"],
+        span[class*="bg-purple-"],
+        span[class*="bg-rose-"] {
+            font-weight: 600;
         }
 
-        html.dark table tbody tr {
-            border-color: #12334a !important;
-        }
-
-        html.dark table tbody tr:hover {
-            background-color: rgba(14, 45, 68, 0.45) !important;
-        }
-
-        /* Dark Mode Modals & Dropdowns */
-        html.dark [role="dialog"] .bg-white,
-        html.dark .ims-modal-content {
-            background-color: #0b2233 !important;
-            border-color: #1a4868 !important;
-            color: #F1F5F9 !important;
-        }
-
-        /* Status Badge Utilities */
-        span[class*="bg-amber-500/"],
-        span[class*="bg-amber-100"] {
-            font-weight: 700 !important;
-        }
-        span[class*="bg-emerald-500/"],
-        span[class*="bg-emerald-100"] {
-            font-weight: 700 !important;
-        }
-        span[class*="bg-cyan-500/"],
-        span[class*="bg-cyan-100"],
-        span[class*="bg-sky-500/"],
-        span[class*="bg-sky-100"] {
-            font-weight: 700 !important;
-        }
-        span[class*="bg-rose-500/"],
-        span[class*="bg-rose-100"] {
-            font-weight: 700 !important;
-        }
-
-        /* Buttons Keep Sharp Text */
+        /* Primary Action Buttons Keep Bright White Text */
         .btn-primary-theme,
         button[type="submit"].bg-blue-600,
         button[type="submit"].bg-cyan-600,

@@ -44,9 +44,9 @@
                 <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
                     Daftar Node / Point of Presence (POP)
                 </h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Distribusi server router gateway per wilayah jaringan.</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Distribusi server router gateway per wilayah jaringan.</p>
             </div>
-            <span class="text-xs text-slate-400 font-mono">Total: {{ $pops->total() }} Node</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Total: {{ $pops->total() }} Node</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -65,7 +65,7 @@
                     @forelse($pops as $pop)
                         @php $cCount = $popCustomerCounts[$pop->kode_pop] ?? 0; @endphp
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                            <td class="py-4 px-5 font-mono font-bold text-blue-500">
+                            <td class="py-4 px-5 font-mono font-bold text-blue-600 dark:text-blue-400">
                                 {{ $pop->kode_pop }}
                             </td>
                             <td class="py-4 px-5 font-semibold text-slate-800 dark:text-slate-200">
@@ -73,11 +73,11 @@
                             </td>
                             <td class="py-4 px-5 font-mono">
                                 @if($cCount > 0)
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
                                         👥 {{ number_format($cCount) }} Client
                                     </span>
                                 @else
-                                    <span class="text-slate-400 text-xs font-medium">0 Client</span>
+                                    <span class="text-slate-500 dark:text-slate-400 text-xs font-medium">0 Client</span>
                                 @endif
                             </td>
                             <td class="py-4 px-5 text-slate-600 dark:text-slate-400">
@@ -87,15 +87,15 @@
                                 {{ $pop->date_create ? \Carbon\Carbon::parse($pop->date_create)->translatedFormat('d M Y H:i') : '-' }}
                             </td>
                             <td class="py-4 px-5">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/20">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
                                     <span>AKTIF</span>
                                 </span>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+                            <td colspan="6" class="py-8 text-center text-slate-500 dark:text-slate-400 text-xs">
                                 Tidak ada data POP ditemukan.
                             </td>
                         </tr>
@@ -113,30 +113,30 @@
 
     <!-- Modal Tambah POP -->
     <div x-show="popModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog">
-        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" @click="popModalOpen = false"></div>
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs" @click="popModalOpen = false"></div>
         <div class="flex min-h-full items-center justify-center p-4">
             <div class="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white">Tambah Node POP Baru</h3>
-                    <button @click="popModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
+                    <button @click="popModalOpen = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-white transition text-lg font-bold">&times;</button>
                 </div>
                 <form action="{{ route('noc.pop.store') }}" method="POST" class="space-y-4 text-xs">
                     @csrf
                     <div>
                         <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode POP <span class="text-rose-500">*</span></label>
-                        <input type="text" name="kode_pop" required placeholder="Contoh: POP-SRG" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
+                        <input type="text" name="kode_pop" required placeholder="Contoh: POP-SRG" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama POP <span class="text-rose-500">*</span></label>
-                        <input type="text" name="nama_pop" required placeholder="Contoh: POP SOREANG UTAMA" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
+                        <input type="text" name="nama_pop" required placeholder="Contoh: POP SOREANG UTAMA" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Deskripsi / Alamat Server Node</label>
-                        <textarea name="desc_pop" rows="2" placeholder="Detail server / lokasi rak POP..." class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white"></textarea>
+                        <textarea name="desc_pop" rows="2" placeholder="Detail server / lokasi rak POP..." class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30"></textarea>
                     </div>
                     <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
-                        <button type="button" @click="popModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">Batal</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold">Simpan POP</button>
+                        <button type="button" @click="popModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700">Batal</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-xs">Simpan POP</button>
                     </div>
                 </form>
             </div>

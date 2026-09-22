@@ -44,9 +44,9 @@
                 <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
                     Daftar Master Wilayah Perangkat Jaringan (m_wilayah_perangkat)
                 </h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Pemetaan regional router core, OLT gateway, dan distribusi node.</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Pemetaan regional router core, OLT gateway, dan distribusi node.</p>
             </div>
-            <span class="text-xs text-slate-400 font-mono">Total: {{ $wilayahs->total() }} Wilayah</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Total: {{ $wilayahs->total() }} Wilayah</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -65,33 +65,33 @@
                     @forelse($wilayahs as $w)
                         @php $oltTotal = $oltCounts[$w->kode_w] ?? 0; @endphp
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                            <td class="py-4 px-5 font-mono font-bold text-blue-500">
+                            <td class="py-4 px-5 font-mono font-bold text-blue-600 dark:text-blue-400">
                                 {{ $w->kode_w }}
                             </td>
                             <td class="py-4 px-5 font-bold text-slate-800 dark:text-slate-200">
                                 🗺️ {{ $w->name_w }}
                             </td>
                             <td class="py-4 px-5 font-mono">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
                                     🖥️ {{ $oltTotal }} Unit OLT
                                 </span>
                             </td>
                             <td class="py-4 px-5 font-bold text-slate-900 dark:text-white font-mono">
-                                {{ $w->capacity_w ?: '-' }} <span class="text-[10px] text-slate-400 font-normal">Card</span>
+                                {{ $w->capacity_w ?: '-' }} <span class="text-[10px] text-slate-500 dark:text-slate-400 font-normal">Card</span>
                             </td>
                             <td class="py-4 px-5">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/20">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
                                     <span>AKTIF / COVERED</span>
                                 </span>
                             </td>
-                            <td class="py-4 px-5 text-slate-500 dark:text-slate-400">
+                            <td class="py-4 px-5 text-slate-600 dark:text-slate-400">
                                 {{ $w->note_w ?: '-' }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+                            <td colspan="6" class="py-8 text-center text-slate-500 dark:text-slate-400 text-xs">
                                 Tidak ada data wilayah perangkat ditemukan.
                             </td>
                         </tr>
@@ -109,38 +109,38 @@
 
     <!-- Modal Tambah Wilayah -->
     <div x-show="wilayahModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog">
-        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" @click="wilayahModalOpen = false"></div>
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs" @click="wilayahModalOpen = false"></div>
         <div class="flex min-h-full items-center justify-center p-4">
             <div class="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white">Tambah Wilayah Perangkat Baru</h3>
-                    <button @click="wilayahModalOpen = false" class="text-slate-400 hover:text-white">&times;</button>
+                    <button @click="wilayahModalOpen = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-white transition text-lg font-bold">&times;</button>
                 </div>
                 <form action="{{ route('noc.wilayah.store') }}" method="POST" class="space-y-4 text-xs">
                     @csrf
                     <div>
                         <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kode Wilayah <span class="text-rose-500">*</span></label>
                         <input type="text" name="kode_w" placeholder="Contoh: W4" required
-                               class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Wilayah Perangkat <span class="text-rose-500">*</span></label>
                         <input type="text" name="name_w" placeholder="Contoh: KOTA CIMAHI" required
-                               class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Kapasitas Slot</label>
                         <input type="text" name="capacity_w" placeholder="Contoh: 2"
-                               class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30">
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Catatan</label>
                         <textarea name="note_w" rows="2" placeholder="Catatan opsional..."
-                                  class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"></textarea>
+                                  class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500/30"></textarea>
                     </div>
                     <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
-                        <button type="button" @click="wilayahModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">Batal</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-md shadow-blue-500/25">Simpan Wilayah</button>
+                        <button type="button" @click="wilayahModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-slate-700">Batal</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-xs">Simpan Wilayah</button>
                     </div>
                 </form>
             </div>

@@ -284,17 +284,17 @@
                                 <div class="flex items-center justify-between gap-1">
                                     <span class="text-slate-600 dark:text-slate-400">Collect Perangkat :</span>
                                     @if($item->collect_perangkat == 1)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Done &#10004;</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20">Done &#10004;</span>
                                     @else
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">Undone &#128274;</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/20">Undone &#128274;</span>
                                     @endif
                                 </div>
                                 <div class="flex items-center justify-between gap-1">
                                     <span class="text-slate-600 dark:text-slate-400">Pending Tagihan :</span>
                                     @if($item->collect_payment == 1)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Done &#10004;</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/20">Done &#10004;</span>
                                     @else
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">Undone &#128274;</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/20">Undone &#128274;</span>
                                     @endif
                                 </div>
                             </td>
@@ -303,13 +303,13 @@
                             <td class="py-4 px-4 align-top">
                                 <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold font-mono tracking-wide
                                     @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
-                                        bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
+                                        bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30
                                     @elseif(in_array($item->status_terminasi, ['13', '15', '17']))
-                                        bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30
+                                        bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30
                                     @elseif(in_array($item->status_terminasi, ['14', '16']))
-                                        bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30
+                                        bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30
                                     @else
-                                        bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
+                                        bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/30
                                     @endif">
                                     (KD{{ $item->status_terminasi }}) {{ $item->desc_terminasi ?: 'Req. Terminasi' }}
                                 </span>
@@ -349,14 +349,14 @@
 
                                     </div>
                                 @elseif($item->status_terminasi == '14')
-                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
-                                        <svg class="w-3.5 h-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 text-[11px] font-bold">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                         </svg>
                                         <span>Terminasi Selesai</span>
                                     </div>
                                 @elseif($item->status_terminasi == '16')
-                                    <div class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 text-[11px] font-medium">
+                                    <div class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-500/10 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-500/20 text-[11px] font-medium">
                                         <span>Dibatalkan</span>
                                     </div>
                                 @else

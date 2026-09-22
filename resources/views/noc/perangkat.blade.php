@@ -41,21 +41,21 @@
             </svg>
         </form>
 
-        <div class="text-xs text-slate-400 font-mono">
-            <span>Total Item: <strong class="text-white">{{ $barangs->total() }}</strong></span>
+        <div class="text-xs text-slate-500 dark:text-slate-400 font-mono">
+            <span>Total Item: <strong class="text-slate-900 dark:text-white">{{ $barangs->total() }}</strong></span>
         </div>
     </div>
 
     <!-- Barang / Hardware Table Card -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
         <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div>
                 <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
                     Master Data Perangkat & Asset Jaringan
                 </h3>
-                <p class="text-[11px] text-slate-400 mt-0.5">Daftar katalog perangkat ONT, Switch, Router, Dropcore FO, dan material instalasi.</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Daftar katalog perangkat ONT, Switch, Router, Dropcore FO, dan material instalasi.</p>
             </div>
-            <span class="text-xs text-slate-400 font-mono">Total: {{ $barangs->total() }} Item</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Total: {{ $barangs->total() }} Item</span>
         </div>
 
         <div class="overflow-x-auto">

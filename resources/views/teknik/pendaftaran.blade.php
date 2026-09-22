@@ -8,17 +8,17 @@
      x-data="pendaftaranWorkflowComponent()">
     
     <!-- Top Header: Breadcrumbs & Registrasi Baru Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
         <!-- Breadcrumb Navigation -->
         <div>
-            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
-                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 transition">IMS</a>
-                <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">IMS</a>
+                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
-                <span class="text-slate-800 font-semibold">Pendaftaran Pelanggan</span>
+                <span class="text-slate-800 dark:text-slate-200 font-semibold">Pendaftaran Pelanggan</span>
             </div>
-            <h2 class="text-lg font-bold text-slate-900 tracking-tight">Antrean Pendaftaran Baru</h2>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Antrean Pendaftaran Baru</h2>
         </div>
 
         <!-- Button + Registrasi Baru (Buka Modal Form) -->
@@ -36,20 +36,20 @@
 
     {{-- Banner Notifikasi Registrasi Baru dengan Tombol Cetak Form Berlangganan Langsung --}}
     @if(session('nomor_internet_baru'))
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-300 shrink-0">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                     </svg>
                 </div>
                 <div>
-                    <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <span>Registrasi Baru Berhasil Disimpan!</span>
-                        <span class="px-2 py-0.5 rounded text-[11px] bg-emerald-100 text-emerald-800 font-mono font-bold">No. Internet: {{ session('nomor_internet_baru') }}</span>
+                        <span class="px-2 py-0.5 rounded text-[11px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-mono font-bold">No. Internet: {{ session('nomor_internet_baru') }}</span>
                     </h4>
-                    <p class="text-xs text-slate-600 mt-0.5">
-                        Dokumen Form Berlangganan untuk <strong class="text-slate-900">{{ session('nama_pelanggan_baru') }}</strong> telah terbuat secara otomatis dan siap dicetak.
+                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                        Dokumen Form Berlangganan untuk <strong class="text-slate-900 dark:text-white">{{ session('nama_pelanggan_baru') }}</strong> telah terbuat secara otomatis dan siap dicetak.
                     </p>
                 </div>
             </div>
@@ -80,15 +80,15 @@
     @endif
 
     <!-- Filter Card Container -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
         <form method="GET" action="{{ route('teknik.pendaftaran') }}" id="filterForm">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 items-end">
                 
                 <!-- 1. Dropdown Semua Layanan -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Layanan</label>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Layanan</label>
                     <select name="layanan" 
-                            class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium outline-none transition shadow-xs">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
                         <option value="">SEMUA LAYANAN</option>
                         @foreach($layananList as $layanan)
                             <option value="{{ $layanan->kode_kategori_bandwith }}" {{ ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith ? 'selected' : '' }}>
@@ -100,29 +100,29 @@
 
                 <!-- 2. Input Nama -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama</label>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Nama</label>
                     <input type="text" 
                            name="nama" 
                            value="{{ $filters['nama'] ?? '' }}" 
                            placeholder="Cari Nama..." 
-                           class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium outline-none transition placeholder:text-slate-400 shadow-xs">
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xs">
                 </div>
 
                 <!-- 3. Input Alamat -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Alamat</label>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Alamat</label>
                     <input type="text" 
                            name="alamat" 
                            value="{{ $filters['alamat'] ?? '' }}" 
                            placeholder="Cari Alamat..." 
-                           class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium outline-none transition placeholder:text-slate-400 shadow-xs">
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xs">
                 </div>
 
                 <!-- 4. Dropdown Semua Status -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Status</label>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Status</label>
                     <select name="status" 
-                            class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium outline-none transition shadow-xs">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
                         <option value="">SEMUA STATUS (PENDAFTARAN)</option>
                         @foreach($statusList as $status)
                             <option value="{{ $status->status_reg }}" {{ ($filters['status'] ?? '') == $status->status_reg ? 'selected' : '' }}>
@@ -134,9 +134,9 @@
 
                 <!-- 5. Dropdown Semua Wilayah -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">Wilayah</label>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Wilayah</label>
                     <select name="wilayah" 
-                            class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium outline-none transition shadow-xs">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
                         <option value="">SEMUA WILAYAH</option>
                         @foreach($wilayahList as $wilayah)
                             <option value="{{ $wilayah->name_w }}" {{ ($filters['wilayah'] ?? '') == $wilayah->name_w ? 'selected' : '' }}>
@@ -149,8 +149,8 @@
                 <!-- 6. Action Buttons: Reset & Export Excel -->
                 <div class="flex items-center gap-2">
                     <a href="{{ route('teknik.pendaftaran') }}" 
-                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition duration-150">
-                        <svg class="w-3.5 h-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition duration-150">
+                        <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                         </svg>
                         <span>Reset</span>
@@ -167,12 +167,12 @@
                 </div>
             </div>
 
-            <div class="mt-4 flex items-center justify-between border-t border-slate-200 pt-3">
-                <div class="flex items-center gap-2 text-xs text-slate-600">
+            <div class="mt-4 flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-3">
+                <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                     <span>Show</span>
                     <select name="per_page" 
                             onchange="document.getElementById('filterForm').submit()"
-                            class="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-800 font-medium focus:ring-1 focus:ring-blue-500 outline-none">
+                            class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-800 dark:text-slate-200 font-medium focus:ring-1 focus:ring-blue-500 outline-none">
                         <option value="10" {{ ($filters['per_page'] ?? '10') == '10' ? 'selected' : '' }}>10</option>
                         <option value="25" {{ ($filters['per_page'] ?? '') == '25' ? 'selected' : '' }}>25</option>
                         <option value="50" {{ ($filters['per_page'] ?? '') == '50' ? 'selected' : '' }}>50</option>
@@ -182,7 +182,7 @@
                 </div>
 
                 <div>
-                    <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-xs text-blue-700 font-bold border border-blue-200 transition cursor-pointer">
+                    <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-xs text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800 transition cursor-pointer">
                         Terapkan Filter
                     </button>
                 </div>
@@ -191,11 +191,11 @@
     </div>
 
     <!-- Data Table Card Container -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b-2 border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-900 uppercase tracking-wider">
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                         <th class="py-3.5 px-4">Pelanggan</th>
                         <th class="py-3.5 px-4">Group Layanan</th>
                         <th class="py-3.5 px-4">Lokasi Pemasangan</th>
@@ -204,42 +204,42 @@
                         <th class="py-3.5 px-4 text-center min-w-[120px]">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 text-xs">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs text-slate-700 dark:text-slate-300">
                     @forelse($registrasi as $item)
-                        <tr class="hover:bg-slate-50/80 transition duration-150">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150">
                             
                             <!-- 1. Pelanggan -->
                             <td class="py-4 px-4 align-top">
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                   class="font-bold font-mono text-blue-600 hover:text-blue-800 underline tracking-wide text-xs inline-block"
+                                   class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline tracking-wide text-xs inline-block"
                                    title="Buka Profile Pelanggan">
                                     {{ $item->nomor_internet }}
                                 </a>
-                                <div class="mt-1 font-bold text-slate-900 uppercase text-xs">
+                                <div class="mt-1 font-bold text-slate-900 dark:text-white uppercase text-xs">
                                     <span>{{ $item->nama_pelanggan }}</span>
-                                    <span class="text-slate-500 font-normal">
+                                    <span class="text-slate-500 dark:text-slate-400 font-normal">
                                         ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
-                                <div class="text-[11px] text-slate-600 font-medium mt-0.5">
+                                <div class="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                                     {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }} 
                                     @if($item->nominal_bandwith)
-                                        <span class="text-slate-900 font-bold">{{ $item->nominal_bandwith }} Mbps</span>
+                                        <span class="text-slate-900 dark:text-white font-bold">{{ $item->nominal_bandwith }} Mbps</span>
                                     @endif
                                 </div>
                             </td>
 
                             <!-- 2. Group Layanan -->
-                            <td class="py-4 px-4 align-top font-semibold text-slate-700 uppercase tracking-wider text-[11px]">
+                            <td class="py-4 px-4 align-top font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
                                 {{ $item->group_layanan ?: 'MEDIANET' }}
                             </td>
 
                             <!-- 3. Lokasi Pemasangan -->
                             <td class="py-4 px-4 align-top max-w-xs">
-                                <span class="font-bold text-slate-900 uppercase text-[11px] tracking-wide block mb-1">
+                                <span class="font-bold text-slate-900 dark:text-white uppercase text-[11px] tracking-wide block mb-1">
                                     {{ $item->jenis_bangunan ?: 'RUMAH-PRIBADI' }}
                                 </span>
-                                <p class="text-[11px] text-slate-600 leading-relaxed uppercase">
+                                <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed uppercase">
                                     {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
                                 </p>
                             </td>
@@ -249,11 +249,11 @@
                                 <div>
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border shadow-xs
                                         @if(in_array($item->status_reg, ['17', '17.1']))
-                                            bg-sky-50 text-sky-800 border-sky-300
+                                            bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-800
                                         @elseif($item->status_reg == '18')
-                                            bg-indigo-50 text-indigo-800 border-indigo-300
+                                            bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800
                                         @else
-                                            bg-amber-50 text-amber-900 border-amber-300
+                                            bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800
                                         @endif">
                                         <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
                                         <span>{{ $item->desc_registrasi ?: 'Pendaftaran #' . $item->status_reg }}</span>
@@ -261,15 +261,15 @@
                                 </div>
 
                                 @if($item->instalasi_date_start)
-                                    <div class="text-[10px] text-slate-600 font-medium">
-                                        Jadwal: <strong class="text-slate-800">{{ \Carbon\Carbon::parse($item->instalasi_date_start)->translatedFormat('d M Y') }}</strong>
+                                    <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+                                        Jadwal: <strong class="text-slate-800 dark:text-slate-200">{{ \Carbon\Carbon::parse($item->instalasi_date_start)->translatedFormat('d M Y') }}</strong>
                                         {{ $item->instalasi_time ?: '' }}
                                     </div>
                                 @endif
 
                                 @if($item->date_update)
-                                    <div class="text-[10px] text-slate-500">
-                                        Updated <span class="underline text-slate-700 font-medium">{{ \Carbon\Carbon::parse($item->date_update)->translatedFormat('d M Y H:i') }} WIB</span>
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400">
+                                        Updated <span class="underline text-slate-700 dark:text-slate-300 font-medium">{{ \Carbon\Carbon::parse($item->date_update)->translatedFormat('d M Y H:i') }} WIB</span>
                                     </div>
                                 @endif
 
@@ -289,13 +289,13 @@
 
                             <!-- 5. Tanggal SO -->
                             <td class="py-4 px-4 align-top text-xs space-y-1">
-                                <div class="text-slate-900 font-bold text-[11px]">
+                                <div class="text-slate-900 dark:text-white font-bold text-[11px]">
                                     {{ \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y H:i') }} WIB
                                 </div>
-                                <div class="text-[11px] text-slate-600 uppercase font-semibold">
+                                <div class="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-semibold">
                                     {{ $item->user_create ?: 'DRAFFTER' }}
                                 </div>
-                                <div class="text-[10px] text-blue-700 font-mono font-bold">
+                                <div class="text-[10px] text-blue-700 dark:text-blue-400 font-mono font-bold">
                                     SALES: {{ $item->nama_sales ?: '-' }}
                                 </div>
                             </td>
@@ -330,17 +330,17 @@
                                         </button>
                                         <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-amber-700 hover:text-amber-800 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-[11px] transition font-bold"
                                             title="Cetak Surat Tugas Survey untuk Tim Teknisi">
-                                            <svg class="w-3.5 h-3.5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
                                                 @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-sky-700 hover:text-sky-800 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[11px] transition font-semibold">
+                                            <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                             <span>Ubah Survey</span>
@@ -360,17 +360,17 @@
                                         </button>
                                         <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-amber-700 hover:text-amber-800 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-[11px] transition font-bold"
                                             title="Cetak Surat Tugas Survey">
-                                            <svg class="w-3.5 h-3.5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
                                                 @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[11px] transition font-semibold">
+                                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                             </svg>
                                             <span>Edit Hasil Survey</span>
@@ -390,17 +390,17 @@
                                         </button>
                                         <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-800 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-bold"
                                             title="Cetak Surat Tugas Instalasi untuk Tim Teknisi">
-                                            <svg class="w-3.5 h-3.5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
                                                 @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-sky-700 hover:text-sky-800 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[11px] transition font-semibold">
+                                            <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                             <span>Ubah Instalasi</span>
@@ -420,17 +420,17 @@
                                         </button>
                                         <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-800 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-bold"
                                             title="Cetak Surat Tugas Instalasi">
-                                            <svg class="w-3.5 h-3.5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
                                                 @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-800 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-semibold">
+                                            <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                             </svg>
                                             <span>Edit Hasil Instalasi</span>
@@ -439,14 +439,14 @@
 
                                     {{-- Tahap 6: Jadwal Aktivasi Terbit (#19, #19.1) --}}
                                     @if(in_array($item->status_reg, ['19', '19.1']))
-                                        <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-purple-50 border border-purple-200 text-purple-700 text-[10px] font-bold">
+                                        <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
                                             <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
                                             <span>Menunggu NOC</span>
                                         </div>
                                         <button type="button" 
                                                 @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-teal-700 hover:text-teal-800 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-semibold">
+                                            <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                             </svg>
@@ -458,8 +458,8 @@
                                     @if(!in_array($item->status_reg, ['14', '15', '20']))
                                         <button type="button" 
                                                 @click="openBatalModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-rose-600 hover:text-rose-700 text-[11px] transition font-semibold cursor-pointer">
-                                            <svg class="w-3.5 h-3.5 text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-[11px] transition font-semibold cursor-pointer">
+                                            <svg class="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
                                             <span>Batal Pasang</span>
@@ -470,19 +470,19 @@
                                     <div class="inline-flex items-center gap-1.5">
                                         <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}?download=pdf" 
                                            target="_blank"
-                                           class="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 text-[11px] transition font-bold"
+                                           class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[11px] transition font-bold"
                                            title="Download PDF Form Berlangganan">
-                                            <svg class="w-3.5 h-3.5 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                             </svg>
                                             <span>Unduh PDF</span>
                                         </a>
-                                        <span class="text-slate-300">|</span>
+                                        <span class="text-slate-300 dark:text-slate-700">|</span>
                                         <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1 text-sky-700 hover:text-sky-800 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[11px] transition font-bold"
                                             title="Buka & Cetak Form Berlangganan Pelanggan Ini">
-                                            <svg class="w-3.5 h-3.5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Form</span>
@@ -492,8 +492,8 @@
                                     {{-- Tombol Edit Pendaftaran Pelanggan --}}
                                     <button type="button" 
                                             @click="openEditModal('{{ $item->nomor_internet }}')"
-                                            class="inline-flex items-center gap-1.5 text-blue-700 hover:text-blue-800 text-[11px] transition font-bold cursor-pointer">
-                                        <svg class="w-3.5 h-3.5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            class="inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-[11px] transition font-bold cursor-pointer">
+                                        <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                         </svg>
                                         <span>Edit Data</span>
@@ -504,9 +504,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-500 text-sm">
+                            <td colspan="6" class="py-12 text-center text-slate-500 dark:text-slate-400 text-sm">
                                 <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="w-10 h-10 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <svg class="w-10 h-10 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                                     </svg>
                                     <span>Tidak ada antrean pendaftaran baru yang sedang berlangsung.</span>
@@ -519,19 +519,19 @@
         </div>
 
         <!-- Pagination Controls -->
-        <div class="px-5 py-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-xs text-slate-600">
-                Showing <span class="text-slate-900 font-bold">{{ $registrasi->firstItem() ?? 0 }}</span> 
-                to <span class="text-slate-900 font-bold">{{ $registrasi->lastItem() ?? 0 }}</span> 
-                of <span class="text-slate-900 font-bold">{{ $registrasi->total() }}</span> entries
+        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-xs text-slate-600 dark:text-slate-400">
+                Showing <span class="text-slate-900 dark:text-white font-bold">{{ $registrasi->firstItem() ?? 0 }}</span> 
+                to <span class="text-slate-900 dark:text-white font-bold">{{ $registrasi->lastItem() ?? 0 }}</span> 
+                of <span class="text-slate-900 dark:text-white font-bold">{{ $registrasi->total() }}</span> entries
             </div>
 
             <div class="flex items-center gap-1">
-                <a href="{{ $registrasi->url(1) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->onFirstPage() ? 'border-slate-200 text-slate-400 pointer-events-none' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">First</a>
-                <a href="{{ $registrasi->previousPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->onFirstPage() ? 'border-slate-200 text-slate-400 pointer-events-none' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}">Previous</a>
+                <a href="{{ $registrasi->url(1) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }}">First</a>
+                <a href="{{ $registrasi->previousPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }}">Previous</a>
                 <span class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-xs">{{ $registrasi->currentPage() }}</span>
-                <a href="{{ $registrasi->nextPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->hasMorePages() ? 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900' : 'border-slate-200 text-slate-400 pointer-events-none' }}">Next</a>
-                <a href="{{ $registrasi->url($registrasi->lastPage()) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->hasMorePages() ? 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900' : 'border-slate-200 text-slate-400 pointer-events-none' }}">Last</a>
+                <a href="{{ $registrasi->nextPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Next</a>
+                <a href="{{ $registrasi->url($registrasi->lastPage()) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
             </div>
         </div>
     </div>
@@ -545,14 +545,14 @@
          aria-labelledby="billing-modal-title" role="dialog" aria-modal="true">
         
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="billingModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-2xl">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-2xl">
                 
                 <!-- Loading Indicator -->
-                <div x-show="billingLoading" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div x-show="billingLoading" class="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center">
                     <svg class="w-8 h-8 text-blue-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -560,15 +560,15 @@
                 </div>
 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
-                    <h3 class="text-sm font-bold text-slate-800 tracking-wide" id="billing-modal-title">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/80">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white tracking-wide" id="billing-modal-title">
                         Billing Detail
                     </h3>
                     
                     <!-- Close button -->
                     <button type="button" 
                             @click="billingModalOpen = false"
-                            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -582,36 +582,36 @@
                     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                         <!-- Left Info -->
                         <div class="space-y-1 text-xs">
-                            <div class="text-sm font-semibold text-slate-800">
-                                Pelanggan : <span class="font-bold uppercase text-slate-900" x-text="billingData.nama_pelanggan || '-'"></span>
+                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                Pelanggan : <span class="font-bold uppercase text-slate-900 dark:text-white" x-text="billingData.nama_pelanggan || '-'"></span>
                             </div>
-                            <div class="text-slate-500">
-                                Status : <span class="font-medium text-slate-700" x-text="billingData.status || 'Draft Billing'"></span>
+                            <div class="text-slate-500 dark:text-slate-400">
+                                Status : <span class="font-medium text-slate-700 dark:text-slate-300" x-text="billingData.status || 'Draft Billing'"></span>
                             </div>
-                            <div class="text-slate-500">
-                                Method : <span class="font-medium text-slate-700" x-text="billingData.method || 'Midtrans'"></span>
+                            <div class="text-slate-500 dark:text-slate-400">
+                                Method : <span class="font-medium text-slate-700 dark:text-slate-300" x-text="billingData.method || 'Midtrans'"></span>
                             </div>
                         </div>
 
                         <!-- Right Summary Totals -->
                         <div class="text-left sm:text-right space-y-0.5">
-                            <div class="text-xs text-slate-500 italic">
-                                Sub Total : <span class="font-bold text-slate-700" x-text="'Rp ' + Number(billingData.subtotal || 0).toLocaleString('id-ID') + ',00'"></span>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 italic">
+                                Sub Total : <span class="font-bold text-slate-700 dark:text-slate-200" x-text="'Rp ' + Number(billingData.subtotal || 0).toLocaleString('id-ID') + ',00'"></span>
                             </div>
-                            <div class="text-[11px] text-slate-400 italic">
+                            <div class="text-[11px] text-slate-400 dark:text-slate-500 italic">
                                 Tax : <span x-text="'Rp ' + Number(billingData.tax || 0).toLocaleString('id-ID') + ',00(Include)'"></span>
                             </div>
-                            <div class="text-base font-extrabold text-slate-800 italic pt-1">
-                                Total : <span class="text-blue-600" x-text="'Rp ' + Number(billingData.total || 0).toLocaleString('id-ID') + ',00'"></span>
+                            <div class="text-base font-extrabold text-slate-800 dark:text-white italic pt-1">
+                                Total : <span class="text-blue-600 dark:text-blue-400" x-text="'Rp ' + Number(billingData.total || 0).toLocaleString('id-ID') + ',00'"></span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Components Table -->
-                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                                <tr class="bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-800">
                                     <th class="py-2.5 px-4">
                                         <div class="flex items-center gap-1">
                                             <span>Component</span>
@@ -620,16 +620,16 @@
                                             </svg>
                                         </div>
                                     </th>
-                                    <th class="py-2.5 px-4 w-20 border-l border-slate-200">Qty</th>
-                                    <th class="py-2.5 px-4 w-40 border-l border-slate-200">Amount</th>
+                                    <th class="py-2.5 px-4 w-20 border-l border-slate-200 dark:border-slate-800">Qty</th>
+                                    <th class="py-2.5 px-4 w-40 border-l border-slate-200 dark:border-slate-800">Amount</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-200 text-slate-700">
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                                 <template x-for="item in billingData.items" :key="item.komponen">
-                                    <tr class="hover:bg-slate-50 transition">
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                                         <td class="py-3 px-4 font-medium uppercase text-[11px]" x-text="item.komponen"></td>
-                                        <td class="py-3 px-4 border-l border-slate-200" x-text="item.qty"></td>
-                                        <td class="py-3 px-4 border-l border-slate-200 font-mono text-[11px]" x-text="'Rp ' + Number(item.biaya).toLocaleString('id-ID') + ',00'"></td>
+                                        <td class="py-3 px-4 border-l border-slate-200 dark:border-slate-800" x-text="item.qty"></td>
+                                        <td class="py-3 px-4 border-l border-slate-200 dark:border-slate-800 font-mono text-[11px]" x-text="'Rp ' + Number(item.biaya).toLocaleString('id-ID') + ',00'"></td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -639,10 +639,10 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
+                <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
                     <button type="button" 
                             @click="billingModalOpen = false"
-                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300 cursor-pointer">
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-300 dark:border-slate-700 cursor-pointer">
                         Tutup
                     </button>
                 </div>
@@ -659,24 +659,24 @@
          aria-labelledby="batal-modal-title" role="dialog" aria-modal="true">
         
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs transition-opacity" 
              @click="batalModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-lg">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-lg">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/80">
                     <div class="flex items-center gap-2">
-                        <h3 class="text-sm font-bold text-slate-900 tracking-wide">
-                            Batal Pemasangan An/ <span class="text-blue-600 uppercase font-mono" x-text="batalNamaPelanggan"></span>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white tracking-wide">
+                            Batal Pemasangan An/ <span class="text-blue-600 dark:text-blue-400 uppercase font-mono" x-text="batalNamaPelanggan"></span>
                         </h3>
                     </div>
                     
                     <!-- Close button -->
                     <button type="button" 
                             @click="batalModalOpen = false" 
-                            class="text-slate-400 hover:text-slate-700 text-2xl font-bold p-1 leading-none transition cursor-pointer">
+                            class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-2xl font-bold p-1 leading-none transition cursor-pointer">
                         &times;
                     </button>
                 </div>
@@ -688,11 +688,11 @@
                     <input type="hidden" name="nama_pelanggan" :value="batalNamaPelanggan">
 
                     <!-- Inner Card -->
-                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-4">
                         
                         <!-- Radio Options -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <label class="flex items-center gap-2.5 text-xs text-slate-800 cursor-pointer font-bold p-2.5 rounded-xl bg-white border border-slate-300 hover:border-blue-500 shadow-xs">
+                            <label class="flex items-center gap-2.5 text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-blue-500 shadow-xs">
                                 <input type="radio" 
                                        name="kategori_batal" 
                                        value="14" 
@@ -701,7 +701,7 @@
                                 <span class="text-[11px] uppercase tracking-wide">TIDAK TERJANGKAU</span>
                             </label>
 
-                            <label class="flex items-center gap-2.5 text-xs text-slate-800 cursor-pointer font-bold p-2.5 rounded-xl bg-white border border-slate-300 hover:border-blue-500 shadow-xs">
+                            <label class="flex items-center gap-2.5 text-xs text-slate-800 dark:text-slate-200 cursor-pointer font-bold p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-blue-500 shadow-xs">
                                 <input type="radio" 
                                        name="kategori_batal" 
                                        value="15" 
@@ -713,7 +713,7 @@
 
                         <!-- Textarea Alasan Batal Pasang -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-800 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                                 Alasan Batal Pasang <span class="text-rose-600 font-bold">*</span>
                             </label>
                             <textarea name="alasan_batal" 
@@ -721,15 +721,15 @@
                                       required
                                       rows="3" 
                                       placeholder="Masukkan alasan pembatalan pemasangan secara rinci..." 
-                                      class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 font-medium outline-none transition placeholder:text-slate-400 shadow-xs"></textarea>
+                                      class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white font-medium outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xs"></textarea>
                         </div>
                     </div>
 
                     <!-- Modal Footer Action Buttons -->
-                    <div class="mt-6 pt-4 border-t border-slate-200 flex items-center justify-end gap-2.5">
+                    <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5">
                         <button type="button" 
                                 @click="batalModalOpen = false"
-                                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer">
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -758,40 +758,40 @@
          aria-labelledby="modal-title" role="dialog" aria-modal="true">
         
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="modalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-4xl">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-4xl">
                 
                 <!-- Loading State Indicator -->
-                <div x-show="isLoadingEdit" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3">
+                <div x-show="isLoadingEdit" class="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3">
                     <svg class="w-8 h-8 text-blue-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span class="text-xs text-slate-700 font-semibold">Memuat Data Pendaftaran...</span>
+                    <span class="text-xs text-slate-700 dark:text-slate-300 font-semibold">Memuat Data Pendaftaran...</span>
                 </div>
 
                 <!-- Modal Header & 2-Step Indicator -->
-                <div class="px-6 py-5 border-b border-slate-200 bg-slate-50/80">
+                <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-600">
+                            <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-base font-bold text-slate-900 tracking-wide" id="modal-title" x-text="isEditMode ? 'Edit Pendaftaran: ' + editNomorInternet : 'Form Registration'"></h3>
-                                <p class="text-xs text-slate-500" x-text="isEditMode ? 'Perbarui data pendaftaran dan instalasi pelanggan' : 'Pendaftaran pelanggan baru Internet System Management'"></p>
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-wide" id="modal-title" x-text="isEditMode ? 'Edit Pendaftaran: ' + editNomorInternet : 'Form Registration'"></h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400" x-text="isEditMode ? 'Perbarui data pendaftaran dan instalasi pelanggan' : 'Pendaftaran pelanggan baru Internet System Management'"></p>
                             </div>
                         </div>
                         
                         <!-- Close button -->
                         <button type="button" 
                                 @click="modalOpen = false"
-                                class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -802,26 +802,26 @@
                     <div class="grid grid-cols-2 gap-3 pt-2">
                         <!-- Step 1 Tab -->
                         <div class="flex items-center gap-3 p-2.5 rounded-xl border transition duration-150"
-                             :class="currentStep === 1 ? 'bg-blue-50/80 border-blue-300 text-blue-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400'">
+                             :class="currentStep === 1 ? 'bg-blue-50/80 dark:bg-blue-950/50 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 shadow-sm' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'">
                             <div class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs"
-                                 :class="currentStep === 1 ? 'bg-blue-600 text-white shadow' : 'bg-slate-200 text-slate-500'">
+                                 :class="currentStep === 1 ? 'bg-blue-600 text-white shadow' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'">
                                 1
                             </div>
                             <div class="text-left">
-                                <span class="block text-xs font-bold" :class="currentStep === 1 ? 'text-slate-900' : 'text-slate-500'">Langkah 1</span>
+                                <span class="block text-xs font-bold" :class="currentStep === 1 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">Langkah 1</span>
                                 <span class="block text-[10px]">Data Pelanggan & KTP</span>
                             </div>
                         </div>
 
                         <!-- Step 2 Tab -->
                         <div class="flex items-center gap-3 p-2.5 rounded-xl border transition duration-150"
-                             :class="currentStep === 2 ? 'bg-blue-50/80 border-blue-300 text-blue-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400'">
+                             :class="currentStep === 2 ? 'bg-blue-50/80 dark:bg-blue-950/50 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 shadow-sm' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'">
                             <div class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs"
-                                 :class="currentStep === 2 ? 'bg-blue-600 text-white shadow' : 'bg-slate-200 text-slate-500'">
+                                 :class="currentStep === 2 ? 'bg-blue-600 text-white shadow' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'">
                                 2
                             </div>
                             <div class="text-left">
-                                <span class="block text-xs font-bold" :class="currentStep === 2 ? 'text-slate-900' : 'text-slate-500'">Langkah 2</span>
+                                <span class="block text-xs font-bold" :class="currentStep === 2 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">Langkah 2</span>
                                 <span class="block text-[10px]">Layanan & Lokasi Pasang</span>
                             </div>
                         </div>
@@ -829,7 +829,7 @@
                 </div>
 
                 <!-- Validation Error Alert -->
-                <div x-show="stepError" x-cloak class="mx-6 mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs flex items-center gap-2">
+                <div x-show="stepError" x-cloak class="mx-6 mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
                     <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
@@ -852,7 +852,7 @@
                         <!-- NIK Penduduk & Nama Pelanggan -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     NIK Penduduk <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
@@ -860,10 +860,10 @@
                                        name="nik_penduduk" 
                                        required
                                        placeholder="nik penduduk" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Nama Pelanggan <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
@@ -871,55 +871,55 @@
                                        name="nama_pelanggan" 
                                        required
                                        placeholder="NAMA PELANGGAN" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none uppercase transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                         </div>
 
                         <!-- Jenis Kelamin & Tanggal Lahir -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-2">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                     Jenis Kelamin <span class="text-rose-500">*</span>
                                 </label>
                                 <div class="flex items-center gap-6 pt-1">
-                                    <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer font-medium">
-                                        <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="1" class="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 focus:ring-blue-500">
+                                    <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
+                                        <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="1" class="w-4 h-4 text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
                                         <span>LAKI-LAKI</span>
                                     </label>
-                                    <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer font-medium">
-                                        <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="2" class="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 focus:ring-blue-500">
+                                    <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
+                                        <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="2" class="w-4 h-4 text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
                                         <span>PEREMPUAN</span>
                                     </label>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Tanggal Lahir <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="date" 
                                        x-model="tanggalLahir"
                                        name="tanggal_lahir" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                             </div>
                         </div>
 
                         <!-- Instansi / Corporate & Nama PIC -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-2">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                     Pelanggan Instansi / Corporate ?
                                 </label>
-                                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer font-medium">
+                                <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
                                     <input type="checkbox" 
                                            x-model="isCorporate" 
                                            name="is_corporate" 
                                            value="1" 
-                                           class="w-4 h-4 rounded text-blue-600 bg-slate-100 border-slate-300 focus:ring-blue-500">
+                                           class="w-4 h-4 rounded text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
                                     <span>Ya, Corporate / Badan Usaha</span>
                                 </label>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Nama PIC (Penanggung Jawab)
                                 </label>
                                 <input type="text" 
@@ -927,24 +927,24 @@
                                        name="pic" 
                                        :disabled="!isCorporate"
                                        placeholder="NAMA PENANGGUNG JAWAB" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none uppercase transition disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:opacity-60 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                         </div>
 
                         <!-- Email & Nomor Handphone -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Email <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="email" 
                                        x-model="email"
                                        name="email" 
                                        placeholder="email pelanggan" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Nomor Handphone <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
@@ -952,29 +952,29 @@
                                        name="nomor_hp" 
                                        required
                                        placeholder="0812xxxx" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Nomor HP Keluarga
                                 </label>
                                 <input type="text" 
                                        x-model="nomorHp2"
                                        name="nomor_hp_2" 
                                        placeholder="0813xxxx" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                         </div>
 
                         <!-- Wilayah KTP (Provinsi & Kota) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Provinsi KTP <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="provinsiKtp" 
                                         @change="fetchKotaKtp()"
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Provinsi</option>
                                     @foreach($provinces as $prov)
                                         <option value="{{ $prov->kode_wilayah_provinsi }}">{{ $prov->nama_provinsi }}</option>
@@ -982,12 +982,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Kota/Kabupaten KTP <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="kotaKtp" 
                                         @change="fetchKecamatanKtp()"
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Kota/Kabupaten</option>
                                     <template x-for="item in kotaKtpList" :key="item.kode_wilayah_kota">
                                         <option :value="item.kode_wilayah_kota" x-text="item.nama_kota"></option>
@@ -999,12 +999,12 @@
                         <!-- Wilayah KTP (Kecamatan & Kelurahan) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Kecamatan KTP <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="kecamatanKtp" 
                                         @change="fetchKelurahanKtp()"
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Kecamatan</option>
                                     <template x-for="item in kecamatanKtpList" :key="item.kode_wilayah_kecamatan">
                                         <option :value="item.kode_wilayah_kecamatan" x-text="item.nama_kecamatan"></option>
@@ -1012,12 +1012,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Kelurahan KTP <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="kelurahanKtp" 
                                         name="kode_wilayah_kelurahan_ktp"
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Kelurahan</option>
                                     <template x-for="item in kelurahanKtpList" :key="item.kode_wilayah_kelurahan">
                                         <option :value="item.kode_wilayah_kelurahan" x-text="item.nama_kelurahan"></option>
@@ -1029,34 +1029,34 @@
                         <!-- RT KTP, RW KTP & Alamat KTP -->
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     RT KTP <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
                                        x-model="rtKtp"
                                        name="rt_ktp" 
                                        placeholder="RT" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     RW KTP <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
                                        x-model="rwKtp"
                                        name="rw_ktp" 
                                        placeholder="RW" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Alamat Sesuai KTP <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
                                        x-model="alamatKtp"
                                        name="alamat_ktp" 
                                        placeholder="Jalan / Nomor Bangunan..."
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                         </div>
 
@@ -1064,10 +1064,10 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                             <!-- Foto KTP -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Foto KTP <span class="text-rose-500">*</span>
                                 </label>
-                                <div class="relative border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 transition cursor-pointer flex flex-col items-center justify-center min-h-[110px]">
+                                <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-xl p-3 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex flex-col items-center justify-center min-h-[110px]">
                                     <input type="file" 
                                            name="foto_ktp" 
                                            accept="image/*"
@@ -1075,10 +1075,10 @@
                                            class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
                                     <template x-if="!fotoKtpPreview">
                                         <div class="space-y-1 flex flex-col items-center">
-                                            <svg class="w-6 h-6 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <svg class="w-6 h-6 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                                             </svg>
-                                            <span class="text-[11px] text-slate-600 font-medium">Upload Foto KTP</span>
+                                            <span class="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Upload Foto KTP</span>
                                         </div>
                                     </template>
                                     <template x-if="fotoKtpPreview">
@@ -1089,10 +1089,10 @@
 
                             <!-- Foto Rumah -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Foto Rumah / Lokasi <span class="text-rose-500">*</span>
                                 </label>
-                                <div class="relative border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-3 text-center bg-slate-50 hover:bg-slate-100 transition cursor-pointer flex flex-col items-center justify-center min-h-[110px]">
+                                <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-xl p-3 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex flex-col items-center justify-center min-h-[110px]">
                                     <input type="file" 
                                            name="foto_rumah" 
                                            accept="image/*"
@@ -1100,10 +1100,10 @@
                                            class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
                                     <template x-if="!fotoRumahPreview">
                                         <div class="space-y-1 flex flex-col items-center">
-                                            <svg class="w-6 h-6 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <svg class="w-6 h-6 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                                             </svg>
-                                            <span class="text-[11px] text-slate-600 font-medium">Upload Foto Rumah</span>
+                                            <span class="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Upload Foto Rumah</span>
                                         </div>
                                     </template>
                                     <template x-if="fotoRumahPreview">
@@ -1121,13 +1121,13 @@
                         <!-- Jenis Bangunan, No Bangunan & Group Layanan -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Jenis Bangunan <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="jenisBangunan"
                                         name="jenis_bangunan" 
                                         required
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Jenis Bangunan</option>
                                     @foreach($bangunanList as $b)
                                         <option value="{{ $b->jenis_bangunan }}">{{ $b->jenis_bangunan }}</option>
@@ -1135,22 +1135,22 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     No Bangunan <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
                                        x-model="nomorBangunan"
                                        name="nomor_bangunan" 
                                        placeholder="contoh: LT2/15, BLOK C/22" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Group Layanan
                                 </label>
                                 <select x-model="groupLayanan"
                                         name="group_layanan" 
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="MEDIANET">MEDIANET</option>
                                     <option value="DNET">DNET</option>
                                     <option value="CORPORATE">CORPORATE</option>
@@ -1161,14 +1161,14 @@
                         <!-- Layanan & Paket Bandwidth -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Layanan <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="selectedLayanan"
                                         @change="fetchPaket()"
                                         name="kode_kategori_bandwith"
                                         required
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Layanan</option>
                                     @foreach($layananList as $l)
                                         <option value="{{ $l->kode_kategori_bandwith }}">{{ $l->nama_kategori_bandwith }}</option>
@@ -1176,13 +1176,13 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Paket Bandwidth <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="selectedPaket"
                                         name="kode_bandwith" 
                                         required
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Paket Layanan</option>
                                     <template x-for="p in paketList" :key="p.kode_bandwith">
                                         <option :value="p.kode_bandwith" x-text="p.nominal_bandwith + ' Mbps - Rp ' + Number(p.harga_bandwith).toLocaleString('id-ID')"></option>
@@ -1192,13 +1192,13 @@
                         </div>
 
                         <!-- Checkbox Sync KTP to Pemasangan -->
-                        <div class="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
-                            <span class="text-xs font-semibold text-blue-800">Data Pemasangan Sama dengan KTP ?</span>
-                            <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer font-semibold">
+                        <div class="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 flex items-center justify-between">
+                            <span class="text-xs font-semibold text-blue-800 dark:text-blue-300">Data Pemasangan Sama dengan KTP ?</span>
+                            <label class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-semibold">
                                 <input type="checkbox" 
                                        x-model="sameAsKtp"
                                        @change="syncKtpToPasang()"
-                                       class="w-4 h-4 rounded text-blue-600 bg-white border-slate-300 focus:ring-blue-500">
+                                       class="w-4 h-4 rounded text-blue-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
                                 <span>Ya, Sama dengan KTP</span>
                             </label>
                         </div>
@@ -1206,12 +1206,12 @@
                         <!-- Wilayah Pemasangan (Provinsi & Kota) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Provinsi Pemasangan <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="provinsiPasang" 
                                         @change="fetchKotaPasang()"
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Provinsi</option>
                                     @foreach($provinces as $prov)
                                         <option value="{{ $prov->kode_wilayah_provinsi }}">{{ $prov->nama_provinsi }}</option>
@@ -1219,12 +1219,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Kota/Kabupaten Pemasangan <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="kotaPasang" 
                                         @change="fetchKecamatanPasang()"
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Kota/Kabupaten</option>
                                     <template x-for="item in kotaPasangList" :key="item.kode_wilayah_kota">
                                         <option :value="item.kode_wilayah_kota" x-text="item.nama_kota"></option>
@@ -1236,12 +1236,12 @@
                         <!-- Wilayah Pemasangan (Kecamatan & Kelurahan) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Kecamatan Pemasangan <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="kecamatanPasang" 
                                         @change="fetchKelurahanPasang()"
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Kecamatan</option>
                                     <template x-for="item in kecamatanPasangList" :key="item.kode_wilayah_kecamatan">
                                         <option :value="item.kode_wilayah_kecamatan" x-text="item.nama_kecamatan"></option>
@@ -1249,12 +1249,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Kelurahan Pemasangan <span class="text-rose-500">*</span>
                                 </label>
                                 <select x-model="kelurahanPasang" 
                                         name="kode_wilayah_kelurahan_pasang"
-                                        class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition">
+                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                     <option value="">Pilih Kelurahan</option>
                                     <template x-for="item in kelurahanPasangList" :key="item.kode_wilayah_kelurahan">
                                         <option :value="item.kode_wilayah_kelurahan" x-text="item.nama_kelurahan"></option>
@@ -1266,27 +1266,27 @@
                         <!-- RT, RW & Alamat Pasang -->
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     RT Pasang <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
                                        x-model="rtPasang"
                                        name="rt_pasang" 
                                        placeholder="RT" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     RW Pasang <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
                                        x-model="rwPasang"
                                        name="rw_pasang" 
                                        placeholder="RW" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Alamat Pemasangan Lengkap <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
@@ -1294,48 +1294,48 @@
                                        name="alamat_pasang" 
                                        required
                                        placeholder="Jalan, Blok, Patokan lokasi..."
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                         </div>
 
                         <!-- Titik Koordinat & Sharelock Lokasi -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Titik Koordinat (Lat, Long)
                                 </label>
                                 <input type="text" 
                                        x-model="lonLat"
                                        name="lon_lat" 
                                        placeholder="-6.914744, 107.609810" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Sharelock Lokasi Maps <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
                                        x-model="locMaps"
                                        name="loc_maps" 
                                        placeholder="https://maps.app.goo.gl/..." 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                         </div>
 
                         <!-- Permintaan Khusus & Sales -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Permintaan Khusus Pelanggan
                                 </label>
                                 <input type="text" 
                                        x-model="noteRequest"
                                        name="note_request" 
                                        placeholder="Catatan instalasi, misal: pasang jam 2 siang..." 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                     Nama Sales <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" 
@@ -1343,29 +1343,29 @@
                                        name="nama_sales" 
                                        required
                                        placeholder="nama sales" 
-                                       class="w-full bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none transition placeholder-slate-400">
+                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                             </div>
                         </div>
 
                         <!-- Info Nomor Pelanggan Otomatis / Edit -->
-                        <div class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
-                            <div class="text-xs text-slate-700 font-medium">
-                                Nomor Pelanggan: <strong class="text-blue-600 font-mono text-sm tracking-wide" x-text="editNomorInternet"></strong>
+                        <div class="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 flex items-center justify-between">
+                            <div class="text-xs text-slate-700 dark:text-slate-300 font-medium">
+                                Nomor Pelanggan: <strong class="text-blue-600 dark:text-blue-400 font-mono text-sm tracking-wide" x-text="editNomorInternet"></strong>
                             </div>
-                            <span class="text-[11px] text-slate-500" x-text="isEditMode ? 'Nomor Pelanggan Tetap' : 'Dibuat otomatis oleh sistem'"></span>
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400" x-text="isEditMode ? 'Nomor Pelanggan Tetap' : 'Dibuat otomatis oleh sistem'"></span>
                         </div>
 
                     </div>
 
                     <!-- Modal Wizard Footer Action Buttons -->
-                    <div class="mt-8 pt-5 border-t border-slate-200 flex items-center justify-between">
+                    <div class="mt-8 pt-5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                         
                         <!-- Step 1 Controls -->
                         <template x-if="currentStep === 1">
                             <div class="w-full flex items-center justify-between">
                                 <button type="button" 
                                         @click="modalOpen = false"
-                                        class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer border border-slate-200">
+                                        class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-700">
                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                     </svg>
@@ -1388,7 +1388,7 @@
                             <div class="w-full flex items-center justify-between">
                                 <button type="button" 
                                         @click="currentStep = 1"
-                                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer border border-slate-200">
+                                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-700">
                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                                     </svg>
@@ -1420,20 +1420,20 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="scheduleSurveyModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-4xl">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-4xl">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
-                    <h3 class="text-base font-bold text-slate-800 tracking-wide">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/80">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
                         Form Survey An/<span x-text="surveyForm.nama_pelanggan || 'PELANGGAN'"></span>
                     </h3>
                     <button type="button" 
                             @click="scheduleSurveyModalOpen = false"
-                            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -1452,24 +1452,24 @@
                             <!-- Left Column -->
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Tanggal Survey <span class="text-rose-500">*</span>
                                     </label>
                                     <input type="date" 
                                            name="survey_date_start" 
                                            x-model="surveyForm.survey_date_start" 
                                            required
-                                           class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+                                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Waktu Survey <span class="text-rose-500">*</span>
                                     </label>
                                     <select name="survey_time" 
                                             x-model="surveyForm.survey_time" 
                                             required
-                                            class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+                                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
                                         <option value="">Pilih waktu survey</option>
                                         @foreach($timeJobs as $time)
                                             <option value="{{ $time->time_job }}">{{ $time->time_job }}</option>
@@ -1478,7 +1478,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Catatan Survey <span class="text-rose-500">*</span>
                                     </label>
                                     <textarea name="survey_note" 
@@ -1486,15 +1486,15 @@
                                               rows="2" 
                                               required
                                               placeholder="masukan catatan untuk teknisi lapangan saat proses instalasi."
-                                              class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"></textarea>
+                                              class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"></textarea>
                                 </div>
 
                                 <!-- Foto Mapping Upload Area -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Foto Mapping <span class="text-rose-500">*</span>
                                     </label>
-                                    <div class="relative border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50 hover:bg-slate-100">
+                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                         <input type="file" 
                                                name="foto_mapping" 
                                                accept="image/*"
@@ -1503,10 +1503,10 @@
                                         
                                         <template x-if="!surveyForm.foto_mapping_preview">
                                             <div class="flex flex-col items-center justify-center py-4">
-                                                <svg class="w-10 h-10 text-slate-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <svg class="w-10 h-10 text-slate-400 dark:text-slate-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                                                 </svg>
-                                                <p class="text-xs text-slate-500 font-medium">Drag and drop a file here or click</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Drag and drop a file here or click</p>
                                             </div>
                                         </template>
 
@@ -1521,18 +1521,18 @@
 
                             <!-- Right Column: Team Survey -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-2">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                     Team Survey
                                 </label>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl max-h-80 overflow-y-auto">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl max-h-80 overflow-y-auto">
                                     @foreach($karyawanTeknisi as $k)
-                                        <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-200 cursor-pointer text-xs transition">
+                                        <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-800/60 cursor-pointer text-xs transition">
                                             <input type="checkbox" 
                                                    name="team_survey[]" 
                                                    value="{{ $k->kode_karyawan }}" 
                                                    :checked="surveyForm.team_survey.includes('{{ $k->kode_karyawan }}')"
-                                                   class="w-4 h-4 rounded text-blue-600 bg-white border-slate-300 focus:ring-blue-500">
-                                            <span class="text-slate-800 uppercase font-medium text-[11px]">
+                                                   class="w-4 h-4 rounded text-blue-600 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
+                                            <span class="text-slate-800 dark:text-slate-200 uppercase font-medium text-[11px]">
                                                 {{ $k->nama_karyawan }}
                                             </span>
                                         </label>
@@ -1544,10 +1544,10 @@
                     </div>
 
                     <!-- Modal Footer Actions -->
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                    <div class="px-6 py-4 bg-slate-50/80 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
                         <button type="button" 
                                 @click="scheduleSurveyModalOpen = false"
-                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300 cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-300 dark:border-slate-700 cursor-pointer">
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -1574,20 +1574,20 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="reportSurveyModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
-                    <h3 class="text-base font-bold text-slate-800 tracking-wide">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/80">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
                         Report Survey An/<span x-text="reportSurveyForm.nama_pelanggan || 'PELANGGAN'"></span>
                     </h3>
                     <button type="button" 
                             @click="reportSurveyModalOpen = false"
-                            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -1603,15 +1603,15 @@
                     <div class="p-6 space-y-6 max-h-[78vh] overflow-y-auto">
                         
                         <!-- Top Checkbox: Jadwal Ulang Survey -->
-                        <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-3">
-                            <span class="text-sm font-bold text-rose-600">Jadwal Ulang Survey ?</span>
+                        <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 flex items-center gap-3">
+                            <span class="text-sm font-bold text-rose-600 dark:text-rose-400">Jadwal Ulang Survey ?</span>
                             <label class="inline-flex items-center gap-2 cursor-pointer font-semibold">
                                 <input type="checkbox" 
                                        name="is_reschedule" 
                                        value="1" 
                                        x-model="reportSurveyForm.is_reschedule"
-                                       class="w-4 h-4 rounded text-rose-600 bg-white border-slate-300 focus:ring-rose-500">
-                                <span class="text-xs text-slate-700">Ya, Jadwal Ulang</span>
+                                       class="w-4 h-4 rounded text-rose-600 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-rose-500">
+                                <span class="text-xs text-slate-700 dark:text-slate-300">Ya, Jadwal Ulang</span>
                             </label>
                         </div>
 
@@ -1621,18 +1621,18 @@
                             <div class="space-y-4">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                             <span x-text="reportSurveyForm.is_reschedule ? 'Tanggal Reschedule Survey' : 'Tanggal Selesai Survey'"></span> <span class="text-rose-500">*</span>
                                         </label>
                                         <input type="date" 
                                                name="survey_date_finish" 
                                                x-model="reportSurveyForm.survey_date_finish" 
                                                required
-                                               class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+                                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
                                     </div>
 
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                             <span x-text="reportSurveyForm.is_reschedule ? 'Catatan Jadwal Ulang' : 'Catatan Selesai Survey'"></span> <span class="text-rose-500">*</span>
                                         </label>
                                         <input type="text" 
@@ -1640,31 +1640,31 @@
                                                x-model="reportSurveyForm.survey_note_finish" 
                                                required
                                                placeholder="CATATAN SELESAI"
-                                               class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+                                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
                                     </div>
                                 </div>
 
                                 <!-- Radio: Bisa Dilakukan Pemasangan -->
                                 <template x-if="!reportSurveyForm.is_reschedule">
                                     <div class="space-y-1.5">
-                                        <label class="block text-xs font-semibold text-slate-700">
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                                             Bisa Dilakukan Pemasangan <span class="text-rose-500">*</span>
                                         </label>
                                         <div class="flex items-center gap-6 pt-1">
-                                            <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
+                                            <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer">
                                                 <input type="radio" 
                                                        name="bisa_pasang" 
                                                        value="YA" 
                                                        x-model="reportSurveyForm.bisa_pasang"
-                                                       class="w-4 h-4 text-emerald-600 bg-white border-slate-300 focus:ring-emerald-500">
+                                                       class="w-4 h-4 text-emerald-600 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-emerald-500">
                                                 <span>YA</span>
                                             </label>
-                                            <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
+                                            <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer">
                                                 <input type="radio" 
                                                        name="bisa_pasang" 
                                                        value="TIDAK" 
                                                        x-model="reportSurveyForm.bisa_pasang"
-                                                       class="w-4 h-4 text-rose-600 bg-white border-slate-300 focus:ring-rose-500">
+                                                       class="w-4 h-4 text-rose-600 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-rose-500">
                                                 <span>Tidak</span>
                                             </label>
                                         </div>
@@ -1673,10 +1673,10 @@
 
                                 <!-- Update Foto Mapping -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Update Foto Mapping <span class="text-rose-500">*</span>
                                     </label>
-                                    <div class="relative border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50 hover:bg-slate-100">
+                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                         <input type="file" 
                                                name="update_foto_mapping" 
                                                accept="image/*"
@@ -1685,10 +1685,10 @@
                                         
                                         <template x-if="!reportSurveyForm.foto_mapping_preview">
                                             <div class="flex flex-col items-center justify-center py-4">
-                                                <svg class="w-8 h-8 text-slate-400 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <svg class="w-8 h-8 text-slate-400 dark:text-slate-500 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                                                 </svg>
-                                                <p class="text-xs text-slate-500 font-medium">Drag and drop a file here or click</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Drag and drop a file here or click</p>
                                             </div>
                                         </template>
 
@@ -1706,18 +1706,18 @@
                                 
                                 <!-- Team Survey -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Team Survey
                                     </label>
-                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl max-h-40 overflow-y-auto">
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl max-h-40 overflow-y-auto">
                                         @foreach($karyawanTeknisi as $k)
-                                            <label class="flex items-center gap-1.5 p-1 rounded hover:bg-slate-200 cursor-pointer text-xs transition">
+                                            <label class="flex items-center gap-1.5 p-1 rounded hover:bg-slate-200/60 dark:hover:bg-slate-800/60 cursor-pointer text-xs transition">
                                                 <input type="checkbox" 
                                                        name="team_survey[]" 
                                                        value="{{ $k->kode_karyawan }}" 
                                                        :checked="reportSurveyForm.team_survey.includes('{{ $k->kode_karyawan }}')"
-                                                       class="w-3.5 h-3.5 rounded text-blue-600 bg-white border-slate-300">
-                                                <span class="text-slate-800 uppercase font-medium text-[10px] truncate">
+                                                       class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700">
+                                                <span class="text-slate-800 dark:text-slate-200 uppercase font-medium text-[10px] truncate">
                                                     {{ $k->nama_karyawan }}
                                                 </span>
                                             </label>
@@ -1726,10 +1726,10 @@
                                 </div>
 
                                 <!-- Perangkat / Peralatan yang Digunakan -->
-                                <div class="space-y-3 pt-2 border-t border-slate-200">
+                                <div class="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
                                     <div class="flex items-center gap-2">
                                         <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
-                                        <span class="text-xs font-bold text-slate-800">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-white">
                                             Perangkat/ Peralatan Yang Digunakan
                                         </span>
                                     </div>
@@ -1738,7 +1738,7 @@
                                     <div class="flex items-center gap-2">
                                         <div class="flex-1">
                                             <select x-model="surveySelectedBarang" 
-                                                    class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-teal-500">
+                                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-teal-500">
                                                 <option value="">Pilih Perangkat</option>
                                                 @foreach($barangList as $b)
                                                     <option value="{{ $b->kode_barang }}">
@@ -1752,7 +1752,7 @@
                                                    min="1" 
                                                    x-model="surveySelectedJumlah" 
                                                    placeholder="Jumlah" 
-                                                   class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-teal-500 text-center">
+                                                   class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-teal-500 text-center">
                                         </div>
                                         <button type="button" 
                                                 @click="addDeviceToSurvey()"
@@ -1762,34 +1762,34 @@
                                     </div>
 
                                     <!-- Devices Table -->
-                                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-inner">
+                                    <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-inner">
                                         <table class="w-full text-left text-xs">
-                                            <thead class="bg-slate-100 text-[11px] font-bold text-slate-600">
+                                            <thead class="bg-slate-100 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                                                 <tr>
                                                     <th class="py-2 px-3">Barang</th>
                                                     <th class="py-2 px-3 text-center">Jumlah</th>
                                                     <th class="py-2 px-3 text-center">Action</th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-slate-200">
+                                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                                                 <template x-if="reportSurveyForm.perangkat_list.length === 0">
                                                     <tr>
-                                                        <td colspan="3" class="py-4 text-center text-slate-400 italic text-[11px]">
+                                                        <td colspan="3" class="py-4 text-center text-slate-400 dark:text-slate-500 italic text-[11px]">
                                                             No data available in table
                                                         </td>
                                                     </tr>
                                                 </template>
                                                 <template x-for="(item, index) in reportSurveyForm.perangkat_list" :key="index">
-                                                    <tr class="hover:bg-slate-50">
-                                                        <td class="py-2 px-3 font-semibold text-slate-800 uppercase" x-text="item.nama_barang"></td>
-                                                        <td class="py-2 px-3 text-center font-mono font-bold text-slate-700" x-text="item.jumlah + ' ' + (item.satuan || 'UNIT')"></td>
+                                                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                                                        <td class="py-2 px-3 font-semibold text-slate-800 dark:text-slate-200 uppercase" x-text="item.nama_barang"></td>
+                                                        <td class="py-2 px-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300" x-text="item.jumlah + ' ' + (item.satuan || 'UNIT')"></td>
                                                         <td class="py-2 px-3 text-center">
                                                             <!-- Hidden Form Inputs -->
                                                             <input type="hidden" :name="'perangkat[' + index + '][kode_barang]'" :value="item.kode_barang">
                                                             <input type="hidden" :name="'perangkat[' + index + '][jumlah]'" :value="item.jumlah">
                                                             <button type="button" 
                                                                     @click="removeDeviceFromSurvey(index)"
-                                                                    class="text-rose-500 hover:text-rose-700 p-1 rounded transition">
+                                                                    class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1 rounded transition">
                                                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                                 </svg>
@@ -1808,10 +1808,10 @@
                     </div>
 
                     <!-- Modal Footer Actions -->
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                    <div class="px-6 py-4 bg-slate-50/80 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
                         <button type="button" 
                                 @click="reportSurveyModalOpen = false"
-                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300 cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-300 dark:border-slate-700 cursor-pointer">
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -1838,20 +1838,20 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="scheduleInstalasiModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
-                    <h3 class="text-base font-bold text-slate-800 tracking-wide">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/80">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
                         Form Instalasi An/<span x-text="instalasiForm.nama_pelanggan || 'PELANGGAN'"></span>
                     </h3>
                     <button type="button" 
                             @click="scheduleInstalasiModalOpen = false"
-                            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -1874,35 +1874,35 @@
                                 <div>
                                     <div class="flex items-center gap-2 mb-1.5">
                                         <div class="w-1 h-4 bg-amber-500 rounded-full"></div>
-                                        <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
                                             PERMINTAAN DARI PELANGGAN
                                         </span>
                                     </div>
-                                    <div class="p-3 bg-amber-500/90 text-white rounded-xl font-bold text-xs shadow-sm">
+                                    <div class="p-3 bg-amber-500/90 dark:bg-amber-600/90 text-white rounded-xl font-bold text-xs shadow-sm">
                                         <span x-text="instalasiForm.note_request || 'Catatan pendaftaran standar'"></span>
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                             Tanggal Instalasi <span class="text-rose-500">*</span>
                                         </label>
                                         <input type="date" 
                                                name="instalasi_date_start" 
                                                x-model="instalasiForm.instalasi_date_start" 
                                                required
-                                               class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+                                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
                                     </div>
 
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                             Waktu Instalasi <span class="text-rose-500">*</span>
                                         </label>
                                         <select name="instalasi_time" 
                                                 x-model="instalasiForm.instalasi_time" 
                                                 required
-                                                class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
                                             <option value="">Pilih waktu instalasi</option>
                                             @foreach($timeJobs as $time)
                                                 <option value="{{ $time->time_job }}">{{ $time->time_job }}</option>
@@ -1913,18 +1913,18 @@
 
                                 <!-- Team Instalasi -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Team Instalasi
                                     </label>
-                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl max-h-40 overflow-y-auto">
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl max-h-40 overflow-y-auto">
                                         @foreach($karyawanTeknisi as $k)
-                                            <label class="flex items-center gap-1.5 p-1 rounded hover:bg-slate-200 cursor-pointer text-xs transition">
+                                            <label class="flex items-center gap-1.5 p-1 rounded hover:bg-slate-200/60 dark:hover:bg-slate-800/60 cursor-pointer text-xs transition">
                                                 <input type="checkbox" 
                                                        name="team_instalasi[]" 
                                                        value="{{ $k->kode_karyawan }}" 
                                                        :checked="instalasiForm.team_instalasi.includes('{{ $k->kode_karyawan }}')"
-                                                       class="w-3.5 h-3.5 rounded text-blue-600 bg-white border-slate-300">
-                                                <span class="text-slate-800 uppercase font-medium text-[10px] truncate">
+                                                       class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700">
+                                                <span class="text-slate-800 dark:text-slate-200 uppercase font-medium text-[10px] truncate">
                                                     {{ $k->nama_karyawan }}
                                                 </span>
                                             </label>
@@ -1933,7 +1933,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Catatan Pemasangan <span class="text-rose-500">*</span>
                                     </label>
                                     <textarea name="instalasi_note" 
@@ -1941,7 +1941,7 @@
                                               rows="2" 
                                               required
                                               placeholder="Catatan untuk teknisi lapangan saat proses pemasangan..."
-                                              class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"></textarea>
+                                              class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"></textarea>
                                 </div>
 
                             </div>
@@ -1953,7 +1953,7 @@
                                 <div class="space-y-3">
                                     <div class="flex items-center gap-2">
                                         <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
-                                        <span class="text-xs font-bold text-slate-800">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-white">
                                             Perangkat/ Peralatan Yang Digunakan
                                         </span>
                                     </div>
@@ -1962,7 +1962,7 @@
                                     <div class="flex items-center gap-2">
                                         <div class="flex-1">
                                             <select x-model="instalasiSelectedBarang" 
-                                                    class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-teal-500">
+                                                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-teal-500">
                                                 <option value="">Pilih Perangkat</option>
                                                 @foreach($barangList as $b)
                                                     <option value="{{ $b->kode_barang }}">
@@ -1976,7 +1976,7 @@
                                                    min="1" 
                                                    x-model="instalasiSelectedJumlah" 
                                                    placeholder="Jumlah" 
-                                                   class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-teal-500 text-center">
+                                                   class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-teal-500 text-center">
                                         </div>
                                         <button type="button" 
                                                 @click="addDeviceToInstalasi()"
@@ -1986,33 +1986,33 @@
                                     </div>
 
                                     <!-- Devices Table -->
-                                    <div class="border border-slate-200 rounded-xl overflow-hidden max-h-48 overflow-y-auto shadow-inner">
+                                    <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden max-h-48 overflow-y-auto shadow-inner">
                                         <table class="w-full text-left text-xs">
-                                            <thead class="bg-slate-100 text-[11px] font-bold text-slate-600">
+                                            <thead class="bg-slate-100 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                                                 <tr>
                                                     <th class="py-2 px-3">Barang</th>
                                                     <th class="py-2 px-3 text-center">Jumlah</th>
                                                     <th class="py-2 px-3 text-center">Action</th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-slate-200">
+                                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                                                 <template x-if="instalasiForm.perangkat_list.length === 0">
                                                     <tr>
-                                                        <td colspan="3" class="py-4 text-center text-slate-400 italic text-[11px]">
+                                                        <td colspan="3" class="py-4 text-center text-slate-400 dark:text-slate-500 italic text-[11px]">
                                                             No data available in table
                                                         </td>
                                                     </tr>
                                                 </template>
                                                 <template x-for="(item, index) in instalasiForm.perangkat_list" :key="index">
-                                                    <tr class="hover:bg-slate-50">
-                                                        <td class="py-2 px-3 font-semibold text-slate-800 uppercase" x-text="item.nama_barang"></td>
-                                                        <td class="py-2 px-3 text-center font-mono font-bold text-slate-700" x-text="item.jumlah + ' ' + (item.satuan || 'UNIT')"></td>
+                                                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                                                        <td class="py-2 px-3 font-semibold text-slate-800 dark:text-slate-200 uppercase" x-text="item.nama_barang"></td>
+                                                        <td class="py-2 px-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300" x-text="item.jumlah + ' ' + (item.satuan || 'UNIT')"></td>
                                                         <td class="py-2 px-3 text-center">
                                                             <input type="hidden" :name="'perangkat[' + index + '][kode_barang]'" :value="item.kode_barang">
                                                             <input type="hidden" :name="'perangkat[' + index + '][jumlah]'" :value="item.jumlah">
                                                             <button type="button" 
                                                                     @click="removeDeviceFromInstalasi(index)"
-                                                                    class="text-rose-500 hover:text-rose-700 p-1 rounded transition">
+                                                                    class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1 rounded transition">
                                                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                                 </svg>
@@ -2027,10 +2027,10 @@
 
                                 <!-- Update Foto Mapping -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Update Foto Mapping <span class="text-rose-500">*</span>
                                     </label>
-                                    <div class="relative border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50 hover:bg-slate-100">
+                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                         <input type="file" 
                                                name="update_foto_mapping" 
                                                accept="image/*"
@@ -2039,10 +2039,10 @@
                                         
                                         <template x-if="!instalasiForm.foto_mapping_preview">
                                             <div class="flex flex-col items-center justify-center py-3">
-                                                <svg class="w-8 h-8 text-slate-400 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <svg class="w-8 h-8 text-slate-400 dark:text-slate-500 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                                                 </svg>
-                                                <p class="text-xs text-slate-500 font-medium">Drag and drop a file here or click</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Drag and drop a file here or click</p>
                                             </div>
                                         </template>
 
@@ -2060,10 +2060,10 @@
                     </div>
 
                     <!-- Modal Footer Actions -->
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                    <div class="px-6 py-4 bg-slate-50/80 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
                         <button type="button" 
                                 @click="scheduleInstalasiModalOpen = false"
-                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300 cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-300 dark:border-slate-700 cursor-pointer">
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -2090,20 +2090,20 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="reportInstalasiModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
-                    <h3 class="text-base font-bold text-slate-800 tracking-wide">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-950/80">
+                    <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
                         Report Instalasi An/<span x-text="reportInstalasiForm.nama_pelanggan || 'PELANGGAN'"></span>
                     </h3>
                     <button type="button" 
                             @click="reportInstalasiModalOpen = false"
-                            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -2119,15 +2119,15 @@
                     <div class="p-6 space-y-6 max-h-[78vh] overflow-y-auto">
                         
                         <!-- Top Checkbox: Jadwal Ulang Pemasangan -->
-                        <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-3">
-                            <span class="text-sm font-bold text-rose-600">Jadwal Ulang Pemasangan ?</span>
+                        <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 flex items-center gap-3">
+                            <span class="text-sm font-bold text-rose-600 dark:text-rose-400">Jadwal Ulang Pemasangan ?</span>
                             <label class="inline-flex items-center gap-2 cursor-pointer font-semibold">
                                 <input type="checkbox" 
                                        name="is_reschedule" 
                                        value="1" 
                                        x-model="reportInstalasiForm.is_reschedule"
-                                       class="w-4 h-4 rounded text-rose-600 bg-white border-slate-300 focus:ring-rose-500">
-                                <span class="text-xs text-slate-700">Ya, Jadwal Ulang</span>
+                                       class="w-4 h-4 rounded text-rose-600 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-rose-500">
+                                <span class="text-xs text-slate-700 dark:text-slate-300">Ya, Jadwal Ulang</span>
                             </label>
                         </div>
 
@@ -2138,18 +2138,18 @@
                                 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                             <span x-text="reportInstalasiForm.is_reschedule ? 'Tanggal Reschedule Instalasi' : 'Selesai Instalasi'"></span> <span class="text-rose-500">*</span>
                                         </label>
                                         <input type="date" 
                                                name="instalasi_date_finish" 
                                                x-model="reportInstalasiForm.instalasi_date_finish" 
                                                required
-                                               class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+                                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
                                     </div>
 
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                             <span x-text="reportInstalasiForm.is_reschedule ? 'Catatan Jadwal Ulang' : 'Catatan Selesai Instalasi'"></span> <span class="text-rose-500">*</span>
                                         </label>
                                         <input type="text" 
@@ -2157,24 +2157,24 @@
                                                x-model="reportInstalasiForm.instalasi_note_finish" 
                                                required
                                                placeholder="catatan Instalasi"
-                                               class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+                                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
                                     </div>
                                 </div>
 
                                 <!-- Team Instalasi -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Team Instalasi <span class="text-rose-500">*</span>
                                     </label>
-                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl max-h-48 overflow-y-auto">
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-2.5 bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl max-h-48 overflow-y-auto">
                                         @foreach($karyawanTeknisi as $k)
-                                            <label class="flex items-center gap-1.5 p-1 rounded hover:bg-slate-200 cursor-pointer text-xs transition">
+                                            <label class="flex items-center gap-1.5 p-1 rounded hover:bg-slate-200/60 dark:hover:bg-slate-800/60 cursor-pointer text-xs transition">
                                                 <input type="checkbox" 
                                                        name="team_instalasi[]" 
                                                        value="{{ $k->kode_karyawan }}" 
                                                        :checked="reportInstalasiForm.team_instalasi.includes('{{ $k->kode_karyawan }}')"
-                                                       class="w-3.5 h-3.5 rounded text-blue-600 bg-white border-slate-300">
-                                                <span class="text-slate-800 uppercase font-medium text-[10px] truncate">
+                                                       class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700">
+                                                <span class="text-slate-800 dark:text-slate-200 uppercase font-medium text-[10px] truncate">
                                                     {{ $k->nama_karyawan }}
                                                 </span>
                                             </label>
@@ -2184,10 +2184,10 @@
 
                                 <!-- Update Foto Mapping -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                         Update Foto Mapping <span class="text-rose-500">*</span>
                                     </label>
-                                    <div class="relative border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-blue-500 transition cursor-pointer bg-slate-50 hover:bg-slate-100">
+                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-800/50">
                                         <input type="file" 
                                                name="update_foto_mapping" 
                                                accept="image/*"
@@ -2196,10 +2196,10 @@
                                         
                                         <template x-if="!reportInstalasiForm.foto_mapping_preview">
                                             <div class="flex flex-col items-center justify-center py-3">
-                                                <svg class="w-8 h-8 text-slate-400 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <svg class="w-8 h-8 text-slate-400 dark:text-slate-500 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                                                 </svg>
-                                                <p class="text-xs text-slate-500 font-medium">Drag and drop a file here or click</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Drag and drop a file here or click</p>
                                             </div>
                                         </template>
 
@@ -2217,7 +2217,7 @@
                             <div class="space-y-3">
                                 <div class="flex items-center gap-2">
                                     <div class="w-1 h-4 bg-teal-500 rounded-full"></div>
-                                    <span class="text-xs font-bold text-slate-800">
+                                    <span class="text-xs font-bold text-slate-800 dark:text-white">
                                         Perangkat/ Peralatan Yang Digunakan
                                     </span>
                                 </div>
@@ -2226,7 +2226,7 @@
                                 <div class="flex items-center gap-2">
                                     <div class="flex-1">
                                         <select x-model="reportInstalasiSelectedBarang" 
-                                                class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-teal-500">
+                                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-teal-500">
                                             <option value="">Pilih Perangkat</option>
                                             @foreach($barangList as $b)
                                                 <option value="{{ $b->kode_barang }}">
@@ -2240,7 +2240,7 @@
                                                min="1" 
                                                x-model="reportInstalasiSelectedJumlah" 
                                                placeholder="Jumlah" 
-                                               class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-teal-500 text-center">
+                                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-1 focus:ring-teal-500 text-center">
                                     </div>
                                     <button type="button" 
                                             @click="addDeviceToReportInstalasi()"
@@ -2249,35 +2249,35 @@
                                     </button>
                                 </div>
 
-                                <!-- Devices Table (Matching screenshot layout) -->
-                                <div class="border border-slate-200 rounded-xl overflow-hidden max-h-72 overflow-y-auto shadow-inner">
+                                <!-- Devices Table -->
+                                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden max-h-72 overflow-y-auto shadow-inner">
                                     <table class="w-full text-left text-xs">
-                                        <thead class="bg-slate-100 text-[11px] font-bold text-slate-600">
+                                        <thead class="bg-slate-100 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                                             <tr>
                                                 <th class="py-2.5 px-3">Barang</th>
                                                 <th class="py-2.5 px-3 text-center">Jumlah</th>
                                                 <th class="py-2.5 px-3 text-center">Action</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-slate-200">
+                                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                                             <template x-if="reportInstalasiForm.perangkat_list.length === 0">
                                                 <tr>
-                                                    <td colspan="3" class="py-6 text-center text-slate-400 italic text-[11px]">
+                                                    <td colspan="3" class="py-6 text-center text-slate-400 dark:text-slate-500 italic text-[11px]">
                                                         No data available in table
                                                     </td>
                                                 </tr>
                                             </template>
                                             <template x-for="(item, index) in reportInstalasiForm.perangkat_list" :key="index">
-                                                <tr class="hover:bg-slate-50">
-                                                    <td class="py-2.5 px-3 font-semibold text-slate-800 uppercase" x-text="item.nama_barang"></td>
-                                                    <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-700" x-text="item.jumlah + ' ' + (item.satuan || 'UNIT')"></td>
+                                                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                                                    <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-slate-200 uppercase" x-text="item.nama_barang"></td>
+                                                    <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-700 dark:text-slate-300" x-text="item.jumlah + ' ' + (item.satuan || 'UNIT')"></td>
                                                     <td class="py-2.5 px-3 text-center">
                                                         <input type="hidden" :name="'perangkat[' + index + '][kode_barang]'" :value="item.kode_barang">
                                                         <input type="hidden" :name="'perangkat[' + index + '][jumlah]'" :value="item.jumlah">
                                                         <button type="button" 
                                                                 @click="removeDeviceFromReportInstalasi(index)"
                                                                 title="Hapus Barang"
-                                                                class="text-rose-500 hover:text-rose-700 p-1 rounded transition hover:scale-110">
+                                                                class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-1 rounded transition hover:scale-110">
                                                             <svg class="w-4 h-4 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                                             </svg>
@@ -2294,10 +2294,10 @@
                     </div>
 
                     <!-- Modal Footer Actions -->
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                    <div class="px-6 py-4 bg-slate-50/80 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
                         <button type="button" 
                                 @click="reportInstalasiModalOpen = false"
-                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300 cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-300 dark:border-slate-700 cursor-pointer">
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                             </svg>
@@ -2324,30 +2324,30 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
              @click="requestAktivasiModalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white border border-slate-200 text-left shadow-2xl transition-all sm:my-8 w-full max-w-lg">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-lg">
                 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-amber-50/80">
+                <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-amber-50/80 dark:bg-amber-950/30">
                     <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl bg-amber-100 border border-amber-200 text-amber-600 flex items-center justify-center">
+                        <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a5 5 0 0 1-5.84 7.38v-4.8m5.84-2.58a5 5 0 0 0-7.38-5.84l3.4 3.4M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM6.166 5.106a.75.75 0 0 1 1.06 0l1.592 1.592a.75.75 0 0 1-1.06 1.06L6.166 6.166a.75.75 0 0 1 0-1.06Zm11.668 0a.75.75 0 0 1 0 1.06l-1.592 1.592a.75.75 0 1 1-1.06-1.06l1.592-1.592a.75.75 0 0 1 1.06 0Z" />
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-sm font-bold text-slate-900">
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">
                                 Kirim Permintaan Aktivasi NOC
                             </h3>
-                            <p class="text-[11px] text-slate-500">Serahkan pendaftaran selesai instalasi ke tim NOC</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Serahkan pendaftaran selesai instalasi ke tim NOC</p>
                         </div>
                     </div>
                     <button type="button" 
                             @click="requestAktivasiModalOpen = false"
-                            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
@@ -2361,38 +2361,38 @@
                     <input type="hidden" name="nama_pelanggan" :value="aktivasiForm.nama_pelanggan">
 
                     <div class="p-6 space-y-4">
-                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Nomor Internet:</span>
-                                <span class="font-mono font-bold text-blue-600" x-text="aktivasiForm.nomor_internet"></span>
+                                <span class="text-slate-500 dark:text-slate-400">Nomor Internet:</span>
+                                <span class="font-mono font-bold text-blue-600 dark:text-blue-400" x-text="aktivasiForm.nomor_internet"></span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-slate-500">Nama Pelanggan:</span>
-                                <span class="font-bold text-slate-800 uppercase" x-text="aktivasiForm.nama_pelanggan"></span>
+                                <span class="text-slate-500 dark:text-slate-400">Nama Pelanggan:</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-100 uppercase" x-text="aktivasiForm.nama_pelanggan"></span>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                                 Catatan Serah Terima ke NOC
                             </label>
                             <textarea name="catatan_aktivasi" 
                                       x-model="aktivasiForm.catatan_aktivasi" 
                                       rows="3" 
                                       placeholder="Tambahkan catatan khusus untuk tim NOC..."
-                                      class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition"></textarea>
+                                      class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition"></textarea>
                         </div>
 
-                        <p class="text-[11px] text-slate-500 leading-relaxed">
-                            Setelah dikirim, status pelanggan akan berubah menjadi <strong class="text-amber-600">Jadwal Aktivasi Terbit (#19)</strong> dan akan langsung muncul pada antrean aktivasi Tim NOC.
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Setelah dikirim, status pelanggan akan berubah menjadi <strong class="text-amber-600 dark:text-amber-400">Jadwal Aktivasi Terbit (#19)</strong> dan akan langsung muncul pada antrean aktivasi Tim NOC.
                         </p>
                     </div>
 
                     <!-- Modal Footer Actions -->
-                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                    <div class="px-6 py-4 bg-slate-50/80 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
                         <button type="button" 
                                 @click="requestAktivasiModalOpen = false"
-                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-300 cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-300 dark:border-slate-700 cursor-pointer">
                             <span>Batal</span>
                         </button>
                         <button type="submit" 

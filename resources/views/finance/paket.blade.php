@@ -160,11 +160,11 @@
     <!-- 2. FILTER PILL TABS PER PERUNTUKAN BANGUNAN (MATCHING MOCKUP)      -->
     <!-- =================================================================== -->
     <div class="flex items-center justify-center overflow-x-auto py-1">
-        <div class="inline-flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl backdrop-blur-xl max-w-full">
+        <div class="inline-flex items-center gap-2 p-1.5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs backdrop-blur-xl max-w-full">
             
             <!-- All -->
             <a href="{{ route('finance.paket', array_merge(request()->query(), ['bangunan' => 'all'])) }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedBangunan === 'all' || empty($selectedBangunan) ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedBangunan === 'all' || empty($selectedBangunan) ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}">
                 <span>Semua Bangunan</span>
             </a>
 
@@ -172,9 +172,9 @@
             @foreach($buildingTypes as $bKey => $bLabel)
                 @php $cnt = $buildingCounts[$bKey] ?? 0; @endphp
                 <a href="{{ route('finance.paket', array_merge(request()->query(), ['bangunan' => $bKey])) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap {{ $selectedBangunan === $bKey ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60' }}">
+                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap {{ $selectedBangunan === $bKey ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}">
                     <span>{{ $bLabel }}</span>
-                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $selectedBangunan === $bKey ? 'bg-white/20 text-white' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20' }}">
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $selectedBangunan === $bKey ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-blue-500/10 text-slate-700 dark:text-blue-400 border border-slate-200 dark:border-blue-500/20' }}">
                         {{ $cnt }}
                     </span>
                 </a>
@@ -184,12 +184,12 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 3. TABLE MASTER PAKET (DARK COMMAND CENTER THEME)                   -->
+    <!-- 3. TABLE MASTER PAKET                                               -->
     <!-- =================================================================== -->
-    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl shadow-black/20 overflow-hidden backdrop-blur-xl">
+    <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
         
         <!-- Search Bar Top Right -->
-        <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 border-b border-slate-800 bg-slate-900/60">
+        <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60">
             <form method="GET" action="{{ route('finance.paket') }}" class="relative w-full sm:w-80">
                 @if($selectedBangunan !== 'all')
                     <input type="hidden" name="bangunan" value="{{ $selectedBangunan }}">
@@ -201,7 +201,7 @@
                        name="search" 
                        value="{{ $search }}"
                        placeholder="Search paket / kode / kecepatan..." 
-                       class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                       class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
             </form>
         </div>
 
@@ -209,11 +209,11 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                    <tr class="bg-slate-950/80 text-slate-300 text-[11px] font-bold uppercase tracking-wider border-b border-slate-800">
+                    <tr class="bg-slate-50 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                         <th class="py-3.5 px-5">
                             <div class="flex items-center gap-1.5 cursor-pointer">
                                 <span>KODE PAKET</span>
-                                <svg class="w-3.5 h-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                 </svg>
                             </div>
@@ -222,7 +222,7 @@
                         <th class="py-3.5 px-5">
                             <div class="flex items-center gap-1.5 cursor-pointer">
                                 <span>KATEGORI BANDWIDTH</span>
-                                <svg class="w-3.5 h-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                 </svg>
                             </div>
@@ -230,7 +230,7 @@
                         <th class="py-3.5 px-5">
                             <div class="flex items-center gap-1.5 cursor-pointer">
                                 <span>KECEPATAN</span>
-                                <svg class="w-3.5 h-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                 </svg>
                             </div>
@@ -238,7 +238,7 @@
                         <th class="py-3.5 px-5">
                             <div class="flex items-center gap-1.5 cursor-pointer">
                                 <span>HARGA BULANAN</span>
-                                <svg class="w-3.5 h-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                 </svg>
                             </div>
@@ -248,40 +248,40 @@
                         <th class="py-3.5 px-5 text-right">AKSI</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/80 bg-slate-900/40 text-slate-200">
+                <tbody class="divide-y divide-slate-200/80 dark:divide-slate-800/80 bg-white dark:bg-slate-900/40 text-slate-700 dark:text-slate-200">
                     @forelse($pakets as $paket)
                         @php
                             $katName = $paket->nama_kategori_bandwith ?: ($paket->alias_nama_kategori ?: 'BROADBAND');
                             $rawPeruntukan = $paket->peruntukan_bangunan ?: ($paket->kategori_bangunan ?: 'RUMAH-KANTOR');
                             $peruntukanList = array_filter(array_map('trim', explode(',', $rawPeruntukan)));
                         @endphp
-                        <tr class="hover:bg-slate-800/50 transition">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
                             <!-- 1. Kode Paket -->
                             <td class="py-4 px-5">
-                                <span class="font-mono font-bold text-white text-xs tracking-wide">
+                                <span class="font-mono font-bold text-slate-900 dark:text-white text-xs tracking-wide">
                                      {{ $paket->kode_bandwith }}
                                 </span>
                             </td>
 
                             <!-- 2. Nama Paket -->
-                            <td class="py-4 px-5 font-bold text-white text-xs">
+                            <td class="py-4 px-5 font-bold text-slate-900 dark:text-white text-xs">
                                 {{ $paket->nama_bandwith }}
                             </td>
 
                             <!-- 3. Kategori Bandwidth -->
                             <td class="py-4 px-5">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
                                     {{ $katName }}
                                 </span>
                             </td>
 
                             <!-- 4. Kecepatan -->
-                            <td class="py-4 px-5 font-mono font-bold text-slate-200">
+                            <td class="py-4 px-5 font-mono font-bold text-slate-800 dark:text-slate-200">
                                 {{ $paket->nominal_bandwith }} Mbps
                             </td>
 
                             <!-- 5. Harga Bulanan -->
-                            <td class="py-4 px-5 font-mono font-bold text-white">
+                            <td class="py-4 px-5 font-mono font-bold text-slate-900 dark:text-white">
                                 Rp {{ number_format((float) ($paket->harga_bandwith ?? 0), 0, ',', '.') }}
                             </td>
 
@@ -292,14 +292,14 @@
                                         @php
                                             $tagUpper = strtoupper(trim($pTag));
                                             $badgeClass = match($tagUpper) {
-                                                'KOS-KOSAN' => 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
-                                                'RUMAH-PRIBADI' => 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-                                                'RUMAH-KANTOR' => 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-                                                'RUKO' => 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-                                                'APARTEMEN' => 'bg-purple-500/15 text-purple-300 border-purple-500/30',
-                                                'GEDUNG' => 'bg-teal-500/15 text-teal-300 border-teal-500/30',
-                                                'OUTDOOR/EVENT' => 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-                                                default => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                'KOS-KOSAN' => 'bg-cyan-50 dark:bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-500/30',
+                                                'RUMAH-PRIBADI' => 'bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-500/30',
+                                                'RUMAH-KANTOR' => 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30',
+                                                'RUKO' => 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30',
+                                                'APARTEMEN' => 'bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30',
+                                                'GEDUNG' => 'bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-500/30',
+                                                'OUTDOOR/EVENT' => 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30',
+                                                default => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                                             };
                                         @endphp
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide border {{ $badgeClass }}">
@@ -312,13 +312,13 @@
                             <!-- 7. Status Aktif -->
                             <td class="py-4 px-5 text-center">
                                 @if($paket->disable == 0)
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-sm" title="Paket Aktif">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shadow-xs" title="Paket Aktif">
                                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                         </svg>
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-500 shadow-sm" title="Paket Non-Aktif">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 shadow-xs" title="Paket Non-Aktif">
                                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                         </svg>
@@ -331,7 +331,7 @@
                                 <div class="inline-flex items-center gap-1.5">
                                     <button type="button" 
                                             @click="openEditModal({{ json_encode($paket) }})"
-                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold shadow-md shadow-blue-500/20 transition cursor-pointer">
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold shadow-xs shadow-blue-500/20 transition cursor-pointer">
                                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                         </svg>
@@ -342,12 +342,12 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-12 text-center text-slate-400 text-xs">
+                            <td colspan="8" class="py-12 text-center text-slate-500 dark:text-slate-400 text-xs">
                                 <div class="flex flex-col items-center justify-center">
-                                    <svg class="w-10 h-10 text-slate-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <svg class="w-10 h-10 text-slate-400 dark:text-slate-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
                                     </svg>
-                                    <span class="font-bold text-slate-300">Tidak ada data paket ditemukan.</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-300">Tidak ada data paket ditemukan.</span>
                                     <span class="text-[11px] text-slate-500 mt-1">Klik "+ Tambah Paket Baru" untuk membuat struktur paket internet baru.</span>
                                 </div>
                             </td>
@@ -358,7 +358,7 @@
         </div>
 
         <!-- Table Footer / Pagination -->
-        <div class="px-5 py-4 border-t border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-400">
+        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-600 dark:text-slate-400">
             <div>
                 Showing {{ $pakets->firstItem() ?? 0 }} to {{ $pakets->lastItem() ?? 0 }} of {{ $pakets->total() }} results
             </div>
@@ -373,17 +373,17 @@
     <!-- =================================================================== -->
     <div x-show="modalOpen" 
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-6 text-slate-100 my-8"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-6 text-slate-800 dark:text-slate-100 my-8"
              @click.away="modalOpen = false">
             
             <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                 <div>
-                    <h3 class="font-bold text-white text-base" x-text="isEdit ? 'Edit Paket Internet & Tarif' : 'Tambah Paket Internet Baru'"></h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Konfigurasi spesifikasi kecepatan, kategori, dan tarif bulanan.</p>
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base" x-text="isEdit ? 'Edit Paket Internet & Tarif' : 'Tambah Paket Internet Baru'"></h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Konfigurasi spesifikasi kecepatan, kategori, dan tarif bulanan.</p>
                 </div>
-                <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-white transition">
+                <button type="button" @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
@@ -391,13 +391,13 @@
             </div>
 
             <!-- Auto-Update Alert Banner -->
-            <div class="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs flex items-start gap-2.5">
-                <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-blue-400 text-xs flex items-start gap-2.5">
+                <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                 </svg>
                 <div>
                     <span class="font-bold block">Sinkronisasi Otomatis ke Pelanggan & Billing:</span>
-                    <span class="text-[11px] text-slate-300">Jika harga diubah, seluruh data pelanggan aktif dan invoice tagihan berjalan yang belum lunas akan **otomatis diperbarui** mengikuti harga baru ini.</span>
+                    <span class="text-[11px] text-slate-600 dark:text-slate-300">Jika harga diubah, seluruh data pelanggan aktif dan invoice tagihan berjalan yang belum lunas akan **otomatis diperbarui** mengikuti harga baru ini.</span>
                 </div>
             </div>
 
@@ -408,22 +408,22 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Kode Paket -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-300">Kode Paket <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Kode Paket <span class="text-rose-500">*</span></label>
                         <input type="text" 
                                name="kode_bandwith" 
                                x-model="form.kode_bandwith" 
                                required
                                placeholder="Contoh: AG0001" 
-                               class="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                               class="w-full px-3.5 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/30">
                     </div>
 
                     <!-- Kategori Bandwidth -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-300">Kategori Bandwidth <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Kategori Bandwidth <span class="text-rose-500">*</span></label>
                         <select name="kode_kategori_bandwith" 
                                 x-model="form.kode_kategori_bandwith"
                                 required
-                                class="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                class="w-full px-3.5 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30">
                             @foreach($kategoriList as $kat)
                                 <option value="{{ $kat->kode_kategori_bandwith }}">
                                     {{ $kat->nama_kategori_bandwith }}
@@ -435,19 +435,19 @@
 
                 <!-- Nama Paket -->
                 <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-300">Nama Paket <span class="text-rose-500">*</span></label>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Nama Paket <span class="text-rose-500">*</span></label>
                     <input type="text" 
                            name="nama_bandwith" 
                            x-model="form.nama_bandwith" 
                            required
                            placeholder="Contoh: Paket 75 Mbps" 
-                           class="w-full px-3.5 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                           class="w-full px-3.5 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Kecepatan (Mbps) -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-300">Kecepatan (Mbps) <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Kecepatan (Mbps) <span class="text-rose-500">*</span></label>
                         <div class="relative">
                             <input type="number" 
                                    name="nominal_bandwith" 
@@ -455,14 +455,14 @@
                                    required
                                    min="1"
                                    placeholder="75" 
-                                   class="w-full pl-3.5 pr-12 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                   class="w-full pl-3.5 pr-12 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/30">
                             <span class="absolute right-3.5 top-2 text-xs text-slate-400 font-bold">Mbps</span>
                         </div>
                     </div>
 
                     <!-- Harga Bulanan (Rp) -->
                     <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-300">Harga Bulanan (Rp) <span class="text-rose-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Harga Bulanan (Rp) <span class="text-rose-500">*</span></label>
                         <div class="relative">
                             <span class="absolute left-3.5 top-2 text-xs text-slate-400 font-bold">Rp</span>
                             <input type="number" 
@@ -472,19 +472,19 @@
                                    min="0"
                                    step="1"
                                    placeholder="3500000" 
-                                   class="w-full pl-10 pr-3.5 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white font-mono font-bold text-amber-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                   class="w-full pl-10 pr-3.5 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold text-blue-600 dark:text-amber-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
                         </div>
                     </div>
                 </div>
 
                 <!-- Peruntukan Bangunan (Multi-selection tags) -->
                 <div class="space-y-2 pt-1">
-                    <label class="block text-xs font-bold text-slate-300">Peruntukan Bangunan</label>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Peruntukan Bangunan</label>
                     <div class="flex flex-wrap gap-2">
                         @foreach($buildingTypes as $bKey => $bLabel)
                             <button type="button" 
                                     @click="togglePeruntukan('{{ $bKey }}')"
-                                    :class="form.peruntukan.includes('{{ $bKey }}') ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20' : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200'"
+                                    :class="form.peruntukan.includes('{{ $bKey }}') ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20' : 'bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-slate-200'"
                                     class="px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer flex items-center gap-1.5">
                                 <span x-show="form.peruntukan.includes('{{ $bKey }}')">✓</span>
                                 <span>{{ $bLabel }}</span>
@@ -498,22 +498,22 @@
                 </div>
 
                 <!-- Status Aktif -->
-                <div class="pt-2 flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
+                <div class="pt-2 flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                     <div>
-                        <span class="block text-xs font-bold text-white">Status Paket Aktif</span>
-                        <span class="block text-[11px] text-slate-400">Paket aktif dapat dipilih untuk registrasi pelanggan baru.</span>
+                        <span class="block text-xs font-bold text-slate-900 dark:text-white">Status Paket Aktif</span>
+                        <span class="block text-[11px] text-slate-500 dark:text-slate-400">Paket aktif dapat dipilih untuk registrasi pelanggan baru.</span>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="status_aktif" value="1" x-model="form.status_aktif" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                 </div>
 
                 <!-- Modal Actions -->
-                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-800">
+                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200 dark:border-slate-800">
                     <button type="button" 
                             @click="modalOpen = false"
-                            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+                            class="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition">
                         Batal
                     </button>
                     <button type="submit" 

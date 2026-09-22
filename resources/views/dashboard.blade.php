@@ -4,27 +4,28 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Role Welcome Banner -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 sm:p-8 text-white shadow-xs">
-        <div class="pointer-events-none absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl"></div>
+    <!-- Role Welcome Banner (Clean White Card Theme) -->
+    <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 sm:p-7 shadow-xs">
         <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white border border-white/25 mb-3">
-                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 border border-blue-200 text-blue-700 mb-3">
+                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
                     <span>Level Pengguna: {{ $user->nama_level }}</span>
                 </div>
-                <h2 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                     Selamat Datang, {{ $user->nama }}!
                 </h2>
-                <p class="text-sm text-blue-100 mt-1 max-w-2xl">
-                    {{ $user->role_description }} &middot; Akun: <strong class="text-white">{{ $user->username }}</strong>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
+                    {{ $user->role_description }} &middot; Akun: <strong class="text-slate-800 font-semibold">{{ $user->username }}</strong>
                 </p>
             </div>
 
             <div class="flex items-center gap-3">
-                <div class="px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white">
-                    <span class="text-blue-100">Waktu Server:</span>
-                    <span class="font-bold text-white ml-1">{{ now()->format('d M Y, H:i') }} WIB</span>
+                <div class="px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-center gap-2 shadow-xs">
+                    <svg class="w-4 h-4 text-blue-600 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <span>Waktu Server: <strong class="text-slate-900 font-bold ml-0.5">{{ now()->format('d M Y, H:i') }} WIB</strong></span>
                 </div>
             </div>
         </div>

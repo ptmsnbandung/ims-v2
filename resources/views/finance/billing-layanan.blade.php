@@ -211,6 +211,16 @@
 
         <!-- Top Right Actions -->
         <div class="flex items-center gap-3 relative z-10 flex-wrap">
+            @if(auth()->user()?->isAdmin() || auth()->user()?->isDirektur())
+            <a href="{{ route('admin.broadcast') }}"
+               class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500/30 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                </svg>
+                <span>Broadcast WA (Jatuh Tempo)</span>
+            </a>
+            @endif
+
             <a href="{{ route('finance.billing-layanan.export', request()->query()) }}"
                class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700/80 text-xs font-semibold flex items-center gap-2 shadow-sm transition">
                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

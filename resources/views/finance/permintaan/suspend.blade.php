@@ -81,7 +81,18 @@
             <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Pengajuan isolir jaringan untuk pelanggan yang menunggak / melewati batas jatuh tempo, dan pembukaan isolir saat lunas.</p>
         </div>
 
-        <div>
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <form action="{{ route('finance.permintaan.suspend.auto') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menjalankan Auto Request Suspend ke NOC untuk semua pelanggan yang belum bayar (Jatuh Tempo Tanggal 25)?');">
+                @csrf
+                <button type="submit"
+                        title="Otomatis Request Suspend ke NOC untuk Pelanggan Belum Bayar (Jatuh Tempo Tgl 25 Jam 06:00)"
+                        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 text-xs font-bold shadow-md transition duration-150 cursor-pointer">
+                    <svg class="w-4 h-4 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                    </svg>
+                    <span>⚡ Run Auto Suspend Tgl 25</span>
+                </button>
+            </form>
             <button type="button"
                     @click="resetForm(); createModalOpen = true"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition duration-150 cursor-pointer">

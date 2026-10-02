@@ -822,6 +822,22 @@
                         </a>
                         <div class="ims-tooltip">Master Paket Internet</div>
                     </div>
+
+                    <!-- 3. Broadcast WhatsApp -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('admin.broadcast') }}"
+                           class="ims-nav-item {{ request()->routeIs('admin.broadcast*') ? 'active' : '' }}"
+                           title="Broadcast WhatsApp">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.broadcast*') ? 'text-emerald-400' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                            </svg>
+                            <span class="ims-nav-text flex items-center justify-between w-full">
+                                <span>Broadcast WA</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">NEW</span>
+                            </span>
+                        </a>
+                        <div class="ims-tooltip">Broadcast WhatsApp (Jatuh Tempo & Pengumuman)</div>
+                    </div>
                     @endif
 
                     <!-- Logout / Keluar -->

@@ -9,6 +9,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1567,6 +1568,20 @@ class FinanceController extends Controller
         ]);
 
         return redirect()->back()->with('success', "Request Suspend {$kodeSuspend} berhasil dibuat dan diteruskan ke tim NOC!");
+    }
+
+    /**
+     * Trigger Manual Process Auto Request Suspend ke NOC untuk Pelanggan Belum Bayar (Jatuh Tempo Tgl 25)
+     */
+    public function autoSuspendUnpaid(Request $request): RedirectResponse
+    {
+        $currentUser = auth()->user()->nama ?? 'Finance';
+
+        Artisan::call('suspend:unpaid-customers', [
+            '--user' => $currentUser . ' (Manual Trigger)',
+        ]);
+
+        return redirect()->back()->with('success', "Proses Auto Request Suspend Jatuh Tempo Tanggal 25 berhasil dijalankan ke tim NOC!");
     }
 
     /**

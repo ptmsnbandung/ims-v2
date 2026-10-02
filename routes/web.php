@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\BroadcastController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\FinanceController;
@@ -35,6 +36,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/paket', [AdminController::class, 'paket'])->name('paket');
         Route::post('/paket/store', [AdminController::class, 'storePaket'])->name('paket.store');
         Route::match(['POST', 'DELETE'], '/paket/{kode_bandwith}/delete', [AdminController::class, 'deletePaket'])->name('paket.delete')->where('kode_bandwith', '.*');
+
+        // 3. Broadcast WhatsApp (Jatuh Tempo, Massal, Per Orangan, Custom Template)
+        Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast');
+        Route::get('/broadcast/preview', [BroadcastController::class, 'preview'])->name('broadcast.preview');
+        Route::post('/broadcast/send-single', [BroadcastController::class, 'sendSingle'])->name('broadcast.send-single');
+        Route::post('/broadcast/send-bulk', [BroadcastController::class, 'sendBulk'])->name('broadcast.send-bulk');
+        Route::post('/broadcast/template/store', [BroadcastController::class, 'saveTemplate'])->name('broadcast.template.store');
+        Route::post('/broadcast/template/{id}/delete', [BroadcastController::class, 'deleteTemplate'])->name('broadcast.template.delete');
+        Route::get('/broadcast/history', [BroadcastController::class, 'history'])->name('broadcast.history');
     });
 
     // Routes Shared Ticket Hub & Tiket Gangguan (Teknik, NOC, Direktur, Admin, Finance)
@@ -217,6 +227,7 @@ Route::middleware('auth')->group(function () {
         // 4. Permintaan ke NOC: Suspend Layanan (Jatuh Tempo / Tunggakan)
         Route::get('/permintaan/suspend', [FinanceController::class, 'suspend'])->name('permintaan.suspend');
         Route::post('/permintaan/suspend', [FinanceController::class, 'storeSuspend'])->name('permintaan.suspend.store');
+        Route::post('/permintaan/suspend/auto', [FinanceController::class, 'autoSuspendUnpaid'])->name('permintaan.suspend.auto');
         Route::post('/permintaan/suspend/{kode_suspend}/unsuspend', [FinanceController::class, 'requestUnsuspend'])->name('permintaan.suspend.unsuspend')->where('kode_suspend', '.*');
         Route::post('/permintaan/suspend/{kode_suspend}/cancel', [FinanceController::class, 'cancelSuspend'])->name('permintaan.suspend.cancel')->where('kode_suspend', '.*');
 

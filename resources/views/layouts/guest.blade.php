@@ -130,7 +130,7 @@
 
             <!-- Footer -->
             <div class="mt-6 text-center text-xs font-semibold text-cyan-100/80 drop-shadow">
-                &copy; {{ date('Y') }} PT. Mega Sarana Nusantara &bull; IMS Router Management
+                &copy; {{ date('Y') }} PT. Media Solusi Network &bull; IMS Router Management
             </div>
         </div>
     </div>

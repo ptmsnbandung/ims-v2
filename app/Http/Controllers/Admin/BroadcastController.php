@@ -112,80 +112,208 @@ class BroadcastController extends Controller
     }
 
     /**
-     * Dynamically select customer fields and determine safe order column to prevent SQL 1054 Unknown column errors
+     * Dynamically select customer fields and determine safe order column to prevent SQL 1054 Unknown column errors.
+     * Every reference to a joined-table column (mp.*, reg.*, inv.*) is checked for existence first.
      */
     protected function selectCustomerFields($query, string $baseTable): string
     {
-        $cols = Schema::getColumnListing($baseTable);
+        $cols     = Schema::getColumnListing($baseTable);
         $firstCol = !empty($cols) ? $cols[0] : 'nomor_internet';
-        $fallbackSort = in_array('nomor_internet', $cols) ? "c.nomor_internet" : (in_array('id', $cols) ? "c.id" : "c.{$firstCol}");
+        $fallbackSort = in_array('nomor_internet', $cols) ? 'c.nomor_internet'
+            : (in_array('id', $cols) ? 'c.id' : "c.{$firstCol}");
 
-        $hasNameCol    = in_array('nama_pelanggan', $cols);
-        $hasNamePCol   = in_array('nama_p', $cols);
-        $hasNameSimple = in_array('nama', $cols);
+        // ── Pre-fetch m_pelanggan & trx_batchjob_register column lists once ──
+        $mpCols  = Schema::hasTable('m_pelanggan')          ? Schema::getColumnListing('m_pelanggan')          : [];
+        $regCols = Schema::hasTable('trx_batchjob_register')? Schema::getColumnListing('trx_batchjob_register'): [];
+        $invCols = Schema::hasTable('trx_billing_layanan')  ? Schema::getColumnListing('trx_billing_layanan')  : [];
 
-        // Name column resolution
-        if ($hasNameCol) {
-            $nameCol = "c.nama_pelanggan";
-            $sortField = "c.nama_pelanggan";
-        } elseif ($hasNamePCol) {
-            $nameCol = "c.nama_p";
-            $sortField = "c.nama_p";
-        } elseif ($hasNameSimple) {
-            $nameCol = "c.nama";
-            $sortField = "c.nama";
-        } elseif (Schema::hasTable('m_pelanggan') && Schema::hasColumn('m_pelanggan', 'nama_pelanggan')) {
-            $nameCol = "COALESCE(mp.nama_pelanggan, mp.nama_p, c.nomor_internet)";
+        // ─── Name column ────────────────────────────────────────────────────
+        if (in_array('nama_pelanggan', $cols)) {
+            $nameCol   = 'c.nama_pelanggan';
+            $sortField = 'c.nama_pelanggan';
+        } elseif (in_array('nama_p', $cols)) {
+            $nameCol   = 'c.nama_p';
+            $sortField = 'c.nama_p';
+        } elseif (in_array('nama', $cols)) {
+            $nameCol   = 'c.nama';
+            $sortField = 'c.nama';
+        } elseif (in_array('nama_pelanggan', $mpCols)) {
+            // build safe COALESCE from only existing mp columns
+            $parts = ['mp.nama_pelanggan'];
+            if (in_array('nama_p', $mpCols))   $parts[] = 'mp.nama_p';
+            if (in_array('nomor_internet', $cols)) $parts[] = 'c.nomor_internet';
+            $nameCol   = count($parts) > 1 ? 'COALESCE(' . implode(', ', $parts) . ')' : $parts[0];
             $sortField = $fallbackSort;
-        } elseif (Schema::hasTable('trx_batchjob_register') && Schema::hasColumn('trx_batchjob_register', 'nama_pelanggan')) {
-            $nameCol = "COALESCE(reg.nama_pelanggan, c.nomor_internet)";
+        } elseif (in_array('nama_pelanggan', $regCols)) {
+            $nameCol   = in_array('nomor_internet', $cols)
+                ? 'COALESCE(reg.nama_pelanggan, c.nomor_internet)'
+                : 'reg.nama_pelanggan';
             $sortField = $fallbackSort;
         } else {
-            $nameCol = "c.nomor_internet";
+            $nameCol   = in_array('nomor_internet', $cols) ? 'c.nomor_internet' : "''";
             $sortField = $fallbackSort;
         }
 
-        // Phone column resolution
+        // ─── Phone column ────────────────────────────────────────────────────
         $phoneCol = "''";
         if (in_array('nomor_hp', $cols)) {
-            $phoneCol = "c.nomor_hp";
+            $phoneCol = 'c.nomor_hp';
         } elseif (in_array('hp_pelanggan', $cols)) {
-            $phoneCol = "c.hp_pelanggan";
+            $phoneCol = 'c.hp_pelanggan';
         } elseif (in_array('hp_p', $cols)) {
-            $phoneCol = "c.hp_p";
+            $phoneCol = 'c.hp_p';
         } elseif (in_array('hp', $cols)) {
-            $phoneCol = "c.hp";
-        } elseif (Schema::hasTable('m_pelanggan') && Schema::hasColumn('m_pelanggan', 'nomor_hp')) {
-            $phoneCol = "COALESCE(mp.nomor_hp, mp.hp_p, '')";
-        } elseif (Schema::hasTable('trx_batchjob_register') && Schema::hasColumn('trx_batchjob_register', 'nomor_hp')) {
-            $phoneCol = "COALESCE(reg.nomor_hp, '')";
+            $phoneCol = 'c.hp';
+        } elseif (!empty($mpCols)) {
+            // Build COALESCE only from columns that actually exist in m_pelanggan
+            $mpPhoneParts = [];
+            if (in_array('nomor_hp', $mpCols))    $mpPhoneParts[] = 'mp.nomor_hp';
+            if (in_array('hp_pelanggan', $mpCols)) $mpPhoneParts[] = 'mp.hp_pelanggan';
+            if (in_array('hp_p', $mpCols))         $mpPhoneParts[] = 'mp.hp_p';
+            if (in_array('hp', $mpCols))           $mpPhoneParts[] = 'mp.hp';
+            if (!empty($mpPhoneParts)) {
+                $mpPhoneParts[] = "''";
+                $phoneCol = 'COALESCE(' . implode(', ', $mpPhoneParts) . ')';
+            }
+        } elseif (!empty($regCols)) {
+            $regPhoneParts = [];
+            if (in_array('nomor_hp', $regCols)) $regPhoneParts[] = 'reg.nomor_hp';
+            if (in_array('hp_p', $regCols))     $regPhoneParts[] = 'reg.hp_p';
+            if (!empty($regPhoneParts)) {
+                $regPhoneParts[] = "''";
+                $phoneCol = 'COALESCE(' . implode(', ', $regPhoneParts) . ')';
+            }
         }
 
-        // No internet column resolution
-        $noCol = in_array('nomor_internet', $cols) ? "c.nomor_internet" : (in_array('id_pelanggan', $cols) ? "c.id_pelanggan" : (in_array('id', $cols) ? "c.id" : "''"));
+        // ─── nomor_internet ──────────────────────────────────────────────────
+        if (in_array('nomor_internet', $cols)) {
+            $noCol = 'c.nomor_internet';
+        } elseif (in_array('id_pelanggan', $cols)) {
+            $noCol = 'c.id_pelanggan';
+        } elseif (in_array('id', $cols)) {
+            $noCol = 'c.id';
+        } else {
+            $noCol = "''";
+        }
 
-        // Address resolution
-        $alamatCol = in_array('alamat_pasang', $cols) ? "c.alamat_pasang" : (in_array('alamat_p', $cols) ? "c.alamat_p" : (in_array('alamat', $cols) ? "c.alamat" : "''"));
+        // ─── alamat ─────────────────────────────────────────────────────────
+        if (in_array('alamat_pasang', $cols)) {
+            $alamatCol = 'c.alamat_pasang';
+        } elseif (in_array('alamat_p', $cols)) {
+            $alamatCol = 'c.alamat_p';
+        } elseif (in_array('alamat', $cols)) {
+            $alamatCol = 'c.alamat';
+        } elseif (in_array('alamat_pasang', $mpCols)) {
+            $alamatCol = 'mp.alamat_pasang';
+        } elseif (in_array('alamat_p', $mpCols)) {
+            $alamatCol = 'mp.alamat_p';
+        } else {
+            $alamatCol = "''";
+        }
 
-        // City resolution
-        $kotaCol = in_array('nama_kota_pasang', $cols) ? "c.nama_kota_pasang" : (in_array('kota_pasang', $cols) ? "c.kota_pasang" : "''");
+        // ─── kota ───────────────────────────────────────────────────────────
+        if (in_array('nama_kota_pasang', $cols)) {
+            $kotaCol = 'c.nama_kota_pasang';
+        } elseif (in_array('kota_pasang', $cols)) {
+            $kotaCol = 'c.kota_pasang';
+        } elseif (in_array('nama_kota_pasang', $mpCols)) {
+            $kotaCol = 'mp.nama_kota_pasang';
+        } else {
+            $kotaCol = "''";
+        }
 
-        // Bandwidth resolution
-        $paketCol = in_array('nama_kategori_bandwith', $cols) ? "c.nama_kategori_bandwith" : (in_array('nama_bandwith', $cols) ? "c.nama_bandwith" : "''");
+        // ─── paket/bandwith ─────────────────────────────────────────────────
+        if (in_array('nama_kategori_bandwith', $cols)) {
+            $paketCol = 'c.nama_kategori_bandwith';
+        } elseif (in_array('nama_bandwith', $cols)) {
+            $paketCol = 'c.nama_bandwith';
+        } else {
+            $paketCol = "''";
+        }
 
-        // Status reg resolution
-        $statusRegCol = in_array('status_reg', $cols) ? "c.status_reg" : "''";
+        // ─── status_reg ─────────────────────────────────────────────────────
+        $statusRegCol = in_array('status_reg', $cols) ? 'c.status_reg' : "''";
 
-        // Invoice fields (from inv if joined or c if base is billing table)
-        $hasInv = Schema::hasTable('trx_billing_layanan');
-        $kodeBillCol = in_array('kode_billing_layanan', $cols) ? "c.kode_billing_layanan" : ($hasInv ? "COALESCE(inv.kode_billing_layanan, '')" : "''");
-        $periodeCol  = in_array('periode_tagihan', $cols) ? "c.periode_tagihan" : ($hasInv ? "COALESCE(inv.periode_tagihan, '')" : "''");
-        $bulanCol    = in_array('bulan_tagihan', $cols) ? "c.bulan_tagihan" : ($hasInv ? "COALESCE(inv.bulan_tagihan, '')" : "''");
-        $tahunCol    = in_array('tahun_tagihan', $cols) ? "c.tahun_tagihan" : ($hasInv ? "COALESCE(inv.tahun_tagihan, '')" : "''");
-        $totalCol    = in_array('total_layanan', $cols) ? "c.total_layanan" : (in_array('harga_bandwith', $cols) ? "c.harga_bandwith" : ($hasInv ? "COALESCE(inv.total_layanan, inv.harga_bandwith, 0)" : "0"));
-        $statusBillCol = in_array('status_bill_lay', $cols) ? "c.status_bill_lay" : ($hasInv ? "COALESCE(inv.status_bill_lay, '')" : "''");
-        $expiryCol   = in_array('expiry', $cols) ? "c.expiry" : ($hasInv ? "COALESCE(inv.expiry, '')" : "''");
-        $snapCol     = in_array('payment_respond_post', $cols) ? "c.payment_respond_post" : ($hasInv ? "COALESCE(inv.payment_respond_post, '')" : "''");
+        // ─── Invoice fields — only reference inv.* columns that exist ────────
+        $hasInv = !empty($invCols);
+
+        // kode_billing_layanan
+        if (in_array('kode_billing_layanan', $cols)) {
+            $kodeBillCol = 'c.kode_billing_layanan';
+        } elseif ($hasInv && in_array('kode_billing_layanan', $invCols)) {
+            $kodeBillCol = "COALESCE(inv.kode_billing_layanan, '')";
+        } else {
+            $kodeBillCol = "''";
+        }
+
+        // periode_tagihan
+        if (in_array('periode_tagihan', $cols)) {
+            $periodeCol = 'c.periode_tagihan';
+        } elseif ($hasInv && in_array('periode_tagihan', $invCols)) {
+            $periodeCol = "COALESCE(inv.periode_tagihan, '')";
+        } else {
+            $periodeCol = "''";
+        }
+
+        // bulan_tagihan
+        if (in_array('bulan_tagihan', $cols)) {
+            $bulanCol = 'c.bulan_tagihan';
+        } elseif ($hasInv && in_array('bulan_tagihan', $invCols)) {
+            $bulanCol = "COALESCE(inv.bulan_tagihan, '')";
+        } else {
+            $bulanCol = "''";
+        }
+
+        // tahun_tagihan
+        if (in_array('tahun_tagihan', $cols)) {
+            $tahunCol = 'c.tahun_tagihan';
+        } elseif ($hasInv && in_array('tahun_tagihan', $invCols)) {
+            $tahunCol = "COALESCE(inv.tahun_tagihan, '')";
+        } else {
+            $tahunCol = "''";
+        }
+
+        // total_layanan / harga_bandwith
+        if (in_array('total_layanan', $cols)) {
+            $totalCol = 'c.total_layanan';
+        } elseif (in_array('harga_bandwith', $cols)) {
+            $totalCol = 'c.harga_bandwith';
+        } elseif ($hasInv) {
+            $invTotalParts = [];
+            if (in_array('total_layanan', $invCols))  $invTotalParts[] = 'inv.total_layanan';
+            if (in_array('harga_bandwith', $invCols)) $invTotalParts[] = 'inv.harga_bandwith';
+            $invTotalParts[] = '0';
+            $totalCol = count($invTotalParts) > 1 ? 'COALESCE(' . implode(', ', $invTotalParts) . ')' : '0';
+        } else {
+            $totalCol = '0';
+        }
+
+        // status_bill_lay
+        if (in_array('status_bill_lay', $cols)) {
+            $statusBillCol = 'c.status_bill_lay';
+        } elseif ($hasInv && in_array('status_bill_lay', $invCols)) {
+            $statusBillCol = "COALESCE(inv.status_bill_lay, '')";
+        } else {
+            $statusBillCol = "''";
+        }
+
+        // expiry
+        if (in_array('expiry', $cols)) {
+            $expiryCol = 'c.expiry';
+        } elseif ($hasInv && in_array('expiry', $invCols)) {
+            $expiryCol = "COALESCE(inv.expiry, '')";
+        } else {
+            $expiryCol = "''";
+        }
+
+        // payment_respond_post
+        if (in_array('payment_respond_post', $cols)) {
+            $snapCol = 'c.payment_respond_post';
+        } elseif ($hasInv && in_array('payment_respond_post', $invCols)) {
+            $snapCol = "COALESCE(inv.payment_respond_post, '')";
+        } else {
+            $snapCol = "''";
+        }
 
         $query->select(
             DB::raw("{$noCol} as nomor_internet"),
@@ -208,6 +336,7 @@ class BroadcastController extends Controller
 
         return $sortField;
     }
+
 
     /**
      * Build base customer query dynamically according to available tables & columns

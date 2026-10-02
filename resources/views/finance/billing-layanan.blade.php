@@ -186,6 +186,28 @@
              }
          },
 
+         // Modal Bukti Transfer Pelanggan
+         proofModalOpen: false,
+         proofKodeBilling: '',
+         proofNamaPelanggan: '',
+         proofInternet: '',
+         proofNominal: 0,
+         proofUrl: '',
+         proofNotes: '',
+         proofDate: '',
+         proofStatus: '',
+         openProofModalFromEl(el) {
+             this.proofKodeBilling = el.dataset.kode || '';
+             this.proofNamaPelanggan = el.dataset.nama || '';
+             this.proofInternet = el.dataset.internet || '';
+             this.proofNominal = parseFloat(el.dataset.nominal) || 0;
+             this.proofUrl = el.dataset.proofUrl || '';
+             this.proofNotes = el.dataset.notes || '';
+             this.proofDate = el.dataset.proofDate || '';
+             this.proofStatus = el.dataset.status || '';
+             this.proofModalOpen = true;
+         },
+
          // Format Currency Helper
          formatRupiah(num) {
              return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
@@ -676,7 +698,73 @@
                         <td class="py-3.5 px-4 align-top">
                             <div class="space-y-1.5">
                                 <!-- Payment Method Badge & Quick Actions -->
-                                @if($inv->payment_type == 1)
+                                @php
+                                    $hasTransfer = ($inv->payment_type == 2) || !empty($inv->has_manual_transfer_proof) || !empty($inv->payment_confirmation);
+                                    $confirmation = $inv->payment_confirmation ?? null;
+                                @endphp
+
+                                @if($hasTransfer)
+                                <div class="flex flex-col gap-1.5 items-start">
+                                    <!-- Badge Metode Transfer -->
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[10px] font-semibold">
+                                        <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5" />
+                                        </svg>
+                                        <span>Manual Transfer</span>
+                                    </span>
+
+                                    <!-- Bukti Transfer & Status Verifikasi -->
+                                    @if($confirmation && !empty($confirmation->proof_file))
+                                        <!-- Tombol Lihat Bukti Transfer -->
+                                        <button type="button"
+                                                @click="openProofModalFromEl($el)"
+                                                data-kode="{{ $inv->kode_billing_layanan }}"
+                                                data-nama="{{ $inv->nama_pelanggan }}"
+                                                data-internet="{{ $inv->nomor_internet }}"
+                                                data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
+                                                data-proof-url="{{ $confirmation->proof_file }}"
+                                                data-notes="{{ $confirmation->notes ?? '-' }}"
+                                                data-proof-date="{{ !empty($confirmation->created_at) ? \Carbon\Carbon::parse($confirmation->created_at)->translatedFormat('d M Y H:i') : '-' }}"
+                                                data-status="{{ $confirmation->status ?? 'pending' }}"
+                                                title="Klik untuk melihat bukti transfer pelanggan"
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 dark:hover:bg-indigo-500/20 text-[9px] font-semibold transition cursor-pointer shadow-xs">
+                                            <svg class="w-3 h-3 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                            </svg>
+                                            <span>Lihat Bukti Transfer</span>
+                                        </button>
+
+                                        <!-- Status Pembayaran / Verifikasi -->
+                                        @if($inv->status_bill_lay == '15' || $confirmation->status === 'approved')
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-semibold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            <span>Lunas (Terverifikasi)</span>
+                                        </span>
+                                        @elseif($confirmation->status === 'rejected')
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 text-[9px] font-semibold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                            <span>Transfer Ditolak</span>
+                                        </span>
+                                        @else
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[9px] font-semibold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                            <span>Menunggu Verifikasi</span>
+                                        </span>
+                                        @endif
+                                    @else
+                                        @if($inv->status_bill_lay == '15')
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-semibold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            <span>Lunas Manual</span>
+                                        </span>
+                                        @else
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[9px] font-medium">
+                                            <span>Belum Upload Bukti</span>
+                                        </span>
+                                        @endif
+                                    @endif
+                                </div>
+                                @elseif($inv->payment_type == 1)
                                 <div class="flex flex-col gap-1 items-start">
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[10px] font-semibold">
                                         <svg class="w-3 h-3 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -729,15 +817,6 @@
                                         </button>
                                     </form>
                                     @endif
-                                </div>
-                                @elseif($inv->payment_type == 2)
-                                <div class="flex flex-col gap-1 items-start">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[10px] font-semibold">
-                                        <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5" />
-                                        </svg>
-                                        <span>Manual Transfer</span>
-                                    </span>
                                 </div>
                                 @else
                                 <div class="flex flex-col gap-1 items-start">
@@ -887,7 +966,7 @@
 
                     <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-3.5 text-xs text-blue-800 dark:text-blue-300 space-y-1">
                         <p class="font-semibold flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Otomatis Terjadwal: Setiap Tanggal 1, Jam 08:00 WIB
@@ -1455,6 +1534,132 @@
                 <button type="button" @click="midtransModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer">
                     Tutup
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. MODAL LIHAT BUKTI TRANSFER MANUAL -->
+    <div x-show="proofModalOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+         style="display: none;">
+        <div @click.away="proofModalOpen = false"
+             x-show="proofModalOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 overflow-hidden my-8 flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Bukti Transfer Pembayaran</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400" x-text="proofNamaPelanggan + ' • #' + proofInternet"></p>
+                    </div>
+                </div>
+                <button type="button" @click="proofModalOpen = false" class="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4 overflow-y-auto flex-1">
+                <!-- Info Header Box -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">No. Invoice:</span>
+                        <span class="font-bold font-mono text-slate-800 dark:text-slate-200" x-text="proofKodeBilling"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">Nominal Tagihan:</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400" x-text="formatRupiah(proofNominal)"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">Waktu Upload:</span>
+                        <span class="font-medium text-slate-700 dark:text-slate-300" x-text="proofDate || '-'"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[11px]">Status Verifikasi:</span>
+                        <span class="inline-flex items-center gap-1 font-semibold capitalize"
+                              :class="proofStatus === 'approved' ? 'text-emerald-600 dark:text-emerald-400' : (proofStatus === 'rejected' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400')">
+                            <span class="w-2 h-2 rounded-full" :class="proofStatus === 'approved' ? 'bg-emerald-500' : (proofStatus === 'rejected' ? 'bg-rose-500' : 'bg-amber-500 animate-pulse')"></span>
+                            <span x-text="proofStatus === 'approved' ? 'Lunas / Disetujui' : (proofStatus === 'rejected' ? 'Ditolak' : 'Menunggu Approval')"></span>
+                        </span>
+                    </div>
+                    <div class="sm:col-span-2 border-t border-slate-200 dark:border-slate-800 pt-2" x-show="proofNotes && proofNotes !== '-'">
+                        <span class="text-slate-400 block text-[11px]">Catatan Pengirim:</span>
+                        <p class="text-slate-700 dark:text-slate-300 italic text-xs mt-0.5" x-text="proofNotes"></p>
+                    </div>
+                </div>
+
+                <!-- Preview Gambar Bukti Transfer -->
+                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-900/5 dark:bg-slate-950 flex flex-col items-center justify-center min-h-[220px] p-2 relative group">
+                    <template x-if="proofUrl && (proofUrl.endsWith('.pdf') || proofUrl.includes('/pdf'))">
+                        <div class="py-12 px-4 text-center space-y-3">
+                            <div class="w-16 h-16 mx-auto rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                                <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                </svg>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 font-medium">Dokumen Bukti Transfer berformat PDF</p>
+                            <a :href="proofUrl" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/20 transition">
+                                <span>Buka File PDF</span>
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                </svg>
+                            </a>
+                        </div>
+                    </template>
+
+                    <template x-if="proofUrl && !(proofUrl.endsWith('.pdf') || proofUrl.includes('/pdf'))">
+                        <div class="w-full flex flex-col items-center">
+                            <img :src="proofUrl" alt="Bukti Transfer" class="max-h-[380px] w-auto rounded-lg object-contain shadow-sm hover:scale-[1.01] transition duration-200 cursor-pointer" @click="window.open(proofUrl, '_blank')">
+                            <div class="mt-2 text-center">
+                                <a :href="proofUrl" target="_blank" class="text-[11px] text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 inline-flex items-center gap-1 font-medium">
+                                    <span>Buka Gambar Ukuran Penuh</span>
+                                    <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 dark:bg-slate-950/80 px-6 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <button type="button" @click="proofModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition">
+                    Tutup
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <button type="button"
+                            x-show="proofStatus !== 'approved'"
+                            @click="proofModalOpen = false; openPayModal(proofKodeBilling, proofInternet, proofNamaPelanggan, proofNominal, '2')"
+                            class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition cursor-pointer">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <span>Konfirmasi & Approve Pembayaran</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

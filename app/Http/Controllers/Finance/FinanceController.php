@@ -105,6 +105,34 @@ class FinanceController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // Ambil Data Konfirmasi Pembayaran / Bukti Transfer dari Portal Pelanggan
+        $kodeBillings = collect($invoices->items())->pluck('kode_billing_layanan')->filter()->toArray();
+        $confirmations = collect();
+        if (!empty($kodeBillings)) {
+            try {
+                if (Schema::hasTable('payment_confirmations')) {
+                    $confirmations = DB::table('payment_confirmations')
+                        ->whereIn('kode_billing_layanan', $kodeBillings)
+                        ->orderBy('id', 'desc')
+                        ->get()
+                        ->keyBy('kode_billing_layanan');
+                }
+            } catch (\Throwable $e) {
+                Log::info('Query payment_confirmations notice: ' . $e->getMessage());
+            }
+        }
+
+        foreach ($invoices as $inv) {
+            $confirmation = $confirmations->get($inv->kode_billing_layanan) ?? null;
+            $inv->payment_confirmation = $confirmation;
+            // Jika invoice memiliki bukti transfer terdaftar, tandai payment_type menjadi transfer manual (2) jika belum
+            if ($confirmation && (empty($inv->payment_type) || $inv->payment_type == '1')) {
+                $inv->has_manual_transfer_proof = true;
+            } else {
+                $inv->has_manual_transfer_proof = false;
+            }
+        }
+
         // Master Dropdown Data (Optimized to fast master tables)
         $bulanList = [
             '01' => 'Januari',
@@ -415,6 +443,22 @@ class FinanceController extends Controller
                 'hide' => '0',
             ]);
 
+            // Sinkronisasi status di tabel payment_confirmations menjadi approved
+            try {
+                if (Schema::hasTable('payment_confirmations')) {
+                    DB::table('payment_confirmations')
+                        ->where('kode_billing_layanan', $decodedKode)
+                        ->update([
+                            'status' => 'approved',
+                            'verified_at' => Carbon::now()->toDateTimeString(),
+                            'admin_notes' => "Diverifikasi oleh {$userUpdate} via Approval Billing Layanan",
+                            'updated_at' => Carbon::now()->toDateTimeString(),
+                        ]);
+                }
+            } catch (\Throwable $e) {
+                Log::info('Update payment_confirmations note: ' . $e->getMessage());
+            }
+
             // Auto Req Unsuspend ke NOC jika pelanggan sedang dalam status Suspend/Terisolir
             $unsuspendInfo = '';
             if ($nomorInternet && Schema::hasTable('trx_suspend')) {
@@ -656,7 +700,7 @@ class FinanceController extends Controller
 
             DB::table('trx_billing_registrasi_log')->insert([
                 'kode_billing_regis_log' => 'LOG-' . uniqid(),
-                'kode_billing_registrasi' => $decodedKode,
+                'kode_billing_regis_log' => $decodedKode,
                 'status_bill_reg' => '19',
                 'note_billing_reg' => "Metode pembayaran registrasi diubah ke {$paymentTypeName} oleh {$user}",
                 'date_create' => Carbon::now()->toDateTimeString(),
@@ -2139,4 +2183,3 @@ class FinanceController extends Controller
         return response()->json($customers);
     }
 }
-

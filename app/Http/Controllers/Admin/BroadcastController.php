@@ -117,6 +117,8 @@ class BroadcastController extends Controller
     protected function selectCustomerFields($query, string $baseTable): string
     {
         $cols = Schema::getColumnListing($baseTable);
+        $firstCol = !empty($cols) ? $cols[0] : 'nomor_internet';
+        $fallbackSort = in_array('nomor_internet', $cols) ? "c.nomor_internet" : (in_array('id', $cols) ? "c.id" : "c.{$firstCol}");
 
         $hasNameCol    = in_array('nama_pelanggan', $cols);
         $hasNamePCol   = in_array('nama_p', $cols);
@@ -134,13 +136,13 @@ class BroadcastController extends Controller
             $sortField = "c.nama";
         } elseif (Schema::hasTable('m_pelanggan') && Schema::hasColumn('m_pelanggan', 'nama_pelanggan')) {
             $nameCol = "COALESCE(mp.nama_pelanggan, mp.nama_p, c.nomor_internet)";
-            $sortField = in_array('nomor_internet', $cols) ? "c.nomor_internet" : "c.id";
+            $sortField = $fallbackSort;
         } elseif (Schema::hasTable('trx_batchjob_register') && Schema::hasColumn('trx_batchjob_register', 'nama_pelanggan')) {
             $nameCol = "COALESCE(reg.nama_pelanggan, c.nomor_internet)";
-            $sortField = in_array('nomor_internet', $cols) ? "c.nomor_internet" : "c.id";
+            $sortField = $fallbackSort;
         } else {
             $nameCol = "c.nomor_internet";
-            $sortField = in_array('nomor_internet', $cols) ? "c.nomor_internet" : "c.id";
+            $sortField = $fallbackSort;
         }
 
         // Phone column resolution
@@ -160,7 +162,7 @@ class BroadcastController extends Controller
         }
 
         // No internet column resolution
-        $noCol = in_array('nomor_internet', $cols) ? "c.nomor_internet" : (in_array('id_pelanggan', $cols) ? "c.id_pelanggan" : "c.id");
+        $noCol = in_array('nomor_internet', $cols) ? "c.nomor_internet" : (in_array('id_pelanggan', $cols) ? "c.id_pelanggan" : (in_array('id', $cols) ? "c.id" : "''"));
 
         // Address resolution
         $alamatCol = in_array('alamat_pasang', $cols) ? "c.alamat_pasang" : (in_array('alamat_p', $cols) ? "c.alamat_p" : (in_array('alamat', $cols) ? "c.alamat" : "''"));
@@ -205,6 +207,78 @@ class BroadcastController extends Controller
         );
 
         return $sortField;
+    }
+
+    /**
+     * Build base customer query dynamically according to available tables & columns
+     */
+    protected function buildCustomerQuery(string &$baseTable, array &$cols): \Illuminate\Database\Query\Builder
+    {
+        $hasViewBatchjob  = Schema::hasTable('view_batchjob');
+        $hasViewBilling   = Schema::hasTable('view_billing_layanan');
+        $hasTrxBatchReg   = Schema::hasTable('trx_batchjob_register');
+        $hasMPelanggan    = Schema::hasTable('m_pelanggan');
+        $hasTbPendaftaran = Schema::hasTable('tb_pendaftaran');
+        $hasTrxBilling    = Schema::hasTable('trx_billing_layanan');
+
+        if ($hasViewBatchjob) {
+            $baseTable = 'view_batchjob';
+            $query = DB::table('view_batchjob as c');
+        } elseif ($hasViewBilling) {
+            $baseTable = 'view_billing_layanan';
+            $query = DB::table('view_billing_layanan as c');
+        } elseif ($hasTrxBatchReg) {
+            $baseTable = 'trx_batchjob_register';
+            $query = DB::table('trx_batchjob_register as c');
+            if ($hasMPelanggan && Schema::hasColumn('trx_batchjob_register', 'nik_penduduk')) {
+                $query->leftJoin('m_pelanggan as mp', 'c.nik_penduduk', '=', 'mp.nik_penduduk');
+            }
+        } elseif ($hasTbPendaftaran) {
+            $baseTable = 'tb_pendaftaran';
+            $query = DB::table('tb_pendaftaran as c');
+        } elseif ($hasTrxBilling) {
+            $baseTable = 'trx_billing_layanan';
+            $query = DB::table('trx_billing_layanan as c');
+            if ($hasTrxBatchReg) {
+                $query->leftJoin('trx_batchjob_register as reg', 'c.nomor_internet', '=', 'reg.nomor_internet');
+            }
+            if ($hasMPelanggan && $hasTrxBatchReg && Schema::hasColumn('trx_batchjob_register', 'nik_penduduk')) {
+                $query->leftJoin('m_pelanggan as mp', 'reg.nik_penduduk', '=', 'mp.nik_penduduk');
+            }
+        } else {
+            $baseTable = 'tb_pengguna';
+            $query = DB::table('tb_pengguna as c');
+        }
+
+        $cols = Schema::getColumnListing($baseTable);
+
+        // Join latest invoice if using customer table and invoice table exists
+        if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
+            $trxCols = Schema::getColumnListing('trx_billing_layanan');
+            if (in_array('id', $trxCols)) {
+                $invPk = 'id';
+            } elseif (in_array('kode_billing_layanan', $trxCols)) {
+                $invPk = 'kode_billing_layanan';
+            } elseif (in_array('date_create', $trxCols)) {
+                $invPk = 'date_create';
+            } elseif (in_array('created_at', $trxCols)) {
+                $invPk = 'created_at';
+            } else {
+                $invPk = 'nomor_internet';
+            }
+
+            $latestSub = DB::table('trx_billing_layanan')
+                ->select('nomor_internet', DB::raw("MAX({$invPk}) as max_key"))
+                ->groupBy('nomor_internet');
+
+            $query->leftJoinSub($latestSub, 'sub_inv', function ($join) {
+                $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+            })->leftJoin('trx_billing_layanan as inv', function ($join) use ($invPk) {
+                $join->on('sub_inv.max_key', '=', "inv.{$invPk}");
+            });
+        }
+
+        return $query;
     }
 
     /**
@@ -265,55 +339,9 @@ class BroadcastController extends Controller
             $perPage = 10;
         }
 
-        // Build base query & resolve available database tables dynamically
-        $hasViewBatchjob  = Schema::hasTable('view_batchjob');
-        $hasViewBilling   = Schema::hasTable('view_billing_layanan');
-        $hasTrxBatchReg   = Schema::hasTable('trx_batchjob_register');
-        $hasMPelanggan    = Schema::hasTable('m_pelanggan');
-        $hasTbPendaftaran = Schema::hasTable('tb_pendaftaran');
-        $hasTrxBilling    = Schema::hasTable('trx_billing_layanan');
-
-        if ($hasViewBatchjob) {
-            $baseTable = 'view_batchjob';
-            $query = DB::table('view_batchjob as c');
-        } elseif ($hasViewBilling) {
-            $baseTable = 'view_billing_layanan';
-            $query = DB::table('view_billing_layanan as c');
-        } elseif ($hasTrxBatchReg) {
-            $baseTable = 'trx_batchjob_register';
-            $query = DB::table('trx_batchjob_register as c');
-            if ($hasMPelanggan && Schema::hasColumn('trx_batchjob_register', 'nik_penduduk')) {
-                $query->leftJoin('m_pelanggan as mp', 'c.nik_penduduk', '=', 'mp.nik_penduduk');
-            }
-        } elseif ($hasTbPendaftaran) {
-            $baseTable = 'tb_pendaftaran';
-            $query = DB::table('tb_pendaftaran as c');
-        } elseif ($hasTrxBilling) {
-            $baseTable = 'trx_billing_layanan';
-            $query = DB::table('trx_billing_layanan as c');
-            if ($hasTrxBatchReg) {
-                $query->leftJoin('trx_batchjob_register as reg', 'c.nomor_internet', '=', 'reg.nomor_internet');
-            }
-            if ($hasMPelanggan && $hasTrxBatchReg && Schema::hasColumn('trx_batchjob_register', 'nik_penduduk')) {
-                $query->leftJoin('m_pelanggan as mp', 'reg.nik_penduduk', '=', 'mp.nik_penduduk');
-            }
-        } else {
-            $baseTable = 'tb_pengguna';
-            $query = DB::table('tb_pengguna as c');
-        }
-
-        $cols = Schema::getColumnListing($baseTable);
-
-        // Join latest invoice if using customer table and invoice table exists
-        if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
-            $latestSub = DB::table('trx_billing_layanan')
-                ->select('nomor_internet', DB::raw('MAX(id) as max_id'))
-                ->groupBy('nomor_internet');
-
-            $query->leftJoinSub($latestSub, 'sub_inv', function ($join) {
-                $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
-            })->leftJoin('trx_billing_layanan as inv', 'sub_inv.max_id', '=', 'inv.id');
-        }
+        $baseTable = '';
+        $cols = [];
+        $query = $this->buildCustomerQuery($baseTable, $cols);
 
         $sortField = $this->selectCustomerFields($query, $baseTable);
 
@@ -390,6 +418,9 @@ class BroadcastController extends Controller
         // Counter Statistics
         $totalTargetCount = $pelangganList->total();
         
+        $hasViewBilling   = Schema::hasTable('view_billing_layanan');
+        $hasViewBatchjob  = Schema::hasTable('view_batchjob');
+        $hasTrxBilling    = Schema::hasTable('trx_billing_layanan');
         $unpaidTable = $hasViewBilling ? 'view_billing_layanan' : ($hasTrxBilling ? 'trx_billing_layanan' : ($hasViewBatchjob ? 'view_batchjob' : 'trx_batchjob_register'));
         $unpaidCols = Schema::getColumnListing($unpaidTable);
         
@@ -466,23 +497,10 @@ class BroadcastController extends Controller
             }
         }
 
-        $hasViewBatchjob  = Schema::hasTable('view_batchjob');
-        $hasViewBilling   = Schema::hasTable('view_billing_layanan');
-        $hasTrxBatchReg   = Schema::hasTable('trx_batchjob_register');
-
-        if ($hasViewBatchjob) {
-            $baseTable = 'view_batchjob';
-            $query = DB::table('view_batchjob as c')->where('c.nomor_internet', $nomorInternet);
-        } elseif ($hasTrxBatchReg) {
-            $baseTable = 'trx_batchjob_register';
-            $query = DB::table('trx_batchjob_register as c')->where('c.nomor_internet', $nomorInternet);
-        } elseif ($hasViewBilling) {
-            $baseTable = 'view_billing_layanan';
-            $query = DB::table('view_billing_layanan as c')->where('c.nomor_internet', $nomorInternet);
-        } else {
-            $baseTable = 'trx_billing_layanan';
-            $query = DB::table('trx_billing_layanan as c')->where('c.nomor_internet', $nomorInternet);
-        }
+        $baseTable = '';
+        $cols = [];
+        $query = $this->buildCustomerQuery($baseTable, $cols);
+        $query->where('c.nomor_internet', $nomorInternet);
 
         $this->selectCustomerFields($query, $baseTable);
         $data = $query->first();
@@ -588,23 +606,10 @@ class BroadcastController extends Controller
         $senderName = $user->nama_karyawan ?? ($user->username ?? 'Direktur');
         $kodeBatch = 'BC-MASSAL-' . date('YmdHis') . '-' . rand(100, 999);
 
-        $hasViewBatchjob  = Schema::hasTable('view_batchjob');
-        $hasViewBilling   = Schema::hasTable('view_billing_layanan');
-        $hasTrxBatchReg   = Schema::hasTable('trx_batchjob_register');
-
-        if ($hasViewBatchjob) {
-            $baseTable = 'view_batchjob';
-            $query = DB::table('view_batchjob as c')->whereIn('c.nomor_internet', $targets);
-        } elseif ($hasTrxBatchReg) {
-            $baseTable = 'trx_batchjob_register';
-            $query = DB::table('trx_batchjob_register as c')->whereIn('c.nomor_internet', $targets);
-        } elseif ($hasViewBilling) {
-            $baseTable = 'view_billing_layanan';
-            $query = DB::table('view_billing_layanan as c')->whereIn('c.nomor_internet', $targets);
-        } else {
-            $baseTable = 'trx_billing_layanan';
-            $query = DB::table('trx_billing_layanan as c')->whereIn('c.nomor_internet', $targets);
-        }
+        $baseTable = '';
+        $cols = [];
+        $query = $this->buildCustomerQuery($baseTable, $cols);
+        $query->whereIn('c.nomor_internet', $targets);
 
         $this->selectCustomerFields($query, $baseTable);
         $customerRecords = $query->get();

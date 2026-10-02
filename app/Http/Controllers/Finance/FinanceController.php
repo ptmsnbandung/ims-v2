@@ -105,12 +105,14 @@ class FinanceController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        // Ambil Data Konfirmasi Pembayaran & merchant_type / payment_type langsung dari trx_billing_layanan
+        // Ambil Data Konfirmasi Pembayaran & merchant_type / payment_type langsung dari database
         $kodeBillings = collect($invoices->items())->pluck('kode_billing_layanan')->filter()->toArray();
-        $confirmations = collect();
+        $nomorInternets = collect($invoices->items())->pluck('nomor_internet')->filter()->toArray();
         $trxBillings = collect();
+        $confirmationsByKode = collect();
+        $confirmationsByCustomer = collect();
 
-        if (!empty($kodeBillings)) {
+        if (!empty($kodeBillings) || !empty($nomorInternets)) {
             try {
                 if (Schema::hasTable('trx_billing_layanan')) {
                     $trxBillings = DB::table('trx_billing_layanan')
@@ -123,16 +125,53 @@ class FinanceController extends Controller
                 Log::info('Query trx_billing_layanan notice: ' . $e->getMessage());
             }
 
+            $records = collect();
+
+            // 1. Coba ambil dari tabel payment_confirmations di database aktif (ims_v3)
             try {
                 if (Schema::hasTable('payment_confirmations')) {
-                    $confirmations = DB::table('payment_confirmations')
-                        ->whereIn('kode_billing_layanan', $kodeBillings)
+                    $localRecords = DB::table('payment_confirmations')
+                        ->where(function ($q) use ($kodeBillings, $nomorInternets) {
+                            if (!empty($kodeBillings)) {
+                                $q->whereIn('kode_billing_layanan', $kodeBillings);
+                            }
+                            if (!empty($nomorInternets)) {
+                                $q->orWhereIn('customer_id', $nomorInternets);
+                            }
+                        })
                         ->orderBy('id', 'desc')
-                        ->get()
-                        ->keyBy('kode_billing_layanan');
+                        ->get();
+
+                    if ($localRecords->isNotEmpty()) {
+                        $records = $records->merge($localRecords);
+                    }
                 }
             } catch (\Throwable $e) {
-                Log::info('Query payment_confirmations notice: ' . $e->getMessage());
+                Log::info('Query local payment_confirmations notice: ' . $e->getMessage());
+            }
+
+            // 2. Fallback cross-database ke database ptmsn.payment_confirmations (seperti di bayar_transfer.php)
+            try {
+                $escapedKodes = !empty($kodeBillings) ? "'" . implode("','", array_map('addslashes', $kodeBillings)) . "'" : "''";
+                $escapedCusts = !empty($nomorInternets) ? "'" . implode("','", array_map('addslashes', $nomorInternets)) . "'" : "''";
+
+                $ptmsnRecords = DB::select("
+                    SELECT * FROM ptmsn.payment_confirmations 
+                    WHERE kode_billing_layanan IN ({$escapedKodes}) 
+                       OR customer_id IN ({$escapedCusts})
+                    ORDER BY id DESC
+                ");
+
+                if (!empty($ptmsnRecords)) {
+                    $records = $records->merge(collect($ptmsnRecords));
+                }
+            } catch (\Throwable $e) {
+                // Ignore jika ptmsn bukan database lokal
+            }
+
+            if ($records->isNotEmpty()) {
+                $confirmationsByKode = $records->keyBy('kode_billing_layanan');
+                $confirmationsByCustomer = $records->keyBy('customer_id');
             }
         }
 
@@ -147,11 +186,24 @@ class FinanceController extends Controller
                 }
             }
 
-            $confirmation = $confirmations->get($inv->kode_billing_layanan) ?? null;
+            $kode = $inv->kode_billing_layanan;
+            $altKode1 = str_replace('/', '-', $kode);
+            $altKode2 = str_replace('-', '/', $kode);
+
+            $confirmation = $confirmationsByKode->get($kode)
+                ?? $confirmationsByKode->get($altKode1)
+                ?? $confirmationsByKode->get($altKode2)
+                ?? $confirmationsByCustomer->get($inv->nomor_internet)
+                ?? null;
+
             $inv->payment_confirmation = $confirmation;
-            // Jika invoice memiliki bukti transfer terdaftar, tandai payment_type menjadi transfer manual (2) jika belum
-            if ($confirmation && (empty($inv->payment_type) || $inv->payment_type == '1')) {
+
+            // Jika invoice memiliki bukti transfer terdaftar, tandai payment_type menjadi transfer manual (2)
+            if ($confirmation && !empty($confirmation->proof_file)) {
                 $inv->has_manual_transfer_proof = true;
+                if (empty($inv->payment_type) || $inv->payment_type == '1') {
+                    $inv->payment_type = '2';
+                }
             } else {
                 $inv->has_manual_transfer_proof = false;
             }
@@ -467,11 +519,64 @@ class FinanceController extends Controller
                 'hide' => '0',
             ]);
 
+            // Handle upload foto bukti transfer (jika diupload via modal / kamera)
+            if ($request->hasFile('foto_bukti')) {
+                try {
+                    $file = $request->file('foto_bukti');
+                    if ($file->isValid()) {
+                        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                        $filename = 'proof_' . preg_replace('/[^a-zA-Z0-9]/', '_', $decodedKode) . '_' . time() . '.' . $ext;
+                        $uploadPath = public_path('uploads/bukti_transfer');
+                        if (!file_exists($uploadPath)) {
+                            mkdir($uploadPath, 0755, true);
+                        }
+                        $file->move($uploadPath, $filename);
+                        $proofUrl = '/uploads/bukti_transfer/' . $filename;
+
+                        if (Schema::hasTable('payment_confirmations')) {
+                            $existPc = DB::table('payment_confirmations')
+                                ->where('kode_billing_layanan', $decodedKode)
+                                ->orWhere('kode_billing_layanan', str_replace('/', '-', $decodedKode))
+                                ->orWhere('kode_billing_layanan', str_replace('-', '/', $decodedKode))
+                                ->first();
+
+                            if ($existPc) {
+                                DB::table('payment_confirmations')
+                                    ->where('id', $existPc->id)
+                                    ->update([
+                                        'proof_file' => $proofUrl,
+                                        'status' => 'approved',
+                                        'verified_at' => Carbon::now()->toDateTimeString(),
+                                        'admin_notes' => "Diverifikasi oleh {$userUpdate} via Approval Billing Layanan",
+                                        'updated_at' => Carbon::now()->toDateTimeString(),
+                                    ]);
+                            } else {
+                                DB::table('payment_confirmations')->insert([
+                                    'kode_billing_layanan' => $decodedKode,
+                                    'customer_id' => $nomorInternet,
+                                    'proof_file' => $proofUrl,
+                                    'status' => 'approved',
+                                    'verified_at' => Carbon::now()->toDateTimeString(),
+                                    'notes' => $catatan,
+                                    'admin_notes' => "Diupload & diverifikasi oleh {$userUpdate}",
+                                    'created_at' => Carbon::now()->toDateTimeString(),
+                                    'updated_at' => Carbon::now()->toDateTimeString(),
+                                ]);
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Upload foto bukti notice: ' . $e->getMessage());
+                }
+            }
+
             // Sinkronisasi status di tabel payment_confirmations menjadi approved
             try {
                 if (Schema::hasTable('payment_confirmations')) {
                     DB::table('payment_confirmations')
                         ->where('kode_billing_layanan', $decodedKode)
+                        ->orWhere('kode_billing_layanan', str_replace('/', '-', $decodedKode))
+                        ->orWhere('kode_billing_layanan', str_replace('-', '/', $decodedKode))
                         ->update([
                             'status' => 'approved',
                             'verified_at' => Carbon::now()->toDateTimeString(),
@@ -480,7 +585,27 @@ class FinanceController extends Controller
                         ]);
                 }
             } catch (\Throwable $e) {
-                Log::info('Update payment_confirmations note: ' . $e->getMessage());
+                Log::info('Update local payment_confirmations note: ' . $e->getMessage());
+            }
+
+            // Cross-database update ke database ptmsn jika ada
+            try {
+                $escapedKode = addslashes($decodedKode);
+                $escapedAlt1 = addslashes(str_replace('/', '-', $decodedKode));
+                $escapedAlt2 = addslashes(str_replace('-', '/', $decodedKode));
+                $nowStr = Carbon::now()->toDateTimeString();
+                $adminNoteStr = addslashes("Diverifikasi oleh {$userUpdate} via Approval Billing Layanan");
+
+                DB::statement("
+                    UPDATE ptmsn.payment_confirmations 
+                    SET status = 'approved',
+                        verified_at = '{$nowStr}',
+                        admin_notes = '{$adminNoteStr}',
+                        updated_at = '{$nowStr}'
+                    WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                ");
+            } catch (\Throwable $e) {
+                // Ignore jika ptmsn bukan database lokal
             }
 
             // Auto Req Unsuspend ke NOC jika pelanggan sedang dalam status Suspend/Terisolir
@@ -775,10 +900,22 @@ class FinanceController extends Controller
             ->limit(10)
             ->get();
 
+        $confirmation = null;
+        if (Schema::hasTable('payment_confirmations')) {
+            $confirmation = DB::table('payment_confirmations')
+                ->where('kode_billing_layanan', $decodedKode)
+                ->orWhere('kode_billing_layanan', str_replace('/', '-', $decodedKode))
+                ->orWhere('kode_billing_layanan', str_replace('-', '/', $decodedKode))
+                ->orWhere('customer_id', $invoice->nomor_internet ?? '')
+                ->orderBy('id', 'desc')
+                ->first();
+        }
+
         return response()->json([
             'invoice' => $invoice,
             'items' => $items,
             'logs' => $logs,
+            'confirmation' => $confirmation,
         ]);
     }
 

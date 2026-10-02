@@ -1192,7 +1192,7 @@
         <div @click.away="payModalOpen = false"
              class="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
             
-            <form action="{{ route('finance.billing-layanan.konfirmasi-bayar.post') }}" method="POST">
+            <form action="{{ route('finance.billing-layanan.konfirmasi-bayar.post') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="kode_billing" :value="payKodeBilling">
                 <div class="p-6 space-y-4">
@@ -1313,6 +1313,37 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Verifikasi</label>
                         <input type="text" name="catatan" x-model="payCatatan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
+                    </div>
+
+                    <!-- Foto Bukti Transfer / Kwitansi (Opsional) -->
+                    <div class="space-y-1.5" x-data="{ fotoBuktiPreview: null }">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                            Upload / Ambil Foto Bukti Transfer <span class="text-slate-400 font-normal">(Opsional)</span>
+                        </label>
+                        <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-3 text-center hover:border-emerald-500 transition cursor-pointer bg-slate-50 dark:bg-slate-950/40">
+                            <input type="file"
+                                   name="foto_bukti"
+                                   accept="image/*"
+                                   capture="environment"
+                                   @change="const file = $event.target.files[0]; if(file) { fotoBuktiPreview = URL.createObjectURL(file); }"
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            
+                            <template x-if="!fotoBuktiPreview">
+                                <div class="flex flex-col items-center justify-center py-2 pointer-events-none">
+                                    <svg class="w-6 h-6 text-slate-400 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                    </svg>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Klik untuk ambil foto kamera atau pilih file bukti transfer</p>
+                                </div>
+                            </template>
+
+                            <template x-if="fotoBuktiPreview">
+                                <div class="relative rounded-lg overflow-hidden max-h-28 flex items-center justify-center">
+                                    <img :src="fotoBuktiPreview" class="object-contain max-h-24 rounded shadow-sm">
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
 

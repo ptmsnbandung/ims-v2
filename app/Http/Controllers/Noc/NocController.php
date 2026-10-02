@@ -69,6 +69,116 @@ class NocController extends Controller
         // Master Barang / Perangkat
         $barangs = DB::table('m_barang')->where('hide', '!=', '1')->get();
 
+        $selectedBulan = $request->filled('bulan') ? str_pad($request->input('bulan'), 2, '0', STR_PAD_LEFT) : date('m');
+        $selectedTahun = $request->filled('tahun') ? (string) $request->input('tahun') : (string) date('Y');
+
+        $monthsList = [
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember',
+        ];
+
+        $currentYearInt = (int) date('Y');
+        $availableYears = range($currentYearInt - 4, $currentYearInt + 1);
+
+        try {
+            $startDate = Carbon::createFromDate((int) $selectedTahun, (int) $selectedBulan, 1)->startOfMonth()->format('Y-m-d 00:00:00');
+            $endDate = Carbon::createFromDate((int) $selectedTahun, (int) $selectedBulan, 1)->endOfMonth()->format('Y-m-d 23:59:59');
+
+            $prevMonthDate = Carbon::createFromDate((int) $selectedTahun, (int) $selectedBulan, 1)->subMonth();
+            $prevStartDate = $prevMonthDate->copy()->startOfMonth()->format('Y-m-d 00:00:00');
+            $prevEndDate = $prevMonthDate->copy()->endOfMonth()->format('Y-m-d 23:59:59');
+        } catch (\Throwable $e) {
+            $selectedBulan = date('m');
+            $selectedTahun = (string) date('Y');
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d 00:00:00');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d 23:59:59');
+            $prevStartDate = Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d 00:00:00');
+            $prevEndDate = Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d 23:59:59');
+        }
+
+        // New Users KPI for selected month in NOC
+        $newUserStats = [
+            'selectedBulan' => $selectedBulan,
+            'selectedTahun' => $selectedTahun,
+            'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
+            'totalBaru' => 0,
+            'aktifBaru' => 0,
+            'prosesBaru' => 0,
+            'batalBaru' => 0,
+            'prevTotalBaru' => 0,
+            'growthPercent' => 0,
+            'growthCount' => 0,
+            'paketBreakdown' => collect([]),
+            'recentNewUsers' => collect([]),
+        ];
+
+        try {
+            if (Schema::hasTable('trx_batchjob_register')) {
+                $monthStats = DB::table('trx_batchjob_register')
+                    ->whereBetween('date_create', [$startDate, $endDate])
+                    ->selectRaw("
+                        COUNT(*) as total_baru,
+                        COUNT(CASE WHEN status_reg = '20' THEN 1 END) as aktif_baru,
+                        COUNT(CASE WHEN status_reg IN ('11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1') THEN 1 END) as proses_baru,
+                        COUNT(CASE WHEN status_reg IN ('14', '15') THEN 1 END) as batal_baru
+                    ")
+                    ->first();
+
+                $totalBaru = (int) ($monthStats->total_baru ?? 0);
+                $aktifBaru = (int) ($monthStats->aktif_baru ?? 0);
+                $prosesBaru = (int) ($monthStats->proses_baru ?? 0);
+                $batalBaru = (int) ($monthStats->batal_baru ?? 0);
+
+                $prevTotalBaru = DB::table('trx_batchjob_register')
+                    ->whereBetween('date_create', [$prevStartDate, $prevEndDate])
+                    ->count();
+
+                $growthCount = $totalBaru - $prevTotalBaru;
+                $growthPercent = $prevTotalBaru > 0 
+                    ? round((($totalBaru - $prevTotalBaru) / $prevTotalBaru) * 100, 1) 
+                    : ($totalBaru > 0 ? 100 : 0);
+
+                $sourceTable = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
+                $paketBreakdown = DB::table($sourceTable)
+                    ->whereBetween('date_create', [$startDate, $endDate])
+                    ->select(
+                        DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_paket"),
+                        DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
+                        DB::raw('count(*) as total')
+                    )
+                    ->groupBy('nama_paket', 'nominal_bandwith')
+                    ->orderByDesc('total')
+                    ->limit(5)
+                    ->get();
+
+                $newUserStats = [
+                    'selectedBulan' => $selectedBulan,
+                    'selectedTahun' => $selectedTahun,
+                    'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
+                    'totalBaru' => $totalBaru,
+                    'aktifBaru' => $aktifBaru,
+                    'prosesBaru' => $prosesBaru,
+                    'batalBaru' => $batalBaru,
+                    'prevTotalBaru' => $prevTotalBaru,
+                    'growthPercent' => $growthPercent,
+                    'growthCount' => $growthCount,
+                    'paketBreakdown' => $paketBreakdown,
+                ];
+            }
+        } catch (\Throwable $e) {
+            // Fail-safe
+        }
+
         // Index OLT Availability (1..128, occupied vs available)
         $indexOltData = $this->getIndexOltSlots();
 
@@ -92,6 +202,11 @@ class NocController extends Controller
             'occupiedIndexOlts' => $indexOltData['occupied'],
             'allPorts' => $indexOltData['allPorts'],
             'portStats' => $indexOltData['portStats'],
+            'newUserStats' => $newUserStats,
+            'monthsList' => $monthsList,
+            'availableYears' => $availableYears,
+            'selectedBulan' => $selectedBulan,
+            'selectedTahun' => $selectedTahun,
         ]);
     }
 

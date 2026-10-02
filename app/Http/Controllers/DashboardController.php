@@ -3,24 +3,212 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pengguna;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     /**
-     * Display the dashboard view.
+     * Display the universal dashboard view with new users statistics and date filters.
      */
     public function index(Request $request): View
     {
-        /** @var Pengguna $user */
+        /** @var Pengguna|null $user */
         $user = $request->user();
-        $user->loadMissing(['level', 'karyawan']);
+        if ($user && $user instanceof Pengguna) {
+            $user->loadMissing(['level', 'karyawan']);
+        }
 
+        $selectedBulan = $request->filled('bulan') ? str_pad($request->input('bulan'), 2, '0', STR_PAD_LEFT) : date('m');
+        $selectedTahun = $request->filled('tahun') ? (string) $request->input('tahun') : (string) date('Y');
+
+        $monthsList = [
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember',
+        ];
+
+        $currentYearInt = (int) date('Y');
+        $availableYears = range($currentYearInt - 4, $currentYearInt + 1);
+
+        try {
+            $startDate = Carbon::createFromDate((int) $selectedTahun, (int) $selectedBulan, 1)->startOfMonth()->format('Y-m-d 00:00:00');
+            $endDate = Carbon::createFromDate((int) $selectedTahun, (int) $selectedBulan, 1)->endOfMonth()->format('Y-m-d 23:59:59');
+
+            $prevMonthDate = Carbon::createFromDate((int) $selectedTahun, (int) $selectedBulan, 1)->subMonth();
+            $prevStartDate = $prevMonthDate->copy()->startOfMonth()->format('Y-m-d 00:00:00');
+            $prevEndDate = $prevMonthDate->copy()->endOfMonth()->format('Y-m-d 23:59:59');
+        } catch (\Throwable $e) {
+            $selectedBulan = date('m');
+            $selectedTahun = (string) date('Y');
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d 00:00:00');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d 23:59:59');
+            $prevStartDate = Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d 00:00:00');
+            $prevEndDate = Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d 23:59:59');
+        }
+
+        // 1. STATISTIK USER & PELANGGAN BARU (Bulan & Tahun Terpilih)
+        $newUserStats = [
+            'selectedBulan' => $selectedBulan,
+            'selectedTahun' => $selectedTahun,
+            'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
+            'totalBaru' => 0,
+            'aktifBaru' => 0,
+            'prosesBaru' => 0,
+            'batalBaru' => 0,
+            'prevTotalBaru' => 0,
+            'growthPercent' => 0,
+            'growthCount' => 0,
+            'totalPenggunaSistemBaru' => 0,
+            'totalSemuaPelangganAktif' => 0,
+            'paketBreakdown' => collect([]),
+            'recentNewUsers' => collect([]),
+            'statusBreakdown' => [
+                '11' => 0,    // Draft Registrasi
+                '12' => 0,    // Survey
+                '16' => 0,    // Instalasi
+                '18_19' => 0, // Aktivasi NOC
+                '20' => 0,    // Aktif Online
+                'batal' => 0, // Batal (#14, #15)
+            ],
+        ];
+
+        try {
+            if (Schema::hasTable('trx_batchjob_register')) {
+                $monthStats = DB::table('trx_batchjob_register')
+                    ->whereBetween('date_create', [$startDate, $endDate])
+                    ->selectRaw("
+                        COUNT(*) as total_baru,
+                        COUNT(CASE WHEN status_reg = '20' THEN 1 END) as aktif_baru,
+                        COUNT(CASE WHEN status_reg IN ('11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1') THEN 1 END) as proses_baru,
+                        COUNT(CASE WHEN status_reg IN ('14', '15') THEN 1 END) as batal_baru,
+                        COUNT(CASE WHEN status_reg IN ('11', '11.1') THEN 1 END) as draft_count,
+                        COUNT(CASE WHEN status_reg IN ('12', '13', '13.1') THEN 1 END) as survey_count,
+                        COUNT(CASE WHEN status_reg IN ('16', '17', '17.1') THEN 1 END) as instalasi_count,
+                        COUNT(CASE WHEN status_reg IN ('18', '18.1', '19', '19.1') THEN 1 END) as aktivasi_count
+                    ")
+                    ->first();
+
+                $totalBaru = (int) ($monthStats->total_baru ?? 0);
+                $aktifBaru = (int) ($monthStats->aktif_baru ?? 0);
+                $prosesBaru = (int) ($monthStats->proses_baru ?? 0);
+                $batalBaru = (int) ($monthStats->batal_baru ?? 0);
+
+                // Previous month count for trend comparison
+                $prevTotalBaru = DB::table('trx_batchjob_register')
+                    ->whereBetween('date_create', [$prevStartDate, $prevEndDate])
+                    ->count();
+
+                $growthCount = $totalBaru - $prevTotalBaru;
+                $growthPercent = $prevTotalBaru > 0 
+                    ? round((($totalBaru - $prevTotalBaru) / $prevTotalBaru) * 100, 1) 
+                    : ($totalBaru > 0 ? 100 : 0);
+
+                // Total all-time active customers
+                $totalSemuaPelangganAktif = DB::table('trx_batchjob_register')
+                    ->where('status_reg', '20')
+                    ->count();
+
+                // Paket Breakdown for new registrations this month
+                $sourceTable = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
+                
+                if ($sourceTable === 'view_batchjob') {
+                    $paketBreakdown = DB::table('view_batchjob')
+                        ->whereBetween('date_create', [$startDate, $endDate])
+                        ->select(
+                            DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_paket"),
+                            DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
+                            DB::raw('count(*) as total')
+                        )
+                        ->groupBy('nama_paket', 'nominal_bandwith')
+                        ->orderByDesc('total')
+                        ->limit(6)
+                        ->get();
+
+                    $recentNewUsers = DB::table('view_batchjob')
+                        ->whereBetween('date_create', [$startDate, $endDate])
+                        ->orderBy('date_create', 'desc')
+                        ->limit(8)
+                        ->get();
+                } else {
+                    $paketBreakdown = DB::table('trx_batchjob_register')
+                        ->whereBetween('date_create', [$startDate, $endDate])
+                        ->select(
+                            DB::raw("COALESCE(kode_bandwith, 'DEFAULT') as nama_paket"),
+                            DB::raw("'0' as nominal_bandwith"),
+                            DB::raw('count(*) as total')
+                        )
+                        ->groupBy('kode_bandwith')
+                        ->orderByDesc('total')
+                        ->limit(6)
+                        ->get();
+
+                    $recentNewUsers = DB::table('trx_batchjob_register')
+                        ->whereBetween('date_create', [$startDate, $endDate])
+                        ->orderBy('date_create', 'desc')
+                        ->limit(8)
+                        ->get();
+                }
+
+                // New system users (tb_pengguna)
+                $totalPenggunaSistemBaru = 0;
+                if (Schema::hasTable('tb_pengguna')) {
+                    $userDateCol = Schema::hasColumn('tb_pengguna', 'date_create') 
+                        ? 'date_create' 
+                        : (Schema::hasColumn('tb_pengguna', 'created_at') ? 'created_at' : null);
+                    
+                    if ($userDateCol) {
+                        $totalPenggunaSistemBaru = DB::table('tb_pengguna')
+                            ->whereBetween($userDateCol, [$startDate, $endDate])
+                            ->count();
+                    }
+                }
+
+                $newUserStats = [
+                    'selectedBulan' => $selectedBulan,
+                    'selectedTahun' => $selectedTahun,
+                    'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
+                    'totalBaru' => $totalBaru,
+                    'aktifBaru' => $aktifBaru,
+                    'prosesBaru' => $prosesBaru,
+                    'batalBaru' => $batalBaru,
+                    'prevTotalBaru' => $prevTotalBaru,
+                    'growthPercent' => $growthPercent,
+                    'growthCount' => $growthCount,
+                    'totalPenggunaSistemBaru' => $totalPenggunaSistemBaru,
+                    'totalSemuaPelangganAktif' => $totalSemuaPelangganAktif,
+                    'paketBreakdown' => $paketBreakdown,
+                    'recentNewUsers' => $recentNewUsers,
+                    'statusBreakdown' => [
+                        '11' => (int) ($monthStats->draft_count ?? 0),
+                        '12' => (int) ($monthStats->survey_count ?? 0),
+                        '16' => (int) ($monthStats->instalasi_count ?? 0),
+                        '18_19' => (int) ($monthStats->aktivasi_count ?? 0),
+                        '20' => $aktifBaru,
+                        'batal' => $batalBaru,
+                    ],
+                ];
+            }
+        } catch (\Throwable $e) {
+            // Fail-safe default
+        }
+
+        // 2. STATISTIK FINANCE (SINKRON DENGAN BULAN & TAHUN TERPILIH)
         $financeStats = [
-            'currentMonth' => date('m'),
-            'currentYear' => (string) date('Y'),
+            'currentMonth' => $selectedBulan,
+            'currentYear' => $selectedTahun,
             'draftCount' => 0,
             'draftAmount' => 0,
             'publishCount' => 0,
@@ -33,23 +221,10 @@ class DashboardController extends Controller
 
         if ($user->isFinance() || $user->isDirektur()) {
             try {
-                $currentMonth = date('m');
-                $currentYear = (string) date('Y');
-
-                $draftCount = 0;
-                $draftAmount = 0;
-                $publishCount = 0;
-                $publishAmount = 0;
-                $paidCount = 0;
-                $paidAmount = 0;
-                $totalRegPending = 0;
-                $recentInvoices = collect([]);
-
-                // Hitung statistik invoice bulanan (High performance single query)
-                if (DB::getSchemaBuilder()->hasTable('trx_billing_layanan')) {
+                if (Schema::hasTable('trx_billing_layanan')) {
                     $kpi = DB::table('trx_billing_layanan')
-                        ->where('bulan_tagihan', $currentMonth)
-                        ->where('tahun_tagihan', $currentYear)
+                        ->where('bulan_tagihan', $selectedBulan)
+                        ->where('tahun_tagihan', $selectedTahun)
                         ->selectRaw("
                             COUNT(CASE WHEN status_bill_lay IN ('11', '12') THEN 1 END) as draft_count,
                             COALESCE(SUM(CASE WHEN status_bill_lay IN ('11', '12') THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as draft_amount,
@@ -67,39 +242,50 @@ class DashboardController extends Controller
                     $paidCount = (int) ($kpi->paid_count ?? 0);
                     $paidAmount = (float) ($kpi->paid_amount ?? 0);
 
-                    $viewTable = DB::getSchemaBuilder()->hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
+                    $viewTable = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
                     $recentInvoices = DB::table($viewTable)
+                        ->where('bulan_tagihan', $selectedBulan)
+                        ->where('tahun_tagihan', $selectedTahun)
                         ->orderBy('date_create', 'desc')
                         ->limit(5)
                         ->get();
-                }
 
-                if (DB::getSchemaBuilder()->hasTable('view_billing_reg') || DB::getSchemaBuilder()->hasTable('trx_billing_reg')) {
-                    $regTable = DB::getSchemaBuilder()->hasTable('view_billing_reg') ? 'view_billing_reg' : 'trx_billing_reg';
-                    $totalRegPending = DB::table($regTable)->whereIn('status_bill_reg', ['11', '12', '13'])->count();
-                }
+                    if ($recentInvoices->isEmpty()) {
+                        $recentInvoices = DB::table($viewTable)
+                            ->orderBy('date_create', 'desc')
+                            ->limit(5)
+                            ->get();
+                    }
 
-                $financeStats = [
-                    'currentMonth' => $currentMonth,
-                    'currentYear' => $currentYear,
-                    'draftCount' => $draftCount,
-                    'draftAmount' => $draftAmount,
-                    'publishCount' => $publishCount,
-                    'publishAmount' => $publishAmount,
-                    'paidCount' => $paidCount,
-                    'paidAmount' => $paidAmount,
-                    'totalRegPending' => $totalRegPending,
-                    'recentInvoices' => $recentInvoices,
-                ];
+                    $regTable = Schema::hasTable('view_billing_reg') ? 'view_billing_reg' : (Schema::hasTable('trx_billing_reg') ? 'trx_billing_reg' : null);
+                    $totalRegPending = $regTable ? DB::table($regTable)->whereIn('status_bill_reg', ['11', '12', '13'])->count() : 0;
+
+                    $financeStats = [
+                        'currentMonth' => $selectedBulan,
+                        'currentYear' => $selectedTahun,
+                        'draftCount' => $draftCount,
+                        'draftAmount' => $draftAmount,
+                        'publishCount' => $publishCount,
+                        'publishAmount' => $publishAmount,
+                        'paidCount' => $paidCount,
+                        'paidAmount' => $paidAmount,
+                        'totalRegPending' => $totalRegPending,
+                        'recentInvoices' => $recentInvoices,
+                    ];
+                }
             } catch (\Throwable $e) {
-                // Fail-safe default if database views are not present
+                // Fail-safe default
             }
         }
 
         return view('dashboard', [
             'user' => $user,
+            'newUserStats' => $newUserStats,
             'financeStats' => $financeStats,
+            'monthsList' => $monthsList,
+            'availableYears' => $availableYears,
+            'selectedBulan' => $selectedBulan,
+            'selectedTahun' => $selectedTahun,
         ]);
     }
 }
-

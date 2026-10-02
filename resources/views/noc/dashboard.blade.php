@@ -196,6 +196,113 @@
                     <span>Manajemen OLT</span>
                 </a>
             </div>
+    </div>
+
+    <!-- Filter Bulan & Tahun + Statistik User Baru (NOC) -->
+    <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <div class="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-cyan-400">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                        Statistik User Baru & Provisioning NOC
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Periode: <span class="font-bold text-blue-600 dark:text-cyan-400">{{ $newUserStats['selectedBulanNama'] }} {{ $newUserStats['selectedTahun'] }}</span> &middot; {{ number_format($newUserStats['totalBaru']) }} pendaftaran baru tercatat.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Form -->
+        <form action="{{ route('noc.dashboard') }}" method="GET" class="flex flex-wrap items-center gap-2">
+            <div class="relative">
+                <select name="bulan" 
+                        class="appearance-none pl-3 pr-7 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
+                    @foreach($monthsList as $num => $namaBulan)
+                        <option value="{{ $num }}" {{ $selectedBulan == $num ? 'selected' : '' }}>
+                            {{ $namaBulan }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+            </div>
+
+            <div class="relative">
+                <select name="tahun" 
+                        class="appearance-none pl-3 pr-7 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
+                    @foreach($availableYears as $year)
+                        <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
+                            {{ $year }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+            </div>
+
+            <button type="submit" 
+                    class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-xs transition cursor-pointer">
+                Filter
+            </button>
+
+            @if($selectedBulan != date('m') || $selectedTahun != date('Y'))
+                <a href="{{ route('noc.dashboard') }}" 
+                   class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition"
+                   title="Reset ke Bulan Saat Ini">
+                    Reset
+                </a>
+            @endif
+        </form>
+    </div>
+
+    <!-- Monthly New Users Summary Mini-Banner for NOC -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Baru Bulan Ini</span>
+                <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5 font-mono">
+                    {{ number_format($newUserStats['totalBaru']) }} <span class="text-xs font-normal text-slate-400">Pendaftar</span>
+                </div>
+            </div>
+            <div class="text-right">
+                @if($newUserStats['growthCount'] >= 0)
+                    <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">+{{ $newUserStats['growthCount'] }} vs bln lalu</span>
+                @else
+                    <span class="text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded-full">{{ $newUserStats['growthCount'] }} vs bln lalu</span>
+                @endif
+            </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aktivasi Selesai (#20)</span>
+                <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 font-mono">
+                    {{ number_format($newUserStats['aktifBaru']) }} <span class="text-xs font-normal text-slate-400">Aktif</span>
+                </div>
+            </div>
+            <div class="text-right text-[11px] text-slate-400">
+                <span>{{ $newUserStats['totalBaru'] > 0 ? round(($newUserStats['aktifBaru'] / $newUserStats['totalBaru']) * 100) : 0 }}% konversi</span>
+            </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Antrean Baru Menunggu</span>
+                <div class="text-xl font-black text-amber-500 mt-0.5 font-mono">
+                    {{ number_format($newUserStats['prosesBaru']) }} <span class="text-xs font-normal text-slate-400">Order</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <a href="{{ route('noc.aktivasi') }}" class="text-xs font-bold text-blue-600 dark:text-cyan-400 hover:underline">Proses NOC &rarr;</a>
+            </div>
         </div>
     </div>
 

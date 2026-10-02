@@ -699,18 +699,64 @@
                             <div class="space-y-1.5">
                                 <!-- Payment Method Badge & Quick Actions -->
                                 @php
-                                    $hasTransfer = ($inv->payment_type == 2) || !empty($inv->has_manual_transfer_proof) || !empty($inv->payment_confirmation);
+                                    $merchantRaw = trim((string)($inv->merchant_type ?? ''));
+                                    $merchantLower = strtolower($merchantRaw);
+                                    $pType = (string)($inv->payment_type ?? '');
                                     $confirmation = $inv->payment_confirmation ?? null;
+
+                                    // Cek apakah Transfer Bank (dari merchant_type atau payment_type)
+                                    $isTransfer = ($pType === '2')
+                                        || !empty($inv->has_manual_transfer_proof)
+                                        || !empty($confirmation)
+                                        || (
+                                            $merchantRaw !== '' && (
+                                                str_contains($merchantLower, 'bca') ||
+                                                str_contains($merchantLower, 'mandiri') ||
+                                                str_contains($merchantLower, 'bri') ||
+                                                str_contains($merchantLower, 'bni') ||
+                                                str_contains($merchantLower, 'bsi') ||
+                                                str_contains($merchantLower, 'permata') ||
+                                                str_contains($merchantLower, 'cimb') ||
+                                                str_contains($merchantLower, 'transfer') ||
+                                                str_contains($merchantLower, 'bank')
+                                            )
+                                        );
+
+                                    // Cek apakah Tunai / Cash To Collector
+                                    $isCash = ($pType === '3')
+                                        || (
+                                            $merchantRaw !== '' && (
+                                                str_contains($merchantLower, 'cash') ||
+                                                str_contains($merchantLower, 'kolektor') ||
+                                                str_contains($merchantLower, 'collector') ||
+                                                str_contains($merchantLower, 'kasir') ||
+                                                str_contains($merchantLower, 'tunai')
+                                            )
+                                        );
+
+                                    // Format Label Metode Pembayaran Sesuai Kolom merchant_type
+                                    if (!empty($merchantRaw)) {
+                                        $methodLabel = $merchantRaw;
+                                        if (in_array(strtoupper($merchantRaw), ['BCA', 'MANDIRI', 'BRI', 'BNI', 'BSI', 'PERMATA', 'CIMB'])) {
+                                            $methodLabel = 'Transfer ' . strtoupper($merchantRaw);
+                                        }
+                                    } elseif ($isTransfer) {
+                                        $methodLabel = 'Manual Transfer';
+                                    } elseif ($isCash) {
+                                        $methodLabel = 'Cash To Collector';
+                                    } else {
+                                        $methodLabel = 'Midtrans (Online)';
+                                    }
                                 @endphp
 
-                                @if($hasTransfer)
+                                @if($isTransfer)
                                 <div class="flex flex-col gap-1.5 items-start">
-                                    <!-- Badge Metode Transfer -->
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[10px] font-semibold">
+                                    <!-- Badge Metode Transfer dengan Nama Bank dari merchant_type -->
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Manual Transfer' }}">
                                         <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5" />
                                         </svg>
-                                        <span>Manual Transfer</span>
+                                        <span>{{ $methodLabel }}</span>
                                     </span>
 
                                     <!-- Bukti Transfer & Status Verifikasi -->
@@ -764,13 +810,22 @@
                                         @endif
                                     @endif
                                 </div>
-                                @elseif($inv->payment_type == 1)
+                                @elseif($isCash)
                                 <div class="flex flex-col gap-1 items-start">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[10px] font-semibold">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Cash To Collector' }}">
+                                        <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                        </svg>
+                                        <span>{{ $methodLabel }}</span>
+                                    </span>
+                                </div>
+                                @else
+                                <div class="flex flex-col gap-1 items-start">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Midtrans (Online)' }}">
                                         <svg class="w-3 h-3 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                                         </svg>
-                                        <span>Midtrans (Online)</span>
+                                        <span>{{ $methodLabel }}</span>
                                     </span>
 
                                     @if($snapUrl && !$isSnapExpired)
@@ -806,7 +861,7 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400"></span>
                                         <span>Link Expired</span>
                                     </button>
-                                    @else
+                                    @elseif($inv->status_bill_lay != '15')
                                     <form method="POST" action="{{ route('finance.billing-layanan.generate-midtrans.post') }}">
                                         @csrf
                                         <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
@@ -817,15 +872,6 @@
                                         </button>
                                     </form>
                                     @endif
-                                </div>
-                                @else
-                                <div class="flex flex-col gap-1 items-start">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[10px] font-semibold">
-                                        <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                                        </svg>
-                                        <span>Cash To Collector</span>
-                                    </span>
                                 </div>
                                 @endif
 
@@ -1041,6 +1087,7 @@
                             <span class="text-slate-500 dark:text-slate-400 block text-[11px]">Paket & Periode:</span>
                             <span class="font-bold text-blue-600 dark:text-blue-400" x-text="(detailData.invoice?.nama_kategori_bandwith || '') + ' ' + (detailData.invoice?.nominal_bandwith || '') + ' Mbps'"></span>
                             <span class="text-slate-500 dark:text-slate-400 block text-[10px] mt-0.5" x-text="'Periode: ' + (detailData.invoice?.periode_tagihan || '-')"></span>
+                            <span class="text-emerald-600 dark:text-emerald-400 block text-[10px] font-semibold mt-0.5" x-text="'Metode: ' + (detailData.invoice?.merchant_type || (detailData.invoice?.payment_type == 1 ? 'Midtrans' : (detailData.invoice?.payment_type == 3 ? 'Cash To Collector' : 'Manual Transfer')))"></span>
                         </div>
                     </div>
 

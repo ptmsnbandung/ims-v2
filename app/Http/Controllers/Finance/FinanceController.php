@@ -105,10 +105,24 @@ class FinanceController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        // Ambil Data Konfirmasi Pembayaran / Bukti Transfer dari Portal Pelanggan
+        // Ambil Data Konfirmasi Pembayaran & merchant_type / payment_type langsung dari trx_billing_layanan
         $kodeBillings = collect($invoices->items())->pluck('kode_billing_layanan')->filter()->toArray();
         $confirmations = collect();
+        $trxBillings = collect();
+
         if (!empty($kodeBillings)) {
+            try {
+                if (Schema::hasTable('trx_billing_layanan')) {
+                    $trxBillings = DB::table('trx_billing_layanan')
+                        ->whereIn('kode_billing_layanan', $kodeBillings)
+                        ->select('kode_billing_layanan', 'merchant_type', 'payment_type')
+                        ->get()
+                        ->keyBy('kode_billing_layanan');
+                }
+            } catch (\Throwable $e) {
+                Log::info('Query trx_billing_layanan notice: ' . $e->getMessage());
+            }
+
             try {
                 if (Schema::hasTable('payment_confirmations')) {
                     $confirmations = DB::table('payment_confirmations')
@@ -123,6 +137,16 @@ class FinanceController extends Controller
         }
 
         foreach ($invoices as $inv) {
+            $trx = $trxBillings->get($inv->kode_billing_layanan);
+            if ($trx) {
+                if (!empty($trx->merchant_type)) {
+                    $inv->merchant_type = $trx->merchant_type;
+                }
+                if (isset($trx->payment_type) && $trx->payment_type !== null && $trx->payment_type !== '') {
+                    $inv->payment_type = (string) $trx->payment_type;
+                }
+            }
+
             $confirmation = $confirmations->get($inv->kode_billing_layanan) ?? null;
             $inv->payment_confirmation = $confirmation;
             // Jika invoice memiliki bukti transfer terdaftar, tandai payment_type menjadi transfer manual (2) jika belum
@@ -729,6 +753,18 @@ class FinanceController extends Controller
             return response()->json(['error' => 'Invoice tidak ditemukan'], 404);
         }
 
+        if (Schema::hasTable('trx_billing_layanan')) {
+            $trx = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $decodedKode)->first();
+            if ($trx) {
+                if (!empty($trx->merchant_type)) {
+                    $invoice->merchant_type = $trx->merchant_type;
+                }
+                if (isset($trx->payment_type) && $trx->payment_type !== null && $trx->payment_type !== '') {
+                    $invoice->payment_type = (string) $trx->payment_type;
+                }
+            }
+        }
+
         $items = DB::table('trx_billing_layanan_detail')
             ->where('kode_billing_layanan', $decodedKode)
             ->get();
@@ -806,6 +842,7 @@ class FinanceController extends Controller
             ]);
 
             foreach ($invoices as $inv) {
+                $methodStr = $inv->merchant_type ?? ($inv->desc_payment_type ?? ($inv->payment_type == 1 ? 'Midtrans' : ($inv->payment_type == 3 ? 'Cash To Collector' : 'Manual Transfer')));
                 fputcsv($handle, [
                     $inv->kode_billing_layanan ?? '',
                     $inv->nomor_internet ?? '',
@@ -819,7 +856,7 @@ class FinanceController extends Controller
                     $inv->total_layanan ?? 0,
                     $inv->amount_paid ?? 0,
                     $inv->desc_bill_lay ?? '',
-                    $inv->desc_payment_type ?? ($inv->payment_type == 1 ? 'Midtrans' : 'Manual Transfer'),
+                    $methodStr,
                     $inv->payment_publish ?? $inv->date_create ?? '',
                     $inv->payment_paid ?? '',
                     $inv->nama_kota_pasang ?? '',

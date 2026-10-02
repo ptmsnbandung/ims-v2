@@ -2,12 +2,13 @@
 
 @section('content')
 <div class="space-y-6" x-data="broadcastApp()">
-    <!-- Top Header Banner (Fully Adaptive Light & Dark Mode) -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs relative overflow-hidden">
+    
+    <!-- Header Banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs relative overflow-hidden">
         <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         
         <div class="relative z-10">
-            <div class="flex flex-wrap items-center gap-2 mb-2">
+            <div class="flex items-center gap-2 mb-1.5">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                     <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
@@ -19,363 +20,360 @@
                 </span>
             </div>
             
-            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-                <span>Broadcast WhatsApp Pelanggan</span>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                Broadcast WhatsApp Pelanggan
             </h1>
             
-            <p class="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
-                Kirim pengingat jatuh tempo tagihan, pengumuman pemeliharaan jaringan, atau pesan custom secara massal maupun per orangan dengan template terpersonalisasi.
+            <p class="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1">
+                Kirim pengingat jatuh tempo tagihan atau pengumuman resmi ke WhatsApp pelanggan (Per Orangan maupun Massal).
             </p>
         </div>
 
-        <div class="relative z-10 flex items-center gap-3 flex-wrap">
+        <div class="relative z-10 flex items-center gap-2.5 flex-wrap">
             <a href="{{ route('admin.broadcast.history') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition">
                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
-                <span>Riwayat Log Broadcast</span>
+                <span>Riwayat Broadcast Log</span>
             </a>
+        </div>
+    </div>
 
-            <button @click="openModalTemplate()" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition cursor-pointer">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <span>Kelola Template</span>
-            </button>
+    <!-- Quick User Guide (Langkah Penggunaan Sederhana) -->
+    <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/20 rounded-2xl p-4 text-slate-800 dark:text-slate-200 text-xs">
+        <div class="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 mb-2 text-sm">
+            <span>💡 Petunjuk Mudah Penggunaan Fitur Broadcast WA:</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="flex items-start gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-emerald-200 dark:border-slate-800 shadow-xs">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">1</span>
+                <div>
+                    <div class="font-bold text-slate-900 dark:text-white">Pilih Template Pesan</div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Pilih template Jatuh Tempo, Pengumuman, atau ketik pesan kustom.</div>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-emerald-200 dark:border-slate-800 shadow-xs">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">2</span>
+                <div>
+                    <div class="font-bold text-slate-900 dark:text-white">Pilih Target Pelanggan</div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Gunakan filter status tagihan &amp; centang pelanggan yang ingin dikirimkan.</div>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-emerald-200 dark:border-slate-800 shadow-xs">
+                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">3</span>
+                <div>
+                    <div class="font-bold text-slate-900 dark:text-white">Kirim WhatsApp</div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Klik tombol <b>Kirim WA</b> (per orang) atau <b>Broadcast Massal</b>.</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Stat KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Card 1: Mendekati Jatuh Tempo / Belum Lunas -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 relative overflow-hidden shadow-xs">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Tagihan Jatuh Tempo</p>
-                    <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalUnpaidCount) }}</h3>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Perlu pengingat WhatsApp</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-                </div>
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Belum Bayar / Jatuh Tempo</p>
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalUnpaidCount) }}</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Pelanggan perlu penagihan</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
             </div>
         </div>
 
-        <!-- Card 2: Total Target Terfilter -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 relative overflow-hidden shadow-xs">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Target Pelanggan</p>
-                    <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalTargetCount) }}</h3>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Sesuai filter pencarian</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                    </svg>
-                </div>
+        <!-- Card 2: Total Target Pelanggan -->
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Total Pelanggan Terfilter</p>
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalTargetCount) }}</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Sesuai kriteria di bawah</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                </svg>
             </div>
         </div>
 
         <!-- Card 3: Broadcast Terkirim Hari Ini -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 relative overflow-hidden shadow-xs">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Terkirim Hari Ini</p>
-                    <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($sentTodayCount) }}</h3>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Status dikirim ke WA</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                    </svg>
-                </div>
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Terkirim Hari Ini</p>
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($sentTodayCount) }}</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Status dikirim ke WA</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                </svg>
             </div>
         </div>
 
-        <!-- Card 4: Total Log Riwayat -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 relative overflow-hidden shadow-xs">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">Total Log Broadcast</p>
-                    <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalSentLog) }}</h3>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Akumulasi seluruh pesan</p>
-                </div>
-                <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
-                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-                </div>
+        <!-- Card 4: Total Log Broadcast -->
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">Total Akumulasi Log</p>
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalSentLog) }}</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Total riwayat broadcast</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
             </div>
         </div>
     </div>
 
-    <!-- Main Workspace Grid: Left (Filters & Customers) + Right (Message Builder & Preview) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-        <!-- Left Column: Target Pelanggan Table & Selectors (7 Cols) -->
-        <div class="lg:col-span-7 space-y-4">
-            
-            <!-- Filters & Search Toolbar -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-                <form method="GET" action="{{ route('admin.broadcast') }}" class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        
-                        <!-- Filter Status Tagihan -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Status Tagihan</label>
-                            <select name="status_tagihan" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                                <option value="unpaid" {{ $selectedStatusTagihan == 'unpaid' ? 'selected' : '' }}>⚠️ Mendekati Jatuh Tempo / Belum Lunas</option>
-                                <option value="paid" {{ $selectedStatusTagihan == 'paid' ? 'selected' : '' }}>✅ Lunas (PAID)</option>
-                                <option value="isolir" {{ $selectedStatusTagihan == 'isolir' ? 'selected' : '' }}>⛔ Isolir / Suspend</option>
-                                <option value="all" {{ $selectedStatusTagihan == 'all' ? 'selected' : '' }}>🌐 Semua Pelanggan</option>
-                            </select>
-                        </div>
-
-                        <!-- Filter Periode Bulan -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Bulan Tagihan</label>
-                            <select name="bulan" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                                <option value="all" {{ $selectedBulan == 'all' ? 'selected' : '' }}>Semua Bulan</option>
-                                @for($m = 1; $m <= 12; $m++)
-                                    @php $monthVal = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
-                                    <option value="{{ $monthVal }}" {{ $selectedBulan == $monthVal ? 'selected' : '' }}>
-                                        {{ \Carbon\Carbon::create(null, $m, 1)->translatedFormat('F') }}
-                                    </option>
-                                @endfor
-                            </select>
-                        </div>
-
-                        <!-- Filter Periode Tahun -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tahun Tagihan</label>
-                            <select name="tahun" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                                <option value="all" {{ $selectedTahun == 'all' ? 'selected' : '' }}>Semua Tahun</option>
-                                @for($y = date('Y'); $y >= date('Y') - 3; $y--)
-                                    <option value="{{ $y }}" {{ $selectedTahun == $y ? 'selected' : '' }}>{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row gap-3 items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
-                        <!-- Search Box -->
-                        <div class="relative w-full sm:w-72">
-                            <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama, ID internet, HP..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                            <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                            </svg>
-                        </div>
-
-                        <!-- Buttons & Per Page -->
-                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                            <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition shadow-xs">
-                                Filter Data
-                            </button>
-                            <a href="{{ route('admin.broadcast') }}" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium transition border border-slate-200 dark:border-slate-700">
-                                Reset
-                            </a>
-                        </div>
-                    </div>
-                </form>
+    <!-- LANGKAH 1: PENGATURAN PESAN BROADCAST (Template & Editor) -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">1</span>
+                <h2 class="text-base font-bold text-slate-900 dark:text-white">Pilih Template &amp; Isi Pesan Broadcast</h2>
             </div>
-
-            <!-- Customer Table Card -->
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
-                <!-- Action Bar above table -->
-                <div class="p-4 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
-                            <input type="checkbox" @change="toggleSelectAll($event)" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                            <span>Pilih Semua Halaman Ini</span>
-                        </label>
-                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium" x-show="selectedTargets.length > 0">
-                            (<span class="text-emerald-600 dark:text-emerald-400 font-bold" x-text="selectedTargets.length"></span> dipilih)
-                        </span>
-                    </div>
-
-                    <button @click="triggerBulkBroadcast()" type="button" :disabled="selectedTargets.length === 0" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-semibold shadow transition cursor-pointer">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                        </svg>
-                        <span>Kirim Broadcast Massal (<span x-text="selectedTargets.length">0</span>)</span>
-                    </button>
-                </div>
-
-                <!-- Table Content -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                        <thead class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
-                            <tr>
-                                <th class="p-3.5 w-10 text-center">#</th>
-                                <th class="p-3.5">Pelanggan</th>
-                                <th class="p-3.5">No. Internet & HP</th>
-                                <th class="p-3.5">Status Tagihan</th>
-                                <th class="p-3.5 text-right">Nominal</th>
-                                <th class="p-3.5 text-center">Aksi WA</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                            @forelse($pelangganList as $item)
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                    <td class="p-3.5 text-center">
-                                        <input type="checkbox" value="{{ $item->nomor_internet }}" x-model="selectedTargets" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
-                                    </td>
-
-                                    <td class="p-3.5">
-                                        <div class="font-bold text-slate-900 dark:text-white text-xs">{{ $item->nama_pelanggan }}</div>
-                                        <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[180px]">{{ $item->alamat_pasang ?? ($item->nama_kota_pasang ?? 'Area IMS') }}</div>
-                                    </td>
-
-                                    <td class="p-3.5">
-                                        <div class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{{ $item->nomor_internet }}</div>
-                                        <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                            <span>📱 {{ $item->nomor_hp ?? '-' }}</span>
-                                        </div>
-                                    </td>
-
-                                    <td class="p-3.5">
-                                        @if($item->status_bill_lay == '15')
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-                                                <span>LUNAS</span>
-                                            </span>
-                                        @elseif(in_array($item->status_bill_lay, ['13', '14']))
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse"></span>
-                                                <span>JATUH TEMPO</span>
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                                                <span>{{ $item->status_bill_lay ?? 'Aktif' }}</span>
-                                            </span>
-                                        @endif
-                                        <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Periode {{ $item->periode_tagihan ?? ($item->bulan_tagihan . '/' . $item->tahun_tagihan) }}</div>
-                                    </td>
-
-                                    <td class="p-3.5 text-right font-bold text-slate-900 dark:text-slate-100">
-                                        Rp {{ number_format((float) ($item->total_layanan ?? ($item->harga_bandwith ?? 0)), 0, ',', '.') }}
-                                    </td>
-
-                                    <td class="p-3.5 text-center">
-                                        <button @click="openSingleSendModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->nomor_hp }}')" type="button" title="Kirim WA ke Pelanggan Ini" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-semibold transition cursor-pointer">
-                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                                            </svg>
-                                            <span>Kirim WA</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="p-8 text-center text-slate-400 dark:text-slate-500">
-                                        Tidak ada data pelanggan yang sesuai dengan filter pencarian.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-                    {{ $pelangganList->links() }}
-                </div>
-            </div>
-
+            <button @click="showPreview = !showPreview" type="button" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                <span x-text="showPreview ? '🙈 Sembunyikan Pratinjau WA' : '👁️ Tampilkan Pratinjau WA'"></span>
+            </button>
         </div>
 
-        <!-- Right Column: Interactive WhatsApp Message Builder & Live Smartphone Preview (5 Cols) -->
-        <div class="lg:col-span-5 space-y-4 sticky top-6">
-            
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xl space-y-5">
-                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                        </svg>
-                        <span>Custom Editor Broadcast</span>
-                    </h3>
-                    <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-200 dark:border-emerald-500/20">Live Sync</span>
-                </div>
-
-                <!-- Template Selector Preset -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+            <!-- Left: Template & Message Input (7 cols) -->
+            <div class="md:col-span-7 space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Template Broadcast</label>
-                    <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Pilih Template Pesan Siap Pakai:</label>
+                    <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
                         @foreach($templates as $tpl)
                             <option value="{{ $tpl->id }}" data-pesan="{{ addslashes($tpl->pesan) }}" data-kategori="{{ $tpl->kategori }}">
-                                {{ $tpl->nama_template }} {{ $tpl->is_default ? '(Default)' : '' }}
+                                📌 {{ $tpl->nama_template }} {{ $tpl->is_default ? '(Default)' : '' }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                <!-- Placeholder Variable Chips (Click to insert) -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Sisipkan Variabel Dinamis (Klik untuk tambah):</label>
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Tombol Cepat Sisipkan Data Pelanggan:</label>
                     <div class="flex flex-wrap gap-1.5 text-[11px]">
-                        <button type="button" @click="insertVariable('{nama}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 transition font-medium">
+                        <button type="button" @click="insertVariable('{nama}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
                             +{nama}
                         </button>
-                        <button type="button" @click="insertVariable('{nomor_internet}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 transition font-medium">
+                        <button type="button" @click="insertVariable('{nomor_internet}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
                             +{nomor_internet}
                         </button>
-                        <button type="button" @click="insertVariable('{periode}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 transition font-medium">
+                        <button type="button" @click="insertVariable('{periode}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
                             +{periode}
                         </button>
-                        <button type="button" @click="insertVariable('{nominal}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 transition font-medium">
+                        <button type="button" @click="insertVariable('{nominal}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
                             +{nominal}
                         </button>
-                        <button type="button" @click="insertVariable('{jatuh_tempo}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 transition font-medium">
+                        <button type="button" @click="insertVariable('{jatuh_tempo}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
                             +{jatuh_tempo}
                         </button>
-                        <button type="button" @click="insertVariable('{link_pembayaran}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 transition font-medium">
+                        <button type="button" @click="insertVariable('{link_pembayaran}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
                             +{link_pembayaran}
                         </button>
                     </div>
                 </div>
 
-                <!-- Textarea Editor -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Isi Pesan Broadcast (Customizable)</label>
-                    <textarea x-model="customPesan" id="broadcastPesanTextarea" rows="8" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans leading-relaxed"></textarea>
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Gunakan format markdown WA: *teks cetak tebal*, _teks miring_, ~teks dicoret~.</p>
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Isi Pesan WhatsApp yang Akan Dikirim:</label>
+                    <textarea x-model="customPesan" id="broadcastPesanTextarea" rows="6" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans leading-relaxed"></textarea>
                 </div>
+            </div>
 
-                <!-- WhatsApp Live Smartphone Mockup Preview -->
+            <!-- Right: WhatsApp Live Preview (5 cols) -->
+            <div class="md:col-span-5" x-show="showPreview">
+                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Pratinjau Tampilan Pesan WhatsApp:</label>
                 <div class="border border-slate-300 dark:border-slate-800 rounded-2xl overflow-hidden bg-[#efeae2] dark:bg-[#0b141a] shadow-inner">
-                    <!-- WhatsApp Header -->
                     <div class="bg-[#075e54] dark:bg-[#202c33] px-4 py-2.5 flex items-center gap-3 border-b border-emerald-800 dark:border-slate-800 text-white">
                         <div class="w-8 h-8 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center text-white font-bold text-xs">
                             IMS
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-white">Preview WhatsApp (Sample)</div>
-                            <div class="text-[10px] text-emerald-200 dark:text-emerald-400">Online &bull; IMS Official Gateway</div>
+                            <div class="text-xs font-bold text-white">IMS Support (Sample Preview)</div>
+                            <div class="text-[10px] text-emerald-200 dark:text-emerald-400">Online &bull; WhatsApp Broadcast</div>
                         </div>
                     </div>
 
-                    <!-- WhatsApp Message Body -->
-                    <div class="p-4 bg-repeat min-h-[140px] max-h-[220px] overflow-y-auto" style="background-color: #efeae2; background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size: 16px 16px;">
-                        <div class="bg-[#d9fdd3] text-slate-900 dark:bg-[#005c4b] dark:text-slate-100 p-3 rounded-xl rounded-tl-none max-w-[90%] text-xs shadow-xs leading-relaxed whitespace-pre-wrap font-sans" x-html="formatWaPreview(customPesan)"></div>
+                    <div class="p-4 bg-repeat min-h-[160px] max-h-[240px] overflow-y-auto" style="background-color: #efeae2; background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size: 16px 16px;">
+                        <div class="bg-[#d9fdd3] text-slate-900 dark:bg-[#005c4b] dark:text-slate-100 p-3 rounded-xl rounded-tl-none max-w-[95%] text-xs shadow-xs leading-relaxed whitespace-pre-wrap font-sans" x-html="formatWaPreview(customPesan)"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <!-- Mass Broadcast Trigger Action Button -->
-                <button @click="triggerBulkBroadcast()" type="button" :disabled="selectedTargets.length === 0" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 cursor-pointer">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                    </svg>
-                    <span>KIRIM BROADCAST MASSAL KE <span x-text="selectedTargets.length">0</span> PELANGGAN</span>
-                </button>
+    <!-- LANGKAH 2 & 3: DAFTAR PELANGGAN & PENGIRIMAN -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">2</span>
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Pilih Target Pelanggan &amp; Eksekusi Kirim</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Centang pelanggan pada tabel, lalu klik tombol Broadcast Massal di sebelah kanan.</p>
+                </div>
             </div>
 
+            <!-- LANGKAH 3 ACTION BUTTON -->
+            <button @click="triggerBulkBroadcast()" type="button" :disabled="selectedTargets.length === 0" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/20 transition cursor-pointer">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                </svg>
+                <span>3. KIRIM BROADCAST MASSAL (<span x-text="selectedTargets.length">0</span> PELANGGAN DIPILIH)</span>
+            </button>
         </div>
 
+        <!-- Filter Toolbar -->
+        <form method="GET" action="{{ route('admin.broadcast') }}" class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                
+                <!-- Filter Status Tagihan -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Filter Status Pelanggan:</label>
+                    <select name="status_tagihan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="all" {{ $selectedStatusTagihan == 'all' ? 'selected' : '' }}>🌐 Semua Pelanggan (Default)</option>
+                        <option value="unpaid" {{ $selectedStatusTagihan == 'unpaid' ? 'selected' : '' }}>⚠️ Belum Lunas / Mendekati Jatuh Tempo</option>
+                        <option value="paid" {{ $selectedStatusTagihan == 'paid' ? 'selected' : '' }}>✅ Lunas (PAID)</option>
+                        <option value="isolir" {{ $selectedStatusTagihan == 'isolir' ? 'selected' : '' }}>⛔ Isolir / Suspend</option>
+                    </select>
+                </div>
+
+                <!-- Filter Periode Bulan -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Filter Bulan Tagihan:</label>
+                    <select name="bulan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="all" {{ $selectedBulan == 'all' ? 'selected' : '' }}>Semua Bulan</option>
+                        @for($m = 1; $m <= 12; $m++)
+                            @php $monthVal = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
+                            <option value="{{ $monthVal }}" {{ $selectedBulan == $monthVal ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create(null, $m, 1)->translatedFormat('F') }}
+                            </option>
+                        @endfor
+                    </select>
+                </div>
+
+                <!-- Filter Periode Tahun -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Filter Tahun Tagihan:</label>
+                    <select name="tahun" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="all" {{ $selectedTahun == 'all' ? 'selected' : '' }}>Semua Tahun</option>
+                        @for($y = date('Y'); $y >= date('Y') - 3; $y--)
+                            <option value="{{ $y }}" {{ $selectedTahun == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+
+                <!-- Search Input -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pencarian Pelanggan:</label>
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama, ID internet, HP..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+                <label class="inline-flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
+                    <input type="checkbox" @change="toggleSelectAll($event)" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                    <span>Centang / Pilih Semua Pelanggan di Halaman Ini</span>
+                </label>
+
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-xs">
+                        Terapkan Filter
+                    </button>
+                    <a href="{{ route('admin.broadcast') }}" class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition">
+                        Reset Filter
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Customer Table -->
+        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                    <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800 font-bold">
+                        <tr>
+                            <th class="p-3.5 w-10 text-center">Pilih</th>
+                            <th class="p-3.5">Nama Pelanggan</th>
+                            <th class="p-3.5">Nomor Internet &amp; HP</th>
+                            <th class="p-3.5">Wilayah &amp; Alamat</th>
+                            <th class="p-3.5">Status Tagihan</th>
+                            <th class="p-3.5 text-right">Nominal</th>
+                            <th class="p-3.5 text-center">Aksi Kirim Per Orang</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        @forelse($pelangganList as $item)
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                                <td class="p-3.5 text-center">
+                                    <input type="checkbox" value="{{ $item->nomor_internet }}" x-model="selectedTargets" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                                </td>
+
+                                <td class="p-3.5 font-bold text-slate-900 dark:text-white text-xs">
+                                    {{ $item->nama_pelanggan }}
+                                </td>
+
+                                <td class="p-3.5">
+                                    <div class="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{{ $item->nomor_internet }}</div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400">📱 {{ $item->nomor_hp ?? '-' }}</div>
+                                </td>
+
+                                <td class="p-3.5 text-[11px] text-slate-600 dark:text-slate-400">
+                                    <div class="font-semibold text-slate-800 dark:text-slate-200">{{ $item->nama_kota_pasang ?? 'Area IMS' }}</div>
+                                    <div class="truncate max-w-[200px]">{{ $item->alamat_pasang ?? ($item->alamat_p ?? '-') }}</div>
+                                </td>
+
+                                <td class="p-3.5">
+                                    @if($item->status_bill_lay == '15')
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                                            <span>✅ LUNAS</span>
+                                        </span>
+                                    @elseif(in_array($item->status_bill_lay, ['13', '14']))
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                                            <span>⚠️ JATUH TEMPO</span>
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                            <span>{{ $item->status_bill_lay ?: 'Aktif' }}</span>
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <td class="p-3.5 text-right font-bold text-slate-900 dark:text-slate-100">
+                                    Rp {{ number_format((float) ($item->total_layanan ?? ($item->harga_bandwith ?? 0)), 0, ',', '.') }}
+                                </td>
+
+                                <td class="p-3.5 text-center">
+                                    <button @click="openSingleSendModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->nomor_hp }}')" type="button" title="Kirim WA ke Pelanggan Ini" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-semibold transition cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                        </svg>
+                                        <span>Kirim WA</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-slate-400 dark:text-slate-500">
+                                    Tidak ada data pelanggan yang sesuai dengan filter pencarian.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                {{ $pelangganList->links() }}
+            </div>
+        </div>
     </div>
 
     <!-- Modal Single Send Confirmation -->
@@ -486,50 +484,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal Kelola Template Broadcast -->
-    <div x-show="showTemplateModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4" @click.away="showTemplateModal = false">
-            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span class="text-emerald-600 dark:text-emerald-400">⚙️</span>
-                    <span>Kelola Template Broadcast Custom</span>
-                </h3>
-                <button @click="showTemplateModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
-            </div>
-
-            <form action="{{ route('admin.broadcast.template.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Nama Template</label>
-                    <input type="text" name="nama_template" required placeholder="cth: Pengumuman Promo Internet" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Kategori</label>
-                    <select name="kategori" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="jatuh_tempo">Peringatan Jatuh Tempo</option>
-                        <option value="pengumuman">Pengumuman Jaringan</option>
-                        <option value="custom">Pesan Custom / Umum</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pesan Template</label>
-                    <textarea name="pesan" rows="6" required placeholder="Gunakan placeholder {nama}, {nomor_internet}, {periode}, {nominal}, {jatuh_tempo}, {link_pembayaran}..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
-                </div>
-
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                    <button @click="showTemplateModal = false" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30">
-                        Simpan Template Baru
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -540,7 +494,7 @@ function broadcastApp() {
         customPesan: `{!! addslashes($defaultTemplate->pesan ?? '') !!}`,
         showSingleModal: false,
         showBulkModal: false,
-        showTemplateModal: false,
+        showPreview: true,
         singleTarget: {
             noInternet: '',
             nama: '',
@@ -659,7 +613,7 @@ function broadcastApp() {
 
         triggerBulkBroadcast() {
             if (this.selectedTargets.length === 0) {
-                alert('Pilih setidaknya 1 pelanggan untuk broadcast massal!');
+                alert('Pilih setidaknya 1 pelanggan pada tabel untuk broadcast massal!');
                 return;
             }
 
@@ -714,10 +668,6 @@ function broadcastApp() {
                 }
                 this.updateBulkProgress();
             }
-        },
-
-        openModalTemplate() {
-            this.showTemplateModal = true;
         }
     };
 }

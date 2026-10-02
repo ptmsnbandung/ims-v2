@@ -252,29 +252,49 @@ class BroadcastController extends Controller
 
         $cols = Schema::getColumnListing($baseTable);
 
-        // Join latest invoice if using customer table and invoice table exists
+        // Join latest invoice safely — no assumption on PK column name (id/kode_billing_layanan may not exist)
         if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
-            if (Schema::hasColumn('trx_billing_layanan', 'kode_billing_layanan')) {
-                $invPk = 'kode_billing_layanan';
-            } elseif (Schema::hasColumn('trx_billing_layanan', 'date_create')) {
-                $invPk = 'date_create';
-            } elseif (Schema::hasColumn('trx_billing_layanan', 'created_at')) {
-                $invPk = 'created_at';
-            } elseif (Schema::hasColumn('trx_billing_layanan', 'id')) {
-                $invPk = 'id';
+            $trxBillingCols = Schema::getColumnListing('trx_billing_layanan');
+
+            // Determine the safest unique key available — prefer kode_billing_layanan (IMS production PK)
+            if (in_array('kode_billing_layanan', $trxBillingCols)) {
+                // Use kode_billing_layanan as the join key
+                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
+                    ->selectRaw('tbl_sub.nomor_internet, MAX(tbl_sub.kode_billing_layanan) as max_kode')
+                    ->groupBy('tbl_sub.nomor_internet');
+
+                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
+                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+                })->leftJoin('trx_billing_layanan as inv', 'sub_inv.max_kode', '=', 'inv.kode_billing_layanan');
+
+            } elseif (in_array('tahun_tagihan', $trxBillingCols) && in_array('bulan_tagihan', $trxBillingCols)) {
+                // Fallback: join on tahun_tagihan + bulan_tagihan max
+                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
+                    ->selectRaw('tbl_sub.nomor_internet, MAX(tbl_sub.tahun_tagihan) as max_tahun, MAX(tbl_sub.bulan_tagihan) as max_bulan')
+                    ->groupBy('tbl_sub.nomor_internet');
+
+                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
+                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+                })->leftJoin('trx_billing_layanan as inv', function ($join) {
+                    $join->on('inv.nomor_internet', '=', 'sub_inv.nomor_internet')
+                         ->on('inv.tahun_tagihan', '=', 'sub_inv.max_tahun')
+                         ->on('inv.bulan_tagihan', '=', 'sub_inv.max_bulan');
+                });
+
+            } elseif (in_array('id', $trxBillingCols)) {
+                // Last resort: id column exists
+                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
+                    ->selectRaw('tbl_sub.nomor_internet, MAX(tbl_sub.id) as max_id')
+                    ->groupBy('tbl_sub.nomor_internet');
+
+                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
+                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+                })->leftJoin('trx_billing_layanan as inv', 'sub_inv.max_id', '=', 'inv.id');
+
             } else {
-                $invPk = 'nomor_internet';
+                // Safest fallback: simple join on nomor_internet only (no PK needed)
+                $query->leftJoin('trx_billing_layanan as inv', 'c.nomor_internet', '=', 'inv.nomor_internet');
             }
-
-            $latestSub = DB::table('trx_billing_layanan')
-                ->select('nomor_internet', DB::raw("MAX({$invPk}) as max_key"))
-                ->groupBy('nomor_internet');
-
-            $query->leftJoinSub($latestSub, 'sub_inv', function ($join) {
-                $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
-            })->leftJoin('trx_billing_layanan as inv', function ($join) use ($invPk) {
-                $join->on('sub_inv.max_key', '=', "inv.{$invPk}");
-            });
         }
 
         return $query;

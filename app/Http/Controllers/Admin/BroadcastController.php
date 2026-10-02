@@ -118,18 +118,29 @@ class BroadcastController extends Controller
     {
         $cols = Schema::getColumnListing($baseTable);
 
+        $hasNameCol    = in_array('nama_pelanggan', $cols);
+        $hasNamePCol   = in_array('nama_p', $cols);
+        $hasNameSimple = in_array('nama', $cols);
+
         // Name column resolution
-        $nameCol = "c.nomor_internet";
-        if (in_array('nama_pelanggan', $cols)) {
+        if ($hasNameCol) {
             $nameCol = "c.nama_pelanggan";
-        } elseif (in_array('nama_p', $cols)) {
+            $sortField = "c.nama_pelanggan";
+        } elseif ($hasNamePCol) {
             $nameCol = "c.nama_p";
-        } elseif (in_array('nama', $cols)) {
+            $sortField = "c.nama_p";
+        } elseif ($hasNameSimple) {
             $nameCol = "c.nama";
+            $sortField = "c.nama";
         } elseif (Schema::hasTable('m_pelanggan') && Schema::hasColumn('m_pelanggan', 'nama_pelanggan')) {
             $nameCol = "COALESCE(mp.nama_pelanggan, mp.nama_p, c.nomor_internet)";
+            $sortField = in_array('nomor_internet', $cols) ? "c.nomor_internet" : "c.id";
         } elseif (Schema::hasTable('trx_batchjob_register') && Schema::hasColumn('trx_batchjob_register', 'nama_pelanggan')) {
             $nameCol = "COALESCE(reg.nama_pelanggan, c.nomor_internet)";
+            $sortField = in_array('nomor_internet', $cols) ? "c.nomor_internet" : "c.id";
+        } else {
+            $nameCol = "c.nomor_internet";
+            $sortField = in_array('nomor_internet', $cols) ? "c.nomor_internet" : "c.id";
         }
 
         // Phone column resolution
@@ -193,7 +204,7 @@ class BroadcastController extends Controller
             DB::raw("{$snapCol} as payment_respond_post")
         );
 
-        return $nameCol;
+        return $sortField;
     }
 
     /**
@@ -291,6 +302,8 @@ class BroadcastController extends Controller
             $query = DB::table('tb_pengguna as c');
         }
 
+        $cols = Schema::getColumnListing($baseTable);
+
         // Join latest invoice if using customer table and invoice table exists
         if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
             $latestSub = DB::table('trx_billing_layanan')
@@ -302,19 +315,19 @@ class BroadcastController extends Controller
             })->leftJoin('trx_billing_layanan as inv', 'sub_inv.max_id', '=', 'inv.id');
         }
 
-        $orderCol = $this->selectCustomerFields($query, $baseTable);
+        $sortField = $this->selectCustomerFields($query, $baseTable);
 
         // Apply Month & Year Filter
         if ($selectedBulan !== 'all' && !empty($selectedBulan)) {
-            $query->where(function($q) use ($selectedBulan, $baseTable) {
-                $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan') ? 'c.bulan_tagihan' : 'inv.bulan_tagihan';
+            $query->where(function($q) use ($selectedBulan, $baseTable, $cols) {
+                $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('bulan_tagihan', $cols)) ? 'c.bulan_tagihan' : 'inv.bulan_tagihan';
                 $q->where($col, str_pad($selectedBulan, 2, '0', STR_PAD_LEFT))
                   ->orWhereNull($col);
             });
         }
         if ($selectedTahun !== 'all' && !empty($selectedTahun)) {
-            $query->where(function($q) use ($selectedTahun, $baseTable) {
-                $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan') ? 'c.tahun_tagihan' : 'inv.tahun_tagihan';
+            $query->where(function($q) use ($selectedTahun, $baseTable, $cols) {
+                $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('tahun_tagihan', $cols)) ? 'c.tahun_tagihan' : 'inv.tahun_tagihan';
                 $q->where($col, $selectedTahun)
                   ->orWhereNull($col);
             });
@@ -322,42 +335,45 @@ class BroadcastController extends Controller
 
         // Apply Status Tagihan Filter
         if ($selectedStatusTagihan === 'unpaid' || $selectedStatusTagihan === 'near_due') {
-            $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan') ? 'c.status_bill_lay' : 'inv.status_bill_lay';
+            $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('status_bill_lay', $cols)) ? 'c.status_bill_lay' : 'inv.status_bill_lay';
             $query->whereIn($col, ['13', '14']);
         } elseif ($selectedStatusTagihan === 'paid') {
-            $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan') ? 'c.status_bill_lay' : 'inv.status_bill_lay';
+            $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('status_bill_lay', $cols)) ? 'c.status_bill_lay' : 'inv.status_bill_lay';
             $query->where($col, '15');
         } elseif ($selectedStatusTagihan === 'isolir') {
-            if (Schema::hasColumn($baseTable, 'status_reg')) {
+            if (in_array('status_reg', $cols)) {
                 $query->whereIn('c.status_reg', ['23', '23.1']);
             }
         }
 
         // Apply Wilayah Filter
         if ($selectedWilayah !== 'all' && !empty($selectedWilayah)) {
-            if (Schema::hasColumn($baseTable, 'nama_kota_pasang')) {
+            if (in_array('nama_kota_pasang', $cols)) {
                 $query->where('c.nama_kota_pasang', $selectedWilayah);
             }
         }
 
         // Search Filter
         if (!empty($search)) {
-            $query->where(function ($q) use ($search, $baseTable) {
-                if (Schema::hasColumn($baseTable, 'nama_pelanggan')) {
+            $query->where(function ($q) use ($search, $cols) {
+                if (in_array('nama_pelanggan', $cols)) {
                     $q->where('c.nama_pelanggan', 'like', "%{$search}%");
-                } elseif (Schema::hasColumn($baseTable, 'nama_p')) {
+                } elseif (in_array('nama_p', $cols)) {
                     $q->where('c.nama_p', 'like', "%{$search}%");
+                } elseif (in_array('nama', $cols)) {
+                    $q->where('c.nama', 'like', "%{$search}%");
                 }
-                if (Schema::hasColumn($baseTable, 'nomor_internet')) {
+
+                if (in_array('nomor_internet', $cols)) {
                     $q->orWhere('c.nomor_internet', 'like', "%{$search}%");
                 }
-                if (Schema::hasColumn($baseTable, 'nomor_hp')) {
+                if (in_array('nomor_hp', $cols)) {
                     $q->orWhere('c.nomor_hp', 'like', "%{$search}%");
                 }
             });
         }
 
-        $pelangganList = $query->orderBy(DB::raw($orderCol), 'asc')
+        $pelangganList = $query->orderBy($sortField, 'asc')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -374,12 +390,19 @@ class BroadcastController extends Controller
         // Counter Statistics
         $totalTargetCount = $pelangganList->total();
         
-        $unpaidQuery = DB::table($hasViewBilling ? 'view_billing_layanan' : ($hasTrxBilling ? 'trx_billing_layanan' : 'trx_batchjob_register'))
-            ->whereIn('status_bill_lay', ['13', '14']);
-        if ($selectedBulan !== 'all') {
+        $unpaidTable = $hasViewBilling ? 'view_billing_layanan' : ($hasTrxBilling ? 'trx_billing_layanan' : ($hasViewBatchjob ? 'view_batchjob' : 'trx_batchjob_register'));
+        $unpaidCols = Schema::getColumnListing($unpaidTable);
+        
+        $unpaidQuery = DB::table($unpaidTable);
+        if (in_array('status_bill_lay', $unpaidCols)) {
+            $unpaidQuery->whereIn('status_bill_lay', ['13', '14']);
+        } elseif (in_array('status_reg', $unpaidCols)) {
+            $unpaidQuery->whereIn('status_reg', ['23', '23.1']);
+        }
+        if ($selectedBulan !== 'all' && in_array('bulan_tagihan', $unpaidCols)) {
             $unpaidQuery->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
         }
-        if ($selectedTahun !== 'all') {
+        if ($selectedTahun !== 'all' && in_array('tahun_tagihan', $unpaidCols)) {
             $unpaidQuery->where('tahun_tagihan', $selectedTahun);
         }
         $totalUnpaidCount = $unpaidQuery->count();

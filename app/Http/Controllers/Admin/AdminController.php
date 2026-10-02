@@ -388,12 +388,18 @@ class AdminController extends Controller
             ->where('b.hide', '0');
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('b.kode_bandwith', 'like', "%{$search}%")
-                  ->orWhere('b.nama_bandwith', 'like', "%{$search}%")
-                  ->orWhere('k.nama_kategori_bandwith', 'like', "%{$search}%")
-                  ->orWhere('b.peruntukan_bangunan', 'like', "%{$search}%")
-                  ->orWhere('b.nominal_bandwith', 'like', "%{$search}%");
+            $hasNamaBandwith = Schema::hasColumn('m_bandwith', 'nama_bandwith');
+            $hasPeruntukan = Schema::hasColumn('m_bandwith', 'peruntukan_bangunan');
+            $query->where(function ($q) use ($search, $hasNamaBandwith, $hasPeruntukan) {
+                $q->where('b.kode_bandwith', 'like', "%{$search}%");
+                if ($hasNamaBandwith) {
+                    $q->orWhere('b.nama_bandwith', 'like', "%{$search}%");
+                }
+                $q->orWhere('k.nama_kategori_bandwith', 'like', "%{$search}%");
+                if ($hasPeruntukan) {
+                    $q->orWhere('b.peruntukan_bangunan', 'like', "%{$search}%");
+                }
+                $q->orWhere('b.nominal_bandwith', 'like', "%{$search}%");
             });
         }
 

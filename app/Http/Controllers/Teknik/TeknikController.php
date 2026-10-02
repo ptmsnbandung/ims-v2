@@ -2378,11 +2378,19 @@ class TeknikController extends Controller
      */
     public function getPaket(string $kategori): JsonResponse
     {
-        $paket = DB::table('m_bandwith')
-            ->where('kode_kategori_bandwith', $kategori)
-            ->where('disable', 0)
-            ->orderBy('nominal_bandwith')
-            ->get();
+        $hasDisable = Schema::hasTable('m_bandwith') && Schema::hasColumn('m_bandwith', 'disable');
+        $query = DB::table('m_bandwith')->where('kode_kategori_bandwith', $kategori);
+        if ($hasDisable) {
+            $query->where(function($q) {
+                $q->where('disable', 0)->orWhereNull('disable');
+            });
+        }
+        $paket = $query->orderBy('nominal_bandwith')->get()->map(function($p) {
+            if (empty($p->nama_bandwith)) {
+                $p->nama_bandwith = "Paket " . ($p->nominal_bandwith ?? '') . " Mbps";
+            }
+            return $p;
+        });
 
         return response()->json($paket);
     }
@@ -3261,7 +3269,34 @@ class TeknikController extends Controller
             ]);
         }
 
+        // Ensure nama_bandwith column exists if possible
+        if (Schema::hasTable('m_bandwith') && !Schema::hasColumn('m_bandwith', 'nama_bandwith')) {
+            try {
+                Schema::table('m_bandwith', function ($table) {
+                    $table->string('nama_bandwith', 150)->nullable()->after('kode_bandwith');
+                });
+            } catch (\Throwable $e) {
+                // Ignore if DB user doesn't have ALTER TABLE permissions
+            }
+        }
+
         // 2. Daftar Paket Lengkap (m_bandwith)
+        $hasNamaBandwith = Schema::hasTable('m_bandwith') && Schema::hasColumn('m_bandwith', 'nama_bandwith');
+
+        $selectPaketCols = [
+            'b.kode_bandwith',
+            'b.kode_kategori_bandwith',
+            'b.nominal_bandwith',
+            'b.harga_bandwith',
+            'k.nama_kategori_bandwith',
+            'k.alias_nama_kategori',
+        ];
+        if ($hasNamaBandwith) {
+            $selectPaketCols[] = 'b.nama_bandwith';
+        } else {
+            $selectPaketCols[] = DB::raw("CONCAT(COALESCE(k.nama_kategori_bandwith, 'Paket'), ' ', COALESCE(b.nominal_bandwith, ''), ' Mbps') as nama_bandwith");
+        }
+
         $paketList = Schema::hasTable('m_bandwith')
             ? DB::table('m_bandwith as b')
                 ->leftJoin('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
@@ -3271,17 +3306,15 @@ class TeknikController extends Controller
                 ->where(function($q) {
                     $q->where('b.hide', '0')->orWhereNull('b.hide');
                 })
-                ->select(
-                    'b.kode_bandwith',
-                    'b.kode_kategori_bandwith',
-                    'b.nama_bandwith',
-                    'b.nominal_bandwith',
-                    'b.harga_bandwith',
-                    'k.nama_kategori_bandwith',
-                    'k.alias_nama_kategori'
-                )
+                ->select($selectPaketCols)
                 ->orderBy('b.nominal_bandwith', 'asc')
                 ->get()
+                ->map(function ($p) {
+                    if (empty($p->nama_bandwith)) {
+                        $p->nama_bandwith = trim(($p->nama_kategori_bandwith ?? 'Paket') . ' ' . ($p->nominal_bandwith ?? '') . ' Mbps');
+                    }
+                    return $p;
+                })
             : collect();
 
         if ($paketList->isEmpty()) {

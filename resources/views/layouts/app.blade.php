@@ -676,59 +676,17 @@
                         <div class="ims-tooltip">Inventaris Perangkat</div>
                     </div>
 
-                    <!-- 5. Tiket & Pengaduan (Dropdown: Semua Tiket & Gangguan) -->
-                    <div class="ims-nav-wrapper ims-has-flyout"
-                         x-data="{ tiketNocOpen: {{ request()->routeIs('teknik.tiket*') ? 'true' : 'false' }} }"
-                         @mouseenter="openFlyout($el, 'Tiket & Pengaduan', [
-                             { label: 'Semua Tiket (Pusat Tiket)', url: '{{ route('teknik.tiket') }}', active: {{ (request()->routeIs('teknik.tiket') && !request()->routeIs('teknik.tiket.gangguan*')) ? 'true' : 'false' }} },
-                             { label: 'Tiket Gangguan (NOC)', url: '{{ route('teknik.tiket.gangguan', ['kategori' => 'gangguan']) }}', active: {{ (request()->routeIs('teknik.tiket.gangguan*') && (!request()->filled('kategori') || request('kategori') === 'gangguan')) ? 'true' : 'false' }} },
-                             { label: 'Ubah Password', url: '{{ route('teknik.tiket.gangguan', ['kategori' => 'ubah_password']) }}', active: {{ request('kategori') === 'ubah_password' ? 'true' : 'false' }} },
-                             { label: 'Relokasi Layanan', url: '{{ route('teknik.tiket.gangguan', ['kategori' => 'relokasi']) }}', active: {{ request('kategori') === 'relokasi' ? 'true' : 'false' }} }
-                         ])"
-                         @mouseleave="closeFlyoutWithDelay()">
-                        <button type="button"
-                                @click="sidebarCollapsed ? (sidebarCollapsed = false, tiketNocOpen = true) : (tiketNocOpen = !tiketNocOpen)"
-                                class="w-full ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }} justify-between"
-                                title="Tiket & Pengaduan">
-                            <span class="flex items-center gap-3.5">
-                                <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-                                </svg>
-                                <span class="ims-nav-text">Tiket</span>
-                            </span>
-                            <svg class="ims-nav-arrow w-4 h-4 transition-transform duration-200"
-                                 :class="tiketNocOpen ? 'rotate-180 text-white' : 'text-[#9CA3AF]'"
-                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    <!-- 5. Tiket -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('teknik.tiket') }}"
+                           class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
+                           title="Tiket & Permintaan">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                             </svg>
-                        </button>
-                        <div class="ims-tooltip">Tiket & Pengaduan</div>
-
-                        <!-- Submenu -->
-                        <div x-show="tiketNocOpen"
-                             x-cloak
-                             x-collapse
-                             class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
-                            <a href="{{ route('teknik.tiket') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ (request()->routeIs('teknik.tiket') && !request()->routeIs('teknik.tiket.gangguan*')) ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-                                <span class="w-1.5 h-1.5 rounded-full border {{ (request()->routeIs('teknik.tiket') && !request()->routeIs('teknik.tiket.gangguan*')) ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-                                <span>Semua Tiket (Pusat Tiket)</span>
-                            </a>
-                            <a href="{{ route('teknik.tiket.gangguan', ['kategori' => 'gangguan']) }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ (request()->routeIs('teknik.tiket.gangguan*') && (!request()->filled('kategori') || request('kategori') === 'gangguan')) ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-                                <span class="w-1.5 h-1.5 rounded-full border {{ (request()->routeIs('teknik.tiket.gangguan*') && (!request()->filled('kategori') || request('kategori') === 'gangguan')) ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-                                <span class="flex items-center justify-between w-full">
-                                    <span>Tiket Gangguan</span>
-                                    <span class="px-1.5 py-0.2 rounded text-[8px] font-bold bg-cyan-500/20 text-cyan-300">NOC</span>
-                                </span>
-                            </a>
-                            <a href="{{ route('teknik.tiket.gangguan', ['kategori' => 'ubah_password']) }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request('kategori') === 'ubah_password' ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-                                <span class="w-1.5 h-1.5 rounded-full border {{ request('kategori') === 'ubah_password' ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-                                <span>Ubah Password</span>
-                            </a>
-                            <a href="{{ route('teknik.tiket.gangguan', ['kategori' => 'relokasi']) }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request('kategori') === 'relokasi' ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-                                <span class="w-1.5 h-1.5 rounded-full border {{ request('kategori') === 'relokasi' ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-                                <span>Relokasi Layanan</span>
-                            </a>
-                        </div>
+                            <span class="ims-nav-text">Tiket</span>
+                        </a>
+                        <div class="ims-tooltip">Tiket & Permintaan</div>
                     </div>
 
                     <!-- 6. Data Pelanggan -->

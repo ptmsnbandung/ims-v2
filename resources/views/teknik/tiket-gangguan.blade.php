@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tiket Gangguan & Ubah Password - IMS Router')
+@section('title', 'Tiket Gangguan & Pengaduan - IMS-V2')
 @section('page_title', 'Tiket Gangguan & Pengaduan')
 
 @section('content')
@@ -209,6 +209,10 @@
             <span class="text-slate-500 dark:text-slate-400">Role:</span>
             <span class="px-2.5 py-0.5 rounded-lg font-semibold {{ auth()->user()?->role_badge_classes ?? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20' }}">
                 {{ auth()->user()?->nama_level ?? auth()->user()?->role?->label() ?? 'Staff' }}
+            </span>
+            <span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                Pelaksana Utama: Tim NOC
             </span>
 
             <button type="button"
@@ -923,8 +927,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">Tim Teknisi / Personil:</label>
-                    <input type="text" name="team_teknisi" x-model="modalTeamTeknisi" placeholder="Nama Teknisi / Tim yang ditugaskan" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm">
+                    <label class="block text-slate-700 dark:text-slate-300 font-bold mb-1">Petugas NOC / Personil Pelaksana:</label>
+                    <input type="text" name="team_teknisi" x-model="modalTeamTeknisi" placeholder="Nama Petugas NOC / Teknisi yang ditugaskan" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm">
                 </div>
 
                 <div>

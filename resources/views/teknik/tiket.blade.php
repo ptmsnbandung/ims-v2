@@ -159,9 +159,12 @@
 
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-base sm:text-lg font-bold tracking-tight text-white m-0">
-                        Gangguan Layanan
-                    </h3>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base sm:text-lg font-bold tracking-tight text-white m-0">
+                            Gangguan Layanan
+                        </h3>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/20 text-white border border-white/30 backdrop-blur-xs">Pelaksana: NOC</span>
+                    </div>
                     <p class="mt-1.5 text-xs sm:text-sm font-medium text-white/95">
                         {{ $counts['gangguan'] ?? 0 }} Tiket
                     </p>

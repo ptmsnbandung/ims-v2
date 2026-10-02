@@ -166,6 +166,10 @@ Route::middleware('auth')->group(function () {
 
         // 8. Inventaris Perangkat & Asset Jaringan
         Route::get('/perangkat', [NocController::class, 'perangkat'])->name('perangkat');
+
+        // 9. Tiket Gangguan (Pelaksana Utama NOC)
+        Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');
+        Route::get('/tiket-gangguan', [TeknikController::class, 'tiketGangguan'])->name('tiket.gangguan');
     });
 
     // Routes Role Finance & Direktur & Admin
@@ -234,6 +238,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/pelanggan', [TeknikController::class, 'pelanggan'])->name('pelanggan');
         Route::get('/pelanggan/export', [TeknikController::class, 'exportPelanggan'])->name('pelanggan.export');
         Route::get('/pelanggan/{nomor_internet}', [TeknikController::class, 'profilePelanggan'])->name('pelanggan.profile');
+
+        // 8. Tiket Gangguan (Monitoring Finance)
+        Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');
+        Route::get('/tiket-gangguan', [TeknikController::class, 'tiketGangguan'])->name('tiket.gangguan');
     });
 });
 

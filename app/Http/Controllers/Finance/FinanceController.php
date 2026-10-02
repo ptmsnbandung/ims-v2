@@ -115,9 +115,13 @@ class FinanceController extends Controller
         if (!empty($kodeBillings) || !empty($nomorInternets)) {
             try {
                 if (Schema::hasTable('trx_billing_layanan')) {
+                    $trxSelect = ['kode_billing_layanan', 'merchant_type', 'payment_type'];
+                    if (Schema::hasColumn('trx_billing_layanan', 'destination_bank')) {
+                        $trxSelect[] = 'destination_bank';
+                    }
                     $trxBillings = DB::table('trx_billing_layanan')
                         ->whereIn('kode_billing_layanan', $kodeBillings)
-                        ->select('kode_billing_layanan', 'merchant_type', 'payment_type')
+                        ->select($trxSelect)
                         ->get()
                         ->keyBy('kode_billing_layanan');
                 }
@@ -184,6 +188,9 @@ class FinanceController extends Controller
                 if (isset($trx->payment_type) && $trx->payment_type !== null && $trx->payment_type !== '') {
                     $inv->payment_type = (string) $trx->payment_type;
                 }
+                if (isset($trx->destination_bank) && !empty($trx->destination_bank)) {
+                    $inv->destination_bank = $trx->destination_bank;
+                }
             }
 
             $kode = $inv->kode_billing_layanan;
@@ -197,6 +204,13 @@ class FinanceController extends Controller
                 ?? null;
 
             $inv->payment_confirmation = $confirmation;
+
+            // Pastikan destination_bank terisi dari kolom tabel atau confirmation jika ada
+            if (empty($inv->destination_bank)) {
+                $inv->destination_bank = $confirmation?->destination_bank 
+                    ?? $confirmation?->bank_name 
+                    ?? null;
+            }
 
             // Jika invoice memiliki bukti transfer terdaftar, tandai payment_type menjadi transfer manual (2)
             if ($confirmation && !empty($confirmation->proof_file)) {
@@ -497,17 +511,22 @@ class FinanceController extends Controller
             $inv = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $decodedKode)->first();
             $nomorInternet = $inv?->nomor_internet;
 
+            $updateData = [
+                'status_bill_lay' => '15', // Paid
+                'payment_paid' => Carbon::now()->toDateTimeString(),
+                'amount_paid' => (string) $nominal,
+                'merchant_type' => $bank,
+                'payment_type' => $paymentType,
+                'date_update' => Carbon::now()->toDateTimeString(),
+                'user_update' => $userUpdate,
+            ];
+            if (Schema::hasColumn('trx_billing_layanan', 'destination_bank')) {
+                $updateData['destination_bank'] = $bank;
+            }
+
             DB::table('trx_billing_layanan')
                 ->where('kode_billing_layanan', $decodedKode)
-                ->update([
-                    'status_bill_lay' => '15', // Paid
-                    'payment_paid' => Carbon::now()->toDateTimeString(),
-                    'amount_paid' => (string) $nominal,
-                    'merchant_type' => $bank,
-                    'payment_type' => $paymentType,
-                    'date_update' => Carbon::now()->toDateTimeString(),
-                    'user_update' => $userUpdate,
-                ]);
+                ->update($updateData);
 
             DB::table('trx_billing_layanan_log')->insert([
                 'kode_billing_lay_log' => 'LOG-' . uniqid(),

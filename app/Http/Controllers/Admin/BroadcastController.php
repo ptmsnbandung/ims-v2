@@ -254,15 +254,14 @@ class BroadcastController extends Controller
 
         // Join latest invoice if using customer table and invoice table exists
         if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
-            $trxCols = Schema::getColumnListing('trx_billing_layanan');
-            if (in_array('id', $trxCols)) {
-                $invPk = 'id';
-            } elseif (in_array('kode_billing_layanan', $trxCols)) {
+            if (Schema::hasColumn('trx_billing_layanan', 'kode_billing_layanan')) {
                 $invPk = 'kode_billing_layanan';
-            } elseif (in_array('date_create', $trxCols)) {
+            } elseif (Schema::hasColumn('trx_billing_layanan', 'date_create')) {
                 $invPk = 'date_create';
-            } elseif (in_array('created_at', $trxCols)) {
+            } elseif (Schema::hasColumn('trx_billing_layanan', 'created_at')) {
                 $invPk = 'created_at';
+            } elseif (Schema::hasColumn('trx_billing_layanan', 'id')) {
+                $invPk = 'id';
             } else {
                 $invPk = 'nomor_internet';
             }

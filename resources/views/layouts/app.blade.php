@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Dashboard' }} - IMS Router Management</title>
+    <title>{{ $title ?? 'Dashboard' }} - IMS-V2</title>
 
     <!-- Anti-flicker Theme Initialization (Default to Light Mode) -->
     <script>
@@ -358,12 +358,12 @@
                 
                 <!-- Sidebar Header / Logo -->
                 <div class="h-16 px-3.5 flex items-center justify-between border-b border-[#0d2a38] shrink-0">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 overflow-hidden" title="IMS Router Management">
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3 overflow-hidden" title="IMS-V2 Management">
                         <div class="w-9 h-9 rounded-xl bg-[#0c2f42] border border-cyan-400/30 p-1 shadow-md shadow-cyan-500/20 flex items-center justify-center flex-shrink-0">
                             <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
                         </div>
                         <div class="ims-logo-text whitespace-nowrap">
-                            <span class="font-bold text-white tracking-wide text-base">IMS <span class="text-cyan-400">ROUTER</span></span>
+                            <span class="font-bold text-white tracking-wide text-base">IMS<span class="text-cyan-400">-V2</span></span>
                             <span class="block text-[10px] text-[#94A3B8] tracking-wider uppercase font-semibold">System Manager</span>
                         </div>
                     </a>
@@ -886,7 +886,7 @@
                         @elseif(auth()->user()?->isTeknik())
                             <span class="text-[11px] text-blue-400/90 font-medium">Modul Teknik &middot; v1.0</span>
                         @else
-                            <span class="text-[11px] text-[#9CA3AF] font-medium">IMS Router &middot; v1.0</span>
+                            <span class="text-[11px] text-[#9CA3AF] font-medium">IMS-V2 &middot; v1.0</span>
                         @endif
                     </div>
                     <div class="ims-footer-mini text-[10px] text-[#9CA3AF] font-mono font-bold">

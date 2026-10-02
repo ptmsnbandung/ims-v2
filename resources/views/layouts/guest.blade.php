@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Masuk' }} - IMS Router Management</title>
+    <title>{{ $title ?? 'Masuk' }} - IMS-V2</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('assets/images/logo.png') }}">
@@ -114,7 +114,7 @@
                     <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
                 </div>
                 <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] flex items-center gap-2.5">
-                    IMS <span class="bg-gradient-to-r from-cyan-300 via-teal-200 to-sky-300 bg-clip-text text-transparent font-black">Router</span>
+                    IMS<span class="bg-gradient-to-r from-cyan-300 via-teal-200 to-sky-300 bg-clip-text text-transparent font-black">-V2</span>
                 </h1>
                 <p class="mt-1 text-sm font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">
                     Internet System Management Portal
@@ -130,7 +130,7 @@
 
             <!-- Footer -->
             <div class="mt-6 text-center text-xs font-semibold text-cyan-100/80 drop-shadow">
-                &copy; {{ date('Y') }} PT. Media Solusi Network &bull; IMS Router Management
+                &copy; {{ date('Y') }} PT. Media Solusi Network &bull; IMS-V2
             </div>
         </div>
     </div>

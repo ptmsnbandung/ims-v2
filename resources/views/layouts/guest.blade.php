@@ -113,7 +113,7 @@
                 <div class="w-20 h-20 rounded-3xl bg-white/95 backdrop-blur-md p-3 shadow-2xl shadow-cyan-950/50 border border-white/80 mb-3.5 flex items-center justify-center transition duration-300 hover:scale-105">
                     <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
                 </div>
-                <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] flex items-center gap-2.5">
+                <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
                     IMS<span class="bg-gradient-to-r from-cyan-300 via-teal-200 to-sky-300 bg-clip-text text-transparent font-black">-V2</span>
                 </h1>
                 <p class="mt-1 text-sm font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">

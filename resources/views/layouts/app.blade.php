@@ -363,7 +363,7 @@
                             <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
                         </div>
                         <div class="ims-logo-text whitespace-nowrap">
-                            <span class="font-bold text-white tracking-wide text-base">IMS<span class="text-cyan-400">-V2</span></span>
+                            <span class="font-bold text-white tracking-tight text-base">IMS<span class="text-cyan-400">-V2</span></span>
                             <span class="block text-[10px] text-[#94A3B8] tracking-wider uppercase font-semibold">System Manager</span>
                         </div>
                     </a>

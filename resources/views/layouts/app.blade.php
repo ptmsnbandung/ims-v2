@@ -62,6 +62,33 @@
             }
         }
 
+        @media (min-width: 1024px) {
+            html, body {
+                height: 100% !important;
+                overflow: hidden !important;
+            }
+            .ims-layout-root {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+            }
+            .ims-sidebar {
+                position: sticky !important;
+                top: 0 !important;
+                height: 100vh !important;
+                max-height: 100vh !important;
+                flex-shrink: 0 !important;
+                align-self: flex-start !important;
+                z-index: 40 !important;
+            }
+            .ims-main-scroll {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+        }
+
         /* Nav Item Styles */
         .ims-nav-item {
             display: flex;
@@ -317,8 +344,8 @@
               }
           }
       }">
-    <div class="min-h-full flex flex-col">
-        <div class="flex-1 flex overflow-hidden">
+    <div class="min-h-full h-screen flex flex-col overflow-hidden ims-layout-root">
+        <div class="flex-1 flex overflow-hidden min-h-0 h-full">
             <!-- Mobile Sidebar Backdrop -->
             <div x-show="mobileSidebarOpen"
                  x-cloak
@@ -327,10 +354,10 @@
 
             <!-- Sidebar (Deep Oceanic Navy Charcoal & Cyan Highlights) -->
             <aside :class="{ 'collapsed': sidebarCollapsed, 'mobile-open': mobileSidebarOpen }"
-                   class="ims-sidebar fixed inset-y-0 left-0 z-50 bg-[#061d28] border-r border-[#0d2a38] flex flex-col lg:static shrink-0 overflow-visible">
+                   class="ims-sidebar fixed inset-y-0 left-0 z-40 bg-[#061d28] border-r border-[#0d2a38] flex flex-col lg:sticky lg:top-0 lg:h-screen shrink-0 overflow-visible">
                 
                 <!-- Sidebar Header / Logo -->
-                <div class="h-16 px-3.5 flex items-center justify-between border-b border-[#0d2a38]">
+                <div class="h-16 px-3.5 flex items-center justify-between border-b border-[#0d2a38] shrink-0">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 overflow-hidden" title="IMS Router Management">
                         <div class="w-9 h-9 rounded-xl bg-[#0c2f42] border border-cyan-400/30 p-1 shadow-md shadow-cyan-500/20 flex items-center justify-center flex-shrink-0">
                             <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
@@ -354,7 +381,7 @@
                 </div>
 
                 <!-- Sidebar Navigation Menu -->
-                <nav class="ims-sidebar-nav flex-1 px-2.5 py-3 space-y-1.5 overflow-y-auto overflow-x-visible"
+                <nav class="ims-sidebar-nav flex-1 min-h-0 px-2.5 py-3 space-y-1.5 overflow-y-auto overflow-x-visible"
                      x-data="{
                          permintaanOpen: {{ request()->routeIs('teknik.permintaan.*') ? 'true' : 'false' }}
                      }">
@@ -860,7 +887,7 @@
                 </nav>
 
                 <!-- Sidebar Footer Info -->
-                <div class="p-3 border-t border-[#1F2937] text-center overflow-hidden">
+                <div class="p-3 border-t border-[#0d2a38] text-center overflow-hidden shrink-0">
                     <div class="ims-footer-full whitespace-nowrap">
                         @if(auth()->user()?->isAdmin() || auth()->user()?->isDirektur())
                             <span class="text-[11px] text-blue-400/90 font-medium">Master Admin &middot; v1.0</span>
@@ -881,9 +908,9 @@
             </aside>
 
             <!-- Main Content Area -->
-            <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+            <div class="flex-1 flex flex-col min-w-0 overflow-y-auto ims-main-scroll">
                 <!-- Top Navbar (Dual Light & Dark Mode) -->
-                <header class="min-h-16 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30 py-2 shadow-xs transition-colors duration-200">
+                <header class="min-h-16 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30 py-2 shadow-xs transition-colors duration-200">
                     <div class="flex items-center gap-3">
                         <!-- Sidebar Toggle Button in Navbar (Tombol Hamburger) -->
                         <button @click="toggleSidebar()" 
@@ -1031,7 +1058,7 @@
                 </main>
 
                 <!-- Bottom Footer (Dual Light & Dark Mode) -->
-                <footer class="mt-auto px-6 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2 transition-colors duration-200">
+                <footer class="mt-auto shrink-0 px-6 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2 transition-colors duration-200">
                     <div>
                         &copy; {{ date('Y') }} Media Solusi Network
                     </div>

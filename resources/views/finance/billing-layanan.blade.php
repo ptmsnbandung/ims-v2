@@ -879,14 +879,22 @@
                             </div>
                             <div>
                                 <h3 class="text-base font-bold text-slate-900 dark:text-white">Generate Invoice Massal</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Terbitkan tagihan berkala untuk seluruh pelanggan aktif</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Terbitkan tagihan bulanan untuk seluruh pelanggan aktif &amp; suspend</p>
                             </div>
                         </div>
                         <button type="button" @click="generateModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
                     </div>
 
-                    <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-3.5 text-xs text-blue-800 dark:text-blue-300">
-                        Sistem akan men-generate invoice bulanan baru untuk seluruh pelanggan berstatus aktif pada periode terpilih. Tagihan yang sudah ada sebelumnya tidak akan diduplikasi.
+                    <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-3.5 text-xs text-blue-800 dark:text-blue-300 space-y-1">
+                        <p class="font-semibold flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Otomatis Terjadwal: Setiap Tanggal 1, Jam 08:00 WIB
+                        </p>
+                        <p class="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+                            Sistem secara berkala otomatis men-generate invoice massal setiap awal bulan untuk pelanggan <strong>Aktif</strong> dan <strong>Suspend (Isolir)</strong>. Anda juga dapat memicu penerbitan tagihan secara manual melalui form ini. Tagihan yang sudah ada sebelumnya tidak akan diduplikasi.
+                        </p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">

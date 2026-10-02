@@ -118,13 +118,13 @@ class BroadcastController extends Controller
     {
         $nama = $data->nama_pelanggan ?? 'Pelanggan';
         $noInternet = $data->nomor_internet ?? '-';
-        $periode = $data->periode_tagihan ?? (isset($data->bulan_tagihan, $data->tahun_tagihan) ? $data->bulan_tagihan . '/' . $data->tahun_tagihan : date('m/Y'));
+        $periode = !empty($data->periode_tagihan) ? $data->periode_tagihan : (!empty($data->bulan_tagihan) ? $data->bulan_tagihan . '/' . $data->tahun_tagihan : date('m/Y'));
         
         $nominalVal = $data->total_layanan ?? ($data->harga_bandwith ?? ($data->harga ?? 0));
         $nominal = 'Rp ' . number_format((float) $nominalVal, 0, ',', '.');
         
-        $expiryRaw = $data->expiry ?? ($data->tgl_jatuh_tempo ?? null);
-        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : date('d M Y', strtotime('+5 days'));
+        $expiryRaw = !empty($data->expiry) ? $data->expiry : (!empty($data->tgl_jatuh_tempo) ? $data->tgl_jatuh_tempo : null);
+        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : date('d F Y', strtotime('+5 days'));
 
         $linkPembayaran = '';
         if (!empty($data->payment_respond_post)) {
@@ -160,57 +160,109 @@ class BroadcastController extends Controller
         $this->ensureSchema();
 
         $search = trim($request->input('search', ''));
-        $selectedStatusTagihan = $request->input('status_tagihan', 'unpaid'); // default 'unpaid' (Mendekati Jatuh Tempo / Belum Lunas)
-        $selectedBulan = $request->input('bulan', date('m'));
-        $selectedTahun = $request->input('tahun', date('Y'));
+        $selectedStatusTagihan = $request->input('status_tagihan', 'all'); // Default 'all' to show all active & registered customers
+        $selectedBulan = $request->input('bulan', 'all');
+        $selectedTahun = $request->input('tahun', 'all');
         $selectedWilayah = $request->input('wilayah', 'all');
         $perPage = (int) $request->input('per_page', 10);
         if (!in_array($perPage, [10, 25, 50, 100, 250])) {
             $perPage = 10;
         }
 
-        // Query Pelanggan & Tagihan
-        $useViewBilling = Schema::hasTable('view_billing_layanan');
-        $query = DB::table($useViewBilling ? 'view_billing_layanan' : 'trx_billing_layanan');
+        $useBatchjob = Schema::hasTable('view_batchjob');
+        $useBillingView = Schema::hasTable('view_billing_layanan');
+        $useBillingTrx = Schema::hasTable('trx_billing_layanan');
 
+        if ($useBatchjob) {
+            $query = DB::table('view_batchjob as b');
+
+            if ($useBillingView) {
+                $latestBillingSubQuery = DB::table('view_billing_layanan')
+                    ->select('nomor_internet', DB::raw('MAX(id) as max_billing_id'))
+                    ->groupBy('nomor_internet');
+
+                $query->leftJoinSub($latestBillingSubQuery, 'lb', function ($join) {
+                    $join->on('b.nomor_internet', '=', 'lb.nomor_internet');
+                })->leftJoin('view_billing_layanan as inv', 'lb.max_billing_id', '=', 'inv.id');
+            } elseif ($useBillingTrx) {
+                $latestBillingSubQuery = DB::table('trx_billing_layanan')
+                    ->select('nomor_internet', DB::raw('MAX(id) as max_billing_id'))
+                    ->groupBy('nomor_internet');
+
+                $query->leftJoinSub($latestBillingSubQuery, 'lb', function ($join) {
+                    $join->on('b.nomor_internet', '=', 'lb.nomor_internet');
+                })->leftJoin('trx_billing_layanan as inv', 'lb.max_billing_id', '=', 'inv.id');
+            }
+
+            $query->select(
+                'b.nomor_internet',
+                'b.nama_pelanggan',
+                'b.nomor_hp',
+                'b.alamat_pasang',
+                'b.alamat_p',
+                'b.nama_kota_pasang',
+                'b.nama_kategori_bandwith',
+                'b.status_reg',
+                'b.desc_registrasi',
+                DB::raw('COALESCE(inv.kode_billing_layanan, "") as kode_billing_layanan'),
+                DB::raw('COALESCE(inv.periode_tagihan, "") as periode_tagihan'),
+                DB::raw('COALESCE(inv.bulan_tagihan, "") as bulan_tagihan'),
+                DB::raw('COALESCE(inv.tahun_tagihan, "") as tahun_tagihan'),
+                DB::raw('COALESCE(inv.total_layanan, inv.harga_bandwith, 0) as total_layanan'),
+                DB::raw('COALESCE(inv.status_bill_lay, "") as status_bill_lay'),
+                DB::raw('COALESCE(inv.expiry, "") as expiry'),
+                DB::raw('COALESCE(inv.payment_respond_post, "") as payment_respond_post')
+            );
+        } else {
+            $table = $useBillingView ? 'view_billing_layanan' : ($useBillingTrx ? 'trx_billing_layanan' : 'trx_batchjob_register');
+            $query = DB::table($table);
+        }
+
+        // Apply Month & Year Filter if specified
         if ($selectedBulan !== 'all' && !empty($selectedBulan)) {
-            $query->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
+            $query->where(function($q) use ($selectedBulan) {
+                $q->where('inv.bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT))
+                  ->orWhereNull('inv.bulan_tagihan');
+            });
         }
         if ($selectedTahun !== 'all' && !empty($selectedTahun)) {
-            $query->where('tahun_tagihan', $selectedTahun);
+            $query->where(function($q) use ($selectedTahun) {
+                $q->where('inv.tahun_tagihan', $selectedTahun)
+                  ->orWhereNull('inv.tahun_tagihan');
+            });
         }
 
-        // Status Tagihan Filter
-        if ($selectedStatusTagihan === 'unpaid') {
-            // Belum Lunas / Mendekati Jatuh Tempo
-            $query->whereIn('status_bill_lay', ['13', '14']);
-        } elseif ($selectedStatusTagihan === 'near_due') {
-            // Publish Billing / Waiting Payment
-            $query->whereIn('status_bill_lay', ['13', '14']);
+        // Apply Status Tagihan Filter
+        if ($selectedStatusTagihan === 'unpaid' || $selectedStatusTagihan === 'near_due') {
+            $query->whereIn('inv.status_bill_lay', ['13', '14']);
         } elseif ($selectedStatusTagihan === 'paid') {
-            $query->where('status_bill_lay', '15');
+            $query->where('inv.status_bill_lay', '15');
         } elseif ($selectedStatusTagihan === 'isolir') {
-            if ($useViewBilling && Schema::hasColumn('view_billing_layanan', 'status_reg')) {
-                $query->whereIn('status_reg', ['23', '23.1']);
+            if ($useBatchjob) {
+                $query->whereIn('b.status_reg', ['23', '23.1']);
             }
         }
 
-        // Wilayah Filter
-        if ($selectedWilayah !== 'all' && !empty($selectedWilayah) && $useViewBilling) {
-            $query->where('nama_kota_pasang', $selectedWilayah);
+        // Apply Wilayah Filter
+        if ($selectedWilayah !== 'all' && !empty($selectedWilayah)) {
+            $column = $useBatchjob ? 'b.nama_kota_pasang' : 'nama_kota_pasang';
+            $query->where($column, $selectedWilayah);
         }
 
         // Search Filter
         if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_pelanggan', 'like', "%{$search}%")
-                  ->orWhere('nomor_internet', 'like', "%{$search}%")
-                  ->orWhere('nomor_hp', 'like', "%{$search}%")
-                  ->orWhere('kode_billing_layanan', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search, $useBatchjob) {
+                $nameCol = $useBatchjob ? 'b.nama_pelanggan' : 'nama_pelanggan';
+                $noCol   = $useBatchjob ? 'b.nomor_internet' : 'nomor_internet';
+                $hpCol   = $useBatchjob ? 'b.nomor_hp' : 'nomor_hp';
+
+                $q->where($nameCol, 'like', "%{$search}%")
+                  ->orWhere($noCol, 'like', "%{$search}%")
+                  ->orWhere($hpCol, 'like', "%{$search}%");
             });
         }
 
-        $pelangganList = $query->orderBy('nama_pelanggan', 'asc')
+        $pelangganList = $query->orderBy($useBatchjob ? 'b.nama_pelanggan' : 'nama_pelanggan', 'asc')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -226,11 +278,16 @@ class BroadcastController extends Controller
 
         // Counter Statistics
         $totalTargetCount = $pelangganList->total();
-        $totalUnpaidCount = DB::table($useViewBilling ? 'view_billing_layanan' : 'trx_billing_layanan')
-            ->whereIn('status_bill_lay', ['13', '14'])
-            ->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT))
-            ->where('tahun_tagihan', $selectedTahun)
-            ->count();
+        
+        $unpaidQuery = DB::table($useBillingView ? 'view_billing_layanan' : ($useBillingTrx ? 'trx_billing_layanan' : 'trx_batchjob_register'))
+            ->whereIn('status_bill_lay', ['13', '14']);
+        if ($selectedBulan !== 'all') {
+            $unpaidQuery->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
+        }
+        if ($selectedTahun !== 'all') {
+            $unpaidQuery->where('tahun_tagihan', $selectedTahun);
+        }
+        $totalUnpaidCount = $unpaidQuery->count();
 
         $totalSentLog = Schema::hasTable('tb_broadcast_wa_log') ? DB::table('tb_broadcast_wa_log')->count() : 0;
         $sentTodayCount = Schema::hasTable('tb_broadcast_wa_log')
@@ -239,7 +296,14 @@ class BroadcastController extends Controller
 
         // Wilayah Dropdown List
         $wilayahList = [];
-        if ($useViewBilling && Schema::hasColumn('view_billing_layanan', 'nama_kota_pasang')) {
+        if ($useBatchjob) {
+            $wilayahList = DB::table('view_batchjob')
+                ->whereNotNull('nama_kota_pasang')
+                ->where('nama_kota_pasang', '!=', '')
+                ->distinct()
+                ->pluck('nama_kota_pasang')
+                ->toArray();
+        } elseif ($useBillingView && Schema::hasColumn('view_billing_layanan', 'nama_kota_pasang')) {
             $wilayahList = DB::table('view_billing_layanan')
                 ->whereNotNull('nama_kota_pasang')
                 ->where('nama_kota_pasang', '!=', '')
@@ -284,17 +348,21 @@ class BroadcastController extends Controller
             }
         }
 
-        $useViewBilling = Schema::hasTable('view_billing_layanan');
-        $data = DB::table($useViewBilling ? 'view_billing_layanan' : 'trx_billing_layanan')
-            ->where('nomor_internet', $nomorInternet)
-            ->orderBy('id', 'desc')
-            ->first();
+        $useBatchjob = Schema::hasTable('view_batchjob');
+        $useBillingView = Schema::hasTable('view_billing_layanan');
 
-        if (!$data) {
-            // Fallback try view_batchjob
-            if (Schema::hasTable('view_batchjob')) {
-                $data = DB::table('view_batchjob')->where('nomor_internet', $nomorInternet)->first();
+        if ($useBatchjob) {
+            $query = DB::table('view_batchjob as b')->where('b.nomor_internet', $nomorInternet);
+            if ($useBillingView) {
+                $query->leftJoin('view_billing_layanan as inv', function($join) {
+                    $join->on('b.nomor_internet', '=', 'inv.nomor_internet');
+                });
             }
+            $data = $query->first();
+        } else {
+            $data = DB::table($useBillingView ? 'view_billing_layanan' : 'trx_billing_layanan')
+                ->where('nomor_internet', $nomorInternet)
+                ->first();
         }
 
         if (!$data) {
@@ -398,13 +466,24 @@ class BroadcastController extends Controller
         $senderName = $user->nama_karyawan ?? ($user->username ?? 'Direktur');
         $kodeBatch = 'BC-MASSAL-' . date('YmdHis') . '-' . rand(100, 999);
 
-        $useViewBilling = Schema::hasTable('view_billing_layanan');
-        $customerRecords = DB::table($useViewBilling ? 'view_billing_layanan' : 'trx_billing_layanan')
-            ->whereIn('nomor_internet', $targets)
-            ->get();
+        $useBatchjob = Schema::hasTable('view_batchjob');
+        $useBillingView = Schema::hasTable('view_billing_layanan');
 
-        if ($customerRecords->isEmpty() && Schema::hasTable('view_batchjob')) {
-            $customerRecords = DB::table('view_batchjob')
+        if ($useBatchjob) {
+            $query = DB::table('view_batchjob as b')->whereIn('b.nomor_internet', $targets);
+            if ($useBillingView) {
+                $latestBillingSubQuery = DB::table('view_billing_layanan')
+                    ->select('nomor_internet', DB::raw('MAX(id) as max_billing_id'))
+                    ->whereIn('nomor_internet', $targets)
+                    ->groupBy('nomor_internet');
+
+                $query->leftJoinSub($latestBillingSubQuery, 'lb', function ($join) {
+                    $join->on('b.nomor_internet', '=', 'lb.nomor_internet');
+                })->leftJoin('view_billing_layanan as inv', 'lb.max_billing_id', '=', 'inv.id');
+            }
+            $customerRecords = $query->get();
+        } else {
+            $customerRecords = DB::table($useBillingView ? 'view_billing_layanan' : 'trx_billing_layanan')
                 ->whereIn('nomor_internet', $targets)
                 ->get();
         }

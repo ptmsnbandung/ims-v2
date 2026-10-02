@@ -137,76 +137,72 @@
                 <span class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">1</span>
                 <h2 class="text-base font-bold text-slate-900 dark:text-white">Pilih Template &amp; Isi Pesan Broadcast</h2>
             </div>
-            <button @click="showPreview = !showPreview" type="button" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
-                <span x-text="showPreview ? '🙈 Sembunyikan Pratinjau WA' : '👁️ Tampilkan Pratinjau WA'"></span>
+            <button @click="showPreview = !showPreview" type="button" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0">
+                <span x-text="showPreview ? '🙈 Sembunyikan Pratinjau' : '👁️ Tampilkan Pratinjau WA'"></span>
             </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
-            <!-- Left: Template & Message Input (7 cols) -->
-            <div class="md:col-span-7 space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Pilih Template Pesan Siap Pakai:</label>
-                    <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
-                        @foreach($templates as $tpl)
-                            <option value="{{ $tpl->id }}" data-pesan="{{ addslashes($tpl->pesan) }}" data-kategori="{{ $tpl->kategori }}">
-                                📌 {{ $tpl->nama_template }} {{ $tpl->is_default ? '(Default)' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+        <!-- Row 1: Template selector + var buttons + textarea -->
+        <div class="space-y-4">
+            <!-- Template Dropdown -->
+            <div>
+                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Pilih Template Pesan Siap Pakai:</label>
+                <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
+                    @foreach($templates as $tpl)
+                        <option value="{{ $tpl->id }}" data-pesan="{{ addslashes($tpl->pesan) }}" data-kategori="{{ $tpl->kategori }}">
+                            📌 {{ $tpl->nama_template }} {{ $tpl->is_default ? '(Default)' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Tombol Cepat Sisipkan Data Pelanggan:</label>
-                    <div class="flex flex-wrap gap-1.5 text-[11px]">
-                        <button type="button" @click="insertVariable('{nama}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
-                            +{nama}
-                        </button>
-                        <button type="button" @click="insertVariable('{nomor_internet}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
-                            +{nomor_internet}
-                        </button>
-                        <button type="button" @click="insertVariable('{periode}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
-                            +{periode}
-                        </button>
-                        <button type="button" @click="insertVariable('{nominal}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
-                            +{nominal}
-                        </button>
-                        <button type="button" @click="insertVariable('{jatuh_tempo}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
-                            +{jatuh_tempo}
-                        </button>
-                        <button type="button" @click="insertVariable('{link_pembayaran}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-600/30 dark:text-emerald-300 border border-slate-300 dark:border-slate-700 font-bold transition">
-                            +{link_pembayaran}
-                        </button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Isi Pesan WhatsApp yang Akan Dikirim:</label>
-                    <textarea x-model="customPesan" id="broadcastPesanTextarea" rows="6" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans leading-relaxed"></textarea>
+            <!-- Variable Quick Insert Buttons -->
+            <div>
+                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">Sisipkan Data Pelanggan ke Pesan:</label>
+                <div class="flex flex-wrap gap-2 text-[11px]">
+                    @foreach(['{nama}', '{nomor_internet}', '{periode}', '{nominal}', '{jatuh_tempo}', '{link_pembayaran}', '{paket}', '{alamat}'] as $var)
+                    <button type="button" @click="insertVariable('{{ $var }}')"
+                        class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 font-bold transition">
+                        + {{ $var }}
+                    </button>
+                    @endforeach
                 </div>
             </div>
 
-            <!-- Right: WhatsApp Live Preview (5 cols) -->
-            <div class="md:col-span-5" x-show="showPreview">
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Pratinjau Tampilan Pesan WhatsApp:</label>
-                <div class="border border-slate-300 dark:border-slate-800 rounded-2xl overflow-hidden bg-[#efeae2] dark:bg-[#0b141a] shadow-inner">
-                    <div class="bg-[#075e54] dark:bg-[#202c33] px-4 py-2.5 flex items-center gap-3 border-b border-emerald-800 dark:border-slate-800 text-white">
-                        <div class="w-8 h-8 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center text-white font-bold text-xs">
-                            IMS
-                        </div>
-                        <div>
-                            <div class="text-xs font-bold text-white">IMS Support (Sample Preview)</div>
-                            <div class="text-[10px] text-emerald-200 dark:text-emerald-400">Online &bull; WhatsApp Broadcast</div>
-                        </div>
-                    </div>
+            <!-- Textarea Message Editor -->
+            <div>
+                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Isi Pesan WhatsApp yang Akan Dikirim:</label>
+                <textarea x-model="customPesan" id="broadcastPesanTextarea" rows="7"
+                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans leading-relaxed resize-y"></textarea>
+            </div>
+        </div>
 
-                    <div class="p-4 bg-repeat min-h-[160px] max-h-[240px] overflow-y-auto" style="background-color: #efeae2; background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size: 16px 16px;">
-                        <div class="bg-[#d9fdd3] text-slate-900 dark:bg-[#005c4b] dark:text-slate-100 p-3 rounded-xl rounded-tl-none max-w-[95%] text-xs shadow-xs leading-relaxed whitespace-pre-wrap font-sans" x-html="formatWaPreview(customPesan)"></div>
+        <!-- Row 2: WhatsApp Preview (collapsible) -->
+        <div x-show="showPreview" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+            <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">
+                📱 Pratinjau Tampilan Pesan di WhatsApp:
+            </label>
+            <div class="border border-slate-300 dark:border-slate-800 rounded-2xl overflow-hidden bg-[#efeae2] dark:bg-[#0b141a] shadow-inner max-w-xl">
+                <!-- WA Header Bar -->
+                <div class="bg-[#075e54] dark:bg-[#202c33] px-4 py-2.5 flex items-center gap-3 border-b border-emerald-800 dark:border-slate-800 text-white">
+                    <div class="w-8 h-8 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                        IMS
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-white">IMS Support (Sample Preview)</div>
+                        <div class="text-[10px] text-emerald-200 dark:text-emerald-400">Online &bull; WhatsApp Broadcast</div>
+                    </div>
+                </div>
+                <!-- WA Chat Bubble -->
+                <div class="p-4 min-h-[120px] max-h-[280px] overflow-y-auto" style="background-color:#efeae2; background-image:radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size:16px 16px;">
+                    <div class="bg-[#d9fdd3] text-slate-900 dark:bg-[#005c4b] dark:text-slate-100 p-3 rounded-xl rounded-tl-none max-w-[85%] text-xs shadow-xs leading-relaxed whitespace-pre-wrap font-sans"
+                        x-html="formatWaPreview(customPesan)">
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- LANGKAH 2 & 3: DAFTAR PELANGGAN & PENGIRIMAN -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">

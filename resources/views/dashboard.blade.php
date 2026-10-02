@@ -443,52 +443,52 @@
                                 @forelse($newUserStats['recentNewUsers'] as $nu)
                                     <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
                                         <td class="py-3 px-4">
-                                            <a href="{{ route('teknik.pelanggan.profile', $nu->nomor_internet) }}" 
+                                            <a href="{{ route('teknik.pelanggan.profile', $nu->nomor_internet ?? '') }}" 
                                                class="font-bold text-blue-600 dark:text-cyan-400 font-mono hover:underline">
-                                                {{ $nu->nomor_internet }}
+                                                {{ $nu->nomor_internet ?? '-' }}
                                             </a>
-                                            <div class="font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5">{{ $nu->nama_pelanggan }}</div>
+                                            <div class="font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5">{{ $nu->nama_pelanggan ?? 'Pelanggan' }}</div>
                                         </td>
                                         <td class="py-3 px-4">
                                             <div class="font-medium text-slate-700 dark:text-slate-300">
-                                                {{ $nu->nama_kategori_bandwith ?: ($nu->alias_nama_kategori ?: 'INTERNET') }}
+                                                {{ $nu->nama_kategori_bandwith ?? ($nu->alias_nama_kategori ?? ($nu->nama_paket ?? 'INTERNET')) }}
                                             </div>
                                             <div class="text-[11px] font-bold font-mono text-blue-600 dark:text-cyan-400">
-                                                {{ $nu->nominal_bandwith ?: '10' }} Mbps
+                                                {{ $nu->nominal_bandwith ?? '10' }} Mbps
                                             </div>
                                         </td>
                                         <td class="py-3 px-4 text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                                            {{ $nu->date_create ? \Carbon\Carbon::parse($nu->date_create)->format('d M Y, H:i') : '-' }}
+                                            {{ !empty($nu->date_create) ? \Carbon\Carbon::parse($nu->date_create)->format('d M Y, H:i') : '-' }}
                                         </td>
                                         <td class="py-3 px-4">
-                                            @if($nu->status_reg == '20')
+                                            @if(($nu->status_reg ?? null) == '20')
                                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
                                                     AKTIF (#20)
                                                 </span>
-                                            @elseif(in_array($nu->status_reg, ['18', '18.1', '19', '19.1']))
+                                            @elseif(in_array(($nu->status_reg ?? null), ['18', '18.1', '19', '19.1']))
                                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30">
-                                                    AKTIVASI (#{{ $nu->status_reg }})
+                                                    AKTIVASI (#{{ $nu->status_reg ?? '' }})
                                                 </span>
-                                            @elseif(in_array($nu->status_reg, ['16', '17', '17.1']))
+                                            @elseif(in_array(($nu->status_reg ?? null), ['16', '17', '17.1']))
                                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 dark:border-indigo-500/30">
-                                                    INSTALASI (#{{ $nu->status_reg }})
+                                                    INSTALASI (#{{ $nu->status_reg ?? '' }})
                                                 </span>
-                                            @elseif(in_array($nu->status_reg, ['12', '13', '13.1']))
+                                            @elseif(in_array(($nu->status_reg ?? null), ['12', '13', '13.1']))
                                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
-                                                    SURVEY (#{{ $nu->status_reg }})
+                                                    SURVEY (#{{ $nu->status_reg ?? '' }})
                                                 </span>
-                                            @elseif(in_array($nu->status_reg, ['14', '15']))
+                                            @elseif(in_array(($nu->status_reg ?? null), ['14', '15']))
                                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30">
-                                                    BATAL (#{{ $nu->status_reg }})
+                                                    BATAL (#{{ $nu->status_reg ?? '' }})
                                                 </span>
                                             @else
                                                 <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                                                    DRAFT (#{{ $nu->status_reg }})
+                                                    DRAFT (#{{ $nu->status_reg ?? '11' }})
                                                 </span>
                                             @endif
                                         </td>
                                         <td class="py-3 px-4 text-center">
-                                            <a href="{{ route('teknik.pelanggan.profile', $nu->nomor_internet) }}" 
+                                            <a href="{{ route('teknik.pelanggan.profile', $nu->nomor_internet ?? '') }}" 
                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-semibold transition"
                                                title="Lihat Profil Pelanggan">
                                                 <span>Profil</span>

@@ -119,5 +119,14 @@ class DashboardNewUserStatsTest extends TestCase
         $response->assertSee('Pelanggan Baru 1', false);
         $response->assertSee('Pelanggan Baru 2', false);
         $response->assertDontSee('Pelanggan Lama Sept');
+
+        // Filter September 2026
+        $responseSept = $this->actingAs($admin)->get('/dashboard?bulan=09&tahun=2026');
+
+        $responseSept->assertStatus(200);
+        $responseSept->assertSee('September 2026', false);
+        $responseSept->assertSee('Pelanggan Lama Sept', false);
+        $responseSept->assertDontSee('Pelanggan Baru 1');
+        $responseSept->assertDontSee('Pelanggan Baru 2');
     }
 }

@@ -125,7 +125,10 @@ class NocController extends Controller
         try {
             if (Schema::hasTable('trx_batchjob_register')) {
                 $monthStats = DB::table('trx_batchjob_register')
-                    ->whereBetween('date_create', [$startDate, $endDate])
+                    ->where(function ($q) use ($startDate, $endDate, $selectedTahun, $selectedBulan) {
+                        $q->whereBetween('date_create', [$startDate, $endDate])
+                          ->orWhere('date_create', 'like', "{$selectedTahun}-{$selectedBulan}%");
+                    })
                     ->selectRaw("
                         COUNT(*) as total_baru,
                         COUNT(CASE WHEN status_reg = '20' THEN 1 END) as aktif_baru,
@@ -140,7 +143,9 @@ class NocController extends Controller
                 $batalBaru = (int) ($monthStats->batal_baru ?? 0);
 
                 $prevTotalBaru = DB::table('trx_batchjob_register')
-                    ->whereBetween('date_create', [$prevStartDate, $prevEndDate])
+                    ->where(function ($q) use ($prevStartDate, $prevEndDate) {
+                        $q->whereBetween('date_create', [$prevStartDate, $prevEndDate]);
+                    })
                     ->count();
 
                 $growthCount = $totalBaru - $prevTotalBaru;
@@ -148,18 +153,36 @@ class NocController extends Controller
                     ? round((($totalBaru - $prevTotalBaru) / $prevTotalBaru) * 100, 1) 
                     : ($totalBaru > 0 ? 100 : 0);
 
-                $sourceTable = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
-                $paketBreakdown = DB::table($sourceTable)
-                    ->whereBetween('date_create', [$startDate, $endDate])
-                    ->select(
-                        DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_paket"),
-                        DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
-                        DB::raw('count(*) as total')
-                    )
-                    ->groupBy('nama_paket', 'nominal_bandwith')
-                    ->orderByDesc('total')
-                    ->limit(5)
-                    ->get();
+                $baseQuery = DB::table('trx_batchjob_register as r')
+                    ->where(function ($q) use ($startDate, $endDate, $selectedTahun, $selectedBulan) {
+                        $q->whereBetween('r.date_create', [$startDate, $endDate])
+                          ->orWhere('r.date_create', 'like', "{$selectedTahun}-{$selectedBulan}%");
+                    });
+
+                $hasBandwith = Schema::hasTable('m_bandwith');
+                $hasBandwithKat = Schema::hasTable('m_bandwith_kategori');
+
+                if ($hasBandwith) {
+                    $baseQuery->leftJoin('m_bandwith as bw', 'r.kode_bandwith', '=', 'bw.kode_bandwith');
+                }
+                if ($hasBandwith && $hasBandwithKat) {
+                    $baseQuery->leftJoin('m_bandwith_kategori as bwk', 'bw.kode_kategori_bandwith', '=', 'bwk.kode_kategori_bandwith');
+                }
+
+                $namaPaketCol = ($hasBandwith && $hasBandwithKat)
+                    ? "COALESCE(bwk.nama_kategori_bandwith, bwk.alias_nama_kategori, bw.nama_bandwith, r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')"
+                    : ($hasBandwith ? "COALESCE(bw.nama_bandwith, r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')" : "COALESCE(r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')");
+                $nominalBwCol = $hasBandwith ? "COALESCE(bw.nominal_bandwith, r.nominal_bandwith, '0')" : "COALESCE(r.nominal_bandwith, '0')";
+
+                $paketBreakdown = (clone $baseQuery)->select(
+                    DB::raw("{$namaPaketCol} as nama_paket"),
+                    DB::raw("{$nominalBwCol} as nominal_bandwith"),
+                    DB::raw('count(*) as total')
+                )
+                ->groupBy('nama_paket', 'nominal_bandwith')
+                ->orderByDesc('total')
+                ->limit(5)
+                ->get();
 
                 $newUserStats = [
                     'selectedBulan' => $selectedBulan,

@@ -121,79 +121,54 @@ class DashboardController extends Controller
                     ->where('status_reg', '20')
                     ->count();
 
-                // Paket Breakdown & Recent New Users for selected month
-                if (Schema::hasTable('view_batchjob')) {
-                    $paketBreakdown = DB::table('view_batchjob')
-                        ->whereBetween('date_create', [$startDate, $endDate])
-                        ->select(
-                            DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_paket"),
-                            DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
-                            DB::raw('count(*) as total')
-                        )
-                        ->groupBy('nama_paket', 'nominal_bandwith')
-                        ->orderByDesc('total')
-                        ->limit(6)
-                        ->get();
+                // Query langsung dari tabel trx_batchjob_register berdasarkan kolom date_create
+                $baseQuery = DB::table('trx_batchjob_register as r')
+                    ->where(function ($q) use ($startDate, $endDate, $selectedTahun, $selectedBulan) {
+                        $q->whereBetween('r.date_create', [$startDate, $endDate])
+                          ->orWhere('r.date_create', 'like', "{$selectedTahun}-{$selectedBulan}%");
+                    });
 
-                    $recentNewUsers = DB::table('view_batchjob')
-                        ->whereBetween('date_create', [$startDate, $endDate])
-                        ->select(
-                            'nomor_internet',
-                            'nama_pelanggan',
-                            DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_kategori_bandwith"),
-                            DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
-                            'status_reg',
-                            'date_create'
-                        )
-                        ->orderBy('date_create', 'desc')
-                        ->limit(8)
-                        ->get();
-                } else {
-                    $query = DB::table('trx_batchjob_register as r')
-                        ->whereBetween('r.date_create', [$startDate, $endDate]);
+                $hasPelanggan = Schema::hasTable('m_pelanggan');
+                $hasBandwith = Schema::hasTable('m_bandwith');
+                $hasBandwithKat = Schema::hasTable('m_bandwith_kategori');
 
-                    $hasPelanggan = Schema::hasTable('m_pelanggan');
-                    $hasBandwith = Schema::hasTable('m_bandwith');
-                    $hasBandwithKat = Schema::hasTable('m_bandwith_kategori');
-
-                    if ($hasPelanggan) {
-                        $query->leftJoin('m_pelanggan as p', 'r.nik_penduduk', '=', 'p.nik_penduduk');
-                    }
-                    if ($hasBandwith) {
-                        $query->leftJoin('m_bandwith as bw', 'r.kode_bandwith', '=', 'bw.kode_bandwith');
-                    }
-                    if ($hasBandwith && $hasBandwithKat) {
-                        $query->leftJoin('m_bandwith_kategori as bwk', 'bw.kode_kategori_bandwith', '=', 'bwk.kode_kategori_bandwith');
-                    }
-
-                    $namaPelangganCol = $hasPelanggan ? "COALESCE(p.nama_penduduk, r.nama_pelanggan, r.nomor_internet)" : "COALESCE(r.nama_pelanggan, r.nomor_internet)";
-                    $namaPaketCol = ($hasBandwith && $hasBandwithKat)
-                        ? "COALESCE(bwk.nama_kategori_bandwith, bwk.alias_nama_kategori, bw.nama_bandwith, r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')"
-                        : ($hasBandwith ? "COALESCE(bw.nama_bandwith, r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')" : "COALESCE(r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')");
-                    $nominalBwCol = $hasBandwith ? "COALESCE(bw.nominal_bandwith, r.nominal_bandwith, '0')" : "COALESCE(r.nominal_bandwith, '0')";
-
-                    $recentNewUsers = (clone $query)->select(
-                        'r.nomor_internet',
-                        DB::raw("{$namaPelangganCol} as nama_pelanggan"),
-                        DB::raw("{$namaPaketCol} as nama_kategori_bandwith"),
-                        DB::raw("{$nominalBwCol} as nominal_bandwith"),
-                        'r.status_reg',
-                        'r.date_create'
-                    )
-                    ->orderBy('r.date_create', 'desc')
-                    ->limit(8)
-                    ->get();
-
-                    $paketBreakdown = (clone $query)->select(
-                        DB::raw("{$namaPaketCol} as nama_paket"),
-                        DB::raw("{$nominalBwCol} as nominal_bandwith"),
-                        DB::raw('count(*) as total')
-                    )
-                    ->groupBy('nama_paket', 'nominal_bandwith')
-                    ->orderByDesc('total')
-                    ->limit(6)
-                    ->get();
+                if ($hasPelanggan) {
+                    $baseQuery->leftJoin('m_pelanggan as p', 'r.nik_penduduk', '=', 'p.nik_penduduk');
                 }
+                if ($hasBandwith) {
+                    $baseQuery->leftJoin('m_bandwith as bw', 'r.kode_bandwith', '=', 'bw.kode_bandwith');
+                }
+                if ($hasBandwith && $hasBandwithKat) {
+                    $baseQuery->leftJoin('m_bandwith_kategori as bwk', 'bw.kode_kategori_bandwith', '=', 'bwk.kode_kategori_bandwith');
+                }
+
+                $namaPelangganCol = $hasPelanggan ? "COALESCE(p.nama_penduduk, r.nama_pelanggan, r.nomor_internet)" : "COALESCE(r.nama_pelanggan, r.nomor_internet)";
+                $namaPaketCol = ($hasBandwith && $hasBandwithKat)
+                    ? "COALESCE(bwk.nama_kategori_bandwith, bwk.alias_nama_kategori, bw.nama_bandwith, r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')"
+                    : ($hasBandwith ? "COALESCE(bw.nama_bandwith, r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')" : "COALESCE(r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')");
+                $nominalBwCol = $hasBandwith ? "COALESCE(bw.nominal_bandwith, r.nominal_bandwith, '0')" : "COALESCE(r.nominal_bandwith, '0')";
+
+                $recentNewUsers = (clone $baseQuery)->select(
+                    'r.nomor_internet',
+                    DB::raw("{$namaPelangganCol} as nama_pelanggan"),
+                    DB::raw("{$namaPaketCol} as nama_kategori_bandwith"),
+                    DB::raw("{$nominalBwCol} as nominal_bandwith"),
+                    'r.status_reg',
+                    'r.date_create'
+                )
+                ->orderBy('r.date_create', 'desc')
+                ->limit(10)
+                ->get();
+
+                $paketBreakdown = (clone $baseQuery)->select(
+                    DB::raw("{$namaPaketCol} as nama_paket"),
+                    DB::raw("{$nominalBwCol} as nominal_bandwith"),
+                    DB::raw('count(*) as total')
+                )
+                ->groupBy('nama_paket', 'nominal_bandwith')
+                ->orderByDesc('total')
+                ->limit(6)
+                ->get();
 
                 // New system users (tb_pengguna)
                 $totalPenggunaSistemBaru = 0;

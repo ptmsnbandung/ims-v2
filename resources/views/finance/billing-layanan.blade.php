@@ -734,6 +734,8 @@
                                             )
                                         );
 
+                                    $isMidtrans = !$isTransfer && !$isCash;
+
                                     // Format Label Metode Pembayaran Sesuai Kolom merchant_type
                                     if (!empty($merchantRaw)) {
                                         $methodLabel = $merchantRaw;
@@ -828,7 +830,12 @@
                                         <span>{{ $methodLabel }}</span>
                                     </span>
 
-                                    @if($snapUrl && !$isSnapExpired)
+                                    @if($inv->status_bill_lay == '15')
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                                        <span>Lunas (Midtrans)</span>
+                                    </span>
+                                    @elseif($snapUrl && !$isSnapExpired)
                                     <button type="button"
                                             @click="openMidtransModalFromEl($el)"
                                             data-kode="{{ $inv->kode_billing_layanan }}"
@@ -890,29 +897,59 @@
                         <!-- 7. Action Buttons (2x2 Stacked Grid: Approve, Change Pay, Detail, Hapus) -->
                         <td class="py-3 px-3 align-middle text-center">
                             <div class="grid grid-cols-2 gap-1.5 w-[210px] mx-auto">
-                                <!-- 1. Approve / Konfirmasi Bayar (Top Left) -->
-                                @if($inv->status_bill_lay != '15')
-                                <button type="button"
-                                        @click="openPayModalFromEl($el)"
-                                        data-kode="{{ $inv->kode_billing_layanan }}"
-                                        data-internet="{{ $inv->nomor_internet }}"
-                                        data-nama="{{ $inv->nama_pelanggan }}"
-                                        data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
-                                        data-payment-type="{{ $inv->payment_type ?? 2 }}"
-                                        title="Approve Pembayaran Lunas"
-                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/15 dark:hover:bg-emerald-600 dark:text-emerald-400 dark:hover:text-white dark:border-emerald-500/30 text-[11px] font-bold transition shadow-sm cursor-pointer whitespace-nowrap">
-                                    <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                    </svg>
-                                    <span>Approve</span>
-                                </button>
+                                <!-- 1. Status Bayar untuk Midtrans, atau Approve untuk Transfer/Cash (Top Left) -->
+                                @if($isMidtrans)
+                                    {{-- METODE MIDTRANS: Tidak ada tombol Approve, langsung tampilkan status bayar --}}
+                                    @if($inv->status_bill_lay == '15')
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[11px] font-bold select-none" title="Tagihan Midtrans Lunas">
+                                        <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                        <span>Lunas</span>
+                                    </span>
+                                    @elseif($isSnapExpired)
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 text-[11px] font-bold select-none" title="Link Pembayaran Midtrans Expired">
+                                        <svg class="w-3 h-3 flex-shrink-0 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                        </svg>
+                                        <span>Expired</span>
+                                    </span>
+                                    @elseif($inv->status_bill_lay == '14')
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30 text-[11px] font-bold select-none" title="Menunggu Pembayaran Pelanggan">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                                        <span>Pending</span>
+                                    </span>
+                                    @else
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 text-[11px] font-bold select-none" title="Tagihan Belum Dibayar (Menunggu Pembayaran Midtrans)">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        <span>Belum Bayar</span>
+                                    </span>
+                                    @endif
                                 @else
-                                <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 text-emerald-600/70 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400/70 dark:border-emerald-500/20 text-[11px] font-semibold opacity-75 select-none">
-                                    <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-                                    <span>Lunas</span>
-                                </span>
+                                    {{-- METODE TRANSFER / CASH: Memerlukan Konfirmasi & Tombol Approve Manual --}}
+                                    @if($inv->status_bill_lay != '15')
+                                    <button type="button"
+                                            @click="openPayModalFromEl($el)"
+                                            data-kode="{{ $inv->kode_billing_layanan }}"
+                                            data-internet="{{ $inv->nomor_internet }}"
+                                            data-nama="{{ $inv->nama_pelanggan }}"
+                                            data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
+                                            data-payment-type="{{ $inv->payment_type ?? 2 }}"
+                                            title="Approve Pembayaran Lunas"
+                                            class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/15 dark:hover:bg-emerald-600 dark:text-emerald-400 dark:hover:text-white dark:border-emerald-500/30 text-[11px] font-bold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                        <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                        <span>Approve</span>
+                                    </button>
+                                    @else
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 text-emerald-600/70 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400/70 dark:border-emerald-500/20 text-[11px] font-semibold opacity-75 select-none">
+                                        <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                        <span>Lunas</span>
+                                    </span>
+                                    @endif
                                 @endif
 
                                 <!-- 2. Change Payment Method (Top Right) -->

@@ -106,6 +106,31 @@ class NocController extends Controller
             $prevEndDate = Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d 23:59:59');
         }
 
+        // Date filter closure for flexible string/datetime matching
+        $applyDateFilter = function ($query, $column = 'date_create') use ($startDate, $endDate, $selectedTahun, $selectedBulan) {
+            return $query->where(function ($q) use ($column, $startDate, $endDate, $selectedTahun, $selectedBulan) {
+                $q->whereBetween($column, [$startDate, $endDate])
+                  ->orWhere($column, 'like', "{$selectedTahun}-{$selectedBulan}%")
+                  ->orWhere(function ($sub) use ($column, $selectedTahun, $selectedBulan) {
+                      $sub->whereMonth($column, (int) $selectedBulan)
+                          ->whereYear($column, (int) $selectedTahun);
+                  });
+            });
+        };
+
+        $prevApplyDateFilter = function ($query, $column = 'date_create') use ($prevStartDate, $prevEndDate, $prevMonthDate) {
+            $prevYear = $prevMonthDate->format('Y');
+            $prevMonth = $prevMonthDate->format('m');
+            return $query->where(function ($q) use ($column, $prevStartDate, $prevEndDate, $prevYear, $prevMonth) {
+                $q->whereBetween($column, [$prevStartDate, $prevEndDate])
+                  ->orWhere($column, 'like', "{$prevYear}-{$prevMonth}%")
+                  ->orWhere(function ($sub) use ($column, $prevYear, $prevMonth) {
+                      $sub->whereMonth($column, (int) $prevMonth)
+                          ->whereYear($column, (int) $prevYear);
+                  });
+            });
+        };
+
         // New Users KPI for selected month in NOC
         $newUserStats = [
             'selectedBulan' => $selectedBulan,
@@ -123,17 +148,19 @@ class NocController extends Controller
         ];
 
         try {
-            if (Schema::hasTable('trx_batchjob_register')) {
-                $monthStats = DB::table('trx_batchjob_register')
-                    ->where(function ($q) use ($startDate, $endDate, $selectedTahun, $selectedBulan) {
-                        $q->whereBetween('date_create', [$startDate, $endDate])
-                          ->orWhere('date_create', 'like', "{$selectedTahun}-{$selectedBulan}%");
-                    })
+            $hasTrx = Schema::hasTable('trx_batchjob_register');
+            $hasView = Schema::hasTable('view_batchjob');
+            $sourceTable = $hasView ? 'view_batchjob' : ($hasTrx ? 'trx_batchjob_register' : null);
+
+            if ($sourceTable) {
+                $monthStatsQuery = DB::table($sourceTable);
+                $applyDateFilter($monthStatsQuery, 'date_create');
+                $monthStats = $monthStatsQuery
                     ->selectRaw("
                         COUNT(*) as total_baru,
-                        COUNT(CASE WHEN status_reg = '20' THEN 1 END) as aktif_baru,
+                        COUNT(CASE WHEN status_reg = '20' OR status_reg = '20.0' OR status_reg = '20.1' THEN 1 END) as aktif_baru,
                         COUNT(CASE WHEN status_reg IN ('11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1') THEN 1 END) as proses_baru,
-                        COUNT(CASE WHEN status_reg IN ('14', '15') THEN 1 END) as batal_baru
+                        COUNT(CASE WHEN status_reg IN ('14', '15', '23', '23.1') THEN 1 END) as batal_baru
                     ")
                     ->first();
 
@@ -142,47 +169,81 @@ class NocController extends Controller
                 $prosesBaru = (int) ($monthStats->proses_baru ?? 0);
                 $batalBaru = (int) ($monthStats->batal_baru ?? 0);
 
-                $prevTotalBaru = DB::table('trx_batchjob_register')
-                    ->where(function ($q) use ($prevStartDate, $prevEndDate) {
-                        $q->whereBetween('date_create', [$prevStartDate, $prevEndDate]);
-                    })
-                    ->count();
+                $prevQuery = DB::table($sourceTable);
+                $prevApplyDateFilter($prevQuery, 'date_create');
+                $prevTotalBaru = $prevQuery->count();
 
                 $growthCount = $totalBaru - $prevTotalBaru;
                 $growthPercent = $prevTotalBaru > 0 
                     ? round((($totalBaru - $prevTotalBaru) / $prevTotalBaru) * 100, 1) 
                     : ($totalBaru > 0 ? 100 : 0);
 
-                $baseQuery = DB::table('trx_batchjob_register as r')
-                    ->where(function ($q) use ($startDate, $endDate, $selectedTahun, $selectedBulan) {
-                        $q->whereBetween('r.date_create', [$startDate, $endDate])
-                          ->orWhere('r.date_create', 'like', "{$selectedTahun}-{$selectedBulan}%");
-                    });
+                if ($sourceTable === 'view_batchjob') {
+                    $paketQuery = DB::table('view_batchjob');
+                    $applyDateFilter($paketQuery, 'date_create');
 
-                $hasBandwith = Schema::hasTable('m_bandwith');
-                $hasBandwithKat = Schema::hasTable('m_bandwith_kategori');
+                    $paketBreakdown = $paketQuery
+                        ->select(
+                            DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_paket"),
+                            DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
+                            DB::raw('count(*) as total')
+                        )
+                        ->groupBy('nama_paket', 'nominal_bandwith')
+                        ->orderByDesc('total')
+                        ->limit(5)
+                        ->get();
+                } else {
+                    $baseQuery = DB::table('trx_batchjob_register as r');
+                    $applyDateFilter($baseQuery, 'r.date_create');
 
-                if ($hasBandwith) {
-                    $baseQuery->leftJoin('m_bandwith as bw', 'r.kode_bandwith', '=', 'bw.kode_bandwith');
+                    $hasBandwith = Schema::hasTable('m_bandwith');
+                    $hasBandwithKat = Schema::hasTable('m_bandwith_kategori');
+
+                    $hasTrxNamaKat = Schema::hasColumn('trx_batchjob_register', 'nama_kategori_bandwith');
+                    $hasTrxNominalBw = Schema::hasColumn('trx_batchjob_register', 'nominal_bandwith');
+
+                    if ($hasBandwith) {
+                        $baseQuery->leftJoin('m_bandwith as bw', 'r.kode_bandwith', '=', 'bw.kode_bandwith');
+                    }
+                    if ($hasBandwith && $hasBandwithKat) {
+                        $baseQuery->leftJoin('m_bandwith_kategori as bwk', 'bw.kode_kategori_bandwith', '=', 'bwk.kode_kategori_bandwith');
+                    }
+
+                    $namaPaketParts = [];
+                    if ($hasBandwith && $hasBandwithKat) {
+                        $namaPaketParts[] = 'bwk.nama_kategori_bandwith';
+                        $namaPaketParts[] = 'bwk.alias_nama_kategori';
+                    }
+                    if ($hasBandwith) {
+                        $namaPaketParts[] = 'bw.nama_bandwith';
+                    }
+                    if ($hasTrxNamaKat) {
+                        $namaPaketParts[] = 'r.nama_kategori_bandwith';
+                    }
+                    $namaPaketParts[] = 'r.kode_bandwith';
+                    $namaPaketParts[] = "'INTERNET'";
+                    $namaPaketCol = 'COALESCE(' . implode(', ', $namaPaketParts) . ')';
+
+                    $nominalBwParts = [];
+                    if ($hasBandwith) {
+                        $nominalBwParts[] = 'bw.nominal_bandwith';
+                    }
+                    if ($hasTrxNominalBw) {
+                        $nominalBwParts[] = 'r.nominal_bandwith';
+                    }
+                    $nominalBwParts[] = "'0'";
+                    $nominalBwCol = 'COALESCE(' . implode(', ', $nominalBwParts) . ')';
+
+                    $paketBreakdown = (clone $baseQuery)->select(
+                        DB::raw("{$namaPaketCol} as nama_paket"),
+                        DB::raw("{$nominalBwCol} as nominal_bandwith"),
+                        DB::raw('count(*) as total')
+                    )
+                    ->groupBy('nama_paket', 'nominal_bandwith')
+                    ->orderByDesc('total')
+                    ->limit(5)
+                    ->get();
                 }
-                if ($hasBandwith && $hasBandwithKat) {
-                    $baseQuery->leftJoin('m_bandwith_kategori as bwk', 'bw.kode_kategori_bandwith', '=', 'bwk.kode_kategori_bandwith');
-                }
-
-                $namaPaketCol = ($hasBandwith && $hasBandwithKat)
-                    ? "COALESCE(bwk.nama_kategori_bandwith, bwk.alias_nama_kategori, bw.nama_bandwith, r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')"
-                    : ($hasBandwith ? "COALESCE(bw.nama_bandwith, r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')" : "COALESCE(r.nama_kategori_bandwith, r.kode_bandwith, 'INTERNET')");
-                $nominalBwCol = $hasBandwith ? "COALESCE(bw.nominal_bandwith, r.nominal_bandwith, '0')" : "COALESCE(r.nominal_bandwith, '0')";
-
-                $paketBreakdown = (clone $baseQuery)->select(
-                    DB::raw("{$namaPaketCol} as nama_paket"),
-                    DB::raw("{$nominalBwCol} as nominal_bandwith"),
-                    DB::raw('count(*) as total')
-                )
-                ->groupBy('nama_paket', 'nominal_bandwith')
-                ->orderByDesc('total')
-                ->limit(5)
-                ->get();
 
                 $newUserStats = [
                     'selectedBulan' => $selectedBulan,
@@ -199,7 +260,7 @@ class NocController extends Controller
                 ];
             }
         } catch (\Throwable $e) {
-            // Fail-safe
+            \Illuminate\Support\Facades\Log::error('Error fetching NOC new user stats: ' . $e->getMessage());
         }
 
         // Index OLT Availability (1..128, occupied vs available)

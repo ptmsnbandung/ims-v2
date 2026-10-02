@@ -514,18 +514,6 @@
                         <div class="ims-tooltip">Data Pelanggan</div>
                     </div>
 
-                    <!-- 6. Peta Jaringan FTTH (GIS) -->
-                    <div class="ims-nav-wrapper">
-                        <a href="{{ route('teknik.peta-jaringan') }}"
-                           class="ims-nav-item {{ request()->routeIs('teknik.peta-jaringan*') ? 'active' : '' }}"
-                           title="Peta Jaringan FTTH">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.peta-jaringan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689A1.125 1.125 0 0 0 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
-                            </svg>
-                            <span class="ims-nav-text">Peta Jaringan FTTH</span>
-                        </a>
-                        <div class="ims-tooltip">Peta Jaringan FTTH</div>
-                    </div>
 
                     <!-- 7. Cek Coverage ODP -->
                     <div class="ims-nav-wrapper">

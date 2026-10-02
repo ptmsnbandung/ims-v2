@@ -112,15 +112,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/pelanggan/{nomor_internet}/perangkat', [TeknikController::class, 'storePerangkat'])->name('pelanggan.perangkat.store');
         Route::post('/pelanggan/{nomor_internet}/perangkat/{kode_inst_barang}/delete', [TeknikController::class, 'deletePerangkat'])->name('pelanggan.perangkat.delete');
         Route::post('/pelanggan/{nomor_internet}/update-pppoe', [TeknikController::class, 'updatePppoe'])->name('pelanggan.update-pppoe');
-        // Peta Jaringan & Jalur FTTH (GIS Network Builder)
-        Route::get('/peta-jaringan', [TeknikController::class, 'petaJaringan'])->name('peta-jaringan');
-        Route::post('/peta-jaringan/project', [TeknikController::class, 'storeGisProject'])->name('peta-jaringan.project.store');
-        Route::post('/peta-jaringan/project/{id}/delete', [TeknikController::class, 'deleteGisProject'])->name('peta-jaringan.project.delete');
-        Route::post('/peta-jaringan/element', [TeknikController::class, 'saveGisElement'])->name('peta-jaringan.element.save');
-        Route::post('/peta-jaringan/element/{id}/delete', [TeknikController::class, 'deleteGisElement'])->name('peta-jaringan.element.delete');
-        Route::post('/peta-jaringan/upload-photo', [TeknikController::class, 'uploadGisPhoto'])->name('peta-jaringan.upload-photo');
-        Route::post('/peta-jaringan/import-kmz', [TeknikController::class, 'importKmzKml'])->name('peta-jaringan.import-kmz');
-        Route::get('/peta-jaringan/export-kml/{projectId?}', [TeknikController::class, 'exportKml'])->name('peta-jaringan.export-kml');
 
         // Cek Coverage Lokasi ke ODP Terdekat (GIS Dropcore Routing)
         Route::get('/coverage', [TeknikController::class, 'coverage'])->name('coverage');

@@ -28,8 +28,8 @@
 <div class="space-y-6" x-data="billingLayananPage()">
 
     <!-- Page Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative overflow-hidden">
-        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative z-20">
+        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none overflow-hidden"></div>
         <div class="relative z-10">
             <div class="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
                 <span>Finance &amp; Billing</span>

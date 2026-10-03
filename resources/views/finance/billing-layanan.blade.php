@@ -1072,14 +1072,16 @@
                                     <!-- Jika Belum Memilih Jenis Layanan -->
                                     <template x-if="!generateLayanan">
                                         <tr>
-                                            <td colspan="4" class="p-12 text-center text-slate-400">
-                                                <div class="w-12 h-12 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center text-blue-500 mb-3 shadow-xs">
-                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                    </svg>
+                                            <td colspan="4" class="py-14 px-6 text-center align-middle">
+                                                <div class="flex flex-col items-center justify-center max-w-md mx-auto py-2">
+                                                    <div class="w-14 h-14 shrink-0 rounded-2xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center text-blue-500 mb-3.5 shadow-sm">
+                                                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div class="font-bold text-sm text-slate-800 dark:text-slate-200">Silakan Pilih Jenis Layanan Terlebih Dahulu</div>
+                                                    <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Pilih opsi pada dropdown <strong class="text-slate-700 dark:text-slate-300">JENIS LAYANAN</strong> di atas untuk menampilkan daftar pelanggan.</div>
                                                 </div>
-                                                <div class="font-bold text-sm text-slate-800 dark:text-slate-200">Silakan Pilih Jenis Layanan Terlebih Dahulu</div>
-                                                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">Pilih opsi pada dropdown <strong>JENIS LAYANAN</strong> di atas untuk menampilkan daftar pelanggan.</div>
                                             </td>
                                         </tr>
                                     </template>
@@ -1087,9 +1089,11 @@
                                     <!-- Loading State saat memilih layanan / fetch -->
                                     <template x-if="generateLayanan && generateLoading">
                                         <tr>
-                                            <td colspan="4" class="p-12 text-center text-slate-400">
-                                                <div class="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                                                <div class="text-xs font-medium text-slate-600 dark:text-slate-300">Memuat data pelanggan...</div>
+                                            <td colspan="4" class="py-14 px-6 text-center align-middle text-slate-400">
+                                                <div class="flex flex-col items-center justify-center py-2">
+                                                    <div class="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                                                    <div class="text-xs font-semibold text-slate-600 dark:text-slate-300">Memuat data pelanggan...</div>
+                                                </div>
                                             </td>
                                         </tr>
                                     </template>
@@ -1097,12 +1101,14 @@
                                     <!-- Kosong setelah fetch dengan layanan terpilih -->
                                     <template x-if="generateLayanan && !generateLoading && generateCandidates.length === 0">
                                         <tr>
-                                            <td colspan="4" class="p-12 text-center text-slate-400">
-                                                <div class="w-10 h-10 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-2">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                            <td colspan="4" class="py-14 px-6 text-center align-middle text-slate-400">
+                                                <div class="flex flex-col items-center justify-center max-w-md mx-auto py-2">
+                                                    <div class="w-12 h-12 shrink-0 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-3">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                                    </div>
+                                                    <div class="font-bold text-sm text-slate-700 dark:text-slate-300">Tidak ada data invoice yang sesuai</div>
+                                                    <div class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter periode/tahun.</div>
                                                 </div>
-                                                <div class="font-medium text-slate-700 dark:text-slate-300">Tidak ada data invoice yang sesuai</div>
-                                                <div class="text-[11px] text-slate-400 mt-0.5">Coba sesuaikan kata kunci pencarian atau filter periode/tahun.</div>
                                             </td>
                                         </tr>
                                     </template>

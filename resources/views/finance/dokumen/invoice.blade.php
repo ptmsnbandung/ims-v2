@@ -484,12 +484,26 @@
             display: block;
         }
 
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
         /* Print Media Styles */
         @media print {
-            body {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            html, body {
                 background: #ffffff !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
             .screen-toolbar {
@@ -499,16 +513,22 @@
             .page-container {
                 padding: 0 !important;
                 margin: 0 !important;
+                display: block !important;
             }
 
             .paper-sheet {
                 box-shadow: none !important;
+                border: none !important;
                 width: 100% !important;
                 min-height: 100vh !important;
+                height: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                page-break-inside: avoid;
-                page-break-after: avoid;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                page-break-inside: avoid !important;
+                page-break-after: avoid !important;
             }
 
             .kop-header-container, .kop-footer-container {

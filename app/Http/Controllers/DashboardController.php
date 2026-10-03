@@ -97,6 +97,18 @@ class DashboardController extends Controller
         };
 
         // 1. STATISTIK USER & PELANGGAN BARU (Bulan & Tahun Terpilih)
+        $chartData = [
+            'monthlyLabels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+            'monthlyRegistrasi' => array_fill(0, 12, 0),
+            'monthlyAktif' => array_fill(0, 12, 0),
+            'totalTahunRegistrasi' => 0,
+            'totalTahunAktif' => 0,
+            'bandwidthLabels' => ['BROADBAND HOME', 'DEDICATED SOHO', 'CORPORATE', 'HOTSPOT VOUCHER'],
+            'bandwidthSeries' => [0, 0, 0, 0],
+            'pipelineLabels' => ['Draft Pendaftaran', 'Survey Lokasi', 'Instalasi & Pasang', 'Aktivasi NOC', 'Aktif (Online)', 'Batal'],
+            'pipelineSeries' => [0, 0, 0, 0, 0, 0],
+        ];
+
         $newUserStats = [
             'selectedBulan' => $selectedBulan,
             'selectedTahun' => $selectedTahun,
@@ -312,6 +324,114 @@ class DashboardController extends Controller
                         'batal' => $batalBaru,
                     ],
                 ];
+
+                // 1.B DATA GRAFIK: TREN PERTUMBUHAN USER DARI BULAN KE BULAN (12 BULAN PADA TAHUN TERPILIH)
+                $chartMonthlyLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                $chartMonthlyRegistrasi = array_fill(0, 12, 0);
+                $chartMonthlyAktif = array_fill(0, 12, 0);
+
+                for ($m = 1; $m <= 12; $m++) {
+                    $mPad = str_pad((string)$m, 2, '0', STR_PAD_LEFT);
+                    $mStart = Carbon::createFromDate($selectedTahunInt, $m, 1)->startOfMonth()->format('Y-m-d 00:00:00');
+                    $mEnd = Carbon::createFromDate($selectedTahunInt, $m, 1)->endOfMonth()->format('Y-m-d 23:59:59');
+                    $mPrefix = "{$selectedTahunInt}-{$mPad}";
+
+                    $mRow = DB::table($sourceTable)
+                        ->where(function($q) use ($mStart, $mEnd, $mPrefix, $m, $selectedTahunInt) {
+                            $q->whereBetween('date_create', [$mStart, $mEnd])
+                              ->orWhere('date_create', 'like', "{$mPrefix}%")
+                              ->orWhere(function($sub) use ($m, $selectedTahunInt) {
+                                  $sub->whereMonth('date_create', $m)->whereYear('date_create', $selectedTahunInt);
+                              });
+                        })
+                        ->selectRaw("
+                            COUNT(*) as total,
+                            COUNT(CASE WHEN status_reg IN ('20', '20.0', '20.1') THEN 1 END) as aktif
+                        ")
+                        ->first();
+
+                    $chartMonthlyRegistrasi[$m - 1] = (int) ($mRow->total ?? 0);
+                    $chartMonthlyAktif[$m - 1] = (int) ($mRow->aktif ?? 0);
+                }
+
+                // 1.C DATA GRAFIK: DISTRIBUSI KATEGORI BANDWIDTH
+                $chartBandwidthLabels = [];
+                $chartBandwidthSeries = [];
+
+                if ($sourceTable === 'view_batchjob') {
+                    $bwDistQuery = DB::table('view_batchjob')
+                        ->where(function($q) use ($selectedTahunInt) {
+                            $q->where('date_create', 'like', "{$selectedTahunInt}%")
+                              ->orWhereYear('date_create', $selectedTahunInt);
+                        })
+                        ->select(
+                            DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'BROADBAND') as kategori_name"),
+                            DB::raw('COUNT(*) as total')
+                        )
+                        ->groupBy('kategori_name')
+                        ->orderByDesc('total')
+                        ->get();
+                } else {
+                    $bwDistQuery = (clone $baseQuery)
+                        ->select(
+                            DB::raw("COALESCE(NULLIF(bwk.nama_kategori_bandwith, ''), NULLIF(bwk.alias_nama_kategori, ''), 'BROADBAND') as kategori_name"),
+                            DB::raw('COUNT(*) as total')
+                        )
+                        ->groupBy('kategori_name')
+                        ->orderByDesc('total')
+                        ->get();
+                }
+
+                if ($bwDistQuery->isEmpty()) {
+                    // Fallback all-time distribution jika tahun terpilih belum ada data
+                    if ($sourceTable === 'view_batchjob') {
+                        $bwDistQuery = DB::table('view_batchjob')
+                            ->select(
+                                DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'BROADBAND') as kategori_name"),
+                                DB::raw('COUNT(*) as total')
+                            )
+                            ->groupBy('kategori_name')
+                            ->orderByDesc('total')
+                            ->limit(6)
+                            ->get();
+                    }
+                }
+
+                foreach ($bwDistQuery as $bwItem) {
+                    $labelName = trim((string)$bwItem->kategori_name);
+                    if (!empty($labelName)) {
+                        $chartBandwidthLabels[] = $labelName;
+                        $chartBandwidthSeries[] = (int) $bwItem->total;
+                    }
+                }
+
+                if (empty($chartBandwidthLabels)) {
+                    $chartBandwidthLabels = ['BROADBAND HOME', 'DEDICATED SOHO', 'CORPORATE', 'HOTSPOT VOUCHER'];
+                    $chartBandwidthSeries = [0, 0, 0, 0];
+                }
+
+                // 1.D DATA GRAFIK: PIPELINE STATUS REGISTRASI
+                $chartPipelineLabels = ['Draft Pendaftaran', 'Survey Lokasi', 'Instalasi & Pasang', 'Aktivasi NOC', 'Aktif (Online)', 'Batal'];
+                $chartPipelineSeries = [
+                    (int) ($monthStats->draft_count ?? 0),
+                    (int) ($monthStats->survey_count ?? 0),
+                    (int) ($monthStats->instalasi_count ?? 0),
+                    (int) ($monthStats->aktivasi_count ?? 0),
+                    $aktifBaru,
+                    $batalBaru,
+                ];
+
+                $chartData = [
+                    'monthlyLabels' => $chartMonthlyLabels,
+                    'monthlyRegistrasi' => $chartMonthlyRegistrasi,
+                    'monthlyAktif' => $chartMonthlyAktif,
+                    'totalTahunRegistrasi' => array_sum($chartMonthlyRegistrasi),
+                    'totalTahunAktif' => array_sum($chartMonthlyAktif),
+                    'bandwidthLabels' => $chartBandwidthLabels,
+                    'bandwidthSeries' => $chartBandwidthSeries,
+                    'pipelineLabels' => $chartPipelineLabels,
+                    'pipelineSeries' => $chartPipelineSeries,
+                ];
             }
         } catch (\Throwable $e) {
             Log::error('Dashboard New User Stats Error: ' . $e->getMessage());
@@ -394,6 +514,7 @@ class DashboardController extends Controller
             'user' => $user,
             'newUserStats' => $newUserStats,
             'financeStats' => $financeStats,
+            'chartData' => $chartData,
             'monthsList' => $monthsList,
             'availableYears' => $availableYears,
             'selectedBulan' => $selectedBulan,

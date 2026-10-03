@@ -60,6 +60,251 @@
         </div>
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- SECTION: VISUALISASI GRAFIK & ANALITIK (DIBAWAH HEADER HALO)             -->
+    <!-- ========================================================================= -->
+    <div class="space-y-5">
+        
+        <!-- Header & Quick Filter Bar -->
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                        <span>Analitik & Grafik Pertumbuhan</span>
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-cyan-400 border border-blue-200 dark:border-blue-500/20">
+                            Tahun {{ $selectedTahun }}
+                        </span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Monitoring tren user baru bulanan, sebaran kategori bandwidth, dan pipeline instalasi.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filter Bulan & Tahun -->
+            <form action="{{ route('dashboard') }}" method="GET" class="flex flex-wrap items-center gap-2">
+                <div class="relative">
+                    <select name="bulan" class="appearance-none pl-3 pr-7 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
+                        @foreach($monthsList as $num => $namaBulan)
+                            <option value="{{ $num }}" {{ $selectedBulan == $num ? 'selected' : '' }}>
+                                {{ $namaBulan }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <select name="tahun" class="appearance-none pl-3 pr-7 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
+                        @foreach($availableYears as $year)
+                            <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
+                                {{ $year }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+
+                <button type="submit" class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition cursor-pointer">
+                    Terapkan
+                </button>
+            </form>
+        </div>
+
+        <!-- Row 1: Area Line Chart (Tren Bulanan) & Donut Chart (Kategori Bandwidth) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            <!-- 1. Grafik Tren User Baru dari Bulan ke Bulan (8 Cols) -->
+            <div class="lg:col-span-8 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <div>
+                            <h4 class="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                <span>Tren Pertumbuhan User Baru per Bulan</span>
+                            </h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Perbandingan jumlah registrasi baru vs aktivasi selesai sepanjang tahun {{ $selectedTahun }}.
+                            </p>
+                        </div>
+                        
+                        <!-- Mini KPI Badges -->
+                        <div class="flex items-center gap-2">
+                            <div class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/50 text-right">
+                                <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-cyan-400 block">Total Registrasi</span>
+                                <span class="text-sm font-black font-mono text-slate-900 dark:text-white">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
+                            </div>
+                            <div class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/50 text-right">
+                                <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">Total Aktif Online</span>
+                                <span class="text-sm font-black font-mono text-slate-900 dark:text-white">{{ number_format($chartData['totalTahunAktif']) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ApexChart Container -->
+                    <div class="pt-4">
+                        <div id="chart-user-monthly-trend" class="w-full" style="min-height: 310px;"></div>
+                    </div>
+                </div>
+
+                <!-- Footer Metric Note -->
+                <div class="mt-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                    <div class="flex items-center gap-4">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">Pendaftaran Baru</span>
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">Aktivasi Selesai (Aktif)</span>
+                        </span>
+                    </div>
+                    <span class="font-mono text-slate-400">Periode: Jan - Des {{ $selectedTahun }}</span>
+                </div>
+            </div>
+
+            <!-- 2. Grafik Donut Kategori Bandwidth (4 Cols) -->
+            <div class="lg:col-span-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <h4 class="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                            Distribusi Kategori Bandwidth
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            Pangsa paket layanan yang dipilih pelanggan.
+                        </p>
+                    </div>
+
+                    <!-- ApexChart Donut Container -->
+                    <div class="pt-4 flex items-center justify-center">
+                        <div id="chart-bandwidth-distribution" class="w-full" style="min-height: 270px;"></div>
+                    </div>
+                </div>
+
+                <!-- Custom Badges Breakdown -->
+                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
+                    @php
+                        $paletteColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'];
+                        $totalBwAll = array_sum($chartData['bandwidthSeries']);
+                    @endphp
+                    @foreach($chartData['bandwidthLabels'] as $idx => $label)
+                        @php
+                            $val = $chartData['bandwidthSeries'][$idx] ?? 0;
+                            $pct = $totalBwAll > 0 ? round(($val / $totalBwAll) * 100, 1) : 0;
+                            $dotColor = $paletteColors[$idx % count($paletteColors)];
+                        @endphp
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ $dotColor }};"></span>
+                                <span class="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[140px]" title="{{ $label }}">{{ $label }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 font-mono">
+                                <span class="font-bold text-slate-900 dark:text-white">{{ number_format($val) }}</span>
+                                <span class="text-[10px] text-slate-400">({{ $pct }}%)</span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Row 2: Status Pipeline Pendaftaran & Paket Kecepatan Terpopuler -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            <!-- 3. Status Pipeline Alur Pendaftaran (6 Cols) -->
+            <div class="lg:col-span-6 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                    <div>
+                        <h4 class="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                            Pipeline & Tahapan Aktivasi
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            Status pendaftaran pada bulan {{ $newUserStats['selectedBulanNama'] }} {{ $selectedTahun }}.
+                        </p>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-500/20">
+                        {{ number_format($newUserStats['totalBaru']) }} Total Baru
+                    </span>
+                </div>
+
+                <div class="pt-3">
+                    <div id="chart-pipeline-funnel" class="w-full" style="min-height: 250px;"></div>
+                </div>
+            </div>
+
+            <!-- 4. Paket Kecepatan Bandwidth Terfavorit (6 Cols) -->
+            <div class="lg:col-span-6 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                        <div>
+                            <h4 class="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                                Paket Kecepatan Terfavorit
+                            </h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Top pilihan nominal Mbps oleh pelanggan baru.
+                            </p>
+                        </div>
+                        <a href="{{ route('admin.paket') }}" class="text-[11px] font-bold text-blue-600 dark:text-cyan-400 hover:underline">
+                            Lihat Semua &rarr;
+                        </a>
+                    </div>
+
+                    <div class="pt-4 space-y-3">
+                        @php
+                            $maxPaketCount = $newUserStats['paketBreakdown']->max('total') ?: 1;
+                        @endphp
+                        @forelse($newUserStats['paketBreakdown'] as $idx => $pItem)
+                            @php
+                                $pTotal = (int) $pItem->total;
+                                $pPct = round(($pTotal / $maxPaketCount) * 100);
+                                $pSpeed = (int) ($pItem->nominal_bandwith ?? 0);
+                            @endphp
+                            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 space-y-1.5">
+                                <div class="flex items-center justify-between text-xs">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 dark:text-cyan-400 flex items-center justify-center font-mono font-bold text-[11px]">
+                                            #{{ $idx + 1 }}
+                                        </span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ $pItem->nama_paket }}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+                                            {{ $pSpeed }} Mbps
+                                        </span>
+                                    </div>
+                                    <span class="font-mono font-bold text-slate-900 dark:text-white">{{ number_format($pTotal) }} User</span>
+                                </div>
+                                <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full transition-all duration-500" style="width: {{ $pPct }}%;"></div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-6 text-slate-400 text-xs">
+                                Belum ada data transaksi paket untuk periode ini.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                    <span>Diperbarui otomatis dari database</span>
+                    <span class="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live Data
+                    </span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
     <!-- Quick Role-Specific Feature Overview Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         @if($user->isTeknik() || $user->isDirektur())
@@ -590,3 +835,267 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+    const tooltipTheme = isDark ? 'dark' : 'light';
+
+    // -------------------------------------------------------------
+    // 1. CHART: TREN PERTUMBUHAN USER BULANAN (AREA SPLINE GRADIENT)
+    // -------------------------------------------------------------
+    const monthlyLabels = @json($chartData['monthlyLabels']);
+    const monthlyRegistrasi = @json($chartData['monthlyRegistrasi']);
+    const monthlyAktif = @json($chartData['monthlyAktif']);
+
+    const trendEl = document.querySelector('#chart-user-monthly-trend');
+    if (trendEl) {
+        const optionsTrend = {
+            series: [
+                {
+                    name: 'Pendaftaran Baru',
+                    data: monthlyRegistrasi
+                },
+                {
+                    name: 'Aktivasi Selesai (Aktif)',
+                    data: monthlyAktif
+                }
+            ],
+            chart: {
+                type: 'area',
+                height: 310,
+                fontFamily: 'inherit',
+                toolbar: { show: false },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 600
+                },
+                background: 'transparent'
+            },
+            colors: ['#0284c7', '#10b981'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: isDark ? 0.35 : 0.45,
+                    opacityTo: 0.05,
+                    stops: [0, 95, 100]
+                }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: [3, 2.5],
+                dashArray: [0, 0]
+            },
+            markers: {
+                size: 4,
+                strokeWidth: 2,
+                hover: { size: 6 }
+            },
+            dataLabels: { enabled: false },
+            xaxis: {
+                categories: monthlyLabels,
+                labels: {
+                    style: {
+                        colors: textColor,
+                        fontSize: '11px',
+                        fontWeight: 600
+                    }
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: textColor,
+                        fontSize: '11px',
+                        fontWeight: 500
+                    },
+                    formatter: (val) => Math.round(val)
+                },
+                min: 0,
+                forceNiceScale: true
+            },
+            grid: {
+                borderColor: gridColor,
+                strokeDashArray: 4,
+                padding: { top: 0, right: 10, bottom: 0, left: 10 }
+            },
+            legend: {
+                show: false
+            },
+            tooltip: {
+                theme: tooltipTheme,
+                y: {
+                    formatter: function (val) {
+                        return val + " Pelanggan";
+                    }
+                }
+            }
+        };
+
+        const chartTrend = new ApexCharts(trendEl, optionsTrend);
+        chartTrend.render();
+    }
+
+    // -------------------------------------------------------------
+    // 2. CHART: DISTRIBUSI KATEGORI BANDWIDTH (DONUT PIE)
+    // -------------------------------------------------------------
+    const bwLabels = @json($chartData['bandwidthLabels']);
+    const bwSeries = @json($chartData['bandwidthSeries']);
+
+    const bwEl = document.querySelector('#chart-bandwidth-distribution');
+    if (bwEl) {
+        const optionsBw = {
+            series: bwSeries.length > 0 && bwSeries.some(v => v > 0) ? bwSeries : [1],
+            labels: bwSeries.length > 0 && bwSeries.some(v => v > 0) ? bwLabels : ['Belum Ada Data'],
+            chart: {
+                type: 'donut',
+                height: 270,
+                fontFamily: 'inherit',
+                background: 'transparent'
+            },
+            colors: ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'],
+            stroke: {
+                width: 2,
+                colors: isDark ? ['#0f172a'] : ['#ffffff']
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '72%',
+                        labels: {
+                            show: true,
+                            name: {
+                                show: true,
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                color: textColor,
+                                offsetY: -2
+                            },
+                            value: {
+                                show: true,
+                                fontSize: '20px',
+                                fontWeight: 900,
+                                color: isDark ? '#ffffff' : '#0f172a',
+                                offsetY: 4,
+                                formatter: (val) => val
+                            },
+                            total: {
+                                show: true,
+                                label: 'Total User',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                color: textColor,
+                                formatter: function (w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            tooltip: {
+                theme: tooltipTheme,
+                y: {
+                    formatter: (val) => val + " User"
+                }
+            }
+        };
+
+        const chartBw = new ApexCharts(bwEl, optionsBw);
+        chartBw.render();
+    }
+
+    // -------------------------------------------------------------
+    // 3. CHART: PIPELINE STATUS REGISTRASI (BAR CHART)
+    // -------------------------------------------------------------
+    const pipeLabels = @json($chartData['pipelineLabels']);
+    const pipeSeries = @json($chartData['pipelineSeries']);
+
+    const pipeEl = document.querySelector('#chart-pipeline-funnel');
+    if (pipeEl) {
+        const optionsPipe = {
+            series: [{
+                name: 'Jumlah Pelanggan',
+                data: pipeSeries
+            }],
+            chart: {
+                type: 'bar',
+                height: 250,
+                fontFamily: 'inherit',
+                toolbar: { show: false },
+                background: 'transparent'
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 6,
+                    horizontal: true,
+                    distributed: true,
+                    barHeight: '55%',
+                    dataLabels: {
+                        position: 'top'
+                    }
+                }
+            },
+            colors: ['#3b82f6', '#f59e0b', '#6366f1', '#06b6d4', '#10b981', '#ef4444'],
+            dataLabels: {
+                enabled: true,
+                textAnchor: 'start',
+                style: {
+                    colors: isDark ? ['#e2e8f0'] : ['#1e293b'],
+                    fontSize: '11px',
+                    fontWeight: 700
+                },
+                formatter: (val) => val > 0 ? val + " User" : "0",
+                offsetX: 6
+            },
+            xaxis: {
+                categories: pipeLabels,
+                labels: {
+                    style: {
+                        colors: textColor,
+                        fontSize: '11px'
+                    }
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: textColor,
+                        fontSize: '11px',
+                        fontWeight: 600
+                    }
+                }
+            },
+            grid: {
+                borderColor: gridColor,
+                strokeDashArray: 4,
+                xaxis: { lines: { show: true } },
+                yaxis: { lines: { show: false } }
+            },
+            legend: { show: false },
+            tooltip: {
+                theme: tooltipTheme,
+                y: {
+                    formatter: (val) => val + " User"
+                }
+            }
+        };
+
+        const chartPipe = new ApexCharts(pipeEl, optionsPipe);
+        chartPipe.render();
+    }
+});
+</script>
+@endpush

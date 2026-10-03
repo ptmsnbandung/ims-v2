@@ -388,37 +388,61 @@ class AdminController extends Controller
             ->where('b.hide', '0');
 
         $hasNamaBandwith = Schema::hasColumn('m_bandwith', 'nama_bandwith');
-        $hasPeruntukan = Schema::hasColumn('m_bandwith', 'peruntukan_bangunan');
-        $hasKategoriBangunan = Schema::hasColumn('m_bandwith', 'kategori_bangunan');
+        $hasLayananBangunan = Schema::hasTable('m_layanan_bangunan');
+        $hasJnsBangunan = Schema::hasTable('m_jns_bangunan');
+
+        // Deteksi nama kolom kategori bandwidth pada masing-masing tabel (kode_kategori_bandwit vs kode_kategori_bandwith)
+        $lbKatCol = 'kode_kategori_bandwith';
+        if ($hasLayananBangunan) {
+            if (Schema::hasColumn('m_layanan_bangunan', 'kode_kategori_bandwit')) {
+                $lbKatCol = 'kode_kategori_bandwit';
+            } elseif (Schema::hasColumn('m_layanan_bangunan', 'kode_kategori_bandwith')) {
+                $lbKatCol = 'kode_kategori_bandwith';
+            }
+        }
+
+        $bKatCol = 'kode_kategori_bandwith';
+        if (Schema::hasColumn('m_bandwith', 'kode_kategori_bandwit')) {
+            $bKatCol = 'kode_kategori_bandwit';
+        } elseif (Schema::hasColumn('m_bandwith', 'kode_kategori_bandwith')) {
+            $bKatCol = 'kode_kategori_bandwith';
+        }
 
         if ($search) {
-            $query->where(function ($q) use ($search, $hasNamaBandwith, $hasPeruntukan) {
+            $query->where(function ($q) use ($search, $hasNamaBandwith) {
                 $q->where('b.kode_bandwith', 'like', "%{$search}%");
                 if ($hasNamaBandwith) {
                     $q->orWhere('b.nama_bandwith', 'like', "%{$search}%");
                 }
                 $q->orWhere('k.nama_kategori_bandwith', 'like', "%{$search}%");
-                if ($hasPeruntukan) {
-                    $q->orWhere('b.peruntukan_bangunan', 'like', "%{$search}%");
-                }
                 $q->orWhere('b.nominal_bandwith', 'like', "%{$search}%");
             });
         }
 
-        if ($selectedBangunan !== 'all' && !empty($selectedBangunan) && ($hasPeruntukan || $hasKategoriBangunan)) {
-            $query->where(function ($q) use ($selectedBangunan, $hasPeruntukan, $hasKategoriBangunan) {
-                if ($hasPeruntukan) {
-                    $q->where('b.peruntukan_bangunan', 'like', "%{$selectedBangunan}%");
-                }
-                if ($hasKategoriBangunan) {
-                    $q->orWhere('b.kategori_bangunan', 'like', "%{$selectedBangunan}%");
-                }
-            });
+        if ($selectedBangunan !== 'all' && !empty($selectedBangunan)) {
+            if ($hasLayananBangunan) {
+                $query->whereExists(function ($sub) use ($selectedBangunan, $hasJnsBangunan, $lbKatCol, $bKatCol) {
+                    $sub->select(DB::raw(1))
+                        ->from('m_layanan_bangunan as lb')
+                        ->whereColumn("lb.{$lbKatCol}", "b.{$bKatCol}");
+                    
+                    if ($hasJnsBangunan) {
+                        $sub->join('m_jns_bangunan as jb', 'lb.kode_bangunan', '=', 'jb.kode_bangunan')
+                            ->where(function ($q) use ($selectedBangunan) {
+                                $q->where('jb.kode_bangunan', $selectedBangunan)
+                                  ->orWhere('jb.jenis_bangunan', $selectedBangunan)
+                                  ->orWhere('lb.kode_bangunan', $selectedBangunan);
+                            });
+                    } else {
+                        $sub->where('lb.kode_bangunan', $selectedBangunan);
+                    }
+                });
+            }
         }
 
         if ($selectedKategori !== 'all' && !empty($selectedKategori)) {
-            $query->where(function ($q) use ($selectedKategori) {
-                $q->where('b.kode_kategori_bandwith', $selectedKategori)
+            $query->where(function ($q) use ($selectedKategori, $bKatCol) {
+                $q->where("b.{$bKatCol}", $selectedKategori)
                   ->orWhere('k.nama_kategori_bandwith', $selectedKategori);
             });
         }
@@ -428,63 +452,103 @@ class AdminController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // Attach default name_bandwith jika masih kosong & cast data types
+        // 1. Ambil data master jenis bangunan (m_jns_bangunan)
+        $buildingTypes = [];
+        $buildingList = collect();
+        if ($hasJnsBangunan) {
+            $buildingList = DB::table('m_jns_bangunan')
+                ->where('hide', '0')
+                ->orderBy('kode_bangunan', 'asc')
+                ->get();
+
+            foreach ($buildingList as $b) {
+                $buildingTypes[$b->kode_bangunan] = strtoupper(trim($b->jenis_bangunan));
+            }
+        }
+
+        // Fallback default jika tabel m_jns_bangunan belum terisi
+        if (empty($buildingTypes)) {
+            $buildingTypes = [
+                'BN001' => 'KOS-KOSAN',
+                'BN002' => 'RUMAH-PRIBADI',
+                'BN003' => 'RUMAH-KANTOR',
+                'BN004' => 'RUKO',
+                'BN005' => 'APARTEMEN',
+                'BN006' => 'GEDUNG',
+                'BN007' => 'OUTDOR/EVENT',
+            ];
+        }
+
+        // 2. Attach jenis bangunan ke setiap item paket via m_layanan_bangunan -> m_jns_bangunan
+        $kategoriCodes = $pakets->pluck($bKatCol)->filter()->unique()->toArray();
+        $layananBangunanMap = [];
+        if (!empty($kategoriCodes) && $hasLayananBangunan && $hasJnsBangunan) {
+            $relData = DB::table('m_layanan_bangunan as lb')
+                ->join('m_jns_bangunan as jb', 'lb.kode_bangunan', '=', 'jb.kode_bangunan')
+                ->whereIn("lb.{$lbKatCol}", $kategoriCodes)
+                ->where('jb.hide', '0')
+                ->select("lb.{$lbKatCol} as kode_kategori_bandwith", 'jb.kode_bangunan', 'jb.jenis_bangunan')
+                ->get();
+
+            foreach ($relData as $r) {
+                $layananBangunanMap[$r->kode_kategori_bandwith][] = [
+                    'kode' => $r->kode_bangunan,
+                    'nama' => strtoupper(trim($r->jenis_bangunan)),
+                ];
+            }
+        }
+
+        // Attach peruntukan bangunan & format data types
         foreach ($pakets as $p) {
             $p->harga_bandwith = (float) ($p->harga_bandwith ?? 0);
             $p->nominal_bandwith = (int) ($p->nominal_bandwith ?? 0);
             if (empty($p->nama_bandwith)) {
                 $p->nama_bandwith = "Paket {$p->nominal_bandwith} Mbps";
             }
+            $pKatVal = $p->{$bKatCol} ?? ($p->kode_kategori_bandwith ?? null);
+            $p->bangunan_list = $pKatVal ? ($layananBangunanMap[$pKatVal] ?? []) : [];
         }
 
         // List Kategori untuk dropdown
         $kategoriList = DB::table('m_bandwith_kategori')->where('disable', 0)->get();
 
-        // 1. KPI Counters
+        // 3. KPI Counters
         $totalPaket = DB::table('m_bandwith')->where('hide', '0')->count();
         $totalAktif = DB::table('m_bandwith')->where('hide', '0')->where('disable', 0)->count();
         $totalKategori = DB::table('m_bandwith_kategori')->where('disable', 0)->count();
         $minSpeed = DB::table('m_bandwith')->where('hide', '0')->min('nominal_bandwith') ?: 1;
         $maxSpeed = DB::table('m_bandwith')->where('hide', '0')->max('nominal_bandwith') ?: 1000;
 
-        // 2. Count per Building Types
-        $buildingTypes = [
-            'KOS-KOSAN' => 'KOS-KOSAN',
-            'RUMAH-PRIBADI' => 'RUMAH-PRIBADI',
-            'RUMAH-KANTOR' => 'RUMAH-KANTOR',
-            'RUKO' => 'RUKO',
-            'APARTEMEN' => 'APARTEMEN',
-            'GEDUNG' => 'GEDUNG',
-            'OUTDOOR/EVENT' => 'OUTDOOR/EVENT',
-        ];
-
-        // Merge extra types from database if exists
-        if (Schema::hasTable('m_jns_bangunan')) {
-            $dbBangunan = DB::table('m_jns_bangunan')->where('hide', '0')->pluck('jenis_bangunan')->filter();
-            foreach ($dbBangunan as $b) {
-                $bUpper = strtoupper(trim($b));
-                if (!empty($bUpper) && !isset($buildingTypes[$bUpper])) {
-                    $buildingTypes[$bUpper] = $bUpper;
-                }
-            }
-        }
-
+        // 4. Count per Building Types
         $buildingCounts = [];
-        foreach ($buildingTypes as $key => $label) {
-            if ($hasPeruntukan || $hasKategoriBangunan) {
-                $buildingCounts[$key] = DB::table('m_bandwith')
-                    ->where('hide', '0')
-                    ->where(function ($q) use ($key, $hasPeruntukan, $hasKategoriBangunan) {
-                        if ($hasPeruntukan) {
-                            $q->where('peruntukan_bangunan', 'like', "%{$key}%");
-                        }
-                        if ($hasKategoriBangunan) {
-                            $q->orWhere('kategori_bangunan', 'like', "%{$key}%");
+        foreach ($buildingTypes as $bKode => $bLabel) {
+            if ($hasLayananBangunan) {
+                $cnt = DB::table('m_bandwith as b')
+                    ->join('m_layanan_bangunan as lb', "b.{$bKatCol}", '=', "lb.{$lbKatCol}")
+                    ->where('b.hide', '0')
+                    ->where(function($q) use ($bKode, $bLabel, $hasJnsBangunan) {
+                        $q->where('lb.kode_bangunan', $bKode);
+                        if ($hasJnsBangunan) {
+                            $q->orWhereExists(function($sub) use ($bKode, $bLabel) {
+                                $sub->select(DB::raw(1))
+                                    ->from('m_jns_bangunan as jb')
+                                    ->whereColumn('jb.kode_bangunan', 'lb.kode_bangunan')
+                                    ->where(function($sq) use ($bKode, $bLabel) {
+                                        $sq->where('jb.kode_bangunan', $bKode)
+                                           ->orWhere('jb.jenis_bangunan', $bLabel)
+                                           ->orWhere('jb.jenis_bangunan', $bKode);
+                                    });
+                            });
                         }
                     })
-                    ->count();
+                    ->distinct('b.kode_bandwith')
+                    ->count('b.kode_bandwith');
+
+                $buildingCounts[$bKode] = $cnt;
+                $buildingCounts[$bLabel] = $cnt;
             } else {
-                $buildingCounts[$key] = 0;
+                $buildingCounts[$bKode] = 0;
+                $buildingCounts[$bLabel] = 0;
             }
         }
 

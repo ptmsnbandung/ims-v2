@@ -170,11 +170,14 @@
 
             <!-- Each Building Category -->
             @foreach($buildingTypes as $bKey => $bLabel)
-                @php $cnt = $buildingCounts[$bKey] ?? 0; @endphp
+                @php 
+                    $cnt = $buildingCounts[$bKey] ?? ($buildingCounts[$bLabel] ?? 0); 
+                    $isActive = ($selectedBangunan === $bKey || $selectedBangunan === $bLabel);
+                @endphp
                 <a href="{{ route('admin.paket', array_merge(request()->query(), ['bangunan' => $bKey])) }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap {{ $selectedBangunan === $bKey ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}">
+                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap {{ $isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60' }}">
                     <span>{{ $bLabel }}</span>
-                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $selectedBangunan === $bKey ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-blue-500/10 text-slate-700 dark:text-blue-400 border border-slate-200 dark:border-blue-500/20' }}">
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-blue-500/10 text-slate-700 dark:text-blue-400 border border-slate-200 dark:border-blue-500/20' }}">
                         {{ $cnt }}
                     </span>
                 </a>
@@ -252,8 +255,12 @@
                     @forelse($pakets as $paket)
                         @php
                             $katName = $paket->nama_kategori_bandwith ?: ($paket->alias_nama_kategori ?: 'BROADBAND');
-                            $rawPeruntukan = $paket->peruntukan_bangunan ?: ($paket->kategori_bangunan ?: 'RUMAH-KANTOR');
-                            $peruntukanList = array_filter(array_map('trim', explode(',', $rawPeruntukan)));
+                            if (!empty($paket->bangunan_list)) {
+                                $peruntukanList = array_column($paket->bangunan_list, 'nama');
+                            } else {
+                                $rawPeruntukan = $paket->peruntukan_bangunan ?? ($paket->kategori_bangunan ?? 'SEMUA');
+                                $peruntukanList = array_filter(array_map('trim', explode(',', $rawPeruntukan)));
+                            }
                         @endphp
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
                             <!-- 1. Kode Paket -->

@@ -848,6 +848,7 @@
                                             <span>+ Buat Link</span>
                                         </button>
                                     </form>
+                                    @endif
                                 </div>
                                 @endif
 

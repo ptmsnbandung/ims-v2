@@ -1988,52 +1988,10 @@
                     </div>
                 </div>
 
-                <!-- Tabs: Semua vs Terpilih -->
-                <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
-                    <div class="flex items-center gap-2">
-                        <button type="button"
-                                @click="batchTab = 'all'"
-                                :class="batchTab === 'all' ? 'bg-cyan-600 text-white shadow-xs' : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-                                class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5">
-                            <span>Semua Hasil</span>
-                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono" :class="batchTab === 'all' ? 'bg-cyan-700/50 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'" x-text="batchInvoices.length"></span>
-                        </button>
-                        <button type="button"
-                                @click="batchTab = 'selected'"
-                                :class="batchTab === 'selected' ? 'bg-cyan-600 text-white shadow-xs' : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
-                                class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5">
-                            <span>Tagihan Terpilih</span>
-                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono" :class="batchTab === 'selected' ? 'bg-cyan-700/50 text-white' : 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-bold'" x-text="selectedBatchCount"></span>
-                        </button>
-                    </div>
-                    <span class="text-[11px] text-slate-400 italic hidden sm:inline" x-text="batchTab === 'selected' ? 'Menampilkan tagihan yang telah Anda centang' : 'Pilihan Anda akan tetap tersimpan saat mencari nama lain'"></span>
-                </div>
-            </div>
-
-            <!-- Selected Chips Bar (Persistent across multi-search) -->
-            <div x-show="selectedBatchCount > 0"
-                 style="flex-shrink: 0; flex-grow: 0; max-height: 80px; overflow-y: auto;"
-                 class="px-5 py-2.5 bg-cyan-50/70 dark:bg-cyan-950/25 border-b border-cyan-200/60 dark:border-cyan-800/40 flex items-center justify-between gap-3 batch-modal-scroll">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-[11px] font-bold text-cyan-700 dark:text-cyan-300 mr-1 flex items-center gap-1 shrink-0">
-                        <svg class="w-3.5 h-3.5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        <span>Terpilih (<span x-text="selectedBatchCount"></span>):</span>
-                    </span>
-                    <template x-for="item in selectedBatchList" :key="item.kode_billing_layanan">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-cyan-500/30 shadow-xs">
-                            <span class="font-bold text-slate-900 dark:text-white" x-text="item.nama_pelanggan"></span>
-                            <span class="text-slate-400 font-mono text-[10px]" x-text="'#' + item.nomor_internet"></span>
-                            <button type="button" @click.stop="removeSelectedItem(item.kode_billing_layanan)" class="text-slate-400 hover:text-rose-500 ml-0.5 cursor-pointer font-bold leading-none" title="Hapus dari pilihan">&times;</button>
-                        </span>
-                    </template>
-                </div>
-                <button type="button" @click="resetBatchSelection()" class="text-[11px] text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 font-bold shrink-0 cursor-pointer underline whitespace-nowrap">
-                    Hapus Semua
-                </button>
             </div>
 
             <!-- Invoices List Table (Strictly Scrollable with Inline Styles) -->
-            <div style="flex: 1 1 auto; height: 0; min-height: 150px; max-height: calc(82vh - 250px); overflow-y: scroll; overflow-x: auto; -webkit-overflow-scrolling: touch; display: block;" class="p-0 relative batch-modal-scroll border-b border-slate-200 dark:border-slate-800">
+            <div style="flex: 1 1 auto; height: 0; min-height: 150px; max-height: calc(82vh - 180px); overflow-y: scroll; overflow-x: auto; -webkit-overflow-scrolling: touch; display: block;" class="p-0 relative batch-modal-scroll border-b border-slate-200 dark:border-slate-800">
                 <!-- Loading Overlay -->
                 <div x-show="batchLoading" class="absolute inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-20">
                     <div class="flex flex-col items-center gap-2">
@@ -2046,20 +2004,20 @@
                 </div>
 
                 <!-- Empty State -->
-                <template x-if="!batchLoading && displayedBatchInvoices.length === 0">
+                <template x-if="!batchLoading && batchInvoices.length === 0">
                     <div class="py-16 text-center space-y-2">
                         <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
                             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
                         </div>
-                        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300" x-text="batchTab === 'selected' ? 'Belum ada tagihan yang dipilih' : 'Tidak ada data invoice ditemukan'"></p>
-                        <p class="text-xs text-slate-500" x-text="batchTab === 'selected' ? 'Kembali ke tab Semua Hasil dan centang tagihan yang ingin dicetak.' : 'Coba ubah filter bulan, tahun, atau kata kunci pencarian.'"></p>
+                        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tidak ada data invoice ditemukan</p>
+                        <p class="text-xs text-slate-500">Coba ubah filter bulan, tahun, atau kata kunci pencarian.</p>
                     </div>
                 </template>
 
                 <!-- Table Content -->
-                <table x-show="displayedBatchInvoices.length > 0" class="w-full text-left border-collapse text-xs">
+                <table x-show="batchInvoices.length > 0" class="w-full text-left border-collapse text-xs">
                     <thead style="position: sticky; top: 0; z-index: 10;" class="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 uppercase text-[10px] tracking-wider font-bold">
                         <tr>
                             <th class="py-3 px-4 w-12 text-center">
@@ -2074,7 +2032,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                        <template x-for="inv in displayedBatchInvoices" :key="inv.kode_billing_layanan">
+                        <template x-for="inv in batchInvoices" :key="inv.kode_billing_layanan">
                             <tr class="hover:bg-cyan-50/40 dark:hover:bg-slate-800/40 transition cursor-pointer"
                                 :class="isBatchSelected(inv.kode_billing_layanan) ? 'bg-cyan-50/60 dark:bg-cyan-500/10' : ''"
                                 @click="toggleBatchItem(inv)">
@@ -2113,7 +2071,7 @@
                             Reset Pilihan
                         </button>
                     </template>
-                    <span x-show="selectedBatchCount > 0" class="text-slate-400 hidden sm:inline">&bull; Siap dicetak serentak</span>
+                    <span x-show="selectedBatchCount > 0" class="text-slate-400 hidden sm:inline">&bull; Siap dicetak</span>
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -2137,7 +2095,7 @@
                     </button>
 
                     <button type="button"
-                            @click="printSelectedInvoices()"
+                            @click="openSelectedPreviewModal()"
                             :disabled="selectedBatchCount === 0"
                             :class="selectedBatchCount === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 cursor-pointer'"
                             class="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
@@ -2147,6 +2105,135 @@
                             <rect x="6" y="14" width="12" height="8"></rect>
                         </svg>
                         <span>Cetak Terpilih (<span x-text="selectedBatchCount"></span>)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         8. MODAL KONFIRMASI / PREVIEW TAGIHAN TERPILIH
+         ========================================== -->
+    <div x-show="selectedPreviewModalOpen"
+         x-cloak
+         @keydown.escape.window="selectedPreviewModalOpen = false"
+         class="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm overflow-hidden"
+         style="position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 1rem; background-color: rgba(2, 6, 23, 0.85); overflow: hidden;"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <div @click.away="selectedPreviewModalOpen = false"
+             x-show="selectedPreviewModalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             style="width: 100%; max-width: 52rem; height: 80vh; max-height: calc(100vh - 3rem); display: flex; flex-direction: column; overflow: hidden; margin: auto;"
+             class="relative w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            
+            <!-- Header Modal Preview -->
+            <div style="flex-shrink: 0; flex-grow: 0;" class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043A3.746 3.746 0 0 1 21 12Z" />
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Daftar Tagihan Terpilih Siap Cetak</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Total <span class="font-bold text-cyan-600 dark:text-cyan-400" x-text="selectedBatchCount"></span> invoice tagihan pelanggan siap dicetak serentak.</p>
+                    </div>
+                </div>
+                <button type="button" @click="selectedPreviewModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-2xl leading-none">&times;</button>
+            </div>
+
+            <!-- Table List of Selected Invoices -->
+            <div style="flex: 1 1 auto; height: 0; min-height: 150px; overflow-y: scroll; overflow-x: auto; -webkit-overflow-scrolling: touch; display: block;" class="p-0 relative batch-modal-scroll border-b border-slate-200 dark:border-slate-800">
+                <template x-if="selectedBatchCount === 0">
+                    <div class="py-16 text-center space-y-2">
+                        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Belum ada tagihan yang dipilih</p>
+                        <p class="text-xs text-slate-500">Kembali ke jendela pencarian untuk memilih tagihan pelanggan.</p>
+                    </div>
+                </template>
+
+                <table x-show="selectedBatchCount > 0" class="w-full text-left border-collapse text-xs">
+                    <thead style="position: sticky; top: 0; z-index: 10;" class="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 uppercase text-[10px] tracking-wider font-bold">
+                        <tr>
+                            <th class="py-3 px-4 w-12 text-center">No</th>
+                            <th class="py-3 px-4">Nama Pelanggan</th>
+                            <th class="py-3 px-4">Nomor Internet</th>
+                            <th class="py-3 px-4 text-center">Status Bayar</th>
+                            <th class="py-3 px-4 w-20 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        <template x-for="(item, idx) in selectedBatchList" :key="item.kode_billing_layanan">
+                            <tr class="hover:bg-cyan-50/40 dark:hover:bg-slate-800/40 transition">
+                                <td class="py-3 px-4 text-center text-slate-400 font-mono text-xs" x-text="idx + 1"></td>
+                                <td class="py-3 px-4">
+                                    <div class="font-bold text-slate-900 dark:text-white" x-text="item.nama_pelanggan"></div>
+                                    <div class="text-[11px] text-slate-400 font-mono" x-text="item.kode_billing_layanan"></div>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400" x-text="item.nomor_internet"></span>
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold inline-block"
+                                          :class="item.status_bill_lay == '15' || item.status_bill_lay == '2' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : (item.status_bill_lay == '13' || item.status_bill_lay == '1' ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400' : (item.status_bill_lay == '14' ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400' : 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300'))"
+                                          x-text="item.status_desc"></span>
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    <button type="button"
+                                            @click="removeSelectedItem(item.kode_billing_layanan)"
+                                            class="px-2 py-1 rounded-lg text-[11px] text-rose-500 hover:text-white hover:bg-rose-500 border border-rose-200 dark:border-rose-900/60 transition cursor-pointer font-medium"
+                                            title="Batalkan pilihan ini">
+                                        Batal
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer Modal Preview -->
+            <div style="flex-shrink: 0; flex-grow: 0;" class="px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/20">
+                        <span x-text="selectedBatchCount"></span> invoice siap cetak
+                    </span>
+                    <button type="button"
+                            x-show="selectedBatchCount > 0"
+                            @click="resetBatchSelection(); selectedPreviewModalOpen = false"
+                            class="text-xs text-rose-500 hover:text-rose-700 dark:hover:text-red-400 font-semibold cursor-pointer underline ml-1">
+                        Hapus Semua
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap justify-end">
+                    <button type="button"
+                            @click="selectedPreviewModalOpen = false"
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition">
+                        Kembali / Tambah Pilihan
+                    </button>
+
+                    <button type="button"
+                            @click="executeBatchPrint()"
+                            :disabled="selectedBatchCount === 0"
+                            :class="selectedBatchCount === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 cursor-pointer'"
+                            class="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                        <span>Cetak Sekarang (<span x-text="selectedBatchCount"></span> Invoice)</span>
                     </button>
                 </div>
             </div>
@@ -2218,6 +2305,7 @@ function billingLayananPage() {
 
         // Modal Batch Print Invoices
         batchPrintModalOpen: false,
+        selectedPreviewModalOpen: false,
         batchBulan: '{{ request('bulan') ?: ($selectedBulan ?: date('m')) }}',
         batchTahun: '{{ request('tahun') ?: ($selectedTahun ?: date('Y')) }}',
         batchSearch: '',
@@ -2348,7 +2436,14 @@ function billingLayananPage() {
             this.selectedBatchMap = { ...this.selectedBatchMap };
             this.updateBatchSelectAllState();
         },
-        printSelectedInvoices() {
+        openSelectedPreviewModal() {
+            if (this.selectedBatchCount === 0) {
+                alert('Silakan pilih minimal 1 tagihan pelanggan untuk dicetak.');
+                return;
+            }
+            this.selectedPreviewModalOpen = true;
+        },
+        executeBatchPrint() {
             const kodes = Object.keys(this.selectedBatchMap);
             if (kodes.length === 0) {
                 alert('Silakan pilih minimal 1 tagihan pelanggan untuk dicetak.');
@@ -2356,6 +2451,9 @@ function billingLayananPage() {
             }
             const url = '/finance/dokumen/batch-invoice?kodes=' + encodeURIComponent(kodes.join(','));
             window.open(url, '_blank');
+        },
+        printSelectedInvoices() {
+            this.openSelectedPreviewModal();
         },
         printAllFilteredInvoices() {
             const params = new URLSearchParams({

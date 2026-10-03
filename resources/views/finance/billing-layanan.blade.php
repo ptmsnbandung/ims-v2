@@ -157,11 +157,11 @@
         </div>
 
         <!-- 4. Paid (Kas Masuk) -->
-        <div class="p-4 rounded-2xl bg-rose-50/70 dark:bg-slate-900/90 border border-rose-200 dark:border-rose-500/20 shadow-lg relative overflow-hidden group hover:border-rose-400 dark:hover:border-rose-500/40 transition">
-            <div class="absolute -right-6 -top-6 w-24 h-24 bg-rose-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
+        <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/20 shadow-lg relative overflow-hidden group hover:border-emerald-400 dark:hover:border-emerald-500/40 transition">
+            <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
             <div class="flex items-center justify-between relative z-10">
-                <span class="text-xs font-bold text-rose-700 dark:text-rose-400 tracking-wide uppercase">Paid (Kas Masuk)</span>
-                <span class="p-2 rounded-xl bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-500/20">
+                <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 tracking-wide uppercase">Paid (Kas Masuk)</span>
+                <span class="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20">
                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043A3.746 3.746 0 0 1 21 12Z" />
                     </svg>
@@ -171,8 +171,8 @@
                 <div class="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                     Rp {{ number_format($kpis['paid']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-xs text-rose-700/90 dark:text-rose-300/80 font-medium mt-1 flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                <div class="text-xs text-emerald-700/90 dark:text-emerald-300/80 font-medium mt-1 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     <span>{{ number_format($kpis['paid']['count']) }} Invoice Telah Terbayar</span>
                 </div>
             </div>

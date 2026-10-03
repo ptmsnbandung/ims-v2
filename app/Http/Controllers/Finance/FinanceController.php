@@ -51,7 +51,59 @@ class FinanceController extends Controller
             $query->where('status_reg', $request->input('status_user'));
         }
         if ($request->filled('status_bayar')) {
-            $query->where('status_bill_lay', $request->input('status_bayar'));
+            $statusBayar = trim((string)$request->input('status_bayar'));
+            if ($statusBayar === 'menunggu_verifikasi' || $statusBayar === 'waiting_verification') {
+                $pendingKodes = collect();
+                if (Schema::hasTable('payment_confirmations')) {
+                    $pendingKodes = DB::table('payment_confirmations')
+                        ->where('status', '!=', 'approved')
+                        ->where('status', '!=', 'rejected')
+                        ->pluck('kode_billing_layanan')
+                        ->filter()
+                        ->toArray();
+                }
+
+                $expandedKodes = [];
+                foreach ($pendingKodes as $k) {
+                    $expandedKodes[] = $k;
+                    $expandedKodes[] = str_replace('/', '-', $k);
+                    $expandedKodes[] = str_replace('-', '/', $k);
+                }
+
+                try {
+                    $ptmsnPending = DB::select("SELECT kode_billing_layanan FROM ptmsn.payment_confirmations WHERE status != 'approved' AND status != 'rejected'");
+                    foreach ($ptmsnPending as $p) {
+                        if (!empty($p->kode_billing_layanan)) {
+                            $expandedKodes[] = $p->kode_billing_layanan;
+                            $expandedKodes[] = str_replace('/', '-', $p->kode_billing_layanan);
+                            $expandedKodes[] = str_replace('-', '/', $p->kode_billing_layanan);
+                        }
+                    }
+                } catch (\Throwable $e) {}
+
+                $expandedKodes = array_unique(array_filter($expandedKodes));
+
+                $query->where(function ($q) use ($expandedKodes) {
+                    $q->where('status_bill_lay', '!=', '15');
+                    if (!empty($expandedKodes)) {
+                        $q->whereIn('kode_billing_layanan', $expandedKodes);
+                    } else {
+                        $q->where('status_bill_lay', '14')
+                          ->where(function ($sub) {
+                              $sub->where('payment_type', '2')
+                                  ->orWhere('merchant_type', 'like', '%transfer%')
+                                  ->orWhere('merchant_type', 'like', '%bca%')
+                                  ->orWhere('merchant_type', 'like', '%mandiri%')
+                                  ->orWhere('merchant_type', 'like', '%bri%')
+                                  ->orWhere('merchant_type', 'like', '%bni%')
+                                  ->orWhere('merchant_type', 'like', '%bsi%')
+                                  ->orWhere('merchant_type', 'like', '%permata%');
+                          });
+                    }
+                });
+            } else {
+                $query->where('status_bill_lay', $statusBayar);
+            }
         }
         if ($request->filled('wilayah')) {
             $query->where('nama_kota_pasang', $request->input('wilayah'));
@@ -255,7 +307,12 @@ class FinanceController extends Controller
         }
 
         $statusBillList = Schema::hasTable('m_status_bill_lay')
-            ? DB::table('m_status_bill_lay')->where('hide', '0')->get()
+            ? DB::table('m_status_bill_lay')
+                ->where('hide', '0')
+                ->whereNotIn('status_bill_lay', ['17', '18'])
+                ->where('desc_bill_lay', 'NOT LIKE', '%cancel midtrans%')
+                ->where('desc_bill_lay', 'NOT LIKE', '%expire midtrans%')
+                ->get()
             : collect();
 
         $statusUserList = [
@@ -1047,7 +1104,37 @@ class FinanceController extends Controller
             $query->where('nama_kategori_bandwith', $request->input('layanan'));
         }
         if ($request->filled('status_bayar')) {
-            $query->where('status_bill_reg', $request->input('status_bayar'));
+            $statusBayar = trim((string)$request->input('status_bayar'));
+            if ($statusBayar === 'menunggu_verifikasi' || $statusBayar === 'waiting_verification') {
+                $pendingKodes = collect();
+                if (Schema::hasTable('payment_confirmations')) {
+                    $pendingKodes = DB::table('payment_confirmations')
+                        ->where('status', '!=', 'approved')
+                        ->where('status', '!=', 'rejected')
+                        ->pluck('kode_billing_layanan')
+                        ->filter()
+                        ->toArray();
+                }
+
+                $expandedKodes = [];
+                foreach ($pendingKodes as $k) {
+                    $expandedKodes[] = $k;
+                    $expandedKodes[] = str_replace('/', '-', $k);
+                    $expandedKodes[] = str_replace('-', '/', $k);
+                }
+                $expandedKodes = array_unique(array_filter($expandedKodes));
+
+                $query->where(function ($q) use ($expandedKodes) {
+                    $q->where('status_bill_reg', '!=', '14');
+                    if (!empty($expandedKodes)) {
+                        $q->whereIn('kode_billing_registrasi', $expandedKodes);
+                    } else {
+                        $q->where('payment_type', '2');
+                    }
+                });
+            } else {
+                $query->where('status_bill_reg', $statusBayar);
+            }
         }
         if ($request->filled('wilayah')) {
             $query->where('alamat_p', 'LIKE', '%' . $request->input('wilayah') . '%');
@@ -1098,7 +1185,12 @@ class FinanceController extends Controller
         }
 
         $statusBillRegList = Schema::hasTable('m_status_bill_reg')
-            ? DB::table('m_status_bill_reg')->where('hide', '0')->get()
+            ? DB::table('m_status_bill_reg')
+                ->where('hide', '0')
+                ->whereNotIn('status_bill_reg', ['17', '18'])
+                ->where('desc_bill_reg', 'NOT LIKE', '%cancel midtrans%')
+                ->where('desc_bill_reg', 'NOT LIKE', '%expire midtrans%')
+                ->get()
             : collect();
 
         return view('finance.billing-registrasi', [

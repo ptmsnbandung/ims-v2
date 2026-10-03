@@ -401,8 +401,14 @@
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Status Bayar</label>
                     <select name="status_bayar" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Status Bayar</option>
+                        <option value="menunggu_verifikasi" {{ request('status_bayar') === 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
                         @foreach($statusBillList as $sb)
-                        <option value="{{ $sb->status_bill_lay }}" {{ request('status_bayar') === (string)$sb->status_bill_lay ? 'selected' : '' }}>{{ $sb->desc_bill_lay }}</option>
+                            @php
+                                $descLower = strtolower($sb->desc_bill_lay ?? '');
+                            @endphp
+                            @if(!str_contains($descLower, 'cancel midtrans') && !str_contains($descLower, 'expire midtrans') && !in_array((string)$sb->status_bill_lay, ['17', '18']))
+                            <option value="{{ $sb->status_bill_lay }}" {{ request('status_bayar') === (string)$sb->status_bill_lay ? 'selected' : '' }}>{{ $sb->desc_bill_lay }}</option>
+                            @endif
                         @endforeach
                     </select>
                 </div>

@@ -2,6 +2,28 @@
 
 @section('title', 'Billing Layanan - IMS Router')
 
+@php
+    $pageInvoices = [];
+    if (isset($invoices)) {
+        foreach ($invoices as $inv) {
+            $statusDesc = $inv->desc_bill_lay ?? '';
+            if (empty($statusDesc)) {
+                if (($inv->status_bill_lay ?? '') == '15') $statusDesc = 'Lunas';
+                elseif (($inv->status_bill_lay ?? '') == '13') $statusDesc = 'Published';
+                elseif (($inv->status_bill_lay ?? '') == '14') $statusDesc = 'Menunggu Verifikasi';
+                else $statusDesc = 'Draft';
+            }
+            $pageInvoices[] = [
+                'kode_billing_layanan' => $inv->kode_billing_layanan ?? '',
+                'nomor_internet' => $inv->nomor_internet ?? '-',
+                'nama_pelanggan' => $inv->nama_pelanggan ?? 'Pelanggan',
+                'status_bill_lay' => (string)($inv->status_bill_lay ?? ''),
+                'status_desc' => $statusDesc,
+            ];
+        }
+    }
+@endphp
+
 @section('content')
 <div class="space-y-6"
      x-data="{
@@ -69,15 +91,7 @@
          batchSearch: '',
          batchStatus: '{{ request('status_bayar', '') }}',
          batchInvoices: [],
-         pageInvoices: @json($invoices->map(function($inv) {
-             return [
-                 'kode_billing_layanan' => $inv->kode_billing_layanan ?? '',
-                 'nomor_internet' => $inv->nomor_internet ?? '-',
-                 'nama_pelanggan' => $inv->nama_pelanggan ?? 'Pelanggan',
-                 'status_bill_lay' => (string)($inv->status_bill_lay ?? ''),
-                 'status_desc' => $inv->desc_bill_lay ?? ($inv->status_bill_lay == '15' ? 'Lunas' : ($inv->status_bill_lay == '13' ? 'Published' : ($inv->status_bill_lay == '14' ? 'Menunggu Verifikasi' : 'Draft'))),
-             ];
-         })->values()),
+         pageInvoices: @json($pageInvoices),
          selectedBatchKodes: [],
          batchLoading: false,
          batchSelectAll: false,

@@ -929,13 +929,13 @@
                         </div>
 
                         <!-- Row 3: PPN, Auto Publish, and Action Buttons -->
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-2 border-t border-slate-100 dark:border-slate-800">
                             <!-- PPN Options -->
-                            <div class="md:col-span-4">
+                            <div>
                                 <label class="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-2">
                                     PPN ?<span class="text-red-500 font-bold ml-0.5">*</span>
                                 </label>
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-3.5 flex-wrap">
                                     <label class="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
                                         <input type="radio" name="ppn" value="include" x-model="generatePpn" class="w-4 h-4 text-blue-600 focus:ring-blue-500 accent-blue-600">
                                         <span>Include</span>
@@ -952,7 +952,7 @@
                             </div>
 
                             <!-- Auto Publish Options -->
-                            <div class="md:col-span-3">
+                            <div>
                                 <label class="block text-xs font-semibold text-slate-800 dark:text-slate-200 mb-2">
                                     Auto Publish ?<span class="text-red-500 font-bold ml-0.5">*</span>
                                 </label>
@@ -969,17 +969,17 @@
                             </div>
 
                             <!-- Actions (Multi Generate + Close) -->
-                            <div class="md:col-span-5 flex justify-end items-center gap-2.5">
+                            <div class="flex justify-end items-center gap-2.5">
                                 <template x-if="generateJenis === 'multi'">
                                     <button type="submit"
-                                            class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition cursor-pointer">
+                                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-md shadow-blue-500/25 transition cursor-pointer">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                         <span>Generate All Invoices</span>
                                     </button>
                                 </template>
                                 <button type="button"
                                         @click="generateModalOpen = false"
-                                        class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-xs shadow-md shadow-amber-500/25 transition cursor-pointer">
+                                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-xs shadow-md shadow-amber-500/25 transition cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"></rect>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 9 6 6m0-6-6 6"></path>
@@ -2089,7 +2089,7 @@ function billingLayananPage() {
                 const res = await fetch('/finance/billing-layanan/generate-candidates?' + params.toString());
                 if (res.ok) {
                     const data = await res.json();
-                    this.generateCandidates = data.candidates || [];
+                    this.generateCandidates = (data && data.data) ? data.data : (data.candidates || []);
                 } else {
                     this.generateCandidates = [];
                 }

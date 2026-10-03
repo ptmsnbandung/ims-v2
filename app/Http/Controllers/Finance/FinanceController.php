@@ -2671,51 +2671,53 @@ class FinanceController extends Controller
      */
     public function searchBatchInvoiceJson(Request $request): JsonResponse
     {
-        $bulan = $request->query('bulan', date('m'));
-        $tahun = $request->query('tahun', date('Y'));
+        $bulan = $request->query('bulan', '');
+        $tahun = $request->query('tahun', '');
         $search = trim($request->query('search', ''));
         $statusBayar = $request->query('status_bayar', '');
 
-        $query = DB::table('trx_billing_layanan');
+        $tableName = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
+        $query = DB::table($tableName);
 
-        if (Schema::hasTable('m_status_billing_layanan')) {
-            $query->leftJoin('m_status_billing_layanan', 'trx_billing_layanan.status_bill_lay', '=', 'm_status_billing_layanan.status_bill_lay');
+        if ($bulan !== '' && $bulan !== null) {
+            $bulanPad = str_pad($bulan, 2, '0', STR_PAD_LEFT);
+            $bulanInt = (int)$bulan;
+            $query->where(function($q) use ($bulanPad, $bulanInt) {
+                $q->where('bulan_tagihan', $bulanPad)
+                  ->orWhere('bulan_tagihan', (string)$bulanInt);
+            });
         }
-
-        if ($bulan) {
-            $query->where('trx_billing_layanan.bulan_tagihan', str_pad($bulan, 2, '0', STR_PAD_LEFT));
-        }
-        if ($tahun) {
-            $query->where('trx_billing_layanan.tahun_tagihan', $tahun);
+        if ($tahun !== '' && $tahun !== null) {
+            $query->where('tahun_tagihan', $tahun);
         }
         if ($statusBayar !== '' && $statusBayar !== null) {
-            $query->where('trx_billing_layanan.status_bill_lay', $statusBayar);
+            $query->where('status_bill_lay', $statusBayar);
         }
         if ($search) {
             $query->where(function($q) use ($search) {
-                $q->where('trx_billing_layanan.nama_pelanggan', 'like', "%{$search}%")
-                  ->orWhere('trx_billing_layanan.nomor_internet', 'like', "%{$search}%")
-                  ->orWhere('trx_billing_layanan.kode_billing_layanan', 'like', "%{$search}%")
-                  ->orWhere('trx_billing_layanan.invoice_file', 'like', "%{$search}%");
+                $q->where('nama_pelanggan', 'like', "%{$search}%")
+                  ->orWhere('nomor_internet', 'like', "%{$search}%")
+                  ->orWhere('kode_billing_layanan', 'like', "%{$search}%")
+                  ->orWhere('invoice_file', 'like', "%{$search}%");
             });
         }
 
         $invoices = $query->select(
-            'trx_billing_layanan.id',
-            'trx_billing_layanan.kode_billing_layanan',
-            'trx_billing_layanan.nomor_internet',
-            'trx_billing_layanan.nama_pelanggan',
-            'trx_billing_layanan.total_layanan',
-            'trx_billing_layanan.harga_bandwith',
-            'trx_billing_layanan.potongan',
-            'trx_billing_layanan.ppn',
-            'trx_billing_layanan.bulan_tagihan',
-            'trx_billing_layanan.tahun_tagihan',
-            'trx_billing_layanan.periode_tagihan',
-            'trx_billing_layanan.status_bill_lay',
-            'trx_billing_layanan.expiry',
-            DB::raw("COALESCE(m_status_billing_layanan.desc_bill_lay, 'Draft') as status_desc")
-        )->orderBy('trx_billing_layanan.nama_pelanggan', 'asc')->get();
+            'id',
+            'kode_billing_layanan',
+            'nomor_internet',
+            'nama_pelanggan',
+            'total_layanan',
+            'harga_bandwith',
+            'potongan',
+            'ppn',
+            'bulan_tagihan',
+            'tahun_tagihan',
+            'periode_tagihan',
+            'status_bill_lay',
+            'expiry',
+            DB::raw("COALESCE(desc_bill_lay, 'Draft') as status_desc")
+        )->orderBy('nama_pelanggan', 'asc')->get();
 
         return response()->json([
             'success' => true,
@@ -2738,12 +2740,18 @@ class FinanceController extends Controller
         $bulan = $request->input('bulan', $request->query('bulan'));
         $tahun = $request->input('tahun', $request->query('tahun'));
 
-        $query = DB::table('trx_billing_layanan');
+        $tableName = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
+        $query = DB::table($tableName);
         if (!empty($kodes)) {
             $query->whereIn('kode_billing_layanan', $kodes);
         } else {
-            if ($bulan) {
-                $query->where('bulan_tagihan', str_pad($bulan, 2, '0', STR_PAD_LEFT));
+            if ($bulan !== '' && $bulan !== null) {
+                $bulanPad = str_pad($bulan, 2, '0', STR_PAD_LEFT);
+                $bulanInt = (int)$bulan;
+                $query->where(function($q) use ($bulanPad, $bulanInt) {
+                    $q->where('bulan_tagihan', $bulanPad)
+                      ->orWhere('bulan_tagihan', (string)$bulanInt);
+                });
             }
             if ($tahun) {
                 $query->where('tahun_tagihan', $tahun);

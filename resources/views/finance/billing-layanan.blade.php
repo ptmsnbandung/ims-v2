@@ -566,15 +566,12 @@
                             </span>
                             @endif
 
-                            <div class="mt-1.5 flex items-center gap-2">
-                                <a href="{{ route('finance.dokumen.invoice', urlencode($inv->kode_billing_layanan)) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium" title="Buka & Cetak Dokumen Invoice PDF">
-                                    <svg class="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <div class="mt-1.5">
+                                <a href="{{ route('finance.dokumen.invoice', urlencode($inv->kode_billing_layanan)) }}" target="_blank" class="group inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 dark:hover:bg-rose-600 dark:hover:text-white text-[10px] font-semibold transition shadow-xs" title="Buka & Cetak PDF Invoice ({{ $inv->kode_billing_layanan }})">
+                                    <svg class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 group-hover:text-white shrink-0 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                     </svg>
-                                    <span class="truncate max-w-[130px]">{{ $inv->invoice_file ?: ($inv->kode_billing_layanan . '.pdf') }}</span>
-                                </a>
-                                <a href="{{ route('finance.dokumen.invoice', urlencode($inv->kode_billing_layanan)) }}?download=pdf" target="_blank" class="px-1.5 py-0.5 rounded bg-rose-500/10 hover:bg-rose-500 text-rose-600 hover:text-white dark:text-rose-400 text-[10px] font-bold border border-rose-500/20 transition shrink-0" title="Download PDF Langsung">
-                                    PDF
+                                    <span>PDF Invoice</span>
                                 </a>
                             </div>
                         </td>
@@ -752,7 +749,7 @@
                                     } elseif ($isCash) {
                                         $methodLabel = 'Cash To Collector';
                                     } else {
-                                        $methodLabel = 'Midtrans (Online)';
+                                        $methodLabel = 'Midtran';
                                     }
                                 @endphp
 
@@ -799,7 +796,7 @@
                                 </div>
                                 @else
                                 <div class="flex flex-col gap-1 items-start">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Midtrans (Online)' }}">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Midtran' }}">
                                         <svg class="w-3 h-3 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                                         </svg>

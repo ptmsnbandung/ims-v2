@@ -235,17 +235,22 @@
 
         /* 2. Body Form */
         .form-body {
-            padding: 4px 15mm 4px 15mm;
+            padding: 4px 14mm 4px 14mm;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
             flex-grow: 1;
+            font-family: Arial, Helvetica, sans-serif, 'Inter';
         }
 
         .doc-title-container {
             text-align: center;
-            margin: 2px 0 6px 0;
-            position: relative;
+            margin: 0 0 6px 0;
+        }
+
+        .doc-title-wrapper {
+            display: inline-block;
+            text-align: center;
         }
 
         .doc-title {
@@ -254,171 +259,144 @@
             font-style: italic;
             letter-spacing: 0.5px;
             color: #000;
-            display: inline-block;
-            border-bottom: 1.5px solid #000;
-            padding-bottom: 1px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 0px;
+            line-height: 1.1;
         }
 
-        .tagihan-badge {
-            display: inline-block;
-            border: 1px solid #333;
-            padding: 1px 8px;
-            font-size: 9pt;
+        .doc-subtitle {
+            font-size: 7.5pt;
             font-weight: bold;
-            margin-bottom: 4px;
-            background: #f8fafc;
-            border-radius: 3px;
+            font-style: italic;
+            text-align: right;
+            margin-top: 1px;
+            letter-spacing: 0.5px;
         }
 
-        /* Info Table */
-        .info-table {
+        /* Info Box */
+        .info-box {
             width: 100%;
+            border: 1px solid #000;
             border-collapse: collapse;
             margin-bottom: 6px;
-            font-size: 9pt;
+            font-size: 8.5pt;
         }
 
-        .info-table td {
+        .info-box td {
             vertical-align: top;
-            padding: 1px 4px;
+            padding: 5px 6px;
         }
 
         .info-customer {
-            width: 48%;
-            padding-right: 12px;
+            width: 50%;
+            border-right: 1px solid #000;
         }
 
-        .info-meta {
-            width: 52%;
+        .info-company {
+            width: 50%;
+            padding-left: 8px;
         }
 
-        .meta-row {
-            display: flex;
-            margin-bottom: 2px;
+        .cust-name-header {
+            font-weight: bold;
+            font-size: 9pt;
+            text-transform: uppercase;
+            border-bottom: 1.5px solid #000;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
         }
 
-        .meta-label {
-            width: 130px;
-            flex-shrink: 0;
+        .cust-address-text {
+            font-size: 8pt;
+            line-height: 1.25;
+            text-transform: uppercase;
+            color: #000;
         }
 
-        .meta-sep {
-            margin: 0 4px;
-        }
-
-        .meta-value {
-            font-weight: 500;
+        .company-header-text {
+            font-weight: bold;
+            font-size: 9pt;
+            text-transform: uppercase;
+            margin-bottom: 3px;
         }
 
         /* Billing Main Table */
         .bill-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 4px;
+            margin-top: 2px;
             margin-bottom: 6px;
-            font-size: 9pt;
+            font-size: 8.5pt;
         }
 
         .bill-table th, .bill-table td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 3px 5px;
         }
 
         .bill-table th {
-            background-color: #f1f5f9;
+            background-color: #000000;
+            color: #ffffff;
             font-weight: bold;
             text-align: center;
-            font-size: 9pt;
-        }
-
-        .bill-table .spacer-row td {
-            height: 28px;
-            border-top: none;
-            border-bottom: none;
+            font-size: 8.5pt;
+            padding: 3px 4px;
         }
 
         .terbilang-cell {
-            font-style: italic;
-            font-size: 8.5pt;
+            font-size: 8pt;
             vertical-align: top;
-            background: #fafafa;
+            padding: 4px 6px;
+            color: #000;
+        }
+
+        .tagihan-cyan-bar {
+            background-color: #00C0F3 !important;
+            color: #000000 !important;
+            font-weight: bold;
+            text-align: center;
+            font-size: 8.5pt;
+            padding: 4px 6px;
+            letter-spacing: 0.3px;
         }
 
         /* Signatures & Payment Block */
         .sig-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 4px;
-            margin-bottom: 4px;
-            font-size: 9pt;
+            margin-top: 2px;
+            margin-bottom: 6px;
+            font-size: 8.5pt;
         }
 
-        .sig-table td {
+        .sig-table th, .sig-table td {
             border: 1px solid #000;
-            vertical-align: top;
-            padding: 4px;
         }
 
-        .sig-col-header {
-            text-align: center;
+        .sig-table th {
+            background-color: #000000;
+            color: #ffffff;
             font-weight: bold;
-            border-bottom: 1px solid #000;
-            padding: 3px 0;
-            background-color: #f8fafc;
+            text-align: center;
+            font-size: 8.5pt;
+            padding: 3px 4px;
         }
 
-        .sig-col-content {
-            height: 90px;
+        .sig-cell-content {
+            min-height: 65px;
+            padding: 8px 4px 6px 4px;
+            text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            text-align: center;
-            padding: 4px 2px;
-            position: relative;
-        }
-
-        .stamp-img {
-            max-height: 68px;
-            max-width: 140px;
-            object-fit: contain;
-            margin: 0 auto;
-        }
-
-        .pay-link-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            height: 100%;
-            gap: 4px;
-        }
-
-        .pay-link-btn {
-            display: inline-block;
-            font-size: 7.5pt;
-            color: #0284c7;
-            text-decoration: underline;
-            word-break: break-all;
-            max-width: 150px;
-            text-align: center;
-        }
-
-        /* Perforated Divider */
-        .perforated-divider {
-            margin: 6px 0;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 4px;
-            color: #475569;
-            font-size: 8pt;
-            user-select: none;
         }
 
-        .perforated-line {
-            flex-grow: 1;
-            border-top: 1.5px dashed #64748b;
+        /* Cut Divider Line */
+        .cut-line {
+            border-top: 1.5px dashed #000000;
+            margin: 8px 0 6px 0;
+            width: 100%;
         }
 
         /* Slip Pembayaran */
@@ -427,27 +405,37 @@
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
-            font-size: 9.5pt;
+            font-size: 9pt;
             margin-bottom: 3px;
         }
 
-        .slip-table {
+        .slip-box {
             width: 100%;
+            border: 1px solid #000;
             border-collapse: collapse;
-            font-size: 8.5pt;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-size: 8pt;
         }
 
-        .slip-table td {
+        .slip-box td {
             vertical-align: top;
-            padding: 1.5px 2px;
+            padding: 3px 6px;
+        }
+
+        .slip-left {
+            width: 50%;
+            border-right: 1px solid #000;
+        }
+
+        .slip-right {
+            width: 50%;
         }
 
         .slip-sig-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 8.5pt;
-            margin-top: 2px;
+            margin-top: 4px;
             margin-bottom: 4px;
         }
 
@@ -458,7 +446,7 @@
         }
 
         .notes-box {
-            font-family: 'Verdana', sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             font-size: 6.8pt;
             line-height: 1.25;
             color: #1e293b;
@@ -597,7 +585,7 @@
                         </div>
                         <div>
                             <div style="font-weight: 600;">Download Gambar (.png)</div>
-                            <span class="dropdown-item-desc">Gambar resolusi tinggi HD</span>
+                            <span class="dropdown-item-desc">Gambar resolisi tinggi HD</span>
                         </div>
                     </button>
                 </div>
@@ -647,35 +635,33 @@
                 
                 <!-- TITLE -->
                 <div class="doc-title-container">
-                    <div class="doc-title">INVOICE</div>
+                    <div class="doc-title-wrapper">
+                        <div class="doc-title">INVOICE</div>
+                        <div class="doc-subtitle">TAGIHAN</div>
+                    </div>
                 </div>
 
-                <!-- TAGIHAN BADGE -->
-                <div>
-                    <span class="tagihan-badge">Tagihan</span>
-                </div>
-
-                <!-- CUSTOMER & INVOICE META TABLE -->
-                <table class="info-table">
+                <!-- CUSTOMER & INVOICE META BOX -->
+                <table class="info-box">
                     <tr>
                         <td class="info-customer">
-                            <div style="font-weight: bold; font-size: 10pt; text-transform: uppercase;">{{ $customerName }}</div>
-                            <div style="font-size: 9pt; color: #1e293b; margin-top: 2px; line-height: 1.3;">
+                            <div class="cust-name-header">{{ $customerName }}</div>
+                            <div class="cust-address-text">
                                 {{ $alamat }}
                             </div>
                         </td>
-                        <td class="info-meta">
-                            <div style="font-weight: bold; font-size: 9.5pt; margin-bottom: 2px;">PT MEDIA SOLUSI NETWORK</div>
-                            <table style="width: 100%; font-size: 9pt; border-collapse: collapse;">
+                        <td class="info-company">
+                            <div class="company-header-text">PT MEDIA SOLUSI NETWORK</div>
+                            <table style="width: 100%; font-size: 8.5pt; border-collapse: collapse;">
                                 <tr>
-                                    <td style="width: 125px; padding: 1px 0;">No Tagihan</td>
-                                    <td style="width: 10px; text-align: center; padding: 1px 0;">:</td>
-                                    <td style="font-weight: bold; padding: 1px 0;">{{ $noInvoice }}</td>
+                                    <td style="width: 115px; padding: 1px 0;">No tagihan</td>
+                                    <td style="width: 8px; text-align: center; padding: 1px 0;">:</td>
+                                    <td style="padding: 1px 0;">{{ $noInvoice }}</td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 1px 0;">Nomor Pelanggan</td>
                                     <td style="text-align: center; padding: 1px 0;">:</td>
-                                    <td style="font-weight: bold; padding: 1px 0;">{{ $nomorInternet }}</td>
+                                    <td style="padding: 1px 0;">{{ $nomorInternet }}</td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 1px 0;">Periode Pemakaian</td>
@@ -696,10 +682,10 @@
                 <table class="bill-table">
                     <thead>
                         <tr>
-                            <th style="width: 6%;">No</th>
-                            <th style="width: 54%;">Layanan</th>
-                            <th style="width: 15%;">Qty</th>
-                            <th style="width: 25%;">Tagihan</th>
+                            <th style="width: 5%;">No</th>
+                            <th style="width: 63%;">Layanan</th>
+                            <th style="width: 12%;">Qty</th>
+                            <th style="width: 20%;">Tagihan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -707,103 +693,92 @@
                             @foreach($items as $idx => $item)
                             <tr>
                                 <td style="text-align: center;">{{ $idx + 1 }}</td>
-                                <td>{{ $item->komponen ?? $namaLayanan }}</td>
+                                <td>{{ strtoupper($item->komponen ?? $namaLayanan) }}</td>
                                 <td style="text-align: center;">{{ $item->qty ?? 1 }}</td>
-                                <td style="text-align: right;">Rp {{ number_format((float) ($item->biaya ?? $subtotal), 0, ',', '.') }}</td>
+                                <td style="text-align: right;">Rp {{ number_format((float) ($item->biaya ?? $subtotal), 0, ',', '.') }},00</td>
                             </tr>
                             @endforeach
                         @else
                             <tr>
                                 <td style="text-align: center;">1</td>
-                                <td>{{ $namaLayanan }}</td>
+                                <td>{{ strtoupper($namaLayanan) }}</td>
                                 <td style="text-align: center;">1</td>
-                                <td style="text-align: right;">Rp {{ number_format($subtotal, 0, ',', '.') }}</td>
+                                <td style="text-align: right;">Rp {{ number_format($subtotal, 0, ',', '.') }},00</td>
                             </tr>
                         @endif
-
-                        <!-- Spacer row matching docx layout -->
-                        <tr class="spacer-row">
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
 
                         <!-- Terbilang & Potongan -->
                         <tr>
                             <td colspan="2" rowspan="2" class="terbilang-cell">
-                                <strong>Terbilang :</strong> <em>{{ $terbilangText }}</em>
+                                <strong>Terbilang :</strong> {{ $terbilangText }}
                             </td>
-                            <td style="text-align: right; font-weight: 500;">POTONGAN</td>
+                            <td style="text-align: right; font-weight: normal;">POTONGAN</td>
                             <td style="text-align: right;">
-                                {{ $potongan > 0 ? 'Rp ' . number_format($potongan, 0, ',', '.') : '-' }}
+                                {{ $potongan > 0 ? 'Rp ' . number_format($potongan, 0, ',', '.') . ',00' : '0' }}
                             </td>
                         </tr>
 
                         <!-- PPN -->
                         <tr>
-                            <td style="text-align: right; font-weight: 500;">PPN</td>
+                            <td style="text-align: right; font-weight: normal;">PPN</td>
                             <td style="text-align: right;">
-                                {{ $ppn > 0 ? 'Rp ' . number_format($ppn, 0, ',', '.') : '-' }}
+                                <div style="line-height: 1.1;">
+                                    <div>Rp {{ number_format($ppn > 0 ? $ppn : ($total * 0.1), 0, ',', '.') }},00</div>
+                                    <div style="font-size: 7.5pt; color: #333;">(include)</div>
+                                </div>
                             </td>
                         </tr>
 
-                        <!-- Total Tagihan -->
-                        <tr style="background-color: #f8fafc; font-weight: bold;">
-                            <td colspan="3" style="text-align: center; font-size: 9.5pt; padding: 5px;">
+                        <!-- Total Tagihan (Cyan highlight) -->
+                        <tr>
+                            <td colspan="3" class="tagihan-cyan-bar">
                                 TAGIHAN BULAN INI
                             </td>
-                            <td style="text-align: right; font-size: 10pt; padding: 5px;">
-                                Rp {{ number_format($total, 0, ',', '.') }}
+                            <td style="text-align: right; font-size: 9pt; font-weight: bold; background-color: #ffffff; padding: 4px 6px;">
+                                Rp {{ number_format($total, 0, ',', '.') }},00
                             </td>
                         </tr>
                     </tbody>
                 </table>
 
-                <!-- SIGNATURES & PAYMENT METHOD BLOCK (3 COLUMNS MATCHING DOCX) -->
+                <!-- SIGNATURES & PAYMENT METHOD BLOCK (3 COLUMNS MATCHING IMAGE 2) -->
                 <table class="sig-table">
                     <thead>
                         <tr>
-                            <th style="width: 32%;" class="sig-col-header">Pembayaran</th>
-                            <th style="width: 36%;" class="sig-col-header">Mengetahui</th>
-                            <th style="width: 32%;" class="sig-col-header">Pelanggan</th>
+                            <th style="width: 32%;">Pembayaran</th>
+                            <th style="width: 36%;">Mengetahui</th>
+                            <th style="width: 32%;">Pelanggan</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <!-- Column 1: Pembayaran & Link / QR -->
+                            <!-- Column 1: Pembayaran & Link Klik Disini -->
                             <td>
-                                <div class="sig-col-content pay-link-box">
-                                    <div style="font-size: 8pt; font-weight: bold; color: #1e293b;">LINK PEMBAYARAN</div>
-                                    <a href="{{ $paymentUrl }}" target="_blank" class="pay-link-btn">
-                                        {{ Str::limit($paymentUrl, 38) }}
-                                    </a>
-                                    <div style="font-size: 7pt; color: #64748b;">(Klik / Salin Link untuk Pembayaran)</div>
-                                </div>
-                            </td>
-
-                            <!-- Column 2: Mengetahui (Stempel & TTD Keuangan Ida Mayasari) -->
-                            <td>
-                                <div class="sig-col-content">
-                                    @if($stampBase64)
-                                        <img src="{{ $stampBase64 }}" alt="Stempel Keuangan PT MSN" class="stamp-img">
-                                    @else
-                                        <div style="height: 50px;"></div>
-                                    @endif
+                                <div class="sig-cell-content">
+                                    <div style="font-size: 8pt; font-weight: bold; margin-bottom: 4px;">LINK PEMBAYARAN :</div>
                                     <div>
-                                        <div style="font-weight: bold; font-size: 9pt; border-bottom: 1px solid #000; display: inline-block; padding-bottom: 1px;">Ida Mayasari</div>
-                                        <div style="font-size: 8pt; color: #334155;">Keuangan</div>
+                                        <a href="{{ $paymentUrl }}" target="_blank" style="color: #0000ff; text-decoration: underline; font-weight: bold; font-size: 8.5pt;">
+                                            Klik Disini
+                                        </a>
                                     </div>
                                 </div>
                             </td>
 
-                            <!-- Column 3: Pelanggan (TTD & Nama) -->
+                            <!-- Column 2: Mengetahui (Ida Mayasari - Keuangan) -->
                             <td>
-                                <div class="sig-col-content">
-                                    <div style="height: 50px;"></div>
-                                    <div>
-                                        <div style="font-weight: bold; font-size: 9pt; border-bottom: 1px solid #000; display: inline-block; min-width: 120px; padding-bottom: 1px;">&nbsp;</div>
-                                        <div style="font-size: 8pt; color: #334155;">TTD &amp; Nama</div>
+                                <div class="sig-cell-content" style="justify-content: flex-end; padding-top: 18px;">
+                                    <div style="display: inline-block; min-width: 140px; text-align: center;">
+                                        <div style="font-weight: bold; font-size: 8.5pt;">Ida Mayasari</div>
+                                        <div style="border-top: 1px solid #000; margin-top: 2px; padding-top: 2px; font-size: 8pt;">Keuangan</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Column 3: Pelanggan (Customer Name) -->
+                            <td>
+                                <div class="sig-cell-content" style="justify-content: flex-end; padding-top: 18px;">
+                                    <div style="font-weight: bold; font-size: 8.5pt; text-transform: uppercase;">
+                                        {{ $customerName }}
                                     </div>
                                 </div>
                             </td>
@@ -811,11 +786,8 @@
                     </tbody>
                 </table>
 
-                <!-- PERFORATED DIVIDER / GUNTING -->
-                <div class="perforated-divider">
-                    <span style="font-size: 11pt;">✂</span>
-                    <div class="perforated-line"></div>
-                </div>
+                <!-- CUT DIVIDER LINE -->
+                <div class="cut-line"></div>
 
                 <!-- SLIP PEMBAYARAN -->
                 <div class="slip-header">
@@ -823,31 +795,31 @@
                     <span>SLIP PEMBAYARAN</span>
                 </div>
 
-                <table class="slip-table">
+                <table class="slip-box">
                     <tr>
-                        <td style="width: 50%;">
-                            <table style="width: 100%; border-collapse: collapse;">
+                        <td class="slip-left">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
                                 <tr>
-                                    <td style="width: 110px; padding: 1px 0;">Nomor Tagihan</td>
+                                    <td style="width: 95px; padding: 1px 0;">Nomor Tagihan</td>
                                     <td style="width: 8px; text-align: center; padding: 1px 0;">:</td>
-                                    <td style="font-weight: bold; padding: 1px 0;">{{ $noInvoice }}</td>
+                                    <td style="padding: 1px 0;">{{ $noInvoice }}</td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 1px 0;">Nomor Pelanggan</td>
                                     <td style="text-align: center; padding: 1px 0;">:</td>
-                                    <td style="font-weight: bold; padding: 1px 0;">{{ $nomorInternet }}</td>
+                                    <td style="padding: 1px 0;">{{ $nomorInternet }}</td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 1px 0;">Nama Pelanggan</td>
                                     <td style="text-align: center; padding: 1px 0;">:</td>
-                                    <td style="padding: 1px 0;">{{ $customerName }}</td>
+                                    <td style="padding: 1px 0; text-transform: uppercase;">{{ $customerName }}</td>
                                 </tr>
                             </table>
                         </td>
-                        <td style="width: 50%; padding-left: 10px;">
-                            <table style="width: 100%; border-collapse: collapse;">
+                        <td class="slip-right">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 8pt;">
                                 <tr>
-                                    <td style="width: 120px; padding: 1px 0;">Periode Pemakaian</td>
+                                    <td style="width: 95px; padding: 1px 0;">Periode Tagihan</td>
                                     <td style="width: 8px; text-align: center; padding: 1px 0;">:</td>
                                     <td style="padding: 1px 0;">{{ $periodeTagihan }}</td>
                                 </tr>
@@ -859,7 +831,7 @@
                                 <tr>
                                     <td style="padding: 1px 0;">Jumlah Tagihan</td>
                                     <td style="text-align: center; padding: 1px 0;">:</td>
-                                    <td style="font-weight: bold; padding: 1px 0;">Rp {{ number_format($total, 0, ',', '.') }}</td>
+                                    <td style="padding: 1px 0; font-weight: bold;">Rp {{ number_format($total, 0, ',', '.') }},00</td>
                                 </tr>
                             </table>
                         </td>
@@ -869,15 +841,15 @@
                 <!-- SLIP SIGNATURES -->
                 <table class="slip-sig-table">
                     <tr>
-                        <td style="padding-bottom: 25px;">Petugas</td>
-                        <td style="padding-bottom: 25px;">Pelanggan</td>
+                        <td style="padding-bottom: 28px;">Petugas</td>
+                        <td style="padding-bottom: 28px;">Pelanggan</td>
                     </tr>
                     <tr>
                         <td>
-                            <span style="border-top: 1px dotted #64748b; padding-top: 2px; display: inline-block; min-width: 110px;">TTD &amp; Nama</span>
+                            <span style="font-size: 8pt;">TTD / Nama</span>
                         </td>
                         <td>
-                            <span style="border-top: 1px dotted #64748b; padding-top: 2px; display: inline-block; min-width: 110px;">TTD &amp; Nama</span>
+                            <span style="font-size: 8pt; font-weight: bold; text-transform: uppercase;">{{ $customerName }}</span>
                         </td>
                     </tr>
                 </table>

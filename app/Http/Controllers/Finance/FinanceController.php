@@ -2598,16 +2598,18 @@ class FinanceController extends Controller
         // Periode & Jatuh tempo
         $bulanTagihan = $invoice->bulan_tagihan ?? date('m');
         $tahunTagihan = $invoice->tahun_tagihan ?? date('Y');
-        $periodeTagihan = $invoice->periode_tagihan ?: (Carbon::createFromDate($tahunTagihan, $bulanTagihan, 1)->locale('id')->isoFormat('MMMM Y'));
+        
+        $monthName = date('M', mktime(0, 0, 0, (int)$bulanTagihan, 1, (int)$tahunTagihan));
+        $periodeTagihan = $invoice->periode_tagihan ?: ($monthName . ' ' . $tahunTagihan);
         
         $jatuhTempo = !empty($invoice->expiry) 
             ? Carbon::parse($invoice->expiry)->locale('id')->isoFormat('D MMMM Y')
-            : Carbon::createFromDate($tahunTagihan, $bulanTagihan, 20)->locale('id')->isoFormat('D MMMM Y');
+            : 'Tanggal 20 Setiap Bulan';
 
         // Layanan & Nominal
         $kategoriBandwith = $invoice->nama_kategori_bandwith ?? ($customer->nama_kategori_bandwith ?? 'BROADBAND');
         $nominalBandwith = $invoice->nominal_bandwith ?? ($customer->nominal_bandwith ?? '');
-        $namaLayanan = "LAYANAN INTERNET {$kategoriBandwith}" . ($nominalBandwith ? " {$nominalBandwith} Mbps" : '');
+        $namaLayanan = "LAYANAN INTERNET {$kategoriBandwith}" . ($nominalBandwith ? " {$nominalBandwith} MBps" : '');
 
         $subtotal = (float) ($invoice->harga_bandwith ?? ($customer->harga_bandwith ?? ($invoice->total_layanan ?? 0)));
         $potongan = (float) ($invoice->potongan ?? 0);
@@ -2674,40 +2676,36 @@ class FinanceController extends Controller
             return 'Nol Rupiah';
         }
 
-        $baca = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
-        
-        $terbilang = '';
-        if ($angka < 12) {
-            $terbilang = ' ' . $baca[(int)$angka];
-        } elseif ($angka < 20) {
-            $terbilang = $this->terbilangRupiah($angka - 10) . ' Belas';
-            $terbilang = str_replace(' Rupiah', '', $terbilang);
-        } elseif ($angka < 100) {
-            $terbilang = $this->terbilangRupiah((int)($angka / 10)) . ' Puluh ' . $this->terbilangRupiah(fmod($angka, 10));
-            $terbilang = str_replace(' Rupiah', '', $terbilang);
-        } elseif ($angka < 200) {
-            $terbilang = ' Seratus ' . $this->terbilangRupiah($angka - 100);
-            $terbilang = str_replace(' Rupiah', '', $terbilang);
-        } elseif ($angka < 1000) {
-            $terbilang = $this->terbilangRupiah((int)($angka / 100)) . ' Ratus ' . $this->terbilangRupiah(fmod($angka, 100));
-            $terbilang = str_replace(' Rupiah', '', $terbilang);
-        } elseif ($angka < 2000) {
-            $terbilang = ' Seribu ' . $this->terbilangRupiah($angka - 1000);
-            $terbilang = str_replace(' Rupiah', '', $terbilang);
-        } elseif ($angka < 1000000) {
-            $terbilang = $this->terbilangRupiah((int)($angka / 1000)) . ' Ribu ' . $this->terbilangRupiah(fmod($angka, 1000));
-            $terbilang = str_replace(' Rupiah', '', $terbilang);
-        } elseif ($angka < 1000000000) {
-            $terbilang = $this->terbilangRupiah((int)($angka / 1000000)) . ' Juta ' . $this->terbilangRupiah(fmod($angka, 1000000));
-            $terbilang = str_replace(' Rupiah', '', $terbilang);
-        } elseif ($angka < 1000000000000) {
-            $terbilang = $this->terbilangRupiah((int)($angka / 1000000000)) . ' Milyar ' . $this->terbilangRupiah(fmod($angka, 1000000000));
-            $terbilang = str_replace(' Rupiah', '', $terbilang);
-        } else {
-            $terbilang = (string)$angka;
-        }
+        $terbilang = $this->penyebut($angka);
+        return trim(preg_replace('/\s+/', ' ', $terbilang)) . ' Rupiah';
+    }
 
-        $clean = preg_replace('/\s+/', ' ', trim(str_replace('Rupiah', '', $terbilang)));
-        return trim($clean) . ' Rupiah';
+    private function penyebut(float $nilai): string
+    {
+        $nilai = abs((float)$nilai);
+        $huruf = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+        $temp = '';
+        if ($nilai < 12) {
+            $temp = ' ' . $huruf[(int)$nilai];
+        } elseif ($nilai < 20) {
+            $temp = $this->penyebut($nilai - 10) . ' Belas';
+        } elseif ($nilai < 100) {
+            $temp = $this->penyebut((int)($nilai / 10)) . ' Puluh' . $this->penyebut(fmod($nilai, 10));
+        } elseif ($nilai < 200) {
+            $temp = ' Seratus' . $this->penyebut($nilai - 100);
+        } elseif ($nilai < 1000) {
+            $temp = $this->penyebut((int)($nilai / 100)) . ' Ratus' . $this->penyebut(fmod($nilai, 100));
+        } elseif ($nilai < 2000) {
+            $temp = ' Seribu' . $this->penyebut($nilai - 1000);
+        } elseif ($nilai < 1000000) {
+            $temp = $this->penyebut((int)($nilai / 1000)) . ' Ribu' . $this->penyebut(fmod($nilai, 1000));
+        } elseif ($nilai < 1000000000) {
+            $temp = $this->penyebut((int)($nilai / 1000000)) . ' Juta' . $this->penyebut(fmod($nilai, 1000000));
+        } elseif ($nilai < 1000000000000) {
+            $temp = $this->penyebut((int)($nilai / 1000000000)) . ' Milyar' . $this->penyebut(fmod($nilai, 1000000000));
+        } elseif ($nilai < 1000000000000000) {
+            $temp = $this->penyebut((int)($nilai / 1000000000000)) . ' Trilyun' . $this->penyebut(fmod($nilai, 1000000000000));
+        }
+        return $temp;
     }
 }

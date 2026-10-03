@@ -2117,7 +2117,7 @@
                     <button type="button"
                             @click="openSelectedPreviewModal()"
                             :disabled="selectedBatchCount === 0"
-                            :class="selectedBatchCount === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 cursor-pointer'"
+                            :class="selectedBatchCount === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-cyan-600 hover:bg-cyan-700 text-white cursor-pointer'"
                             class="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -2136,7 +2136,7 @@
          ========================================== -->
     <div x-show="selectedPreviewModalOpen"
          x-cloak
-         @keydown.escape.window="selectedPreviewModalOpen = false"
+         @keydown.escape.window="backToBatchSearchModal()"
          class="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm overflow-hidden"
          style="position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 1rem; background-color: rgba(2, 6, 23, 0.85); overflow: hidden;"
          x-transition:enter="transition ease-out duration-200"
@@ -2146,7 +2146,7 @@
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
 
-        <div @click.away="selectedPreviewModalOpen = false"
+        <div @click.away="backToBatchSearchModal()"
              x-show="selectedPreviewModalOpen"
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 scale-95"
@@ -2170,7 +2170,7 @@
                         <p class="text-xs text-slate-500 dark:text-slate-400">Total <span class="font-bold text-cyan-600 dark:text-cyan-400" x-text="selectedBatchCount"></span> invoice tagihan pelanggan siap dicetak serentak.</p>
                     </div>
                 </div>
-                <button type="button" @click="selectedPreviewModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-2xl leading-none">&times;</button>
+                <button type="button" @click="backToBatchSearchModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-2xl leading-none">&times;</button>
             </div>
 
             <!-- Table List of Selected Invoices -->
@@ -2230,7 +2230,7 @@
                     </span>
                     <button type="button"
                             x-show="selectedBatchCount > 0"
-                            @click="resetBatchSelection(); selectedPreviewModalOpen = false"
+                            @click="resetBatchSelection(); backToBatchSearchModal()"
                             class="text-xs text-rose-500 hover:text-rose-700 dark:hover:text-red-400 font-semibold cursor-pointer underline ml-1">
                         Hapus Semua
                     </button>
@@ -2238,7 +2238,7 @@
 
                 <div class="flex items-center gap-2 flex-wrap justify-end">
                     <button type="button"
-                            @click="selectedPreviewModalOpen = false"
+                            @click="backToBatchSearchModal()"
                             class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition">
                         Kembali / Tambah Pilihan
                     </button>
@@ -2246,7 +2246,7 @@
                     <button type="button"
                             @click="executeBatchPrint()"
                             :disabled="selectedBatchCount === 0"
-                            :class="selectedBatchCount === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 cursor-pointer'"
+                            :class="selectedBatchCount === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-cyan-600 hover:bg-cyan-700 active:bg-cyan-800 text-white cursor-pointer'"
                             class="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -2474,7 +2474,12 @@ function billingLayananPage() {
                 alert('Silakan pilih minimal 1 tagihan pelanggan untuk dicetak.');
                 return;
             }
+            this.batchPrintModalOpen = false;
             this.selectedPreviewModalOpen = true;
+        },
+        backToBatchSearchModal() {
+            this.selectedPreviewModalOpen = false;
+            this.batchPrintModalOpen = true;
         },
         executeBatchPrint() {
             const kodes = Object.keys(this.selectedBatchMap);

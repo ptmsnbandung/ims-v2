@@ -64,16 +64,28 @@
 
          // Modal Batch Print Invoices
          batchPrintModalOpen: false,
-         batchBulan: '{{ $selectedBulan ?: date('m') }}',
-         batchTahun: '{{ $selectedTahun ?: date('Y') }}',
+         batchBulan: '{{ request('bulan', $selectedBulan ?? '') }}',
+         batchTahun: '{{ request('tahun', $selectedTahun ?? '') }}',
          batchSearch: '',
-         batchStatus: '',
+         batchStatus: '{{ request('status_bayar', '') }}',
          batchInvoices: [],
+         pageInvoices: @json($invoices->map(function($inv) {
+             return [
+                 'kode_billing_layanan' => $inv->kode_billing_layanan ?? '',
+                 'nomor_internet' => $inv->nomor_internet ?? '-',
+                 'nama_pelanggan' => $inv->nama_pelanggan ?? 'Pelanggan',
+                 'status_bill_lay' => (string)($inv->status_bill_lay ?? ''),
+                 'status_desc' => $inv->desc_bill_lay ?? ($inv->status_bill_lay == '15' ? 'Lunas' : ($inv->status_bill_lay == '13' ? 'Published' : ($inv->status_bill_lay == '14' ? 'Menunggu Verifikasi' : 'Draft'))),
+             ];
+         })->values()),
          selectedBatchKodes: [],
          batchLoading: false,
          batchSelectAll: false,
          async openBatchPrintModal() {
              this.batchPrintModalOpen = true;
+             if (this.pageInvoices && this.pageInvoices.length > 0) {
+                 this.batchInvoices = [...this.pageInvoices];
+             }
              await this.fetchBatchInvoices();
          },
          async fetchBatchInvoices() {
@@ -89,14 +101,18 @@
                  });
                  const res = await fetch('/finance/dokumen/batch-invoice/search?' + params.toString());
                  const data = await res.json();
-                 if (data && data.success) {
-                     this.batchInvoices = data.data || [];
+                 if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+                     this.batchInvoices = data.data;
+                 } else if (this.pageInvoices && this.pageInvoices.length > 0 && !this.batchSearch && !this.batchStatus) {
+                     this.batchInvoices = [...this.pageInvoices];
                  } else {
-                     this.batchInvoices = [];
+                     this.batchInvoices = (data && data.data) ? data.data : [];
                  }
              } catch (e) {
                  console.error('Error fetching batch invoices:', e);
-                 this.batchInvoices = [];
+                 if (this.pageInvoices && this.pageInvoices.length > 0) {
+                     this.batchInvoices = [...this.pageInvoices];
+                 }
              } finally {
                  this.batchLoading = false;
              }
@@ -2135,6 +2151,7 @@
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Bulan</label>
                         <select x-model="batchBulan" @change="fetchBatchInvoices()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                            <option value="">Semua Bulan</option>
                             @foreach($bulanList as $k => $nm)
                             <option value="{{ $k }}">{{ $k }} - {{ $nm }}</option>
                             @endforeach
@@ -2145,6 +2162,7 @@
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Tahun</label>
                         <select x-model="batchTahun" @change="fetchBatchInvoices()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                            <option value="">Semua Tahun</option>
                             @foreach($tahunList as $th)
                             <option value="{{ $th }}">{{ $th }}</option>
                             @endforeach

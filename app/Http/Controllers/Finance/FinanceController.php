@@ -2737,14 +2737,27 @@ class FinanceController extends Controller
      */
     public function searchBatchInvoiceJson(Request $request): JsonResponse
     {
-        try {
-            $bulan = $request->query('bulan', '');
-            $tahun = $request->query('tahun', '');
-            $search = trim($request->query('search', ''));
-            $statusBayar = $request->query('status_bayar', '');
+        $bulan = $request->query('bulan', '');
+        $tahun = $request->query('tahun', '');
+        $search = trim($request->query('search', ''));
+        $statusBayar = $request->query('status_bayar', '');
 
-            $tableName = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
-            $query = DB::table($tableName);
+        $statusDescriptions = [
+            '11' => 'Draft',
+            '12' => 'Auto Publish',
+            '13' => 'Published (Belum Bayar)',
+            '14' => 'Menunggu Verifikasi',
+            '15' => 'Lunas (Paid)',
+            '16' => 'Dibatalkan',
+            '17' => 'Expired',
+            '18' => 'Kadaluarsa',
+            '1' => 'Published',
+            '2' => 'Lunas',
+        ];
+
+        $invoices = collect();
+        try {
+            $query = DB::table('view_billing_layanan');
 
             if ($bulan !== '' && $bulan !== null) {
                 $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
@@ -2768,54 +2781,65 @@ class FinanceController extends Controller
                 });
             }
 
-            // Fetch records from view/table safely
             $invoices = $query->orderBy('nama_pelanggan', 'asc')->get();
-
-            $statusDescriptions = [
-                '11' => 'Draft',
-                '12' => 'Auto Publish',
-                '13' => 'Published (Belum Bayar)',
-                '14' => 'Menunggu Verifikasi',
-                '15' => 'Lunas (Paid)',
-                '16' => 'Dibatalkan',
-                '17' => 'Expired',
-                '18' => 'Kadaluarsa',
-                '1' => 'Published',
-                '2' => 'Lunas',
-            ];
-
-            $data = $invoices->map(function($inv) use ($statusDescriptions) {
-                $statusKey = (string)($inv->status_bill_lay ?? '');
-                $statusDesc = $inv->desc_bill_lay ?? ($statusDescriptions[$statusKey] ?? 'Draft');
-
-                return [
-                    'kode_billing_layanan' => $inv->kode_billing_layanan ?? '',
-                    'nomor_internet' => $inv->nomor_internet ?? '-',
-                    'nama_pelanggan' => $inv->nama_pelanggan ?? 'Pelanggan',
-                    'nama_kategori_bandwith' => $inv->nama_kategori_bandwith ?? '',
-                    'nominal_bandwith' => $inv->nominal_bandwith ?? '',
-                    'total_layanan' => (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0),
-                    'bulan_tagihan' => $inv->bulan_tagihan ?? '',
-                    'tahun_tagihan' => $inv->tahun_tagihan ?? '',
-                    'periode_tagihan' => $inv->periode_tagihan ?? (($inv->bulan_tagihan ?? '') . '/' . ($inv->tahun_tagihan ?? '')),
-                    'status_bill_lay' => $statusKey,
-                    'status_desc' => $statusDesc,
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'total' => $data->count(),
-                'data' => $data
-            ]);
         } catch (\Throwable $e) {
-            Log::error('searchBatchInvoiceJson error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => []
-            ], 500);
+            Log::info('searchBatchInvoiceJson view_billing_layanan query fallback: ' . $e->getMessage());
+            try {
+                $query = DB::table('trx_billing_layanan')
+                    ->leftJoin('view_batchjob', 'trx_billing_layanan.nomor_internet', '=', 'view_batchjob.nomor_internet');
+
+                if ($bulan !== '' && $bulan !== null) {
+                    $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
+                    $query->where('trx_billing_layanan.bulan_tagihan', $bulanPad);
+                }
+                if ($tahun !== '' && $tahun !== null) {
+                    $query->where('trx_billing_layanan.tahun_tagihan', (string)$tahun);
+                }
+                if ($statusBayar !== '' && $statusBayar !== null) {
+                    $query->where('trx_billing_layanan.status_bill_lay', $statusBayar);
+                }
+                if ($search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('view_batchjob.nama_pelanggan', 'like', "%{$search}%")
+                          ->orWhere('trx_billing_layanan.nomor_internet', 'like', "%{$search}%")
+                          ->orWhere('trx_billing_layanan.kode_billing_layanan', 'like', "%{$search}%");
+                    });
+                }
+
+                $invoices = $query->select(
+                    'trx_billing_layanan.*',
+                    'view_batchjob.nama_pelanggan'
+                )->get();
+            } catch (\Throwable $e2) {
+                Log::error('searchBatchInvoiceJson fallback failed: ' . $e2->getMessage());
+                $invoices = DB::table('trx_billing_layanan')->limit(100)->get();
+            }
         }
+
+        $data = $invoices->map(function($inv) use ($statusDescriptions) {
+            $statusKey = (string)($inv->status_bill_lay ?? '');
+            $statusDesc = $inv->desc_bill_lay ?? ($statusDescriptions[$statusKey] ?? 'Draft');
+
+            return [
+                'kode_billing_layanan' => $inv->kode_billing_layanan ?? '',
+                'nomor_internet' => $inv->nomor_internet ?? '-',
+                'nama_pelanggan' => $inv->nama_pelanggan ?? 'Pelanggan',
+                'nama_kategori_bandwith' => $inv->nama_kategori_bandwith ?? '',
+                'nominal_bandwith' => $inv->nominal_bandwith ?? '',
+                'total_layanan' => (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0),
+                'bulan_tagihan' => $inv->bulan_tagihan ?? '',
+                'tahun_tagihan' => $inv->tahun_tagihan ?? '',
+                'periode_tagihan' => $inv->periode_tagihan ?? (($inv->bulan_tagihan ?? '') . '/' . ($inv->tahun_tagihan ?? '')),
+                'status_bill_lay' => $statusKey,
+                'status_desc' => $statusDesc,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'total' => $data->count(),
+            'data' => $data
+        ]);
     }
 
     /**
@@ -2905,25 +2929,41 @@ class FinanceController extends Controller
         $bulan = $request->input('bulan', $request->query('bulan'));
         $tahun = $request->input('tahun', $request->query('tahun'));
 
-        $tableName = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
-        $query = DB::table($tableName);
-        if (!empty($kodes)) {
-            $query->whereIn('kode_billing_layanan', $kodes);
-        } else {
-            if ($bulan !== '' && $bulan !== null) {
-                $bulanPad = str_pad($bulan, 2, '0', STR_PAD_LEFT);
-                $bulanInt = (int)$bulan;
-                $query->where(function($q) use ($bulanPad, $bulanInt) {
-                    $q->where('bulan_tagihan', $bulanPad)
-                      ->orWhere('bulan_tagihan', (string)$bulanInt);
-                });
+        $rawInvoices = collect();
+        try {
+            $query = DB::table('view_billing_layanan');
+            if (!empty($kodes)) {
+                $query->whereIn('kode_billing_layanan', $kodes);
+            } else {
+                if ($bulan !== '' && $bulan !== null) {
+                    $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
+                    $bulanInt = (int)$bulan;
+                    $query->where(function($q) use ($bulanPad, $bulanInt) {
+                        $q->where('bulan_tagihan', $bulanPad)
+                          ->orWhere('bulan_tagihan', (string)$bulanInt);
+                    });
+                }
+                if ($tahun) {
+                    $query->where('tahun_tagihan', (string)$tahun);
+                }
             }
-            if ($tahun) {
-                $query->where('tahun_tagihan', $tahun);
+            $rawInvoices = $query->orderBy('nama_pelanggan', 'asc')->get();
+        } catch (\Throwable $e) {
+            $query = DB::table('trx_billing_layanan')
+                ->leftJoin('view_batchjob', 'trx_billing_layanan.nomor_internet', '=', 'view_batchjob.nomor_internet');
+            if (!empty($kodes)) {
+                $query->whereIn('trx_billing_layanan.kode_billing_layanan', $kodes);
+            } else {
+                if ($bulan !== '' && $bulan !== null) {
+                    $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
+                    $query->where('trx_billing_layanan.bulan_tagihan', $bulanPad);
+                }
+                if ($tahun) {
+                    $query->where('trx_billing_layanan.tahun_tagihan', (string)$tahun);
+                }
             }
+            $rawInvoices = $query->select('trx_billing_layanan.*', 'view_batchjob.nama_pelanggan', 'view_batchjob.alamat_pasang')->get();
         }
-
-        $rawInvoices = $query->orderBy('nama_pelanggan', 'asc')->get();
 
         if ($rawInvoices->isEmpty()) {
             abort(404, "Tidak ada data invoice yang ditemukan untuk dicetak.");

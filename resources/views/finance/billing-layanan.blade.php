@@ -1069,26 +1069,46 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/60">
-                                    <template x-if="generateLoading">
+                                    <!-- Jika Belum Memilih Jenis Layanan -->
+                                    <template x-if="!generateLayanan">
                                         <tr>
                                             <td colspan="4" class="p-12 text-center text-slate-400">
-                                                <div class="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                                                <div class="text-xs font-medium">Memuat data pelanggan...</div>
+                                                <div class="w-12 h-12 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 flex items-center justify-center text-blue-500 mb-3 shadow-xs">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="font-bold text-sm text-slate-800 dark:text-slate-200">Silakan Pilih Jenis Layanan Terlebih Dahulu</div>
+                                                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">Pilih opsi pada dropdown <strong>JENIS LAYANAN</strong> di atas untuk menampilkan daftar pelanggan.</div>
                                             </td>
                                         </tr>
                                     </template>
-                                    <template x-if="!generateLoading && generateCandidates.length === 0">
+
+                                    <!-- Loading State saat memilih layanan / fetch -->
+                                    <template x-if="generateLayanan && generateLoading">
+                                        <tr>
+                                            <td colspan="4" class="p-12 text-center text-slate-400">
+                                                <div class="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                                                <div class="text-xs font-medium text-slate-600 dark:text-slate-300">Memuat data pelanggan...</div>
+                                            </td>
+                                        </tr>
+                                    </template>
+
+                                    <!-- Kosong setelah fetch dengan layanan terpilih -->
+                                    <template x-if="generateLayanan && !generateLoading && generateCandidates.length === 0">
                                         <tr>
                                             <td colspan="4" class="p-12 text-center text-slate-400">
                                                 <div class="w-10 h-10 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-2">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                                 </div>
                                                 <div class="font-medium text-slate-700 dark:text-slate-300">Tidak ada data invoice yang sesuai</div>
-                                                <div class="text-[11px] text-slate-400 mt-0.5">Coba sesuaikan kata kunci pencarian atau filter layanan.</div>
+                                                <div class="text-[11px] text-slate-400 mt-0.5">Coba sesuaikan kata kunci pencarian atau filter periode/tahun.</div>
                                             </td>
                                         </tr>
                                     </template>
-                                    <template x-if="!generateLoading && generateCandidates.length > 0">
+
+                                    <!-- Ada data dengan layanan terpilih -->
+                                    <template x-if="generateLayanan && !generateLoading && generateCandidates.length > 0">
                                         <template x-for="c in paginatedCandidates" :key="c.nomor_internet">
                                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
                                                 <td class="py-3 px-4">
@@ -1130,7 +1150,7 @@
                         <!-- Table Bottom Controls -->
                         <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400">
                             <div>
-                                <span x-text="generateCandidates.length === 0 ? 'Showing 0 to 0 of 0 entries' : 'Showing ' + (((generatePage - 1) * generatePerPage) + 1) + ' to ' + Math.min(generatePage * generatePerPage, generateCandidates.length) + ' of ' + generateCandidates.length + ' entries'"></span>
+                                <span x-text="!generateLayanan ? 'Pilih jenis layanan untuk melihat data' : (generateCandidates.length === 0 ? 'Showing 0 to 0 of 0 entries' : 'Showing ' + (((generatePage - 1) * generatePerPage) + 1) + ' to ' + Math.min(generatePage * generatePerPage, generateCandidates.length) + ' of ' + generateCandidates.length + ' entries')"></span>
                             </div>
                             <div class="inline-flex rounded-lg shadow-2xs border border-slate-200 dark:border-slate-700 overflow-hidden text-xs">
                                 <button type="button" @click="candidateFirstPage()" :disabled="generatePage === 1" class="px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer font-medium">First</button>
@@ -2266,10 +2286,23 @@ function billingLayananPage() {
         generateLoading: false,
         async openGenerateModal() {
             this.generateModalOpen = true;
-            await this.fetchGenerateCandidates();
+            this.generatePage = 1;
+            this.generateSearch = '';
+            if (this.generateLayanan) {
+                await this.fetchGenerateCandidates();
+            } else {
+                this.generateCandidates = [];
+                this.generateLoading = false;
+            }
         },
         async fetchGenerateCandidates() {
+            if (!this.generateLayanan) {
+                this.generateCandidates = [];
+                this.generateLoading = false;
+                return;
+            }
             this.generateLoading = true;
+            this.generatePage = 1;
             try {
                 const params = new URLSearchParams({
                     bulan: this.generateBulan || '',

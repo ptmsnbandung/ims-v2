@@ -2857,6 +2857,14 @@ class FinanceController extends Controller
         $search = trim($request->query('search', ''));
         $layanan = trim($request->query('layanan', ''));
 
+        if (empty($layanan)) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'count' => 0,
+            ]);
+        }
+
         $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
         $namaBulanShort = Carbon::createFromDate((int)$tahun, (int)$bulanPad, 1)->format('M');
         $periodeStr = "{$namaBulanShort} {$tahun}";

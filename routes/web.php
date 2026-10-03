@@ -180,6 +180,7 @@ Route::middleware('auth')->group(function () {
         // 1. Billing Layanan (Recurring Monthly Invoicing)
         Route::get('/', [FinanceController::class, 'billingLayanan'])->name('index');
         Route::get('/billing-layanan', [FinanceController::class, 'billingLayanan'])->name('billing-layanan');
+        Route::get('/billing-layanan/generate-candidates', [FinanceController::class, 'getGenerateCandidatesJson'])->name('billing-layanan.generate-candidates');
         Route::post('/billing-layanan/generate', [FinanceController::class, 'generateInvoice'])->name('billing-layanan.generate');
         Route::post('/billing-layanan/publish', [FinanceController::class, 'publishBillingLayanan'])->name('billing-layanan.publish.post');
         Route::post('/billing-layanan/{kode_billing}/publish', [FinanceController::class, 'publishBillingLayanan'])->name('billing-layanan.publish')->where('kode_billing', '.*');

@@ -9,8 +9,58 @@
          showAdvancedFilters: false,
          // Modal Generate Invoice
          generateModalOpen: false,
+         generateJenis: 'single',
+         generateLayanan: '',
          generateBulan: '{{ $selectedBulan ?: date('m') }}',
          generateTahun: '{{ $selectedTahun ?: date('Y') }}',
+         generateKirimWa: true,
+         generateKirimEmail: true,
+         generatePpn: 'default',
+         generateAutoPublish: 'yes',
+         generateSearch: '',
+         generatePerPage: 10,
+         generatePage: 1,
+         generateCandidates: [],
+         generateLoading: false,
+         async openGenerateModal() {
+             this.generateModalOpen = true;
+             await this.fetchGenerateCandidates();
+         },
+         async fetchGenerateCandidates() {
+             this.generateLoading = true;
+             try {
+                 const params = new URLSearchParams({
+                     bulan: this.generateBulan || '',
+                     tahun: this.generateTahun || '',
+                     layanan: this.generateLayanan || '',
+                     search: this.generateSearch || '',
+                 });
+                 const res = await fetch('/finance/billing-layanan/generate-candidates?' + params.toString());
+                 const data = await res.json();
+                 if (data && data.success) {
+                     this.generateCandidates = data.data || [];
+                 } else {
+                     this.generateCandidates = [];
+                 }
+                 this.generatePage = 1;
+             } catch (e) {
+                 console.error('Error fetching generate candidates:', e);
+                 this.generateCandidates = [];
+             } finally {
+                 this.generateLoading = false;
+             }
+         },
+         get paginatedCandidates() {
+             const start = (this.generatePage - 1) * this.generatePerPage;
+             return this.generateCandidates.slice(start, start + this.generatePerPage);
+         },
+         get totalCandidatePages() {
+             return Math.ceil(this.generateCandidates.length / this.generatePerPage) || 1;
+         },
+         candidateFirstPage() { this.generatePage = 1; },
+         candidatePrevPage() { if (this.generatePage > 1) this.generatePage--; },
+         candidateNextPage() { if (this.generatePage < this.totalCandidatePages) this.generatePage++; },
+         candidateLastPage() { this.generatePage = this.totalCandidatePages; },
 
          // Modal Batch Print Invoices
          batchPrintModalOpen: false,
@@ -332,13 +382,13 @@
                 <span>Print Invoices</span>
             </button>
 
-            <button @click="generateModalOpen = true"
+            <button @click="openGenerateModal()"
                     type="button"
                     class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/25 border border-blue-400/20 transition duration-150 cursor-pointer">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                <span>Generate Invoice Massal</span>
+                <span>Generate Invoice</span>
             </button>
         </div>
     </div>
@@ -1068,68 +1118,270 @@
     <!-- MODALS SECTION                                                          -->
     <!-- ======================================================================= -->
 
-    <!-- 1. MODAL GENERATE INVOICE BULANAN -->
+    <!-- 1. MODAL GENERATE INVOICE (SESUAI GAMBAR) -->
     <div x-show="generateModalOpen"
          x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="generateModalOpen = false"
-             class="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl overflow-hidden my-auto max-h-[95vh] flex flex-col">
             
-            <form method="POST" action="{{ route('finance.billing-layanan.generate') }}">
-                @csrf
-                <div class="p-6 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
-                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
+            <!-- Modal Header -->
+            <div class="px-6 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-950/60">
+                <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">Form Generate Invoice</h3>
+                <button type="button" @click="generateModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold transition">&times;</button>
+            </div>
+
+            <!-- Modal Body Scrollable -->
+            <div class="p-6 space-y-6 overflow-y-auto flex-1">
+                <form method="POST" action="{{ route('finance.billing-layanan.generate') }}" id="generateInvoiceForm">
+                    @csrf
+
+                    <!-- Upper Box Container -->
+                    <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-sm space-y-5">
+                        <!-- Row 1: Jenis Generate & Jenis Layanan -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                    Jenis Generate Invoice ?<span class="text-red-500 font-bold ml-0.5">*</span>
+                                </label>
+                                <div class="flex items-center gap-6 text-xs text-slate-700 dark:text-slate-300">
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="jenis_generate" value="single" x-model="generateJenis" class="text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>Single User</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="jenis_generate" value="multi" x-model="generateJenis" class="text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>Multi User</span>
+                                    </label>
+                                </div>
                             </div>
                             <div>
-                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Generate Invoice Massal</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Terbitkan tagihan bulanan untuk seluruh pelanggan aktif &amp; suspend</p>
+                                <label class="block text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 mb-1 tracking-wider">
+                                    JENIS LAYANAN<span class="text-red-500 font-bold ml-0.5">*</span>
+                                </label>
+                                <select name="layanan" x-model="generateLayanan" @change="fetchGenerateCandidates()" class="w-full border-0 border-b border-slate-300 dark:border-slate-700 bg-transparent text-xs text-slate-800 dark:text-slate-200 py-1.5 px-0 focus:outline-none focus:border-blue-500 focus:ring-0">
+                                    <option value="">PILIH LAYANAN</option>
+                                    <option value="Broadband">Internet Broadband</option>
+                                    <option value="Dedicated">Internet Dedicated</option>
+                                    <option value="Semua Layanan">Semua Layanan</option>
+                                </select>
                             </div>
                         </div>
-                        <button type="button" @click="generateModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
-                    </div>
 
-                    <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-3.5 text-xs text-blue-800 dark:text-blue-300 space-y-1">
-                        <p class="font-semibold flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Otomatis Terjadwal: Setiap Tanggal 1, Jam 08:00 WIB
-                        </p>
-                        <p class="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
-                            Sistem secara berkala otomatis men-generate invoice massal setiap awal bulan untuk pelanggan <strong>Aktif</strong> dan <strong>Suspend (Isolir)</strong>. Anda juga dapat memicu penerbitan tagihan secara manual melalui form ini. Tagihan yang sudah ada sebelumnya tidak akan diduplikasi.
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Bulan Target</label>
-                            <select name="bulan" x-model="generateBulan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
-                                @foreach($bulanList as $k => $b)
-                                <option value="{{ $k }}">{{ $k }} - {{ $b }}</option>
-                                @endforeach
-                            </select>
+                        <!-- Row 2: Periode, Tahun, Kirim Invoice -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 mb-1 tracking-wider">
+                                    PERIODE TAGIHAN<span class="text-red-500 font-bold ml-0.5">*</span>
+                                </label>
+                                <select name="bulan" x-model="generateBulan" @change="fetchGenerateCandidates()" class="w-full border-0 border-b border-slate-300 dark:border-slate-700 bg-transparent text-xs text-slate-800 dark:text-slate-200 py-1.5 px-0 focus:outline-none focus:border-blue-500 focus:ring-0">
+                                    <option value="">PILIH PERIODE</option>
+                                    @foreach($bulanList as $k => $b)
+                                    <option value="{{ $k }}">{{ $k }} - {{ $b }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 mb-1 tracking-wider">
+                                    TAHUN TAGIHAN<span class="text-red-500 font-bold ml-0.5">*</span>
+                                </label>
+                                <select name="tahun" x-model="generateTahun" @change="fetchGenerateCandidates()" class="w-full border-0 border-b border-slate-300 dark:border-slate-700 bg-transparent text-xs text-slate-800 dark:text-slate-200 py-1.5 px-0 focus:outline-none focus:border-blue-500 focus:ring-0">
+                                    <option value="">PILIH PERIODE</option>
+                                    @for($y = 2024; $y <= 2030; $y++)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                    Kirim Invoice ?<span class="text-red-500 font-bold ml-0.5">*</span>
+                                </label>
+                                <div class="flex items-center gap-4 text-xs text-slate-700 dark:text-slate-300">
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" name="kirim_wa" x-model="generateKirimWa" value="1" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>WhastApp</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" name="kirim_email" x-model="generateKirimEmail" value="1" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>Email</span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Tahun Target</label>
-                            <input type="number" name="tahun" x-model="generateTahun" min="2020" max="2035" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+
+                        <!-- Row 3: PPN & Auto Publish -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                    PPN ?<span class="text-red-500 font-bold ml-0.5">*</span>
+                                </label>
+                                <div class="flex items-center gap-5 text-xs text-slate-700 dark:text-slate-300">
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="ppn" value="include" x-model="generatePpn" class="text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>Include</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="ppn" value="exclude" x-model="generatePpn" class="text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>Exclude</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="ppn" value="default" x-model="generatePpn" class="text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>Default</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                    Auto Publish ?<span class="text-red-500 font-bold ml-0.5">*</span>
+                                </label>
+                                <div class="flex items-center gap-5 text-xs text-slate-700 dark:text-slate-300">
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="auto_publish" value="yes" x-model="generateAutoPublish" class="text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>Yes</span>
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="auto_publish" value="no" x-model="generateAutoPublish" class="text-blue-600 focus:ring-blue-500 w-4 h-4 accent-blue-600">
+                                        <span>No</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Action Button Row -->
+                        <div class="flex justify-end items-center gap-3 pt-2">
+                            <template x-if="generateJenis === 'multi'">
+                                <button type="submit"
+                                        class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    <span>Generate All Invoice</span>
+                                </button>
+                            </template>
+                            <button type="button"
+                                    @click="generateModalOpen = false"
+                                    class="px-4 py-2 rounded bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-xs shadow-md shadow-amber-500/20 flex items-center gap-1.5 transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2"></rect>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 9 6 6m0-6-6 6"></path>
+                                </svg>
+                                <span>Close</span>
+                            </button>
                         </div>
                     </div>
-                </div>
 
-                <div class="bg-slate-50 dark:bg-slate-950/80 px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                    <button type="button" @click="generateModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-blue-500/25">
-                        Proses Generate Invoice
-                    </button>
-                </div>
-            </form>
+                    <!-- Interactive Data Table Area -->
+                    <div class="mt-6 space-y-3">
+                        <!-- Table Top Controls -->
+                        <div class="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3">
+                            <div class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                                <span>Show</span>
+                                <select x-model.number="generatePerPage" class="border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none">
+                                    <option :value="10">10</option>
+                                    <option :value="25">25</option>
+                                    <option :value="50">50</option>
+                                    <option :value="100">100</option>
+                                </select>
+                                <span>entries</span>
+                            </div>
+
+                            <div class="flex flex-col items-end gap-2 w-full sm:w-auto">
+                                <div class="inline-flex rounded shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden text-xs">
+                                    <button type="button" @click="candidateFirstPage()" :disabled="generatePage === 1" class="px-3 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">First</button>
+                                    <button type="button" @click="candidatePrevPage()" :disabled="generatePage === 1" class="px-3 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">Previous</button>
+                                    <button type="button" @click="candidateNextPage()" :disabled="generatePage === totalCandidatePages" class="px-3 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">Next</button>
+                                    <button type="button" @click="candidateLastPage()" :disabled="generatePage === totalCandidatePages" class="px-3 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">Last</button>
+                                </div>
+                                <div class="flex items-center text-xs text-slate-600 dark:text-slate-400">
+                                    <span class="mr-1 font-medium">Search:</span>
+                                    <input type="text"
+                                           x-model="generateSearch"
+                                           @input.debounce.300ms="fetchGenerateCandidates()"
+                                           placeholder=""
+                                           class="border-0 border-b border-slate-300 dark:border-slate-700 bg-transparent text-xs px-2 py-0.5 focus:outline-none focus:border-blue-500 w-44">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Candidate Table -->
+                        <div class="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead class="bg-blue-50/40 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800">
+                                    <tr>
+                                        <th class="p-3 font-semibold text-slate-700 dark:text-slate-200">
+                                            Customer <span class="text-slate-400 text-[10px] ml-1">⇅</span>
+                                        </th>
+                                        <th class="p-3 font-semibold text-slate-700 dark:text-slate-200 border-l border-slate-200 dark:border-slate-800">
+                                            Periode
+                                        </th>
+                                        <th class="p-3 font-semibold text-slate-700 dark:text-slate-200 border-l border-slate-200 dark:border-slate-800">
+                                            Pending
+                                        </th>
+                                        <th class="p-3 font-semibold text-slate-700 dark:text-slate-200 border-l border-slate-200 dark:border-slate-800 text-center">
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <template x-if="generateLoading">
+                                        <tr>
+                                            <td colspan="4" class="p-8 text-center text-slate-400">
+                                                <div class="inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                                Memuat data tagihan...
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="!generateLoading && generateCandidates.length === 0">
+                                        <tr>
+                                            <td colspan="4" class="p-8 text-center text-slate-400">
+                                                No data available in table
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="!generateLoading && generateCandidates.length > 0">
+                                        <template x-for="c in paginatedCandidates" :key="c.nomor_internet">
+                                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                                                <td class="p-3">
+                                                    <div class="font-medium text-slate-800 dark:text-slate-200" x-text="c.nama_pelanggan"></div>
+                                                    <div class="text-[11px] text-slate-400 font-mono" x-text="c.nomor_internet + ' (' + c.layanan + ')'"></div>
+                                                </td>
+                                                <td class="p-3 border-l border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300" x-text="c.periode"></td>
+                                                <td class="p-3 border-l border-slate-100 dark:border-slate-800 font-semibold text-slate-800 dark:text-slate-200" x-text="c.pending_formatted"></td>
+                                                <td class="p-3 border-l border-slate-100 dark:border-slate-800 text-center">
+                                                    <template x-if="c.is_generated">
+                                                        <span class="inline-flex items-center px-2.5 py-1 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                                            Generated
+                                                        </span>
+                                                    </template>
+                                                    <template x-if="!c.is_generated">
+                                                        <button type="submit"
+                                                                name="nomor_internet"
+                                                                :value="c.nomor_internet"
+                                                                class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-[11px] font-semibold shadow-xs transition cursor-pointer">
+                                                            Generate
+                                                        </button>
+                                                    </template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Table Bottom Controls -->
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400">
+                            <div>
+                                <span x-text="generateCandidates.length === 0 ? 'Showing 0 to 0 of 0 entries' : 'Showing ' + (((generatePage - 1) * generatePerPage) + 1) + ' to ' + Math.min(generatePage * generatePerPage, generateCandidates.length) + ' of ' + generateCandidates.length + ' entries'"></span>
+                            </div>
+                            <div class="inline-flex rounded shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden text-xs">
+                                <button type="button" @click="candidateFirstPage()" :disabled="generatePage === 1" class="px-3 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">First</button>
+                                <button type="button" @click="candidatePrevPage()" :disabled="generatePage === 1" class="px-3 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">Previous</button>
+                                <button type="button" @click="candidateNextPage()" :disabled="generatePage === totalCandidatePages" class="px-3 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">Next</button>
+                                <button type="button" @click="candidateLastPage()" :disabled="generatePage === totalCandidatePages" class="px-3 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-40 cursor-pointer">Last</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 

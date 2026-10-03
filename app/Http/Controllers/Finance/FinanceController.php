@@ -360,13 +360,79 @@ class FinanceController extends Controller
     public function generateInvoice(Request $request): RedirectResponse
     {
         $request->validate([
-            'bulan' => 'required|string|size:2',
-            'tahun' => 'required|numeric|min:2020|max:2035',
+            'bulan' => 'required',
+            'tahun' => 'required',
         ]);
 
         $bulan = str_pad($request->input('bulan'), 2, '0', STR_PAD_LEFT);
         $tahun = (string) $request->input('tahun');
         $userCreator = Auth::user()?->nama ?? 'FINANCE';
+        $jenisGenerate = $request->input('jenis_generate', 'single');
+        $nomorInternet = $request->input('nomor_internet');
+        $autoPublish = $request->input('auto_publish', 'yes');
+        $ppnSetting = $request->input('ppn', 'default');
+        $kirimWa = $request->has('kirim_wa') || $request->input('kirim_wa') == '1' || $request->input('kirim_wa') === 'true';
+        $kirimEmail = $request->has('kirim_email') || $request->input('kirim_email') == '1' || $request->input('kirim_email') === 'true';
+
+        if ($jenisGenerate === 'single' && $nomorInternet) {
+            $p = DB::table('view_batchjob')
+                ->where('nomor_internet', $nomorInternet)
+                ->first();
+
+            if (!$p) {
+                return redirect()->back()->with('error', "Pelanggan dengan nomor internet {$nomorInternet} tidak ditemukan.");
+            }
+
+            $kodeBilling = "INV/{$p->nomor_internet}/{$bulan}/{$tahun}";
+            $namaBulanShort = Carbon::createFromDate((int)$tahun, (int)$bulan, 1)->format('M');
+            $periodeTagihan = "{$namaBulanShort} {$tahun}";
+
+            $exists = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $kodeBilling)->exists();
+            if ($exists) {
+                return redirect()->back()->with('info', "Invoice {$kodeBilling} sudah pernah diterbitkan sebelumnya.");
+            }
+
+            $hargaBandwith = (float) ($p->harga_bandwith ?? $p->nominal_bandwith ?? 0);
+            $potongan = (float) ($p->potongan ?? 0);
+            $totalLayanan = max(0, $hargaBandwith - $potongan);
+            $statusBill = ($autoPublish === 'yes') ? '13' : '12';
+            $now = Carbon::now()->toDateTimeString();
+
+            DB::table('trx_billing_layanan')->insert([
+                'kode_billing_layanan' => $kodeBilling,
+                'nomor_internet' => $p->nomor_internet,
+                'kode_bandwith' => $p->kode_bandwith ?? null,
+                'nominal_bandwith' => $p->nominal_bandwith ?? '0',
+                'bulan_tagihan' => $bulan,
+                'tahun_tagihan' => $tahun,
+                'periode_tagihan' => $periodeTagihan,
+                'potongan' => (string) $potongan,
+                'desc_potongan' => $p->potongan_note ?? '-',
+                'ppn' => ($ppnSetting === 'exclude' ? '0' : ($p->ppn_nom ?? '0.11')),
+                'tax' => ($ppnSetting === 'exclude' ? '0' : ($p->ppn ?? '2')),
+                'voucher' => '-',
+                'total_layanan' => (string) $totalLayanan,
+                'notif_mail' => $kirimEmail ? '1' : '0',
+                'notif_wa' => $kirimWa ? '1' : '0',
+                'status_bill_lay' => $statusBill,
+                'denda' => null,
+                'invoice_file' => null,
+                'payment_type' => '1',
+                'payment_post' => '-',
+                'payment_publish' => ($autoPublish === 'yes') ? $now : null,
+                'date_create' => $now,
+                'user_create' => $userCreator,
+                'date_update' => $now,
+                'user_update' => $userCreator,
+                'hide' => '0',
+                'islock' => null,
+            ]);
+
+            return redirect()->route('finance.billing-layanan', [
+                'bulan' => $bulan,
+                'tahun' => $tahun,
+            ])->with('success', "Invoice {$kodeBilling} berhasil dibuat.");
+        }
 
         $result = BillingService::generateMonthlyInvoices($bulan, $tahun, $userCreator);
 
@@ -2723,6 +2789,79 @@ class FinanceController extends Controller
             'success' => true,
             'total' => $invoices->count(),
             'data' => $invoices
+        ]);
+    }
+
+    /**
+     * API JSON Kandidat Pelanggan untuk Form Generate Invoice
+     */
+    public function getGenerateCandidatesJson(Request $request): JsonResponse
+    {
+        $bulan = $request->query('bulan', date('m'));
+        $tahun = $request->query('tahun', date('Y'));
+        $search = trim($request->query('search', ''));
+        $layanan = trim($request->query('layanan', ''));
+
+        $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
+        $namaBulanShort = Carbon::createFromDate((int)$tahun, (int)$bulanPad, 1)->format('M');
+        $periodeStr = "{$namaBulanShort} {$tahun}";
+
+        $query = DB::table('view_batchjob')
+            ->whereIn('status_reg', ['20', '21', '21.1', '22'])
+            ->where('hide', '0')
+            ->whereNotNull('nomor_internet')
+            ->where('nomor_internet', '!=', '');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', "%{$search}%")
+                  ->orWhere('nomor_internet', 'like', "%{$search}%");
+            });
+        }
+
+        if ($layanan && $layanan !== 'Semua Layanan') {
+            $query->where('nama_kategori_bandwith', 'like', "%{$layanan}%");
+        }
+
+        $pelanggans = $query->select(
+            'nomor_internet',
+            'nama_pelanggan',
+            'nama_kategori_bandwith',
+            'nominal_bandwith',
+            'harga_bandwith',
+            'potongan',
+            'status_reg'
+        )->orderBy('nama_pelanggan', 'asc')->get()->unique('nomor_internet');
+
+        // Check which ones already have invoices generated
+        $existingInvoices = DB::table('trx_billing_layanan')
+            ->where('bulan_tagihan', $bulanPad)
+            ->where('tahun_tagihan', (string)$tahun)
+            ->whereIn('nomor_internet', $pelanggans->pluck('nomor_internet'))
+            ->pluck('status_bill_lay', 'nomor_internet');
+
+        $data = $pelanggans->map(function($p) use ($existingInvoices, $periodeStr) {
+            $hasInv = $existingInvoices->has($p->nomor_internet);
+            $harga = (float)($p->harga_bandwith ?? $p->nominal_bandwith ?? 0);
+            $pot = (float)($p->potongan ?? 0);
+            $pendingNominal = max(0, $harga - $pot);
+
+            return [
+                'nomor_internet' => $p->nomor_internet,
+                'nama_pelanggan' => $p->nama_pelanggan,
+                'layanan' => $p->nama_kategori_bandwith ?? '-',
+                'periode' => $periodeStr,
+                'pending_nominal' => $pendingNominal,
+                'pending_formatted' => 'Rp ' . number_format($pendingNominal, 0, ',', '.'),
+                'is_generated' => $hasInv,
+                'status_bill_lay' => $existingInvoices[$p->nomor_internet] ?? null,
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'total' => $data->count(),
+            'data' => $data
         ]);
     }
 

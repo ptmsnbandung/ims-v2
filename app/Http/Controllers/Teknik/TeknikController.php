@@ -2991,10 +2991,11 @@ class TeknikController extends Controller
 
         // 2. Jika belum ada di view_batchjob (misal registrasi baru), query langsung tabel terkait
         if (!$customer) {
+            $katTable = Schema::hasTable('m_bandwith_kategori') ? 'm_bandwith_kategori' : 'm_kategori_bandwith';
             $customer = DB::table('trx_batchjob_register')
                 ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
                 ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
-                ->leftJoin('m_kategori_bandwith', 'm_bandwith.kode_kategori_bandwith', '=', 'm_kategori_bandwith.kode_kategori_bandwith')
+                ->leftJoin($katTable, 'm_bandwith.kode_kategori_bandwith', '=', "{$katTable}.kode_kategori_bandwith")
                 ->leftJoin('m_pop', 'trx_batchjob_register.kode_pop', '=', 'm_pop.kode_pop')
                 ->where('trx_batchjob_register.nomor_internet', $nomorInternet)
                 ->select(
@@ -3011,9 +3012,9 @@ class TeknikController extends Controller
                     'm_pelanggan.rw_ktp',
                     'm_bandwith.nominal_bandwith',
                     'm_bandwith.harga_bandwith',
-                    'm_kategori_bandwith.nama_kategori_bandwith',
-                    'm_kategori_bandwith.alias_nama_kategori',
-                    'm_kategori_bandwith.biaya_reg',
+                    "{$katTable}.nama_kategori_bandwith",
+                    "{$katTable}.alias_nama_kategori",
+                    "{$katTable}.biaya_reg",
                     'm_pop.nama_pop'
                 )
                 ->first();
@@ -3059,10 +3060,11 @@ class TeknikController extends Controller
 
         // 2. Jika belum ada di view_batchjob (misal registrasi baru), query langsung tabel terkait
         if (!$customer) {
+            $katTable = Schema::hasTable('m_bandwith_kategori') ? 'm_bandwith_kategori' : 'm_kategori_bandwith';
             $customer = DB::table('trx_batchjob_register')
                 ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
                 ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
-                ->leftJoin('m_kategori_bandwith', 'm_bandwith.kode_kategori_bandwith', '=', 'm_kategori_bandwith.kode_kategori_bandwith')
+                ->leftJoin($katTable, 'm_bandwith.kode_kategori_bandwith', '=', "{$katTable}.kode_kategori_bandwith")
                 ->leftJoin('m_pop', 'trx_batchjob_register.kode_pop', '=', 'm_pop.kode_pop')
                 ->where('trx_batchjob_register.nomor_internet', $nomorInternet)
                 ->select(
@@ -3079,9 +3081,9 @@ class TeknikController extends Controller
                     'm_pelanggan.rw_ktp',
                     'm_bandwith.nominal_bandwith',
                     'm_bandwith.harga_bandwith',
-                    'm_kategori_bandwith.nama_kategori_bandwith',
-                    'm_kategori_bandwith.alias_nama_kategori',
-                    'm_kategori_bandwith.biaya_reg',
+                    "{$katTable}.nama_kategori_bandwith",
+                    "{$katTable}.alias_nama_kategori",
+                    "{$katTable}.biaya_reg",
                     'm_pop.nama_pop'
                 )
                 ->first();
@@ -3125,10 +3127,11 @@ class TeknikController extends Controller
 
         // 2. Jika belum ada di view_batchjob (misal registrasi baru), query langsung tabel terkait
         if (!$customer) {
+            $katTable = Schema::hasTable('m_bandwith_kategori') ? 'm_bandwith_kategori' : 'm_kategori_bandwith';
             $customer = DB::table('trx_batchjob_register')
                 ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
                 ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
-                ->leftJoin('m_kategori_bandwith', 'm_bandwith.kode_kategori_bandwith', '=', 'm_kategori_bandwith.kode_kategori_bandwith')
+                ->leftJoin($katTable, 'm_bandwith.kode_kategori_bandwith', '=', "{$katTable}.kode_kategori_bandwith")
                 ->leftJoin('m_pop', 'trx_batchjob_register.kode_pop', '=', 'm_pop.kode_pop')
                 ->where('trx_batchjob_register.nomor_internet', $nomorInternet)
                 ->select(
@@ -3145,9 +3148,9 @@ class TeknikController extends Controller
                     'm_pelanggan.rw_ktp',
                     'm_bandwith.nominal_bandwith',
                     'm_bandwith.harga_bandwith',
-                    'm_kategori_bandwith.nama_kategori_bandwith',
-                    'm_kategori_bandwith.alias_nama_kategori',
-                    'm_kategori_bandwith.biaya_reg',
+                    "{$katTable}.nama_kategori_bandwith",
+                    "{$katTable}.alias_nama_kategori",
+                    "{$katTable}.biaya_reg",
                     'm_pop.nama_pop'
                 )
                 ->first();

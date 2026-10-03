@@ -2542,11 +2542,18 @@ class FinanceController extends Controller
                 ->first();
         }
         if (!$customer && Schema::hasTable('trx_batchjob_register')) {
-            $customer = DB::table('trx_batchjob_register')
-                ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
-                ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
-                ->leftJoin('m_kategori_bandwith', 'm_bandwith.kode_kategori_bandwith', '=', 'm_kategori_bandwith.kode_kategori_bandwith')
-                ->where('trx_batchjob_register.nomor_internet', $invoice->nomor_internet)
+            $katTable = Schema::hasTable('m_bandwith_kategori') ? 'm_bandwith_kategori' : 'm_kategori_bandwith';
+            $custQuery = DB::table('trx_batchjob_register');
+            if (Schema::hasTable('m_pelanggan')) {
+                $custQuery->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk');
+            }
+            if (Schema::hasTable('m_bandwith')) {
+                $custQuery->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith');
+                if (Schema::hasTable($katTable)) {
+                    $custQuery->leftJoin($katTable, 'm_bandwith.kode_kategori_bandwith', '=', "{$katTable}.kode_kategori_bandwith");
+                }
+            }
+            $customer = $custQuery->where('trx_batchjob_register.nomor_internet', $invoice->nomor_internet)
                 ->select(
                     'trx_batchjob_register.*',
                     'm_pelanggan.nama_penduduk',
@@ -2555,7 +2562,7 @@ class FinanceController extends Controller
                     'm_pelanggan.rw_ktp',
                     'm_bandwith.nominal_bandwith',
                     'm_bandwith.harga_bandwith',
-                    'm_kategori_bandwith.nama_kategori_bandwith'
+                    "{$katTable}.nama_kategori_bandwith"
                 )
                 ->first();
         }

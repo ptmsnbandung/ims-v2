@@ -2737,8 +2737,6 @@ class FinanceController extends Controller
      */
     public function searchBatchInvoiceJson(Request $request): JsonResponse
     {
-    public function searchBatchInvoiceJson(Request $request): JsonResponse
-    {
         try {
             $bulan = $request->query('bulan', '');
             $tahun = $request->query('tahun', '');

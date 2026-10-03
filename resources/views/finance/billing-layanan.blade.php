@@ -1841,7 +1841,7 @@
     <div x-show="batchPrintModalOpen"
          x-cloak
          @keydown.escape.window="batchPrintModalOpen = false"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm overflow-hidden"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 scale-95"
          x-transition:enter-end="opacity-100 scale-100"
@@ -1849,9 +1849,10 @@
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95">
 
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[92vh] overflow-hidden">
+        <div @click.away="batchPrintModalOpen = false"
+             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full h-[88vh] max-h-[88vh] flex flex-col overflow-hidden my-auto">
             <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+            <div class="shrink-0 px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
                 <div class="flex items-center gap-3">
                     <span class="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -1869,7 +1870,7 @@
             </div>
 
             <!-- Filter Controls Bar -->
-            <div class="p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 space-y-3">
+            <div class="shrink-0 p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <!-- Bulan -->
                     <div>
@@ -1932,7 +1933,7 @@
             </div>
 
             <!-- Invoices List Table -->
-            <div class="flex-1 overflow-y-auto min-h-[300px] p-0 relative">
+            <div class="flex-1 min-h-0 overflow-y-auto p-0 relative">
                 <!-- Loading Overlay -->
                 <div x-show="batchLoading" class="absolute inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-20">
                     <div class="flex flex-col items-center gap-2">
@@ -2003,7 +2004,7 @@
             </div>
 
             <!-- Modal Footer with Selection Counters & Print Actions -->
-            <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="shrink-0 px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
                     <span class="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/20">
                         <span x-text="selectedBatchKodes.length"></span> dari <span x-text="batchInvoices.length"></span> dipilih
@@ -2113,8 +2114,8 @@ function billingLayananPage() {
 
         // Modal Batch Print Invoices
         batchPrintModalOpen: false,
-        batchBulan: '{{ request('bulan', $selectedBulan ?? '') }}',
-        batchTahun: '{{ request('tahun', $selectedTahun ?? '') }}',
+        batchBulan: '{{ request('bulan') ?: ($selectedBulan ?: date('m')) }}',
+        batchTahun: '{{ request('tahun') ?: ($selectedTahun ?: date('Y')) }}',
         batchSearch: '',
         batchStatus: '{{ request('status_bayar', '') }}',
         batchInvoices: [],
@@ -2124,8 +2125,11 @@ function billingLayananPage() {
         batchSelectAll: false,
         async openBatchPrintModal() {
             this.batchPrintModalOpen = true;
-            if (this.pageInvoices && this.pageInvoices.length > 0) {
-                this.batchInvoices = [...this.pageInvoices];
+            if (!this.batchBulan) {
+                this.batchBulan = '{{ $selectedBulan ?: date('m') }}';
+            }
+            if (!this.batchTahun) {
+                this.batchTahun = '{{ $selectedTahun ?: date('Y') }}';
             }
             await this.fetchBatchInvoices();
         },

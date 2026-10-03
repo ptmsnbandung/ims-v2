@@ -159,12 +159,18 @@ class FinanceController extends Controller
 
         // Ambil Data Konfirmasi Pembayaran & merchant_type / payment_type langsung dari database
         $kodeBillings = collect($invoices->items())->pluck('kode_billing_layanan')->filter()->toArray();
-        $nomorInternets = collect($invoices->items())->pluck('nomor_internet')->filter()->toArray();
+        $expandedKodeBillings = [];
+        foreach ($kodeBillings as $kb) {
+            $expandedKodeBillings[] = $kb;
+            $expandedKodeBillings[] = str_replace('/', '-', $kb);
+            $expandedKodeBillings[] = str_replace('-', '/', $kb);
+        }
+        $expandedKodeBillings = array_unique(array_filter($expandedKodeBillings));
+
         $trxBillings = collect();
         $confirmationsByKode = collect();
-        $confirmationsByCustomer = collect();
 
-        if (!empty($kodeBillings) || !empty($nomorInternets)) {
+        if (!empty($kodeBillings)) {
             try {
                 if (Schema::hasTable('trx_billing_layanan')) {
                     $trxSelect = ['kode_billing_layanan', 'merchant_type', 'payment_type'];
@@ -185,16 +191,9 @@ class FinanceController extends Controller
 
             // 1. Coba ambil dari tabel payment_confirmations di database aktif (ims_v3)
             try {
-                if (Schema::hasTable('payment_confirmations')) {
+                if (Schema::hasTable('payment_confirmations') && !empty($expandedKodeBillings)) {
                     $localRecords = DB::table('payment_confirmations')
-                        ->where(function ($q) use ($kodeBillings, $nomorInternets) {
-                            if (!empty($kodeBillings)) {
-                                $q->whereIn('kode_billing_layanan', $kodeBillings);
-                            }
-                            if (!empty($nomorInternets)) {
-                                $q->orWhereIn('customer_id', $nomorInternets);
-                            }
-                        })
+                        ->whereIn('kode_billing_layanan', $expandedKodeBillings)
                         ->orderBy('id', 'desc')
                         ->get();
 
@@ -208,26 +207,39 @@ class FinanceController extends Controller
 
             // 2. Fallback cross-database ke database ptmsn.payment_confirmations (seperti di bayar_transfer.php)
             try {
-                $escapedKodes = !empty($kodeBillings) ? "'" . implode("','", array_map('addslashes', $kodeBillings)) . "'" : "''";
-                $escapedCusts = !empty($nomorInternets) ? "'" . implode("','", array_map('addslashes', $nomorInternets)) . "'" : "''";
+                if (!empty($expandedKodeBillings)) {
+                    $escapedKodes = "'" . implode("','", array_map('addslashes', $expandedKodeBillings)) . "'";
+                    $ptmsnRecords = DB::select("
+                        SELECT * FROM ptmsn.payment_confirmations 
+                        WHERE kode_billing_layanan IN ({$escapedKodes}) 
+                        ORDER BY id DESC
+                    ");
 
-                $ptmsnRecords = DB::select("
-                    SELECT * FROM ptmsn.payment_confirmations 
-                    WHERE kode_billing_layanan IN ({$escapedKodes}) 
-                       OR customer_id IN ({$escapedCusts})
-                    ORDER BY id DESC
-                ");
-
-                if (!empty($ptmsnRecords)) {
-                    $records = $records->merge(collect($ptmsnRecords));
+                    if (!empty($ptmsnRecords)) {
+                        $records = $records->merge(collect($ptmsnRecords));
+                    }
                 }
             } catch (\Throwable $e) {
                 // Ignore jika ptmsn bukan database lokal
             }
 
             if ($records->isNotEmpty()) {
-                $confirmationsByKode = $records->keyBy('kode_billing_layanan');
-                $confirmationsByCustomer = $records->keyBy('customer_id');
+                foreach ($records as $rec) {
+                    if (!empty($rec->kode_billing_layanan)) {
+                        $k = $rec->kode_billing_layanan;
+                        if (!$confirmationsByKode->has($k)) {
+                            $confirmationsByKode->put($k, $rec);
+                        }
+                        $kDash = str_replace('/', '-', $k);
+                        if (!$confirmationsByKode->has($kDash)) {
+                            $confirmationsByKode->put($kDash, $rec);
+                        }
+                        $kSlash = str_replace('-', '/', $k);
+                        if (!$confirmationsByKode->has($kSlash)) {
+                            $confirmationsByKode->put($kSlash, $rec);
+                        }
+                    }
+                }
             }
         }
 
@@ -252,7 +264,6 @@ class FinanceController extends Controller
             $confirmation = $confirmationsByKode->get($kode)
                 ?? $confirmationsByKode->get($altKode1)
                 ?? $confirmationsByKode->get($altKode2)
-                ?? $confirmationsByCustomer->get($inv->nomor_internet)
                 ?? null;
 
             $inv->payment_confirmation = $confirmation;
@@ -982,9 +993,25 @@ class FinanceController extends Controller
                 ->where('kode_billing_layanan', $decodedKode)
                 ->orWhere('kode_billing_layanan', str_replace('/', '-', $decodedKode))
                 ->orWhere('kode_billing_layanan', str_replace('-', '/', $decodedKode))
-                ->orWhere('customer_id', $invoice->nomor_internet ?? '')
                 ->orderBy('id', 'desc')
                 ->first();
+        }
+
+        if (!$confirmation) {
+            try {
+                $escapedKode = addslashes($decodedKode);
+                $escapedAlt1 = addslashes(str_replace('/', '-', $decodedKode));
+                $escapedAlt2 = addslashes(str_replace('-', '/', $decodedKode));
+                $ptmsnConf = DB::selectOne("
+                    SELECT * FROM ptmsn.payment_confirmations 
+                    WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                    ORDER BY id DESC
+                    LIMIT 1
+                ");
+                if ($ptmsnConf) {
+                    $confirmation = $ptmsnConf;
+                }
+            } catch (\Throwable $e) {}
         }
 
         return response()->json([

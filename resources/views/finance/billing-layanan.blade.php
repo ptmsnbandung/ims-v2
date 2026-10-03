@@ -1184,12 +1184,12 @@
          x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="payModalOpen = false"
-             class="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+             class="relative w-full max-w-lg md:max-w-2xl lg:max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto transition-all duration-200">
             
             <form action="{{ route('finance.billing-layanan.konfirmasi-bayar.post') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="kode_billing" :value="payKodeBilling">
-                <div class="p-6 space-y-4">
+                <div class="p-6 md:p-7 space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 rounded-xl" :class="payMetode === 'cash' ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'">
@@ -1212,15 +1212,24 @@
                         <button type="button" @click="payModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
                     </div>
 
-                    <!-- Info Ringkasan Invoice -->
-                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500 dark:text-slate-400">No. Invoice:</span>
-                            <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="payKodeBilling"></span>
+                    <!-- Info Ringkasan & Nominal Diterima (2-Column Grid on Desktop) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <!-- Info Ringkasan Invoice -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-2 flex flex-col justify-center">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">No. Invoice:</span>
+                                <span class="font-bold text-slate-900 dark:text-white font-mono text-sm" x-text="payKodeBilling"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Nama Pelanggan:</span>
+                                <span class="font-semibold text-blue-600 dark:text-blue-400 text-sm" x-text="payNamaPelanggan"></span>
+                            </div>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500 dark:text-slate-400">Nama Pelanggan:</span>
-                            <span class="font-semibold text-blue-600 dark:text-blue-400" x-text="payNamaPelanggan"></span>
+
+                        <!-- Nominal Diterima -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nominal Diterima (Rp)</label>
+                            <input type="number" name="nominal_bayar" x-model="payNominal" required min="1" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 font-bold text-lg rounded-xl px-3.5 py-2.5 focus:border-emerald-500">
                         </div>
                     </div>
 
@@ -1252,15 +1261,9 @@
                         </div>
                     </div>
 
-                    <!-- Nominal Diterima -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nominal Diterima (Rp)</label>
-                        <input type="number" name="nominal_bayar" x-model="payNominal" required min="1" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 font-bold text-base rounded-xl px-3.5 py-2.5 focus:border-emerald-500">
-                    </div>
-
                     <!-- Dynamic Fields: Jika CASH TO COLLECT -->
                     <div x-show="payMetode === 'cash'" class="space-y-3 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15">
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tipe Kasir / Kolektor</label>
                                 <select name="bank_tujuan" x-model="payBank" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
@@ -1275,16 +1278,16 @@
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nama Petugas Kolektor <span class="text-slate-500 font-normal">(Opsional)</span></label>
                                 <input type="text" name="nama_kolektor" x-model="payNamaKolektor" placeholder="Nama Petugas..." class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                             </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">No. Kwitansi / Tanda Terima <span class="text-slate-500 font-normal">(Opsional)</span></label>
-                            <input type="text" name="no_kwitansi" x-model="payNoKwitansi" placeholder="Contoh: KWT-00123" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">No. Kwitansi / Tanda Terima <span class="text-slate-500 font-normal">(Opsional)</span></label>
+                                <input type="text" name="no_kwitansi" x-model="payNoKwitansi" placeholder="Contoh: KWT-00123" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                            </div>
                         </div>
                     </div>
 
                     <!-- Dynamic Fields: Jika MANUAL TRANSFER -->
                     <div x-show="payMetode === 'transfer'" class="space-y-3 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/15">
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
                                     <span>Rekening Bank Tujuan</span>
@@ -1311,40 +1314,43 @@
                         </div>
                     </div>
 
-                    <!-- Catatan Verifikasi -->
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Verifikasi</label>
-                        <input type="text" name="catatan" x-model="payCatatan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-emerald-500">
-                    </div>
+                    <!-- Catatan Verifikasi & Foto Bukti Transfer (2-Column Grid on Desktop) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <!-- Catatan Verifikasi -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Verifikasi</label>
+                            <input type="text" name="catatan" x-model="payCatatan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:border-emerald-500">
+                        </div>
 
-                    <!-- Foto Bukti Transfer / Kwitansi (Opsional) -->
-                    <div class="space-y-1.5" x-data="{ fotoBuktiPreview: null }">
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Upload / Ambil Foto Bukti Transfer <span class="text-slate-400 font-normal">(Opsional)</span>
-                        </label>
-                        <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-3 text-center hover:border-emerald-500 transition cursor-pointer bg-slate-50 dark:bg-slate-950/40">
-                            <input type="file"
-                                   name="foto_bukti"
-                                   accept="image/*"
-                                   capture="environment"
-                                   @change="const file = $event.target.files[0]; if(file) { fotoBuktiPreview = URL.createObjectURL(file); }"
-                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                            
-                            <template x-if="!fotoBuktiPreview">
-                                <div class="flex flex-col items-center justify-center py-2 pointer-events-none">
-                                    <svg class="w-6 h-6 text-slate-400 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-                                    </svg>
-                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Klik untuk ambil foto kamera atau pilih file bukti transfer</p>
-                                </div>
-                            </template>
+                        <!-- Foto Bukti Transfer / Kwitansi (Opsional) -->
+                        <div class="space-y-1.5" x-data="{ fotoBuktiPreview: null }">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                Upload / Ambil Foto Bukti Transfer <span class="text-slate-400 font-normal">(Opsional)</span>
+                            </label>
+                            <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-center hover:border-emerald-500 transition cursor-pointer bg-slate-50 dark:bg-slate-950/40 min-h-[42px] flex items-center justify-center">
+                                <input type="file"
+                                       name="foto_bukti"
+                                       accept="image/*"
+                                       capture="environment"
+                                       @change="const file = $event.target.files[0]; if(file) { fotoBuktiPreview = URL.createObjectURL(file); }"
+                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                
+                                <template x-if="!fotoBuktiPreview">
+                                    <div class="flex items-center justify-center gap-1.5 pointer-events-none text-slate-500 dark:text-slate-400">
+                                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                                        </svg>
+                                        <span class="text-[11px] font-medium">Klik ambil / pilih foto</span>
+                                    </div>
+                                </template>
 
-                            <template x-if="fotoBuktiPreview">
-                                <div class="relative rounded-lg overflow-hidden max-h-28 flex items-center justify-center">
-                                    <img :src="fotoBuktiPreview" class="object-contain max-h-24 rounded shadow-sm">
-                                </div>
-                            </template>
+                                <template x-if="fotoBuktiPreview">
+                                    <div class="relative rounded-lg overflow-hidden max-h-16 flex items-center justify-center">
+                                        <img :src="fotoBuktiPreview" class="object-contain max-h-16 rounded shadow-sm">
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>

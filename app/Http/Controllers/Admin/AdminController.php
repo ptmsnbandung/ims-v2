@@ -387,9 +387,11 @@ class AdminController extends Controller
             )
             ->where('b.hide', '0');
 
+        $hasNamaBandwith = Schema::hasColumn('m_bandwith', 'nama_bandwith');
+        $hasPeruntukan = Schema::hasColumn('m_bandwith', 'peruntukan_bangunan');
+        $hasKategoriBangunan = Schema::hasColumn('m_bandwith', 'kategori_bangunan');
+
         if ($search) {
-            $hasNamaBandwith = Schema::hasColumn('m_bandwith', 'nama_bandwith');
-            $hasPeruntukan = Schema::hasColumn('m_bandwith', 'peruntukan_bangunan');
             $query->where(function ($q) use ($search, $hasNamaBandwith, $hasPeruntukan) {
                 $q->where('b.kode_bandwith', 'like', "%{$search}%");
                 if ($hasNamaBandwith) {
@@ -403,10 +405,14 @@ class AdminController extends Controller
             });
         }
 
-        if ($selectedBangunan !== 'all' && !empty($selectedBangunan)) {
-            $query->where(function ($q) use ($selectedBangunan) {
-                $q->where('b.peruntukan_bangunan', 'like', "%{$selectedBangunan}%")
-                  ->orWhere('b.kategori_bangunan', 'like', "%{$selectedBangunan}%");
+        if ($selectedBangunan !== 'all' && !empty($selectedBangunan) && ($hasPeruntukan || $hasKategoriBangunan)) {
+            $query->where(function ($q) use ($selectedBangunan, $hasPeruntukan, $hasKategoriBangunan) {
+                if ($hasPeruntukan) {
+                    $q->where('b.peruntukan_bangunan', 'like', "%{$selectedBangunan}%");
+                }
+                if ($hasKategoriBangunan) {
+                    $q->orWhere('b.kategori_bangunan', 'like', "%{$selectedBangunan}%");
+                }
             });
         }
 
@@ -465,13 +471,21 @@ class AdminController extends Controller
 
         $buildingCounts = [];
         foreach ($buildingTypes as $key => $label) {
-            $buildingCounts[$key] = DB::table('m_bandwith')
-                ->where('hide', '0')
-                ->where(function ($q) use ($key) {
-                    $q->where('peruntukan_bangunan', 'like', "%{$key}%")
-                      ->orWhere('kategori_bangunan', 'like', "%{$key}%");
-                })
-                ->count();
+            if ($hasPeruntukan || $hasKategoriBangunan) {
+                $buildingCounts[$key] = DB::table('m_bandwith')
+                    ->where('hide', '0')
+                    ->where(function ($q) use ($key, $hasPeruntukan, $hasKategoriBangunan) {
+                        if ($hasPeruntukan) {
+                            $q->where('peruntukan_bangunan', 'like', "%{$key}%");
+                        }
+                        if ($hasKategoriBangunan) {
+                            $q->orWhere('kategori_bangunan', 'like', "%{$key}%");
+                        }
+                    })
+                    ->count();
+            } else {
+                $buildingCounts[$key] = 0;
+            }
         }
 
         return view('admin.paket', [
@@ -708,6 +722,18 @@ class AdminController extends Controller
                     $table->dateTime('date_update')->nullable();
                     $table->string('user_update', 100)->nullable();
                     $table->timestamps();
+                });
+            } else {
+                Schema::table('m_bandwith', function (Blueprint $table) {
+                    if (!Schema::hasColumn('m_bandwith', 'nama_bandwith')) {
+                        $table->string('nama_bandwith', 150)->nullable()->after('kode_bandwith');
+                    }
+                    if (!Schema::hasColumn('m_bandwith', 'peruntukan_bangunan')) {
+                        $table->string('peruntukan_bangunan', 255)->nullable()->after('harga_bandwith');
+                    }
+                    if (!Schema::hasColumn('m_bandwith', 'kategori_bangunan')) {
+                        $table->string('kategori_bangunan', 100)->nullable()->after('peruntukan_bangunan');
+                    }
                 });
             }
         } catch (\Throwable $e) {

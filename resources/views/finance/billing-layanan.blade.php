@@ -51,19 +51,27 @@
                 <button @click="actionDropdownOpen = !actionDropdownOpen"
                         type="button"
                         class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700/80 text-xs font-semibold flex items-center gap-2 shadow-sm transition cursor-pointer relative"
-                        :class="{ 'ring-2 ring-blue-500/30 border-blue-400': actionDropdownOpen }">
-                    <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        :class="{ 'ring-2 ring-blue-500/30 border-blue-400': actionDropdownOpen, 'border-violet-400/60 bg-violet-50/60 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300': requestCount > 0 }">
+                    <svg class="w-4 h-4" :class="requestCount > 0 ? 'text-violet-600 dark:text-violet-400' : 'text-slate-500 dark:text-slate-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                     </svg>
                     <span>Menu Aksi</span>
+
+                    <!-- Badge Pill Counter (If Pending Requests Exist) -->
+                    <span x-show="requestCount > 0"
+                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-600 text-white font-extrabold text-[10px] shadow-xs animate-pulse">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                        <span x-text="requestCount"></span>
+                    </span>
+
                     <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': actionDropdownOpen }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                     </svg>
 
-                    <!-- Pulse indicator dot if requestCount > 0 -->
-                    <span x-show="requestCount > 0" class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-violet-600 text-[9px] font-bold text-white items-center justify-center" x-text="requestCount"></span>
+                    <!-- Top-Right Floating Notification Ping -->
+                    <span x-show="requestCount > 0" class="absolute -top-1 -right-1 flex h-4 w-4">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-4 w-4 bg-rose-600 text-[9px] font-extrabold text-white items-center justify-center shadow-xs" x-text="requestCount"></span>
                     </span>
                 </button>
 

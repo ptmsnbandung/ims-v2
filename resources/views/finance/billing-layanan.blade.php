@@ -1165,29 +1165,31 @@
             <form action="{{ route('finance.billing-layanan.konfirmasi-bayar.post') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="kode_billing" :value="payKodeBilling">
-                <div class="p-6 md:p-7 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="p-2.5 rounded-xl" :class="payMetode === 'cash' ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'">
-                                <template x-if="payMetode === 'cash'">
-                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                                    </svg>
-                                </template>
-                                <template x-if="payMetode !== 'cash'">
-                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                    </svg>
-                                </template>
-                            </div>
-                            <div>
-                                <h3 class="text-base font-bold text-slate-900 dark:text-white" x-text="payMetode === 'cash' ? 'Konfirmasi Bayar: Cash To Collector' : 'Konfirmasi Bayar: Manual Transfer'"></h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Verifikasi pelunasan tagihan invoice pelanggan</p>
-                            </div>
-                        </div>
-                        <button type="button" @click="payModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
-                    </div>
 
+                <!-- Modal Header (Sidebar Blue Theme) -->
+                <div class="px-6 py-4 bg-[#061d28] border-b border-[#0d2a38] flex items-center justify-between text-white">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                            <template x-if="payMetode === 'cash'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                </svg>
+                            </template>
+                            <template x-if="payMetode !== 'cash'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </template>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white tracking-wide" x-text="payMetode === 'cash' ? 'Konfirmasi Bayar: Cash To Collector' : 'Konfirmasi Bayar: Manual Transfer'"></h3>
+                            <p class="text-xs text-slate-300">Verifikasi pelunasan tagihan invoice pelanggan</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="payModalOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer text-2xl leading-none">&times;</button>
+                </div>
+
+                <div class="p-6 md:p-7 space-y-4">
                     <!-- Info Ringkasan & Nominal Diterima (2-Column Grid on Desktop) -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                         <!-- Info Ringkasan Invoice -->
@@ -1298,12 +1300,12 @@
                             <input type="text" name="catatan" x-model="payCatatan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:border-emerald-500">
                         </div>
 
-                        <!-- Foto Bukti Transfer / Kwitansi (Opsional) -->
+                        <!-- Foto Bukti Transfer (Upload Bukti Transfer) -->
                         <div class="space-y-1.5" x-data="{ fotoBuktiPreview: null }">
                             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                Upload / Ambil Foto Bukti Transfer <span class="text-slate-400 font-normal">(Opsional)</span>
+                                Upload Bukti Transfer
                             </label>
-                            <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-center hover:border-emerald-500 transition cursor-pointer bg-slate-50 dark:bg-slate-950/40 min-h-[42px] flex items-center justify-center">
+                            <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-center hover:border-cyan-500 transition cursor-pointer bg-slate-50 dark:bg-slate-950/40 min-h-[42px] flex items-center justify-center">
                                 <input type="file"
                                        name="foto_bukti"
                                        accept="image/*"
@@ -1317,7 +1319,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
                                         </svg>
-                                        <span class="text-[11px] font-medium">Klik ambil / pilih foto</span>
+                                        <span class="text-[11px] font-medium">Upload Bukti Transfer</span>
                                     </div>
                                 </template>
 
@@ -1657,24 +1659,20 @@
              x-transition:leave-end="opacity-0 scale-95 translate-y-4"
              class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 overflow-hidden my-8 flex flex-col max-h-[90vh]">
             
-            <!-- Modal Header -->
-            <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/50">
+            <!-- Modal Header (Sidebar Blue Theme) -->
+            <div class="px-6 py-4 border-b border-[#0d2a38] flex items-center justify-between bg-[#061d28] text-white">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Bukti Transfer Pembayaran</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400" x-text="proofNamaPelanggan + ' • #' + proofInternet"></p>
+                        <h3 class="text-base font-bold text-white tracking-wide">Bukti Transfer Pembayaran</h3>
+                        <p class="text-xs text-slate-300" x-text="proofNamaPelanggan + ' • #' + proofInternet"></p>
                     </div>
                 </div>
-                <button type="button" @click="proofModalOpen = false" class="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                <button type="button" @click="proofModalOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer text-2xl leading-none">&times;</button>
             </div>
 
             <!-- Modal Body -->

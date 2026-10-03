@@ -203,6 +203,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/invoice/{kode_billing}', [FinanceController::class, 'dokumenInvoice'])->name('invoice')->where('kode_billing', '.*');
         Route::get('/api/billing-layanan-detail', [FinanceController::class, 'getBillingLayananDetail'])->name('billing-layanan.detail.query');
         Route::get('/api/billing-layanan/{kode_billing}', [FinanceController::class, 'getBillingLayananDetail'])->name('billing-layanan.detail')->where('kode_billing', '.*');
+        Route::get('/billing-layanan/requests', [FinanceController::class, 'getBillingRequestsJson'])->name('billing-layanan.requests.json');
+        Route::post('/billing-layanan/requests/{id}/approve', [FinanceController::class, 'approveBillingRequest'])->name('billing-layanan.requests.approve');
+        Route::post('/billing-layanan/requests/approve-all', [FinanceController::class, 'approveAllBillingRequests'])->name('billing-layanan.requests.approve-all');
+        Route::post('/billing-layanan/requests/{id}/reject', [FinanceController::class, 'rejectBillingRequest'])->name('billing-layanan.requests.reject');
+        Route::post('/billing-layanan/request-invoice', [FinanceController::class, 'storeBillingRequest'])->name('billing-layanan.request-invoice.post');
 
         // 2. Billing Registrasi (Tagihan Pasang Baru)
         Route::get('/billing-registrasi', [FinanceController::class, 'billingRegistrasi'])->name('billing-registrasi');

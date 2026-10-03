@@ -64,6 +64,19 @@
                 <span>Export CSV</span>
             </a>
 
+            <button @click="openRequestModal()"
+                    type="button"
+                    class="relative px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-violet-600/20 border border-violet-400/20 transition duration-150 cursor-pointer"
+                    title="Permintaan Penerbitan Tagihan dari Portal Pelanggan">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                </svg>
+                <span>Request Pelanggan</span>
+                <span x-show="requestCount > 0"
+                      class="px-2 py-0.5 rounded-full bg-white text-violet-700 font-bold text-[10px] animate-pulse"
+                      x-text="requestCount"></span>
+            </button>
+
             <button @click="openBatchPrintModal()"
                     type="button"
                     class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 text-white border border-slate-700/90 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-black/10 transition cursor-pointer"
@@ -87,6 +100,32 @@
         </div>
     </div>
 
+    <!-- Quick Alert Banner Request Pelanggan -->
+    <template x-if="requestCount > 0">
+        <div class="flex items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-violet-600/15 via-purple-600/10 to-indigo-600/15 border border-violet-500/30 text-xs shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0 animate-bounce">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                        Terdapat <span class="text-violet-600 dark:text-violet-400 font-extrabold" x-text="requestCount"></span> Permintaan Tagihan dari Portal Pelanggan
+                    </h4>
+                    <p class="text-slate-600 dark:text-slate-400 text-[11px] mt-0.5">
+                        Pelanggan telah mengajukan permintaan penerbitan invoice bulan berikutnya secara mandiri.
+                    </p>
+                </div>
+            </div>
+            <button type="button"
+                    @click="openRequestModal()"
+                    class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shrink-0 shadow-md shadow-violet-600/20 transition cursor-pointer flex items-center gap-1.5">
+                <span>Review &amp; Proses</span>
+                <span>&rarr;</span>
+            </button>
+        </div>
+    </template>
 
     <!-- 4 KPI Financial Metric Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -2264,6 +2303,199 @@
                 </div>
             </div>
         </div>
+    <!-- ==========================================
+         9. MODAL DAFTAR REQUEST INVOICE DARI PORTAL PELANGGAN
+         ========================================== -->
+    <div x-show="requestModalOpen"
+         x-cloak
+         @keydown.escape.window="requestModalOpen = false"
+         class="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm overflow-hidden"
+         style="position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 1rem; background-color: rgba(2, 6, 23, 0.85); overflow: hidden;"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <div @click.away="requestModalOpen = false"
+             x-show="requestModalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             style="width: 100%; max-width: 58rem; height: 85vh; max-height: calc(100vh - 3rem); display: flex; flex-direction: column; overflow: hidden; margin: auto;"
+             class="relative w-full max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            
+            <!-- Header Modal Request -->
+            <div style="flex-shrink: 0; flex-grow: 0;" class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 rounded-2xl bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>Permintaan Tagihan dari Portal Pelanggan</span>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300" x-text="requestCount + ' Pending'"></span>
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Daftar pelanggan yang mengajukan penerbitan tagihan bulan berikutnya secara mandiri.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Filter Tabs -->
+                    <div class="flex items-center bg-slate-200/70 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold">
+                        <button type="button"
+                                @click="requestStatusFilter = 'pending'; fetchBillingRequests()"
+                                :class="requestStatusFilter === 'pending' ? 'bg-white dark:bg-slate-700 text-violet-600 dark:text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'"
+                                class="px-3 py-1 rounded-lg transition cursor-pointer">
+                            Pending
+                        </button>
+                        <button type="button"
+                                @click="requestStatusFilter = 'all'; fetchBillingRequests()"
+                                :class="requestStatusFilter === 'all' ? 'bg-white dark:bg-slate-700 text-violet-600 dark:text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'"
+                                class="px-3 py-1 rounded-lg transition cursor-pointer">
+                            Semua Riwayat
+                        </button>
+                    </div>
+
+                    <button type="button" @click="requestModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-2xl leading-none">&times;</button>
+                </div>
+            </div>
+
+            <!-- Table List of Requests -->
+            <div style="flex: 1 1 auto; height: 0; min-height: 150px; overflow-y: scroll; overflow-x: auto; -webkit-overflow-scrolling: touch; display: block;" class="p-0 relative batch-modal-scroll border-b border-slate-200 dark:border-slate-800">
+                <!-- Loading State -->
+                <template x-if="requestLoading">
+                    <div class="py-20 text-center text-slate-400">
+                        <div class="inline-block w-7 h-7 border-2 border-violet-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                        <div class="text-xs font-medium text-slate-600 dark:text-slate-300">Memuat permintaan tagihan...</div>
+                    </div>
+                </template>
+
+                <!-- Empty State -->
+                <template x-if="!requestLoading && requestList.length === 0">
+                    <div class="py-20 text-center">
+                        <div class="w-14 h-14 mx-auto rounded-2xl bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40 flex items-center justify-center text-violet-500 mb-3.5 shadow-sm">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                        </div>
+                        <div class="font-bold text-sm text-slate-800 dark:text-slate-200">Tidak Ada Permintaan Tagihan Pending</div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">Saat ini belum ada pengajuan invoice mandiri dari pelanggan portal yang menunggu persetujuan.</div>
+                    </div>
+                </template>
+
+                <!-- Request Records Table -->
+                <table x-show="!requestLoading && requestList.length > 0" class="w-full text-left border-collapse text-xs">
+                    <thead style="position: sticky; top: 0; z-index: 10;" class="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 uppercase text-[10px] tracking-wider font-bold">
+                        <tr>
+                            <th class="py-3 px-4 w-12 text-center">No</th>
+                            <th class="py-3 px-4">Pelanggan</th>
+                            <th class="py-3 px-4">Layanan</th>
+                            <th class="py-3 px-4">Periode Diminta</th>
+                            <th class="py-3 px-4">Nominal</th>
+                            <th class="py-3 px-4">Waktu Request</th>
+                            <th class="py-3 px-4 text-center">Status / Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        <template x-for="(req, idx) in requestList" :key="req.id">
+                            <tr class="hover:bg-violet-50/40 dark:hover:bg-slate-800/40 transition">
+                                <td class="py-3.5 px-4 text-center text-slate-400 font-mono text-xs" x-text="idx + 1"></td>
+                                <td class="py-3.5 px-4">
+                                    <div class="font-bold text-slate-900 dark:text-white" x-text="req.nama_pelanggan"></div>
+                                    <div class="text-[11px] text-blue-600 dark:text-blue-400 font-mono font-semibold" x-text="req.nomor_internet"></div>
+                                    <template x-if="req.catatan_pelanggan && req.catatan_pelanggan !== '-'">
+                                        <div class="text-[10px] text-slate-500 italic mt-0.5" x-text="'Catatan: ' + req.catatan_pelanggan"></div>
+                                    </template>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300" x-text="req.layanan"></span>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <div class="font-bold text-violet-700 dark:text-violet-400 font-mono text-xs" x-text="req.periode_tagihan"></div>
+                                    <div class="text-[10px] text-slate-400" x-text="'Bulan ' + req.bulan_tagihan + '/' + req.tahun_tagihan"></div>
+                                </td>
+                                <td class="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400" x-text="req.nominal_formatted"></td>
+                                <td class="py-3.5 px-4">
+                                    <div class="text-slate-800 dark:text-slate-200 text-xs" x-text="req.created_at_formatted"></div>
+                                    <div class="text-[10px] text-slate-400" x-text="req.created_at_diff"></div>
+                                </td>
+                                <td class="py-3.5 px-4 text-center">
+                                    <template x-if="req.status_request === 'pending'">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <button type="button"
+                                                    @click="approveRequest(req.id)"
+                                                    :disabled="requestActionLoadingId === req.id"
+                                                    class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition flex items-center gap-1 cursor-pointer">
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                                </svg>
+                                                <span>Setujui</span>
+                                            </button>
+                                            <button type="button"
+                                                    @click="rejectRequest(req.id)"
+                                                    :disabled="requestActionLoadingId === req.id"
+                                                    class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 border border-rose-200 dark:border-rose-800 font-semibold text-xs transition cursor-pointer">
+                                                Tolak
+                                            </button>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="req.status_request === 'approved'">
+                                        <div>
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                <span>Disetujui</span>
+                                            </span>
+                                            <div class="text-[10px] text-slate-400 font-mono mt-0.5" x-text="req.kode_billing_layanan"></div>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="req.status_request === 'rejected'">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+                                            <span>Ditolak</span>
+                                        </span>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer Modal Request -->
+            <div style="flex-shrink: 0; flex-grow: 0;" class="px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 font-bold border border-violet-500/20">
+                        <span x-text="requestCount"></span> permintaan menunggu persetujuan
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap justify-end">
+                    <button type="button"
+                            @click="requestModalOpen = false"
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition">
+                        Tutup
+                    </button>
+
+                    <button type="button"
+                            x-show="requestCount > 0"
+                            @click="approveAllRequests()"
+                            class="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-none">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                        <span>Setujui Semua Permintaan (<span x-text="requestCount"></span>)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -2273,6 +2505,117 @@
 <script>
 function billingLayananPage() {
     return {
+        // Modal Request Invoice Portal Pelanggan
+        requestModalOpen: false,
+        requestCount: {{ $pendingRequestCount ?? 0 }},
+        requestStatusFilter: 'pending',
+        requestList: [],
+        requestLoading: false,
+        requestActionLoadingId: null,
+
+        async openRequestModal() {
+            this.requestModalOpen = true;
+            await this.fetchBillingRequests();
+        },
+        async fetchBillingRequests() {
+            this.requestLoading = true;
+            try {
+                const res = await fetch('/finance/billing-layanan/requests?status=' + encodeURIComponent(this.requestStatusFilter));
+                const data = await res.json();
+                if (data && data.success) {
+                    this.requestList = data.data || [];
+                    if (this.requestStatusFilter === 'pending') {
+                        this.requestCount = data.count || 0;
+                    }
+                } else {
+                    this.requestList = [];
+                }
+            } catch (e) {
+                console.error('Error fetching billing requests:', e);
+                this.requestList = [];
+            } finally {
+                this.requestLoading = false;
+            }
+        },
+        async approveRequest(id) {
+            if (!confirm('Setujui permintaan invoice ini dan terbitkan tagihan ke sistem?')) return;
+            this.requestActionLoadingId = id;
+            try {
+                const res = await fetch(`/finance/billing-layanan/requests/${id}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await res.json();
+                if (data && data.success) {
+                    alert(data.message || 'Invoice berhasil diterbitkan.');
+                    await this.fetchBillingRequests();
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Gagal menyetujui permintaan invoice.');
+                }
+            } catch (e) {
+                console.error('Approve request error:', e);
+                alert('Terjadi kesalahan sistem.');
+            } finally {
+                this.requestActionLoadingId = null;
+            }
+        },
+        async approveAllRequests() {
+            if (!confirm(`Apakah Anda yakin ingin menyetujui dan menerbitkan seluruh (${this.requestCount}) invoice yang diminta pelanggan?`)) return;
+            this.requestLoading = true;
+            try {
+                const res = await fetch('/finance/billing-layanan/requests/approve-all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await res.json();
+                if (data && data.success) {
+                    alert(data.message || 'Seluruh invoice berhasil diterbitkan.');
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Gagal memproses persetujuan massal.');
+                }
+            } catch (e) {
+                console.error('Approve all error:', e);
+                alert('Terjadi kesalahan sistem.');
+            } finally {
+                this.requestLoading = false;
+            }
+        },
+        async rejectRequest(id) {
+            const note = prompt('Masukkan alasan penolakan permintaan invoice:');
+            if (note === null) return;
+            this.requestActionLoadingId = id;
+            try {
+                const res = await fetch(`/finance/billing-layanan/requests/${id}/reject`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ note: note })
+                });
+                const data = await res.json();
+                if (data && data.success) {
+                    alert(data.message || 'Permintaan invoice telah ditolak.');
+                    await this.fetchBillingRequests();
+                } else {
+                    alert(data.message || 'Gagal menolak permintaan invoice.');
+                }
+            } catch (e) {
+                console.error('Reject request error:', e);
+                alert('Terjadi kesalahan sistem.');
+            } finally {
+                this.requestActionLoadingId = null;
+            }
+        },
+
         // Filter State
         showAdvancedFilters: false,
         // Modal Generate Invoice

@@ -338,6 +338,16 @@ class FinanceController extends Controller
             '18' => 'Selesai Instalasi',
         ];
 
+        $pendingRequestCount = 0;
+        try {
+            $this->ensureBillingRequestTable();
+            $pendingRequestCount = DB::table('trx_billing_request')
+                ->where('status_request', 'pending')
+                ->count();
+        } catch (\Throwable $e) {
+            $pendingRequestCount = 0;
+        }
+
         return view('finance.billing-layanan', [
             'user' => $request->user(),
             'invoices' => $invoices,
@@ -347,6 +357,7 @@ class FinanceController extends Controller
                 'waiting' => ['count' => $waitingCount, 'amount' => $waitingAmount],
                 'paid' => ['count' => $paidCount, 'amount' => $paidAmount],
             ],
+            'pendingRequestCount' => $pendingRequestCount,
             'bulanList' => $bulanList,
             'tahunList' => $tahunList,
             'bandwithKategoriList' => $bandwithKategoriList,
@@ -3106,4 +3117,432 @@ class FinanceController extends Controller
         }
         return $temp;
     }
+
+    /**
+     * Pastikan tabel trx_billing_request tersedia di database
+     */
+    public function ensureBillingRequestTable(): void
+    {
+        try {
+            if (!Schema::hasTable('trx_billing_request')) {
+                Schema::create('trx_billing_request', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('nomor_internet', 50)->index();
+                    $table->string('nama_pelanggan', 255)->nullable();
+                    $table->string('bulan_tagihan', 10);
+                    $table->string('tahun_tagihan', 10);
+                    $table->string('periode_tagihan', 50)->nullable();
+                    $table->string('layanan', 100)->nullable();
+                    $table->decimal('nominal', 15, 2)->default(0);
+                    $table->text('catatan_pelanggan')->nullable();
+                    $table->enum('status_request', ['pending', 'approved', 'rejected'])->default('pending')->index();
+                    $table->string('kode_billing_layanan', 100)->nullable()->index();
+                    $table->string('approved_by', 100)->nullable();
+                    $table->dateTime('approved_at')->nullable();
+                    $table->string('rejected_by', 100)->nullable();
+                    $table->dateTime('rejected_at')->nullable();
+                    $table->text('rejection_note')->nullable();
+                    $table->timestamps();
+
+                    $table->index(['bulan_tagihan', 'tahun_tagihan']);
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::info('ensureBillingRequestTable info: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * API JSON: Ambil daftar request invoice dari portal pelanggan
+     */
+    public function getBillingRequestsJson(Request $request): JsonResponse
+    {
+        $this->ensureBillingRequestTable();
+
+        $status = $request->query('status', 'pending');
+        $query = DB::table('trx_billing_request');
+        if ($status && $status !== 'all') {
+            $query->where('status_request', $status);
+        }
+
+        $requests = $query->orderBy('created_at', 'desc')->get();
+
+        // Ambil info detail pelanggan & last bill status
+        $internetNumbers = $requests->pluck('nomor_internet')->unique();
+        $customers = DB::table('view_batchjob')
+            ->whereIn('nomor_internet', $internetNumbers)
+            ->get()
+            ->keyBy('nomor_internet');
+
+        $data = $requests->map(function ($req) use ($customers) {
+            $cust = $customers->get($req->nomor_internet);
+            $nama = $req->nama_pelanggan ?: ($cust->nama_pelanggan ?? 'Pelanggan');
+            $layanan = $req->layanan ?: ($cust->nama_kategori_bandwith ?? 'BROADBAND');
+            $nominal = (float)($req->nominal > 0 ? $req->nominal : ($cust->harga_bandwith ?? $cust->nominal_bandwith ?? 0));
+
+            return [
+                'id' => $req->id,
+                'nomor_internet' => $req->nomor_internet,
+                'nama_pelanggan' => $nama,
+                'layanan' => $layanan,
+                'nominal' => $nominal,
+                'nominal_formatted' => 'Rp ' . number_format($nominal, 0, ',', '.'),
+                'bulan_tagihan' => $req->bulan_tagihan,
+                'tahun_tagihan' => $req->tahun_tagihan,
+                'periode_tagihan' => $req->periode_tagihan ?: ($req->bulan_tagihan . '/' . $req->tahun_tagihan),
+                'catatan_pelanggan' => $req->catatan_pelanggan ?: '-',
+                'status_request' => $req->status_request,
+                'kode_billing_layanan' => $req->kode_billing_layanan,
+                'created_at_formatted' => $req->created_at ? Carbon::parse($req->created_at)->format('d M Y, H:i') : '-',
+                'created_at_diff' => $req->created_at ? Carbon::parse($req->created_at)->diffForHumans() : '-',
+                'approved_by' => $req->approved_by,
+                'approved_at' => $req->approved_at,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'count' => $data->count(),
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Endpoint API: Menerima Request Invoice dari Portal Pelanggan
+     */
+    public function storeBillingRequest(Request $request): JsonResponse
+    {
+        $this->ensureBillingRequestTable();
+
+        $nomorInternet = trim((string)$request->input('nomor_internet'));
+        if (empty($nomorInternet)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor internet pelanggan wajib diisi.',
+            ], 422);
+        }
+
+        // Cari data pelanggan
+        $customer = DB::table('view_batchjob')->where('nomor_internet', $nomorInternet)->first();
+        if (!$customer) {
+            return response()->json([
+                'success' => false,
+                'message' => "Pelanggan dengan nomor internet {$nomorInternet} tidak ditemukan.",
+            ], 404);
+        }
+
+        // Default bulan & tahun ke bulan depan jika tidak dispesifikasikan
+        $bulanReq = $request->input('bulan_tagihan');
+        $tahunReq = $request->input('tahun_tagihan');
+
+        if (!$bulanReq || !$tahunReq) {
+            $nextMonthDate = Carbon::now()->addMonth();
+            $bulanReq = $bulanReq ?: $nextMonthDate->format('m');
+            $tahunReq = $tahunReq ?: $nextMonthDate->format('Y');
+        }
+
+        $bulanPad = str_pad((string)$bulanReq, 2, '0', STR_PAD_LEFT);
+        $tahunStr = (string)$tahunReq;
+        $namaBulanShort = Carbon::createFromDate((int)$tahunStr, (int)$bulanPad, 1)->format('M');
+        $periodeStr = "{$namaBulanShort} {$tahunStr}";
+
+        $kodeBillingTarget = "INV/{$nomorInternet}/{$bulanPad}/{$tahunStr}";
+
+        // 1. Cek apakah invoice periode ini sudah pernah terbit di trx_billing_layanan
+        $existsInvoice = DB::table('trx_billing_layanan')
+            ->where('kode_billing_layanan', $kodeBillingTarget)
+            ->first();
+
+        if ($existsInvoice) {
+            return response()->json([
+                'success' => false,
+                'message' => "Invoice tagihan untuk periode {$periodeStr} sudah pernah diterbitkan ({$kodeBillingTarget}).",
+                'kode_billing_layanan' => $kodeBillingTarget,
+            ], 400);
+        }
+
+        // 2. Cek apakah ada request pending yang sama
+        $existsPendingReq = DB::table('trx_billing_request')
+            ->where('nomor_internet', $nomorInternet)
+            ->where('bulan_tagihan', $bulanPad)
+            ->where('tahun_tagihan', $tahunStr)
+            ->where('status_request', 'pending')
+            ->first();
+
+        if ($existsPendingReq) {
+            return response()->json([
+                'success' => true,
+                'message' => "Permintaan invoice untuk periode {$periodeStr} sudah terdaftar dan sedang menunggu persetujuan Finance.",
+                'request_id' => $existsPendingReq->id,
+            ]);
+        }
+
+        $hargaBandwith = (float)($customer->harga_bandwith ?? $customer->nominal_bandwith ?? 0);
+        $potongan = (float)($customer->potongan ?? 0);
+        $nominalTotal = max(0, $hargaBandwith - $potongan);
+
+        $reqId = DB::table('trx_billing_request')->insertGetId([
+            'nomor_internet' => $nomorInternet,
+            'nama_pelanggan' => $customer->nama_pelanggan ?? 'Pelanggan',
+            'bulan_tagihan' => $bulanPad,
+            'tahun_tagihan' => $tahunStr,
+            'periode_tagihan' => $periodeStr,
+            'layanan' => $customer->nama_kategori_bandwith ?? 'BROADBAND',
+            'nominal' => $nominalTotal,
+            'catatan_pelanggan' => $request->input('catatan') ?: 'Permintaan pembayaran bulan berikutnya dari Portal Pelanggan',
+            'status_request' => 'pending',
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Permintaan invoice periode {$periodeStr} berhasil dikirim. Finance akan segera memproses penerbitan tagihan Anda.",
+            'request_id' => $reqId,
+        ]);
+    }
+
+    /**
+     * Approve Single Billing Request (Generate Invoice & Publish)
+     */
+    public function approveBillingRequest(Request $request, $id): JsonResponse
+    {
+        $this->ensureBillingRequestTable();
+        $user = Auth::user()?->nama ?? 'FINANCE';
+
+        $reqItem = DB::table('trx_billing_request')->where('id', $id)->first();
+        if (!$reqItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data permintaan invoice tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($reqItem->status_request === 'approved') {
+            return response()->json([
+                'success' => true,
+                'message' => "Permintaan ini sudah disetujui sebelumnya ({$reqItem->kode_billing_layanan}).",
+                'kode_billing_layanan' => $reqItem->kode_billing_layanan,
+            ]);
+        }
+
+        $nomorInternet = $reqItem->nomor_internet;
+        $bulan = str_pad((string)$reqItem->bulan_tagihan, 2, '0', STR_PAD_LEFT);
+        $tahun = (string)$reqItem->tahun_tagihan;
+        $kodeBilling = "INV/{$nomorInternet}/{$bulan}/{$tahun}";
+
+        $customer = DB::table('view_batchjob')->where('nomor_internet', $nomorInternet)->first();
+        if (!$customer) {
+            return response()->json([
+                'success' => false,
+                'message' => "Pelanggan dengan nomor internet {$nomorInternet} tidak ditemukan.",
+            ], 404);
+        }
+
+        $now = Carbon::now()->toDateTimeString();
+        $namaBulanShort = Carbon::createFromDate((int)$tahun, (int)$bulan, 1)->format('M');
+        $periodeTagihan = "{$namaBulanShort} {$tahun}";
+
+        $hargaBandwith = (float)($customer->harga_bandwith ?? $customer->nominal_bandwith ?? 0);
+        $potongan = (float)($customer->potongan ?? 0);
+        $totalLayanan = max(0, $hargaBandwith - $potongan);
+
+        // Periksa apakah invoice sudah ada di trx_billing_layanan
+        $existsInvoice = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $kodeBilling)->first();
+
+        if (!$existsInvoice) {
+            DB::table('trx_billing_layanan')->insert([
+                'kode_billing_layanan' => $kodeBilling,
+                'nomor_internet' => $nomorInternet,
+                'kode_bandwith' => $customer->kode_bandwith ?? null,
+                'nominal_bandwith' => $customer->nominal_bandwith ?? '0',
+                'bulan_tagihan' => $bulan,
+                'tahun_tagihan' => $tahun,
+                'periode_tagihan' => $periodeTagihan,
+                'potongan' => (string)$potongan,
+                'desc_potongan' => $customer->potongan_note ?? '-',
+                'ppn' => $customer->ppn_nom ?? '0.11',
+                'tax' => $customer->ppn ?? '2',
+                'voucher' => '-',
+                'total_layanan' => (string)$totalLayanan,
+                'notif_mail' => '1',
+                'notif_wa' => '1',
+                'status_bill_lay' => '13', // Published
+                'payment_type' => '1',
+                'payment_post' => '-',
+                'payment_publish' => $now,
+                'date_create' => $now,
+                'user_create' => $user . ' (via Portal Request)',
+                'date_update' => $now,
+                'user_update' => $user,
+                'hide' => '0',
+            ]);
+
+            // Snap Link Midtrans
+            try {
+                $customerDetails = [
+                    'nama' => $customer->nama_pelanggan ?? 'Pelanggan',
+                    'email' => $customer->email ?? 'billing@ims-router.net',
+                    'nomor_hp' => $customer->nomor_hp ?? '08123456789',
+                ];
+                $midtrans = app(MidtransService::class)->generateSnapLink($kodeBilling, $totalLayanan, $customerDetails);
+                if (!empty($midtrans['payment_post'])) {
+                    DB::table('trx_billing_layanan')->where('kode_billing_layanan', $kodeBilling)->update([
+                        'payment_post' => $midtrans['payment_post'],
+                        'payment_respond_post' => $midtrans['payment_respond_post'] ?? '-',
+                        'expiry' => $midtrans['expiry'] ?? null,
+                    ]);
+                }
+            } catch (\Throwable $eMidtrans) {
+                Log::warning("Snap link generation on portal request approve: {$eMidtrans->getMessage()}");
+            }
+
+            // Log
+            try {
+                DB::table('trx_billing_layanan_log')->insert([
+                    'kode_billing_lay_log' => 'LOG-' . uniqid(),
+                    'kode_billing_layanan' => $kodeBilling,
+                    'status_bill_lay' => '13',
+                    'note_billing_lay' => "Invoice generated & approved from Customer Portal Request by {$user}",
+                    'date_create' => $now,
+                    'user_create' => $user,
+                ]);
+            } catch (\Throwable $eLog) {}
+        }
+
+        // Update Request Record
+        DB::table('trx_billing_request')->where('id', $id)->update([
+            'status_request' => 'approved',
+            'kode_billing_layanan' => $kodeBilling,
+            'approved_by' => $user,
+            'approved_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Permintaan invoice untuk {$reqItem->nama_pelanggan} ({$kodeBilling}) berhasil disetujui dan diterbitkan.",
+            'kode_billing_layanan' => $kodeBilling,
+        ]);
+    }
+
+    /**
+     * Approve All Pending Billing Requests
+     */
+    public function approveAllBillingRequests(Request $request): JsonResponse
+    {
+        $this->ensureBillingRequestTable();
+        $user = Auth::user()?->nama ?? 'FINANCE';
+
+        $pendingList = DB::table('trx_billing_request')
+            ->where('status_request', 'pending')
+            ->get();
+
+        if ($pendingList->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada antrean permintaan invoice yang pending.',
+            ]);
+        }
+
+        $successCount = 0;
+        foreach ($pendingList as $item) {
+            try {
+                $nomorInternet = $item->nomor_internet;
+                $bulan = str_pad((string)$item->bulan_tagihan, 2, '0', STR_PAD_LEFT);
+                $tahun = (string)$item->tahun_tagihan;
+                $kodeBilling = "INV/{$nomorInternet}/{$bulan}/{$tahun}";
+
+                $customer = DB::table('view_batchjob')->where('nomor_internet', $nomorInternet)->first();
+                if ($customer) {
+                    $now = Carbon::now()->toDateTimeString();
+                    $namaBulanShort = Carbon::createFromDate((int)$tahun, (int)$bulan, 1)->format('M');
+                    $periodeTagihan = "{$namaBulanShort} {$tahun}";
+                    $hargaBandwith = (float)($customer->harga_bandwith ?? $customer->nominal_bandwith ?? 0);
+                    $potongan = (float)($customer->potongan ?? 0);
+                    $totalLayanan = max(0, $hargaBandwith - $potongan);
+
+                    $exists = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $kodeBilling)->exists();
+                    if (!$exists) {
+                        DB::table('trx_billing_layanan')->insert([
+                            'kode_billing_layanan' => $kodeBilling,
+                            'nomor_internet' => $nomorInternet,
+                            'kode_bandwith' => $customer->kode_bandwith ?? null,
+                            'nominal_bandwith' => $customer->nominal_bandwith ?? '0',
+                            'bulan_tagihan' => $bulan,
+                            'tahun_tagihan' => $tahun,
+                            'periode_tagihan' => $periodeTagihan,
+                            'potongan' => (string)$potongan,
+                            'desc_potongan' => $customer->potongan_note ?? '-',
+                            'ppn' => $customer->ppn_nom ?? '0.11',
+                            'tax' => $customer->ppn ?? '2',
+                            'voucher' => '-',
+                            'total_layanan' => (string)$totalLayanan,
+                            'notif_mail' => '1',
+                            'notif_wa' => '1',
+                            'status_bill_lay' => '13',
+                            'payment_type' => '1',
+                            'payment_post' => '-',
+                            'payment_publish' => $now,
+                            'date_create' => $now,
+                            'user_create' => $user . ' (via Portal Bulk Approve)',
+                            'date_update' => $now,
+                            'user_update' => $user,
+                            'hide' => '0',
+                        ]);
+                    }
+
+                    DB::table('trx_billing_request')->where('id', $item->id)->update([
+                        'status_request' => 'approved',
+                        'kode_billing_layanan' => $kodeBilling,
+                        'approved_by' => $user,
+                        'approved_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ]);
+
+                    $successCount++;
+                }
+            } catch (\Throwable $eItem) {
+                Log::error("Approve all request item {$item->id} error: {$eItem->getMessage()}");
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Berhasil menyetujui dan menerbitkan {$successCount} tagihan dari permintaan pelanggan.",
+            'count' => $successCount,
+        ]);
+    }
+
+    /**
+     * Reject Billing Request
+     */
+    public function rejectBillingRequest(Request $request, $id): JsonResponse
+    {
+        $this->ensureBillingRequestTable();
+        $user = Auth::user()?->nama ?? 'FINANCE';
+        $note = $request->input('note', 'Ditolak oleh Finance');
+
+        $reqItem = DB::table('trx_billing_request')->where('id', $id)->first();
+        if (!$reqItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data permintaan invoice tidak ditemukan.',
+            ], 404);
+        }
+
+        DB::table('trx_billing_request')->where('id', $id)->update([
+            'status_request' => 'rejected',
+            'rejected_by' => $user,
+            'rejected_at' => Carbon::now(),
+            'rejection_note' => $note,
+            'updated_at' => Carbon::now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Permintaan invoice untuk {$reqItem->nama_pelanggan} telah ditolak.",
+        ]);
+    }
 }
+

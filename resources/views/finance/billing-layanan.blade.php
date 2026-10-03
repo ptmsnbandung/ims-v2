@@ -1838,10 +1838,27 @@
     <!-- ==========================================
          MODAL BATCH PRINT INVOICES (CETAK MASSAL)
          ========================================== -->
+    <style>
+        .batch-modal-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .batch-modal-scroll::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .batch-modal-scroll::-webkit-scrollbar-thumb {
+            background: #0891b2;
+            border-radius: 4px;
+        }
+        .batch-modal-scroll::-webkit-scrollbar-thumb:hover {
+            background: #0e7490;
+        }
+    </style>
     <div x-show="batchPrintModalOpen"
          x-cloak
          @keydown.escape.window="batchPrintModalOpen = false"
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm overflow-hidden"
+         style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 1rem; background-color: rgba(2, 6, 23, 0.85);"
+         class="backdrop-blur-sm"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 scale-95"
          x-transition:enter-end="opacity-100 scale-100"
@@ -1850,9 +1867,10 @@
          x-transition:leave-end="opacity-0 scale-95">
 
         <div @click.away="batchPrintModalOpen = false"
-             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full h-[88vh] max-h-[88vh] flex flex-col overflow-hidden my-auto">
-            <!-- Modal Header -->
-            <div class="shrink-0 px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+             style="width: 100%; max-width: 56rem; height: 85vh; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;"
+             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl my-auto">
+            <!-- Modal Header (Fixed) -->
+            <div style="flex-shrink: 0;" class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
                 <div class="flex items-center gap-3">
                     <span class="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -1863,14 +1881,14 @@
                     </span>
                     <div>
                         <h3 class="text-base font-bold text-slate-900 dark:text-white">Cetak Massal Invoice Tagihan</h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Pilih periode bulan &amp; tahun, cari pelanggan, lalu cetak banyak invoice sekaligus.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Pilih periode bulan &amp; tahun, cari pelanggan, centang tagihan yang ingin dicetak, lalu cetak serentak.</p>
                     </div>
                 </div>
                 <button type="button" @click="batchPrintModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-2xl leading-none">&times;</button>
             </div>
 
-            <!-- Filter Controls Bar -->
-            <div class="shrink-0 p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 space-y-3">
+            <!-- Filter Controls Bar (Fixed) -->
+            <div style="flex-shrink: 0;" class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <!-- Bulan -->
                     <div>
@@ -1914,11 +1932,17 @@
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cari Pelanggan</label>
                         <div class="flex gap-1.5">
-                            <input type="text"
-                                   x-model="batchSearch"
-                                   @keydown.enter.prevent="fetchBatchInvoices()"
-                                   placeholder="Nama / No Internet / Inv..."
-                                   class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                            <div class="relative flex-1">
+                                <input type="text"
+                                       x-model="batchSearch"
+                                       @keydown.enter.prevent="fetchBatchInvoices()"
+                                       placeholder="Nama / No Internet / Inv..."
+                                       class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl pl-3 pr-7 py-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                                <button type="button"
+                                        x-show="batchSearch.length > 0"
+                                        @click="batchSearch = ''; fetchBatchInvoices()"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer text-sm leading-none">&times;</button>
+                            </div>
                             <button type="button"
                                     @click="fetchBatchInvoices()"
                                     class="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-sm transition shrink-0 cursor-pointer flex items-center gap-1">
@@ -1930,10 +1954,53 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Tabs: Semua vs Terpilih -->
+                <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+                    <div class="flex items-center gap-2">
+                        <button type="button"
+                                @click="batchTab = 'all'"
+                                :class="batchTab === 'all' ? 'bg-cyan-600 text-white shadow-xs' : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                                class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5">
+                            <span>Semua Hasil</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono" :class="batchTab === 'all' ? 'bg-cyan-700/50 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'" x-text="batchInvoices.length"></span>
+                        </button>
+                        <button type="button"
+                                @click="batchTab = 'selected'"
+                                :class="batchTab === 'selected' ? 'bg-cyan-600 text-white shadow-xs' : 'bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
+                                class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5">
+                            <span>Tagihan Terpilih</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono" :class="batchTab === 'selected' ? 'bg-cyan-700/50 text-white' : 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-bold'" x-text="selectedBatchCount"></span>
+                        </button>
+                    </div>
+                    <span class="text-[11px] text-slate-400 italic hidden sm:inline" x-text="batchTab === 'selected' ? 'Menampilkan tagihan yang telah Anda centang' : 'Pilihan Anda akan tetap tersimpan saat mencari nama lain'"></span>
+                </div>
             </div>
 
-            <!-- Invoices List Table -->
-            <div class="flex-1 min-h-0 overflow-y-auto p-0 relative">
+            <!-- Selected Chips Bar (Persistent across multi-search) -->
+            <div x-show="selectedBatchCount > 0"
+                 style="flex-shrink: 0; max-height: 90px; overflow-y: auto;"
+                 class="px-5 py-2.5 bg-cyan-50/70 dark:bg-cyan-950/25 border-b border-cyan-200/60 dark:border-cyan-800/40 flex items-center justify-between gap-3 batch-modal-scroll">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-[11px] font-bold text-cyan-700 dark:text-cyan-300 mr-1 flex items-center gap-1 shrink-0">
+                        <svg class="w-3.5 h-3.5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        <span>Terpilih (<span x-text="selectedBatchCount"></span>):</span>
+                    </span>
+                    <template x-for="item in selectedBatchList" :key="item.kode_billing_layanan">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-cyan-500/30 shadow-xs">
+                            <span class="font-bold text-slate-900 dark:text-white" x-text="item.nama_pelanggan"></span>
+                            <span class="text-slate-400 font-mono text-[10px]" x-text="'#' + item.nomor_internet"></span>
+                            <button type="button" @click.stop="removeSelectedItem(item.kode_billing_layanan)" class="text-slate-400 hover:text-rose-500 ml-0.5 cursor-pointer font-bold leading-none" title="Hapus dari pilihan">&times;</button>
+                        </span>
+                    </template>
+                </div>
+                <button type="button" @click="resetBatchSelection()" class="text-[11px] text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 font-bold shrink-0 cursor-pointer underline whitespace-nowrap">
+                    Hapus Semua
+                </button>
+            </div>
+
+            <!-- Invoices List Table (Strictly Scrollable with Inline Styles) -->
+            <div style="flex: 1 1 0%; min-height: 0; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;" class="p-0 relative batch-modal-scroll">
                 <!-- Loading Overlay -->
                 <div x-show="batchLoading" class="absolute inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-20">
                     <div class="flex flex-col items-center gap-2">
@@ -1946,21 +2013,21 @@
                 </div>
 
                 <!-- Empty State -->
-                <template x-if="!batchLoading && batchInvoices.length === 0">
+                <template x-if="!batchLoading && displayedBatchInvoices.length === 0">
                     <div class="py-16 text-center space-y-2">
                         <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
                             <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
                         </div>
-                        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tidak ada data invoice ditemukan</p>
-                        <p class="text-xs text-slate-500">Coba ubah filter bulan, tahun, atau kata kunci pencarian.</p>
+                        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300" x-text="batchTab === 'selected' ? 'Belum ada tagihan yang dipilih' : 'Tidak ada data invoice ditemukan'"></p>
+                        <p class="text-xs text-slate-500" x-text="batchTab === 'selected' ? 'Kembali ke tab Semua Hasil dan centang tagihan yang ingin dicetak.' : 'Coba ubah filter bulan, tahun, atau kata kunci pencarian.'"></p>
                     </div>
                 </template>
 
                 <!-- Table Content -->
-                <table x-show="batchInvoices.length > 0" class="w-full text-left border-collapse text-xs">
-                    <thead class="sticky top-0 bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 z-10 uppercase text-[10px] tracking-wider font-bold">
+                <table x-show="displayedBatchInvoices.length > 0" class="w-full text-left border-collapse text-xs">
+                    <thead style="position: sticky; top: 0; z-index: 10;" class="bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 uppercase text-[10px] tracking-wider font-bold">
                         <tr>
                             <th class="py-3 px-4 w-12 text-center">
                                 <input type="checkbox"
@@ -1974,15 +2041,14 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                        <template x-for="inv in batchInvoices" :key="inv.kode_billing_layanan">
+                        <template x-for="inv in displayedBatchInvoices" :key="inv.kode_billing_layanan">
                             <tr class="hover:bg-cyan-50/40 dark:hover:bg-slate-800/40 transition cursor-pointer"
-                                :class="selectedBatchKodes.includes(inv.kode_billing_layanan) ? 'bg-cyan-50/60 dark:bg-cyan-500/10' : ''"
-                                @click="if ($event.target.tagName !== 'INPUT') { const idx = selectedBatchKodes.indexOf(inv.kode_billing_layanan); if (idx > -1) { selectedBatchKodes.splice(idx, 1); } else { selectedBatchKodes.push(inv.kode_billing_layanan); } updateBatchSelectAllState(); }">
+                                :class="isBatchSelected(inv.kode_billing_layanan) ? 'bg-cyan-50/60 dark:bg-cyan-500/10' : ''"
+                                @click="toggleBatchItem(inv)">
                                 <td class="py-3 px-4 text-center" @click.stop>
                                     <input type="checkbox"
-                                           :value="inv.kode_billing_layanan"
-                                           x-model="selectedBatchKodes"
-                                           @change="updateBatchSelectAllState()"
+                                           :checked="isBatchSelected(inv.kode_billing_layanan)"
+                                           @change="toggleBatchItem(inv)"
                                            class="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 w-4 h-4 cursor-pointer">
                                 </td>
                                 <td class="py-3 px-4">
@@ -2003,13 +2069,18 @@
                 </table>
             </div>
 
-            <!-- Modal Footer with Selection Counters & Print Actions -->
-            <div class="shrink-0 px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <!-- Modal Footer (Fixed) -->
+            <div style="flex-shrink: 0;" class="px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
                     <span class="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/20">
-                        <span x-text="selectedBatchKodes.length"></span> dari <span x-text="batchInvoices.length"></span> dipilih
+                        <span x-text="selectedBatchCount"></span> tagihan dipilih
                     </span>
-                    <span x-show="selectedBatchKodes.length > 0" class="text-slate-400 hidden sm:inline">&bull; Siap dicetak serentak</span>
+                    <template x-if="selectedBatchCount > 0">
+                        <button type="button" @click="resetBatchSelection()" class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 font-semibold cursor-pointer underline ml-1">
+                            Reset Pilihan
+                        </button>
+                    </template>
+                    <span x-show="selectedBatchCount > 0" class="text-slate-400 hidden sm:inline">&bull; Siap dicetak serentak</span>
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -2034,15 +2105,15 @@
 
                     <button type="button"
                             @click="printSelectedInvoices()"
-                            :disabled="selectedBatchKodes.length === 0"
-                            :class="selectedBatchKodes.length === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 cursor-pointer'"
+                            :disabled="selectedBatchCount === 0"
+                            :class="selectedBatchCount === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 cursor-pointer'"
                             class="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <polyline points="6 9 6 2 18 2 18 9"></polyline>
                             <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                             <rect x="6" y="14" width="12" height="8"></rect>
                         </svg>
-                        <span>Cetak Terpilih (<span x-text="selectedBatchKodes.length"></span>)</span>
+                        <span>Cetak Terpilih (<span x-text="selectedBatchCount"></span>)</span>
                     </button>
                 </div>
             </div>
@@ -2118,25 +2189,43 @@ function billingLayananPage() {
         batchTahun: '{{ request('tahun') ?: ($selectedTahun ?: date('Y')) }}',
         batchSearch: '',
         batchStatus: '{{ request('status_bayar', '') }}',
+        batchTab: 'all', // 'all' or 'selected'
         batchInvoices: [],
         pageInvoices: @json($pageInvoices),
-        selectedBatchKodes: [],
+        selectedBatchMap: {},
         batchLoading: false,
         batchSelectAll: false,
+
+        get displayedBatchInvoices() {
+            if (this.batchTab === 'selected') {
+                return Object.values(this.selectedBatchMap);
+            }
+            return this.batchInvoices || [];
+        },
+        get selectedBatchCount() {
+            return Object.keys(this.selectedBatchMap).length;
+        },
+        get selectedBatchList() {
+            return Object.values(this.selectedBatchMap);
+        },
+        get selectedBatchKodes() {
+            return Object.keys(this.selectedBatchMap);
+        },
+
         async openBatchPrintModal() {
             this.batchPrintModalOpen = true;
+            this.batchTab = 'all';
+            this.batchSearch = '';
             if (!this.batchBulan) {
-                this.batchBulan = '{{ $selectedBulan ?: date('m') }}';
+                this.batchBulan = '{{ request('bulan') ?: ($selectedBulan ?: date('m')) }}';
             }
             if (!this.batchTahun) {
-                this.batchTahun = '{{ $selectedTahun ?: date('Y') }}';
+                this.batchTahun = '{{ request('tahun') ?: ($selectedTahun ?: date('Y')) }}';
             }
             await this.fetchBatchInvoices();
         },
         async fetchBatchInvoices() {
             this.batchLoading = true;
-            this.selectedBatchKodes = [];
-            this.batchSelectAll = false;
             try {
                 const params = new URLSearchParams({
                     bulan: this.batchBulan || '',
@@ -2146,7 +2235,7 @@ function billingLayananPage() {
                 });
                 const res = await fetch('/finance/dokumen/batch-invoice/search?' + params.toString());
                 const data = await res.json();
-                if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+                if (data && data.success && Array.isArray(data.data)) {
                     this.batchInvoices = data.data;
                 } else if (this.pageInvoices && this.pageInvoices.length > 0 && !this.batchSearch && !this.batchStatus) {
                     this.batchInvoices = [...this.pageInvoices];
@@ -2160,30 +2249,87 @@ function billingLayananPage() {
                 }
             } finally {
                 this.batchLoading = false;
+                this.updateBatchSelectAllState();
+            }
+        },
+        isBatchSelected(kode) {
+            return Boolean(this.selectedBatchMap[kode]);
+        },
+        toggleBatchItem(inv) {
+            if (!inv || !inv.kode_billing_layanan) return;
+            if (this.selectedBatchMap[inv.kode_billing_layanan]) {
+                delete this.selectedBatchMap[inv.kode_billing_layanan];
+            } else {
+                this.selectedBatchMap[inv.kode_billing_layanan] = {
+                    kode_billing_layanan: inv.kode_billing_layanan,
+                    nama_pelanggan: inv.nama_pelanggan || 'Pelanggan',
+                    nomor_internet: inv.nomor_internet || '-',
+                    status_desc: inv.status_desc || 'Tagihan',
+                    status_bill_lay: inv.status_bill_lay || ''
+                };
+            }
+            this.selectedBatchMap = { ...this.selectedBatchMap };
+            this.updateBatchSelectAllState();
+        },
+        removeSelectedItem(kode) {
+            if (this.selectedBatchMap[kode]) {
+                delete this.selectedBatchMap[kode];
+                this.selectedBatchMap = { ...this.selectedBatchMap };
+                this.updateBatchSelectAllState();
             }
         },
         toggleBatchSelectAll() {
+            const list = this.displayedBatchInvoices;
             if (this.batchSelectAll) {
-                this.selectedBatchKodes = this.batchInvoices.map(inv => inv.kode_billing_layanan);
+                list.forEach(inv => {
+                    if (inv && inv.kode_billing_layanan) {
+                        this.selectedBatchMap[inv.kode_billing_layanan] = {
+                            kode_billing_layanan: inv.kode_billing_layanan,
+                            nama_pelanggan: inv.nama_pelanggan || 'Pelanggan',
+                            nomor_internet: inv.nomor_internet || '-',
+                            status_desc: inv.status_desc || 'Tagihan',
+                            status_bill_lay: inv.status_bill_lay || ''
+                        };
+                    }
+                });
             } else {
-                this.selectedBatchKodes = [];
+                list.forEach(inv => {
+                    if (inv && inv.kode_billing_layanan) {
+                        delete this.selectedBatchMap[inv.kode_billing_layanan];
+                    }
+                });
             }
+            this.selectedBatchMap = { ...this.selectedBatchMap };
+            this.updateBatchSelectAllState();
         },
         updateBatchSelectAllState() {
-            this.batchSelectAll = (this.batchInvoices.length > 0 && this.selectedBatchKodes.length === this.batchInvoices.length);
+            const list = this.displayedBatchInvoices;
+            if (!list || list.length === 0) {
+                this.batchSelectAll = false;
+                return;
+            }
+            this.batchSelectAll = list.every(inv => Boolean(this.selectedBatchMap[inv.kode_billing_layanan]));
+        },
+        resetBatchSelection() {
+            this.selectedBatchMap = {};
+            this.selectedBatchMap = { ...this.selectedBatchMap };
+            this.updateBatchSelectAllState();
         },
         printSelectedInvoices() {
-            if (this.selectedBatchKodes.length === 0) {
+            const kodes = Object.keys(this.selectedBatchMap);
+            if (kodes.length === 0) {
                 alert('Silakan pilih minimal 1 tagihan pelanggan untuk dicetak.');
                 return;
             }
-            const url = '/finance/dokumen/batch-invoice?kodes=' + encodeURIComponent(this.selectedBatchKodes.join(','));
+            const url = '/finance/dokumen/batch-invoice?kodes=' + encodeURIComponent(kodes.join(','));
             window.open(url, '_blank');
         },
         printAllFilteredInvoices() {
             const params = new URLSearchParams({
                 bulan: this.batchBulan || '',
-                tahun: this.batchTahun || ''
+                tahun: this.batchTahun || '',
+                search: this.batchSearch || '',
+                status_bayar: this.batchStatus || ''
             });
             const url = '/finance/dokumen/batch-invoice?' + params.toString();
             window.open(url, '_blank');

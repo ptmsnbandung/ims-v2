@@ -47,56 +47,40 @@ class DashboardController extends Controller
         try {
             $selectedBulanInt = (int) $selectedBulan;
             $selectedTahunInt = (int) $selectedTahun;
+            $startOfYear = Carbon::createFromDate($selectedTahunInt, 1, 1)->startOfYear()->format('Y-m-d 00:00:00');
+            $endOfYear = Carbon::createFromDate($selectedTahunInt, 12, 31)->endOfYear()->format('Y-m-d 23:59:59');
 
-            $startDate = Carbon::createFromDate($selectedTahunInt, $selectedBulanInt, 1)->startOfMonth()->format('Y-m-d 00:00:00');
-            $endDate = Carbon::createFromDate($selectedTahunInt, $selectedBulanInt, 1)->endOfMonth()->format('Y-m-d 23:59:59');
-            $prefixYm = "{$selectedTahunInt}-" . str_pad((string)$selectedBulanInt, 2, '0', STR_PAD_LEFT);
-
-            $prevMonthDate = Carbon::createFromDate($selectedTahunInt, $selectedBulanInt, 1)->subMonth();
-            $prevYear = (int) $prevMonthDate->format('Y');
-            $prevMonth = (int) $prevMonthDate->format('m');
-            $prevStartDate = $prevMonthDate->copy()->startOfMonth()->format('Y-m-d 00:00:00');
-            $prevEndDate = $prevMonthDate->copy()->endOfMonth()->format('Y-m-d 23:59:59');
-            $prevPrefixYm = "{$prevYear}-" . str_pad((string)$prevMonth, 2, '0', STR_PAD_LEFT);
+            $prevYearInt = $selectedTahunInt - 1;
+            $prevStartOfYear = Carbon::createFromDate($prevYearInt, 1, 1)->startOfYear()->format('Y-m-d 00:00:00');
+            $prevEndOfYear = Carbon::createFromDate($prevYearInt, 12, 31)->endOfYear()->format('Y-m-d 23:59:59');
         } catch (\Throwable $e) {
-            $selectedBulan = date('m');
             $selectedTahun = (string) date('Y');
-            $selectedBulanInt = (int) $selectedBulan;
             $selectedTahunInt = (int) $selectedTahun;
-            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d 00:00:00');
-            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d 23:59:59');
-            $prefixYm = date('Y-m');
-            $prevYear = (int) Carbon::now()->subMonth()->format('Y');
-            $prevMonth = (int) Carbon::now()->subMonth()->format('m');
-            $prevStartDate = Carbon::now()->subMonth()->startOfMonth()->format('Y-m-d 00:00:00');
-            $prevEndDate = Carbon::now()->subMonth()->endOfMonth()->format('Y-m-d 23:59:59');
-            $prevPrefixYm = Carbon::now()->subMonth()->format('Y-m');
+            $startOfYear = Carbon::createFromDate($selectedTahunInt, 1, 1)->startOfYear()->format('Y-m-d 00:00:00');
+            $endOfYear = Carbon::createFromDate($selectedTahunInt, 12, 31)->endOfYear()->format('Y-m-d 23:59:59');
+            $prevYearInt = $selectedTahunInt - 1;
+            $prevStartOfYear = Carbon::createFromDate($prevYearInt, 1, 1)->startOfYear()->format('Y-m-d 00:00:00');
+            $prevEndOfYear = Carbon::createFromDate($prevYearInt, 12, 31)->endOfYear()->format('Y-m-d 23:59:59');
         }
 
-        // Helper closures for versatile date matching across MySQL/SQLite/String formats
-        $applyDateFilter = function ($query, $col = 'date_create') use ($startDate, $endDate, $prefixYm, $selectedBulanInt, $selectedTahunInt) {
-            $query->where(function ($q) use ($col, $startDate, $endDate, $prefixYm, $selectedBulanInt, $selectedTahunInt) {
-                $q->whereBetween($col, [$startDate, $endDate])
-                  ->orWhere($col, 'like', "{$prefixYm}%")
-                  ->orWhere(function ($sub) use ($col, $selectedBulanInt, $selectedTahunInt) {
-                      $sub->whereMonth($col, $selectedBulanInt)
-                          ->whereYear($col, $selectedTahunInt);
-                  });
+        // Helper closures for yearly date matching across MySQL/SQLite/String formats
+        $applyYearFilter = function ($query, $col = 'date_create') use ($startOfYear, $endOfYear, $selectedTahunInt) {
+            $query->where(function ($q) use ($col, $startOfYear, $endOfYear, $selectedTahunInt) {
+                $q->whereBetween($col, [$startOfYear, $endOfYear])
+                  ->orWhere($col, 'like', "{$selectedTahunInt}%")
+                  ->orWhereYear($col, $selectedTahunInt);
             });
         };
 
-        $prevApplyDateFilter = function ($query, $col = 'date_create') use ($prevStartDate, $prevEndDate, $prevPrefixYm, $prevMonth, $prevYear) {
-            $query->where(function ($q) use ($col, $prevStartDate, $prevEndDate, $prevPrefixYm, $prevMonth, $prevYear) {
-                $q->whereBetween($col, [$prevStartDate, $prevEndDate])
-                  ->orWhere($col, 'like', "{$prevPrefixYm}%")
-                  ->orWhere(function ($sub) use ($col, $prevMonth, $prevYear) {
-                      $sub->whereMonth($col, $prevMonth)
-                          ->whereYear($col, $prevYear);
-                  });
+        $prevApplyYearFilter = function ($query, $col = 'date_create') use ($prevStartOfYear, $prevEndOfYear, $prevYearInt) {
+            $query->where(function ($q) use ($col, $prevStartOfYear, $prevEndOfYear, $prevYearInt) {
+                $q->whereBetween($col, [$prevStartOfYear, $prevEndOfYear])
+                  ->orWhere($col, 'like', "{$prevYearInt}%")
+                  ->orWhereYear($col, $prevYearInt);
             });
         };
 
-        // 1. STATISTIK USER & PELANGGAN BARU (Bulan & Tahun Terpilih)
+        // 1. STATISTIK USER & PELANGGAN BARU (Tahunan)
         $chartData = [
             'monthlyLabels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
             'monthlyRegistrasi' => array_fill(0, 12, 0),
@@ -110,9 +94,7 @@ class DashboardController extends Controller
         ];
 
         $newUserStats = [
-            'selectedBulan' => $selectedBulan,
             'selectedTahun' => $selectedTahun,
-            'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
             'totalBaru' => 0,
             'aktifBaru' => 0,
             'prosesBaru' => 0,
@@ -140,11 +122,11 @@ class DashboardController extends Controller
                 : (Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : null);
 
             if ($sourceTable) {
-                // Aggregated counts for the selected month
+                // Aggregated counts for the selected year
                 $statsQuery = DB::table($sourceTable);
-                $applyDateFilter($statsQuery, 'date_create');
+                $applyYearFilter($statsQuery, 'date_create');
 
-                $monthStats = $statsQuery->selectRaw("
+                $yearStats = $statsQuery->selectRaw("
                     COUNT(*) as total_baru,
                     COUNT(CASE WHEN status_reg IN ('20', '20.0', '20.1') THEN 1 END) as aktif_baru,
                     COUNT(CASE WHEN status_reg IN ('11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1') THEN 1 END) as proses_baru,
@@ -155,14 +137,14 @@ class DashboardController extends Controller
                     COUNT(CASE WHEN status_reg IN ('18', '18.1', '19', '19.1') THEN 1 END) as aktivasi_count
                 ")->first();
 
-                $totalBaru = (int) ($monthStats->total_baru ?? 0);
-                $aktifBaru = (int) ($monthStats->aktif_baru ?? 0);
-                $prosesBaru = (int) ($monthStats->proses_baru ?? 0);
-                $batalBaru = (int) ($monthStats->batal_baru ?? 0);
+                $totalBaru = (int) ($yearStats->total_baru ?? 0);
+                $aktifBaru = (int) ($yearStats->aktif_baru ?? 0);
+                $prosesBaru = (int) ($yearStats->proses_baru ?? 0);
+                $batalBaru = (int) ($yearStats->batal_baru ?? 0);
 
-                // Previous month count for trend comparison
+                // Previous year count for trend comparison
                 $prevQuery = DB::table($sourceTable);
-                $prevApplyDateFilter($prevQuery, 'date_create');
+                $prevApplyYearFilter($prevQuery, 'date_create');
                 $prevTotalBaru = $prevQuery->count();
 
                 $growthCount = $totalBaru - $prevTotalBaru;
@@ -175,10 +157,10 @@ class DashboardController extends Controller
                     ->whereIn('status_reg', ['20', '20.0', '20.1'])
                     ->count();
 
-                // Detailed Recent New Users and Package Breakdown
+                // Detailed Recent New Users and Package Breakdown for the Year
                 if ($sourceTable === 'view_batchjob') {
                     $recentQuery = DB::table('view_batchjob');
-                    $applyDateFilter($recentQuery, 'date_create');
+                    $applyYearFilter($recentQuery, 'date_create');
 
                     $recentNewUsers = $recentQuery
                         ->select(
@@ -194,7 +176,7 @@ class DashboardController extends Controller
                         ->get();
 
                     $paketQuery = DB::table('view_batchjob');
-                    $applyDateFilter($paketQuery, 'date_create');
+                    $applyYearFilter($paketQuery, 'date_create');
 
                     $paketBreakdown = $paketQuery
                         ->select(
@@ -208,7 +190,7 @@ class DashboardController extends Controller
                         ->get();
                 } else {
                     $baseQuery = DB::table('trx_batchjob_register as r');
-                    $applyDateFilter($baseQuery, 'r.date_create');
+                    $applyYearFilter($baseQuery, 'r.date_create');
 
                     $hasPelanggan = Schema::hasTable('m_pelanggan');
                     $hasBandwith = Schema::hasTable('m_bandwith');
@@ -286,7 +268,7 @@ class DashboardController extends Controller
                     ->get();
                 }
 
-                // New system users (tb_pengguna)
+                // New system users (tb_pengguna) in the year
                 $totalPenggunaSistemBaru = 0;
                 if (Schema::hasTable('tb_pengguna')) {
                     $userDateCol = Schema::hasColumn('tb_pengguna', 'date_create') 
@@ -295,15 +277,13 @@ class DashboardController extends Controller
                     
                     if ($userDateCol) {
                         $penggunaQuery = DB::table('tb_pengguna');
-                        $applyDateFilter($penggunaQuery, $userDateCol);
+                        $applyYearFilter($penggunaQuery, $userDateCol);
                         $totalPenggunaSistemBaru = $penggunaQuery->count();
                     }
                 }
 
                 $newUserStats = [
-                    'selectedBulan' => $selectedBulan,
                     'selectedTahun' => $selectedTahun,
-                    'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
                     'totalBaru' => $totalBaru,
                     'aktifBaru' => $aktifBaru,
                     'prosesBaru' => $prosesBaru,
@@ -316,10 +296,10 @@ class DashboardController extends Controller
                     'paketBreakdown' => $paketBreakdown,
                     'recentNewUsers' => $recentNewUsers,
                     'statusBreakdown' => [
-                        '11' => (int) ($monthStats->draft_count ?? 0),
-                        '12' => (int) ($monthStats->survey_count ?? 0),
-                        '16' => (int) ($monthStats->instalasi_count ?? 0),
-                        '18_19' => (int) ($monthStats->aktivasi_count ?? 0),
+                        '11' => (int) ($yearStats->draft_count ?? 0),
+                        '12' => (int) ($yearStats->survey_count ?? 0),
+                        '16' => (int) ($yearStats->instalasi_count ?? 0),
+                        '18_19' => (int) ($yearStats->aktivasi_count ?? 0),
                         '20' => $aktifBaru,
                         'batal' => $batalBaru,
                     ],

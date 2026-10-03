@@ -86,30 +86,17 @@
                 </div>
             </div>
 
-            <!-- Filter Bulan & Tahun -->
-            <form action="{{ route('dashboard') }}" method="GET" class="flex flex-wrap items-center gap-2">
+            <!-- Filter Tahun Saja -->
+            <form action="{{ route('dashboard') }}" method="GET" class="flex items-center gap-2">
                 <div class="relative">
-                    <select name="bulan" class="appearance-none pl-3 pr-7 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
-                        @foreach($monthsList as $num => $namaBulan)
-                            <option value="{{ $num }}" {{ $selectedBulan == $num ? 'selected' : '' }}>
-                                {{ $namaBulan }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                </div>
-
-                <div class="relative">
-                    <select name="tahun" class="appearance-none pl-3 pr-7 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
+                    <select name="tahun" class="appearance-none pl-3.5 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
                         @foreach($availableYears as $year)
                             <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
-                                {{ $year }}
+                                Tahun {{ $year }}
                             </option>
                         @endforeach
                     </select>
-                    <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                    <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </div>
@@ -498,62 +485,18 @@
                             Statistik User & Pelanggan Baru
                         </h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400">
-                            Periode Aktif: <span class="font-bold text-blue-600 dark:text-cyan-400">{{ $newUserStats['selectedBulanNama'] }} {{ $newUserStats['selectedTahun'] }}</span> &middot; Total {{ number_format($newUserStats['totalBaru']) }} pendaftaran baru tercatat.
+                            Periode: <span class="font-bold text-blue-600 dark:text-cyan-400">Tahun {{ $selectedTahun }}</span> &middot; Total {{ number_format($newUserStats['totalBaru']) }} pendaftaran baru tercatat.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Filter Month & Year Form -->
-            <form action="{{ route('dashboard') }}" method="GET" class="flex flex-wrap items-center gap-2.5">
-                <!-- Dropdown Bulan -->
-                <div class="relative">
-                    <select name="bulan" 
-                            class="appearance-none pl-3.5 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
-                        @foreach($monthsList as $num => $namaBulan)
-                            <option value="{{ $num }}" {{ $selectedBulan == $num ? 'selected' : '' }}>
-                                {{ $namaBulan }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                </div>
-
-                <!-- Dropdown Tahun -->
-                <div class="relative">
-                    <select name="tahun" 
-                            class="appearance-none pl-3.5 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
-                        @foreach($availableYears as $year)
-                            <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
-                                {{ $year }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" 
-                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/20 flex items-center gap-1.5 transition cursor-pointer">
-                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-                    </svg>
-                    <span>Filter</span>
-                </button>
-
-                <!-- Reset to Current Month Button -->
-                @if($selectedBulan != date('m') || $selectedTahun != date('Y'))
-                    <a href="{{ route('dashboard') }}" 
-                       class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition"
-                       title="Kembali ke Bulan & Tahun Saat Ini">
-                        Reset
-                    </a>
-                @endif
-            </form>
+            <!-- Single Year Indicator Badge -->
+            <div class="flex items-center gap-2">
+                <span class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-cyan-400 border border-blue-200 dark:border-blue-800/60 font-mono">
+                    Tahun {{ $selectedTahun }}
+                </span>
+            </div>
         </div>
 
         <!-- 4 KPI Metrics Grid -->
@@ -585,7 +528,7 @@
                             {{ $newUserStats['growthCount'] }} ({{ $newUserStats['growthPercent'] }}%)
                         </span>
                     @endif
-                    <span class="text-[11px] text-slate-400">vs bln lalu</span>
+                    <span class="text-[11px] text-slate-400">vs thn lalu</span>
                 </div>
             </div>
 

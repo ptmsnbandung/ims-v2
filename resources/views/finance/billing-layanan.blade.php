@@ -660,7 +660,7 @@
 
                                 <!-- Status Tagihan Badge -->
                                 <div>
-                                    @if($inv->status_bill_lay == '15' || ($confirmation && $confirmation->status === 'approved'))
+                                    @if($inv->status_bill_lay == '15')
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
                                         <span>PAID (Lunas)</span>
@@ -670,7 +670,7 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400"></span>
                                         <span>Transfer Ditolak</span>
                                     </span>
-                                    @elseif($hasUploadedProof && $inv->status_bill_lay != '15')
+                                    @elseif($hasUploadedProof || ($confirmation && !empty($confirmation->proof_file)))
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse"></span>
                                         <span>Menunggu Verifikasi</span>

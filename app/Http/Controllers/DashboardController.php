@@ -94,7 +94,9 @@ class DashboardController extends Controller
         ];
 
         $newUserStats = [
+            'selectedBulan' => $selectedBulan,
             'selectedTahun' => $selectedTahun,
+            'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
             'totalBaru' => 0,
             'aktifBaru' => 0,
             'prosesBaru' => 0,
@@ -283,7 +285,9 @@ class DashboardController extends Controller
                 }
 
                 $newUserStats = [
+                    'selectedBulan' => $selectedBulan,
                     'selectedTahun' => $selectedTahun,
+                    'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
                     'totalBaru' => $totalBaru,
                     'aktifBaru' => $aktifBaru,
                     'prosesBaru' => $prosesBaru,

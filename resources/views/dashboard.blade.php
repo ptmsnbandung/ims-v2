@@ -215,7 +215,7 @@
                             Pipeline & Tahapan Aktivasi
                         </h4>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Status pendaftaran pada bulan {{ $newUserStats['selectedBulanNama'] }} {{ $selectedTahun }}.
+                            Status pendaftaran sepanjang tahun {{ $selectedTahun }}.
                         </p>
                     </div>
                     <span class="text-xs font-mono font-bold text-blue-600 dark:text-cyan-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-500/20">
@@ -455,7 +455,7 @@
                     </div>
                     <span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full">Kas Masuk</span>
                 </div>
-                <h3 class="text-base font-bold text-slate-900 dark:text-white">Realisasi Pendapatan ({{ $newUserStats['selectedBulanNama'] }} {{ $newUserStats['selectedTahun'] }})</h3>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">Realisasi Pendapatan (Tahun {{ $selectedTahun }})</h3>
                 <div class="mt-2">
                     <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                         Rp {{ number_format($financeStats['paidAmount'] ?? 0, 0, ',', '.') }}
@@ -608,7 +608,7 @@
             <div class="lg:col-span-7 space-y-3">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
-                        <span>Pendaftaran Pelanggan Baru ({{ $newUserStats['selectedBulanNama'] }} {{ $newUserStats['selectedTahun'] }})</span>
+                        <span>Pendaftaran Pelanggan Baru (Tahun {{ $selectedTahun }})</span>
                     </h3>
                     <a href="{{ route('teknik.pendaftaran') }}" class="text-xs font-bold text-blue-600 dark:text-cyan-400 hover:underline">
                         Buka Semua &rarr;
@@ -687,7 +687,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="5" class="py-8 text-center text-slate-400 text-xs">
-                                            Tidak ada data pendaftaran pelanggan baru pada bulan {{ $newUserStats['selectedBulanNama'] }} {{ $newUserStats['selectedTahun'] }}.
+                                            Tidak ada data pendaftaran pelanggan baru pada tahun {{ $selectedTahun }}.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -704,7 +704,7 @@
                 <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                         <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                            Paket Populer ({{ $newUserStats['selectedBulanNama'] }} {{ $newUserStats['selectedTahun'] }})
+                            Paket Populer (Tahun {{ $selectedTahun }})
                         </h4>
                         <span class="text-[11px] text-slate-400">Total User</span>
                     </div>

@@ -25,343 +25,7 @@
 @endphp
 
 @section('content')
-<div class="space-y-6"
-     x-data="{
-         // Filter State
-         showAdvancedFilters: false,
-         // Modal Generate Invoice
-         generateModalOpen: false,
-         generateJenis: 'single',
-         generateLayanan: '',
-         generateBulan: '{{ $selectedBulan ?: date('m') }}',
-         generateTahun: '{{ $selectedTahun ?: date('Y') }}',
-         generateKirimWa: true,
-         generateKirimEmail: true,
-         generatePpn: 'default',
-         generateAutoPublish: 'yes',
-         generateSearch: '',
-         generatePerPage: 10,
-         generatePage: 1,
-         generateCandidates: [],
-         generateLoading: false,
-         async openGenerateModal() {
-             this.generateModalOpen = true;
-             await this.fetchGenerateCandidates();
-         },
-         async fetchGenerateCandidates() {
-             this.generateLoading = true;
-             try {
-                 const params = new URLSearchParams({
-                     bulan: this.generateBulan || '',
-                     tahun: this.generateTahun || '',
-                     layanan: this.generateLayanan || '',
-                     search: this.generateSearch || '',
-                 });
-                 const res = await fetch('/finance/billing-layanan/generate-candidates?' + params.toString());
-                 const data = await res.json();
-                 if (data && data.success) {
-                     this.generateCandidates = data.data || [];
-                 } else {
-                     this.generateCandidates = [];
-                 }
-                 this.generatePage = 1;
-             } catch (e) {
-                 console.error('Error fetching generate candidates:', e);
-                 this.generateCandidates = [];
-             } finally {
-                 this.generateLoading = false;
-             }
-         },
-         get paginatedCandidates() {
-             const start = (this.generatePage - 1) * this.generatePerPage;
-             return this.generateCandidates.slice(start, start + this.generatePerPage);
-         },
-         get totalCandidatePages() {
-             return Math.ceil(this.generateCandidates.length / this.generatePerPage) || 1;
-         },
-         candidateFirstPage() { this.generatePage = 1; },
-         candidatePrevPage() { if (this.generatePage > 1) this.generatePage--; },
-         candidateNextPage() { if (this.generatePage < this.totalCandidatePages) this.generatePage++; },
-         candidateLastPage() { this.generatePage = this.totalCandidatePages; },
-
-         // Modal Batch Print Invoices
-         batchPrintModalOpen: false,
-         batchBulan: '{{ request('bulan', $selectedBulan ?? '') }}',
-         batchTahun: '{{ request('tahun', $selectedTahun ?? '') }}',
-         batchSearch: '',
-         batchStatus: '{{ request('status_bayar', '') }}',
-         batchInvoices: [],
-         pageInvoices: @json($pageInvoices),
-         selectedBatchKodes: [],
-         batchLoading: false,
-         batchSelectAll: false,
-         async openBatchPrintModal() {
-             this.batchPrintModalOpen = true;
-             if (this.pageInvoices && this.pageInvoices.length > 0) {
-                 this.batchInvoices = [...this.pageInvoices];
-             }
-             await this.fetchBatchInvoices();
-         },
-         async fetchBatchInvoices() {
-             this.batchLoading = true;
-             this.selectedBatchKodes = [];
-             this.batchSelectAll = false;
-             try {
-                 const params = new URLSearchParams({
-                     bulan: this.batchBulan || '',
-                     tahun: this.batchTahun || '',
-                     search: this.batchSearch || '',
-                     status_bayar: this.batchStatus || ''
-                 });
-                 const res = await fetch('/finance/dokumen/batch-invoice/search?' + params.toString());
-                 const data = await res.json();
-                 if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
-                     this.batchInvoices = data.data;
-                 } else if (this.pageInvoices && this.pageInvoices.length > 0 && !this.batchSearch && !this.batchStatus) {
-                     this.batchInvoices = [...this.pageInvoices];
-                 } else {
-                     this.batchInvoices = (data && data.data) ? data.data : [];
-                 }
-             } catch (e) {
-                 console.error('Error fetching batch invoices:', e);
-                 if (this.pageInvoices && this.pageInvoices.length > 0) {
-                     this.batchInvoices = [...this.pageInvoices];
-                 }
-             } finally {
-                 this.batchLoading = false;
-             }
-         },
-         toggleBatchSelectAll() {
-             if (this.batchSelectAll) {
-                 this.selectedBatchKodes = this.batchInvoices.map(inv => inv.kode_billing_layanan);
-             } else {
-                 this.selectedBatchKodes = [];
-             }
-         },
-         updateBatchSelectAllState() {
-             this.batchSelectAll = (this.batchInvoices.length > 0 && this.selectedBatchKodes.length === this.batchInvoices.length);
-         },
-         printSelectedInvoices() {
-             if (this.selectedBatchKodes.length === 0) {
-                 alert('Silakan pilih minimal 1 tagihan pelanggan untuk dicetak.');
-                 return;
-             }
-             const url = '/finance/dokumen/batch-invoice?kodes=' + encodeURIComponent(this.selectedBatchKodes.join(','));
-             window.open(url, '_blank');
-         },
-         printAllFilteredInvoices() {
-             const params = new URLSearchParams({
-                 bulan: this.batchBulan || '',
-                 tahun: this.batchTahun || ''
-             });
-             const url = '/finance/dokumen/batch-invoice?' + params.toString();
-             window.open(url, '_blank');
-         },
-
-         // Modal Detail Breakdown
-         detailModalOpen: false,
-         detailLoading: false,
-         detailData: {
-             invoice: {},
-             items: [],
-             logs: []
-         },
-         async openDetailModal(kodeBilling) {
-             this.detailLoading = true;
-             this.detailModalOpen = true;
-             try {
-                 const res = await fetch('/finance/api/billing-layanan-detail?kode_billing=' + encodeURIComponent(kodeBilling));
-                 const data = await res.json();
-                 this.detailData = data;
-             } catch (e) {
-                 console.error('Error fetch billing detail:', e);
-             } finally {
-                 this.detailLoading = false;
-             }
-         },
-         openDetailModalFromEl(el) {
-             this.openDetailModal(el.dataset.kode);
-         },
-
-         // Modal Konfirmasi Bayar
-         payModalOpen: false,
-         payKodeBilling: '',
-         payNomorInternet: '',
-         payNamaPelanggan: '',
-         payNominal: 0,
-         payMetode: 'transfer',
-         payBank: 'BCA',
-         payNamaKolektor: '',
-         payNoKwitansi: '',
-         payCatatan: '',
-         openPayModal(kodeBilling, noInternet, nama, nominal, paymentType = '2', destinationBank = '') {
-             this.payKodeBilling = kodeBilling;
-             this.payNomorInternet = noInternet;
-             this.payNamaPelanggan = nama;
-             this.payNominal = parseFloat(nominal) || 0;
-             this.payNamaKolektor = '';
-             this.payNoKwitansi = '';
-             this.payDestinationBank = destinationBank ? String(destinationBank).trim() : '';
-             const pType = String(paymentType || '2');
-             if (pType === '3' || pType === 'cash') {
-                 this.payMetode = 'cash';
-                 this.payBank = this.payDestinationBank || 'Cash To Collector';
-                 this.payCatatan = 'Pembayaran Cash to Collector Terverifikasi';
-             } else {
-                 this.payMetode = 'transfer';
-                 this.payBank = this.payDestinationBank || 'BCA';
-                 this.payCatatan = 'Pembayaran Transfer Terverifikasi';
-             }
-             this.payModalOpen = true;
-         },
-         openPayModalFromEl(el) {
-             this.openPayModal(
-                 el.dataset.kode,
-                 el.dataset.internet,
-                 el.dataset.nama,
-                 el.dataset.nominal,
-                 el.dataset.paymentType || '2',
-                 el.dataset.destinationBank || ''
-             );
-         },
-
-         // Modal Adjustment
-         adjustModalOpen: false,
-         adjustKodeBilling: '',
-         adjustNomorInternet: '',
-         adjustNamaPelanggan: '',
-         adjustSubtotal: 0,
-         adjustPotongan: 0,
-         adjustDescPotongan: '',
-         adjustDenda: 0,
-         adjustNote: '',
-         openAdjustModal(kodeBilling, noInternet, nama, subtotal, potongan, descPotongan, denda) {
-             this.adjustKodeBilling = kodeBilling;
-             this.adjustNomorInternet = noInternet;
-             this.adjustNamaPelanggan = nama;
-             this.adjustSubtotal = parseFloat(subtotal) || 0;
-             this.adjustPotongan = parseFloat(potongan) || 0;
-             this.adjustDescPotongan = descPotongan || '';
-             this.adjustDenda = parseFloat(denda) || 0;
-             this.adjustNote = 'Penyesuaian tagihan pelanggan';
-             this.adjustModalOpen = true;
-         },
-         openAdjustModalFromEl(el) {
-             this.adjustKodeBilling = el.dataset.kode;
-             this.adjustNomorInternet = el.dataset.internet;
-             this.adjustNamaPelanggan = el.dataset.nama;
-             this.adjustSubtotal = parseFloat(el.dataset.subtotal) || 0;
-             this.adjustPotongan = parseFloat(el.dataset.potongan) || 0;
-             this.adjustDescPotongan = el.dataset.descPotongan || '';
-             this.adjustDenda = parseFloat(el.dataset.denda) || 0;
-             this.adjustNote = 'Penyesuaian tagihan pelanggan';
-             this.adjustModalOpen = true;
-         },
-
-         get adjustTotalBaru() {
-             return Math.max(0, this.adjustSubtotal - (parseFloat(this.adjustPotongan) || 0) + (parseFloat(this.adjustDenda) || 0));
-         },
-
-         // Modal Rollback
-         rollbackModalOpen: false,
-         rollbackKodeBilling: '',
-         rollbackNamaPelanggan: '',
-         openRollbackModal(kodeBilling, nama) {
-             this.rollbackKodeBilling = kodeBilling;
-             this.rollbackNamaPelanggan = nama;
-             this.rollbackModalOpen = true;
-         },
-         openRollbackModalFromEl(el) {
-             this.rollbackKodeBilling = el.dataset.kode;
-             this.rollbackNamaPelanggan = el.dataset.nama;
-             this.rollbackModalOpen = true;
-         },
-
-         // Modal Change Payment Method
-         changePayModalOpen: false,
-         changePayKodeBilling: '',
-         changePayNamaPelanggan: '',
-         changePayType: '1',
-         openChangePayModal(kodeBilling, nama, currentType) {
-             this.changePayKodeBilling = kodeBilling;
-             this.changePayNamaPelanggan = nama;
-             this.changePayType = String(currentType || '1');
-             this.changePayModalOpen = true;
-         },
-         openChangePayModalFromEl(el) {
-             this.changePayKodeBilling = el.dataset.kode;
-             this.changePayNamaPelanggan = el.dataset.nama;
-             this.changePayType = String(el.dataset.paymentType || '1');
-             this.changePayModalOpen = true;
-         },
-
-         // Modal Midtrans Payment Link
-         midtransModalOpen: false,
-         midtransKode: '',
-         midtransNama: '',
-         midtransNominal: 0,
-         midtransUrl: '',
-         midtransExpiry: '',
-         midtransIsExpired: false,
-         midtransWaUrl: '',
-         copied: false,
-         openMidtransModalFromEl(el) {
-             this.midtransKode = el.dataset.kode;
-             this.midtransNama = el.dataset.nama;
-             this.midtransNominal = parseFloat(el.dataset.nominal) || 0;
-             this.midtransUrl = el.dataset.midtransUrl || '';
-             this.midtransExpiry = el.dataset.expiry || '';
-             this.midtransIsExpired = el.dataset.isExpired === '1';
-             this.midtransWaUrl = el.dataset.waUrl || '';
-             this.copied = false;
-             this.midtransModalOpen = true;
-         },
-         copyMidtransLink() {
-             if (this.midtransUrl) {
-                 if (navigator.clipboard) {
-                     navigator.clipboard.writeText(this.midtransUrl);
-                 } else {
-                     const temp = document.createElement('textarea');
-                     temp.value = this.midtransUrl;
-                     document.body.appendChild(temp);
-                     temp.select();
-                     document.execCommand('copy');
-                     document.body.removeChild(temp);
-                 }
-                 this.copied = true;
-                 setTimeout(() => { this.copied = false; }, 2500);
-             }
-         },
-
-         // Modal Bukti Transfer Pelanggan
-         proofModalOpen: false,
-         proofKodeBilling: '',
-         proofNamaPelanggan: '',
-         proofInternet: '',
-         proofNominal: 0,
-         proofUrl: '',
-         proofNotes: '',
-         proofDate: '',
-         proofStatus: '',
-         proofDestinationBank: '',
-         openProofModalFromEl(el) {
-             this.proofKodeBilling = el.dataset.kode || '';
-             this.proofNamaPelanggan = el.dataset.nama || '';
-             this.proofInternet = el.dataset.internet || '';
-             this.proofNominal = parseFloat(el.dataset.nominal) || 0;
-             this.proofUrl = el.dataset.proofUrl || '';
-             this.proofNotes = el.dataset.notes || '';
-             this.proofDate = el.dataset.proofDate || '';
-             this.proofStatus = el.dataset.status || '';
-             this.proofDestinationBank = el.dataset.destinationBank || '';
-             this.proofModalOpen = true;
-         },
-
-         // Format Currency Helper
-         formatRupiah(num) {
-             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
-         }
-     }">
+<div class="space-y-6" x-data="billingLayananPage()">
 
     <!-- Page Header & Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative overflow-hidden">
@@ -2386,3 +2050,341 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function billingLayananPage() {
+    return {
+        // Filter State
+        showAdvancedFilters: false,
+        // Modal Generate Invoice
+        generateModalOpen: false,
+        generateJenis: 'single',
+        generateLayanan: '',
+        generateBulan: '{{ $selectedBulan ?: date('m') }}',
+        generateTahun: '{{ $selectedTahun ?: date('Y') }}',
+        generateKirimWa: true,
+        generateKirimEmail: true,
+        generatePpn: 'default',
+        generateAutoPublish: 'yes',
+        generateSearch: '',
+        generatePerPage: 10,
+        generatePage: 1,
+        generateCandidates: [],
+        generateLoading: false,
+        async openGenerateModal() {
+            this.generateModalOpen = true;
+            await this.fetchGenerateCandidates();
+        },
+        async fetchGenerateCandidates() {
+            this.generateLoading = true;
+            try {
+                const params = new URLSearchParams({
+                    bulan: this.generateBulan || '',
+                    tahun: this.generateTahun || '',
+                    layanan: this.generateLayanan || '',
+                    search: this.generateSearch || '',
+                });
+                const res = await fetch('/finance/billing-layanan/generate-candidates?' + params.toString());
+                if (res.ok) {
+                    const data = await res.json();
+                    this.generateCandidates = data.candidates || [];
+                } else {
+                    this.generateCandidates = [];
+                }
+            } catch (e) {
+                console.error('Error fetching candidates:', e);
+                this.generateCandidates = [];
+            } finally {
+                this.generateLoading = false;
+            }
+        },
+        get paginatedCandidates() {
+            const start = (this.generatePage - 1) * this.generatePerPage;
+            return this.generateCandidates.slice(start, start + this.generatePerPage);
+        },
+        get totalCandidatePages() {
+            return Math.ceil(this.generateCandidates.length / this.generatePerPage) || 1;
+        },
+        candidateFirstPage() { this.generatePage = 1; },
+        candidatePrevPage() { if (this.generatePage > 1) this.generatePage--; },
+        candidateNextPage() { if (this.generatePage < this.totalCandidatePages) this.generatePage++; },
+        candidateLastPage() { this.generatePage = this.totalCandidatePages; },
+
+        // Modal Batch Print Invoices
+        batchPrintModalOpen: false,
+        batchBulan: '{{ request('bulan', $selectedBulan ?? '') }}',
+        batchTahun: '{{ request('tahun', $selectedTahun ?? '') }}',
+        batchSearch: '',
+        batchStatus: '{{ request('status_bayar', '') }}',
+        batchInvoices: [],
+        pageInvoices: @json($pageInvoices),
+        selectedBatchKodes: [],
+        batchLoading: false,
+        batchSelectAll: false,
+        async openBatchPrintModal() {
+            this.batchPrintModalOpen = true;
+            if (this.pageInvoices && this.pageInvoices.length > 0) {
+                this.batchInvoices = [...this.pageInvoices];
+            }
+            await this.fetchBatchInvoices();
+        },
+        async fetchBatchInvoices() {
+            this.batchLoading = true;
+            this.selectedBatchKodes = [];
+            this.batchSelectAll = false;
+            try {
+                const params = new URLSearchParams({
+                    bulan: this.batchBulan || '',
+                    tahun: this.batchTahun || '',
+                    search: this.batchSearch || '',
+                    status_bayar: this.batchStatus || ''
+                });
+                const res = await fetch('/finance/dokumen/batch-invoice/search?' + params.toString());
+                const data = await res.json();
+                if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+                    this.batchInvoices = data.data;
+                } else if (this.pageInvoices && this.pageInvoices.length > 0 && !this.batchSearch && !this.batchStatus) {
+                    this.batchInvoices = [...this.pageInvoices];
+                } else {
+                    this.batchInvoices = (data && data.data) ? data.data : [];
+                }
+            } catch (e) {
+                console.error('Error fetching batch invoices:', e);
+                if (this.pageInvoices && this.pageInvoices.length > 0) {
+                    this.batchInvoices = [...this.pageInvoices];
+                }
+            } finally {
+                this.batchLoading = false;
+            }
+        },
+        toggleBatchSelectAll() {
+            if (this.batchSelectAll) {
+                this.selectedBatchKodes = this.batchInvoices.map(inv => inv.kode_billing_layanan);
+            } else {
+                this.selectedBatchKodes = [];
+            }
+        },
+        updateBatchSelectAllState() {
+            this.batchSelectAll = (this.batchInvoices.length > 0 && this.selectedBatchKodes.length === this.batchInvoices.length);
+        },
+        printSelectedInvoices() {
+            if (this.selectedBatchKodes.length === 0) {
+                alert('Silakan pilih minimal 1 tagihan pelanggan untuk dicetak.');
+                return;
+            }
+            const url = '/finance/dokumen/batch-invoice?kodes=' + encodeURIComponent(this.selectedBatchKodes.join(','));
+            window.open(url, '_blank');
+        },
+        printAllFilteredInvoices() {
+            const params = new URLSearchParams({
+                bulan: this.batchBulan || '',
+                tahun: this.batchTahun || ''
+            });
+            const url = '/finance/dokumen/batch-invoice?' + params.toString();
+            window.open(url, '_blank');
+        },
+
+        // Modal Detail Breakdown
+        detailModalOpen: false,
+        detailLoading: false,
+        detailData: { invoice: {}, items: [], logs: [] },
+        async openDetailModal(kodeBilling) {
+            this.detailLoading = true;
+            this.detailModalOpen = true;
+            try {
+                const res = await fetch('/finance/api/billing-layanan-detail?kode_billing=' + encodeURIComponent(kodeBilling));
+                const data = await res.json();
+                this.detailData = data;
+            } catch (e) {
+                console.error('Error fetch billing detail:', e);
+            } finally {
+                this.detailLoading = false;
+            }
+        },
+        openDetailModalFromEl(el) {
+            this.openDetailModal(el.dataset.kode);
+        },
+
+        // Modal Konfirmasi Bayar
+        payModalOpen: false,
+        payKodeBilling: '',
+        payNomorInternet: '',
+        payNamaPelanggan: '',
+        payNominal: 0,
+        payMetode: 'transfer',
+        payBank: 'BCA',
+        payNamaKolektor: '',
+        payNoKwitansi: '',
+        payCatatan: '',
+        openPayModal(kodeBilling, noInternet, nama, nominal, paymentType = '2', destinationBank = '') {
+            this.payKodeBilling = kodeBilling;
+            this.payNomorInternet = noInternet;
+            this.payNamaPelanggan = nama;
+            this.payNominal = parseFloat(nominal) || 0;
+            this.payNamaKolektor = '';
+            this.payNoKwitansi = '';
+            this.payDestinationBank = destinationBank ? String(destinationBank).trim() : '';
+            const pType = String(paymentType || '2');
+            if (pType === '3' || pType === 'cash') {
+                this.payMetode = 'cash';
+                this.payBank = this.payDestinationBank || 'Cash To Collector';
+                this.payCatatan = 'Pembayaran Cash to Collector Terverifikasi';
+            } else {
+                this.payMetode = 'transfer';
+                this.payBank = this.payDestinationBank || 'BCA';
+                this.payCatatan = 'Pembayaran Transfer Terverifikasi';
+            }
+            this.payModalOpen = true;
+        },
+        openPayModalFromEl(el) {
+            this.openPayModal(
+                el.dataset.kode,
+                el.dataset.internet,
+                el.dataset.nama,
+                el.dataset.nominal,
+                el.dataset.paymentType || '2',
+                el.dataset.destinationBank || ''
+            );
+        },
+
+        // Modal Adjustment
+        adjustModalOpen: false,
+        adjustKodeBilling: '',
+        adjustNomorInternet: '',
+        adjustNamaPelanggan: '',
+        adjustSubtotal: 0,
+        adjustPotongan: 0,
+        adjustDescPotongan: '',
+        adjustDenda: 0,
+        adjustNote: '',
+        openAdjustModal(kodeBilling, noInternet, nama, subtotal, potongan, descPotongan, denda) {
+            this.adjustKodeBilling = kodeBilling;
+            this.adjustNomorInternet = noInternet;
+            this.adjustNamaPelanggan = nama;
+            this.adjustSubtotal = parseFloat(subtotal) || 0;
+            this.adjustPotongan = parseFloat(potongan) || 0;
+            this.adjustDescPotongan = descPotongan || '';
+            this.adjustDenda = parseFloat(denda) || 0;
+            this.adjustNote = 'Penyesuaian tagihan pelanggan';
+            this.adjustModalOpen = true;
+        },
+        openAdjustModalFromEl(el) {
+            this.adjustKodeBilling = el.dataset.kode;
+            this.adjustNomorInternet = el.dataset.internet;
+            this.adjustNamaPelanggan = el.dataset.nama;
+            this.adjustSubtotal = parseFloat(el.dataset.subtotal) || 0;
+            this.adjustPotongan = parseFloat(el.dataset.potongan) || 0;
+            this.adjustDescPotongan = el.dataset.descPotongan || '';
+            this.adjustDenda = parseFloat(el.dataset.denda) || 0;
+            this.adjustNote = 'Penyesuaian tagihan pelanggan';
+            this.adjustModalOpen = true;
+        },
+        get adjustTotalBaru() {
+            return Math.max(0, this.adjustSubtotal - (parseFloat(this.adjustPotongan) || 0) + (parseFloat(this.adjustDenda) || 0));
+        },
+
+        // Modal Rollback
+        rollbackModalOpen: false,
+        rollbackKodeBilling: '',
+        rollbackNamaPelanggan: '',
+        openRollbackModal(kodeBilling, nama) {
+            this.rollbackKodeBilling = kodeBilling;
+            this.rollbackNamaPelanggan = nama;
+            this.rollbackModalOpen = true;
+        },
+        openRollbackModalFromEl(el) {
+            this.rollbackKodeBilling = el.dataset.kode;
+            this.rollbackNamaPelanggan = el.dataset.nama;
+            this.rollbackModalOpen = true;
+        },
+
+        // Modal Change Payment Method
+        changePayModalOpen: false,
+        changePayKodeBilling: '',
+        changePayNamaPelanggan: '',
+        changePayType: '1',
+        openChangePayModal(kodeBilling, nama, currentType) {
+            this.changePayKodeBilling = kodeBilling;
+            this.changePayNamaPelanggan = nama;
+            this.changePayType = String(currentType || '1');
+            this.changePayModalOpen = true;
+        },
+        openChangePayModalFromEl(el) {
+            this.changePayKodeBilling = el.dataset.kode;
+            this.changePayNamaPelanggan = el.dataset.nama;
+            this.changePayType = String(el.dataset.paymentType || '1');
+            this.changePayModalOpen = true;
+        },
+
+        // Modal Midtrans Payment Link
+        midtransModalOpen: false,
+        midtransKode: '',
+        midtransNama: '',
+        midtransNominal: 0,
+        midtransUrl: '',
+        midtransExpiry: '',
+        midtransIsExpired: false,
+        midtransWaUrl: '',
+        copied: false,
+        openMidtransModalFromEl(el) {
+            this.midtransKode = el.dataset.kode;
+            this.midtransNama = el.dataset.nama;
+            this.midtransNominal = parseFloat(el.dataset.nominal) || 0;
+            this.midtransUrl = el.dataset.url || '';
+            this.midtransExpiry = el.dataset.expiry || '';
+            this.midtransIsExpired = el.dataset.expired === '1';
+            this.midtransWaUrl = el.dataset.waUrl || '';
+            this.copied = false;
+            this.midtransModalOpen = true;
+        },
+        async copyMidtransUrl() {
+            if (!this.midtransUrl) return;
+            try {
+                await navigator.clipboard.writeText(this.midtransUrl);
+                this.copied = true;
+                setTimeout(() => { this.copied = false; }, 2500);
+            } catch (err) {
+                const ta = document.createElement('textarea');
+                ta.value = this.midtransUrl;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                this.copied = true;
+                setTimeout(() => { this.copied = false; }, 2500);
+            }
+        },
+
+        // Modal Bukti Transfer Pelanggan
+        proofModalOpen: false,
+        proofKodeBilling: '',
+        proofNamaPelanggan: '',
+        proofInternet: '',
+        proofNominal: 0,
+        proofUrl: '',
+        proofNotes: '',
+        proofDate: '',
+        proofStatus: '',
+        proofDestinationBank: '',
+        openProofModalFromEl(el) {
+            this.proofKodeBilling = el.dataset.kode || '';
+            this.proofNamaPelanggan = el.dataset.nama || '';
+            this.proofInternet = el.dataset.internet || '';
+            this.proofNominal = parseFloat(el.dataset.nominal) || 0;
+            this.proofUrl = el.dataset.proofUrl || '';
+            this.proofNotes = el.dataset.notes || '';
+            this.proofDate = el.dataset.proofDate || '';
+            this.proofStatus = el.dataset.status || '';
+            this.proofDestinationBank = el.dataset.destinationBank || '';
+            this.proofModalOpen = true;
+        },
+
+        // Format Currency Helper
+        formatRupiah(num) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
+        }
+    };
+}
+</script>
+@endpush

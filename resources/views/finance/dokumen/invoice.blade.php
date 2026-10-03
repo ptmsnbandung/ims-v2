@@ -753,11 +753,11 @@
                     <tbody>
                         <tr>
                             <!-- Column 1: Pembayaran & Link Klik Disini -->
-                            <td>
-                                <div class="sig-cell-content">
-                                    <div style="font-size: 8pt; font-weight: bold; margin-bottom: 4px;">LINK PEMBAYARAN :</div>
+                            <td style="vertical-align: middle;">
+                                <div class="sig-cell-content" style="min-height: 85px; justify-content: center;">
+                                    <div style="font-size: 8.5pt; font-weight: bold; margin-bottom: 6px;">LINK PEMBAYARAN :</div>
                                     <div>
-                                        <a href="{{ $paymentUrl }}" target="_blank" style="color: #0000ff; text-decoration: underline; font-weight: bold; font-size: 8.5pt;">
+                                        <a href="{{ $paymentUrl }}" target="_blank" style="color: #0000ff; text-decoration: underline; font-weight: bold; font-size: 9pt;">
                                             Klik Disini
                                         </a>
                                     </div>
@@ -765,20 +765,23 @@
                             </td>
 
                             <!-- Column 2: Mengetahui (Ida Mayasari - Keuangan) -->
-                            <td>
-                                <div class="sig-cell-content" style="justify-content: flex-end; padding-top: 18px;">
-                                    <div style="display: inline-block; min-width: 140px; text-align: center;">
-                                        <div style="font-weight: bold; font-size: 8.5pt;">Ida Mayasari</div>
-                                        <div style="border-top: 1px solid #000; margin-top: 2px; padding-top: 2px; font-size: 8pt;">Keuangan</div>
+                            <td style="vertical-align: bottom;">
+                                <div class="sig-cell-content" style="min-height: 85px; justify-content: flex-end; padding-bottom: 4px;">
+                                    <div style="display: inline-block; min-width: 150px; text-align: center;">
+                                        <div style="font-weight: bold; font-size: 9pt;">Ida Mayasari</div>
+                                        <div style="border-top: 1px solid #000; margin-top: 2px; padding-top: 2px; font-size: 8.5pt;">Keuangan</div>
                                     </div>
                                 </div>
                             </td>
 
                             <!-- Column 3: Pelanggan (Customer Name) -->
-                            <td>
-                                <div class="sig-cell-content" style="justify-content: flex-end; padding-top: 18px;">
-                                    <div style="font-weight: bold; font-size: 8.5pt; text-transform: uppercase;">
-                                        {{ $customerName }}
+                            <td style="vertical-align: bottom;">
+                                <div class="sig-cell-content" style="min-height: 85px; justify-content: flex-end; padding-bottom: 4px;">
+                                    <div style="display: inline-block; min-width: 150px; text-align: center;">
+                                        <div style="font-weight: bold; font-size: 9pt; text-transform: uppercase;">
+                                            {{ $customerName }}
+                                        </div>
+                                        <div style="border-top: 1px solid #000; margin-top: 2px; padding-top: 2px; font-size: 8.5pt; color: transparent;">-</div>
                                     </div>
                                 </div>
                             </td>
@@ -838,18 +841,18 @@
                     </tr>
                 </table>
 
-                <!-- SLIP SIGNATURES -->
-                <table class="slip-sig-table">
+                <!-- SLIP SIGNATURES (ENLARGED FOR COMFORTABLE SIGNING) -->
+                <table class="slip-sig-table" style="margin-top: 6px; margin-bottom: 6px;">
                     <tr>
-                        <td style="padding-bottom: 28px;">Petugas</td>
-                        <td style="padding-bottom: 28px;">Pelanggan</td>
+                        <td style="padding-bottom: 50px; font-size: 9pt; font-weight: 500;">Petugas</td>
+                        <td style="padding-bottom: 50px; font-size: 9pt; font-weight: 500;">Pelanggan</td>
                     </tr>
                     <tr>
                         <td>
-                            <span style="font-size: 8pt;">TTD / Nama</span>
+                            <span style="font-size: 8.5pt; display: inline-block; min-width: 150px; border-top: 1px solid #94a3b8; padding-top: 2px;">TTD / Nama</span>
                         </td>
                         <td>
-                            <span style="font-size: 8pt; font-weight: bold; text-transform: uppercase;">{{ $customerName }}</span>
+                            <span style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase; display: inline-block; min-width: 150px; border-top: 1px solid #94a3b8; padding-top: 2px;">{{ $customerName }}</span>
                         </td>
                     </tr>
                 </table>

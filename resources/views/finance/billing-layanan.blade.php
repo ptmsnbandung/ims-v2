@@ -1859,26 +1859,32 @@
          MODAL BATCH PRINT INVOICES (CETAK MASSAL)
          ========================================== -->
     <style>
+        .batch-modal-scroll {
+            scrollbar-width: thin !important;
+            scrollbar-color: #0891b2 rgba(0, 0, 0, 0.08) !important;
+        }
         .batch-modal-scroll::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 8px !important;
+            height: 8px !important;
+            display: block !important;
         }
         .batch-modal-scroll::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.04);
+            background: rgba(0, 0, 0, 0.05) !important;
+            border-radius: 4px !important;
         }
         .batch-modal-scroll::-webkit-scrollbar-thumb {
-            background: #0891b2;
-            border-radius: 4px;
+            background-color: #0891b2 !important;
+            border-radius: 4px !important;
         }
         .batch-modal-scroll::-webkit-scrollbar-thumb:hover {
-            background: #0e7490;
+            background-color: #0e7490 !important;
         }
     </style>
     <div x-show="batchPrintModalOpen"
          x-cloak
          @keydown.escape.window="batchPrintModalOpen = false"
-         class="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
-         style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 1rem; background-color: rgba(2, 6, 23, 0.85);"
+         class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-hidden"
+         style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 1rem; background-color: rgba(2, 6, 23, 0.85); overflow: hidden;"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -1894,10 +1900,10 @@
              x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 scale-100"
              x-transition:leave-end="opacity-0 scale-95"
-             style="width: 100%; max-width: 68rem; height: 88vh; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; margin: auto;"
-             class="relative w-full max-w-5xl lg:max-w-6xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto">
+             style="width: 100%; max-width: 68rem; height: 82vh; max-height: calc(100vh - 2.5rem); display: flex; flex-direction: column; overflow: hidden; margin: auto;"
+             class="relative w-full max-w-5xl lg:max-w-6xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col">
             <!-- Modal Header (Fixed) -->
-            <div style="flex-shrink: 0;" class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+            <div style="flex-shrink: 0; flex-grow: 0;" class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
                 <div class="flex items-center gap-3">
                     <span class="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -1915,7 +1921,7 @@
             </div>
 
             <!-- Filter Controls Bar (Fixed) -->
-            <div style="flex-shrink: 0;" class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 space-y-3">
+            <div style="flex-shrink: 0; flex-grow: 0;" class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <!-- Bulan -->
                     <div>
@@ -2006,7 +2012,7 @@
 
             <!-- Selected Chips Bar (Persistent across multi-search) -->
             <div x-show="selectedBatchCount > 0"
-                 style="flex-shrink: 0; max-height: 90px; overflow-y: auto;"
+                 style="flex-shrink: 0; flex-grow: 0; max-height: 80px; overflow-y: auto;"
                  class="px-5 py-2.5 bg-cyan-50/70 dark:bg-cyan-950/25 border-b border-cyan-200/60 dark:border-cyan-800/40 flex items-center justify-between gap-3 batch-modal-scroll">
                 <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="text-[11px] font-bold text-cyan-700 dark:text-cyan-300 mr-1 flex items-center gap-1 shrink-0">
@@ -2027,7 +2033,7 @@
             </div>
 
             <!-- Invoices List Table (Strictly Scrollable with Inline Styles) -->
-            <div style="flex: 1 1 0%; min-height: 0; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;" class="p-0 relative batch-modal-scroll">
+            <div style="flex: 1 1 auto; height: 0; min-height: 150px; max-height: calc(82vh - 250px); overflow-y: scroll; overflow-x: auto; -webkit-overflow-scrolling: touch; display: block;" class="p-0 relative batch-modal-scroll border-b border-slate-200 dark:border-slate-800">
                 <!-- Loading Overlay -->
                 <div x-show="batchLoading" class="absolute inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-20">
                     <div class="flex flex-col items-center gap-2">
@@ -2097,7 +2103,7 @@
             </div>
 
             <!-- Modal Footer (Fixed) -->
-            <div style="flex-shrink: 0;" class="px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div style="flex-shrink: 0; flex-grow: 0;" class="px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
                     <span class="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/20">
                         <span x-text="selectedBatchCount"></span> tagihan dipilih

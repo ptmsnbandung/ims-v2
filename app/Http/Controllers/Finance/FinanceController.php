@@ -305,8 +305,12 @@ class FinanceController extends Controller
         $currentYear = (int) date('Y');
         $tahunList = [(string) ($currentYear + 1), (string) $currentYear, (string) ($currentYear - 1), (string) ($currentYear - 2), (string) ($currentYear - 3)];
 
+        $bandwithKategoriList = Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith_kategori')->where('disable', 0)->orderBy('nama_kategori_bandwith', 'asc')->get()
+            : collect();
+
         $layananList = Schema::hasTable('m_bandwith_kategori')
-            ? DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique()->toArray()
+            ? DB::table('m_bandwith_kategori')->where('disable', 0)->pluck('nama_kategori_bandwith')->filter()->unique()->values()->toArray()
             : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
 
         $wilayahList = Schema::hasTable('m_wilayah_perangkat')
@@ -345,6 +349,7 @@ class FinanceController extends Controller
             ],
             'bulanList' => $bulanList,
             'tahunList' => $tahunList,
+            'bandwithKategoriList' => $bandwithKategoriList,
             'layananList' => $layananList,
             'wilayahList' => $wilayahList,
             'statusBillList' => $statusBillList,

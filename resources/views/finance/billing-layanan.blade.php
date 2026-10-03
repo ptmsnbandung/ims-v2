@@ -866,9 +866,29 @@
                                 <div class="relative">
                                     <select name="layanan" x-model="generateLayanan" @change="fetchGenerateCandidates()" class="w-full bg-slate-50/60 dark:bg-slate-800/60 hover:bg-white focus:bg-white dark:hover:bg-slate-800 dark:focus:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs appearance-none transition pr-9 cursor-pointer">
                                         <option value="">PILIH LAYANAN</option>
-                                        <option value="Broadband">Internet Broadband</option>
-                                        <option value="Dedicated">Internet Dedicated</option>
                                         <option value="Semua Layanan">Semua Layanan</option>
+                                        @if(isset($bandwithKategoriList) && count($bandwithKategoriList) > 0)
+                                            @foreach($bandwithKategoriList as $bk)
+                                                <option value="{{ $bk->nama_kategori_bandwith }}">{{ $bk->nama_kategori_bandwith }}{{ !empty($bk->alias_nama_kategori) && $bk->alias_nama_kategori !== $bk->nama_kategori_bandwith ? ' (' . $bk->alias_nama_kategori . ')' : '' }}</option>
+                                            @endforeach
+                                        @elseif(isset($layananList) && count($layananList) > 0)
+                                            @foreach($layananList as $lay)
+                                                @if(is_object($lay))
+                                                    <option value="{{ $lay->nama_kategori_bandwith }}">{{ $lay->nama_kategori_bandwith }}</option>
+                                                @else
+                                                    <option value="{{ $lay }}">{{ $lay }}</option>
+                                                @endif
+                                            @endforeach
+                                        @else
+                                            @php
+                                                $dbKategori = \Illuminate\Support\Facades\Schema::hasTable('m_bandwith_kategori')
+                                                    ? \Illuminate\Support\Facades\DB::table('m_bandwith_kategori')->where('disable', 0)->orderBy('nama_kategori_bandwith', 'asc')->get()
+                                                    : collect();
+                                            @endphp
+                                            @foreach($dbKategori as $bk)
+                                                <option value="{{ $bk->nama_kategori_bandwith }}">{{ $bk->nama_kategori_bandwith }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>

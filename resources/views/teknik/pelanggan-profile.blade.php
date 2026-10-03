@@ -848,6 +848,13 @@
                                         'url' => route('teknik.dokumen.instalasi', $customer->nomor_internet), 
                                         'active' => true,
                                     ],
+                                    [
+                                        'name' => 'form_invoice.docx', 
+                                        'label' => 'form_invoice.docx', 
+                                        'desc' => 'Form Tagihan Invoice', 
+                                        'url' => route('finance.dokumen.invoice', $customer->nomor_internet), 
+                                        'active' => true,
+                                    ],
                                     ['name' => 'aktivasi.docx', 'label' => 'aktivasi.docx', 'desc' => 'Form Aktivasi', 'url' => 'javascript:void(0)', 'active' => false],
                                     ['name' => 'terminasi.docx', 'label' => 'terminasi.docx', 'desc' => 'Form Terminasi', 'url' => 'javascript:void(0)', 'active' => false],
                                     ['name' => 'ubah_layanan.docx', 'label' => 'ubah_layanan.docx', 'desc' => 'Form Ubah Layanan', 'url' => 'javascript:void(0)', 'active' => false],

@@ -2500,4 +2500,207 @@ class FinanceController extends Controller
 
         return response()->json($customers);
     }
+
+    /**
+     * Tampilan Dokumen Resmi Form Invoice / Tagihan Pelanggan (PDF, Word, Cetak)
+     */
+    public function dokumenInvoice(Request $request, string $kodeBilling): View
+    {
+        $decodedKode = urldecode($kodeBilling);
+
+        // 1. Ambil invoice dari view_billing_layanan atau trx_billing_layanan
+        $invoice = null;
+        if (Schema::hasTable('view_billing_layanan')) {
+            $invoice = DB::table('view_billing_layanan')
+                ->where('kode_billing_layanan', $decodedKode)
+                ->orWhere('kode_billing_layanan', str_replace('-', '/', $decodedKode))
+                ->orWhere('kode_billing_layanan', str_replace('/', '-', $decodedKode))
+                ->orWhere('invoice_file', $decodedKode)
+                ->orWhere('nomor_internet', $decodedKode)
+                ->first();
+        }
+
+        if (!$invoice && Schema::hasTable('trx_billing_layanan')) {
+            $invoice = DB::table('trx_billing_layanan')
+                ->where('kode_billing_layanan', $decodedKode)
+                ->orWhere('kode_billing_layanan', str_replace('-', '/', $decodedKode))
+                ->orWhere('kode_billing_layanan', str_replace('/', '-', $decodedKode))
+                ->orWhere('invoice_file', $decodedKode)
+                ->orWhere('nomor_internet', $decodedKode)
+                ->first();
+        }
+
+        if (!$invoice) {
+            abort(404, "Dokumen Invoice [{$decodedKode}] tidak ditemukan.");
+        }
+
+        // Ambil data pelanggan lengkap (alamat, nama, no internet)
+        $customer = null;
+        if (Schema::hasTable('view_batchjob')) {
+            $customer = DB::table('view_batchjob')
+                ->where('nomor_internet', $invoice->nomor_internet)
+                ->first();
+        }
+        if (!$customer && Schema::hasTable('trx_batchjob_register')) {
+            $customer = DB::table('trx_batchjob_register')
+                ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
+                ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
+                ->leftJoin('m_kategori_bandwith', 'm_bandwith.kode_kategori_bandwith', '=', 'm_kategori_bandwith.kode_kategori_bandwith')
+                ->where('trx_batchjob_register.nomor_internet', $invoice->nomor_internet)
+                ->select(
+                    'trx_batchjob_register.*',
+                    'm_pelanggan.nama_penduduk',
+                    'm_pelanggan.alamat_ktp',
+                    'm_pelanggan.rt_ktp',
+                    'm_pelanggan.rw_ktp',
+                    'm_bandwith.nominal_bandwith',
+                    'm_bandwith.harga_bandwith',
+                    'm_kategori_bandwith.nama_kategori_bandwith'
+                )
+                ->first();
+        }
+
+        // Ambil rincian item jika ada
+        $items = collect();
+        if (Schema::hasTable('trx_billing_layanan_detail')) {
+            $items = DB::table('trx_billing_layanan_detail')
+                ->where('kode_billing_layanan', $invoice->kode_billing_layanan)
+                ->get();
+        }
+
+        // Format data
+        $customerName = $invoice->nama_pelanggan ?? ($customer->nama_pelanggan ?? ($customer->nama_penduduk ?? 'Pelanggan'));
+        $nomorInternet = $invoice->nomor_internet ?? ($customer->nomor_internet ?? '-');
+        $noInvoice = $invoice->kode_billing_layanan ?? $decodedKode;
+        
+        // Alamat lengkap
+        $alamat = $invoice->alamat_pasang ?? ($customer->alamat_pasang ?? ($customer->alamat_p ?? ($customer->alamat_ktp ?? '-')));
+        if (!empty($customer->rt_pasang) || !empty($customer->rw_pasang)) {
+            $alamat .= " RT." . ($customer->rt_pasang ?? '00') . " / RW." . ($customer->rw_pasang ?? '00');
+        }
+        if (!empty($customer->nama_kel_pasang)) {
+            $alamat .= ", Kel. " . $customer->nama_kel_pasang;
+        }
+        if (!empty($customer->nama_kec_pasang)) {
+            $alamat .= ", Kec. " . $customer->nama_kec_pasang;
+        }
+        if (!empty($customer->nama_kota_pasang)) {
+            $alamat .= ", " . $customer->nama_kota_pasang;
+        }
+
+        // Periode & Jatuh tempo
+        $bulanTagihan = $invoice->bulan_tagihan ?? date('m');
+        $tahunTagihan = $invoice->tahun_tagihan ?? date('Y');
+        $periodeTagihan = $invoice->periode_tagihan ?: (Carbon::createFromDate($tahunTagihan, $bulanTagihan, 1)->locale('id')->isoFormat('MMMM Y'));
+        
+        $jatuhTempo = !empty($invoice->expiry) 
+            ? Carbon::parse($invoice->expiry)->locale('id')->isoFormat('D MMMM Y')
+            : Carbon::createFromDate($tahunTagihan, $bulanTagihan, 20)->locale('id')->isoFormat('D MMMM Y');
+
+        // Layanan & Nominal
+        $kategoriBandwith = $invoice->nama_kategori_bandwith ?? ($customer->nama_kategori_bandwith ?? 'BROADBAND');
+        $nominalBandwith = $invoice->nominal_bandwith ?? ($customer->nominal_bandwith ?? '');
+        $namaLayanan = "LAYANAN INTERNET {$kategoriBandwith}" . ($nominalBandwith ? " {$nominalBandwith} Mbps" : '');
+
+        $subtotal = (float) ($invoice->harga_bandwith ?? ($customer->harga_bandwith ?? ($invoice->total_layanan ?? 0)));
+        $potongan = (float) ($invoice->potongan ?? 0);
+        $ppn = (float) ($invoice->ppn ?? 0);
+        $total = (float) ($invoice->total_layanan ?? max(0, $subtotal - $potongan + $ppn));
+
+        $terbilangText = $this->terbilangRupiah($total);
+
+        // Payment Link (Midtrans redirect / QR)
+        $paymentUrl = null;
+        if (!empty($invoice->payment_respond_post)) {
+            $resp = json_decode($invoice->payment_respond_post, true);
+            $paymentUrl = $resp['redirect_url'] ?? null;
+        }
+        if (!$paymentUrl) {
+            $paymentUrl = route('finance.billing-layanan', ['search' => $noInvoice]);
+        }
+
+        // Encode Base64 Kop and Stamp for seamless offline/PDF/doc export
+        $headerPath = public_path('assets/images/invoice_kop_header.png');
+        if (!file_exists($headerPath)) {
+            $headerPath = public_path('assets/images/kop_header.png');
+        }
+        $footerPath = public_path('assets/images/invoice_kop_footer.png');
+        if (!file_exists($footerPath)) {
+            $footerPath = public_path('assets/images/kop_footer.png');
+        }
+        $stampPath = public_path('assets/images/invoice_stempel_keuangan.png');
+
+        $headerBase64 = file_exists($headerPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($headerPath)) : asset('assets/images/kop_header.png');
+        $footerBase64 = file_exists($footerPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($footerPath)) : asset('assets/images/kop_footer.png');
+        $stampBase64 = file_exists($stampPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($stampPath)) : null;
+
+        return view('finance.dokumen.invoice', compact(
+            'invoice',
+            'customer',
+            'items',
+            'customerName',
+            'nomorInternet',
+            'noInvoice',
+            'alamat',
+            'periodeTagihan',
+            'jatuhTempo',
+            'namaLayanan',
+            'subtotal',
+            'potongan',
+            'ppn',
+            'total',
+            'terbilangText',
+            'paymentUrl',
+            'headerBase64',
+            'footerBase64',
+            'stampBase64'
+        ));
+    }
+
+    /**
+     * Helper Terbilang Bahasa Indonesia
+     */
+    private function terbilangRupiah(float $angka): string
+    {
+        $angka = abs((float) $angka);
+        if ($angka == 0) {
+            return 'Nol Rupiah';
+        }
+
+        $baca = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+        
+        $terbilang = '';
+        if ($angka < 12) {
+            $terbilang = ' ' . $baca[(int)$angka];
+        } elseif ($angka < 20) {
+            $terbilang = $this->terbilangRupiah($angka - 10) . ' Belas';
+            $terbilang = str_replace(' Rupiah', '', $terbilang);
+        } elseif ($angka < 100) {
+            $terbilang = $this->terbilangRupiah((int)($angka / 10)) . ' Puluh ' . $this->terbilangRupiah(fmod($angka, 10));
+            $terbilang = str_replace(' Rupiah', '', $terbilang);
+        } elseif ($angka < 200) {
+            $terbilang = ' Seratus ' . $this->terbilangRupiah($angka - 100);
+            $terbilang = str_replace(' Rupiah', '', $terbilang);
+        } elseif ($angka < 1000) {
+            $terbilang = $this->terbilangRupiah((int)($angka / 100)) . ' Ratus ' . $this->terbilangRupiah(fmod($angka, 100));
+            $terbilang = str_replace(' Rupiah', '', $terbilang);
+        } elseif ($angka < 2000) {
+            $terbilang = ' Seribu ' . $this->terbilangRupiah($angka - 1000);
+            $terbilang = str_replace(' Rupiah', '', $terbilang);
+        } elseif ($angka < 1000000) {
+            $terbilang = $this->terbilangRupiah((int)($angka / 1000)) . ' Ribu ' . $this->terbilangRupiah(fmod($angka, 1000));
+            $terbilang = str_replace(' Rupiah', '', $terbilang);
+        } elseif ($angka < 1000000000) {
+            $terbilang = $this->terbilangRupiah((int)($angka / 1000000)) . ' Juta ' . $this->terbilangRupiah(fmod($angka, 1000000));
+            $terbilang = str_replace(' Rupiah', '', $terbilang);
+        } elseif ($angka < 1000000000000) {
+            $terbilang = $this->terbilangRupiah((int)($angka / 1000000000)) . ' Milyar ' . $this->terbilangRupiah(fmod($angka, 1000000000));
+            $terbilang = str_replace(' Rupiah', '', $terbilang);
+        } else {
+            $terbilang = (string)$angka;
+        }
+
+        $clean = preg_replace('/\s+/', ' ', trim(str_replace('Rupiah', '', $terbilang)));
+        return trim($clean) . ' Rupiah';
+    }
 }

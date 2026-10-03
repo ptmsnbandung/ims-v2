@@ -643,6 +643,9 @@
                             }
                             $waText .= "\n\nTerima kasih telah berlangganan bersama IMS.";
                             $waUrl = !empty($cleanHp) ? "https://wa.me/{$cleanHp}?text=" . urlencode($waText) : '';
+
+                            $confirmation = $inv->payment_confirmation ?? null;
+                            $hasUploadedProof = ($confirmation && !empty($confirmation->proof_file)) || !empty($inv->has_manual_transfer_proof);
                         @endphp
 
                         <!-- 5. Status & Wilayah -->
@@ -657,10 +660,20 @@
 
                                 <!-- Status Tagihan Badge -->
                                 <div>
-                                    @if($inv->status_bill_lay == '15')
+                                    @if($inv->status_bill_lay == '15' || ($confirmation && $confirmation->status === 'approved'))
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
                                         <span>PAID (Lunas)</span>
+                                    </span>
+                                    @elseif($confirmation && $confirmation->status === 'rejected')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400"></span>
+                                        <span>Transfer Ditolak</span>
+                                    </span>
+                                    @elseif($hasUploadedProof && $inv->status_bill_lay != '15')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse"></span>
+                                        <span>Menunggu Verifikasi</span>
                                     </span>
                                     @elseif($inv->status_bill_lay == '13')
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
@@ -694,7 +707,6 @@
                                     $merchantRaw = trim((string)($inv->merchant_type ?? ''));
                                     $merchantLower = strtolower($merchantRaw);
                                     $pType = (string)($inv->payment_type ?? '');
-                                    $confirmation = $inv->payment_confirmation ?? null;
 
                                     // Cek apakah Transfer Bank (dari merchant_type atau payment_type)
                                     $isTransfer = ($pType === '2')
@@ -753,9 +765,8 @@
                                         <span>{{ $methodLabel }}</span>
                                     </span>
 
-                                    <!-- Bukti Transfer & Status Verifikasi -->
+                                    <!-- Bukti Transfer Modal Trigger -->
                                     @if($confirmation && !empty($confirmation->proof_file))
-                                        <!-- Tombol Lihat Bukti Transfer -->
                                         <button type="button"
                                                 @click="openProofModalFromEl($el)"
                                                 data-kode="{{ $inv->kode_billing_layanan }}"
@@ -774,35 +785,6 @@
                                             </svg>
                                             <span>Lihat Bukti Transfer</span>
                                         </button>
-
-                                        <!-- Status Pembayaran / Verifikasi -->
-                                        @if($inv->status_bill_lay == '15' || $confirmation->status === 'approved')
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-semibold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                            <span>Lunas (Terverifikasi)</span>
-                                        </span>
-                                        @elseif($confirmation->status === 'rejected')
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 text-[9px] font-semibold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                            <span>Transfer Ditolak</span>
-                                        </span>
-                                        @else
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[9px] font-semibold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                            <span>Menunggu Verifikasi</span>
-                                        </span>
-                                        @endif
-                                    @else
-                                        @if($inv->status_bill_lay == '15')
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-semibold">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                            <span>Lunas Manual</span>
-                                        </span>
-                                        @else
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 text-[9px] font-medium">
-                                            <span>Belum Upload Bukti</span>
-                                        </span>
-                                        @endif
                                     @endif
                                 </div>
                                 @elseif($isCash)
@@ -823,12 +805,7 @@
                                         <span>{{ $methodLabel }}</span>
                                     </span>
 
-                                    @if($inv->status_bill_lay == '15')
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-semibold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-                                        <span>Lunas (Midtrans)</span>
-                                    </span>
-                                    @elseif($snapUrl && !$isSnapExpired)
+                                    @if($snapUrl && !$isSnapExpired)
                                     <button type="button"
                                             @click="openMidtransModalFromEl($el)"
                                             data-kode="{{ $inv->kode_billing_layanan }}"
@@ -871,7 +848,6 @@
                                             <span>+ Buat Link</span>
                                         </button>
                                     </form>
-                                    @endif
                                 </div>
                                 @endif
 

@@ -7,11 +7,76 @@
      x-data="{
          // Filter State
          showAdvancedFilters: false,
-         
          // Modal Generate Invoice
          generateModalOpen: false,
          generateBulan: '{{ $selectedBulan ?: date('m') }}',
          generateTahun: '{{ $selectedTahun ?: date('Y') }}',
+
+         // Modal Batch Print Invoices
+         batchPrintModalOpen: false,
+         batchBulan: '{{ $selectedBulan ?: date('m') }}',
+         batchTahun: '{{ $selectedTahun ?: date('Y') }}',
+         batchSearch: '',
+         batchStatus: '',
+         batchInvoices: [],
+         selectedBatchKodes: [],
+         batchLoading: false,
+         batchSelectAll: false,
+         async openBatchPrintModal() {
+             this.batchPrintModalOpen = true;
+             await this.fetchBatchInvoices();
+         },
+         async fetchBatchInvoices() {
+             this.batchLoading = true;
+             this.selectedBatchKodes = [];
+             this.batchSelectAll = false;
+             try {
+                 const params = new URLSearchParams({
+                     bulan: this.batchBulan || '',
+                     tahun: this.batchTahun || '',
+                     search: this.batchSearch || '',
+                     status_bayar: this.batchStatus || ''
+                 });
+                 const res = await fetch('/finance/dokumen/batch-invoice/search?' + params.toString());
+                 const data = await res.json();
+                 if (data && data.success) {
+                     this.batchInvoices = data.data || [];
+                 } else {
+                     this.batchInvoices = [];
+                 }
+             } catch (e) {
+                 console.error('Error fetching batch invoices:', e);
+                 this.batchInvoices = [];
+             } finally {
+                 this.batchLoading = false;
+             }
+         },
+         toggleBatchSelectAll() {
+             if (this.batchSelectAll) {
+                 this.selectedBatchKodes = this.batchInvoices.map(inv => inv.kode_billing_layanan);
+             } else {
+                 this.selectedBatchKodes = [];
+             }
+         },
+         updateBatchSelectAllState() {
+             this.batchSelectAll = (this.batchInvoices.length > 0 && this.selectedBatchKodes.length === this.batchInvoices.length);
+         },
+         printSelectedInvoices() {
+             if (this.selectedBatchKodes.length === 0) {
+                 alert('Silakan pilih minimal 1 tagihan pelanggan untuk dicetak.');
+                 return;
+             }
+             const url = '/finance/dokumen/batch-invoice?kodes=' + encodeURIComponent(this.selectedBatchKodes.join(','));
+             window.open(url, '_blank');
+         },
+         printAllFilteredInvoices() {
+             const params = new URLSearchParams({
+                 bulan: this.batchBulan || '',
+                 tahun: this.batchTahun || ''
+             });
+             const url = '/finance/dokumen/batch-invoice?' + params.toString();
+             window.open(url, '_blank');
+         },
 
          // Modal Detail Breakdown
          detailModalOpen: false,
@@ -254,6 +319,18 @@
                 </svg>
                 <span>Export CSV</span>
             </a>
+
+            <button @click="openBatchPrintModal()"
+                    type="button"
+                    class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 text-white border border-slate-700/90 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-black/10 transition cursor-pointer"
+                    title="Cetak Banyak Dokumen Invoice Sekaligus">
+                <svg class="w-4 h-4 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                <span>Print Invoices</span>
+            </button>
 
             <button @click="generateModalOpen = true"
                     type="button"
@@ -1760,6 +1837,225 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                         </svg>
                         <span>Konfirmasi & Approve Pembayaran</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL BATCH PRINT INVOICES (CETAK MASSAL)
+         ========================================== -->
+    <div x-show="batchPrintModalOpen"
+         x-cloak
+         @keydown.escape.window="batchPrintModalOpen = false"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95">
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[92vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Cetak Massal Invoice Tagihan</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Pilih periode bulan &amp; tahun, cari pelanggan, lalu cetak banyak invoice sekaligus.</p>
+                    </div>
+                </div>
+                <button type="button" @click="batchPrintModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer text-2xl leading-none">&times;</button>
+            </div>
+
+            <!-- Filter Controls Bar -->
+            <div class="p-5 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <!-- Bulan -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Bulan</label>
+                        <select x-model="batchBulan" @change="fetchBatchInvoices()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                            @foreach($bulanList as $k => $nm)
+                            <option value="{{ $k }}">{{ $k }} - {{ $nm }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Tahun -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Tahun</label>
+                        <select x-model="batchTahun" @change="fetchBatchInvoices()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                            @foreach($tahunList as $th)
+                            <option value="{{ $th }}">{{ $th }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Status Bayar -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status Tagihan</label>
+                        <select x-model="batchStatus" @change="fetchBatchInvoices()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                            <option value="">Semua Status Tagihan</option>
+                            @foreach($statusBillList as $sb)
+                                @php
+                                    $descLower = strtolower($sb->desc_bill_lay ?? '');
+                                @endphp
+                                @if(!str_contains($descLower, 'cancel midtrans') && !str_contains($descLower, 'expire midtrans') && !in_array((string)$sb->status_bill_lay, ['17', '18']))
+                                <option value="{{ $sb->status_bill_lay }}">{{ $sb->desc_bill_lay }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Search Input & Cari Button -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cari Pelanggan</label>
+                        <div class="flex gap-1.5">
+                            <input type="text"
+                                   x-model="batchSearch"
+                                   @keydown.enter.prevent="fetchBatchInvoices()"
+                                   placeholder="Nama / No Internet / Inv..."
+                                   class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                            <button type="button"
+                                    @click="fetchBatchInvoices()"
+                                    class="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-sm transition shrink-0 cursor-pointer flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                </svg>
+                                <span>Cari</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoices List Table -->
+            <div class="flex-1 overflow-y-auto min-h-[300px] p-0 relative">
+                <!-- Loading Overlay -->
+                <div x-show="batchLoading" class="absolute inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs flex items-center justify-center z-20">
+                    <div class="flex flex-col items-center gap-2">
+                        <svg class="w-8 h-8 animate-spin text-cyan-600 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Memuat data invoice tagihan...</span>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <template x-if="!batchLoading && batchInvoices.length === 0">
+                    <div class="py-16 text-center space-y-2">
+                        <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">Tidak ada data invoice ditemukan</p>
+                        <p class="text-xs text-slate-500">Coba ubah filter bulan, tahun, atau kata kunci pencarian.</p>
+                    </div>
+                </template>
+
+                <!-- Table Content -->
+                <table x-show="batchInvoices.length > 0" class="w-full text-left border-collapse text-xs">
+                    <thead class="sticky top-0 bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 z-10 uppercase text-[10px] tracking-wider font-bold">
+                        <tr>
+                            <th class="py-2.5 px-4 w-10 text-center">
+                                <input type="checkbox"
+                                       x-model="batchSelectAll"
+                                       @change="toggleBatchSelectAll()"
+                                       class="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 w-4 h-4 cursor-pointer">
+                            </th>
+                            <th class="py-2.5 px-3">Pelanggan &amp; Layanan</th>
+                            <th class="py-2.5 px-3">No. Invoice</th>
+                            <th class="py-2.5 px-3">Periode</th>
+                            <th class="py-2.5 px-3">Tagihan</th>
+                            <th class="py-2.5 px-3 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        <template x-for="inv in batchInvoices" :key="inv.kode_billing_layanan">
+                            <tr class="hover:bg-cyan-50/40 dark:hover:bg-slate-800/40 transition cursor-pointer"
+                                :class="selectedBatchKodes.includes(inv.kode_billing_layanan) ? 'bg-cyan-50/60 dark:bg-cyan-500/10' : ''"
+                                @click="if ($event.target.tagName !== 'INPUT') { const idx = selectedBatchKodes.indexOf(inv.kode_billing_layanan); if (idx > -1) { selectedBatchKodes.splice(idx, 1); } else { selectedBatchKodes.push(inv.kode_billing_layanan); } updateBatchSelectAllState(); }">
+                                <td class="py-2.5 px-4 text-center" @click.stop>
+                                    <input type="checkbox"
+                                           :value="inv.kode_billing_layanan"
+                                           x-model="selectedBatchKodes"
+                                           @change="updateBatchSelectAllState()"
+                                           class="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 w-4 h-4 cursor-pointer">
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <div class="font-bold text-slate-900 dark:text-white" x-text="inv.nama_pelanggan"></div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono" x-text="inv.nomor_internet"></div>
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <span class="font-mono text-[11px] font-semibold text-blue-600 dark:text-blue-400" x-text="inv.kode_billing_layanan"></span>
+                                </td>
+                                <td class="py-2.5 px-3">
+                                    <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium" x-text="inv.periode_tagihan || (inv.bulan_tagihan + '/' + inv.tahun_tagihan)"></span>
+                                </td>
+                                <td class="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">
+                                    <span x-text="formatRupiah(inv.total_layanan || inv.harga_bandwith || 0)"></span>
+                                </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold inline-block"
+                                          :class="inv.status_bill_lay == '2' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : (inv.status_bill_lay == '1' ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400' : 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300')"
+                                          x-text="inv.status_desc || 'Draft'"></span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal Footer with Selection Counters & Print Actions -->
+            <div class="px-6 py-3.5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/20">
+                        <span x-text="selectedBatchKodes.length"></span> dari <span x-text="batchInvoices.length"></span> dipilih
+                    </span>
+                    <span x-show="selectedBatchKodes.length > 0" class="text-slate-400 hidden sm:inline">&bull; Siap dicetak serentak</span>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap justify-end">
+                    <button type="button"
+                            @click="batchPrintModalOpen = false"
+                            class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition">
+                        Batal
+                    </button>
+
+                    <button type="button"
+                            x-show="batchInvoices.length > 0"
+                            @click="printAllFilteredInvoices()"
+                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                            title="Cetak seluruh data invoice tagihan yang tampil pada periode ini">
+                        <svg class="w-3.5 h-3.5 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                        <span>Cetak Semua (<span x-text="batchInvoices.length"></span>)</span>
+                    </button>
+
+                    <button type="button"
+                            @click="printSelectedInvoices()"
+                            :disabled="selectedBatchKodes.length === 0"
+                            :class="selectedBatchKodes.length === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 cursor-pointer'"
+                            class="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                        <span>Cetak Terpilih (<span x-text="selectedBatchKodes.length"></span>)</span>
                     </button>
                 </div>
             </div>

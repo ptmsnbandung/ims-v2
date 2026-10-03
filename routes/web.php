@@ -109,6 +109,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dokumen/survey/{nomor_internet}', [TeknikController::class, 'dokumenSurvey'])->name('dokumen.survey');
         Route::get('/dokumen/instalasi/{nomor_internet}', [TeknikController::class, 'dokumenInstalasi'])->name('dokumen.instalasi');
         Route::get('/dokumen/invoice/{kode_billing}', [FinanceController::class, 'dokumenInvoice'])->name('dokumen.invoice')->where('kode_billing', '.*');
+        Route::get('/dokumen/batch-invoice/search', [FinanceController::class, 'searchBatchInvoiceJson'])->name('dokumen.batch-invoice.search');
+        Route::match(['get', 'post'], '/dokumen/batch-invoice', [FinanceController::class, 'batchDokumenInvoice'])->name('dokumen.batch-invoice');
         Route::post('/pelanggan/{nomor_internet}/upload-doc', [TeknikController::class, 'uploadDocArsip'])->name('pelanggan.upload-doc');
         Route::post('/pelanggan/{nomor_internet}/perangkat', [TeknikController::class, 'storePerangkat'])->name('pelanggan.perangkat.store');
         Route::post('/pelanggan/{nomor_internet}/perangkat/{kode_inst_barang}/delete', [TeknikController::class, 'deletePerangkat'])->name('pelanggan.perangkat.delete');
@@ -195,6 +197,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/billing-layanan/{kode_billing}/delete', [FinanceController::class, 'deleteBillingLayanan'])->name('billing-layanan.delete')->where('kode_billing', '.*');
         Route::get('/billing-layanan/export', [FinanceController::class, 'exportBillingLayanan'])->name('billing-layanan.export');
         Route::get('/dokumen/invoice/{kode_billing}', [FinanceController::class, 'dokumenInvoice'])->name('dokumen.invoice')->where('kode_billing', '.*');
+        Route::get('/dokumen/batch-invoice/search', [FinanceController::class, 'searchBatchInvoiceJson'])->name('dokumen.batch-invoice.search');
+        Route::match(['get', 'post'], '/dokumen/batch-invoice', [FinanceController::class, 'batchDokumenInvoice'])->name('dokumen.batch-invoice');
         Route::get('/invoice/{kode_billing}', [FinanceController::class, 'dokumenInvoice'])->name('invoice')->where('kode_billing', '.*');
         Route::get('/api/billing-layanan-detail', [FinanceController::class, 'getBillingLayananDetail'])->name('billing-layanan.detail.query');
         Route::get('/api/billing-layanan/{kode_billing}', [FinanceController::class, 'getBillingLayananDetail'])->name('billing-layanan.detail')->where('kode_billing', '.*');

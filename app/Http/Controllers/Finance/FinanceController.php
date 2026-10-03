@@ -2667,6 +2667,178 @@ class FinanceController extends Controller
     }
 
     /**
+     * API JSON Pencarian Invoice untuk Cetak Massal (Modal Print)
+     */
+    public function searchBatchInvoiceJson(Request $request): JsonResponse
+    {
+        $bulan = $request->query('bulan', date('m'));
+        $tahun = $request->query('tahun', date('Y'));
+        $search = trim($request->query('search', ''));
+        $statusBayar = $request->query('status_bayar', '');
+
+        $query = DB::table('trx_billing_layanan');
+
+        if (Schema::hasTable('m_status_billing_layanan')) {
+            $query->leftJoin('m_status_billing_layanan', 'trx_billing_layanan.status_bill_lay', '=', 'm_status_billing_layanan.status_bill_lay');
+        }
+
+        if ($bulan) {
+            $query->where('trx_billing_layanan.bulan_tagihan', str_pad($bulan, 2, '0', STR_PAD_LEFT));
+        }
+        if ($tahun) {
+            $query->where('trx_billing_layanan.tahun_tagihan', $tahun);
+        }
+        if ($statusBayar !== '' && $statusBayar !== null) {
+            $query->where('trx_billing_layanan.status_bill_lay', $statusBayar);
+        }
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('trx_billing_layanan.nama_pelanggan', 'like', "%{$search}%")
+                  ->orWhere('trx_billing_layanan.nomor_internet', 'like', "%{$search}%")
+                  ->orWhere('trx_billing_layanan.kode_billing_layanan', 'like', "%{$search}%")
+                  ->orWhere('trx_billing_layanan.invoice_file', 'like', "%{$search}%");
+            });
+        }
+
+        $invoices = $query->select(
+            'trx_billing_layanan.id',
+            'trx_billing_layanan.kode_billing_layanan',
+            'trx_billing_layanan.nomor_internet',
+            'trx_billing_layanan.nama_pelanggan',
+            'trx_billing_layanan.total_layanan',
+            'trx_billing_layanan.harga_bandwith',
+            'trx_billing_layanan.potongan',
+            'trx_billing_layanan.ppn',
+            'trx_billing_layanan.bulan_tagihan',
+            'trx_billing_layanan.tahun_tagihan',
+            'trx_billing_layanan.periode_tagihan',
+            'trx_billing_layanan.status_bill_lay',
+            'trx_billing_layanan.expiry',
+            DB::raw("COALESCE(m_status_billing_layanan.desc_bill_lay, 'Draft') as status_desc")
+        )->orderBy('trx_billing_layanan.nama_pelanggan', 'asc')->get();
+
+        return response()->json([
+            'success' => true,
+            'total' => $invoices->count(),
+            'data' => $invoices
+        ]);
+    }
+
+    /**
+     * Cetak Banyak Invoice Sekaligus (Batch Print Invoices)
+     */
+    public function batchDokumenInvoice(Request $request): View
+    {
+        $kodes = $request->input('kodes', $request->query('kodes'));
+        if (is_string($kodes)) {
+            $kodes = explode(',', $kodes);
+        }
+        $kodes = array_filter((array)$kodes);
+
+        $bulan = $request->input('bulan', $request->query('bulan'));
+        $tahun = $request->input('tahun', $request->query('tahun'));
+
+        $query = DB::table('trx_billing_layanan');
+        if (!empty($kodes)) {
+            $query->whereIn('kode_billing_layanan', $kodes);
+        } else {
+            if ($bulan) {
+                $query->where('bulan_tagihan', str_pad($bulan, 2, '0', STR_PAD_LEFT));
+            }
+            if ($tahun) {
+                $query->where('tahun_tagihan', $tahun);
+            }
+        }
+
+        $rawInvoices = $query->orderBy('nama_pelanggan', 'asc')->get();
+
+        if ($rawInvoices->isEmpty()) {
+            abort(404, "Tidak ada data invoice yang ditemukan untuk dicetak.");
+        }
+
+        $headerPath = public_path('assets/images/invoice_kop_header.png');
+        if (!file_exists($headerPath)) $headerPath = public_path('assets/images/kop_header.png');
+        $footerPath = public_path('assets/images/invoice_kop_footer.png');
+        if (!file_exists($footerPath)) $footerPath = public_path('assets/images/kop_footer.png');
+
+        $headerBase64 = file_exists($headerPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($headerPath)) : asset('assets/images/kop_header.png');
+        $footerBase64 = file_exists($footerPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($footerPath)) : asset('assets/images/kop_footer.png');
+
+        $invoicesData = [];
+        foreach ($rawInvoices as $invoice) {
+            $customer = null;
+            if (Schema::hasTable('view_batchjob')) {
+                $customer = DB::table('view_batchjob')->where('nomor_internet', $invoice->nomor_internet)->first();
+            }
+
+            $customerName = $invoice->nama_pelanggan ?? ($customer->nama_pelanggan ?? ($customer->nama_penduduk ?? 'Pelanggan'));
+            $nomorInternet = $invoice->nomor_internet ?? ($customer->nomor_internet ?? '-');
+            $noInvoice = $invoice->kode_billing_layanan;
+
+            $alamat = $invoice->alamat_pasang ?? ($customer->alamat_pasang ?? ($customer->alamat_p ?? ($customer->alamat_ktp ?? '-')));
+            if (!empty($customer->rt_pasang) || !empty($customer->rw_pasang)) {
+                $alamat .= " RT." . ($customer->rt_pasang ?? '00') . " / RW." . ($customer->rw_pasang ?? '00');
+            }
+            if (!empty($customer->nama_kel_pasang)) $alamat .= ", Kel. " . $customer->nama_kel_pasang;
+            if (!empty($customer->nama_kec_pasang)) $alamat .= ", Kec. " . $customer->nama_kec_pasang;
+            if (!empty($customer->nama_kota_pasang)) $alamat .= ", " . $customer->nama_kota_pasang;
+
+            $bTagihan = $invoice->bulan_tagihan ?? date('m');
+            $tTagihan = $invoice->tahun_tagihan ?? date('Y');
+            $monthName = date('M', mktime(0, 0, 0, (int)$bTagihan, 1, (int)$tTagihan));
+            $periodeTagihan = $invoice->periode_tagihan ?: ($monthName . ' ' . $tTagihan);
+
+            $jatuhTempo = !empty($invoice->expiry) 
+                ? Carbon::parse($invoice->expiry)->locale('id')->isoFormat('D MMMM Y')
+                : 'Tanggal 20 Setiap Bulan';
+
+            $kategoriBandwith = $invoice->nama_kategori_bandwith ?? ($customer->nama_kategori_bandwith ?? 'BROADBAND');
+            $nominalBandwith = $invoice->nominal_bandwith ?? ($customer->nominal_bandwith ?? '');
+            $namaLayanan = "LAYANAN INTERNET {$kategoriBandwith}" . ($nominalBandwith ? " {$nominalBandwith} MBps" : '');
+
+            $subtotal = (float) ($invoice->harga_bandwith ?? ($customer->harga_bandwith ?? ($invoice->total_layanan ?? 0)));
+            $potongan = (float) ($invoice->potongan ?? 0);
+            $ppn = (float) ($invoice->ppn ?? 0);
+            $total = (float) ($invoice->total_layanan ?? max(0, $subtotal - $potongan + $ppn));
+
+            $terbilangText = $this->terbilangRupiah($total);
+
+            $paymentUrl = null;
+            if (!empty($invoice->payment_respond_post)) {
+                $resp = json_decode($invoice->payment_respond_post, true);
+                $paymentUrl = $resp['redirect_url'] ?? null;
+            }
+            if (!$paymentUrl) {
+                $paymentUrl = route('finance.billing-layanan', ['search' => $noInvoice]);
+            }
+
+            $invoicesData[] = [
+                'customerName' => $customerName,
+                'nomorInternet' => $nomorInternet,
+                'noInvoice' => $noInvoice,
+                'alamat' => $alamat,
+                'periodeTagihan' => $periodeTagihan,
+                'jatuhTempo' => $jatuhTempo,
+                'namaLayanan' => $namaLayanan,
+                'subtotal' => $subtotal,
+                'potongan' => $potongan,
+                'ppn' => $ppn,
+                'total' => $total,
+                'terbilangText' => $terbilangText,
+                'paymentUrl' => $paymentUrl
+            ];
+        }
+
+        return view('finance.dokumen.batch_invoice', compact(
+            'invoicesData',
+            'headerBase64',
+            'footerBase64',
+            'bulan',
+            'tahun'
+        ));
+    }
+
+    /**
      * Helper Terbilang Bahasa Indonesia
      */
     private function terbilangRupiah(float $angka): string

@@ -700,20 +700,28 @@ class NocController extends Controller
             $totalPonPort = $totalOlt * 8; // fallback default 8 port/olt
         }
 
-        // Hitung status PON aktif / terdaftar per OLT
+        // Hitung status PON aktif / terdaftar per OLT secara agregat (Eliminasi N+1 query)
+        $oltCodes = $olts->pluck('kode_olt')->toArray();
+        $popCodes = $olts->pluck('kode_pop')->filter()->toArray();
+
+        $registeredCountsRaw = DB::table('trx_batchjob_register')
+            ->where(function($q) use ($oltCodes, $popCodes) {
+                $q->whereIn('olt', $oltCodes);
+                if (!empty($popCodes)) {
+                    $q->orWhereIn('kode_pop', $popCodes);
+                }
+            })
+            ->whereNotNull('index_olt')
+            ->where('index_olt', '!=', '')
+            ->whereNotIn('status_reg', ['23', '23.1', '15'])
+            ->select('olt', DB::raw('COUNT(*) as total'))
+            ->groupBy('olt')
+            ->pluck('total', 'olt')
+            ->toArray();
+
         $registeredPonCounts = [];
         foreach ($olts as $olt) {
-            $count = DB::table('trx_batchjob_register')
-                ->where(function($q) use ($olt) {
-                    $q->where('olt', $olt->kode_olt)
-                      ->orWhere('kode_pop', $olt->kode_pop ?? 'non_existent');
-                })
-                ->whereNotNull('index_olt')
-                ->where('index_olt', '!=', '')
-                ->whereNotIn('status_reg', ['23', '23.1', '15'])
-                ->count();
-
-            $registeredPonCounts[$olt->kode_olt] = $count;
+            $registeredPonCounts[$olt->kode_olt] = (int)($registeredCountsRaw[$olt->kode_olt] ?? 0);
         }
 
         $gpons = Schema::hasTable('m_gpon') ? DB::table('m_gpon')->get() : collect();

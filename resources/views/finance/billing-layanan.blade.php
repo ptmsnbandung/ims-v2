@@ -2219,17 +2219,15 @@
                 <table x-show="batchInvoices.length > 0" class="w-full text-left border-collapse text-xs">
                     <thead class="sticky top-0 bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 z-10 uppercase text-[10px] tracking-wider font-bold">
                         <tr>
-                            <th class="py-2.5 px-4 w-10 text-center">
+                            <th class="py-3 px-4 w-12 text-center">
                                 <input type="checkbox"
                                        x-model="batchSelectAll"
                                        @change="toggleBatchSelectAll()"
                                        class="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 w-4 h-4 cursor-pointer">
                             </th>
-                            <th class="py-2.5 px-3">Pelanggan &amp; Layanan</th>
-                            <th class="py-2.5 px-3">No. Invoice</th>
-                            <th class="py-2.5 px-3">Periode</th>
-                            <th class="py-2.5 px-3">Tagihan</th>
-                            <th class="py-2.5 px-3 text-center">Status</th>
+                            <th class="py-3 px-4">Nama Pelanggan</th>
+                            <th class="py-3 px-4">Nomor Internet</th>
+                            <th class="py-3 px-4 text-center">Status Bayar</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -2237,30 +2235,24 @@
                             <tr class="hover:bg-cyan-50/40 dark:hover:bg-slate-800/40 transition cursor-pointer"
                                 :class="selectedBatchKodes.includes(inv.kode_billing_layanan) ? 'bg-cyan-50/60 dark:bg-cyan-500/10' : ''"
                                 @click="if ($event.target.tagName !== 'INPUT') { const idx = selectedBatchKodes.indexOf(inv.kode_billing_layanan); if (idx > -1) { selectedBatchKodes.splice(idx, 1); } else { selectedBatchKodes.push(inv.kode_billing_layanan); } updateBatchSelectAllState(); }">
-                                <td class="py-2.5 px-4 text-center" @click.stop>
+                                <td class="py-3 px-4 text-center" @click.stop>
                                     <input type="checkbox"
                                            :value="inv.kode_billing_layanan"
                                            x-model="selectedBatchKodes"
                                            @change="updateBatchSelectAllState()"
                                            class="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 w-4 h-4 cursor-pointer">
                                 </td>
-                                <td class="py-2.5 px-3">
+                                <td class="py-3 px-4">
                                     <div class="font-bold text-slate-900 dark:text-white" x-text="inv.nama_pelanggan"></div>
-                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono" x-text="inv.nomor_internet"></div>
+                                    <div class="text-[11px] text-slate-400 font-mono" x-text="inv.kode_billing_layanan"></div>
                                 </td>
-                                <td class="py-2.5 px-3">
-                                    <span class="font-mono text-[11px] font-semibold text-blue-600 dark:text-blue-400" x-text="inv.kode_billing_layanan"></span>
+                                <td class="py-3 px-4">
+                                    <span class="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400" x-text="inv.nomor_internet"></span>
                                 </td>
-                                <td class="py-2.5 px-3">
-                                    <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium" x-text="inv.periode_tagihan || (inv.bulan_tagihan + '/' + inv.tahun_tagihan)"></span>
-                                </td>
-                                <td class="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">
-                                    <span x-text="formatRupiah(inv.total_layanan || inv.harga_bandwith || 0)"></span>
-                                </td>
-                                <td class="py-2.5 px-3 text-center">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold inline-block"
-                                          :class="inv.status_bill_lay == '2' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : (inv.status_bill_lay == '1' ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400' : 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300')"
-                                          x-text="inv.status_desc || 'Draft'"></span>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold inline-block"
+                                          :class="inv.status_bill_lay == '15' || inv.status_bill_lay == '2' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : (inv.status_bill_lay == '13' || inv.status_bill_lay == '1' ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400' : (inv.status_bill_lay == '14' ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400' : 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300'))"
+                                          x-text="inv.status_desc"></span>
                                 </td>
                             </tr>
                         </template>

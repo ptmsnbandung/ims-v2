@@ -1877,18 +1877,25 @@
     <div x-show="batchPrintModalOpen"
          x-cloak
          @keydown.escape.window="batchPrintModalOpen = false"
+         class="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
          style="position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 1rem; background-color: rgba(2, 6, 23, 0.85);"
-         class="backdrop-blur-sm"
          x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
          x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95">
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
 
         <div @click.away="batchPrintModalOpen = false"
-             style="width: 100%; max-width: 56rem; height: 85vh; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;"
-             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl my-auto">
+             x-show="batchPrintModalOpen"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             style="width: 100%; max-width: 68rem; height: 88vh; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; margin: auto;"
+             class="relative w-full max-w-5xl lg:max-w-6xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden my-auto">
             <!-- Modal Header (Fixed) -->
             <div style="flex-shrink: 0;" class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
                 <div class="flex items-center gap-3">

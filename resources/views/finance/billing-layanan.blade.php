@@ -749,7 +749,7 @@
                                     } elseif ($isCash) {
                                         $methodLabel = 'Cash To Collector';
                                     } else {
-                                        $methodLabel = 'Midtran';
+                                        $methodLabel = 'Midtrans';
                                     }
                                 @endphp
 
@@ -796,7 +796,7 @@
                                 </div>
                                 @else
                                 <div class="flex flex-col gap-1 items-start">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Midtran' }}">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Midtrans' }}">
                                         <svg class="w-3 h-3 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                                         </svg>

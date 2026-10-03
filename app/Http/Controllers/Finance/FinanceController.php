@@ -2797,7 +2797,20 @@ class FinanceController extends Controller
                 });
             }
 
-            $invoices = $query->orderBy('nama_pelanggan', 'asc')->get();
+            $invoices = $query->select([
+                'kode_billing_layanan',
+                'nomor_internet',
+                'nama_pelanggan',
+                'nama_kategori_bandwith',
+                'nominal_bandwith',
+                'total_layanan',
+                'harga_bandwith',
+                'bulan_tagihan',
+                'tahun_tagihan',
+                'periode_tagihan',
+                'status_bill_lay',
+                'desc_bill_lay',
+            ])->orderBy('nama_pelanggan', 'asc')->limit(250)->get();
         } catch (\Throwable $e) {
             Log::info('searchBatchInvoiceJson view_billing_layanan query fallback: ' . $e->getMessage());
             try {
@@ -2822,10 +2835,16 @@ class FinanceController extends Controller
                     });
                 }
 
-                $invoices = $query->select(
-                    'trx_billing_layanan.*',
-                    'view_batchjob.nama_pelanggan'
-                )->get();
+                $invoices = $query->select([
+                    'trx_billing_layanan.kode_billing_layanan',
+                    'trx_billing_layanan.nomor_internet',
+                    'view_batchjob.nama_pelanggan',
+                    'trx_billing_layanan.total_layanan',
+                    'trx_billing_layanan.harga_bandwith',
+                    'trx_billing_layanan.bulan_tagihan',
+                    'trx_billing_layanan.tahun_tagihan',
+                    'trx_billing_layanan.status_bill_lay',
+                ])->limit(250)->get();
             } catch (\Throwable $e2) {
                 Log::error('searchBatchInvoiceJson fallback failed: ' . $e2->getMessage());
                 $invoices = DB::table('trx_billing_layanan')->limit(100)->get();
@@ -2897,15 +2916,15 @@ class FinanceController extends Controller
             $query->where('nama_kategori_bandwith', 'like', "%{$layanan}%");
         }
 
-        $pelanggans = $query->select(
+        $pelanggans = $query->select([
             'nomor_internet',
             'nama_pelanggan',
             'nama_kategori_bandwith',
             'nominal_bandwith',
             'harga_bandwith',
             'potongan',
-            'status_reg'
-        )->orderBy('nama_pelanggan', 'asc')->get()->unique('nomor_internet');
+            'status_reg',
+        ])->orderBy('nama_pelanggan', 'asc')->limit(500)->get()->unique('nomor_internet');
 
         // Check which ones already have invoices generated
         $existingInvoices = DB::table('trx_billing_layanan')

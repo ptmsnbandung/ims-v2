@@ -47,7 +47,7 @@
         <!-- Top Right Actions -->
         <div class="flex items-center gap-2.5 relative z-10 shrink-0">
             <!-- Dropdown Menu Aksi -->
-            <div class="relative" x-data="{ actionDropdownOpen: false }" @click.outside="actionDropdownOpen = false">
+            <div class="relative" @click.outside="actionDropdownOpen = false">
                 <button @click="actionDropdownOpen = !actionDropdownOpen"
                         type="button"
                         class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700/80 text-xs font-semibold flex items-center gap-2 shadow-sm transition cursor-pointer relative"
@@ -81,7 +81,7 @@
                     <div class="py-1">
                         <!-- Request Pelanggan Item -->
                         <button type="button"
-                                @click="openRequestModal(); actionDropdownOpen = false"
+                                @click="openRequestModal()"
                                 class="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-600 dark:hover:text-violet-400 transition cursor-pointer text-left group">
                             <div class="flex items-center gap-2.5">
                                 <div class="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
@@ -98,7 +98,7 @@
 
                         <!-- Cetak Massal (Print Invoices) -->
                         <button type="button"
-                                @click="openBatchPrintModal(); actionDropdownOpen = false"
+                                @click="openBatchPrintModal()"
                                 class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-600 dark:hover:text-cyan-400 transition cursor-pointer text-left group">
                             <div class="w-7 h-7 rounded-lg bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
                                 <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -2363,7 +2363,6 @@
          x-cloak
          @keydown.escape.window="requestModalOpen = false"
          class="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm overflow-hidden"
-         style="position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 1rem; background-color: rgba(2, 6, 23, 0.85); overflow: hidden;"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
@@ -2558,6 +2557,7 @@
 <script>
 function billingLayananPage() {
     return {
+        actionDropdownOpen: false,
         // Modal Request Invoice Portal Pelanggan
         requestModalOpen: false,
         requestCount: {{ $pendingRequestCount ?? 0 }},
@@ -2567,6 +2567,7 @@ function billingLayananPage() {
         requestActionLoadingId: null,
 
         async openRequestModal() {
+            this.actionDropdownOpen = false;
             this.requestModalOpen = true;
             await this.fetchBillingRequests();
         },
@@ -2769,6 +2770,7 @@ function billingLayananPage() {
         },
 
         async openBatchPrintModal() {
+            this.actionDropdownOpen = false;
             this.batchPrintModalOpen = true;
             this.batchTab = 'all';
             this.batchSearch = '';

@@ -800,17 +800,17 @@
                         </div>
                     </div>
 
-                    <!-- Tiket Gangguan (Monitoring Finance) -->
+                    <!-- Tiket (Pusat Tiket & Permintaan Finance) -->
                     <div class="ims-nav-wrapper">
-                        <a href="{{ route('teknik.tiket.gangguan') }}"
+                        <a href="{{ route('teknik.tiket') }}"
                            class="ims-nav-item {{ request()->routeIs('teknik.tiket*', 'finance.tiket*') ? 'active' : '' }}"
-                           title="Monitoring Tiket Gangguan">
+                           title="Pusat Tiket & Permintaan">
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*', 'finance.tiket*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                             </svg>
-                            <span class="ims-nav-text">Tiket Gangguan</span>
+                            <span class="ims-nav-text">Tiket</span>
                         </a>
-                        <div class="ims-tooltip">Tiket Gangguan (Monitoring)</div>
+                        <div class="ims-tooltip">Pusat Tiket & Permintaan</div>
                     </div>
                     @endif
 

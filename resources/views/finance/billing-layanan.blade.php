@@ -29,7 +29,7 @@
 
     <!-- Page Header & Action Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative z-30">
-        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none overflow-hidden"></div>
+        
         <div class="relative z-10">
             <div class="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
                 <span>Finance &amp; Billing</span>
@@ -140,23 +140,16 @@
             <!-- Primary Action: Request Pelanggan (Di Luar) -->
             <button @click="openRequestModal()"
                     type="button"
-                    class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-violet-500/25 border border-violet-400/20 transition duration-150 cursor-pointer shrink-0 relative">
+                    class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/25 border border-blue-400/20 transition duration-150 cursor-pointer shrink-0">
                 <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                 </svg>
                 <span>Request Pelanggan</span>
 
                 <!-- Counter Badge -->
-                <span x-show="requestCount > 0"
-                      class="inline-flex items-center px-2 py-0.5 rounded-full bg-white text-violet-700 font-extrabold text-[10px] shadow-xs">
-                    <span x-text="requestCount"></span>
-                </span>
-
-                <!-- Floating Ping Notification -->
-                <span x-show="requestCount > 0" class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500"></span>
-                </span>
+                <template x-if="requestCount > 0">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-white text-blue-700 font-extrabold text-[10px] shadow-xs" x-text="requestCount"></span>
+                </template>
             </button>
         </div>
     </div>

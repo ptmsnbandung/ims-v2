@@ -32,6 +32,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({
@@ -43,6 +44,21 @@
                         enable_password: this.enablePassword
                     })
                 });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    let parsedMsg = 'HTTP ' + res.status + ' (' + res.statusText + ')';
+                    try {
+                        const parsedJson = JSON.parse(errorText);
+                        parsedMsg = parsedJson.message || parsedMsg;
+                    } catch(e) {}
+                    
+                    this.testResult = {
+                        success: false,
+                        message: 'Gagal menguji koneksi: ' + parsedMsg
+                    };
+                    return;
+                }
 
                 const data = await res.json();
                 this.testResult = data;

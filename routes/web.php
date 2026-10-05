@@ -127,7 +127,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/coverage/update-ticket-status', [TeknikController::class, 'updateCoverageTicketStatus'])->name('coverage.update-status');
     });
 
-    Route::middleware('role:noc,direktur')->prefix('noc')->name('noc.')->group(function () {
+    Route::middleware('role:noc,direktur,admin')->prefix('noc')->name('noc.')->group(function () {
         // 1. Dashboard NOC Command Center
         Route::get('/', [NocController::class, 'dashboard'])->name('dashboard');
         Route::get('/dashboard', [NocController::class, 'dashboard'])->name('dashboard.index');

@@ -284,6 +284,7 @@ class NocController extends Controller
             'barangs' => $barangs,
             'indexOltSlots' => $indexOltData['slots'],
             'occupiedIndexOlts' => $indexOltData['occupied'],
+            'occupiedMap' => $indexOltData['occupiedMap'],
             'allPorts' => $indexOltData['allPorts'],
             'portStats' => $indexOltData['portStats'],
             'newUserStats' => $newUserStats,
@@ -295,7 +296,7 @@ class NocController extends Controller
     }
 
     /**
-     * Helper: Generate & check available Index OLT slots (1 to 128) across all GPON ports
+     * Helper: Generate & check available Index OLT slots across all GPON ports efficiently
      */
     private function getIndexOltSlots(): array
     {
@@ -307,15 +308,22 @@ class NocController extends Controller
             ->pluck('index_olt');
 
         $occupiedMap = [];
+        $usedPerPort = [];
         foreach ($occupiedRaw as $raw) {
             $clean = trim($raw);
             if (!str_starts_with($clean, 'gpon-onu_') && str_starts_with($clean, '1/')) {
                 $clean = 'gpon-onu_' . $clean;
             }
             $occupiedMap[$clean] = true;
+
+            $parts = explode(':', $clean);
+            if (isset($parts[0])) {
+                $portName = $parts[0];
+                $usedPerPort[$portName] = ($usedPerPort[$portName] ?? 0) + 1;
+            }
         }
 
-        // 2. All 25+ GPON Ports (Slot 1: 1/1/1 s/d 1/1/16, Slot 2: 1/2/1 s/d 1/2/16)
+        // 2. All 32 GPON Ports (Slot 1: 1/1/1 s/d 1/1/16, Slot 2: 1/2/1 s/d 1/2/16)
         $allPorts = [
             'gpon-onu_1/1/1', 'gpon-onu_1/1/2', 'gpon-onu_1/1/3', 'gpon-onu_1/1/4',
             'gpon-onu_1/1/5', 'gpon-onu_1/1/6', 'gpon-onu_1/1/7', 'gpon-onu_1/1/8',
@@ -327,34 +335,23 @@ class NocController extends Controller
             'gpon-onu_1/2/13', 'gpon-onu_1/2/14', 'gpon-onu_1/2/15', 'gpon-onu_1/2/16',
         ];
 
-        $slots = [];
         $portStats = [];
-
         foreach ($allPorts as $port) {
-            $usedCount = 0;
-            for ($i = 1; $i <= 128; $i++) {
-                $key = "{$port}:{$i}";
-                $isOccupied = isset($occupiedMap[$key]);
-                if ($isOccupied) $usedCount++;
-
-                $slots[$port][] = [
-                    'key' => $key,
-                    'num' => $i,
-                    'is_occupied' => $isOccupied,
-                ];
-            }
+            $usedCount = $usedPerPort[$port] ?? 0;
             $portStats[$port] = [
                 'name' => $port,
                 'used' => $usedCount,
-                'free' => 128 - $usedCount,
+                'free' => max(0, 128 - $usedCount),
+                'available' => max(0, 128 - $usedCount),
                 'total' => 128,
             ];
         }
 
         return [
-            'slots' => $slots,
+            'slots' => [],
             'portStats' => $portStats,
             'allPorts' => $allPorts,
+            'occupiedMap' => $occupiedMap,
             'occupied' => array_keys($occupiedMap),
         ];
     }
@@ -1243,6 +1240,7 @@ class NocController extends Controller
             'barangs' => $barangs,
             'indexOltSlots' => $indexOltData['slots'],
             'occupiedIndexOlts' => $indexOltData['occupied'],
+            'occupiedMap' => $indexOltData['occupiedMap'],
             'allPorts' => $indexOltData['allPorts'],
             'portStats' => $indexOltData['portStats'],
             'countSiapAktivasi' => $countSiapAktivasi,

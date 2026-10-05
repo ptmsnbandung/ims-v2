@@ -45,7 +45,20 @@
          pppProfile: 'PROFILE 30 Mbps',
          remoteAddress: '',
 
-         allSlots: {{ json_encode($indexOltSlots ?? []) }},
+         occupiedMap: {{ json_encode($occupiedMap ?? []) }},
+         getSlotsForPort(port) {
+             if (!port) return [];
+             const slots = [];
+             for (let i = 1; i <= 128; i++) {
+                 const key = port + ':' + i;
+                 slots.push({
+                     key: key,
+                     num: i,
+                     is_occupied: !!this.occupiedMap[key]
+                 });
+             }
+             return slots;
+         },
 
          openScheduleModal(item) {
              this.isModalReschedule = ['19', '19.1'].includes(String(item.status_reg));
@@ -866,7 +879,7 @@
                                                 @change="updateIndexOlt()" 
                                                 class="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-[11px] font-semibold">
                                             <option value="">-- Pilih Index (1..128) --</option>
-                                            <template x-for="slot in (allSlots[selectedGponPort] || [])" :key="slot.key">
+                                            <template x-for="slot in getSlotsForPort(selectedGponPort)" :key="slot.key">
                                                 <option :value="slot.num" 
                                                         :disabled="slot.is_occupied && modalIndexOlt !== slot.key"
                                                         :class="slot.is_occupied ? 'text-rose-500 bg-rose-50/10' : 'text-emerald-500 font-bold'"

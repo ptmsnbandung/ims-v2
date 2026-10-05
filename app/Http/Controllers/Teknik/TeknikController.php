@@ -2748,13 +2748,14 @@ class TeknikController extends Controller
             'olts' => $olts,
             'indexOltSlots' => $indexOltData['slots'],
             'occupiedIndexOlts' => $indexOltData['occupied'],
+            'occupiedMap' => $indexOltData['occupiedMap'],
             'allPorts' => $indexOltData['allPorts'],
             'portStats' => $indexOltData['portStats'],
         ]);
     }
 
     /**
-     * Helper: Generate & check available Index OLT slots (1 to 128) across all GPON ports
+     * Helper: Generate & check available Index OLT slots across all GPON ports efficiently
      */
     private function getIndexOltSlots(): array
     {
@@ -2767,6 +2768,7 @@ class TeknikController extends Controller
             ->get();
 
         $occupiedMap = [];
+        $usedPerPort = [];
         foreach ($occupiedData as $row) {
             $clean = trim($row->index_olt);
             if (!str_starts_with($clean, 'gpon-onu_') && str_starts_with($clean, '1/')) {
@@ -2776,9 +2778,15 @@ class TeknikController extends Controller
                 'nomor_internet' => $row->nomor_internet,
                 'nama_pelanggan' => $row->nama_pelanggan,
             ];
+
+            $parts = explode(':', $clean);
+            if (isset($parts[0])) {
+                $portName = $parts[0];
+                $usedPerPort[$portName] = ($usedPerPort[$portName] ?? 0) + 1;
+            }
         }
 
-        // 2. All GPON Ports (Slot 1: 1/1/1 s/d 1/1/16, Slot 2: 1/2/1 s/d 1/2/16)
+        // 2. All 32 GPON Ports (Slot 1: 1/1/1 s/d 1/1/16, Slot 2: 1/2/1 s/d 1/2/16)
         $allPorts = [
             'gpon-onu_1/1/1', 'gpon-onu_1/1/2', 'gpon-onu_1/1/3', 'gpon-onu_1/1/4',
             'gpon-onu_1/1/5', 'gpon-onu_1/1/6', 'gpon-onu_1/1/7', 'gpon-onu_1/1/8',
@@ -2790,39 +2798,23 @@ class TeknikController extends Controller
             'gpon-onu_1/2/13', 'gpon-onu_1/2/14', 'gpon-onu_1/2/15', 'gpon-onu_1/2/16',
         ];
 
-        $slots = [];
         $portStats = [];
-
         foreach ($allPorts as $port) {
-            $usedCount = 0;
-            for ($i = 1; $i <= 128; $i++) {
-                $key = "{$port}:{$i}";
-                $occ = $occupiedMap[$key] ?? null;
-                $isOccupied = !empty($occ);
-                if ($isOccupied) $usedCount++;
-
-                $slots[$port][] = [
-                    'key' => $key,
-                    'num' => $i,
-                    'slot' => (string) $i,
-                    'is_occupied' => $isOccupied,
-                    'occupied_by' => $occ ? $occ['nomor_internet'] : null,
-                    'occupied_name' => $occ ? $occ['nama_pelanggan'] : null,
-                ];
-            }
+            $usedCount = $usedPerPort[$port] ?? 0;
             $portStats[$port] = [
                 'name' => $port,
                 'used' => $usedCount,
-                'free' => 128 - $usedCount,
-                'available' => 128 - $usedCount,
+                'free' => max(0, 128 - $usedCount),
+                'available' => max(0, 128 - $usedCount),
                 'total' => 128,
             ];
         }
 
         return [
-            'slots' => $slots,
+            'slots' => [],
             'portStats' => $portStats,
             'allPorts' => $allPorts,
+            'occupiedMap' => $occupiedMap,
             'occupied' => array_keys($occupiedMap),
         ];
     }

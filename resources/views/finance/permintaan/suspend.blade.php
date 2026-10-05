@@ -40,29 +40,6 @@
          }
      }">
 
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-            <button @click="$el.parentElement.remove()" class="text-emerald-400 hover:text-emerald-200 text-xs font-bold">&times;</button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-                </svg>
-                <span>{{ session('error') }}</span>
-            </div>
-            <button @click="$el.parentElement.remove()" class="text-rose-400 hover:text-rose-200 text-xs font-bold">&times;</button>
-        </div>
-    @endif
 
     <!-- Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
     <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"

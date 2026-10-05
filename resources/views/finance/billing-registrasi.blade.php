@@ -93,24 +93,6 @@
         </div>
     </div>
 
-    <!-- Alert Flash Notifications -->
-    @if(session('success'))
-    <div class="p-4 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 text-sm flex items-center gap-3 backdrop-blur-md">
-        <svg class="w-5 h-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        <span>{{ session('success') }}</span>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="p-4 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/20 dark:text-rose-400 text-sm flex items-center gap-3 backdrop-blur-md">
-        <svg class="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        <span>{{ session('error') }}</span>
-    </div>
-    @endif
 
     <!-- 4 KPI Summary Cards for Registration -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

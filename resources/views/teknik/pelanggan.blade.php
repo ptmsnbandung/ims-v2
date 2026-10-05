@@ -135,19 +135,19 @@
                 </h4>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
+            <div class="grid gap-2 sm:gap-2.5" style="grid-template-columns: repeat(7, minmax(0, 1fr));">
                 @foreach($layananList as $layanan)
                     @php
                         $count = $bwCounts['aktif'][$layanan->kode_kategori_bandwith] ?? 0;
                         $isActiveFilter = ($filters['status'] ?? '') == '20' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
                     @endphp
                     <a href="{{ route('teknik.pelanggan', ['status' => '20', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
-                       class="group p-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md {{ $isActiveFilter ? 'bg-blue-50/80 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/30' : 'bg-white dark:bg-slate-900/90 hover:bg-blue-50/40 dark:hover:bg-slate-800/60 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700' }} flex flex-col justify-between min-h-[76px]">
+                       class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm {{ $isActiveFilter ? 'bg-blue-50/90 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700' }} flex flex-col justify-between min-h-[74px]">
                         <div class="flex items-center justify-between gap-1">
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
                                 {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
                             </span>
-                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-blue-500 shadow-xs shadow-blue-500/50' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
+                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-blue-600 dark:bg-blue-400' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
                         <div class="mt-2 flex items-baseline justify-between">
                             <span class="text-base font-extrabold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-600' }}">
@@ -158,14 +158,14 @@
                     </a>
                 @endforeach
 
-                <!-- Card Total Aktif -->
+                <!-- Card Total Aktif (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route('teknik.pelanggan', ['status' => '20']) }}" 
-                   class="group p-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md {{ (($filters['status'] ?? '') == '20' && empty($filters['layanan'])) ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-500/40 shadow-blue-500/20' : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-transparent hover:from-blue-500 hover:to-indigo-600' }} flex flex-col justify-between min-h-[76px]">
+                   class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-blue-600 hover:bg-blue-700 text-white border-blue-600 flex flex-col justify-between min-h-[74px]">
                     <div class="flex items-center justify-between gap-1">
-                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-white/20 text-white backdrop-blur-xs truncate">
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-blue-800/70 text-white border border-blue-400/30 truncate">
                             TOTAL AKTIF
                         </span>
-                        <svg class="w-3.5 h-3.5 text-white/80 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 text-blue-200 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
@@ -188,19 +188,19 @@
                 </h4>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
+            <div class="grid gap-2 sm:gap-2.5" style="grid-template-columns: repeat(7, minmax(0, 1fr));">
                 @foreach($layananList as $layanan)
                     @php
                         $count = $bwCounts['terminasi'][$layanan->kode_kategori_bandwith] ?? 0;
                         $isActiveFilter = ($filters['status'] ?? '') == '23' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
                     @endphp
                     <a href="{{ route('teknik.pelanggan', ['status' => '23', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
-                       class="group p-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md {{ $isActiveFilter ? 'bg-rose-50/80 dark:bg-rose-500/15 border-rose-500 ring-2 ring-rose-500/30' : 'bg-white dark:bg-slate-900/90 hover:bg-rose-50/40 dark:hover:bg-slate-800/60 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700' }} flex flex-col justify-between min-h-[76px]">
+                       class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm {{ $isActiveFilter ? 'bg-rose-50/90 dark:bg-rose-500/15 border-rose-500 ring-2 ring-rose-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700' }} flex flex-col justify-between min-h-[74px]">
                         <div class="flex items-center justify-between gap-1">
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-rose-300 dark:group-hover:border-rose-600 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
                                 {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
                             </span>
-                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-rose-500 shadow-xs shadow-rose-500/50' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
+                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-rose-600 dark:bg-rose-400' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
                         <div class="mt-2 flex items-baseline justify-between">
                             <span class="text-base font-extrabold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400' : 'text-slate-400 dark:text-slate-600' }}">
@@ -211,14 +211,14 @@
                     </a>
                 @endforeach
 
-                <!-- Card Total Terminasi -->
+                <!-- Card Total Terminasi (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route('teknik.pelanggan', ['status' => '23']) }}" 
-                   class="group p-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md {{ (($filters['status'] ?? '') == '23' && empty($filters['layanan'])) ? 'bg-rose-600 text-white border-rose-600 ring-2 ring-rose-500/40 shadow-rose-500/20' : 'bg-gradient-to-br from-rose-600 to-red-700 text-white border-transparent hover:from-rose-500 hover:to-red-600' }} flex flex-col justify-between min-h-[76px]">
+                   class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-rose-600 hover:bg-rose-700 text-white border-rose-600 flex flex-col justify-between min-h-[74px]">
                     <div class="flex items-center justify-between gap-1">
-                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-white/20 text-white backdrop-blur-xs truncate">
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-800/70 text-white border border-rose-400/30 truncate">
                             TOTAL TERMINASI
                         </span>
-                        <svg class="w-3.5 h-3.5 text-white/80 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 text-rose-200 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
@@ -241,19 +241,19 @@
                 </h4>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
+            <div class="grid gap-2 sm:gap-2.5" style="grid-template-columns: repeat(7, minmax(0, 1fr));">
                 @foreach($layananList as $layanan)
                     @php
                         $count = $bwCounts['suspend'][$layanan->kode_kategori_bandwith] ?? 0;
                         $isActiveFilter = ($filters['status'] ?? '') == '21' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
                     @endphp
                     <a href="{{ route('teknik.pelanggan', ['status' => '21', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
-                       class="group p-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md {{ $isActiveFilter ? 'bg-amber-50/80 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30' : 'bg-white dark:bg-slate-900/90 hover:bg-amber-50/40 dark:hover:bg-slate-800/60 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700' }} flex flex-col justify-between min-h-[76px]">
+                       class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm {{ $isActiveFilter ? 'bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700' }} flex flex-col justify-between min-h-[74px]">
                         <div class="flex items-center justify-between gap-1">
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-amber-300 dark:group-hover:border-amber-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
                                 {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
                             </span>
-                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-amber-500 shadow-xs shadow-amber-500/50' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
+                            <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
                         <div class="mt-2 flex items-baseline justify-between">
                             <span class="text-base font-extrabold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400' : 'text-slate-400 dark:text-slate-600' }}">
@@ -264,14 +264,14 @@
                     </a>
                 @endforeach
 
-                <!-- Card Total Suspend -->
+                <!-- Card Total Suspend (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route('teknik.pelanggan', ['status' => '21']) }}" 
-                   class="group p-2.5 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md {{ (($filters['status'] ?? '') == '21' && empty($filters['layanan'])) ? 'bg-amber-500 text-white border-amber-500 ring-2 ring-amber-500/40 shadow-amber-500/20' : 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-transparent hover:from-amber-400 hover:to-orange-500' }} flex flex-col justify-between min-h-[76px]">
+                   class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-amber-500 hover:bg-amber-600 text-white border-amber-500 flex flex-col justify-between min-h-[74px]">
                     <div class="flex items-center justify-between gap-1">
-                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-white/20 text-white backdrop-blur-xs truncate">
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-700/70 text-white border border-amber-300/30 truncate">
                             TOTAL SUSPEND
                         </span>
-                        <svg class="w-3.5 h-3.5 text-white/80 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 text-amber-100 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>

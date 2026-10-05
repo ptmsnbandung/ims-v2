@@ -12,7 +12,7 @@
         currentRouter: { id: '', name: '', host: '', port: 18735, username: '', password: '', kota: '', is_active: 1 },
         deleteRouterId: null,
         deleteRouterName: '',
-        statusMap: {},
+        statusMap: @json($liveStatus ?? []),
 
         openEditModal(router) {
             this.currentRouter = {

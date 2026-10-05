@@ -1877,8 +1877,48 @@ class NocController extends Controller
         $totalCustomersUnmapped = Schema::hasTable('trx_batchjob_register') ? DB::table('trx_batchjob_register')->whereNull('router_id')->count() : 0;
         $totalCustomers = Schema::hasTable('trx_batchjob_register') ? DB::table('trx_batchjob_register')->count() : 0;
 
+        // Auto-test live status setiap router (server-side)
+        $liveStatus = [];
         foreach ($routers as $r) {
             $r->customer_count = $customerCounts[$r->id] ?? 0;
+            
+            if ($r->is_active) {
+                try {
+                    $pass = $r->password;
+                    try {
+                        $pass = Crypt::decryptString($pass);
+                    } catch (\Exception $e) {
+                        // Fallback to raw password
+                    }
+
+                    $service = new \App\Services\Network\MikrotikService([
+                        'host' => $r->host,
+                        'port' => (int)($r->port ?: 18735),
+                        'username' => $r->username,
+                        'password' => $pass,
+                        'timeout' => 3,
+                    ]);
+
+                    $result = $service->testConnection();
+                    $liveStatus[$r->id] = [
+                        'status' => $result['success'] ? 'online' : 'offline',
+                        'identity' => $result['identity'] ?? null,
+                        'message' => $result['message'] ?? '',
+                    ];
+                } catch (\Throwable $e) {
+                    $liveStatus[$r->id] = [
+                        'status' => 'offline',
+                        'identity' => null,
+                        'message' => $e->getMessage(),
+                    ];
+                }
+            } else {
+                $liveStatus[$r->id] = [
+                    'status' => 'inactive',
+                    'identity' => null,
+                    'message' => 'Router nonaktif',
+                ];
+            }
         }
 
         return view('noc.router', [
@@ -1890,6 +1930,7 @@ class NocController extends Controller
             'totalCustomersMapped' => $totalCustomersMapped,
             'totalCustomersUnmapped' => $totalCustomersUnmapped,
             'totalCustomers' => $totalCustomers,
+            'liveStatus' => $liveStatus,
         ]);
     }
 

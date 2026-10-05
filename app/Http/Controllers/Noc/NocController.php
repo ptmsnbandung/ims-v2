@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Noc;
 
 use App\Http\Controllers\Controller;
+use App\Services\Network\CustomerProvisioningService;
 use App\Services\Olt\OltConnectionService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -1606,9 +1607,9 @@ class NocController extends Controller
     }
 
     /**
-     * Approve Suspend / Unsuspend Request
+     * Approve Suspend / Unsuspend Request (Sekaligus Otomatis MikroTik + OLT Reboot + Kick)
      */
-    public function approveSuspend(Request $request, string $kodeSuspend): RedirectResponse
+    public function approveSuspend(Request $request, string $kodeSuspend, CustomerProvisioningService $provisioning): RedirectResponse
     {
         $suspend = DB::table('trx_suspend')->where('kode_suspend', $kodeSuspend)->first();
         if (!$suspend) {
@@ -1617,24 +1618,51 @@ class NocController extends Controller
 
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'NOC';
+        $nomorInternet = $suspend->nomor_internet;
 
-        $newStatus = ($suspend->status_suspend == '18') ? '13' : '12';
-        $updateData = [
-            'status_suspend' => $newStatus,
-            'date_update' => $now,
-            'user_update' => $currentUser,
-        ];
+        if ($suspend->status_suspend == '18') {
+            // UNsuspend / Buka Isolir -> Aktifkan
+            $res = $provisioning->activateCustomer($nomorInternet, $currentUser, 'Approve Unsuspend dari NOC');
+            return redirect()->back()->with('success', "Buka isolir {$nomorInternet} berhasil! PPPoE di-enable, koneksi di-kick, dan ONU OLT berhasil direboot.");
+        } else {
+            // Suspend / Isolir
+            $res = $provisioning->suspendCustomer($nomorInternet, $currentUser, $suspend->desc_suspend ?: 'Approve Suspend dari NOC');
+            return redirect()->back()->with('success', "Suspend {$nomorInternet} berhasil! PPPoE di-disable, sesi aktif seketika diputus (kicked), dan ONU OLT berhasil direboot.");
+        }
+    }
 
-        if ($newStatus == '12') {
-            $updateData['suspend_start'] = $request->start_suspend ?: now()->format('Y-m-d');
-        } elseif ($newStatus == '13') {
-            $updateData['suspend_end'] = $request->finish_suspend ?: ($request->start_suspend ?: now()->format('Y-m-d'));
+    /**
+     * UNIFIED ACTION: Aktifkan Layanan Pelanggan (DB 20 + MikroTik Enable + Kick + OLT Reboot)
+     */
+    public function unifiedActivate(Request $request, string $nomorInternet, CustomerProvisioningService $provisioning): JsonResponse|RedirectResponse
+    {
+        $currentUser = auth()->user()->nama ?? 'NOC';
+        $note = $request->input('note', 'Aktivasi langsung dari NOC/Teknik');
+
+        $result = $provisioning->activateCustomer($nomorInternet, $currentUser, $note);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($result);
         }
 
-        DB::table('trx_suspend')->where('kode_suspend', $kodeSuspend)->update($updateData);
+        return redirect()->back()->with($result['success'] ? 'success' : 'warning', $result['summary']);
+    }
 
-        $actionText = ($newStatus == '13') ? 'buka isolir (UNsuspend)' : 'suspend';
-        return redirect()->back()->with('success', "Permintaan {$actionText} {$suspend->nomor_internet} berhasil disetujui (Approved)!");
+    /**
+     * UNIFIED ACTION: Suspend / Isolir Layanan Pelanggan (DB 21 + MikroTik Disable + Kick + OLT Reboot)
+     */
+    public function unifiedSuspend(Request $request, string $nomorInternet, CustomerProvisioningService $provisioning): JsonResponse|RedirectResponse
+    {
+        $currentUser = auth()->user()->nama ?? 'NOC';
+        $reason = $request->input('reason', 'Suspend / Isolir langsung dari NOC/Teknik');
+
+        $result = $provisioning->suspendCustomer($nomorInternet, $currentUser, $reason);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($result);
+        }
+
+        return redirect()->back()->with($result['success'] ? 'success' : 'warning', $result['summary']);
     }
 
     /**

@@ -381,6 +381,70 @@ class OltConnectionService
     }
 
     /**
+     * Reboot ONU via OLT Telnet (mode pon-onu-mng)
+     * Contoh index_olt: "gpon-onu_1/2/6:3" atau "1/2/6:3"
+     */
+    public function rebootOnu(string $indexOlt, ?string $kodeOlt = null): array
+    {
+        $cleanIndex = trim($indexOlt);
+        if (empty($cleanIndex)) {
+            return [
+                'success' => false,
+                'message' => 'Index OLT tidak valid atau kosong.',
+            ];
+        }
+
+        // Normalisasi format index_olt (pastikan format gpon-onu_X/X/X:X)
+        if (!str_starts_with($cleanIndex, 'gpon-onu_')) {
+            $cleanIndex = 'gpon-onu_' . ltrim($cleanIndex, '_');
+        }
+
+        // Cari konfigurasi OLT di database atau default
+        $olt = null;
+        if ($kodeOlt && Schema::hasTable('m_olt')) {
+            $olt = DB::table('m_olt')->where('kode_olt', $kodeOlt)->first();
+        }
+        if (!$olt && Schema::hasTable('m_olt')) {
+            $olt = DB::table('m_olt')->where('hide', '!=', '1')->first();
+        }
+
+        $ip = $olt->ip_address ?? env('OLT_HOST', '103.161.206.214');
+        $port = (int)($olt->telnet_port ?? ($olt->port ?? env('OLT_PORT', 45523)));
+        $username = $olt->telnet_user ?? ($olt->username ?? env('OLT_USER', 'aplikasi'));
+        $password = $this->decryptPassword($olt->telnet_password ?? ($olt->password ?? env('OLT_PASS', 'kayuagung2-9')));
+        $enablePassword = $this->decryptPassword($olt->enable_password ?? null);
+
+        try {
+            Log::info("Executing OLT Remote Reboot on {$ip}:{$port} for ONU: {$cleanIndex}");
+
+            $commands = [
+                'configure terminal',
+                "pon-onu-mng {$cleanIndex}",
+                'reboot',
+                'end',
+            ];
+
+            $output = $this->executeTelnetCommand($ip, $port, $username, $password, $enablePassword, $commands);
+
+            Log::info("OLT Remote Reboot result for {$cleanIndex}: OK");
+
+            return [
+                'success' => true,
+                'message' => "Perintah reboot berhasil dikirim ke OLT ({$ip}) untuk ONU {$cleanIndex}.",
+                'output' => $output,
+            ];
+        } catch (Exception $e) {
+            Log::error("OLT Remote Reboot error for {$cleanIndex}: " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => "Gagal reboot ONU {$cleanIndex}: " . $e->getMessage(),
+                'output' => '',
+            ];
+        }
+    }
+
+    /**
      * Safely decrypt password if encrypted, or return raw string
      */
     private function decryptPassword(?string $value): ?string
@@ -394,3 +458,4 @@ class OltConnectionService
         }
     }
 }
+

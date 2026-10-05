@@ -123,6 +123,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/pelanggan/{nomor_internet}/perangkat', [TeknikController::class, 'storePerangkat'])->name('pelanggan.perangkat.store');
         Route::post('/pelanggan/{nomor_internet}/perangkat/{kode_inst_barang}/delete', [TeknikController::class, 'deletePerangkat'])->name('pelanggan.perangkat.delete');
         Route::post('/pelanggan/{nomor_internet}/update-pppoe', [TeknikController::class, 'updatePppoe'])->name('pelanggan.update-pppoe');
+        Route::post('/pelanggan/{nomor_internet}/unified-activate', [NocController::class, 'unifiedActivate'])->name('pelanggan.unified-activate');
+        Route::post('/pelanggan/{nomor_internet}/unified-suspend', [NocController::class, 'unifiedSuspend'])->name('pelanggan.unified-suspend');
 
         // Cek Coverage Lokasi ke ODP Terdekat (GIS Dropcore Routing)
         Route::get('/coverage', [TeknikController::class, 'coverage'])->name('coverage');

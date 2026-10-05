@@ -502,7 +502,31 @@
 
                             <!-- 6. Aksi -->
                             <td class="py-4 px-4 align-top text-center text-xs">
-                                <div class="flex items-center justify-center gap-1.5">
+                                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                    @if(in_array($item->status_reg, ['21', '21.1']))
+                                        <!-- 1-Click UNIFIED AKTIFKAN -->
+                                        <button type="button" 
+                                                onclick="triggerUnifiedAction('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', 'activate')"
+                                                class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs transition cursor-pointer"
+                                                title="Aktifkan PPPoE MikroTik, Kick Koneksi, dan Reboot ONT OLT">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                                            </svg>
+                                            <span>Aktifkan</span>
+                                        </button>
+                                    @elseif($item->status_reg == '20')
+                                        <!-- 1-Click UNIFIED SUSPEND -->
+                                        <button type="button" 
+                                                onclick="triggerUnifiedAction('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', 'suspend')"
+                                                class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs transition cursor-pointer"
+                                                title="Suspend PPPoE MikroTik, Kick Koneksi, dan Reboot ONT OLT">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                            </svg>
+                                            <span>Suspend</span>
+                                        </button>
+                                    @endif
+
                                     <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}?download=pdf" 
                                        target="_blank"
                                        class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500/30 transition" 
@@ -565,4 +589,77 @@
     </div>
 
 </div>
+
+<!-- SweetAlert Script for 1-Click Unified Activate/Suspend -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function triggerUnifiedAction(nomorInternet, namaPelanggan, action) {
+    const isActivate = (action === 'activate');
+    const title = isActivate ? 'Aktifkan Layanan & Reboot ONT?' : 'Suspend / Isolir Layanan & Reboot ONT?';
+    const text = isActivate 
+        ? `Sistem akan otomatis: (1) Mengaktifkan PPPoE di MikroTik, (2) Kick koneksi agar re-auth, dan (3) Remote Reboot ONT OLT untuk ${namaPelanggan} (${nomorInternet}).`
+        : `Sistem akan otomatis: (1) Mendisable PPPoE di MikroTik, (2) Kick sesi aktif seketika, dan (3) Remote Reboot ONT OLT untuk ${namaPelanggan} (${nomorInternet}).`;
+    const confirmButtonColor = isActivate ? '#10b981' : '#f59e0b';
+    const confirmButtonText = isActivate ? 'Ya, Aktifkan Sekarang' : 'Ya, Suspend Sekarang';
+
+    Swal.fire({
+        title: title,
+        html: `<div class="text-left text-xs text-slate-600 dark:text-slate-300 space-y-2 mt-2">
+            <p>${text}</p>
+            <div class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px]">
+                Target: <b>${nomorInternet}</b> - ${namaPelanggan}
+            </div>
+        </div>`,
+        icon: isActivate ? 'question' : 'warning',
+        showCancelButton: true,
+        confirmButtonColor: confirmButtonColor,
+        cancelButtonColor: '#64748b',
+        confirmButtonText: confirmButtonText,
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            const url = isActivate 
+                ? `/teknik/pelanggan/${nomorInternet}/unified-activate` 
+                : `/teknik/pelanggan/${nomorInternet}/unified-suspend`;
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
+            return fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    note: isActivate ? 'Aktivasi 1-Click dari Data Pelanggan' : 'Suspend 1-Click dari Data Pelanggan'
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                return response.json();
+            })
+            .catch(error => {
+                Swal.showValidationMessage(`Request gagal: ${error}`);
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            const res = result.value;
+            Swal.fire({
+                icon: res.success ? 'success' : 'warning',
+                title: res.title || (isActivate ? 'Berhasil Diaktifkan' : 'Berhasil Disuspend'),
+                text: res.summary || 'Proses sinkronisasi MikroTik, Kick Session, dan Reboot ONT selesai.',
+                confirmButtonColor: '#3b82f6'
+            }).then(() => {
+                window.location.reload();
+            });
+        }
+    });
+}
+</script>
 @endsection

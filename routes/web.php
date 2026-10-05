@@ -37,15 +37,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/paket/store', [AdminController::class, 'storePaket'])->name('paket.store');
         Route::match(['POST', 'DELETE'], '/paket/{kode_bandwith}/delete', [AdminController::class, 'deletePaket'])->name('paket.delete')->where('kode_bandwith', '.*');
 
-        // 3. Broadcast WhatsApp (Jatuh Tempo, Massal, Per Orangan, Custom Template)
+        // 3. Broadcast WhatsApp (Jatuh Tempo, Massal, Per Orangan, Custom Template & Meta Cloud API)
         Route::get('/broadcast', [BroadcastController::class, 'index'])->name('broadcast');
         Route::get('/broadcast/preview', [BroadcastController::class, 'preview'])->name('broadcast.preview');
         Route::post('/broadcast/send-single', [BroadcastController::class, 'sendSingle'])->name('broadcast.send-single');
         Route::post('/broadcast/send-bulk', [BroadcastController::class, 'sendBulk'])->name('broadcast.send-bulk');
+        Route::post('/broadcast/send-api-item', [BroadcastController::class, 'sendApiItem'])->name('broadcast.send-api-item');
+        Route::post('/broadcast/test-connection', [BroadcastController::class, 'testConnection'])->name('broadcast.test-connection');
         Route::post('/broadcast/template/store', [BroadcastController::class, 'saveTemplate'])->name('broadcast.template.store');
         Route::post('/broadcast/template/{id}/delete', [BroadcastController::class, 'deleteTemplate'])->name('broadcast.template.delete');
         Route::get('/broadcast/history', [BroadcastController::class, 'history'])->name('broadcast.history');
     });
+
+    // WhatsApp Cloud API Webhook (Public Callback Endpoint)
+    Route::get('/webhook/whatsapp', [BroadcastController::class, 'webhookVerify']);
+    Route::post('/webhook/whatsapp', [BroadcastController::class, 'webhookReceive']);
 
     // Routes Shared Ticket Hub & Tiket Gangguan (Teknik, NOC, Direktur, Admin, Finance)
     Route::middleware('role:teknik,noc,direktur,admin,finance')->prefix('teknik')->name('teknik.')->group(function () {

@@ -116,9 +116,35 @@
                                         </span>
                                     @endif
 
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                                        {{ ucfirst(str_replace('_', ' ', $log->kategori)) }}
-                                    </span>
+                                    <div class="flex items-center gap-1 flex-wrap">
+                                        @if(($log->metode_kirim ?? '') === 'meta_api')
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
+                                                🚀 Meta API
+                                            </span>
+                                        @else
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                                🌐 WA Web
+                                            </span>
+                                        @endif
+
+                                        @if(($log->status_kirim ?? '') === 'sent')
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                Sent
+                                            </span>
+                                        @elseif(($log->status_kirim ?? '') === 'delivered')
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                                                Delivered
+                                            </span>
+                                        @elseif(($log->status_kirim ?? '') === 'read')
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                Read
+                                            </span>
+                                        @elseif(($log->status_kirim ?? '') === 'failed')
+                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200" title="{{ $log->meta_error_message ?? 'Gagal' }}">
+                                                Failed
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
 
@@ -126,6 +152,11 @@
                                 <div class="line-clamp-2 text-slate-800 dark:text-slate-300 text-[11px] bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200 dark:border-slate-800 font-sans leading-relaxed">
                                     {{ $log->pesan_terkirim }}
                                 </div>
+                                @if(!empty($log->meta_message_id))
+                                    <div class="text-[9px] font-mono text-slate-400 mt-1 truncate" title="{{ $log->meta_message_id }}">
+                                        ID: {{ $log->meta_message_id }}
+                                    </div>
+                                @endif
                             </td>
 
                             <td class="p-3.5 text-center">

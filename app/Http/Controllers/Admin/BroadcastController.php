@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\MetaWhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +16,13 @@ use Illuminate\View\View;
 
 class BroadcastController extends Controller
 {
+    protected MetaWhatsAppService $metaWaService;
+
+    public function __construct(MetaWhatsAppService $metaWaService)
+    {
+        $this->metaWaService = $metaWaService;
+    }
+
     /**
      * Ensure Broadcast WA Tables exist (Auto-migration fallback for maximum reliability)
      */
@@ -25,6 +33,9 @@ class BroadcastController extends Controller
                 Schema::create('tb_broadcast_wa_template', function ($table) {
                     $table->id();
                     $table->string('nama_template', 150);
+                    $table->string('meta_template_name', 150)->nullable();
+                    $table->string('meta_language', 20)->default('id');
+                    $table->text('meta_params_map')->nullable();
                     $table->string('subjek', 255)->nullable();
                     $table->string('kategori', 50)->default('custom');
                     $table->text('pesan');
@@ -34,42 +45,80 @@ class BroadcastController extends Controller
 
                 DB::table('tb_broadcast_wa_template')->insert([
                     [
-                        'nama_template' => 'Peringatan Jatuh Tempo Tagihan',
-                        'subjek'        => 'Pengingat Tagihan Internet IMS',
-                        'kategori'      => 'jatuh_tempo',
-                        'pesan'         => "Halo Pelanggan Yth. *{nama}*,\n\nKami menginformasikan bahwa tagihan layanan internet IMS Anda untuk periode *{periode}* sejumlah *{nominal}* akan memasuki jatuh tempo pada *{jatuh_tempo}*.\n\nNomor Internet: *{nomor_internet}*\nPaket: *{paket}*\n\nSilakan melakukan pembayaran melalui link resmi berikut:\n{link_pembayaran}\n\nAbaikan pesan ini jika Anda sudah melakukan pembayaran.\nTerima kasih atas kepercayaan Anda menggunakan layanan IMS.",
-                        'is_default'    => 1,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
+                        'nama_template'      => 'Peringatan Jatuh Tempo Tagihan',
+                        'meta_template_name' => 'pengingat_jatuh_tempo_v1',
+                        'meta_language'      => 'id',
+                        'meta_params_map'    => json_encode(['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran']),
+                        'subjek'             => 'Pengingat Tagihan Internet IMS',
+                        'kategori'           => 'jatuh_tempo',
+                        'pesan'              => "Halo Pelanggan Yth. *{nama}*,\n\nKami menginformasikan bahwa tagihan layanan internet IMS Anda untuk periode *{periode}* sejumlah *{nominal}* akan memasuki jatuh tempo pada *{jatuh_tempo}*.\n\nNomor Internet: *{nomor_internet}*\nPaket: *{paket}*\n\nSilakan melakukan pembayaran melalui link resmi berikut:\n{link_pembayaran}\n\nAbaikan pesan ini jika Anda sudah melakukan pembayaran.\nTerima kasih atas kepercayaan Anda menggunakan layanan IMS.",
+                        'is_default'         => 1,
+                        'created_at'         => now(),
+                        'updated_at'         => now(),
                     ],
                     [
-                        'nama_template' => 'Pengumuman Pemeliharaan Jaringan',
-                        'subjek'        => 'Maintenance Network IMS',
-                        'kategori'      => 'pengumuman',
-                        'pesan'         => "Pemberitahuan Pemeliharaan Jaringan IMS 🔧\n\nKepada Pelanggan Yth. *{nama}*,\n\nDisampaikan bahwa akan dilakukan perbaikan/pemeliharaan jaringan internet di area *{alamat}* pada tanggal *{jatuh_tempo}*.\n\nSelama proses pemeliharaan berlangsung, akses internet mungkin mengalami penyesuaian atau disrupsi sementara. Tim teknis kami akan bekerja secepat mungkin agar layanan kembali optimal.\n\nMohon maaf atas ketidaknyamanan ini. Terima kasih atas pengertian Anda.",
-                        'is_default'    => 0,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
+                        'nama_template'      => 'Pengumuman Pemeliharaan Jaringan',
+                        'meta_template_name' => 'pengumuman_maintenance',
+                        'meta_language'      => 'id',
+                        'meta_params_map'    => json_encode(['nama', 'alamat', 'jatuh_tempo']),
+                        'subjek'             => 'Maintenance Network IMS',
+                        'kategori'           => 'pengumuman',
+                        'pesan'              => "Pemberitahuan Pemeliharaan Jaringan IMS 🔧\n\nKepada Pelanggan Yth. *{nama}*,\n\nDisampaikan bahwa akan dilakukan perbaikan/pemeliharaan jaringan internet di area *{alamat}* pada tanggal *{jatuh_tempo}*.\n\nSelama proses pemeliharaan berlangsung, akses internet mungkin mengalami penyesuaian atau disrupsi sementara. Tim teknis kami akan bekerja secepat mungkin agar layanan kembali optimal.\n\nMohon maaf atas ketidaknyamanan ini. Terima kasih atas pengertian Anda.",
+                        'is_default'         => 0,
+                        'created_at'         => now(),
+                        'updated_at'         => now(),
                     ],
                     [
-                        'nama_template' => 'Peringatan Isolir Layanan (Tunggakan)',
-                        'subjek'        => 'Peringatan Isolir Internet IMS',
-                        'kategori'      => 'jatuh_tempo',
-                        'pesan'         => "Pemberitahuan Layanan Internet IMS ⚠️\n\nHalo *{nama}* (ID: *{nomor_internet}*),\n\nDiberitahukan bahwa tagihan internet Anda periode *{periode}* sebesar *{nominal}* telah melewati tanggal jatuh tempo (*{jatuh_tempo}*).\n\nUntuk menghindari pembatasan/isolir layanan secara otomatis, mohon segera melakukan pelunasan tagihan melalui link berikut:\n{link_pembayaran}\n\nBila ada kendala pembayaran, silakan hubungi tim Support IMS. Terima kasih.",
-                        'is_default'    => 0,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
+                        'nama_template'      => 'Peringatan Isolir Layanan (Tunggakan)',
+                        'meta_template_name' => 'peringatan_isolir_layanan',
+                        'meta_language'      => 'id',
+                        'meta_params_map'    => json_encode(['nama', 'nomor_internet', 'periode', 'nominal', 'jatuh_tempo', 'link_pembayaran']),
+                        'subjek'             => 'Peringatan Isolir Internet IMS',
+                        'kategori'           => 'jatuh_tempo',
+                        'pesan'              => "Pemberitahuan Layanan Internet IMS ⚠️\n\nHalo *{nama}* (ID: *{nomor_internet}*),\n\nDiberitahukan bahwa tagihan internet Anda periode *{periode}* sebesar *{nominal}* telah melewati tanggal jatuh tempo (*{jatuh_tempo}*).\n\nUntuk menghindari pembatasan/isolir layanan secara otomatis, mohon segera melakukan pelunasan tagihan melalui link berikut:\n{link_pembayaran}\n\nBila ada kendala pembayaran, silakan hubungi tim Support IMS. Terima kasih.",
+                        'is_default'         => 0,
+                        'created_at'         => now(),
+                        'updated_at'         => now(),
                     ],
                     [
-                        'nama_template' => 'Pengumuman Informasi Umum / Custom',
-                        'subjek'        => 'Pengumuman IMS',
-                        'kategori'      => 'custom',
-                        'pesan'         => "Halo *{nama}*,\n\n[Tuliskan pesan pengumuman atau informasi khusus di sini]\n\nTerima kasih,\nIMS Management",
-                        'is_default'    => 0,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
+                        'nama_template'      => 'Pengumuman Informasi Umum / Custom',
+                        'meta_template_name' => 'pengumuman_umum',
+                        'meta_language'      => 'id',
+                        'meta_params_map'    => json_encode(['nama']),
+                        'subjek'             => 'Pengumuman IMS',
+                        'kategori'           => 'custom',
+                        'pesan'              => "Halo *{nama}*,\n\nTerima kasih atas kepercayaan Anda menggunakan layanan IMS.\n\nSalam hangat,\nIMS Management",
+                        'is_default'         => 0,
+                        'created_at'         => now(),
+                        'updated_at'         => now(),
                     ],
                 ]);
+            } else {
+                // Ensure columns exist on existing table
+                if (!Schema::hasColumn('tb_broadcast_wa_template', 'meta_template_name')) {
+                    Schema::table('tb_broadcast_wa_template', function ($table) {
+                        $table->string('meta_template_name', 150)->nullable()->after('nama_template');
+                        $table->string('meta_language', 20)->default('id')->after('meta_template_name');
+                        $table->text('meta_params_map')->nullable()->after('meta_language');
+                    });
+
+                    // Set default meta names for known templates
+                    DB::table('tb_broadcast_wa_template')->where('id', 1)->update([
+                        'meta_template_name' => 'pengingat_jatuh_tempo_v1',
+                        'meta_language'      => 'id',
+                        'meta_params_map'    => json_encode(['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran']),
+                    ]);
+                    DB::table('tb_broadcast_wa_template')->where('id', 2)->update([
+                        'meta_template_name' => 'pengumuman_maintenance',
+                        'meta_language'      => 'id',
+                        'meta_params_map'    => json_encode(['nama', 'alamat', 'jatuh_tempo']),
+                    ]);
+                    DB::table('tb_broadcast_wa_template')->where('id', 3)->update([
+                        'meta_template_name' => 'peringatan_isolir_layanan',
+                        'meta_language'      => 'id',
+                        'meta_params_map'    => json_encode(['nama', 'nomor_internet', 'periode', 'nominal', 'jatuh_tempo', 'link_pembayaran']),
+                    ]);
+                }
             }
 
             if (!Schema::hasTable('tb_broadcast_wa_log')) {
@@ -85,9 +134,18 @@ class BroadcastController extends Controller
                     $table->text('pesan_terkirim');
                     $table->string('kategori', 50)->default('custom');
                     $table->string('status_kirim', 30)->default('sent');
-                    $table->string('metode_kirim', 30)->default('wa_web');
+                    $table->string('metode_kirim', 30)->default('meta_api');
+                    $table->string('meta_message_id', 150)->nullable();
+                    $table->text('meta_error_message')->nullable();
                     $table->timestamps();
                 });
+            } else {
+                if (!Schema::hasColumn('tb_broadcast_wa_log', 'meta_message_id')) {
+                    Schema::table('tb_broadcast_wa_log', function ($table) {
+                        $table->string('meta_message_id', 150)->nullable()->after('metode_kirim');
+                        $table->text('meta_error_message')->nullable()->after('meta_message_id');
+                    });
+                }
             }
         } catch (\Exception $e) {
             Log::error('Broadcast WA Schema initialization error: ' . $e->getMessage());
@@ -99,21 +157,11 @@ class BroadcastController extends Controller
      */
     protected function formatWaPhone(?string $phone): string
     {
-        if (empty($phone)) {
-            return '';
-        }
-        $clean = preg_replace('/[^0-9]/', '', $phone);
-        if (str_starts_with($clean, '0')) {
-            $clean = '62' . substr($clean, 1);
-        } elseif (str_starts_with($clean, '8')) {
-            $clean = '62' . $clean;
-        }
-        return $clean;
+        return $this->metaWaService->formatPhone($phone);
     }
 
     /**
-     * Dynamically select customer fields and determine safe order column to prevent SQL 1054 Unknown column errors.
-     * Every reference to a joined-table column (mp.*, reg.*, inv.*) is checked for existence first.
+     * Dynamically select customer fields and determine safe order column.
      */
     protected function selectCustomerFields($query, string $baseTable): string
     {
@@ -122,12 +170,11 @@ class BroadcastController extends Controller
         $fallbackSort = in_array('nomor_internet', $cols) ? 'c.nomor_internet'
             : (in_array('id', $cols) ? 'c.id' : "c.{$firstCol}");
 
-        // ── Pre-fetch m_pelanggan & trx_batchjob_register column lists once ──
-        $mpCols  = Schema::hasTable('m_pelanggan')          ? Schema::getColumnListing('m_pelanggan')          : [];
-        $regCols = Schema::hasTable('trx_batchjob_register')? Schema::getColumnListing('trx_batchjob_register'): [];
-        $invCols = Schema::hasTable('trx_billing_layanan')  ? Schema::getColumnListing('trx_billing_layanan')  : [];
+        $mpCols  = Schema::hasTable('m_pelanggan')           ? Schema::getColumnListing('m_pelanggan')           : [];
+        $regCols = Schema::hasTable('trx_batchjob_register') ? Schema::getColumnListing('trx_batchjob_register') : [];
+        $invCols = Schema::hasTable('trx_billing_layanan')   ? Schema::getColumnListing('trx_billing_layanan')   : [];
 
-        // ─── Name column ────────────────────────────────────────────────────
+        // Name column
         if (in_array('nama_pelanggan', $cols)) {
             $nameCol   = 'c.nama_pelanggan';
             $sortField = 'c.nama_pelanggan';
@@ -138,7 +185,6 @@ class BroadcastController extends Controller
             $nameCol   = 'c.nama';
             $sortField = 'c.nama';
         } elseif (in_array('nama_pelanggan', $mpCols)) {
-            // build safe COALESCE from only existing mp columns
             $parts = ['mp.nama_pelanggan'];
             if (in_array('nama_p', $mpCols))   $parts[] = 'mp.nama_p';
             if (in_array('nomor_internet', $cols)) $parts[] = 'c.nomor_internet';
@@ -154,49 +200,18 @@ class BroadcastController extends Controller
             $sortField = $fallbackSort;
         }
 
-        // ─── Phone column ────────────────────────────────────────────────────
-        $phoneCol = "''";
+        // Phone column
         if (in_array('nomor_hp', $cols)) {
             $phoneCol = 'c.nomor_hp';
-        } elseif (in_array('hp_pelanggan', $cols)) {
-            $phoneCol = 'c.hp_pelanggan';
-        } elseif (in_array('hp_p', $cols)) {
-            $phoneCol = 'c.hp_p';
-        } elseif (in_array('hp', $cols)) {
-            $phoneCol = 'c.hp';
-        } elseif (!empty($mpCols)) {
-            // Build COALESCE only from columns that actually exist in m_pelanggan
-            $mpPhoneParts = [];
-            if (in_array('nomor_hp', $mpCols))    $mpPhoneParts[] = 'mp.nomor_hp';
-            if (in_array('hp_pelanggan', $mpCols)) $mpPhoneParts[] = 'mp.hp_pelanggan';
-            if (in_array('hp_p', $mpCols))         $mpPhoneParts[] = 'mp.hp_p';
-            if (in_array('hp', $mpCols))           $mpPhoneParts[] = 'mp.hp';
-            if (!empty($mpPhoneParts)) {
-                $mpPhoneParts[] = "''";
-                $phoneCol = 'COALESCE(' . implode(', ', $mpPhoneParts) . ')';
-            }
-        } elseif (!empty($regCols)) {
-            $regPhoneParts = [];
-            if (in_array('nomor_hp', $regCols)) $regPhoneParts[] = 'reg.nomor_hp';
-            if (in_array('hp_p', $regCols))     $regPhoneParts[] = 'reg.hp_p';
-            if (!empty($regPhoneParts)) {
-                $regPhoneParts[] = "''";
-                $phoneCol = 'COALESCE(' . implode(', ', $regPhoneParts) . ')';
-            }
-        }
-
-        // ─── nomor_internet ──────────────────────────────────────────────────
-        if (in_array('nomor_internet', $cols)) {
-            $noCol = 'c.nomor_internet';
-        } elseif (in_array('id_pelanggan', $cols)) {
-            $noCol = 'c.id_pelanggan';
-        } elseif (in_array('id', $cols)) {
-            $noCol = 'c.id';
+        } elseif (in_array('nomor_hp', $mpCols)) {
+            $phoneCol = 'mp.nomor_hp';
+        } elseif (in_array('nomor_hp', $regCols)) {
+            $phoneCol = 'reg.nomor_hp';
         } else {
-            $noCol = "''";
+            $phoneCol = "''";
         }
 
-        // ─── alamat ─────────────────────────────────────────────────────────
+        // Address
         if (in_array('alamat_pasang', $cols)) {
             $alamatCol = 'c.alamat_pasang';
         } elseif (in_array('alamat_p', $cols)) {
@@ -211,7 +226,7 @@ class BroadcastController extends Controller
             $alamatCol = "''";
         }
 
-        // ─── kota ───────────────────────────────────────────────────────────
+        // City
         if (in_array('nama_kota_pasang', $cols)) {
             $kotaCol = 'c.nama_kota_pasang';
         } elseif (in_array('kota_pasang', $cols)) {
@@ -222,7 +237,7 @@ class BroadcastController extends Controller
             $kotaCol = "''";
         }
 
-        // ─── paket/bandwith ─────────────────────────────────────────────────
+        // Package
         if (in_array('nama_kategori_bandwith', $cols)) {
             $paketCol = 'c.nama_kategori_bandwith';
         } elseif (in_array('nama_bandwith', $cols)) {
@@ -231,13 +246,12 @@ class BroadcastController extends Controller
             $paketCol = "''";
         }
 
-        // ─── status_reg ─────────────────────────────────────────────────────
+        // Status register
         $statusRegCol = in_array('status_reg', $cols) ? 'c.status_reg' : "''";
 
-        // ─── Invoice fields — only reference inv.* columns that exist ────────
+        // Invoice fields
         $hasInv = !empty($invCols);
 
-        // kode_billing_layanan
         if (in_array('kode_billing_layanan', $cols)) {
             $kodeBillCol = 'c.kode_billing_layanan';
         } elseif ($hasInv && in_array('kode_billing_layanan', $invCols)) {
@@ -246,7 +260,6 @@ class BroadcastController extends Controller
             $kodeBillCol = "''";
         }
 
-        // periode_tagihan
         if (in_array('periode_tagihan', $cols)) {
             $periodeCol = 'c.periode_tagihan';
         } elseif ($hasInv && in_array('periode_tagihan', $invCols)) {
@@ -255,7 +268,6 @@ class BroadcastController extends Controller
             $periodeCol = "''";
         }
 
-        // bulan_tagihan
         if (in_array('bulan_tagihan', $cols)) {
             $bulanCol = 'c.bulan_tagihan';
         } elseif ($hasInv && in_array('bulan_tagihan', $invCols)) {
@@ -264,7 +276,6 @@ class BroadcastController extends Controller
             $bulanCol = "''";
         }
 
-        // tahun_tagihan
         if (in_array('tahun_tagihan', $cols)) {
             $tahunCol = 'c.tahun_tagihan';
         } elseif ($hasInv && in_array('tahun_tagihan', $invCols)) {
@@ -273,22 +284,6 @@ class BroadcastController extends Controller
             $tahunCol = "''";
         }
 
-        // total_layanan / harga_bandwith
-        if (in_array('total_layanan', $cols)) {
-            $totalCol = 'c.total_layanan';
-        } elseif (in_array('harga_bandwith', $cols)) {
-            $totalCol = 'c.harga_bandwith';
-        } elseif ($hasInv) {
-            $invTotalParts = [];
-            if (in_array('total_layanan', $invCols))  $invTotalParts[] = 'inv.total_layanan';
-            if (in_array('harga_bandwith', $invCols)) $invTotalParts[] = 'inv.harga_bandwith';
-            $invTotalParts[] = '0';
-            $totalCol = count($invTotalParts) > 1 ? 'COALESCE(' . implode(', ', $invTotalParts) . ')' : '0';
-        } else {
-            $totalCol = '0';
-        }
-
-        // status_bill_lay
         if (in_array('status_bill_lay', $cols)) {
             $statusBillCol = 'c.status_bill_lay';
         } elseif ($hasInv && in_array('status_bill_lay', $invCols)) {
@@ -297,51 +292,67 @@ class BroadcastController extends Controller
             $statusBillCol = "''";
         }
 
-        // expiry
-        if (in_array('expiry', $cols)) {
-            $expiryCol = 'c.expiry';
-        } elseif ($hasInv && in_array('expiry', $invCols)) {
-            $expiryCol = "COALESCE(inv.expiry, '')";
+        if (in_array('total_layanan', $cols)) {
+            $nominalCol = 'c.total_layanan';
+        } elseif (in_array('harga_bandwith', $cols)) {
+            $nominalCol = 'c.harga_bandwith';
+        } elseif ($hasInv && in_array('total_layanan', $invCols)) {
+            $nominalCol = "COALESCE(inv.total_layanan, 0)";
         } else {
-            $expiryCol = "''";
+            $nominalCol = '0';
         }
 
-        // payment_respond_post
+        if (in_array('expiry', $cols)) {
+            $expiryCol = 'c.expiry';
+        } elseif (in_array('tgl_jatuh_tempo', $cols)) {
+            $expiryCol = 'c.tgl_jatuh_tempo';
+        } elseif ($hasInv && in_array('expiry', $invCols)) {
+            $expiryCol = 'inv.expiry';
+        } elseif ($hasInv && in_array('tgl_jatuh_tempo', $invCols)) {
+            $expiryCol = 'inv.tgl_jatuh_tempo';
+        } else {
+            $expiryCol = 'NULL';
+        }
+
         if (in_array('payment_respond_post', $cols)) {
             $snapCol = 'c.payment_respond_post';
         } elseif ($hasInv && in_array('payment_respond_post', $invCols)) {
-            $snapCol = "COALESCE(inv.payment_respond_post, '')";
+            $snapCol = 'inv.payment_respond_post';
         } else {
-            $snapCol = "''";
+            $snapCol = 'NULL';
         }
 
-        $query->select(
-            DB::raw("{$noCol} as nomor_internet"),
-            DB::raw("{$nameCol} as nama_pelanggan"),
-            DB::raw("{$phoneCol} as nomor_hp"),
-            DB::raw("{$alamatCol} as alamat_pasang"),
-            DB::raw("{$alamatCol} as alamat_p"),
-            DB::raw("{$kotaCol} as nama_kota_pasang"),
-            DB::raw("{$paketCol} as nama_kategori_bandwith"),
-            DB::raw("{$statusRegCol} as status_reg"),
-            DB::raw("{$kodeBillCol} as kode_billing_layanan"),
-            DB::raw("{$periodeCol} as periode_tagihan"),
-            DB::raw("{$bulanCol} as bulan_tagihan"),
-            DB::raw("{$tahunCol} as tahun_tagihan"),
-            DB::raw("{$totalCol} as total_layanan"),
-            DB::raw("{$statusBillCol} as status_bill_lay"),
-            DB::raw("{$expiryCol} as expiry"),
-            DB::raw("{$snapCol} as payment_respond_post")
-        );
+        $selects = [
+            in_array('nomor_internet', $cols) ? 'c.nomor_internet' : "'' as nomor_internet",
+            "{$nameCol} as nama_pelanggan",
+            "{$phoneCol} as nomor_hp",
+            "{$alamatCol} as alamat_pasang",
+            "{$kotaCol} as nama_kota_pasang",
+            "{$paketCol} as nama_kategori_bandwith",
+            "{$statusRegCol} as status_reg",
+            "{$kodeBillCol} as kode_billing_layanan",
+            "{$periodeCol} as periode_tagihan",
+            "{$bulanCol} as bulan_tagihan",
+            "{$tahunCol} as tahun_tagihan",
+            "{$statusBillCol} as status_bill_lay",
+            "{$nominalCol} as total_layanan",
+            "{$expiryCol} as expiry",
+            "{$snapCol} as payment_respond_post",
+        ];
+
+        if (in_array('id', $cols)) {
+            $selects[] = 'c.id';
+        }
+
+        $query->selectRaw(implode(', ', $selects));
 
         return $sortField;
     }
 
-
     /**
-     * Build base customer query dynamically according to available tables & columns
+     * Build customer base query safely.
      */
-    protected function buildCustomerQuery(string &$baseTable, array &$cols): \Illuminate\Database\Query\Builder
+    protected function buildCustomerQuery(string &$baseTable, array &$cols)
     {
         $hasViewBatchjob  = Schema::hasTable('view_batchjob');
         $hasViewBilling   = Schema::hasTable('view_billing_layanan');
@@ -381,13 +392,10 @@ class BroadcastController extends Controller
 
         $cols = Schema::getColumnListing($baseTable);
 
-        // Join latest invoice safely — no assumption on PK column name (id/kode_billing_layanan may not exist)
         if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
             $trxBillingCols = Schema::getColumnListing('trx_billing_layanan');
 
-            // Determine the safest unique key available — prefer kode_billing_layanan (IMS production PK)
             if (in_array('kode_billing_layanan', $trxBillingCols)) {
-                // Use kode_billing_layanan as the join key
                 $subLatest = DB::table('trx_billing_layanan as tbl_sub')
                     ->selectRaw('tbl_sub.nomor_internet, MAX(tbl_sub.kode_billing_layanan) as max_kode')
                     ->groupBy('tbl_sub.nomor_internet');
@@ -396,22 +404,7 @@ class BroadcastController extends Controller
                     $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
                 })->leftJoin('trx_billing_layanan as inv', 'sub_inv.max_kode', '=', 'inv.kode_billing_layanan');
 
-            } elseif (in_array('tahun_tagihan', $trxBillingCols) && in_array('bulan_tagihan', $trxBillingCols)) {
-                // Fallback: join on tahun_tagihan + bulan_tagihan max
-                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
-                    ->selectRaw('tbl_sub.nomor_internet, MAX(tbl_sub.tahun_tagihan) as max_tahun, MAX(tbl_sub.bulan_tagihan) as max_bulan')
-                    ->groupBy('tbl_sub.nomor_internet');
-
-                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
-                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
-                })->leftJoin('trx_billing_layanan as inv', function ($join) {
-                    $join->on('inv.nomor_internet', '=', 'sub_inv.nomor_internet')
-                         ->on('inv.tahun_tagihan', '=', 'sub_inv.max_tahun')
-                         ->on('inv.bulan_tagihan', '=', 'sub_inv.max_bulan');
-                });
-
             } elseif (in_array('id', $trxBillingCols)) {
-                // Last resort: id column exists
                 $subLatest = DB::table('trx_billing_layanan as tbl_sub')
                     ->selectRaw('tbl_sub.nomor_internet, MAX(tbl_sub.id) as max_id')
                     ->groupBy('tbl_sub.nomor_internet');
@@ -419,9 +412,7 @@ class BroadcastController extends Controller
                 $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
                     $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
                 })->leftJoin('trx_billing_layanan as inv', 'sub_inv.max_id', '=', 'inv.id');
-
             } else {
-                // Safest fallback: simple join on nomor_internet only (no PK needed)
                 $query->leftJoin('trx_billing_layanan as inv', 'c.nomor_internet', '=', 'inv.nomor_internet');
             }
         }
@@ -430,7 +421,7 @@ class BroadcastController extends Controller
     }
 
     /**
-     * Render Message Template Placeholders
+     * Render Message Template Placeholders for UI Preview & WA Web
      */
     public function renderTemplateMessage(string $template, object $data): string
     {
@@ -462,12 +453,63 @@ class BroadcastController extends Controller
             '{periode}'         => $periode,
             '{nominal}'         => $nominal,
             '{jatuh_tempo}'     => $jatuhTempo,
-            '{link_pembayaran}'  => $linkPembayaran,
+            '{link_pembayaran}' => $linkPembayaran,
             '{paket}'           => $paket,
             '{alamat}'          => $alamat,
         ];
 
         return strtr($template, $replacements);
+    }
+
+    /**
+     * Build Meta Body Parameters (Array for {{1}}, {{2}}, {{3}}, ...)
+     */
+    public function buildMetaParameters(object $data, ?array $paramsMap = null): array
+    {
+        $nama = $data->nama_pelanggan ?? 'Pelanggan';
+        $noInternet = $data->nomor_internet ?? '-';
+        $periode = !empty($data->periode_tagihan) ? $data->periode_tagihan : (!empty($data->bulan_tagihan) ? $data->bulan_tagihan . '/' . $data->tahun_tagihan : date('m/Y'));
+        
+        $nominalVal = $data->total_layanan ?? ($data->harga_bandwith ?? ($data->harga ?? 0));
+        $nominal = 'Rp ' . number_format((float) $nominalVal, 0, ',', '.');
+        
+        $expiryRaw = !empty($data->expiry) ? $data->expiry : (!empty($data->tgl_jatuh_tempo) ? $data->tgl_jatuh_tempo : null);
+        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : date('d F Y', strtotime('+5 days'));
+
+        $linkPembayaran = '';
+        if (!empty($data->payment_respond_post)) {
+            $snapData = json_decode($data->payment_respond_post, true);
+            $linkPembayaran = $snapData['redirect_url'] ?? '';
+        }
+        if (empty($linkPembayaran)) {
+            $linkPembayaran = config('app.url') . '/finance/billing-layanan';
+        }
+
+        $paket = $data->nama_kategori_bandwith ?? ($data->nama_bandwith ?? 'Internet Fiber');
+        $alamat = $data->alamat_pasang ?? ($data->alamat_p ?? ($data->nama_kota_pasang ?? 'Area IMS'));
+
+        $dict = [
+            'nama'            => $nama,
+            'nomor_internet'  => $noInternet,
+            'periode'         => $periode,
+            'nominal'         => $nominal,
+            'jatuh_tempo'     => $jatuhTempo,
+            'link_pembayaran' => $linkPembayaran,
+            'paket'           => $paket,
+            'alamat'          => $alamat,
+        ];
+
+        if (empty($paramsMap)) {
+            // Default 4-parameter standard
+            return [$nama, $periode, $nominal, $jatuhTempo];
+        }
+
+        $result = [];
+        foreach ($paramsMap as $key) {
+            $cleanKey = trim(str_replace(['{', '}'], '', $key));
+            $result[] = (string) ($dict[$cleanKey] ?? $cleanKey);
+        }
+        return $result;
     }
 
     /**
@@ -482,18 +524,14 @@ class BroadcastController extends Controller
         $selectedBulan = $request->input('bulan', 'all');
         $selectedTahun = $request->input('tahun', 'all');
         $selectedWilayah = $request->input('wilayah', 'all');
-        $perPage = (int) $request->input('per_page', 10);
-        if (!in_array($perPage, [10, 25, 50, 100, 250])) {
-            $perPage = 10;
-        }
+        $perPage = (int) $request->input('per_page', 15);
 
         $baseTable = '';
         $cols = [];
         $query = $this->buildCustomerQuery($baseTable, $cols);
-
         $sortField = $this->selectCustomerFields($query, $baseTable);
 
-        // Apply Month & Year Filter
+        // Apply filters
         if ($selectedBulan !== 'all' && !empty($selectedBulan)) {
             $query->where(function($q) use ($selectedBulan, $baseTable, $cols) {
                 $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('bulan_tagihan', $cols)) ? 'c.bulan_tagihan' : 'inv.bulan_tagihan';
@@ -509,7 +547,6 @@ class BroadcastController extends Controller
             });
         }
 
-        // Apply Status Tagihan Filter
         if ($selectedStatusTagihan === 'unpaid' || $selectedStatusTagihan === 'near_due') {
             $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('status_bill_lay', $cols)) ? 'c.status_bill_lay' : 'inv.status_bill_lay';
             $query->whereIn($col, ['13', '14']);
@@ -522,14 +559,12 @@ class BroadcastController extends Controller
             }
         }
 
-        // Apply Wilayah Filter
         if ($selectedWilayah !== 'all' && !empty($selectedWilayah)) {
             if (in_array('nama_kota_pasang', $cols)) {
                 $query->where('c.nama_kota_pasang', $selectedWilayah);
             }
         }
 
-        // Search Filter
         if (!empty($search)) {
             $query->where(function ($q) use ($search, $cols) {
                 if (in_array('nama_pelanggan', $cols)) {
@@ -553,17 +588,18 @@ class BroadcastController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        // Process WA URL & Formatted HP for each row
         foreach ($pelangganList as $p) {
             $p->clean_hp = $this->formatWaPhone($p->nomor_hp ?? '');
             $p->is_due_soon = in_array($p->status_bill_lay ?? '', ['13', '14']);
         }
 
-        // Templates List
         $templates = DB::table('tb_broadcast_wa_template')->orderBy('is_default', 'desc')->orderBy('nama_template', 'asc')->get();
         $defaultTemplate = $templates->where('is_default', 1)->first() ?? $templates->first();
 
-        // Counter Statistics
+        // Check Meta API status
+        $isMetaConfigured = $this->metaWaService->isConfigured();
+        $metaPhoneId = config('services.meta_whatsapp.phone_number_id');
+
         $totalTargetCount = $pelangganList->total();
         
         $hasViewBilling   = Schema::hasTable('view_billing_layanan');
@@ -591,7 +627,6 @@ class BroadcastController extends Controller
             ? DB::table('tb_broadcast_wa_log')->whereDate('created_at', Carbon::today())->count()
             : 0;
 
-        // Wilayah Dropdown List
         $wilayahList = [];
         if ($hasViewBatchjob) {
             $wilayahList = DB::table('view_batchjob')
@@ -613,6 +648,8 @@ class BroadcastController extends Controller
             'pelangganList',
             'templates',
             'defaultTemplate',
+            'isMetaConfigured',
+            'metaPhoneId',
             'totalTargetCount',
             'totalUnpaidCount',
             'totalSentLog',
@@ -628,6 +665,15 @@ class BroadcastController extends Controller
     }
 
     /**
+     * Test Meta WhatsApp API Connection
+     */
+    public function testConnection(): JsonResponse
+    {
+        $result = $this->metaWaService->testConnection();
+        return response()->json($result);
+    }
+
+    /**
      * AJAX Preview Broadcast Message per Customer
      */
     public function preview(Request $request): JsonResponse
@@ -638,10 +684,11 @@ class BroadcastController extends Controller
         $rawMessage = $request->input('pesan', '');
         $templateId = $request->input('template_id');
 
-        if (!empty($templateId) && empty($rawMessage)) {
-            $tpl = DB::table('tb_broadcast_wa_template')->where('id', $templateId)->first();
-            if ($tpl) {
-                $rawMessage = $tpl->pesan;
+        $templateRecord = null;
+        if (!empty($templateId)) {
+            $templateRecord = DB::table('tb_broadcast_wa_template')->where('id', $templateId)->first();
+            if ($templateRecord && empty($rawMessage)) {
+                $rawMessage = $templateRecord->pesan;
             }
         }
 
@@ -664,19 +711,27 @@ class BroadcastController extends Controller
         $cleanHp = $this->formatWaPhone($data->nomor_hp ?? '');
         $waUrl = !empty($cleanHp) ? 'https://wa.me/' . $cleanHp . '?text=' . urlencode($renderedMessage) : '';
 
+        $paramsMap = null;
+        if ($templateRecord && !empty($templateRecord->meta_params_map)) {
+            $paramsMap = json_decode($templateRecord->meta_params_map, true);
+        }
+        $metaParams = $this->buildMetaParameters($data, $paramsMap);
+
         return response()->json([
-            'success'          => true,
-            'nama_pelanggan'   => $data->nama_pelanggan ?? 'Pelanggan',
-            'nomor_internet'   => $data->nomor_internet ?? '-',
-            'nomor_hp'         => $data->nomor_hp ?? '-',
-            'clean_hp'         => $cleanHp,
-            'rendered_message' => $renderedMessage,
-            'wa_url'           => $waUrl,
+            'success'            => true,
+            'nama_pelanggan'     => $data->nama_pelanggan ?? 'Pelanggan',
+            'nomor_internet'     => $data->nomor_internet ?? '-',
+            'nomor_hp'           => $data->nomor_hp ?? '-',
+            'clean_hp'           => $cleanHp,
+            'rendered_message'   => $renderedMessage,
+            'meta_template_name' => $templateRecord->meta_template_name ?? 'pengingat_jatuh_tempo_v1',
+            'meta_parameters'    => $metaParams,
+            'wa_url'             => $waUrl,
         ]);
     }
 
     /**
-     * Send Single WhatsApp Broadcast (Catat Log & Direct Open WA)
+     * Send Single WhatsApp Broadcast (Supports Meta Cloud API & Fallback WA Web)
      */
     public function sendSingle(Request $request): JsonResponse|RedirectResponse
     {
@@ -688,11 +743,15 @@ class BroadcastController extends Controller
             'pesan'           => 'required|string',
             'nomor_internet'  => 'nullable|string',
             'kategori'        => 'nullable|string',
+            'metode_kirim'    => 'nullable|string|in:meta_api,wa_web',
+            'template_id'     => 'nullable|integer',
         ]);
 
         $user = Auth::user();
         $senderName = $user->nama_karyawan ?? ($user->username ?? 'Direktur');
         $cleanHp = $this->formatWaPhone($request->input('nomor_hp'));
+        $metodeKirim = $request->input('metode_kirim', 'meta_api');
+        $templateId = $request->input('template_id');
 
         if (empty($cleanHp)) {
             if ($request->wantsJson()) {
@@ -702,53 +761,117 @@ class BroadcastController extends Controller
         }
 
         $kodeBroadcast = 'BC-SGL-' . date('YmdHis') . '-' . rand(100, 999);
+        $statusKirim = 'sent';
+        $metaMessageId = null;
+        $metaErrorMessage = null;
+        $apiSuccess = true;
+
+        // Execute Meta Cloud API send if configured and requested
+        if ($metodeKirim === 'meta_api' && $this->metaWaService->isConfigured()) {
+            $tpl = null;
+            if ($templateId) {
+                $tpl = DB::table('tb_broadcast_wa_template')->where('id', $templateId)->first();
+            }
+
+            // Retrieve customer data for meta parameter mapping
+            $baseTable = '';
+            $cols = [];
+            $custQuery = $this->buildCustomerQuery($baseTable, $cols);
+            if ($request->filled('nomor_internet')) {
+                $custQuery->where('c.nomor_internet', $request->input('nomor_internet'));
+            }
+            $this->selectCustomerFields($custQuery, $baseTable);
+            $custData = $custQuery->first();
+
+            $metaTemplateName = $tpl->meta_template_name ?? 'pengingat_jatuh_tempo_v1';
+            $metaLanguage = $tpl->meta_language ?? 'id';
+            $paramsMap = ($tpl && !empty($tpl->meta_params_map)) ? json_decode($tpl->meta_params_map, true) : null;
+            
+            $metaParams = $custData 
+                ? $this->buildMetaParameters($custData, $paramsMap)
+                : [$request->input('nama_penerima')];
+
+            $apiResult = $this->metaWaService->sendTemplateMessage(
+                to: $cleanHp,
+                templateName: $metaTemplateName,
+                languageCode: $metaLanguage,
+                bodyParameters: $metaParams
+            );
+
+            if ($apiResult['success']) {
+                $statusKirim = 'sent';
+                $metaMessageId = $apiResult['message_id'] ?? null;
+            } else {
+                $statusKirim = 'failed';
+                $apiSuccess = false;
+                $metaErrorMessage = $apiResult['message'] ?? 'Gagal kirim via Meta API';
+            }
+        } elseif ($metodeKirim === 'meta_api' && !$this->metaWaService->isConfigured()) {
+            $metodeKirim = 'wa_web';
+        }
 
         DB::table('tb_broadcast_wa_log')->insert([
-            'kode_broadcast'  => $kodeBroadcast,
-            'jenis'           => 'single',
-            'kode_pengguna'   => $user->kode_pengguna ?? null,
-            'nama_pengirim'   => $senderName,
-            'nomor_internet'  => $request->input('nomor_internet'),
-            'nama_penerima'   => $request->input('nama_penerima'),
-            'nomor_hp'        => $cleanHp,
-            'pesan_terkirim'  => $request->input('pesan'),
-            'kategori'        => $request->input('kategori', 'jatuh_tempo'),
-            'status_kirim'    => 'sent',
-            'metode_kirim'    => 'wa_web',
-            'created_at'      => now(),
-            'updated_at'      => now(),
+            'kode_broadcast'     => $kodeBroadcast,
+            'jenis'              => 'single',
+            'kode_pengguna'      => $user->kode_pengguna ?? null,
+            'nama_pengirim'      => $senderName,
+            'nomor_internet'     => $request->input('nomor_internet'),
+            'nama_penerima'      => $request->input('nama_penerima'),
+            'nomor_hp'           => $cleanHp,
+            'pesan_terkirim'     => $request->input('pesan'),
+            'kategori'           => $request->input('kategori', 'jatuh_tempo'),
+            'status_kirim'       => $statusKirim,
+            'metode_kirim'       => $metodeKirim,
+            'meta_message_id'    => $metaMessageId,
+            'meta_error_message' => $metaErrorMessage,
+            'created_at'         => now(),
+            'updated_at'         => now(),
         ]);
 
         $waUrl = 'https://wa.me/' . $cleanHp . '?text=' . urlencode($request->input('pesan'));
 
         if ($request->wantsJson()) {
             return response()->json([
-                'success'        => true,
-                'message'        => 'Broadcast berhasil disiapkan & dicatat di log.',
-                'wa_url'         => $waUrl,
-                'kode_broadcast' => $kodeBroadcast,
-            ]);
+                'success'         => $apiSuccess,
+                'message'         => $apiSuccess 
+                    ? ($metodeKirim === 'meta_api' ? 'Pesan WhatsApp resmi berhasil dikirim via Meta API!' : 'Pesan siap dibuka di WhatsApp Web.') 
+                    : 'Gagal kirim Meta API: ' . $metaErrorMessage,
+                'metode_kirim'    => $metodeKirim,
+                'status_kirim'    => $statusKirim,
+                'wa_url'          => $waUrl,
+                'meta_message_id' => $metaMessageId,
+                'kode_broadcast'  => $kodeBroadcast,
+            ], $apiSuccess ? 200 : 422);
         }
 
         return redirect()->away($waUrl);
     }
 
     /**
-     * Send Bulk WhatsApp Broadcast (Batch Render & Dispatcher Log)
+     * Send Bulk WhatsApp Broadcast (Batch Render & Prepare Queue)
      */
     public function sendBulk(Request $request): JsonResponse
     {
         $this->ensureSchema();
 
         $request->validate([
-            'targets'   => 'required|array|min:1',
-            'pesan'     => 'required|string',
-            'kategori'  => 'nullable|string',
+            'targets'      => 'required|array|min:1',
+            'pesan'        => 'required|string',
+            'template_id'  => 'nullable|integer',
+            'kategori'     => 'nullable|string',
+            'metode_kirim' => 'nullable|string|in:meta_api,wa_web',
         ]);
 
         $targets = $request->input('targets');
         $rawMessage = $request->input('pesan');
         $kategori = $request->input('kategori', 'jatuh_tempo');
+        $metodeKirim = $request->input('metode_kirim', 'meta_api');
+        $templateId = $request->input('template_id');
+
+        $tpl = null;
+        if ($templateId) {
+            $tpl = DB::table('tb_broadcast_wa_template')->where('id', $templateId)->first();
+        }
 
         $user = Auth::user();
         $senderName = $user->nama_karyawan ?? ($user->username ?? 'Direktur');
@@ -763,7 +886,7 @@ class BroadcastController extends Controller
         $customerRecords = $query->get();
 
         $dispatchQueue = [];
-        $logInserts = [];
+        $paramsMap = ($tpl && !empty($tpl->meta_params_map)) ? json_decode($tpl->meta_params_map, true) : null;
 
         foreach ($customerRecords as $cust) {
             $cleanHp = $this->formatWaPhone($cust->nomor_hp ?? '');
@@ -773,42 +896,97 @@ class BroadcastController extends Controller
 
             $renderedMessage = $this->renderTemplateMessage($rawMessage, $cust);
             $waUrl = 'https://wa.me/' . $cleanHp . '?text=' . urlencode($renderedMessage);
+            $metaParams = $this->buildMetaParameters($cust, $paramsMap);
 
             $dispatchQueue[] = [
-                'nomor_internet' => $cust->nomor_internet ?? '-',
-                'nama_penerima'  => $cust->nama_pelanggan ?? 'Pelanggan',
-                'nomor_hp'       => $cleanHp,
-                'pesan'          => $renderedMessage,
-                'wa_url'         => $waUrl,
+                'kode_broadcast'     => $kodeBatch,
+                'nomor_internet'     => $cust->nomor_internet ?? '-',
+                'nama_penerima'      => $cust->nama_pelanggan ?? 'Pelanggan',
+                'nomor_hp'           => $cleanHp,
+                'pesan'              => $renderedMessage,
+                'meta_template_name' => $tpl->meta_template_name ?? 'pengingat_jatuh_tempo_v1',
+                'meta_language'      => $tpl->meta_language ?? 'id',
+                'meta_parameters'    => $metaParams,
+                'wa_url'             => $waUrl,
+                'kategori'           => $kategori,
+                'template_id'        => $templateId,
             ];
-
-            $logInserts[] = [
-                'kode_broadcast'  => $kodeBatch,
-                'jenis'           => 'massal',
-                'kode_pengguna'   => $user->kode_pengguna ?? null,
-                'nama_pengirim'   => $senderName,
-                'nomor_internet'  => $cust->nomor_internet ?? null,
-                'nama_penerima'   => $cust->nama_pelanggan ?? 'Pelanggan',
-                'nomor_hp'        => $cleanHp,
-                'pesan_terkirim'  => $renderedMessage,
-                'kategori'        => $kategori,
-                'status_kirim'    => 'sent',
-                'metode_kirim'    => 'wa_web',
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ];
-        }
-
-        if (!empty($logInserts)) {
-            DB::table('tb_broadcast_wa_log')->insert($logInserts);
         }
 
         return response()->json([
-            'success'        => true,
-            'message'        => 'Broadcast massal untuk ' . count($dispatchQueue) . ' pelanggan berhasil dibuat dan dicatat.',
-            'kode_broadcast' => $kodeBatch,
-            'total_count'    => count($dispatchQueue),
-            'queue'          => $dispatchQueue,
+            'success'            => true,
+            'message'            => 'Antrean broadcast massal untuk ' . count($dispatchQueue) . ' pelanggan berhasil disiapkan.',
+            'kode_broadcast'     => $kodeBatch,
+            'total_count'        => count($dispatchQueue),
+            'metode_kirim'       => $metodeKirim,
+            'is_meta_configured' => $this->metaWaService->isConfigured(),
+            'queue'              => $dispatchQueue,
+        ]);
+    }
+
+    /**
+     * Dispatch Single Meta Cloud API Item from Bulk Queue
+     */
+    public function sendApiItem(Request $request): JsonResponse
+    {
+        $this->ensureSchema();
+
+        $request->validate([
+            'kode_broadcast'     => 'required|string',
+            'nomor_internet'     => 'nullable|string',
+            'nama_penerima'      => 'required|string',
+            'nomor_hp'           => 'required|string',
+            'pesan'              => 'required|string',
+            'meta_template_name' => 'nullable|string',
+            'meta_language'      => 'nullable|string',
+            'meta_parameters'    => 'nullable|array',
+            'kategori'           => 'nullable|string',
+        ]);
+
+        $user = Auth::user();
+        $senderName = $user->nama_karyawan ?? ($user->username ?? 'Direktur');
+        $cleanHp = $this->formatWaPhone($request->input('nomor_hp'));
+        
+        $metaTemplateName = $request->input('meta_template_name', 'pengingat_jatuh_tempo_v1');
+        $metaLanguage = $request->input('meta_language', 'id');
+        $metaParams = $request->input('meta_parameters', [$request->input('nama_penerima')]);
+
+        $apiResult = $this->metaWaService->sendTemplateMessage(
+            to: $cleanHp,
+            templateName: $metaTemplateName,
+            languageCode: $metaLanguage,
+            bodyParameters: $metaParams
+        );
+
+        $statusKirim = $apiResult['success'] ? 'sent' : 'failed';
+        $metaMessageId = $apiResult['message_id'] ?? null;
+        $metaErrorMessage = $apiResult['success'] ? null : ($apiResult['message'] ?? 'Gagal kirim via Meta API');
+
+        // Insert log record
+        DB::table('tb_broadcast_wa_log')->insert([
+            'kode_broadcast'     => $request->input('kode_broadcast'),
+            'jenis'              => 'massal',
+            'kode_pengguna'      => $user->kode_pengguna ?? null,
+            'nama_pengirim'      => $senderName,
+            'nomor_internet'     => $request->input('nomor_internet'),
+            'nama_penerima'      => $request->input('nama_penerima'),
+            'nomor_hp'           => $cleanHp,
+            'pesan_terkirim'     => $request->input('pesan'),
+            'kategori'           => $request->input('kategori', 'jatuh_tempo'),
+            'status_kirim'       => $statusKirim,
+            'metode_kirim'       => 'meta_api',
+            'meta_message_id'    => $metaMessageId,
+            'meta_error_message' => $metaErrorMessage,
+            'created_at'         => now(),
+            'updated_at'         => now(),
+        ]);
+
+        return response()->json([
+            'success'            => $apiResult['success'],
+            'message'            => $apiResult['message'],
+            'meta_message_id'    => $metaMessageId,
+            'status_kirim'       => $statusKirim,
+            'meta_error_message' => $metaErrorMessage,
         ]);
     }
 
@@ -820,20 +998,24 @@ class BroadcastController extends Controller
         $this->ensureSchema();
 
         $request->validate([
-            'nama_template' => 'required|string|max:150',
-            'pesan'         => 'required|string',
-            'kategori'      => 'nullable|string',
+            'nama_template'      => 'required|string|max:150',
+            'meta_template_name' => 'nullable|string|max:150',
+            'meta_language'      => 'nullable|string|max:20',
+            'pesan'              => 'required|string',
+            'kategori'           => 'nullable|string',
         ]);
 
         $templateId = $request->input('id');
 
         $data = [
-            'nama_template' => $request->input('nama_template'),
-            'subjek'        => $request->input('subjek', $request->input('nama_template')),
-            'kategori'      => $request->input('kategori', 'custom'),
-            'pesan'         => $request->input('pesan'),
-            'is_default'    => $request->has('is_default') ? 1 : 0,
-            'updated_at'    => now(),
+            'nama_template'      => $request->input('nama_template'),
+            'meta_template_name' => $request->input('meta_template_name'),
+            'meta_language'      => $request->input('meta_language', 'id'),
+            'subjek'             => $request->input('subjek', $request->input('nama_template')),
+            'kategori'           => $request->input('kategori', 'custom'),
+            'pesan'              => $request->input('pesan'),
+            'is_default'         => $request->has('is_default') ? 1 : 0,
+            'updated_at'         => now(),
         ];
 
         if ($request->has('is_default') && $request->input('is_default') == 1) {
@@ -883,6 +1065,8 @@ class BroadcastController extends Controller
         $search = trim($request->input('search', ''));
         $selectedKategori = $request->input('kategori', 'all');
         $selectedJenis = $request->input('jenis', 'all');
+        $selectedStatus = $request->input('status', 'all');
+        $selectedMetode = $request->input('metode', 'all');
         $perPage = (int) $request->input('per_page', 15);
 
         $query = DB::table('tb_broadcast_wa_log');
@@ -893,12 +1077,19 @@ class BroadcastController extends Controller
         if ($selectedJenis !== 'all' && !empty($selectedJenis)) {
             $query->where('jenis', $selectedJenis);
         }
+        if ($selectedStatus !== 'all' && !empty($selectedStatus)) {
+            $query->where('status_kirim', $selectedStatus);
+        }
+        if ($selectedMetode !== 'all' && !empty($selectedMetode)) {
+            $query->where('metode_kirim', $selectedMetode);
+        }
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_penerima', 'like', "%{$search}%")
                   ->orWhere('nomor_internet', 'like', "%{$search}%")
                   ->orWhere('nomor_hp', 'like', "%{$search}%")
                   ->orWhere('kode_broadcast', 'like', "%{$search}%")
+                  ->orWhere('meta_message_id', 'like', "%{$search}%")
                   ->orWhere('pesan_terkirim', 'like', "%{$search}%");
             });
         }
@@ -907,6 +1098,66 @@ class BroadcastController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('admin.broadcast.history', compact('logs', 'search', 'selectedKategori', 'selectedJenis', 'perPage'));
+        return view('admin.broadcast.history', compact('logs', 'search', 'selectedKategori', 'selectedJenis', 'selectedStatus', 'selectedMetode', 'perPage'));
+    }
+
+    /**
+     * Webhook Verification (GET hub.challenge from Meta)
+     */
+    public function webhookVerify(Request $request)
+    {
+        $mode = $request->query('hub_mode');
+        $token = $request->query('hub_verify_token');
+        $challenge = $request->query('hub_challenge');
+
+        $verifyToken = config('services.meta_whatsapp.webhook_verify_token') ?? env('META_WA_WEBHOOK_VERIFY_TOKEN', 'ims_secret_token_2026');
+
+        if ($mode === 'subscribe' && $token === $verifyToken) {
+            Log::info('Meta WhatsApp Webhook Verified successfully');
+            return response($challenge, 200)->header('Content-Type', 'text/plain');
+        }
+
+        Log::warning('Meta WhatsApp Webhook verification failed. Token mismatch.');
+        return response('Forbidden', 403);
+    }
+
+    /**
+     * Webhook Event Receiver (POST status & messages from Meta)
+     */
+    public function webhookReceive(Request $request): JsonResponse
+    {
+        $payload = $request->all();
+        Log::info('Meta WhatsApp Webhook Payload: ' . json_encode($payload));
+
+        try {
+            $entries = $payload['entry'] ?? [];
+            foreach ($entries as $entry) {
+                $changes = $entry['changes'] ?? [];
+                foreach ($changes as $change) {
+                    $value = $change['value'] ?? [];
+                    
+                    // Handle Message Statuses (sent, delivered, read, failed)
+                    if (!empty($value['statuses'])) {
+                        foreach ($value['statuses'] as $st) {
+                            $msgId = $st['id'] ?? null;
+                            $status = $st['status'] ?? null; // delivered, read, failed, sent
+                            
+                            if ($msgId && $status && Schema::hasTable('tb_broadcast_wa_log')) {
+                                DB::table('tb_broadcast_wa_log')
+                                    ->where('meta_message_id', $msgId)
+                                    ->update([
+                                        'status_kirim' => $status,
+                                        'updated_at'   => now(),
+                                    ]);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Meta WhatsApp Webhook Receive error: ' . $e->getMessage());
+        }
+
+        return response()->json(['status' => 'EVENT_RECEIVED']);
     }
 }

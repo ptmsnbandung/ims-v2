@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'meta_whatsapp' => [
+        'token'               => env('META_WA_TOKEN'),
+        'phone_number_id'     => env('META_WA_PHONE_NUMBER_ID'),
+        'business_account_id' => env('META_WA_BUSINESS_ACCOUNT_ID'),
+        'webhook_verify_token'=> env('META_WA_WEBHOOK_VERIFY_TOKEN', 'ims_secret_token_2026'),
+        'api_version'         => env('META_WA_API_VERSION', 'v21.0'),
+    ],
+
 ];

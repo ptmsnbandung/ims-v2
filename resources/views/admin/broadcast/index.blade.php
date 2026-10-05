@@ -8,66 +8,50 @@
         <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         
         <div class="relative z-10">
-            <div class="flex items-center gap-2 mb-1.5">
+            <div class="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                     <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                     </svg>
                     <span>Modul Direktur &amp; Master Admin</span>
                 </span>
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
-                    Direktur Yudiana
-                </span>
+                
+                @if($isMetaConfigured)
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Meta WhatsApp Cloud API Aktif</span>
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/30" title="Isi META_WA_TOKEN & META_WA_PHONE_NUMBER_ID di .env untuk mengaktifkan Cloud API">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Mode WhatsApp Web (Kredensial Meta Belum Diatur di .env)</span>
+                    </span>
+                @endif
             </div>
             
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                Broadcast WhatsApp Pelanggan
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                <span>Broadcast WhatsApp Meta Business</span>
             </h1>
             
             <p class="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1">
-                Kirim pengingat jatuh tempo tagihan atau pengumuman resmi ke WhatsApp pelanggan (Per Orangan maupun Massal).
+                Kirim pengingat tagihan jatuh tempo atau pengumuman resmi ke WhatsApp pelanggan menggunakan <b>Meta WhatsApp Cloud API</b> resmi.
             </p>
         </div>
 
         <div class="relative z-10 flex items-center gap-2.5 flex-wrap">
-            <a href="{{ route('admin.broadcast.history') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition">
+            <button @click="testMetaApi()" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200 dark:border-emerald-500/30 transition">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.122a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.98 0 13.789" />
+                </svg>
+                <span>Test Koneksi Meta API</span>
+            </button>
+
+            <a href="{{ route('admin.broadcast.history') }}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition">
                 <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
                 <span>Riwayat Broadcast Log</span>
             </a>
-        </div>
-    </div>
-
-    <!-- Quick User Guide (Langkah Penggunaan Sederhana) -->
-    <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/20 rounded-2xl p-4 text-slate-800 dark:text-slate-200 text-xs">
-        <div class="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 mb-2 text-sm">
-            <span>💡 Petunjuk Mudah Penggunaan Fitur Broadcast WA:</span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="flex items-start gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-emerald-200 dark:border-slate-800 shadow-xs">
-                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">1</span>
-                <div>
-                    <div class="font-bold text-slate-900 dark:text-white">Pilih Template Pesan</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Pilih template Jatuh Tempo, Pengumuman, atau ketik pesan kustom.</div>
-                </div>
-            </div>
-
-            <div class="flex items-start gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-emerald-200 dark:border-slate-800 shadow-xs">
-                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">2</span>
-                <div>
-                    <div class="font-bold text-slate-900 dark:text-white">Pilih Target Pelanggan</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Gunakan filter status tagihan &amp; centang pelanggan yang ingin dikirimkan.</div>
-                </div>
-            </div>
-
-            <div class="flex items-start gap-2.5 bg-white dark:bg-slate-900 p-3 rounded-xl border border-emerald-200 dark:border-slate-800 shadow-xs">
-                <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">3</span>
-                <div>
-                    <div class="font-bold text-slate-900 dark:text-white">Kirim WhatsApp</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Klik tombol <b>Kirim WA</b> (per orang) atau <b>Broadcast Massal</b>.</div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -130,73 +114,156 @@
         </div>
     </div>
 
-    <!-- LANGKAH 1: PENGATURAN PESAN BROADCAST (Template & Editor) -->
+    <!-- LANGKAH 1: PENGATURAN TEMPLATE META WHATSAPP -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
         <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
             <div class="flex items-center gap-3">
                 <span class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">1</span>
-                <h2 class="text-base font-bold text-slate-900 dark:text-white">Pilih Template &amp; Isi Pesan Broadcast</h2>
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Pilih Template Meta WhatsApp &amp; Konfigurasi Pengiriman</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Template pesan dikelola sesuai standar Meta Cloud API untuk pengiriman terverifikasi.</p>
+                </div>
             </div>
             <button @click="showPreview = !showPreview" type="button" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0">
                 <span x-text="showPreview ? '🙈 Sembunyikan Pratinjau' : '👁️ Tampilkan Pratinjau WA'"></span>
             </button>
         </div>
 
-        <!-- Row 1: Template selector + var buttons + textarea -->
-        <div class="space-y-4">
-            <!-- Template Dropdown -->
-            <div>
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Pilih Template Pesan Siap Pakai:</label>
-                <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
-                    @foreach($templates as $tpl)
-                        <option value="{{ $tpl->id }}" data-pesan="{{ addslashes($tpl->pesan) }}" data-kategori="{{ $tpl->kategori }}">
-                            📌 {{ $tpl->nama_template }} {{ $tpl->is_default ? '(Default)' : '' }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left Column: Template Selection & Meta Info (7 Cols) -->
+            <div class="lg:col-span-7 space-y-4">
+                <!-- Template Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center justify-between">
+                        <span>Pilih Template Resmi Meta yang Digunakan:</span>
+                        <span class="text-[11px] font-normal text-emerald-600 dark:text-emerald-400">Terdaftar di Meta Dashboard</span>
+                    </label>
+                    <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
+                        @foreach($templates as $tpl)
+                            <option value="{{ $tpl->id }}" 
+                                    data-pesan="{{ addslashes($tpl->pesan) }}" 
+                                    data-meta-name="{{ $tpl->meta_template_name ?? 'pengingat_jatuh_tempo_v1' }}"
+                                    data-meta-lang="{{ $tpl->meta_language ?? 'id' }}"
+                                    data-meta-params="{{ addslashes($tpl->meta_params_map ?? '[]') }}"
+                                    data-kategori="{{ $tpl->kategori }}">
+                                📌 {{ $tpl->nama_template }} {{ $tpl->is_default ? '(Default)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-            <!-- Variable Quick Insert Buttons -->
-            <div>
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">Sisipkan Data Pelanggan ke Pesan:</label>
-                <div class="flex flex-wrap gap-2 text-[11px]">
-                    @foreach(['{nama}', '{nomor_internet}', '{periode}', '{nominal}', '{jatuh_tempo}', '{link_pembayaran}', '{paket}', '{alamat}'] as $var)
-                    <button type="button" @click="insertVariable('{{ $var }}')"
-                        class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 font-bold transition">
-                        + {{ $var }}
-                    </button>
-                    @endforeach
+                <!-- Meta Template Details Badge -->
+                <div class="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">Nama Template di Meta:</span>
+                        <span class="font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded" x-text="currentMetaName"></span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">Bahasa Template (Language Code):</span>
+                        <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold" x-text="currentMetaLang + ' (Indonesian)'"></span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">Status Registrasi:</span>
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                            <span>Meta Cloud API Approved</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Parameter Mapping Information -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                        Mapping Parameter Otomatis ke Template Meta:
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;1&#125;&#125; &rarr; Nama Pelanggan</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">diambil dari m_pelanggan</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;2&#125;&#125; &rarr; Periode Tagihan</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">diambil dari invoice aktif</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;3&#125;&#125; &rarr; Nominal Tagihan</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">total tagihan layanan</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;4&#125;&#125; &rarr; Tgl Jatuh Tempo</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">tanggal batas bayar</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;5&#125;&#125; &rarr; ID Internet</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">nomor internet pelanggan</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;6&#125;&#125; &rarr; Link Pembayaran</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">link payment gateway</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pengaturan Mode Pengiriman -->
+                <div class="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">Metode Pengiriman WhatsApp:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition" :class="metodeKirim === 'meta_api' ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-500/10 dark:border-emerald-500' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'">
+                            <input type="radio" value="meta_api" x-model="metodeKirim" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+                            <div>
+                                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                    <span>🚀 Meta Cloud API</span>
+                                    <span class="text-[9px] bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 font-bold px-1.5 py-0.2 rounded">Otomatis</span>
+                                </div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400">Kirim otomatis via server Meta tanpa membuka WhatsApp Web satu per satu.</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition" :class="metodeKirim === 'wa_web' ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-500/10 dark:border-emerald-500' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'">
+                            <input type="radio" value="wa_web" x-model="metodeKirim" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+                            <div>
+                                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                    <span>🌐 WhatsApp Web</span>
+                                    <span class="text-[9px] bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.2 rounded">Manual</span>
+                                </div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400">Membuka tautan wa.me langsung ke browser untuk konfirmasi manual.</div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <!-- Textarea Message Editor -->
-            <div>
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">Isi Pesan WhatsApp yang Akan Dikirim:</label>
-                <textarea x-model="customPesan" id="broadcastPesanTextarea" rows="7"
-                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-sans leading-relaxed resize-y"></textarea>
-            </div>
-        </div>
+            <!-- Right Column: WhatsApp Live Message Preview (5 Cols) -->
+            <div class="lg:col-span-5" x-show="showPreview" x-transition>
+                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                    📱 Pratinjau Tampilan Pesan WhatsApp di Ponsel Pelanggan:
+                </label>
+                
+                <div class="border border-slate-300 dark:border-slate-800 rounded-2xl overflow-hidden bg-[#efeae2] dark:bg-[#0b141a] shadow-md">
+                    <!-- WA Header Bar -->
+                    <div class="bg-[#075e54] dark:bg-[#202c33] px-4 py-2.5 flex items-center gap-3 border-b border-emerald-800 dark:border-slate-800 text-white">
+                        <div class="w-8 h-8 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                            IMS
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-white truncate">IMS WhatsApp Business Official</div>
+                            <div class="text-[10px] text-emerald-200 dark:text-emerald-400 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                <span>Centang Hijau &bull; Meta Verified</span>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- Row 2: WhatsApp Preview (collapsible) -->
-        <div x-show="showPreview" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
-            <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">
-                📱 Pratinjau Tampilan Pesan di WhatsApp:
-            </label>
-            <div class="border border-slate-300 dark:border-slate-800 rounded-2xl overflow-hidden bg-[#efeae2] dark:bg-[#0b141a] shadow-inner max-w-xl">
-                <!-- WA Header Bar -->
-                <div class="bg-[#075e54] dark:bg-[#202c33] px-4 py-2.5 flex items-center gap-3 border-b border-emerald-800 dark:border-slate-800 text-white">
-                    <div class="w-8 h-8 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                        IMS
+                    <!-- WA Chat Bubble Body -->
+                    <div class="p-4 min-h-[160px] max-h-[340px] overflow-y-auto" style="background-color:#efeae2; background-image:radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size:16px 16px;">
+                        <div class="bg-[#d9fdd3] text-slate-900 dark:bg-[#005c4b] dark:text-slate-100 p-3.5 rounded-xl rounded-tl-none max-w-[90%] text-xs shadow-xs leading-relaxed whitespace-pre-wrap font-sans"
+                            x-html="formatWaPreview(customPesan)">
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-xs font-bold text-white">IMS Support (Sample Preview)</div>
-                        <div class="text-[10px] text-emerald-200 dark:text-emerald-400">Online &bull; WhatsApp Broadcast</div>
-                    </div>
-                </div>
-                <!-- WA Chat Bubble -->
-                <div class="p-4 min-h-[120px] max-h-[280px] overflow-y-auto" style="background-color:#efeae2; background-image:radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size:16px 16px;">
-                    <div class="bg-[#d9fdd3] text-slate-900 dark:bg-[#005c4b] dark:text-slate-100 p-3 rounded-xl rounded-tl-none max-w-[85%] text-xs shadow-xs leading-relaxed whitespace-pre-wrap font-sans"
-                        x-html="formatWaPreview(customPesan)">
+
+                    <!-- WA Preview Footer Notice -->
+                    <div class="px-3 py-2 bg-slate-200/80 dark:bg-slate-800/80 border-t border-slate-300 dark:border-slate-700 text-[10px] text-slate-600 dark:text-slate-400 text-center">
+                        🔒 Pesan template resmi terenkripsi end-to-end melalui Meta Cloud API
                     </div>
                 </div>
             </div>
@@ -211,7 +278,7 @@
                 <span class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">2</span>
                 <div>
                     <h2 class="text-base font-bold text-slate-900 dark:text-white">Pilih Target Pelanggan &amp; Eksekusi Kirim</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Centang pelanggan pada tabel, lalu klik tombol Broadcast Massal di sebelah kanan.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Centang pelanggan pada tabel, lalu klik tombol Broadcast Massal.</p>
                 </div>
             </div>
 
@@ -220,7 +287,7 @@
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                 </svg>
-                <span>3. KIRIM BROADCAST MASSAL (<span x-text="selectedTargets.length">0</span> PELANGGAN DIPILIH)</span>
+                <span>3. KIRIM BROADCAST (<span x-text="selectedTargets.length">0</span> PELANGGAN DIPILIH)</span>
             </button>
         </div>
 
@@ -272,7 +339,7 @@
 
             </div>
 
-            <div class="flex items-center justify-between pt-1">
+            <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
                 <label class="inline-flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
                     <input type="checkbox" @change="toggleSelectAll($event)" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
                     <span>Centang / Pilih Semua Pelanggan di Halaman Ini</span>
@@ -301,7 +368,7 @@
                             <th class="p-3.5">Wilayah &amp; Alamat</th>
                             <th class="p-3.5">Status Tagihan</th>
                             <th class="p-3.5 text-right">Nominal</th>
-                            <th class="p-3.5 text-center">Aksi Kirim Per Orang</th>
+                            <th class="p-3.5 text-center">Aksi Kirim</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -317,7 +384,7 @@
 
                                 <td class="p-3.5">
                                     <div class="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{{ $item->nomor_internet }}</div>
-                                    <div class="text-[11px] text-slate-500 dark:text-slate-400">📱 {{ $item->nomor_hp ?? '-' }}</div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">📱 {{ $item->nomor_hp ?? '-' }}</div>
                                 </td>
 
                                 <td class="p-3.5 text-[11px] text-slate-600 dark:text-slate-400">
@@ -341,7 +408,7 @@
                                     @endif
                                 </td>
 
-                                <td class="p-3.5 text-right font-bold text-slate-900 dark:text-slate-100">
+                                <td class="p-3.5 text-right font-bold text-slate-900 dark:text-slate-100 font-mono">
                                     Rp {{ number_format((float) ($item->total_layanan ?? ($item->harga_bandwith ?? 0)), 0, ',', '.') }}
                                 </td>
 
@@ -374,43 +441,56 @@
 
     <!-- Modal Single Send Confirmation -->
     <div x-show="showSingleModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4" @click.away="showSingleModal = false">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4" @click.away="if(!isSingleSending) showSingleModal = false">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <span class="text-emerald-600 dark:text-emerald-400">📱</span>
                     <span>Kirim Broadcast WA Per Orangan</span>
                 </h3>
-                <button @click="showSingleModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
+                <button @click="if(!isSingleSending) showSingleModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
             </div>
 
             <div class="space-y-3 text-xs text-slate-700 dark:text-slate-300">
                 <div class="bg-slate-50 dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-slate-700/60">
-                    <div class="text-slate-500 dark:text-slate-400">Penerima:</div>
+                    <div class="text-slate-500 dark:text-slate-400">Penerima Pesan:</div>
                     <div class="font-bold text-slate-900 dark:text-white text-sm" x-text="singleTarget.nama"></div>
-                    <div class="text-emerald-600 dark:text-emerald-400 font-mono" x-text="'ID: ' + singleTarget.noInternet + ' | HP: ' + singleTarget.hp"></div>
+                    <div class="text-emerald-600 dark:text-emerald-400 font-mono text-[11px]" x-text="'ID: ' + singleTarget.noInternet + ' | HP: ' + singleTarget.hp"></div>
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pratinjau Pesan yang Akan Dikirim:</label>
-                    <div class="bg-[#efeae2] dark:bg-[#0b141a] p-3 rounded-xl border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 whitespace-pre-wrap max-h-48 overflow-y-auto" x-text="singleTarget.renderedPesan"></div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pratinjau Pesan Template:</label>
+                    <div class="bg-[#efeae2] dark:bg-[#0b141a] p-3 rounded-xl border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-slate-100 whitespace-pre-wrap max-h-40 overflow-y-auto font-sans leading-relaxed text-[11px]" x-text="singleTarget.renderedPesan"></div>
+                </div>
+
+                <!-- Pilihan Metode Pengiriman Single -->
+                <div class="pt-1">
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Metode Pengiriman:</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer" :class="singleTarget.metode === 'meta_api' ? 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 dark:border-slate-700'">
+                            <input type="radio" value="meta_api" x-model="singleTarget.metode">
+                            <span>🚀 Meta Cloud API</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer" :class="singleTarget.metode === 'wa_web' ? 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold dark:bg-emerald-500/10 dark:text-emerald-300' : 'border-slate-200 dark:border-slate-700'">
+                            <input type="radio" value="wa_web" x-model="singleTarget.metode">
+                            <span>🌐 WhatsApp Web</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <button @click="showSingleModal = false" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                <button @click="showSingleModal = false" :disabled="isSingleSending" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold disabled:opacity-50">
                     Batal
                 </button>
-                <button @click="submitSingleSend()" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 flex items-center gap-2">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                    </svg>
-                    <span>Buka WhatsApp & Kirim</span>
+                <button @click="submitSingleSend()" :disabled="isSingleSending" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 flex items-center gap-2 disabled:opacity-50 cursor-pointer">
+                    <span x-show="isSingleSending" class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span x-text="isSingleSending ? 'Mengirim...' : (singleTarget.metode === 'meta_api' ? 'Kirim via Meta API Sekarang' : 'Buka WhatsApp Web')"></span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Bulk Queue Dispatcher -->
+    <!-- Modal Bulk Queue Dispatcher (Meta Cloud API & WhatsApp Web) -->
     <div x-show="showBulkModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5" @click.away="if(!isSendingBulk) showBulkModal = false">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -424,8 +504,8 @@
             <!-- Progress Bar -->
             <div class="space-y-2">
                 <div class="flex items-center justify-between text-xs font-semibold">
-                    <span class="text-slate-700 dark:text-slate-300">Kemajuan Pengiriman Queue:</span>
-                    <span class="text-emerald-600 dark:text-emerald-400 font-mono" x-text="bulkProgressPercent + '% (' + bulkSentCount + '/' + bulkQueue.length + ')'"></span>
+                    <span class="text-slate-700 dark:text-slate-300">Kemajuan Pengiriman:</span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-mono" x-text="bulkProgressPercent + '% (' + bulkSentCount + '/' + bulkQueue.length + ' Selesai)'"></span>
                 </div>
                 <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
                     <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-300" :style="'width: ' + bulkProgressPercent + '%'"></div>
@@ -435,30 +515,29 @@
             <!-- Active Queue Table -->
             <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
                 <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] uppercase">
+                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] uppercase font-bold sticky top-0">
                         <tr>
                             <th class="p-2.5">No</th>
                             <th class="p-2.5">Pelanggan</th>
                             <th class="p-2.5">No HP</th>
                             <th class="p-2.5 text-center">Status</th>
-                            <th class="p-2.5 text-right">Aksi</th>
+                            <th class="p-2.5 text-right">Keterangan</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
                         <template x-for="(item, idx) in bulkQueue" :key="idx">
-                            <tr :class="idx === currentBulkIndex ? 'bg-emerald-50 dark:bg-emerald-500/10' : ''">
-                                <td class="p-2.5 text-slate-500 dark:text-slate-400 font-mono" x-text="idx + 1"></td>
+                            <tr :class="idx === currentBulkIndex ? 'bg-emerald-50/60 dark:bg-emerald-500/10 font-semibold' : ''">
+                                <td class="p-2.5 text-slate-500 dark:text-slate-400 font-mono text-[11px]" x-text="idx + 1"></td>
                                 <td class="p-2.5 font-bold text-slate-900 dark:text-white" x-text="item.nama_penerima"></td>
-                                <td class="p-2.5 font-mono text-emerald-600 dark:text-emerald-400" x-text="item.nomor_hp"></td>
+                                <td class="p-2.5 font-mono text-emerald-600 dark:text-emerald-400 text-[11px]" x-text="item.nomor_hp"></td>
                                 <td class="p-2.5 text-center">
-                                    <span x-show="item.status === 'sent'" class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">Terkirim WA</span>
-                                    <span x-show="item.status === 'pending'" class="px-2 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Pending</span>
-                                    <span x-show="item.status === 'active'" class="px-2 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold animate-pulse">Siap Kirim</span>
+                                    <span x-show="item.status === 'sent'" class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">✅ Terkirim</span>
+                                    <span x-show="item.status === 'failed'" class="px-2 py-0.5 rounded text-[10px] bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-bold">❌ Gagal</span>
+                                    <span x-show="item.status === 'pending'" class="px-2 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Antrean</span>
+                                    <span x-show="item.status === 'sending'" class="px-2 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold animate-pulse">Mengirim...</span>
                                 </td>
-                                <td class="p-2.5 text-right">
-                                    <a :href="item.wa_url" target="_blank" @click="item.status = 'sent'; updateBulkProgress();" class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold inline-block">
-                                        Buka WA
-                                    </a>
+                                <td class="p-2.5 text-right text-[11px] text-slate-500 dark:text-slate-400">
+                                    <span x-text="item.meta_msg || (item.status === 'sent' ? 'Meta API OK' : '-')"></span>
                                 </td>
                             </tr>
                         </template>
@@ -467,15 +546,28 @@
             </div>
 
             <!-- Modal Action Footer -->
-            <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
-                <span class="text-[11px] text-slate-500 dark:text-slate-400">Klik "Buka WA" pada tiap baris atau gunakan tombol Otomatis.</span>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 flex-wrap gap-2">
+                <span class="text-[11px] text-slate-500 dark:text-slate-400" x-text="metodeKirim === 'meta_api' ? 'Pengiriman otomatis via Meta WhatsApp Cloud API.' : 'Pengiriman manual via WhatsApp Web.'"></span>
+                
                 <div class="flex items-center gap-2">
-                    <button @click="showBulkModal = false" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
-                        Selesai / Tutup
+                    <button @click="showBulkModal = false" :disabled="isSendingBulk" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold disabled:opacity-50">
+                        Tutup
                     </button>
-                    <button @click="openNextBulkItem()" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow">
-                        <span>Buka WA Berikutnya &raquo;</span>
-                    </button>
+                    
+                    <!-- Auto Start Button for Meta API -->
+                    <template x-if="metodeKirim === 'meta_api'">
+                        <button @click="startAutoBulkApi()" :disabled="isSendingBulk || bulkSentCount === bulkQueue.length" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 disabled:opacity-50 cursor-pointer">
+                            <span x-show="isSendingBulk" class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                            <span x-text="isSendingBulk ? 'Sedang Mengirim Otomatis...' : (bulkSentCount === 0 ? '🚀 Mulai Kirim Massal (Meta API)' : 'Lanjutkan Pengiriman')"></span>
+                        </button>
+                    </template>
+
+                    <!-- Manual Step Button for WA Web -->
+                    <template x-if="metodeKirim === 'wa_web'">
+                        <button @click="openNextBulkItem()" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+                            <span>Buka WA Berikutnya &raquo;</span>
+                        </button>
+                    </template>
                 </div>
             </div>
         </div>
@@ -487,15 +579,20 @@ function broadcastApp() {
     return {
         selectedTargets: [],
         selectedTemplateId: "{{ $defaultTemplate->id ?? '' }}",
+        currentMetaName: "{{ $defaultTemplate->meta_template_name ?? 'pengingat_jatuh_tempo_v1' }}",
+        currentMetaLang: "{{ $defaultTemplate->meta_language ?? 'id' }}",
         customPesan: `{!! addslashes($defaultTemplate->pesan ?? '') !!}`,
+        metodeKirim: "{{ $isMetaConfigured ? 'meta_api' : 'wa_web' }}",
         showSingleModal: false,
         showBulkModal: false,
         showPreview: true,
+        isSingleSending: false,
         singleTarget: {
             noInternet: '',
             nama: '',
             hp: '',
-            renderedPesan: ''
+            renderedPesan: '',
+            metode: 'meta_api'
         },
         bulkQueue: [],
         currentBulkIndex: 0,
@@ -504,7 +601,7 @@ function broadcastApp() {
         isSendingBulk: false,
 
         init() {
-            // Auto init
+            this.loadSelectedTemplate();
         },
 
         toggleSelectAll(e) {
@@ -524,25 +621,11 @@ function broadcastApp() {
             if (selectEl && selectEl.selectedIndex >= 0) {
                 const opt = selectEl.options[selectEl.selectedIndex];
                 const rawPesan = opt.getAttribute('data-pesan');
-                if (rawPesan) {
-                    this.customPesan = rawPesan;
-                }
-            }
-        },
-
-        insertVariable(varTag) {
-            const textarea = document.getElementById('broadcastPesanTextarea');
-            if (textarea) {
-                const start = textarea.selectionStart || 0;
-                const end = textarea.selectionEnd || 0;
-                const text = this.customPesan;
-                this.customPesan = text.substring(0, start) + varTag + text.substring(end);
-                this.$nextTick(() => {
-                    textarea.focus();
-                    textarea.setSelectionRange(start + varTag.length, start + varTag.length);
-                });
-            } else {
-                this.customPesan += ' ' + varTag;
+                const metaName = opt.getAttribute('data-meta-name');
+                const metaLang = opt.getAttribute('data-meta-lang');
+                if (rawPesan) this.customPesan = rawPesan;
+                if (metaName) this.currentMetaName = metaName;
+                if (metaLang) this.currentMetaLang = metaLang;
             }
         },
 
@@ -559,12 +642,34 @@ function broadcastApp() {
             return formatted;
         },
 
+        testMetaApi() {
+            fetch("{{ route('admin.broadcast.test-connection') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("✅ " + data.message + "\n\nNomor: " + (data.data?.display_phone_number || '-') + "\nNama Bisnis: " + (data.data?.verified_name || '-'));
+                } else {
+                    alert("⚠️ Status Meta API:\n" + data.message);
+                }
+            })
+            .catch(err => {
+                alert("Gagal melakukan tes koneksi Meta API!");
+            });
+        },
+
         openSingleSendModal(noInternet, nama, hp) {
             this.singleTarget.noInternet = noInternet;
             this.singleTarget.nama = nama;
             this.singleTarget.hp = hp;
+            this.singleTarget.metode = this.metodeKirim;
             
-            fetch("{{ route('admin.broadcast.preview') }}?nomor_internet=" + encodeURIComponent(noInternet) + "&pesan=" + encodeURIComponent(this.customPesan))
+            fetch("{{ route('admin.broadcast.preview') }}?nomor_internet=" + encodeURIComponent(noInternet) + "&template_id=" + this.selectedTemplateId + "&pesan=" + encodeURIComponent(this.customPesan))
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -581,6 +686,8 @@ function broadcastApp() {
         },
 
         submitSingleSend() {
+            this.isSingleSending = true;
+            
             fetch("{{ route('admin.broadcast.send-single') }}", {
                 method: "POST",
                 headers: {
@@ -592,24 +699,35 @@ function broadcastApp() {
                     nama_penerima: this.singleTarget.nama,
                     nomor_hp: this.singleTarget.hp,
                     pesan: this.singleTarget.renderedPesan,
+                    template_id: this.selectedTemplateId,
+                    metode_kirim: this.singleTarget.metode,
                     kategori: "jatuh_tempo"
                 })
             })
             .then(res => res.json())
             .then(data => {
+                this.isSingleSending = false;
                 this.showSingleModal = false;
-                if (data.success && data.wa_url) {
-                    window.open(data.wa_url, '_blank');
+
+                if (data.success) {
+                    if (data.metode_kirim === 'wa_web' && data.wa_url) {
+                        window.open(data.wa_url, '_blank');
+                    } else {
+                        alert("✅ " + data.message);
+                    }
+                } else {
+                    alert("⚠️ " + (data.message || "Gagal mengirim pesan!"));
                 }
             })
             .catch(err => {
-                alert('Gagal memproses kirim WhatsApp!');
+                this.isSingleSending = false;
+                alert('Terjadi kesalahan koneksi saat mengirim pesan WhatsApp!');
             });
         },
 
         triggerBulkBroadcast() {
             if (this.selectedTargets.length === 0) {
-                alert('Pilih setidaknya 1 pelanggan pada tabel untuk broadcast massal!');
+                alert('Pilih setidaknya 1 pelanggan pada tabel untuk broadcast!');
                 return;
             }
 
@@ -622,6 +740,8 @@ function broadcastApp() {
                 body: JSON.stringify({
                     targets: this.selectedTargets,
                     pesan: this.customPesan,
+                    template_id: this.selectedTemplateId,
+                    metode_kirim: this.metodeKirim,
                     kategori: "jatuh_tempo"
                 })
             })
@@ -630,11 +750,9 @@ function broadcastApp() {
                 if (data.success && data.queue) {
                     this.bulkQueue = data.queue.map(q => ({
                         ...q,
-                        status: 'pending'
+                        status: 'pending',
+                        meta_msg: ''
                     }));
-                    if (this.bulkQueue.length > 0) {
-                        this.bulkQueue[0].status = 'active';
-                    }
                     this.currentBulkIndex = 0;
                     this.bulkSentCount = 0;
                     this.bulkProgressPercent = 0;
@@ -642,14 +760,66 @@ function broadcastApp() {
                 }
             })
             .catch(err => {
-                alert('Terjadi kesalahan saat memproses data broadcast massal!');
+                alert('Terjadi kesalahan saat memproses antrean broadcast massal!');
             });
         },
 
+        async startAutoBulkApi() {
+            if (this.isSendingBulk) return;
+            this.isSendingBulk = true;
+
+            for (let i = 0; i < this.bulkQueue.length; i++) {
+                if (this.bulkQueue[i].status === 'sent') continue;
+
+                this.currentBulkIndex = i;
+                this.bulkQueue[i].status = 'sending';
+
+                try {
+                    const item = this.bulkQueue[i];
+                    const response = await fetch("{{ route('admin.broadcast.send-api-item') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        },
+                        body: JSON.stringify({
+                            kode_broadcast: item.kode_broadcast,
+                            nomor_internet: item.nomor_internet,
+                            nama_penerima: item.nama_penerima,
+                            nomor_hp: item.nomor_hp,
+                            pesan: item.pesan,
+                            meta_template_name: item.meta_template_name,
+                            meta_language: item.meta_language,
+                            meta_parameters: item.meta_parameters,
+                            kategori: item.kategori
+                        })
+                    });
+
+                    const resData = await response.json();
+                    if (resData.success) {
+                        this.bulkQueue[i].status = 'sent';
+                        this.bulkQueue[i].meta_msg = 'Meta Message ID: ' + (resData.meta_message_id?.substring(0, 12) || 'OK') + '...';
+                    } else {
+                        this.bulkQueue[i].status = 'failed';
+                        this.bulkQueue[i].meta_msg = resData.message || 'Gagal API';
+                    }
+                } catch (e) {
+                    this.bulkQueue[i].status = 'failed';
+                    this.bulkQueue[i].meta_msg = 'Error koneksi server';
+                }
+
+                this.updateBulkProgress();
+                // Delay 500ms between requests for smooth dispatching
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            this.isSendingBulk = false;
+        },
+
         updateBulkProgress() {
-            const sent = this.bulkQueue.filter(q => q.status === 'sent').length;
-            this.bulkSentCount = sent;
-            this.bulkProgressPercent = Math.round((sent / this.bulkQueue.length) * 100);
+            const completed = this.bulkQueue.filter(q => q.status === 'sent' || q.status === 'failed').length;
+            this.bulkSentCount = completed;
+            this.bulkProgressPercent = Math.round((completed / this.bulkQueue.length) * 100);
         },
 
         openNextBulkItem() {
@@ -659,9 +829,6 @@ function broadcastApp() {
                 window.open(item.wa_url, '_blank');
                 
                 this.currentBulkIndex++;
-                if (this.currentBulkIndex < this.bulkQueue.length) {
-                    this.bulkQueue[this.currentBulkIndex].status = 'active';
-                }
                 this.updateBulkProgress();
             }
         }

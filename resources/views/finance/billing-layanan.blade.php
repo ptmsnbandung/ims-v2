@@ -163,6 +163,7 @@
             </button>
         </div>
     </div>
+</div>
 
     <!-- Quick Alert Banner Request Pelanggan -->
     <template x-if="requestCount > 0">

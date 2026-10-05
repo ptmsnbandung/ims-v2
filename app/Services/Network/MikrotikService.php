@@ -30,25 +30,20 @@ class MikrotikService
             return;
         }
 
-        // 2. Cek apakah ada router MikroTik di tabel m_olt
-        $oltRouter = null;
-        if (Schema::hasTable('m_olt')) {
-            $oltRouter = DB::table('m_olt')
-                ->where(function ($q) {
-                    $q->where('brand', 'like', '%mikrotik%')
-                      ->orWhere('brand', 'like', '%router%')
-                      ->orWhere('protocol', 'like', '%api%');
-                })
-                ->where('hide', '!=', '1')
+        // 2. Cek koneksi router aktif dari tabel terpisah: `routers`
+        $router = null;
+        if (Schema::hasTable('routers')) {
+            $router = DB::table('routers')
+                ->where('is_active', 1)
                 ->first();
         }
 
-        if ($oltRouter && !empty($oltRouter->ip_address)) {
-            $this->host = $oltRouter->ip_address;
-            $this->port = (int)($oltRouter->port ?: ($oltRouter->telnet_port ?: config('mikrotik.port', 18735)));
-            $this->user = $oltRouter->username ?: ($oltRouter->telnet_user ?: config('mikrotik.user', 'msn'));
+        if ($router && !empty($router->host)) {
+            $this->host = $router->host;
+            $this->port = (int)($router->port ?: config('mikrotik.port', 18735));
+            $this->user = $router->username ?: config('mikrotik.user', 'msn');
             
-            $pass = $oltRouter->password ?: ($oltRouter->telnet_password ?: config('mikrotik.pass', 'kayuagung2-9'));
+            $pass = $router->password ?: config('mikrotik.pass', 'kayuagung2-9');
             try {
                 $this->pass = \Illuminate\Support\Facades\Crypt::decryptString($pass);
             } catch (Exception $e) {

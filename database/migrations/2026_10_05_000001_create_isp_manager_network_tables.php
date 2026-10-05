@@ -11,7 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Tabel activity_logs (Audit Trail Eksekusi MikroTik & OLT)
+        // 1. Tabel TERPISAH: routers (MikroTik RouterOS Gateway)
+        if (!Schema::hasTable('routers')) {
+            Schema::create('routers', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->comment('Nama Router, misal: Router Core Kayuagung');
+                $table->string('host')->comment('IP Address / Hostname MikroTik');
+                $table->integer('port')->default(18735)->comment('Port API RouterOS');
+                $table->string('username')->comment('User API MikroTik');
+                $table->string('password')->comment('Password API MikroTik');
+                $table->boolean('is_active')->default(true)->comment('1 = Aktif, 0 = Nonaktif');
+                $table->string('kota')->nullable()->comment('Wilayah / Lokasi Router');
+                $table->timestamps();
+            });
+        }
+
+        // 2. Tabel activity_logs (Audit Trail Eksekusi MikroTik & OLT)
         if (!Schema::hasTable('activity_logs')) {
             Schema::create('activity_logs', function (Blueprint $table) {
                 $table->id();
@@ -32,7 +47,7 @@ return new class extends Migration
             });
         }
 
-        // 2. Tabel req_suspend_selections (Multi-Select Checkbox Persistence)
+        // 3. Tabel req_suspend_selections (Multi-Select Checkbox Persistence)
         if (!Schema::hasTable('req_suspend_selections')) {
             Schema::create('req_suspend_selections', function (Blueprint $table) {
                 $table->id();
@@ -44,7 +59,7 @@ return new class extends Migration
             });
         }
 
-        // 3. Tabel req_terminasi (Workflow & Bukti Penarikan Perangkat)
+        // 4. Tabel req_terminasi (Workflow & Bukti Penarikan Perangkat)
         if (!Schema::hasTable('req_terminasi')) {
             Schema::create('req_terminasi', function (Blueprint $table) {
                 $table->id();
@@ -79,5 +94,6 @@ return new class extends Migration
         Schema::dropIfExists('req_terminasi');
         Schema::dropIfExists('req_suspend_selections');
         Schema::dropIfExists('activity_logs');
+        Schema::dropIfExists('routers');
     }
 };

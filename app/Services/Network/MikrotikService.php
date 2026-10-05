@@ -115,50 +115,82 @@ class MikrotikService
     }
 
     /**
-     * Kirim perintah dan baca respons dari MikroTik
+     * Baca tepat $length byte dari socket (fread bisa mengembalikan data parsial)
+     */
+    private function readBytes($socket, int $length): string
+    {
+        $data = '';
+        while (strlen($data) < $length) {
+            $chunk = fread($socket, $length - strlen($data));
+            if ($chunk === false || $chunk === '') {
+                $meta = stream_get_meta_data($socket);
+                if (!empty($meta['timed_out'])) {
+                    throw new Exception('Timeout menunggu respons dari MikroTik.');
+                }
+                if (feof($socket)) {
+                    throw new Exception('Koneksi ke MikroTik terputus.');
+                }
+                continue;
+            }
+            $data .= $chunk;
+        }
+        return $data;
+    }
+
+    /**
+     * Baca satu word (panjang terenkode + isi). Mengembalikan '' untuk akhir sentence.
+     */
+    private function readWord($socket): string
+    {
+        $byte = ord($this->readBytes($socket, 1));
+
+        if ($byte < 0x80) {
+            $len = $byte;
+        } elseif (($byte & 0xC0) === 0x80) {
+            $len = (($byte & 0x3F) << 8) | ord($this->readBytes($socket, 1));
+        } elseif (($byte & 0xE0) === 0xC0) {
+            $b = $this->readBytes($socket, 2);
+            $len = (($byte & 0x1F) << 16) | (ord($b[0]) << 8) | ord($b[1]);
+        } elseif (($byte & 0xF0) === 0xE0) {
+            $b = $this->readBytes($socket, 3);
+            $len = (($byte & 0x0F) << 24) | (ord($b[0]) << 16) | (ord($b[1]) << 8) | ord($b[2]);
+        } else {
+            $b = $this->readBytes($socket, 4);
+            $len = (ord($b[0]) << 24) | (ord($b[1]) << 16) | (ord($b[2]) << 8) | ord($b[3]);
+        }
+
+        return $len > 0 ? $this->readBytes($socket, $len) : '';
+    }
+
+    /**
+     * Kirim perintah dan baca seluruh respons (semua sentence sampai !done / !fatal)
+     * Key diawali '?' dikirim sebagai query word (?name=value), selain itu sebagai attribute word (=key=value).
      */
     private function sendCommand($socket, string $command, array $params = []): string
     {
         $data = $this->encodeWord($command);
         foreach ($params as $key => $value) {
-            $data .= $this->encodeWord("={$key}={$value}");
+            if (str_starts_with((string)$key, '?')) {
+                $data .= $this->encodeWord("{$key}={$value}");
+            } else {
+                $data .= $this->encodeWord("={$key}={$value}");
+            }
         }
         $data .= chr(0);
         fwrite($socket, $data);
 
         $response = '';
-        $inWord = false;
-        $wordLen = 0;
-        $word = '';
-
-        while (!feof($socket)) {
-            $char = fread($socket, 1);
-            if ($char === false) break;
-            $byte = ord($char);
-
-            if (!$inWord) {
-                if ($byte < 0x80) {
-                    $wordLen = $byte;
-                    $inWord = true;
-                } elseif ($byte < 0xC0) {
-                    $wordLen = (($byte & 0x3F) << 8) | ord(fread($socket, 1));
-                    $inWord = true;
-                } else {
-                    $wordLen = (($byte & 0x3F) << 24) | (ord(fread($socket, 1)) << 16) | (ord(fread($socket, 1)) << 8) | ord(fread($socket, 1));
-                    $inWord = true;
+        while (true) {
+            $first = null;
+            while (($word = $this->readWord($socket)) !== '') {
+                if ($first === null) {
+                    $first = $word;
                 }
-                continue;
+                $response .= $word . "\n";
             }
 
-            if ($wordLen > 0) {
-                $word .= fread($socket, $wordLen);
-                $wordLen = 0;
-                $inWord = false;
-                $response .= $word . "\n";
-                if (strpos($response, '!done') !== false || strpos($response, '!trap') !== false) {
-                    break;
-                }
-                $word = '';
+            if ($first === '!done' || $first === '!fatal') {
+                break;
             }
         }
 
@@ -167,31 +199,34 @@ class MikrotikService
 
     /**
      * Lakukan proses autentikasi (Login)
+     * - RouterOS >= 6.43 (termasuk v7): login plaintext (name + password)
+     * - RouterOS < 6.43: challenge-response MD5 (=ret=)
      */
     private function login($socket): void
     {
-        // Challenge login (RouterOS v6 & v7 compatibility)
-        $response = $this->sendCommand($socket, '/login');
+        $response = $this->sendCommand($socket, '/login', [
+            'name' => $this->user,
+            'password' => $this->pass,
+        ]);
 
-        if (preg_match('/=ret=([a-f0-9]+)/', $response, $matches)) {
-            $challenge = $matches[1];
-            $md5 = md5(chr(0) . $this->pass . pack('H*', $challenge));
+        if (strpos($response, '!trap') !== false || strpos($response, '!fatal') !== false) {
+            $message = 'Username / Password salah';
+            if (preg_match('/=message=([^\n]+)/', $response, $m)) {
+                $message = trim($m[1]);
+            }
+            throw new Exception('Login ke MikroTik gagal: ' . $message);
+        }
+
+        // RouterOS lama: balasan berisi challenge =ret=
+        if (preg_match('/=ret=([a-f0-9]+)/i', $response, $matches)) {
+            $md5 = md5(chr(0) . $this->pass . pack('H*', $matches[1]));
             $authResp = $this->sendCommand($socket, '/login', [
                 'name' => $this->user,
                 'response' => '00' . $md5,
             ]);
 
-            if (strpos($authResp, '!done') === false) {
+            if (strpos($authResp, '!trap') !== false || strpos($authResp, '!done') === false) {
                 throw new Exception('Login ke MikroTik gagal (Username / Password salah).');
-            }
-        } elseif (strpos($response, '!done') === false) {
-            // Post v6.43+ direct plaintext password login
-            $authResp = $this->sendCommand($socket, '/login', [
-                'name' => $this->user,
-                'password' => $this->pass,
-            ]);
-            if (strpos($authResp, '!done') === false) {
-                throw new Exception('Login ke MikroTik gagal: ' . $authResp);
             }
         }
     }

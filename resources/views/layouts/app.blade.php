@@ -367,17 +367,6 @@
                             <span class="block text-[10px] text-[#94A3B8] tracking-wider uppercase font-semibold">System Manager</span>
                         </div>
                     </a>
-                    
-                    <!-- Single Toggle Button '<<' (Di Sidebar Header) -->
-                    <button x-show="!sidebarCollapsed"
-                            x-cloak
-                            @click="toggleSidebar()"
-                            title="Kecilkan Sidebar (<<)"
-                            class="hidden lg:flex p-2 text-[#94A3B8] hover:text-white rounded-xl bg-[#0c2f42] hover:bg-[#12415c] border border-cyan-500/20 transition items-center justify-center flex-shrink-0 shadow-sm cursor-pointer">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
-                        </svg>
-                    </button>
                 </div>
 
                 <!-- Sidebar Navigation Menu -->

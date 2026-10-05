@@ -64,33 +64,45 @@
         </div>
     @endif
 
-    <!-- Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative overflow-hidden">
-        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="relative z-10">
-            <div class="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-                <span>Modul Finance</span>
-                <span>&bull;</span>
-                <span class="text-slate-500 dark:text-slate-400">Permintaan</span>
-                <span>&bull;</span>
-                <span>UP / Downgrade</span>
-            </div>
-            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                <span>⚡ Permintaan Ubah Layanan (UP / Downgrade)</span>
-                <span class="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 font-semibold">Finance &rarr; NOC</span>
-            </h2>
-            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Ajukan perubahan kecepatan/paket bandwidth sesuai permintaan pelanggan untuk dieksekusi oleh tim NOC.</p>
-        </div>
+    <!-- Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        
+        <!-- Subtle Glow Effect -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
 
-        <div class="relative z-10 shrink-0">
-            <button type="button"
-                    @click="resetForm(); createModalOpen = true"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition duration-150 cursor-pointer">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <span>Request Ubah Bandwidth</span>
-            </button>
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <!-- Top Mini Badges -->
+                <div class="flex flex-wrap items-center gap-2 mb-2.5">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-white text-slate-800 shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                        <span>Modul Finance</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Finance &rarr; NOC</span>
+                    </div>
+                </div>
+
+                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
+                    <span>⚡ Permintaan Ubah Layanan (UP / Downgrade)</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
+                    Ajukan perubahan kecepatan/paket bandwidth sesuai permintaan pelanggan untuk dieksekusi oleh tim NOC.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2.5 shrink-0">
+                <button type="button"
+                        @click="resetForm(); createModalOpen = true"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00b074] hover:bg-[#009b66] text-white text-xs font-bold shadow-md shadow-emerald-950/20 transition cursor-pointer" style="color: #FFFFFF !important;">
+                    <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    <span>Request Ubah Bandwidth</span>
+                </button>
+            </div>
         </div>
     </div>
 

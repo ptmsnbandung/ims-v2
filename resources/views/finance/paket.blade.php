@@ -97,8 +97,9 @@
     <!-- =================================================================== -->
     <!-- 1. TOP HERO HEADER BANNER (MATCHING USER SCREENSHOT)                -->
     <!-- =================================================================== -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border border-blue-500/20 p-5 sm:p-6 shadow-2xl backdrop-blur-xl">
-        <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5 relative z-10">
             <div class="flex items-start sm:items-center gap-3.5">
                 <!-- Icon Wifi Signal -->

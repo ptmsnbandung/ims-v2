@@ -64,33 +64,45 @@
         </div>
     @endif
 
-    <!-- Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative overflow-hidden">
-        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-slate-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="relative z-10">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                <span>Modul Finance</span>
-                <span>&bull;</span>
-                <span class="text-slate-500 dark:text-slate-400">Permintaan</span>
-                <span>&bull;</span>
-                <span class="text-slate-800 dark:text-slate-200">Terminasi</span>
-            </div>
-            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                <span>🔌 Permintaan Terminasi (Putus Berlangganan)</span>
-                <span class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold">Finance &rarr; NOC / Lapangan</span>
-            </h2>
-            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Pengajuan penutupan layanan & penarikan perangkat ONT/Modem untuk pelanggan yang sudah berhenti berlangganan.</p>
-        </div>
+    <!-- Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        
+        <!-- Subtle Glow Effect -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
 
-        <div class="relative z-10 shrink-0">
-            <button type="button"
-                    @click="resetForm(); createModalOpen = true"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold shadow-lg shadow-black/25 transition duration-150 cursor-pointer border border-slate-700">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <span>Request Terminasi</span>
-            </button>
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <!-- Top Mini Badges -->
+                <div class="flex flex-wrap items-center gap-2 mb-2.5">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-white text-slate-800 shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                        <span>Modul Finance</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Finance &rarr; NOC / Lapangan</span>
+                    </div>
+                </div>
+
+                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
+                    <span>🔌 Permintaan Terminasi (Putus Berlangganan)</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
+                    Pengajuan penutupan layanan &amp; penarikan perangkat ONT/Modem untuk pelanggan yang sudah berhenti berlangganan.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2.5 shrink-0">
+                <button type="button"
+                        @click="resetForm(); createModalOpen = true"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00b074] hover:bg-[#009b66] text-white text-xs font-bold shadow-md shadow-emerald-950/20 transition cursor-pointer" style="color: #FFFFFF !important;">
+                    <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    <span>Request Terminasi</span>
+                </button>
+            </div>
         </div>
     </div>
 

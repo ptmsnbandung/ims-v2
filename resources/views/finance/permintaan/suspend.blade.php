@@ -90,7 +90,7 @@
                     <svg class="w-4 h-4 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                     </svg>
-                    <span>⚡ Run Auto Suspend Tgl 25</span>
+                    <span>Run Auto Suspend Tgl 25</span>
                 </button>
             </form>
             <button type="button"
@@ -99,7 +99,7 @@
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                <span>+ Request Suspend (Isolir)</span>
+                <span>Request Suspend (Isolir)</span>
             </button>
         </div>
     </div>

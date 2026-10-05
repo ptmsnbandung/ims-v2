@@ -53,25 +53,32 @@ class OltConnectionService
             // 2. Read Initial Banner / Prompt (Level 2: Protocol Handshake)
             $banner = '';
             if ($protocol === 'telnet') {
-                // Read up to 512 bytes of initial telnet banner
-                $banner = @fread($socket, 512);
+                // Read initial bytes
+                $rawBanner = @fread($socket, 512);
+                if ($rawBanner !== false && strlen($rawBanner) > 0) {
+                    // Strip Telnet negotiation IAC bytes (\xFF...) and non-printable characters
+                    $clean = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $rawBanner);
+                    $banner = trim(mb_convert_encoding($clean, 'UTF-8', 'UTF-8'));
+                }
             }
 
             fclose($socket);
+
+            $bannerText = !empty($banner) ? " | Response: {$banner}" : '';
 
             return [
                 'success' => true,
                 'latency' => max(1, $latency),
                 'protocol' => strtoupper($protocol),
                 'port' => $port,
-                'banner' => trim(preg_replace('/[\x00-\x1F\x7F]/', ' ', $banner)),
-                'message' => "Koneksi berhasil! Host {$ip}:{$port} aktif dan merespon dalam {$latency} ms.",
+                'banner' => $banner,
+                'message' => "Koneksi berhasil! Host {$ip}:{$port} aktif dan merespon dalam {$latency} ms.{$bannerText}",
             ];
         } catch (Exception $e) {
             return [
                 'success' => false,
                 'latency' => 0,
-                'message' => 'Terjadi kesalahan koneksi: ' . $e->getMessage(),
+                'message' => 'Terjadi kesalahan koneksi: ' . mb_convert_encoding($e->getMessage(), 'UTF-8', 'UTF-8'),
             ];
         }
     }

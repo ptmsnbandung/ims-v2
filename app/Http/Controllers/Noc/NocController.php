@@ -931,7 +931,7 @@ class NocController extends Controller
             'enable_password' => $request->enable_password,
         ]);
 
-        return response()->json($res);
+        return response()->json($res, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**

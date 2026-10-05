@@ -28,11 +28,13 @@
 <div class="space-y-6" x-data="billingLayananPage()">
 
     <!-- Page Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
-    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20 z-30"
+    <div class="ims-banner relative rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20 z-10"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
-        <!-- Subtle Glow Effect -->
-        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+        <!-- Subtle Glow Effect (isolated overflow-hidden so child dropdowns are not clipped) -->
+        <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+            <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+        </div>
 
         <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

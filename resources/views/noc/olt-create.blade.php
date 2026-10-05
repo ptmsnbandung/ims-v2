@@ -1,22 +1,33 @@
 @extends('layouts.app')
 
-@section('title', 'Create OLT - NOC IMS')
-@section('page_title', 'Create OLT')
+@section('title', 'Tambah OLT Baru - NOC IMS')
+@section('page_title', 'Tambah OLT Baru')
 
 @section('content')
-<div class="space-y-6"
+<div class="space-y-6 max-w-7xl mx-auto pb-12"
      x-data="{
         testingConnection: false,
         testResult: null,
-        protocol: 'telnet',
-        port: 23,
-        ipAddress: '{{ old('ip_address') }}',
-        username: '{{ old('username') }}',
+        protocol: '{{ old('protocol', 'telnet') }}',
+        port: {{ old('port', 23) }},
+        ipAddress: '{{ old('ip_address', '') }}',
+        username: '{{ old('username', '') }}',
         password: '',
         enablePassword: '',
-        snmpPort: 161,
-        snmpVersion: 'v2c',
-        snmpCommunity: 'public',
+        showPassword: false,
+        showEnablePassword: false,
+        snmpPort: {{ old('snmp_port', 161) }},
+        snmpVersion: '{{ old('snmp_version', 'v2c') }}',
+        snmpCommunity: '{{ old('snmp_community', 'public') }}',
+
+        setProtocol(proto) {
+            this.protocol = proto;
+            if (proto === 'ssh' && (this.port === 23 || !this.port)) {
+                this.port = 22;
+            } else if (proto === 'telnet' && (this.port === 22 || !this.port)) {
+                this.port = 23;
+            }
+        },
 
         async testOltConnection() {
             if (!this.ipAddress) {
@@ -73,114 +84,205 @@
         }
      }">
 
-    <!-- Breadcrumb -->
-    <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-        <a href="{{ route('noc.olt') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">Master Input OLT</a>
-        <span>&gt;</span>
-        <span class="text-slate-900 dark:text-white">Create</span>
+    <!-- =================================================================== -->
+    <!-- 1. TOP HERO HEADER BANNER                                           -->
+    <!-- =================================================================== -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border border-blue-500/20 p-6 sm:p-7 shadow-2xl backdrop-blur-xl text-white">
+        <div class="absolute -right-12 -bottom-12 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-0 right-1/4 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div class="flex items-start sm:items-center gap-4">
+                <!-- Icon Header -->
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/30 border border-blue-400/40 text-blue-400 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/10">
+                    <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                </div>
+                <div>
+                    <!-- Breadcrumbs Pill -->
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 dark:bg-white/5 border border-white/10 text-[11px] font-medium text-slate-300 mb-2">
+                        <a href="{{ route('noc.olt') }}" class="hover:text-white transition flex items-center gap-1">
+                            <span>Master OLT</span>
+                        </a>
+                        <span class="text-slate-500">/</span>
+                        <span class="text-blue-400 font-bold">Registrasi Baru</span>
+                    </div>
+                    <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 flex-wrap">
+                        <span>Tambah Perangkat OLT Baru</span>
+                    </h1>
+                    <p class="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                        Daftarkan perangkat Optical Line Terminal (OLT) baru, tentukan parameter IP gateway, SNMP monitoring, dan akses CLI Telnet/SSH.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 shrink-0">
+                <a href="{{ route('noc.olt') }}" 
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white text-xs font-bold border border-white/15 transition shadow-sm backdrop-blur-sm">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                    </svg>
+                    <span>Kembali</span>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <!-- Page Title -->
-    <div>
-        <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            Create OLT
-        </h1>
-    </div>
-
-    <!-- Main Form Card -->
+    <!-- Main Form -->
     <form action="{{ route('noc.olt.store') }}" method="POST" class="space-y-6">
         @csrf
 
-        <div class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-6 sm:p-7 shadow-xs space-y-8 text-slate-800 dark:text-slate-100">
+        <!-- =============================================================== -->
+        <!-- CARD 1: INFORMASI SPESIFIKASI & PERANGKAT OLT                   -->
+        <!-- =============================================================== -->
+        <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-6 sm:p-7 shadow-xs space-y-6">
             
-            <!-- =============================================================== -->
-            <!-- 1. DEVICE INFORMATION SECTION                                   -->
-            <!-- =============================================================== -->
-            <div class="space-y-4">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.602H7.923a3.375 3.375 0 0 0-3.285 2.602l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m19.5 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m19.5 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m16.5 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Z" />
+                    </svg>
+                </div>
                 <div>
-                    <h3 class="font-bold text-slate-900 dark:text-white text-sm">
-                        Device Information
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                        Spesifikasi & Identitas Perangkat OLT
                     </h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Konfigurasi spesifikasi perangkat OLT (Optical Line Terminal) dan integrasi POP server FTTH.
+                        Konfigurasi dasar perangkat OLT, penamaan gateway, dan integrasi titik POP distribusi.
                     </p>
                 </div>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                    
-                    <!-- Row 1: Name * & Hostname -->
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Name <span class="text-rose-500">*</span>
-                        </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                
+                <!-- 1. Nama OLT -->
+                <div class="space-y-1.5 lg:col-span-2">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Nama OLT <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.75 5.1a3 3 0 0 1 2.4-1.35h7.7a3 3 0 0 1 2.4 1.35l2.1 3.15a4.5 4.5 0 0 1 .9 2.7m-13.5 0h13.5" />
+                            </svg>
+                        </div>
                         <input type="text" 
                                name="name_olt" 
                                value="{{ old('name_olt') }}"
                                required
-                               placeholder="OLT Jakarta 01" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                        @error('name_olt')
-                            <span class="text-[11px] text-rose-500 font-semibold">{{ $message }}</span>
-                        @enderror
+                               placeholder="Contoh: OLT SOEKARNO HATTA" 
+                               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-inner">
                     </div>
+                    @error('name_olt')
+                        <span class="text-[11px] text-rose-500 font-semibold">{{ $message }}</span>
+                    @enderror
+                </div>
 
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Hostname
-                        </label>
+                <!-- 2. Hostname -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Hostname
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m6.75 7.5 3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
+                            </svg>
+                        </div>
                         <input type="text" 
                                name="hostname" 
                                value="{{ old('hostname') }}"
-                               placeholder="olt-jkt-01" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                               placeholder="olt-soetta-01" 
+                               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-inner">
                     </div>
+                </div>
 
-                    <!-- Row 2: IP Address * & Vendor * -->
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            IP Address <span class="text-rose-500">*</span>
-                        </label>
+                <!-- 3. IP Address -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        IP Address / Host <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                            </svg>
+                        </div>
                         <input type="text" 
                                name="ip_address" 
                                x-model="ipAddress"
                                required
                                placeholder="192.168.1.1" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                        @error('ip_address')
-                            <span class="text-[11px] text-rose-500 font-semibold">{{ $message }}</span>
-                        @enderror
+                               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-inner">
                     </div>
+                    @error('ip_address')
+                        <span class="text-[11px] text-rose-500 font-semibold">{{ $message }}</span>
+                    @enderror
+                </div>
 
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Vendor <span class="text-rose-500">*</span>
-                        </label>
+                <!-- 4. Vendor / Brand -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Vendor / Brand <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
+                            </svg>
+                        </div>
                         <input type="text" 
                                name="brand" 
-                               value="{{ old('brand') }}"
-                               placeholder="ZTE, Huawei, Fiberhome..." 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                               value="{{ old('brand', 'ZTE') }}"
+                               placeholder="ZTE / Huawei / Fiberhome" 
+                               list="brandList"
+                               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-inner">
+                        <datalist id="brandList">
+                            <option value="ZTE">
+                            <option value="Huawei">
+                            <option value="Fiberhome">
+                            <option value="VSOL">
+                            <option value="BDCOM">
+                            <option value="Hioso">
+                        </datalist>
                     </div>
+                </div>
 
-                    <!-- Row 3: Model & POP Server -->
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Model
-                        </label>
+                <!-- 5. Model Hardware -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Model Hardware
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
+                            </svg>
+                        </div>
                         <input type="text" 
                                name="model" 
-                               value="{{ old('model') }}"
-                               placeholder="C320, MA5608T..." 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                               value="{{ old('model', 'C320') }}"
+                               placeholder="C320 / C300 / MA5608T" 
+                               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-inner">
                     </div>
+                </div>
 
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            POP Server / Lokasi
-                        </label>
+                <!-- 6. POP Server / Lokasi -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        POP Server / Lokasi
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                            </svg>
+                        </div>
                         <select name="kode_pop" 
-                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                            <option value="">Select an option</option>
+                                class="w-full pl-10 pr-8 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-inner">
+                            <option value="">-- Pilih POP Server --</option>
                             @foreach($pops as $pop)
                                 <option value="{{ $pop->kode_pop }}" {{ old('kode_pop') == $pop->kode_pop ? 'selected' : '' }}>
                                     {{ $pop->nama_pop }} ({{ $pop->kode_pop }})
@@ -188,12 +290,19 @@
                             @endforeach
                         </select>
                     </div>
+                </div>
 
-                    <!-- Row 4: Jumlah Port PON -->
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Jumlah Port PON <span class="text-rose-500">*</span>
-                        </label>
+                <!-- 7. Jumlah Port PON -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Jumlah Port PON <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                            </svg>
+                        </div>
                         <input type="number" 
                                name="capacity_olt" 
                                value="{{ old('capacity_olt', 8) }}"
@@ -201,206 +310,295 @@
                                placeholder="8" 
                                min="1"
                                max="64" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-inner">
                     </div>
+                </div>
 
+                <!-- 8. Catatan Tambahan -->
+                <div class="space-y-1.5 md:col-span-2 lg:col-span-2">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Catatan / Deskripsi OLT
+                    </label>
+                    <input type="text" 
+                           name="note_olt" 
+                           value="{{ old('note_olt') }}"
+                           placeholder="Keterangan tambahan OLT (opsional)..." 
+                           class="w-full px-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition shadow-inner">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- CARD 2: SNMP MONITORING CONFIGURATION                           -->
+        <!-- =============================================================== -->
+        <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-6 sm:p-7 shadow-xs space-y-6">
+            
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                        Konfigurasi SNMP (Simple Network Management Protocol)
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Protokol polling untuk monitoring bandwidth port PON, CPU, temperatur, dan uptime OLT.
+                    </p>
                 </div>
             </div>
 
-            <!-- =============================================================== -->
-            <!-- 2. SNMP CONFIGURATION SECTION                                   -->
-            <!-- =============================================================== -->
-            <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
-                <div>
-                    <h3 class="font-bold text-slate-900 dark:text-white text-sm">
-                        SNMP Configuration
-                    </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Digunakan untuk monitoring status OLT secara berkala
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-                    
-                    <!-- SNMP Port * -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            SNMP Port <span class="text-rose-500">*</span>
-                        </label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                
+                <!-- SNMP Port -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        SNMP Port <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <span class="font-mono text-xs font-bold">#</span>
+                        </div>
                         <input type="number" 
                                name="snmp_port" 
                                x-model="snmpPort"
-                               value="161"
                                required
                                placeholder="161" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                        <span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-1">Default: 161</span>
+                               class="w-full pl-8 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition shadow-inner">
                     </div>
+                    <span class="text-[11px] text-slate-400 block">Port standar: 161</span>
+                </div>
 
-                    <!-- SNMP Version * -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            SNMP Version <span class="text-rose-500">*</span>
-                        </label>
-                        <select name="snmp_version" 
-                                x-model="snmpVersion"
-                                class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                            <option value="v1">v1</option>
-                            <option value="v2c" selected>v2c</option>
-                            <option value="v3">v3</option>
-                        </select>
-                        <span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-1">Rekomendasi: v2c</span>
-                    </div>
+                <!-- SNMP Version -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        SNMP Version <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="snmp_version" 
+                            x-model="snmpVersion"
+                            class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition shadow-inner">
+                        <option value="v1">v1 (Legacy)</option>
+                        <option value="v2c">v2c (Sangat Direkomendasikan)</option>
+                        <option value="v3">v3 (Encrypted Auth)</option>
+                    </select>
+                    <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold block">Rekomendasi: v2c</span>
+                </div>
 
-                    <!-- SNMP Community * -->
-                    <div class="space-y-1">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                            SNMP Community <span class="text-rose-500">*</span>
-                        </label>
+                <!-- SNMP Community -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        SNMP Community String <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+                            </svg>
+                        </div>
                         <input type="text" 
                                name="snmp_community" 
                                x-model="snmpCommunity"
-                               value="public"
                                required
                                placeholder="public" 
-                               class="w-full px-4 py-2.5 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                        <span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-1">Contoh: public, private</span>
+                               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition shadow-inner">
                     </div>
-
+                    <span class="text-[11px] text-slate-400 block">Contoh: public, private, noc-ims</span>
                 </div>
-            </div>
 
-            <!-- =============================================================== -->
-            <!-- 3. CLI / TELNET / SSH ACCESS & LIVE TEST                       -->
-            <!-- =============================================================== -->
-            <div class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4" x-data="{ expanded: true }">
-                <div class="flex items-center justify-between cursor-pointer" @click="expanded = !expanded">
+            </div>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- CARD 3: CLI DIRECT MANAGEMENT & LIVE SOCKET CONNECTION TEST      -->
+        <!-- =============================================================== -->
+        <div class="bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-6 sm:p-7 shadow-xs space-y-6">
+            
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                        </svg>
+                    </div>
                     <div>
-                        <h3 class="font-bold text-slate-900 dark:text-white text-sm">
-                            CLI Management & Direct Connection (Telnet / SSH)
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                            Kredensial CLI & Uji Koneksi Langsung (Telnet / SSH)
                         </h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Digunakan untuk live sync slot GPON, profiling bandwidth, dan scan ONU unconfigured (Kredensial terenkripsi aman)
+                            Digunakan untuk scan live ONU unconfigured, registrasi massal, dan monitoring daya optik (Rx Power).
                         </p>
                     </div>
-                    <span class="text-xs text-blue-600 dark:text-blue-400 font-semibold" x-text="expanded ? 'Tutup Pengaturan' : 'Buka Pengaturan'"></span>
                 </div>
 
-                <div x-show="expanded" class="space-y-4 pt-2">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <!-- Protokol -->
-                        <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-400">Protokol Akses</label>
-                            <select name="protocol" 
-                                    x-model="protocol" 
-                                    @change="port = (protocol === 'ssh' ? 22 : 23)"
-                                    class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                                <option value="telnet">Telnet (Port 23)</option>
-                                <option value="ssh">SSH (Port 22)</option>
-                            </select>
-                        </div>
+                <!-- Protocol Selector Buttons -->
+                <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <button type="button" 
+                            @click="setProtocol('telnet')"
+                            :class="protocol === 'telnet' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
+                            class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5">
+                        <span>🔌 Telnet</span>
+                    </button>
+                    <button type="button" 
+                            @click="setProtocol('ssh')"
+                            :class="protocol === 'ssh' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
+                            class="px-3 py-1.5 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5">
+                        <span>🔒 SSH</span>
+                    </button>
+                    <input type="hidden" name="protocol" :value="protocol">
+                </div>
+            </div>
 
-                        <!-- Port -->
-                        <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-400">Port CLI</label>
-                            <input type="number" 
-                                   name="port" 
-                                   x-model="port"
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                        </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                
+                <!-- 1. Port CLI -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Port CLI <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="number" 
+                           name="port" 
+                           x-model="port"
+                           required
+                           placeholder="23" 
+                           class="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition shadow-inner">
+                    <span class="text-[11px] text-slate-400 block" x-text="protocol === 'ssh' ? 'Default SSH: 22' : 'Default Telnet: 23 / 42223'"></span>
+                </div>
 
-                        <!-- Username -->
-                        <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-400">Username Login</label>
-                            <input type="text" 
-                                   name="username" 
-                                   x-model="username"
-                                   placeholder="zte / admin" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+                <!-- 2. Username Login -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Username Login
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
                         </div>
-
-                        <!-- Password -->
-                        <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-400">Password Login</label>
-                            <input type="password" 
-                                   name="password" 
-                                   x-model="password"
-                                   placeholder="••••••••" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                        </div>
-
-                        <!-- Enable / Super Password -->
-                        <div class="space-y-1 sm:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-400">Enable Password (ZTE/Cisco Privilege)</label>
-                            <input type="password" 
-                                   name="enable_password" 
-                                   x-model="enablePassword"
-                                   placeholder="Opsional (khusus jika butuh command enable)" 
-                                   class="w-full px-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                        </div>
-
-                        <!-- Test Connection Button -->
-                        <div class="sm:col-span-2 flex flex-col justify-end space-y-1">
-                            <button type="button" 
-                                    @click="testOltConnection()"
-                                    :disabled="testingConnection"
-                                    class="w-full px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
-                                <template x-if="!testingConnection">
-                                    <svg class="w-4 h-4 text-amber-500 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-                                    </svg>
-                                </template>
-                                <template x-if="testingConnection">
-                                    <span class="w-4 h-4 border-2 border-slate-400 border-t-blue-600 dark:border-t-white rounded-full animate-spin"></span>
-                                </template>
-                                <span x-text="testingConnection ? 'Sedang Menguji Koneksi...' : '⚡ Test Koneksi ke OLT'"></span>
-                            </button>
-                        </div>
+                        <input type="text" 
+                               name="username" 
+                               x-model="username"
+                               placeholder="aplikasi / zte / admin" 
+                               class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition shadow-inner">
                     </div>
+                </div>
 
-                    <!-- Test Result Indicator -->
-                    <template x-if="testResult">
-                        <div :class="testResult.success ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-400'"
-                             class="p-3.5 rounded-xl border text-xs font-semibold flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span :class="testResult.success ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-rose-500 dark:bg-rose-400'" class="w-2 h-2 rounded-full"></span>
-                                <span x-text="testResult.message"></span>
+                <!-- 3. Password Baru -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Password Login
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                            </svg>
+                        </div>
+                        <input :type="showPassword ? 'text' : 'password'" 
+                               name="password" 
+                               x-model="password"
+                               placeholder="Password CLI OLT" 
+                               class="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition shadow-inner">
+                        <button type="button" 
+                                @click="showPassword = !showPassword"
+                                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <span x-text="showPassword ? '🙈' : '👁️'" class="text-xs"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. Enable / Super Password -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Enable Password (Privilege)
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                            </svg>
+                        </div>
+                        <input :type="showEnablePassword ? 'text' : 'password'" 
+                               name="enable_password" 
+                               x-model="enablePassword"
+                               placeholder="Enable password OLT" 
+                               class="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition shadow-inner">
+                        <button type="button" 
+                                @click="showEnablePassword = !showEnablePassword"
+                                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                            <span x-text="showEnablePassword ? '🙈' : '👁️'" class="text-xs"></span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Action Uji Koneksi Button & Result Box -->
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Uji handshake socket dan respons banner dari IP & Port OLT di atas sebelum menyimpan.
+                    </p>
+                    <button type="button" 
+                            @click="testOltConnection()"
+                            :disabled="testingConnection"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold shadow-md shadow-amber-500/20 transition duration-150 transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 disabled:pointer-events-none">
+                        <template x-if="!testingConnection">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                            </svg>
+                        </template>
+                        <template x-if="testingConnection">
+                            <span class="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
+                        </template>
+                        <span x-text="testingConnection ? 'Sedang Menguji Koneksi OLT...' : '⚡ Uji Koneksi Live ke OLT'"></span>
+                    </button>
+                </div>
+
+                <!-- Test Result Container -->
+                <template x-if="testResult">
+                    <div :class="testResult.success ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80 text-emerald-900 dark:text-emerald-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80 text-rose-900 dark:text-rose-200'"
+                         class="p-4 rounded-2xl border text-xs shadow-xs space-y-2.5 transition animate-fade-in">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5 font-bold">
+                                <span :class="testResult.success ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'" class="w-2.5 h-2.5 rounded-full shrink-0"></span>
+                                <span x-text="testResult.success ? '✅ Koneksi Sukses & Terhubung' : '❌ Pengujian Koneksi Gagal'"></span>
                             </div>
                             <template x-if="testResult.latency">
-                                <span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-black/20 text-[10px] font-mono" x-text="testResult.latency + ' ms'"></span>
+                                <span class="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 text-[11px] font-mono font-bold" x-text="'Latency: ' + testResult.latency + ' ms'"></span>
                             </template>
                         </div>
-                    </template>
-                </div>
+                        <p class="text-xs opacity-90 leading-relaxed" x-text="testResult.message"></p>
+                    </div>
+                </template>
             </div>
 
         </div>
 
-        <!-- Form Action Buttons (Bottom Bar) -->
-        <div class="flex flex-wrap items-center gap-3">
-            <!-- 1. Create -->
-            <button type="submit" 
-                    name="action" 
-                    value="create"
-                    class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition cursor-pointer">
-                Create
-            </button>
-
-            <!-- 2. Create & Create Another -->
-            <button type="submit" 
-                    name="action" 
-                    value="create_and_another"
-                    class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition cursor-pointer">
-                Create & create another
-            </button>
-
-            <!-- 3. Cancel -->
-            <a href="{{ route('noc.olt') }}" 
-               class="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-bold transition">
-                Cancel
-            </a>
+        <!-- =============================================================== -->
+        <!-- BOTTOM ACTION BUTTONS                                           -->
+        <!-- =============================================================== -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 shadow-xs">
+            <div class="text-xs text-slate-500 dark:text-slate-400">
+                Pastikan data yang dimasukkan sudah sesuai sebelum menyimpan perangkat baru.
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <a href="{{ route('noc.olt') }}" 
+                   class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 text-center transition">
+                    Batal
+                </a>
+                <button type="submit" 
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition duration-150 transform hover:-translate-y-0.5 cursor-pointer">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    <span>Simpan OLT Baru</span>
+                </button>
+            </div>
         </div>
-    </form>
 
+    </form>
 </div>
 @endsection

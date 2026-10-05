@@ -27,12 +27,13 @@ class NotificationController extends Controller
         }
 
         $sinceTimestamp = $request->input('since');
+        $tz = 'Asia/Jakarta';
         
-        // Default to last 3 minutes if no since provided
+        // Default to last 2 minutes if no since provided
         if (!empty($sinceTimestamp) && is_numeric($sinceTimestamp)) {
-            $since = Carbon::createFromTimestamp((int) $sinceTimestamp);
+            $since = Carbon::createFromTimestamp((int) $sinceTimestamp, $tz);
         } else {
-            $since = Carbon::now()->subMinutes(3);
+            $since = Carbon::now($tz)->subMinutes(2);
         }
 
         $sinceFormatted = $since->format('Y-m-d H:i:s');
@@ -356,7 +357,7 @@ class NotificationController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'timestamp' => time(),
+            'timestamp' => Carbon::now('Asia/Jakarta')->timestamp,
             'notifications' => $notifications,
         ]);
     }

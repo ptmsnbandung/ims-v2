@@ -1282,10 +1282,36 @@
     <script>
         window.ImsVoice = {
             soundEnabled: localStorage.getItem('ims_voice_sound_enabled') !== 'false',
-            lastCheck: Math.floor(Date.now() / 1000) - 60, // Cek 1 menit ke belakang saat start
+            lastCheck: Math.floor(Date.now() / 1000) - 30, // Cek 30 detik ke belakang saat start
             chimeAudio: new Audio('{{ asset("assets/sound/anoun.mp3") }}'),
             audioUnlocked: false,
             voicesReady: false,
+
+            getPlayedIds() {
+                try {
+                    const stored = sessionStorage.getItem('ims_played_notifications');
+                    return stored ? JSON.parse(stored) : [];
+                } catch(e) {
+                    return [];
+                }
+            },
+
+            markAsPlayed(id) {
+                if (!id) return;
+                try {
+                    const list = this.getPlayedIds();
+                    if (!list.includes(id)) {
+                        list.push(id);
+                        if (list.length > 120) list.shift();
+                        sessionStorage.setItem('ims_played_notifications', JSON.stringify(list));
+                    }
+                } catch(e) {}
+            },
+
+            hasPlayed(id) {
+                if (!id) return false;
+                return this.getPlayedIds().includes(id);
+            },
 
             init() {
                 // Ensure voices are loaded in browser
@@ -1312,7 +1338,8 @@
                 document.addEventListener('click', unlock, { once: true });
                 document.addEventListener('keydown', unlock, { once: true });
 
-                // Poll every 25 seconds when app is open
+                // Initial poll on load, then poll every 25 seconds when app is open
+                setTimeout(() => this.pollNotifications(), 2500);
                 setInterval(() => this.pollNotifications(), 25000);
             },
 
@@ -1377,10 +1404,16 @@
                     if (data.status === 'success') {
                         this.lastCheck = data.timestamp;
                         if (Array.isArray(data.notifications) && data.notifications.length > 0) {
-                            data.notifications.forEach((notif, idx) => {
-                                setTimeout(() => {
-                                    this.playNotificationVoice(notif);
-                                }, idx * 4000); // Jeda 4 detik antar ucapan notifikasi jika ada lebih dari 1
+                            let delayCount = 0;
+                            data.notifications.forEach((notif) => {
+                                const notifId = notif.id || (notif.type + '_' + notif.created_at);
+                                if (!this.hasPlayed(notifId)) {
+                                    this.markAsPlayed(notifId);
+                                    setTimeout(() => {
+                                        this.playNotificationVoice(notif);
+                                    }, delayCount * 4000); // Jeda 4 detik antar ucapan notifikasi jika ada lebih dari 1
+                                    delayCount++;
+                                }
                             });
                         }
                     }

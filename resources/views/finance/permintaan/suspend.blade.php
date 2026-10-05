@@ -65,29 +65,30 @@
     @endif
 
     <!-- Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-rose-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10">
+            <div class="flex items-center gap-2 text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1">
                 <span>Modul Finance</span>
-                <span>&rsaquo;</span>
-                <span>Permintaan</span>
-                <span>&rsaquo;</span>
-                <span class="text-rose-600 dark:text-rose-400 font-semibold">Suspend (Isolir)</span>
+                <span>&bull;</span>
+                <span class="text-slate-500 dark:text-slate-400">Permintaan</span>
+                <span>&bull;</span>
+                <span class="text-rose-600 dark:text-rose-400">Suspend (Isolir)</span>
             </div>
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
                 <span>🛑 Permintaan Suspend / Isolir Tagihan</span>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 font-semibold">Jatuh Tempo &rarr; NOC</span>
             </h2>
-            <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Pengajuan isolir jaringan untuk pelanggan yang menunggak / melewati batas jatuh tempo, dan pembukaan isolir saat lunas.</p>
+            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Pengajuan isolir jaringan untuk pelanggan yang menunggak / melewati batas jatuh tempo, dan pembukaan isolir saat lunas.</p>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap relative z-10 shrink-0">
             <form action="{{ route('finance.permintaan.suspend.auto') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menjalankan Auto Request Suspend ke NOC untuk semua pelanggan yang belum bayar (Jatuh Tempo Tanggal 25)?');">
                 @csrf
                 <button type="submit"
                         title="Otomatis Request Suspend ke NOC untuk Pelanggan Belum Bayar (Jatuh Tempo Tgl 25 Jam 06:00)"
-                        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 text-xs font-bold shadow-md transition duration-150 cursor-pointer">
-                    <svg class="w-4 h-4 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-700 text-xs font-bold shadow-xs transition duration-150 cursor-pointer">
+                    <svg class="w-4 h-4 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                     </svg>
                     <span>Run Auto Suspend Tgl 25</span>

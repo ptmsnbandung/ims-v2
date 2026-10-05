@@ -65,23 +65,24 @@
     @endif
 
     <!-- Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10">
+            <div class="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
                 <span>Modul Finance</span>
-                <span>&rsaquo;</span>
-                <span>Permintaan</span>
-                <span>&rsaquo;</span>
-                <span class="text-blue-600 dark:text-blue-400 font-semibold">UP / Downgrade</span>
+                <span>&bull;</span>
+                <span class="text-slate-500 dark:text-slate-400">Permintaan</span>
+                <span>&bull;</span>
+                <span>UP / Downgrade</span>
             </div>
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
                 <span>⚡ Permintaan Ubah Layanan (UP / Downgrade)</span>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 font-semibold">Finance &rarr; NOC</span>
             </h2>
-            <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Ajukan perubahan kecepatan/paket bandwidth sesuai permintaan pelanggan untuk dieksekusi oleh tim NOC.</p>
+            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Ajukan perubahan kecepatan/paket bandwidth sesuai permintaan pelanggan untuk dieksekusi oleh tim NOC.</p>
         </div>
 
-        <div>
+        <div class="relative z-10 shrink-0">
             <button type="button"
                     @click="resetForm(); createModalOpen = true"
                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition duration-150 cursor-pointer">

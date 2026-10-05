@@ -47,6 +47,10 @@ class CustomerProvisioningService
         $pppoeUsername = trim($customer->ont_us ?? '');
         $indexOlt = trim($customer->index_olt ?? '');
         $kodeOlt = trim($customer->olt ?? '');
+        $routerId = $customer->router_id ?? null;
+
+        // 1b. Resolve router spesifik pelanggan dari trx_batchjob_register.router_id
+        $this->resolveCustomerRouter($routerId, $nomorInternet);
 
         $results = [
             'database' => false,
@@ -149,6 +153,7 @@ class CustomerProvisioningService
         ];
     }
 
+
     /**
      * UNIFIED ACTION: SUSPEND / ISOLIR LAYANAN
      * 1. Update Database Status -> 21 (Suspend / Isolir)
@@ -178,6 +183,10 @@ class CustomerProvisioningService
         $pppoeUsername = trim($customer->ont_us ?? '');
         $indexOlt = trim($customer->index_olt ?? '');
         $kodeOlt = trim($customer->olt ?? '');
+        $routerId = $customer->router_id ?? null;
+
+        // 1b. Resolve router spesifik pelanggan dari trx_batchjob_register.router_id
+        $this->resolveCustomerRouter($routerId, $nomorInternet);
 
         $results = [
             'database' => false,
@@ -285,5 +294,60 @@ class CustomerProvisioningService
             'summary' => implode(' | ', $results['messages']),
             'details' => $results,
         ];
+    }
+
+    /**
+     * Resolve router MikroTik spesifik yang menangani pelanggan ini.
+     * Mengambil konfigurasi dari tabel `routers` berdasarkan `router_id` pelanggan di `trx_batchjob_register`.
+     *
+     * Jika tidak ada router_id spesifik, menggunakan router default (aktif pertama).
+     */
+    private function resolveCustomerRouter(?int $routerId, string $nomorInternet): void
+    {
+        try {
+            if (!Schema::hasTable('routers')) {
+                return;
+            }
+
+            $router = null;
+            if ($routerId) {
+                $router = DB::table('routers')
+                    ->where('id', $routerId)
+                    ->where('is_active', 1)
+                    ->first();
+            }
+
+            // Fallback ke router aktif pertama jika router_id tidak ditemukan
+            if (!$router) {
+                $router = DB::table('routers')
+                    ->where('is_active', 1)
+                    ->first();
+            }
+
+            if (!$router || empty($router->host)) {
+                Log::warning("[CustomerProvisioning] Tidak ada router MikroTik aktif untuk pelanggan {$nomorInternet}.");
+                return;
+            }
+
+            // Decode password jika terenkripsi
+            $pass = $router->password;
+            try {
+                $pass = \Illuminate\Support\Facades\Crypt::decryptString($pass);
+            } catch (\Exception $e) {
+                // Password tidak terenkripsi, gunakan langsung
+            }
+
+            // Inject konfigurasi router spesifik ke MikrotikService
+            $this->mikrotik->setRouter([
+                'host'     => $router->host,
+                'port'     => (int)($router->port ?: 18735),
+                'username' => $router->username,
+                'password' => $pass,
+            ]);
+
+            Log::info("[CustomerProvisioning] Router resolved: [{$router->name}] {$router->host} untuk pelanggan {$nomorInternet}");
+        } catch (\Exception $e) {
+            Log::error('[CustomerProvisioning] resolveCustomerRouter error: ' . $e->getMessage());
+        }
     }
 }

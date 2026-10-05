@@ -1843,4 +1843,229 @@ class NocController extends Controller
             'search' => $search,
         ]);
     }
+
+    /**
+     * Master Router MikroTik: List & Monitoring
+     */
+    public function router(Request $request): View
+    {
+        $search = $request->query('search');
+
+        $query = DB::table('routers');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('host', 'like', "%{$search}%")
+                  ->orWhere('kota', 'like', "%{$search}%");
+            });
+        }
+
+        $routers = $query->orderBy('id', 'asc')->get();
+
+        // Customer counts per router from trx_batchjob_register
+        $customerCounts = Schema::hasTable('trx_batchjob_register')
+            ? DB::table('trx_batchjob_register')
+                ->whereNotNull('router_id')
+                ->select('router_id', DB::raw('COUNT(*) as total_customers'))
+                ->groupBy('router_id')
+                ->pluck('total_customers', 'router_id')
+                ->all()
+            : [];
+
+        $totalCustomersMapped = Schema::hasTable('trx_batchjob_register') ? DB::table('trx_batchjob_register')->whereNotNull('router_id')->count() : 0;
+        $totalCustomersUnmapped = Schema::hasTable('trx_batchjob_register') ? DB::table('trx_batchjob_register')->whereNull('router_id')->count() : 0;
+        $totalCustomers = Schema::hasTable('trx_batchjob_register') ? DB::table('trx_batchjob_register')->count() : 0;
+
+        foreach ($routers as $r) {
+            $r->customer_count = $customerCounts[$r->id] ?? 0;
+        }
+
+        return view('noc.router', [
+            'user' => $request->user(),
+            'routers' => $routers,
+            'search' => $search,
+            'totalRouters' => $routers->count(),
+            'activeRouters' => $routers->where('is_active', 1)->count(),
+            'totalCustomersMapped' => $totalCustomersMapped,
+            'totalCustomersUnmapped' => $totalCustomersUnmapped,
+            'totalCustomers' => $totalCustomers,
+        ]);
+    }
+
+    /**
+     * Store New Router MikroTik
+     */
+    public function storeRouter(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'host' => 'required|string|max:255',
+            'port' => 'required|integer|min:1|max:65535',
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|max:255',
+            'kota' => 'nullable|string|max:100',
+        ]);
+
+        $now = now()->format('Y-m-d H:i:s');
+        $encryptedPass = Crypt::encryptString($request->password);
+
+        DB::table('routers')->insert([
+            'name' => $request->name,
+            'host' => $request->host,
+            'port' => (int)$request->port,
+            'username' => $request->username,
+            'password' => $encryptedPass,
+            'kota' => $request->kota,
+            'is_active' => $request->has('is_active') ? 1 : 0,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        return redirect()->route('noc.router')->with('success', "Router '{$request->name}' berhasil ditambahkan ke sistem.");
+    }
+
+    /**
+     * Update Existing Router MikroTik
+     */
+    public function updateRouter(Request $request, int $id): RedirectResponse
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'host' => 'required|string|max:255',
+            'port' => 'required|integer|min:1|max:65535',
+            'username' => 'required|string|max:255',
+            'kota' => 'nullable|string|max:100',
+        ]);
+
+        $router = DB::table('routers')->where('id', $id)->first();
+        if (!$router) {
+            return redirect()->route('noc.router')->with('error', 'Router tidak ditemukan.');
+        }
+
+        $now = now()->format('Y-m-d H:i:s');
+        $updateData = [
+            'name' => $request->name,
+            'host' => $request->host,
+            'port' => (int)$request->port,
+            'username' => $request->username,
+            'kota' => $request->kota,
+            'is_active' => $request->has('is_active') ? 1 : 0,
+            'updated_at' => $now,
+        ];
+
+        if ($request->filled('password')) {
+            $updateData['password'] = Crypt::encryptString($request->password);
+        }
+
+        DB::table('routers')->where('id', $id)->update($updateData);
+
+        return redirect()->route('noc.router')->with('success', "Konfigurasi Router '{$request->name}' berhasil diperbarui.");
+    }
+
+    /**
+     * Delete Router MikroTik
+     */
+    public function deleteRouter(Request $request, int $id): RedirectResponse
+    {
+        $router = DB::table('routers')->where('id', $id)->first();
+        if (!$router) {
+            return redirect()->route('noc.router')->with('error', 'Router tidak ditemukan.');
+        }
+
+        // Unlink customers in trx_batchjob_register mapped to this router
+        if (Schema::hasTable('trx_batchjob_register')) {
+            DB::table('trx_batchjob_register')->where('router_id', $id)->update(['router_id' => null, 'date_update' => now()]);
+        }
+
+        DB::table('routers')->where('id', $id)->delete();
+
+        return redirect()->route('noc.router')->with('success', "Router '{$router->name}' berhasil dihapus.");
+    }
+
+    /**
+     * Test Connection to Router (AJAX / Live)
+     */
+    public function testRouterConnection(Request $request): JsonResponse
+    {
+        $id = $request->input('id');
+        $host = $request->input('host');
+        $port = (int)$request->input('port', 18735);
+        $username = $request->input('username');
+        $password = $request->input('password');
+
+        if ($id) {
+            $router = DB::table('routers')->where('id', $id)->first();
+            if ($router) {
+                $host = $router->host;
+                $port = (int)($router->port ?: 18735);
+                $username = $router->username;
+                try {
+                    $password = Crypt::decryptString($router->password);
+                } catch (\Exception $e) {
+                    $password = $router->password;
+                }
+            }
+        }
+
+        if (empty($host) || empty($username)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Host dan Username router wajib diisi untuk tes koneksi.',
+            ], 422);
+        }
+
+        $service = new \App\Services\Network\MikrotikService([
+            'host' => $host,
+            'port' => $port,
+            'username' => $username,
+            'password' => $password,
+            'timeout' => 4,
+        ]);
+
+        $result = $service->testConnection();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Sync / Map Customers to Router by City or Default in trx_batchjob_register
+     */
+    public function syncRouterCustomers(Request $request, int $id): JsonResponse|RedirectResponse
+    {
+        $router = DB::table('routers')->where('id', $id)->first();
+        if (!$router) {
+            return response()->json(['success' => false, 'message' => 'Router tidak ditemukan.'], 404);
+        }
+
+        $mappedCount = 0;
+        if (Schema::hasTable('trx_batchjob_register')) {
+            if (!empty($router->kota)) {
+                // Map customers with matching city / address keywords
+                $mappedCount = DB::table('trx_batchjob_register')
+                    ->where(function ($q) use ($router) {
+                        $q->whereNull('router_id')
+                          ->orWhere('router_id', 0);
+                    })
+                    ->where(function ($q) use ($router) {
+                        $q->where('alamat_pasang', 'like', "%{$router->kota}%")
+                          ->orWhere('nama_pelanggan', 'like', "%{$router->kota}%");
+                    })
+                    ->update(['router_id' => $router->id, 'date_update' => now()]);
+            } else {
+                // Assign unmapped customers to this default router
+                $mappedCount = DB::table('trx_batchjob_register')
+                    ->whereNull('router_id')
+                    ->update(['router_id' => $router->id, 'date_update' => now()]);
+            }
+        }
+
+        $msg = "Sinkronisasi selesai! {$mappedCount} pelanggan di trx_batchjob_register berhasil dipetakan ke router '{$router->name}'.";
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'mapped_count' => $mappedCount, 'message' => $msg]);
+        }
+
+        return redirect()->route('noc.router')->with('success', $msg);
+    }
 }

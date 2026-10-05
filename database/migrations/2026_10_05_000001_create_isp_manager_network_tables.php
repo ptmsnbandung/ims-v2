@@ -47,43 +47,9 @@ return new class extends Migration
             });
         }
 
-        // 3. Tabel req_suspend_selections (Multi-Select Checkbox Persistence)
-        if (!Schema::hasTable('req_suspend_selections')) {
-            Schema::create('req_suspend_selections', function (Blueprint $table) {
-                $table->id();
-                $table->string('nomor_internet', 255)->unique();
-                $table->boolean('is_selected')->default(false);
-                $table->timestamps();
-
-                $table->index('is_selected');
-            });
-        }
-
-        // 4. Tabel req_terminasi (Workflow & Bukti Penarikan Perangkat)
-        if (!Schema::hasTable('req_terminasi')) {
-            Schema::create('req_terminasi', function (Blueprint $table) {
-                $table->id();
-                $table->string('nomor_internet', 255);
-                $table->string('status_terminasi', 255)->default('11');
-                $table->date('tanggal_collecting')->nullable();
-                $table->string('team_collecting', 255)->nullable();
-                $table->string('jam_collecting', 255)->nullable();
-                $table->text('keterangan_collecting')->nullable();
-                $table->date('tanggal_berhasil_collect')->nullable();
-                $table->string('jam_berhasil_collect', 255)->nullable();
-                $table->string('foto_bukti_collecting', 255)->nullable();
-                $table->text('keterangan_report')->nullable();
-                $table->date('tanggal_schedule_baru')->nullable();
-                $table->string('jam_schedule_baru', 255)->nullable();
-                $table->string('team_collecting_baru', 255)->nullable();
-                $table->text('alasan_reschedule')->nullable();
-                $table->date('tanggal_terminasi')->nullable();
-                $table->timestamps();
-
-                $table->index('nomor_internet');
-                $table->index('status_terminasi');
-            });
-        }
+        // 3. Drop tabel lama isp_manager jika ada
+        Schema::dropIfExists('req_suspend_selections');
+        Schema::dropIfExists('req_terminasi');
     }
 
     /**
@@ -91,8 +57,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('req_terminasi');
-        Schema::dropIfExists('req_suspend_selections');
         Schema::dropIfExists('activity_logs');
         Schema::dropIfExists('routers');
     }

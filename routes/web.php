@@ -160,7 +160,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/wilayah', [NocController::class, 'wilayahPerangkat'])->name('wilayah');
         Route::post('/wilayah/store', [NocController::class, 'storeWilayahPerangkat'])->name('wilayah.store');
 
-        // 5. Provisioning & Aktivasi Jaringan
+        // 6. Infrastruktur: Router MikroTik (Core & Edge NAS)
+        Route::get('/router', [NocController::class, 'router'])->name('router');
+        Route::post('/router/store', [NocController::class, 'storeRouter'])->name('router.store');
+        Route::post('/router/{id}/update', [NocController::class, 'updateRouter'])->name('router.update');
+        Route::post('/router/{id}/delete', [NocController::class, 'deleteRouter'])->name('router.delete');
+        Route::post('/router/test-connection', [NocController::class, 'testRouterConnection'])->name('router.test-connection');
+        Route::post('/router/{id}/sync-customers', [NocController::class, 'syncRouterCustomers'])->name('router.sync-customers');
+
+        // 7. Provisioning & Aktivasi Jaringan
         Route::get('/aktivasi', [NocController::class, 'aktivasi'])->name('aktivasi');
         Route::post('/aktivasi/{nomor_internet}/schedule', [NocController::class, 'storeScheduleAktivasi'])->name('aktivasi.schedule');
         Route::post('/aktivasi/{nomor_internet}/report', [NocController::class, 'storeReportAktivasi'])->name('aktivasi.report');

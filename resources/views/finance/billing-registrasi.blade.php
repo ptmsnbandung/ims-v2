@@ -54,32 +54,42 @@
          }
      }">
 
-    <!-- Page Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative overflow-hidden">
-        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="relative z-10">
-            <div class="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-                <span>Finance &amp; Billing</span>
-                <span>&bull;</span>
-                <span class="text-slate-500 dark:text-slate-400">Registration Billing</span>
-            </div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                Billing Registrasi (Pasang Baru)
-            </h1>
-            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                Kelola tagihan biaya pendaftaran &amp; instalasi pelanggan baru, tentukan metode pembayaran, dan terbitkan (publish) tagihan ke Billing Layanan.
-            </p>
-        </div>
+    <!-- Page Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        
+        <!-- Subtle Glow Effect -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
 
-        <!-- Top Right Actions -->
-        <div class="flex items-center gap-3 relative z-10">
-            <a href="{{ route('finance.billing-registrasi.export', request()->query()) }}"
-               class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700/80 text-xs font-semibold flex items-center gap-2 shadow-sm transition">
-                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                <span>Export CSV</span>
-            </a>
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-white text-slate-800 shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                        <span>Finance &amp; Billing</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Registration Billing</span>
+                    </div>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5" style="color: #FFFFFF !important;">
+                    Billing Registrasi (Pasang Baru)
+                </h1>
+                <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
+                    Kelola tagihan biaya pendaftaran &amp; instalasi pelanggan baru, tentukan metode pembayaran, dan terbitkan (publish) tagihan ke Billing Layanan.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2 relative z-10 shrink-0">
+                <a href="{{ route('finance.billing-registrasi.export', request()->query()) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold shadow-xs backdrop-blur-xs transition cursor-pointer">
+                    <svg class="w-4 h-4 text-emerald-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    <span>Export CSV</span>
+                </a>
+            </div>
         </div>
     </div>
 

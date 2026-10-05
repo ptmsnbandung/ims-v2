@@ -13,41 +13,53 @@
          searchQuery: '{{ $filters['search'] ?? '' }}',
      }">
     
-    <!-- Top Header: Breadcrumbs & Total KPI Badges -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-        <!-- Breadcrumb & Title -->
-        <div>
-            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">IMS</a>
-                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                </svg>
-                <span class="text-slate-800 dark:text-slate-200 font-semibold">Pelanggan</span>
-            </div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Data Pelanggan Terdaftar</h2>
-        </div>
+    <!-- Top Header: Breadcrumbs & Total KPI Badges (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        
+        <!-- Subtle Glow Effect -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
 
-        <!-- Overall KPI Metric Pills -->
-        <div class="flex flex-wrap items-center gap-2.5">
-            <div class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center gap-2 text-xs">
-                <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></span>
-                <span class="text-slate-600 dark:text-slate-400 font-medium">Total:</span>
-                <strong class="text-slate-900 dark:text-white font-mono font-bold">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <!-- Breadcrumb & Title -->
+            <div>
+                <div class="flex items-center gap-2 text-xs text-[#c6edf3] mb-1.5 font-medium">
+                    <a href="{{ route('dashboard') }}" class="hover:text-white transition">IMS</a>
+                    <svg class="w-3.5 h-3.5 text-teal-300/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <span class="text-white font-semibold">Pelanggan</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
+                    <span>Data Pelanggan Terdaftar</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
+                    Database master pelanggan aktif, profil layanan bandwidth, status isolir, dan arsip terminasi.
+                </p>
             </div>
-            <div class="px-3.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-2 text-xs">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-emerald-700 dark:text-emerald-400 font-semibold">Aktif:</span>
-                <strong class="text-emerald-800 dark:text-emerald-300 font-mono font-bold">{{ number_format($bwCounts['total_aktif']) }}</strong>
-            </div>
-            <div class="px-3.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 flex items-center gap-2 text-xs">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span class="text-rose-700 dark:text-rose-400 font-semibold">Terminasi:</span>
-                <strong class="text-rose-800 dark:text-rose-300 font-mono font-bold">{{ number_format($bwCounts['total_terminasi']) }}</strong>
-            </div>
-            <div class="px-3.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center gap-2 text-xs">
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                <span class="text-amber-700 dark:text-amber-400 font-semibold">Suspend:</span>
-                <strong class="text-amber-800 dark:text-amber-300 font-mono font-bold">{{ number_format($bwCounts['total_suspend']) }}</strong>
+
+            <!-- Overall KPI Metric Pills -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                <div class="px-3.5 py-1.5 rounded-full bg-white text-slate-800 shadow-xs flex items-center gap-2 text-xs font-bold">
+                    <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                    <span class="text-slate-600 font-medium">Total:</span>
+                    <strong class="text-slate-900 font-mono font-bold">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
+                </div>
+                <div class="px-3.5 py-1.5 rounded-full bg-[#04333e]/85 text-emerald-300 border border-teal-400/30 flex items-center gap-2 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-emerald-300 font-semibold">Aktif:</span>
+                    <strong class="text-emerald-200 font-mono font-bold">{{ number_format($bwCounts['total_aktif']) }}</strong>
+                </div>
+                <div class="px-3.5 py-1.5 rounded-full bg-[#3e0413]/85 text-rose-300 border border-rose-400/30 flex items-center gap-2 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                    <span class="text-rose-300 font-semibold">Terminasi:</span>
+                    <strong class="text-rose-200 font-mono font-bold">{{ number_format($bwCounts['total_terminasi']) }}</strong>
+                </div>
+                <div class="px-3.5 py-1.5 rounded-full bg-[#3e2e04]/85 text-amber-300 border border-amber-400/30 flex items-center gap-2 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <span class="text-amber-300 font-semibold">Suspend:</span>
+                    <strong class="text-amber-200 font-mono font-bold">{{ number_format($bwCounts['total_suspend']) }}</strong>
+                </div>
             </div>
         </div>
     </div>

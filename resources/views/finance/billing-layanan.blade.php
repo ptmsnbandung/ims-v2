@@ -27,40 +27,50 @@
 @section('content')
 <div class="space-y-6" x-data="billingLayananPage()">
 
-    <!-- Page Header & Action Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/80 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-xl shadow-black/5 relative z-30">
+    <!-- Page Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20 z-30"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
-        <div class="relative z-10">
-            <div class="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-                <span>Finance &amp; Billing</span>
-                <span>&bull;</span>
-                <span class="text-slate-500 dark:text-slate-400">Recurring Invoicing</span>
+        <!-- Subtle Glow Effect -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-white text-slate-800 shadow-xs">
+                        <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                        <span>Finance &amp; Billing</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Recurring Invoicing</span>
+                    </div>
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5" style="color: #FFFFFF !important;">
+                    Billing Layanan Bulanan
+                </h1>
+                <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
+                    Penerbitan tagihan berkala, pemantauan pembayaran pelanggan, integrasi payment gateway, dan konfirmasi kas masuk.
+                </p>
             </div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                Billing Layanan Bulanan
-            </h1>
-            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                Penerbitan tagihan berkala, pemantauan pembayaran pelanggan, integrasi payment gateway, dan konfirmasi kas masuk.
-            </p>
-        </div>
 
-        <!-- Top Right Actions -->
-        <div class="flex items-center gap-2.5 relative z-10 shrink-0">
-            <!-- Dropdown Menu Aksi -->
-            <div class="relative" @click.outside="actionDropdownOpen = false">
-                <button @click="actionDropdownOpen = !actionDropdownOpen"
-                        type="button"
-                        class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700/80 text-xs font-semibold flex items-center gap-2 shadow-sm transition cursor-pointer relative"
-                        :class="{ 'ring-2 ring-blue-500/30 border-blue-400': actionDropdownOpen }">
-                    <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
-                    <span>Menu Aksi</span>
+            <!-- Top Right Actions -->
+            <div class="flex items-center gap-2.5 relative z-10 shrink-0">
+                <!-- Dropdown Menu Aksi -->
+                <div class="relative" @click.outside="actionDropdownOpen = false">
+                    <button @click="actionDropdownOpen = !actionDropdownOpen"
+                            type="button"
+                            class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold flex items-center gap-2 shadow-xs backdrop-blur-xs transition cursor-pointer relative"
+                            :class="{ 'ring-2 ring-teal-400/50 border-teal-300': actionDropdownOpen }">
+                        <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                        <span>Menu Aksi</span>
 
-                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': actionDropdownOpen }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                </button>
+                        <svg class="w-3.5 h-3.5 text-white/80 transition-transform duration-200" :class="{ 'rotate-180': actionDropdownOpen }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
 
                 <!-- Dropdown Menu items -->
                 <div x-show="actionDropdownOpen"

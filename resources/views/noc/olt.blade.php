@@ -191,7 +191,6 @@
                                 </svg>
                             </div>
                         </th>
-                        <th class="py-3.5 px-5">STATUS PON AKTIF</th>
                         <th class="py-3.5 px-5">STATUS KONEKSI</th>
                         <th class="py-3.5 px-5 text-right">AKSI</th>
                     </tr>
@@ -199,7 +198,6 @@
                 <tbody class="divide-y divide-slate-200/80 dark:divide-slate-800/80 bg-white dark:bg-slate-900/40 text-slate-700 dark:text-slate-200">
                     @forelse($olts as $olt)
                         @php
-                            $activeCount = $registeredPonCounts[$olt->kode_olt] ?? 0;
                             $popName = $olt->nama_pop ?? ($olt->kode_pop ?? 'POP Utama MSN');
                             $ipAddr = !empty($olt->ip_address) ? $olt->ip_address : '10.10.10.1';
                             $brandName = !empty($olt->brand) ? $olt->brand : 'ZTE C320';
@@ -264,17 +262,7 @@
                                 </span>
                             </td>
 
-                            <!-- 6. Status PON Aktif -->
-                            <td class="py-4 px-5">
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 shadow-xs">
-                                    <svg class="w-3 h-3 text-amber-500 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                    </svg>
-                                    <span>{{ $activeCount }} Terdaftar</span>
-                                </span>
-                            </td>
-
-                            <!-- 7. Status Koneksi OLT -->
+                            <!-- 6. Status Koneksi OLT -->
                             <td class="py-4 px-5">
                                 <div class="flex items-center gap-2">
                                     <template x-if="oltStatusMap['{{ $olt->kode_olt }}']?.loading">

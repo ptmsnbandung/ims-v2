@@ -128,6 +128,32 @@ class NotificationController extends Controller
         }
 
         // -------------------------------------------------------------
+        // 3.1 REQUEST INVOICE TAGIHAN DARI PELANGGAN -> DITUJUKAN UNTUK FINANCE & ADMIN
+        // -------------------------------------------------------------
+        if (($isAdminOrDirektur || $isFinance) && Schema::hasTable('trx_billing_request')) {
+            $newBillingRequests = DB::table('trx_billing_request')
+                ->where('status_request', 'pending')
+                ->where('created_at', '>=', $sinceFormatted)
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+
+            foreach ($newBillingRequests as $breq) {
+                $nama = $breq->nama_pelanggan ?: 'Pelanggan';
+                $bulanThn = ($breq->bulan_tagihan ?? '') . '/' . ($breq->tahun_tagihan ?? '');
+                $notifications[] = [
+                    'id' => 'breq_' . $breq->id,
+                    'type' => 'request_invoice',
+                    'title' => 'Permintaan Invoice Tagihan',
+                    'message' => "Pelanggan {$nama} mengajukan penerbitan invoice ({$bulanThn})",
+                    'speech_text' => "Ada permintaan penerbitan invoice tagihan dari pelanggan {$nama}",
+                    'url' => route('finance.billing-layanan'),
+                    'created_at' => $breq->created_at,
+                ];
+            }
+        }
+
+        // -------------------------------------------------------------
         // 4. PERMINTAAN UP/DOWNGRADE -> DARI FINANCE UNTUK EKSEKUSI NOC/TEKNIK
         // -------------------------------------------------------------
         if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_ubah_layanan')) {

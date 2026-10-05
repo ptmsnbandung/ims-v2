@@ -1210,7 +1210,8 @@
                 <!-- Toast Icon -->
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                      :class="{
-                         'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': t.type === 'pendaftaran',
+                         'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': t.type === 'pendaftaran' || t.type === 'pembayaran',
+                         'bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/30': t.type === 'request_invoice',
                          'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': t.type === 'tiket',
                          'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30': t.type === 'updown',
                          'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30': t.type === 'suspend',
@@ -1220,6 +1221,16 @@
                     <template x-if="t.type === 'pendaftaran'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
+                        </svg>
+                    </template>
+                    <template x-if="t.type === 'pembayaran'">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v8.25m0-8.25h16.5m0 0v8.25m0-8.25h1.5a.75.75 0 0 1 .75.75v.75m-2.25 0h2.25m-2.25 0a60.07 60.07 0 0 0-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V8.25m2.25 0H21M9 12.75a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" />
+                        </svg>
+                    </template>
+                    <template x-if="t.type === 'request_invoice'">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                         </svg>
                     </template>
                     <template x-if="t.type === 'tiket'">

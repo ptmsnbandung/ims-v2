@@ -363,8 +363,8 @@
                             <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
                         </div>
                         <div class="ims-logo-text whitespace-nowrap">
-                            <span class="font-bold text-white tracking-tight text-base">IMS<span class="text-cyan-400">-V2</span></span>
-                            <span class="block text-[10px] text-[#94A3B8] tracking-wider uppercase font-semibold">System Manager</span>
+                            <span class="font-bold text-white tracking-tight text-base">IMS<span class="text-blue-500 font-extrabold">-V2</span></span>
+                            <span class="block text-[9.5px] text-[#94A3B8] tracking-normal font-medium leading-tight">Integrated Management System</span>
                         </div>
                     </a>
                 </div>
@@ -913,7 +913,7 @@
 
                         <div>
                             <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">@yield('page_title', 'Dashboard')</h1>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Internet Management System &middot; Portal</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Integrated Management System &middot; Portal</p>
                         </div>
                     </div>
 

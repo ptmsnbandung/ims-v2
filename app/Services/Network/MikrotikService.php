@@ -3,22 +3,11 @@
 namespace App\Services\Network;
 
 use Exception;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use RouterOS\Client;
-use RouterOS\Query;
-
-// Pastikan autoloader untuk library RouterOS terdaftar
-spl_autoload_register(function ($class) {
-    if (str_starts_with($class, 'RouterOS\\')) {
-        $file = __DIR__ . '/../../../vendor/evilfreelancer/routeros-api-php/src/' . str_replace('\\', '/', substr($class, 9)) . '.php';
-        if (file_exists($file)) {
-            require_once $file;
-        }
-    }
-});
+use Throwable;
 
 class MikrotikService
 {
@@ -37,7 +26,7 @@ class MikrotikService
             $this->port = (int)($overrideConfig['port'] ?? config('mikrotik.port', 18735));
             $this->user = $overrideConfig['user'] ?? $overrideConfig['username'] ?? config('mikrotik.user', 'aplikasi');
             $this->pass = $overrideConfig['pass'] ?? $overrideConfig['password'] ?? config('mikrotik.pass', 'kayuagung2-9');
-            $this->timeout = (int)($overrideConfig['timeout'] ?? config('mikrotik.timeout', 5));
+            $this->timeout = (int)($overrideConfig['timeout'] ?? config('mikrotik.timeout', 4));
             $this->ssl = (bool)($overrideConfig['ssl'] ?? config('mikrotik.ssl', false));
             return;
         }
@@ -57,11 +46,11 @@ class MikrotikService
             
             $pass = $router->password ?: 'kayuagung2-9';
             try {
-                $this->pass = \Illuminate\Support\Facades\Crypt::decryptString($pass);
+                $this->pass = Crypt::decryptString($pass);
             } catch (Exception $e) {
                 $this->pass = $pass;
             }
-            $this->timeout = 5;
+            $this->timeout = 4;
             $this->ssl = false;
         } else {
             // 3. Fallback
@@ -69,7 +58,7 @@ class MikrotikService
             $this->port = (int)config('mikrotik.port', 18735);
             $this->user = config('mikrotik.user', 'aplikasi');
             $this->pass = config('mikrotik.pass', 'kayuagung2-9');
-            $this->timeout = 5;
+            $this->timeout = 4;
             $this->ssl = false;
         }
     }
@@ -95,20 +84,19 @@ class MikrotikService
     }
 
     /**
-     * Dapatkan instance RouterOS Client (kompatibel RouterOS v6 & v7)
+     * Dapatkan koneksi API client yang sudah terautentikasi
      */
-    private function getClient(): Client
+    private function getClient(): RouterosAPI
     {
-        return new Client([
-            'host' => $this->host,
-            'port' => $this->port,
-            'user' => $this->user,
-            'pass' => $this->pass,
-            'timeout' => $this->timeout,
-            'attempts' => 2,
-            'delay' => 1,
-            'ssl' => $this->ssl,
-        ]);
+        $api = new RouterosAPI();
+        $api->timeout = $this->timeout;
+        $connected = $api->connect($this->host, $this->user, $this->pass, $this->port, $this->ssl);
+        
+        if (!$connected) {
+            throw new Exception($api->error_str ?: "Tidak dapat terhubung ke MikroTik ({$this->host}:{$this->port})");
+        }
+
+        return $api;
     }
 
     /**
@@ -118,17 +106,17 @@ class MikrotikService
     {
         try {
             $client = $this->getClient();
-            $query = new Query('/system/identity/print');
-            $response = $client->query($query)->read();
-
+            $response = $client->comm('/system/identity/print');
             $identity = $response[0]['name'] ?? 'MikroTik Router';
+
+            $client->disconnect();
 
             return [
                 'success' => true,
                 'identity' => $identity,
                 'message' => "Terhubung ke MikroTik ({$identity})",
             ];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [
                 'success' => false,
                 'identity' => null,
@@ -146,10 +134,12 @@ class MikrotikService
             $client = $this->getClient();
 
             // 1. Cari user di /ppp/secret
-            $query = (new Query('/ppp/secret/print'))->where('name', $username);
-            $secrets = $client->query($query)->read();
+            $secrets = $client->comm('/ppp/secret/print', [
+                '?name' => $username,
+            ]);
 
             if (empty($secrets) || !isset($secrets[0]['.id'])) {
+                $client->disconnect();
                 return [
                     'success' => false,
                     'message' => "User PPPoE '{$username}' tidak ditemukan di MikroTik ({$this->host}).",
@@ -159,16 +149,18 @@ class MikrotikService
             $secretId = $secrets[0]['.id'];
 
             // 2. Set disabled=no
-            $setQuery = (new Query('/ppp/secret/set'))
-                ->equal('.id', $secretId)
-                ->equal('disabled', 'no');
-            $client->query($setQuery)->read();
+            $client->comm('/ppp/secret/set', [
+                '=.id' => $secretId,
+                '=disabled' => 'no',
+            ]);
+
+            $client->disconnect();
 
             return [
                 'success' => true,
                 'message' => "User PPPoE '{$username}' berhasil diaktifkan (disabled=no).",
             ];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -185,10 +177,12 @@ class MikrotikService
             $client = $this->getClient();
 
             // 1. Cari user di /ppp/secret
-            $query = (new Query('/ppp/secret/print'))->where('name', $username);
-            $secrets = $client->query($query)->read();
+            $secrets = $client->comm('/ppp/secret/print', [
+                '?name' => $username,
+            ]);
 
             if (empty($secrets) || !isset($secrets[0]['.id'])) {
+                $client->disconnect();
                 return [
                     'success' => false,
                     'message' => "User PPPoE '{$username}' tidak ditemukan di MikroTik ({$this->host}).",
@@ -198,16 +192,18 @@ class MikrotikService
             $secretId = $secrets[0]['.id'];
 
             // 2. Set disabled=yes
-            $setQuery = (new Query('/ppp/secret/set'))
-                ->equal('.id', $secretId)
-                ->equal('disabled', 'yes');
-            $client->query($setQuery)->read();
+            $client->comm('/ppp/secret/set', [
+                '=.id' => $secretId,
+                '=disabled' => 'yes',
+            ]);
+
+            $client->disconnect();
 
             return [
                 'success' => true,
                 'message' => "User PPPoE '{$username}' berhasil dinonaktifkan / diisolir (disabled=yes).",
             ];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -225,10 +221,12 @@ class MikrotikService
             $client = $this->getClient();
 
             // 1. Cari koneksi aktif di /ppp/active
-            $query = (new Query('/ppp/active/print'))->where('name', $username);
-            $activeList = $client->query($query)->read();
+            $activeList = $client->comm('/ppp/active/print', [
+                '?name' => $username,
+            ]);
 
             if (empty($activeList) || !isset($activeList[0]['.id'])) {
+                $client->disconnect();
                 return [
                     'success' => true,
                     'kicked' => false,
@@ -239,17 +237,20 @@ class MikrotikService
             // 2. Hapus sesi aktif
             foreach ($activeList as $act) {
                 if (isset($act['.id'])) {
-                    $delQuery = (new Query('/ppp/active/remove'))->equal('.id', $act['.id']);
-                    $client->query($delQuery)->read();
+                    $client->comm('/ppp/active/remove', [
+                        '=.id' => $act['.id'],
+                    ]);
                 }
             }
+
+            $client->disconnect();
 
             return [
                 'success' => true,
                 'kicked' => true,
                 'message' => "Sesi aktif user '{$username}' berhasil di-kick (koneksi diputus seketika).",
             ];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             return [
                 'success' => false,
                 'kicked' => false,
@@ -265,9 +266,10 @@ class MikrotikService
     {
         try {
             $client = $this->getClient();
-            $query = new Query('/ppp/secret/print');
-            return $client->query($query)->read();
-        } catch (Exception $e) {
+            $result = $client->comm('/ppp/secret/print');
+            $client->disconnect();
+            return is_array($result) ? $result : [];
+        } catch (Throwable $e) {
             Log::error('Mikrotik getUsers error: ' . $e->getMessage());
             return [];
         }
@@ -280,9 +282,10 @@ class MikrotikService
     {
         try {
             $client = $this->getClient();
-            $query = new Query('/ppp/active/print');
-            return $client->query($query)->read();
-        } catch (Exception $e) {
+            $result = $client->comm('/ppp/active/print');
+            $client->disconnect();
+            return is_array($result) ? $result : [];
+        } catch (Throwable $e) {
             Log::error('Mikrotik getActiveConnections error: ' . $e->getMessage());
             return [];
         }

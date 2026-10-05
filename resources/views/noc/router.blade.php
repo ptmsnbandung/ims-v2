@@ -4,86 +4,7 @@
 @section('page_title', 'Master Data Router')
 
 @section('content')
-<div class="space-y-6"
-     x-data="{
-        addModalOpen: false,
-        editModalOpen: false,
-        deleteModalOpen: false,
-        currentRouter: { id: '', name: '', host: '', port: 18735, username: '', password: '', kota: '', is_active: 1 },
-        deleteRouterId: null,
-        deleteRouterName: '',
-        statusMap: @json($liveStatus ?? []),
-
-        openEditModal(router) {
-            this.currentRouter = {
-                id: router.id,
-                name: router.name,
-                host: router.host,
-                port: router.port || 18735,
-                username: router.username,
-                password: '',
-                kota: router.kota || '',
-                is_active: router.is_active ? 1 : 0
-            };
-            this.editModalOpen = true;
-        },
-
-        confirmDelete(id, name) {
-            this.deleteRouterId = id;
-            this.deleteRouterName = name;
-            this.deleteModalOpen = true;
-        },
-
-        async testPingRouter(id, host, port, username) {
-            if (!this.statusMap[id]) {
-                this.statusMap[id] = { status: 'untested', identity: '', loading: false, message: '' };
-            }
-            this.statusMap[id].loading = true;
-            try {
-                const res = await fetch('{{ route('noc.router.test-connection') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({ id: id, host: host, port: port, username: username })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    this.statusMap[id].status = 'online';
-                    this.statusMap[id].identity = data.identity || 'MikroTik';
-                    this.statusMap[id].message = 'Online: ' + (data.identity || 'Connected');
-                } else {
-                    this.statusMap[id].status = 'offline';
-                    this.statusMap[id].message = data.message || 'Offline / Host tidak merespon';
-                }
-            } catch(e) {
-                this.statusMap[id].status = 'offline';
-                this.statusMap[id].message = 'Koneksi error: ' + e.message;
-            } finally {
-                this.statusMap[id].loading = false;
-            }
-        },
-
-        async syncCustomers(id, name) {
-            if (!confirm(`Sinkronkan pelanggan ke router '${name}'?`)) return;
-            try {
-                const res = await fetch(`{{ url('/noc/router') }}/${id}/sync-customers`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                });
-                const data = await res.json();
-                alert(data.message || 'Sinkronisasi berhasil!');
-                window.location.reload();
-            } catch(e) {
-                alert('Gagal sinkronisasi: ' + e.message);
-            }
-        }
-     }">
+<div class="space-y-6" x-data="routerManagement()">
 
     <!-- =================================================================== -->
     <!-- 1. TOP HERO HEADER BANNER                                           -->
@@ -282,7 +203,7 @@
 
                                     <!-- Edit -->
                                     <button type="button"
-                                            @click="openEditModal({{ json_encode($router) }})"
+                                            @click="openEditModal({{ $router->id }}, '{{ addslashes($router->name) }}', '{{ $router->host }}', {{ $router->port ?: 18735 }}, '{{ addslashes($router->username) }}', '{{ addslashes($router->kota ?? '') }}', {{ $router->is_active ? 1 : 0 }})"
                                             title="Edit Router"
                                             class="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500 hover:text-white text-amber-400 transition">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -503,3 +424,104 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function routerManagement() {
+    return {
+        addModalOpen: false,
+        editModalOpen: false,
+        deleteModalOpen: false,
+        currentRouter: { id: '', name: '', host: '', port: 18735, username: '', password: '', kota: '', is_active: 1 },
+        deleteRouterId: null,
+        deleteRouterName: '',
+        statusMap: {!! json_encode($liveStatus ?? (object)[]) !!},
+
+        openEditModal(id, name, host, port, username, kota, isActive) {
+            this.currentRouter = {
+                id: id,
+                name: name,
+                host: host,
+                port: port || 18735,
+                username: username,
+                password: '',
+                kota: kota || '',
+                is_active: isActive ? 1 : 0
+            };
+            this.editModalOpen = true;
+        },
+
+        confirmDelete(id, name) {
+            this.deleteRouterId = id;
+            this.deleteRouterName = name;
+            this.deleteModalOpen = true;
+        },
+
+        async testPingRouter(id, host, port, username) {
+            this.statusMap = Object.assign({}, this.statusMap, {
+                [id]: { status: 'untested', identity: '', loading: true, message: 'Menghubungkan...' }
+            });
+            try {
+                const res = await fetch('{{ route('noc.router.test-connection') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ id: id, host: host, port: port, username: username })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.statusMap = Object.assign({}, this.statusMap, {
+                        [id]: {
+                            status: 'online',
+                            identity: data.identity || 'MikroTik',
+                            message: 'Online: ' + (data.identity || 'Connected'),
+                            loading: false
+                        }
+                    });
+                } else {
+                    this.statusMap = Object.assign({}, this.statusMap, {
+                        [id]: {
+                            status: 'offline',
+                            identity: null,
+                            message: data.message || 'Offline / Host tidak merespon',
+                            loading: false
+                        }
+                    });
+                }
+            } catch(e) {
+                this.statusMap = Object.assign({}, this.statusMap, {
+                    [id]: {
+                        status: 'offline',
+                        identity: null,
+                        message: 'Koneksi error: ' + e.message,
+                        loading: false
+                    }
+                });
+            }
+        },
+
+        async syncCustomers(id, name) {
+            if (!confirm(`Sinkronkan pelanggan ke router '${name}'?`)) return;
+            try {
+                const res = await fetch(`{{ url('/noc/router') }}/${id}/sync-customers`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await res.json();
+                alert(data.message || 'Sinkronisasi berhasil!');
+                window.location.reload();
+            } catch(e) {
+                alert('Gagal sinkronisasi: ' + e.message);
+            }
+        }
+    };
+}
+</script>
+@endpush
+

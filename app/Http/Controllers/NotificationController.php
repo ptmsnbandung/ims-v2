@@ -205,7 +205,49 @@ class NotificationController extends Controller
                 }
             }
 
-            // 3.3 Konfirmasi Transfer Manual / Bukti Upload Pelanggan (payment_confirmations)
+            // 3.3 Tagihan Layanan Menunggu Verifikasi (trx_billing_layanan status_bill_lay = '14')
+            if (Schema::hasTable('trx_billing_layanan')) {
+                try {
+                    $waitingInvoices = DB::table('trx_billing_layanan')
+                        ->leftJoin('view_batchjob', 'trx_billing_layanan.nomor_internet', '=', 'view_batchjob.nomor_internet')
+                        ->where('trx_billing_layanan.status_bill_lay', '14') // 14 = Menunggu Verifikasi
+                        ->where(function ($q) use ($sinceFormatted) {
+                            $q->where('trx_billing_layanan.date_update', '>=', $sinceFormatted)
+                              ->orWhere('trx_billing_layanan.date_create', '>=', $sinceFormatted);
+                        })
+                        ->select([
+                            'trx_billing_layanan.kode_billing_layanan',
+                            'trx_billing_layanan.nomor_internet',
+                            'trx_billing_layanan.total_layanan',
+                            'trx_billing_layanan.date_update',
+                            'view_batchjob.nama_pelanggan',
+                        ])
+                        ->orderBy('trx_billing_layanan.date_update', 'desc')
+                        ->limit(5)
+                        ->get();
+
+                    foreach ($waitingInvoices as $w) {
+                        $nama = $w->nama_pelanggan ?: ($w->nomor_internet ?: 'Pelanggan');
+                        $nominal = (float) ($w->total_layanan ?: 0);
+                        $nominalFmt = $nominal > 0 ? ' (Rp ' . number_format($nominal, 0, ',', '.') . ')' : '';
+                        $tgl = $w->date_update ?? date('Y-m-d H:i:s');
+
+                        $notifications[] = [
+                            'id' => 'waiting_verif_' . str_replace(['/', '-'], '_', $w->kode_billing_layanan) . '_' . strtotime($tgl),
+                            'type' => 'pembayaran',
+                            'title' => 'Konfirmasi Pembayaran Masuk',
+                            'message' => "Bukti transfer {$w->kode_billing_layanan}{$nominalFmt} dari {$nama} menunggu verifikasi",
+                            'speech_text' => "Ada konfirmasi pembayaran transfer baru dari {$nama} menunggu verifikasi",
+                            'url' => route('finance.billing-layanan', ['search' => $w->kode_billing_layanan]),
+                            'created_at' => $tgl,
+                        ];
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Poll waiting verification billing error: ' . $e->getMessage());
+                }
+            }
+
+            // 3.4 Konfirmasi Transfer Manual / Bukti Upload Pelanggan (payment_confirmations & ptmsn.payment_confirmations)
             if (Schema::hasTable('payment_confirmations')) {
                 try {
                     $newPayments = DB::table('payment_confirmations')
@@ -227,13 +269,38 @@ class NotificationController extends Controller
                             'title' => 'Konfirmasi Pembayaran Masuk',
                             'message' => "Konfirmasi transfer dari {$nama} (" . ($pay->kode_billing_layanan ?? '') . ")",
                             'speech_text' => "Ada konfirmasi pembayaran transfer baru dari {$nama} menunggu verifikasi",
-                            'url' => route('finance.billing-layanan', ['status_bayar' => 'menunggu_verifikasi']),
+                            'url' => route('finance.billing-layanan', ['search' => $pay->kode_billing_layanan ?? '']),
                             'created_at' => $pay->created_at,
                         ];
                     }
                 } catch (\Throwable $e) {
                     Log::warning('Poll payment confirmations error: ' . $e->getMessage());
                 }
+            }
+
+            // Fallback cross-database ptmsn.payment_confirmations
+            try {
+                $ptmsnPayments = DB::select("
+                    SELECT * FROM ptmsn.payment_confirmations
+                    WHERE (created_at >= '{$sinceFormatted}' OR updated_at >= '{$sinceFormatted}')
+                      AND status != 'approved' AND status != 'rejected'
+                    ORDER BY id DESC LIMIT 5
+                ");
+
+                foreach ($ptmsnPayments as $pay) {
+                    $nama = $pay->nama_pelanggan ?? $pay->nomor_internet ?? 'Pelanggan';
+                    $notifications[] = [
+                        'id' => 'ptmsn_pay_conf_' . ($pay->id ?? uniqid()) . '_' . strtotime($pay->created_at ?? 'now'),
+                        'type' => 'pembayaran',
+                        'title' => 'Konfirmasi Pembayaran Masuk',
+                        'message' => "Konfirmasi transfer dari {$nama} (" . ($pay->kode_billing_layanan ?? '') . ")",
+                        'speech_text' => "Ada konfirmasi pembayaran transfer baru dari {$nama} menunggu verifikasi",
+                        'url' => route('finance.billing-layanan', ['search' => $pay->kode_billing_layanan ?? '']),
+                        'created_at' => $pay->created_at,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                // Ignore if ptmsn cross-db table unavailable
             }
 
             // 3.4 Request Invoice Tagihan Mandiri dari Pelanggan (trx_billing_request)

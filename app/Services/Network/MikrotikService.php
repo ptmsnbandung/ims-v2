@@ -7,6 +7,18 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use RouterOS\Client;
+use RouterOS\Query;
+
+// Pastikan autoloader untuk library RouterOS terdaftar
+spl_autoload_register(function ($class) {
+    if (str_starts_with($class, 'RouterOS\\')) {
+        $file = __DIR__ . '/../../../vendor/evilfreelancer/routeros-api-php/src/' . str_replace('\\', '/', substr($class, 9)) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        }
+    }
+});
 
 class MikrotikService
 {
@@ -21,16 +33,16 @@ class MikrotikService
     {
         // 1. Jika ada override config langsung
         if ($overrideConfig) {
-            $this->host = $overrideConfig['host'] ?? $overrideConfig['ip_address'] ?? config('mikrotik.host', '103.161.206.163');
+            $this->host = $overrideConfig['host'] ?? $overrideConfig['ip_address'] ?? config('mikrotik.host', '103.161.206.19');
             $this->port = (int)($overrideConfig['port'] ?? config('mikrotik.port', 18735));
-            $this->user = $overrideConfig['user'] ?? $overrideConfig['username'] ?? config('mikrotik.user', 'msn');
+            $this->user = $overrideConfig['user'] ?? $overrideConfig['username'] ?? config('mikrotik.user', 'aplikasi');
             $this->pass = $overrideConfig['pass'] ?? $overrideConfig['password'] ?? config('mikrotik.pass', 'kayuagung2-9');
             $this->timeout = (int)($overrideConfig['timeout'] ?? config('mikrotik.timeout', 5));
             $this->ssl = (bool)($overrideConfig['ssl'] ?? config('mikrotik.ssl', false));
             return;
         }
 
-        // 2. Cek koneksi router aktif dari tabel terpisah: `routers`
+        // 2. Cek koneksi router aktif dari tabel `routers`
         $router = null;
         if (Schema::hasTable('routers')) {
             $router = DB::table('routers')
@@ -40,25 +52,25 @@ class MikrotikService
 
         if ($router && !empty($router->host)) {
             $this->host = $router->host;
-            $this->port = (int)($router->port ?: config('mikrotik.port', 18735));
-            $this->user = $router->username ?: config('mikrotik.user', 'msn');
+            $this->port = (int)($router->port ?: 18735);
+            $this->user = $router->username ?: 'aplikasi';
             
-            $pass = $router->password ?: config('mikrotik.pass', 'kayuagung2-9');
+            $pass = $router->password ?: 'kayuagung2-9';
             try {
                 $this->pass = \Illuminate\Support\Facades\Crypt::decryptString($pass);
             } catch (Exception $e) {
                 $this->pass = $pass;
             }
-            $this->timeout = (int)config('mikrotik.timeout', 5);
-            $this->ssl = (bool)config('mikrotik.ssl', false);
+            $this->timeout = 5;
+            $this->ssl = false;
         } else {
-            // 3. Fallback ke config mikrotik.php / .env
-            $this->host = config('mikrotik.host', '103.161.206.163');
+            // 3. Fallback
+            $this->host = config('mikrotik.host', '103.161.206.19');
             $this->port = (int)config('mikrotik.port', 18735);
-            $this->user = config('mikrotik.user', 'msn');
+            $this->user = config('mikrotik.user', 'aplikasi');
             $this->pass = config('mikrotik.pass', 'kayuagung2-9');
-            $this->timeout = (int)config('mikrotik.timeout', 5);
-            $this->ssl = (bool)config('mikrotik.ssl', false);
+            $this->timeout = 5;
+            $this->ssl = false;
         }
     }
 
@@ -83,152 +95,20 @@ class MikrotikService
     }
 
     /**
-     * Buka koneksi socket TCP ke MikroTik API
+     * Dapatkan instance RouterOS Client (kompatibel RouterOS v6 & v7)
      */
-    private function connect()
+    private function getClient(): Client
     {
-        $protocol = $this->ssl ? 'tls://' : '';
-        $address = $protocol . $this->host;
-
-        $socket = @fsockopen($address, $this->port, $errno, $errstr, $this->timeout);
-        if (!$socket) {
-            throw new Exception("Gagal terhubung ke MikroTik ({$this->host}:{$this->port}): " . ($errstr ?: 'Connection timed out'));
-        }
-
-        stream_set_timeout($socket, $this->timeout);
-        return $socket;
-    }
-
-    /**
-     * Encode word format MikroTik RouterOS API
-     */
-    private function encodeWord(string $word): string
-    {
-        $len = strlen($word);
-        if ($len < 0x80) {
-            return chr($len) . $word;
-        } elseif ($len < 0x4000) {
-            return chr(0x80 | ($len >> 8)) . chr($len & 0xFF) . $word;
-        } else {
-            return chr(0xC0 | ($len >> 24)) . chr(($len >> 16) & 0xFF) . chr(($len >> 8) & 0xFF) . chr($len & 0xFF) . $word;
-        }
-    }
-
-    /**
-     * Baca tepat $length byte dari socket (fread bisa mengembalikan data parsial)
-     */
-    private function readBytes($socket, int $length): string
-    {
-        $data = '';
-        while (strlen($data) < $length) {
-            $chunk = fread($socket, $length - strlen($data));
-            if ($chunk === false || $chunk === '') {
-                $meta = stream_get_meta_data($socket);
-                if (!empty($meta['timed_out'])) {
-                    throw new Exception('Timeout menunggu respons dari MikroTik.');
-                }
-                if (feof($socket)) {
-                    throw new Exception('Koneksi ke MikroTik terputus.');
-                }
-                continue;
-            }
-            $data .= $chunk;
-        }
-        return $data;
-    }
-
-    /**
-     * Baca satu word (panjang terenkode + isi). Mengembalikan '' untuk akhir sentence.
-     */
-    private function readWord($socket): string
-    {
-        $byte = ord($this->readBytes($socket, 1));
-
-        if ($byte < 0x80) {
-            $len = $byte;
-        } elseif (($byte & 0xC0) === 0x80) {
-            $len = (($byte & 0x3F) << 8) | ord($this->readBytes($socket, 1));
-        } elseif (($byte & 0xE0) === 0xC0) {
-            $b = $this->readBytes($socket, 2);
-            $len = (($byte & 0x1F) << 16) | (ord($b[0]) << 8) | ord($b[1]);
-        } elseif (($byte & 0xF0) === 0xE0) {
-            $b = $this->readBytes($socket, 3);
-            $len = (($byte & 0x0F) << 24) | (ord($b[0]) << 16) | (ord($b[1]) << 8) | ord($b[2]);
-        } else {
-            $b = $this->readBytes($socket, 4);
-            $len = (ord($b[0]) << 24) | (ord($b[1]) << 16) | (ord($b[2]) << 8) | ord($b[3]);
-        }
-
-        return $len > 0 ? $this->readBytes($socket, $len) : '';
-    }
-
-    /**
-     * Kirim perintah dan baca seluruh respons (semua sentence sampai !done / !fatal)
-     * Key diawali '?' dikirim sebagai query word (?name=value), selain itu sebagai attribute word (=key=value).
-     */
-    private function sendCommand($socket, string $command, array $params = []): string
-    {
-        $data = $this->encodeWord($command);
-        foreach ($params as $key => $value) {
-            if (str_starts_with((string)$key, '?')) {
-                $data .= $this->encodeWord("{$key}={$value}");
-            } else {
-                $data .= $this->encodeWord("={$key}={$value}");
-            }
-        }
-        $data .= chr(0);
-        fwrite($socket, $data);
-
-        $response = '';
-        while (true) {
-            $first = null;
-            while (($word = $this->readWord($socket)) !== '') {
-                if ($first === null) {
-                    $first = $word;
-                }
-                $response .= $word . "\n";
-            }
-
-            if ($first === '!done' || $first === '!fatal') {
-                break;
-            }
-        }
-
-        return $response;
-    }
-
-    /**
-     * Lakukan proses autentikasi (Login)
-     * - RouterOS >= 6.43 (termasuk v7): login plaintext (name + password)
-     * - RouterOS < 6.43: challenge-response MD5 (=ret=)
-     */
-    private function login($socket): void
-    {
-        $response = $this->sendCommand($socket, '/login', [
-            'name' => $this->user,
-            'password' => $this->pass,
+        return new Client([
+            'host' => $this->host,
+            'port' => $this->port,
+            'user' => $this->user,
+            'pass' => $this->pass,
+            'timeout' => $this->timeout,
+            'attempts' => 2,
+            'delay' => 1,
+            'ssl' => $this->ssl,
         ]);
-
-        if (strpos($response, '!trap') !== false || strpos($response, '!fatal') !== false) {
-            $message = 'Username / Password salah';
-            if (preg_match('/=message=([^\n]+)/', $response, $m)) {
-                $message = trim($m[1]);
-            }
-            throw new Exception('Login ke MikroTik gagal: ' . $message);
-        }
-
-        // RouterOS lama: balasan berisi challenge =ret=
-        if (preg_match('/=ret=([a-f0-9]+)/i', $response, $matches)) {
-            $md5 = md5(chr(0) . $this->pass . pack('H*', $matches[1]));
-            $authResp = $this->sendCommand($socket, '/login', [
-                'name' => $this->user,
-                'response' => '00' . $md5,
-            ]);
-
-            if (strpos($authResp, '!trap') !== false || strpos($authResp, '!done') === false) {
-                throw new Exception('Login ke MikroTik gagal (Username / Password salah).');
-            }
-        }
     }
 
     /**
@@ -237,16 +117,11 @@ class MikrotikService
     public function testConnection(): array
     {
         try {
-            $socket = $this->connect();
-            $this->login($socket);
+            $client = $this->getClient();
+            $query = new Query('/system/identity/print');
+            $response = $client->query($query)->read();
 
-            $identityResp = $this->sendCommand($socket, '/system/identity/print');
-            fclose($socket);
-
-            $identity = 'MikroTik Router';
-            if (preg_match('/=name=([^\n]+)/', $identityResp, $m)) {
-                $identity = trim($m[1]);
-            }
+            $identity = $response[0]['name'] ?? 'MikroTik Router';
 
             return [
                 'success' => true,
@@ -268,29 +143,26 @@ class MikrotikService
     public function enableUser(string $username): array
     {
         try {
-            $socket = $this->connect();
-            $this->login($socket);
+            $client = $this->getClient();
 
             // 1. Cari user di /ppp/secret
-            $find = $this->sendCommand($socket, '/ppp/secret/print', ['?name' => $username]);
-            if (strpos($find, '!re') === false) {
-                fclose($socket);
+            $query = (new Query('/ppp/secret/print'))->where('name', $username);
+            $secrets = $client->query($query)->read();
+
+            if (empty($secrets) || !isset($secrets[0]['.id'])) {
                 return [
                     'success' => false,
                     'message' => "User PPPoE '{$username}' tidak ditemukan di MikroTik ({$this->host}).",
                 ];
             }
 
-            preg_match('/\.id=([^,\n]+)/', $find, $matches);
-            $id = $matches[1] ?? $username;
+            $secretId = $secrets[0]['.id'];
 
             // 2. Set disabled=no
-            $setResp = $this->sendCommand($socket, '/ppp/secret/set', [
-                '.id' => $id,
-                'disabled' => 'no',
-            ]);
-
-            fclose($socket);
+            $setQuery = (new Query('/ppp/secret/set'))
+                ->equal('.id', $secretId)
+                ->equal('disabled', 'no');
+            $client->query($setQuery)->read();
 
             return [
                 'success' => true,
@@ -310,29 +182,26 @@ class MikrotikService
     public function disableUser(string $username): array
     {
         try {
-            $socket = $this->connect();
-            $this->login($socket);
+            $client = $this->getClient();
 
             // 1. Cari user di /ppp/secret
-            $find = $this->sendCommand($socket, '/ppp/secret/print', ['?name' => $username]);
-            if (strpos($find, '!re') === false) {
-                fclose($socket);
+            $query = (new Query('/ppp/secret/print'))->where('name', $username);
+            $secrets = $client->query($query)->read();
+
+            if (empty($secrets) || !isset($secrets[0]['.id'])) {
                 return [
                     'success' => false,
                     'message' => "User PPPoE '{$username}' tidak ditemukan di MikroTik ({$this->host}).",
                 ];
             }
 
-            preg_match('/\.id=([^,\n]+)/', $find, $matches);
-            $id = $matches[1] ?? $username;
+            $secretId = $secrets[0]['.id'];
 
             // 2. Set disabled=yes
-            $setResp = $this->sendCommand($socket, '/ppp/secret/set', [
-                '.id' => $id,
-                'disabled' => 'yes',
-            ]);
-
-            fclose($socket);
+            $setQuery = (new Query('/ppp/secret/set'))
+                ->equal('.id', $secretId)
+                ->equal('disabled', 'yes');
+            $client->query($setQuery)->read();
 
             return [
                 'success' => true,
@@ -348,19 +217,18 @@ class MikrotikService
 
     /**
      * Kick Active Connection (/ppp/active/remove)
-     * Memutus sesi aktif PPPoE sehingga pelanggan langsung reconnect dengan konfigurasi baru atau terputus
+     * Memutus sesi aktif PPPoE sehingga pelanggan langsung reconnect dengan konfigurasi baru atau seketika terputus
      */
     public function kickActiveConnection(string $username): array
     {
         try {
-            $socket = $this->connect();
-            $this->login($socket);
+            $client = $this->getClient();
 
             // 1. Cari koneksi aktif di /ppp/active
-            $activeResp = $this->sendCommand($socket, '/ppp/active/print', ['?name' => $username]);
+            $query = (new Query('/ppp/active/print'))->where('name', $username);
+            $activeList = $client->query($query)->read();
 
-            if (strpos($activeResp, '!re') === false) {
-                fclose($socket);
+            if (empty($activeList) || !isset($activeList[0]['.id'])) {
                 return [
                     'success' => true,
                     'kicked' => false,
@@ -368,15 +236,13 @@ class MikrotikService
                 ];
             }
 
-            // 2. Ambil .id sesi aktif
-            preg_match('/\.id=([^,\n]+)/', $activeResp, $matches);
-            $activeId = $matches[1] ?? null;
-
-            if ($activeId) {
-                $this->sendCommand($socket, '/ppp/active/remove', ['.id' => $activeId]);
+            // 2. Hapus sesi aktif
+            foreach ($activeList as $act) {
+                if (isset($act['.id'])) {
+                    $delQuery = (new Query('/ppp/active/remove'))->equal('.id', $act['.id']);
+                    $client->query($delQuery)->read();
+                }
             }
-
-            fclose($socket);
 
             return [
                 'success' => true,
@@ -389,6 +255,36 @@ class MikrotikService
                 'kicked' => false,
                 'message' => "Gagal kick sesi PPPoE: " . $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Ambil seluruh user PPPoE Secret
+     */
+    public function getUsers(): array
+    {
+        try {
+            $client = $this->getClient();
+            $query = new Query('/ppp/secret/print');
+            return $client->query($query)->read();
+        } catch (Exception $e) {
+            Log::error('Mikrotik getUsers error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Ambil seluruh koneksi aktif PPPoE
+     */
+    public function getActiveConnections(): array
+    {
+        try {
+            $client = $this->getClient();
+            $query = new Query('/ppp/active/print');
+            return $client->query($query)->read();
+        } catch (Exception $e) {
+            Log::error('Mikrotik getActiveConnections error: ' . $e->getMessage());
+            return [];
         }
     }
 }

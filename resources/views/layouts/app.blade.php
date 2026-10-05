@@ -900,7 +900,7 @@
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0 overflow-y-auto ims-main-scroll">
                 <!-- Top Navbar (Dual Light & Dark Mode) -->
-                <header class="min-h-16 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-40 py-2 shadow-xs transition-colors duration-200">
+                <header class="min-h-16 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-50 py-2 shadow-xs transition-colors duration-200">
                     <div class="flex items-center gap-3">
                         <!-- Sidebar Toggle Button in Navbar (Tombol Hamburger) -->
                         <button @click="toggleSidebar()" 

@@ -28,7 +28,7 @@
 <div class="space-y-6" x-data="billingLayananPage()">
 
     <!-- Page Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
-    <div class="ims-banner relative rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20 z-10"
+    <div class="ims-banner relative rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20 z-30"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
         <!-- Subtle Glow Effect (isolated overflow-hidden so child dropdowns are not clipped) -->
@@ -59,7 +59,7 @@
             <!-- Top Right Actions -->
             <div class="flex items-center gap-2.5 relative z-10 shrink-0">
                 <!-- Dropdown Menu Aksi -->
-                <div class="relative" @click.outside="actionDropdownOpen = false">
+                <div class="relative z-50" @click.outside="actionDropdownOpen = false">
                     <button @click="actionDropdownOpen = !actionDropdownOpen"
                             type="button"
                             class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold flex items-center gap-2 shadow-xs backdrop-blur-xs transition cursor-pointer relative"
@@ -83,7 +83,7 @@
                      x-transition:leave="transition ease-in duration-75"
                      x-transition:leave-start="transform opacity-100 scale-100"
                      x-transition:leave-end="transform opacity-0 scale-95"
-                     class="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/20 py-1.5 z-50 divide-y divide-slate-100 dark:divide-slate-800/60 focus:outline-none">
+                     class="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/40 py-1.5 z-50 divide-y divide-slate-100 dark:divide-slate-800/60 focus:outline-none">
                     
                     <div class="py-1">
                         <!-- Generate Invoice Item -->

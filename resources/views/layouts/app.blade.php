@@ -960,28 +960,30 @@
                                  @click.outside="soundOpen = false"
                                  class="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 space-y-3">
                                 <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">
-                                            🔊
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold flex-shrink-0">
+                                            <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75Z" />
+                                            </svg>
                                         </div>
                                         <div>
                                             <h4 class="text-xs font-bold text-slate-900 dark:text-white">Notifikasi Suara</h4>
                                             <p class="text-[10px] text-slate-500 dark:text-slate-400">Web Speech API &amp; Chime</p>
                                         </div>
                                     </div>
-                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold"
-                                          :class="soundEnabled ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+                                    <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold transition"
+                                          :class="soundEnabled ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'">
                                         <span x-text="soundEnabled ? 'Aktif' : 'Mute'"></span>
                                     </span>
                                 </div>
 
                                 <div class="space-y-2 text-xs text-slate-600 dark:text-slate-300">
                                     <div class="flex items-center justify-between">
-                                        <span>Suara Bicara (Indonesia)</span>
+                                        <span class="font-medium">Suara Bicara (Indonesia)</span>
                                         <button type="button"
                                                 @click="soundEnabled = !soundEnabled; localStorage.setItem('ims_voice_sound_enabled', soundEnabled ? 'true' : 'false'); window.ImsVoice.soundEnabled = soundEnabled;"
                                                 class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                                                :class="soundEnabled ? 'bg-teal-600' : 'bg-slate-300 dark:bg-slate-700'">
+                                                :style="soundEnabled ? 'background-color: #00a8b5 !important;' : 'background-color: #94a3b8 !important;'">
                                             <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                                                   :class="soundEnabled ? 'translate-x-4' : 'translate-x-0'"></span>
                                         </button>
@@ -994,11 +996,12 @@
                                 <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
                                     <button type="button"
                                             @click="window.ImsVoice.testSound()"
-                                            class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-teal-500/20 transition cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-teal-950/20 transition-all duration-200 cursor-pointer hover:opacity-95 active:scale-[0.98]"
+                                            style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%) !important; color: #FFFFFF !important;">
+                                        <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
                                         </svg>
-                                        <span>Uji Coba Suara (Test Sound)</span>
+                                        <span style="color: #FFFFFF !important;">Uji Coba Suara (Test Sound)</span>
                                     </button>
                                 </div>
                             </div>

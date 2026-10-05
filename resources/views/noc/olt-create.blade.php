@@ -84,12 +84,10 @@
         }
      }">
 
-    <!-- =================================================================== -->
-    <!-- 1. TOP HEADER BANNER                                                -->
-    <!-- =================================================================== -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs">
+    <!-- Top Header: Breadcrumbs & Metric Pills matching Dashboard -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+        <!-- Breadcrumb & Title -->
         <div>
-            <!-- Breadcrumbs -->
             <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
                 <a href="{{ route('dashboard') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">IMS</a>
                 <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -101,19 +99,21 @@
                 </svg>
                 <span class="text-slate-800 dark:text-slate-200 font-semibold">Registrasi Baru</span>
             </div>
-            <h1 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                <span>Tambah Perangkat OLT Baru</span>
-            </h1>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Tambah Perangkat OLT Baru</h2>
         </div>
 
-        <div>
-            <a href="{{ route('noc.olt') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-                </svg>
-                <span>Kembali</span>
-            </a>
+        <!-- Metric Badges matching Dashboard style -->
+        <div class="flex flex-wrap items-center gap-2.5">
+            <div class="px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center gap-2 text-xs">
+                <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></span>
+                <span class="text-blue-700 dark:text-blue-400 font-semibold">Status:</span>
+                <strong class="text-blue-800 dark:text-blue-300 font-mono font-bold">Registrasi Baru</strong>
+            </div>
+            <div class="px-3.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-2 text-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span class="text-emerald-700 dark:text-emerald-400 font-semibold">Default:</span>
+                <strong class="text-emerald-800 dark:text-emerald-300 font-mono font-bold">8 Port PON</strong>
+            </div>
         </div>
     </div>
 

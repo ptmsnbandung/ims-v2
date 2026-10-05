@@ -12,10 +12,19 @@ class NotificationController extends Controller
 {
     /**
      * Polling endpoint untuk notifikasi baru saat aplikasi sedang dibuka.
-     * Mengembalikan event pendaftaran baru, tiket gangguan, up/downgrade, terminasi, dan suspend.
+     * Mengembalikan event sesuai hak akses Role pengguna:
+     * - NOC & Teknik: Tiket Gangguan, Jadwal Survey/Aktivasi, Request Eksekusi UP/Down, Suspend, Terminasi.
+     * - Finance: Pendaftaran Baru (Billing), Konfirmasi Pembayaran Kas Masuk, dan Notifikasi Tagihan.
+     * - Admin & Direktur: Mendapatkan semua notifikasi.
      */
     public function poll(Request $request): JsonResponse
     {
+        /** @var \App\Models\Pengguna|null $user */
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['status' => 'unauthenticated', 'notifications' => []], 401);
+        }
+
         $sinceTimestamp = $request->input('since');
         
         // Default to last 3 minutes if no since provided
@@ -28,35 +37,15 @@ class NotificationController extends Controller
         $sinceFormatted = $since->format('Y-m-d H:i:s');
         $notifications = [];
 
-        // 1. Cek Pendaftaran Pelanggan Baru (trx_pendaftaran)
-        if (Schema::hasTable('trx_pendaftaran')) {
-            $newRegistrations = DB::table('trx_pendaftaran')
-                ->where('hide', 0)
-                ->where(function ($q) use ($sinceFormatted) {
-                    $q->where('date_create', '>=', $sinceFormatted)
-                      ->orWhere('date_update', '>=', $sinceFormatted);
-                })
-                ->whereIn('status_reg', ['11', '12', '13']) // Pendaftaran Baru / Draft
-                ->orderBy('date_create', 'desc')
-                ->limit(5)
-                ->get();
+        $isAdminOrDirektur = $user->isAdmin() || $user->isDirektur();
+        $isNoc = $user->isNoc();
+        $isTeknik = $user->isTeknik();
+        $isFinance = $user->isFinance();
 
-            foreach ($newRegistrations as $reg) {
-                $nama = $reg->nama_pelanggan ?: 'Pelanggan';
-                $notifications[] = [
-                    'id' => 'reg_' . $reg->nomor_internet . '_' . strtotime($reg->date_create ?? 'now'),
-                    'type' => 'pendaftaran',
-                    'title' => 'Pelanggan Baru Terdaftar',
-                    'message' => "Pendaftaran baru atas nama {$nama} (No: {$reg->nomor_internet})",
-                    'speech_text' => "Ada pelanggan baru terdaftar, atas nama {$nama}",
-                    'url' => route('teknik.pendaftaran'),
-                    'created_at' => $reg->date_create,
-                ];
-            }
-        }
-
-        // 2. Cek Tiket Gangguan Baru (trx_tiket_gangguan)
-        if (Schema::hasTable('trx_tiket_gangguan')) {
+        // -------------------------------------------------------------
+        // 1. TIKET GANGGUAN BARU -> DITUJUKAN UNTUK NOC, TEKNIK, ADMIN
+        // -------------------------------------------------------------
+        if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_tiket_gangguan')) {
             $newTickets = DB::table('trx_tiket_gangguan')
                 ->where('status', '11') // 11: Request Baru
                 ->where('date_create', '>=', $sinceFormatted)
@@ -79,8 +68,69 @@ class NotificationController extends Controller
             }
         }
 
-        // 3. Cek Permintaan Ubah Layanan UP / Downgrade (trx_ubah_layanan)
-        if (Schema::hasTable('trx_ubah_layanan')) {
+        // -------------------------------------------------------------
+        // 2. PENDAFTARAN BARU -> NOC/TEKNIK (SURVEY/INSTALASI) & FINANCE (BILLING REGISTRASI)
+        // -------------------------------------------------------------
+        if (($isAdminOrDirektur || $isTeknik || $isNoc || $isFinance) && Schema::hasTable('trx_pendaftaran')) {
+            $newRegistrations = DB::table('trx_pendaftaran')
+                ->where('hide', 0)
+                ->where(function ($q) use ($sinceFormatted) {
+                    $q->where('date_create', '>=', $sinceFormatted)
+                      ->orWhere('date_update', '>=', $sinceFormatted);
+                })
+                ->whereIn('status_reg', ['11', '12', '13']) // Pendaftaran Baru / Draft
+                ->orderBy('date_create', 'desc')
+                ->limit(5)
+                ->get();
+
+            foreach ($newRegistrations as $reg) {
+                $nama = $reg->nama_pelanggan ?: 'Pelanggan';
+                $speechText = $isFinance 
+                    ? "Ada pendaftaran pelanggan baru atas nama {$nama} untuk penagihan registrasi"
+                    : "Ada pelanggan baru terdaftar, atas nama {$nama}";
+
+                $notifications[] = [
+                    'id' => 'reg_' . $reg->nomor_internet . '_' . strtotime($reg->date_create ?? 'now'),
+                    'type' => 'pendaftaran',
+                    'title' => 'Pelanggan Baru Terdaftar',
+                    'message' => "Pendaftaran baru atas nama {$nama} (No: {$reg->nomor_internet})",
+                    'speech_text' => $speechText,
+                    'url' => $isFinance ? route('finance.billing-registrasi') : route('teknik.pendaftaran'),
+                    'created_at' => $reg->date_create,
+                ];
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 3. KONFIRMASI PEMBAYARAN / KAS MASUK -> DITUJUKAN UNTUK FINANCE & ADMIN
+        // -------------------------------------------------------------
+        if (($isAdminOrDirektur || $isFinance) && Schema::hasTable('payment_confirmations')) {
+            $newPayments = DB::table('payment_confirmations')
+                ->where('created_at', '>=', $sinceFormatted)
+                ->where('status', '!=', 'approved')
+                ->where('status', '!=', 'rejected')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+
+            foreach ($newPayments as $pay) {
+                $nama = $pay->nama_pelanggan ?? $pay->nomor_internet ?? 'Pelanggan';
+                $notifications[] = [
+                    'id' => 'pay_' . ($pay->id ?? uniqid()),
+                    'type' => 'pembayaran',
+                    'title' => 'Konfirmasi Pembayaran Masuk',
+                    'message' => "Pembayaran baru dari {$nama} (" . ($pay->kode_billing_layanan ?? '') . ")",
+                    'speech_text' => "Ada konfirmasi pembayaran baru dari {$nama}",
+                    'url' => route('finance.billing-layanan', ['status_bayar' => 'menunggu_verifikasi']),
+                    'created_at' => $pay->created_at,
+                ];
+            }
+        }
+
+        // -------------------------------------------------------------
+        // 4. PERMINTAAN UP/DOWNGRADE -> DARI FINANCE UNTUK EKSEKUSI NOC/TEKNIK
+        // -------------------------------------------------------------
+        if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_ubah_layanan')) {
             $newUpdowns = DB::table('trx_ubah_layanan')
                 ->where('status_ubah_layanan', '11') // 11: Request Baru dari Finance
                 ->where('date_create', '>=', $sinceFormatted)
@@ -93,17 +143,19 @@ class NotificationController extends Controller
                 $notifications[] = [
                     'id' => 'updown_' . $u->kode_trx_ubah_layanan,
                     'type' => 'updown',
-                    'title' => 'Permintaan UP / Downgrade',
-                    'message' => "Request perubahan paket untuk {$nama}",
-                    'speech_text' => "Ada permintaan ubah layanan bandwidth untuk {$nama}",
+                    'title' => 'Request Ubah Bandwidth (NOC)',
+                    'message' => "Finance mengajukan perubahan paket untuk {$nama}",
+                    'speech_text' => "Ada permintaan ubah layanan bandwidth dari Finance untuk {$nama}",
                     'url' => route('teknik.permintaan.up-downgrade'),
                     'created_at' => $u->date_create,
                 ];
             }
         }
 
-        // 4. Cek Permintaan Suspend (trx_suspend)
-        if (Schema::hasTable('trx_suspend')) {
+        // -------------------------------------------------------------
+        // 5. PERMINTAAN SUSPEND (ISOLIR) -> DARI FINANCE UNTUK EKSEKUSI NOC
+        // -------------------------------------------------------------
+        if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_suspend')) {
             $newSuspends = DB::table('trx_suspend')
                 ->where('status_suspend', '11') // 11: Request Suspend
                 ->where('date_create', '>=', $sinceFormatted)
@@ -116,17 +168,19 @@ class NotificationController extends Controller
                 $notifications[] = [
                     'id' => 'suspend_' . ($s->kode_suspend ?? uniqid()),
                     'type' => 'suspend',
-                    'title' => 'Permintaan Isolir (Suspend)',
-                    'message' => "Request isolir layanan untuk {$nama}",
-                    'speech_text' => "Ada permintaan isolir suspend tagihan untuk {$nama}",
+                    'title' => 'Request Isolir Jaringan (NOC)',
+                    'message' => "Finance mengajukan isolir tagihan untuk {$nama}",
+                    'speech_text' => "Ada permintaan isolir tagihan dari Finance untuk {$nama}",
                     'url' => route('teknik.permintaan.suspend'),
                     'created_at' => $s->date_create,
                 ];
             }
         }
 
-        // 5. Cek Permintaan Terminasi (trx_terminasi)
-        if (Schema::hasTable('trx_terminasi')) {
+        // -------------------------------------------------------------
+        // 6. PERMINTAAN TERMINASI -> DARI FINANCE UNTUK LAPANGAN/NOC
+        // -------------------------------------------------------------
+        if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_terminasi')) {
             $newTerminasis = DB::table('trx_terminasi')
                 ->where('status_terminasi', '11') // 11: Request Terminasi
                 ->where('date_create', '>=', $sinceFormatted)
@@ -139,9 +193,9 @@ class NotificationController extends Controller
                 $notifications[] = [
                     'id' => 'terminasi_' . ($term->kode_terminasi ?? uniqid()),
                     'type' => 'terminasi',
-                    'title' => 'Permintaan Terminasi',
-                    'message' => "Request putus berlangganan untuk {$nama}",
-                    'speech_text' => "Ada permintaan terminasi layanan untuk {$nama}",
+                    'title' => 'Request Terminasi (NOC/Teknik)',
+                    'message' => "Finance mengajukan putus berlangganan & penarikan ONT untuk {$nama}",
+                    'speech_text' => "Ada permintaan terminasi layanan dari Finance untuk {$nama}",
                     'url' => route('teknik.permintaan.terminasi'),
                     'created_at' => $term->date_create,
                 ];

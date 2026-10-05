@@ -19,12 +19,52 @@ class MikrotikService
 
     public function __construct(?array $overrideConfig = null)
     {
-        $this->host = $overrideConfig['host'] ?? config('mikrotik.host', '103.161.206.163');
-        $this->port = (int)($overrideConfig['port'] ?? config('mikrotik.port', 18735));
-        $this->user = $overrideConfig['user'] ?? config('mikrotik.user', 'msn');
-        $this->pass = $overrideConfig['pass'] ?? config('mikrotik.pass', 'kayuagung2-9');
-        $this->timeout = (int)($overrideConfig['timeout'] ?? config('mikrotik.timeout', 5));
-        $this->ssl = (bool)($overrideConfig['ssl'] ?? config('mikrotik.ssl', false));
+        // 1. Jika ada override config langsung
+        if ($overrideConfig) {
+            $this->host = $overrideConfig['host'] ?? $overrideConfig['ip_address'] ?? config('mikrotik.host', '103.161.206.163');
+            $this->port = (int)($overrideConfig['port'] ?? config('mikrotik.port', 18735));
+            $this->user = $overrideConfig['user'] ?? $overrideConfig['username'] ?? config('mikrotik.user', 'msn');
+            $this->pass = $overrideConfig['pass'] ?? $overrideConfig['password'] ?? config('mikrotik.pass', 'kayuagung2-9');
+            $this->timeout = (int)($overrideConfig['timeout'] ?? config('mikrotik.timeout', 5));
+            $this->ssl = (bool)($overrideConfig['ssl'] ?? config('mikrotik.ssl', false));
+            return;
+        }
+
+        // 2. Cek apakah ada router MikroTik di tabel m_olt
+        $oltRouter = null;
+        if (Schema::hasTable('m_olt')) {
+            $oltRouter = DB::table('m_olt')
+                ->where(function ($q) {
+                    $q->where('brand', 'like', '%mikrotik%')
+                      ->orWhere('brand', 'like', '%router%')
+                      ->orWhere('protocol', 'like', '%api%');
+                })
+                ->where('hide', '!=', '1')
+                ->first();
+        }
+
+        if ($oltRouter && !empty($oltRouter->ip_address)) {
+            $this->host = $oltRouter->ip_address;
+            $this->port = (int)($oltRouter->port ?: ($oltRouter->telnet_port ?: config('mikrotik.port', 18735)));
+            $this->user = $oltRouter->username ?: ($oltRouter->telnet_user ?: config('mikrotik.user', 'msn'));
+            
+            $pass = $oltRouter->password ?: ($oltRouter->telnet_password ?: config('mikrotik.pass', 'kayuagung2-9'));
+            try {
+                $this->pass = \Illuminate\Support\Facades\Crypt::decryptString($pass);
+            } catch (Exception $e) {
+                $this->pass = $pass;
+            }
+            $this->timeout = (int)config('mikrotik.timeout', 5);
+            $this->ssl = (bool)config('mikrotik.ssl', false);
+        } else {
+            // 3. Fallback ke config mikrotik.php / .env
+            $this->host = config('mikrotik.host', '103.161.206.163');
+            $this->port = (int)config('mikrotik.port', 18735);
+            $this->user = config('mikrotik.user', 'msn');
+            $this->pass = config('mikrotik.pass', 'kayuagung2-9');
+            $this->timeout = (int)config('mikrotik.timeout', 5);
+            $this->ssl = (bool)config('mikrotik.ssl', false);
+        }
     }
 
     /**

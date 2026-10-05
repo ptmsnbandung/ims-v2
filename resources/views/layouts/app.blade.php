@@ -929,8 +929,81 @@
                     </div>
 
                     <!-- Right Side Navbar -->
-                    <div class="flex items-center gap-3 sm:gap-4">
+                    <div class="flex items-center gap-2 sm:gap-3">
                         
+                        <!-- Sound Voice Notification Control Dropdown -->
+                        <div class="relative" x-data="{ soundOpen: false, soundEnabled: localStorage.getItem('ims_voice_sound_enabled') !== 'false' }">
+                            <button @click="soundOpen = !soundOpen" 
+                                    type="button"
+                                    :title="soundEnabled ? 'Notifikasi Suara: Aktif' : 'Notifikasi Suara: Senyap (Mute)'"
+                                    class="p-2 rounded-xl transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs border relative"
+                                    :class="soundEnabled 
+                                        ? 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800/60 hover:bg-teal-100 dark:hover:bg-teal-900/50' 
+                                        : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'"
+                                    aria-label="Notifikasi Suara">
+                                <!-- Speaker Wave Icon (When Sound Enabled) -->
+                                <svg x-show="soundEnabled" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75Z" />
+                                </svg>
+                                <!-- Speaker Muted Icon (When Sound Disabled) -->
+                                <svg x-show="!soundEnabled" x-cloak class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75Z" />
+                                </svg>
+
+                                <!-- Active Pulse Dot -->
+                                <span x-show="soundEnabled" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse"></span>
+                            </button>
+
+                            <!-- Sound Settings Dropdown -->
+                            <div x-show="soundOpen"
+                                 x-cloak
+                                 @click.outside="soundOpen = false"
+                                 class="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 space-y-3">
+                                <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">
+                                            🔊
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-slate-900 dark:text-white">Notifikasi Suara</h4>
+                                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Web Speech API &amp; Chime</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                                          :class="soundEnabled ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+                                        <span x-text="soundEnabled ? 'Aktif' : 'Mute'"></span>
+                                    </span>
+                                </div>
+
+                                <div class="space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                                    <div class="flex items-center justify-between">
+                                        <span>Suara Bicara (Indonesia)</span>
+                                        <button type="button"
+                                                @click="soundEnabled = !soundEnabled; localStorage.setItem('ims_voice_sound_enabled', soundEnabled ? 'true' : 'false'); window.ImsVoice.soundEnabled = soundEnabled;"
+                                                class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                                                :class="soundEnabled ? 'bg-teal-600' : 'bg-slate-300 dark:bg-slate-700'">
+                                            <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                                  :class="soundEnabled ? 'translate-x-4' : 'translate-x-0'"></span>
+                                        </button>
+                                    </div>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                        Menyuarakkan: Pelanggan Baru, Tiket Gangguan, UP/Downgrade, Suspend &amp; Terminasi saat aplikasi sedang dibuka.
+                                    </p>
+                                </div>
+
+                                <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <button type="button"
+                                            @click="window.ImsVoice.testSound()"
+                                            class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-teal-500/20 transition cursor-pointer">
+                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                                        </svg>
+                                        <span>Uji Coba Suara (Test Sound)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Theme Toggle Button (Light / Dark Mode) -->
                         <button @click="toggleTheme()" 
                                 type="button"
@@ -1104,6 +1177,209 @@
             </template>
         </div>
     </div>
+
+    <!-- Toast Notification Portal Container (Fixed Top Right) -->
+    <div x-data="{
+             toasts: [],
+             addToast(detail) {
+                 const id = detail.id || ('t_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
+                 const toast = { ...detail, id };
+                 this.toasts.unshift(toast);
+                 if (this.toasts.length > 5) this.toasts.pop();
+                 setTimeout(() => this.removeToast(id), 8000);
+             },
+             removeToast(id) {
+                 this.toasts = this.toasts.filter(t => t.id !== id);
+             }
+         }"
+         @ims-new-toast.window="addToast($event.detail)"
+         class="fixed top-5 right-5 z-[999999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0">
+        
+        <template x-for="t in toasts" :key="t.id">
+            <div class="pointer-events-auto w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xl shadow-black/15 flex items-start gap-3 transition-all duration-300 transform translate-y-0"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-90">
+                
+                <!-- Toast Icon -->
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                     :class="{
+                         'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': t.type === 'pendaftaran',
+                         'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': t.type === 'tiket',
+                         'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30': t.type === 'updown',
+                         'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30': t.type === 'suspend',
+                         'bg-slate-500/15 text-slate-600 dark:text-slate-300 border border-slate-500/30': t.type === 'terminasi',
+                         'bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30': !t.type
+                     }">
+                    <template x-if="t.type === 'pendaftaran'">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
+                        </svg>
+                    </template>
+                    <template x-if="t.type === 'tiket'">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                        </svg>
+                    </template>
+                    <template x-if="t.type === 'updown'">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                        </svg>
+                    </template>
+                    <template x-if="t.type === 'suspend'">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                    </template>
+                    <template x-if="t.type === 'terminasi'">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
+                    </template>
+                    <template x-if="!t.type">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                        </svg>
+                    </template>
+                </div>
+
+                <!-- Toast Content -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                        <h5 class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="t.title"></h5>
+                        <button type="button" @click="removeToast(t.id)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold leading-none cursor-pointer">&times;</button>
+                    </div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-snug" x-text="t.message"></p>
+                    <template x-if="t.url">
+                        <a :href="t.url" class="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline mt-1.5">
+                            <span>Buka Halaman</span>
+                            <span>&rarr;</span>
+                        </a>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- IMS Web Speech Voice Engine & Notification Poller -->
+    <script>
+        window.ImsVoice = {
+            soundEnabled: localStorage.getItem('ims_voice_sound_enabled') !== 'false',
+            lastCheck: Math.floor(Date.now() / 1000) - 60, // Cek 1 menit ke belakang saat start
+            chimeAudio: new Audio('{{ asset("assets/sound/anoun.mp3") }}'),
+            audioUnlocked: false,
+            voicesReady: false,
+
+            init() {
+                // Ensure voices are loaded in browser
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        this.voicesReady = true;
+                    };
+                }
+
+                // Unlock audio autoplay on first click/key
+                const unlock = () => {
+                    if (!this.audioUnlocked) {
+                        this.chimeAudio.muted = true;
+                        this.chimeAudio.play().then(() => {
+                            this.chimeAudio.pause();
+                            this.chimeAudio.currentTime = 0;
+                            this.chimeAudio.muted = false;
+                            this.audioUnlocked = true;
+                        }).catch(() => {});
+                        document.removeEventListener('click', unlock);
+                        document.removeEventListener('keydown', unlock);
+                    }
+                };
+                document.addEventListener('click', unlock, { once: true });
+                document.addEventListener('keydown', unlock, { once: true });
+
+                // Poll every 25 seconds when app is open
+                setInterval(() => this.pollNotifications(), 25000);
+            },
+
+            testSound() {
+                this.playNotificationVoice({
+                    type: '',
+                    title: 'Uji Coba Suara IMS',
+                    message: 'Sistem notifikasi suara Web Speech API & Chime berfungsi dengan baik.',
+                    speech_text: 'Tes notifikasi suara IMS berhasil. Selamat bertugas!',
+                });
+            },
+
+            playNotificationVoice(item) {
+                // Trigger Toast Banner in UI
+                window.dispatchEvent(new CustomEvent('ims-new-toast', { detail: item }));
+
+                if (!this.soundEnabled) return;
+
+                // 1. Play Chime MP3
+                this.chimeAudio.currentTime = 0;
+                this.chimeAudio.play().then(() => {
+                    // 2. Play Web Speech API voice after short chime delay (650ms)
+                    setTimeout(() => {
+                        this.speak(item.speech_text || item.title);
+                    }, 650);
+                }).catch(() => {
+                    // Fallback to speech if chime play is blocked
+                    this.speak(item.speech_text || item.title);
+                });
+            },
+
+            speak(text) {
+                if (!('speechSynthesis' in window) || !text) return;
+                try {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'id-ID';
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+
+                    const voices = window.speechSynthesis.getVoices();
+                    const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang === 'id_ID' || (v.lang && v.lang.toLowerCase().startsWith('id')));
+                    if (idVoice) utterance.voice = idVoice;
+
+                    window.speechSynthesis.speak(utterance);
+                } catch(e) {
+                    console.warn('Speech synthesis error:', e);
+                }
+            },
+
+            async pollNotifications() {
+                if (document.hidden) return; // Hanya jalankan jika tab browser sedang aktif dibuka
+                try {
+                    const res = await fetch(`{{ route('api.notifications.poll') }}?since=${this.lastCheck}`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        this.lastCheck = data.timestamp;
+                        if (Array.isArray(data.notifications) && data.notifications.length > 0) {
+                            data.notifications.forEach((notif, idx) => {
+                                setTimeout(() => {
+                                    this.playNotificationVoice(notif);
+                                }, idx * 4000); // Jeda 4 detik antar ucapan notifikasi jika ada lebih dari 1
+                            });
+                        }
+                    }
+                } catch (e) {
+                    // silent fail on network blips
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.ImsVoice.init();
+        });
+    </script>
 
     @stack('scripts')
 </body>

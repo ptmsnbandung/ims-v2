@@ -1338,9 +1338,9 @@
                 document.addEventListener('click', unlock, { once: true });
                 document.addEventListener('keydown', unlock, { once: true });
 
-                // Initial poll on load, then poll every 25 seconds when app is open
-                setTimeout(() => this.pollNotifications(), 2500);
-                setInterval(() => this.pollNotifications(), 25000);
+                // Initial poll on load, then poll every 10 seconds when app is open
+                setTimeout(() => this.pollNotifications(), 2000);
+                setInterval(() => this.pollNotifications(), 10000);
             },
 
             testSound() {

@@ -40,10 +40,13 @@
          pppoeUsername: '',
          pppoePassword: '',
          showPassword: false,
+         selectedRouterId: '1',
          selectedRouter: 'Router Core Utama (CCR1036)',
          localAddress: '10.10.10.1',
          pppProfile: 'PROFILE 30 Mbps',
          remoteAddress: '',
+         pppoeComment: '',
+         routersList: {{ json_encode($routers ?? []) }},
 
          occupiedMap: {{ json_encode($occupiedMap ?? []) }},
          getSlotsForPort(port) {
@@ -95,6 +98,21 @@
              this.modalCatatanAktivasi = item.aktivasi_note_finish || '';
              this.modalSnModem = (String(item.status_reg) === '20' && item.note_request) ? item.note_request : '';
              this.fotoAktivasiPreview = item.doc_aktivasi ? `/uploads/registrasi/${item.doc_aktivasi}` : null;
+
+             // Inisialisasi Kredensial PPPoE MikroTik untuk Modal Aktivasi
+             this.pppoeUsername = item.pppoe_username || item.ont_us || item.nomor_internet || '';
+             this.pppoePassword = item.pppoe_password || item.ont_ps || (Math.floor(100000 + Math.random() * 900000).toString());
+             this.showPassword = false;
+             this.selectedRouterId = item.router_id ? String(item.router_id) : (this.routersList && this.routersList.length > 0 ? String(this.routersList[0].id) : '1');
+             this.localAddress = '10.10.10.1';
+             let bw = item.nominal_bandwith || '';
+             if (!bw && item.nama_kategori_bandwith) {
+                 let match = String(item.nama_kategori_bandwith).match(/\d+/);
+                 if (match) bw = match[0];
+             }
+             this.pppProfile = bw ? ('PROFILE ' + bw + ' Mbps') : 'PROFILE 30 Mbps';
+             this.remoteAddress = '';
+             this.pppoeComment = 'Aktivasi - ' + (item.nama_pelanggan || '') + ' (' + item.nomor_internet + ')';
 
              if (item.aktivasi_team) {
                  this.modalTeamAktivasi = item.aktivasi_team.split(',').map(s => s.trim());
@@ -854,7 +872,213 @@
 
                     </div>
 
-                    <!-- Modal Actions: Batal & Simpan Report Aktivasi -->
+                    <!-- ================================================================= -->
+                    <!-- SECTION: BUAT PPPOE SECRET BARU (MIKROTIK CONFIGURATION)          -->
+                    <!-- ================================================================= -->
+                    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 p-4 sm:p-5 space-y-4 shadow-xs">
+                        
+                        <!-- Header matching Gambar 2 -->
+                        <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-3">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-cyan-600/10 dark:bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shadow-xs">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-black tracking-wider uppercase text-slate-900 dark:text-white">
+                                        BUAT PPPOE SECRET BARU
+                                    </h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                        Konfigurasi akun PPPoE & profiling MikroTik otomatis
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-[10px] font-bold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                                <span>MikroTik Sync</span>
+                            </div>
+                        </div>
+
+                        <!-- 2-Column Grid matching Gambar 2 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            
+                            <!-- 1. PPPoE Username -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                    PPPoE Username <span class="text-rose-600 font-bold">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                        </svg>
+                                    </span>
+                                    <input type="text" 
+                                           name="pppoe_username" 
+                                           x-model="pppoeUsername" 
+                                           required
+                                           placeholder="Username PPPoE" 
+                                           class="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
+                                </div>
+                            </div>
+
+                            <!-- 2. PPPoE Password with Eye Toggle -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                    PPPoE Password <span class="text-rose-600 font-bold">*</span>
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                        </svg>
+                                    </span>
+                                    <input :type="showPassword ? 'text' : 'password'" 
+                                           name="pppoe_password" 
+                                           x-model="pppoePassword" 
+                                           required
+                                           placeholder="Min. 6 karakter" 
+                                           class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
+                                    <button type="button" 
+                                            @click="showPassword = !showPassword"
+                                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer">
+                                        <template x-if="!showPassword">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            </svg>
+                                        </template>
+                                        <template x-if="showPassword">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                            </svg>
+                                        </template>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Router Dropdown -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                    Router <span class="text-rose-600 font-bold">*</span>
+                                </label>
+                                <select name="router_id" 
+                                        x-model="selectedRouterId" 
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
+                                    <option value="">— Pilih router —</option>
+                                    @if(isset($routers) && count($routers) > 0)
+                                        @foreach($routers as $r)
+                                            <option value="{{ $r->id }}">{{ $r->name }} ({{ $r->host }})</option>
+                                        @endforeach
+                                    @else
+                                        <option value="1">Router Reog (103.161.207.34)</option>
+                                        <option value="2">Router Soreang (103.161.206.19)</option>
+                                    @endif
+                                </select>
+                            </div>
+
+                            <!-- 4. Local Address (Gateway) -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Local Address</label>
+                                    <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400">Otomatis dari router</span>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                        </svg>
+                                    </span>
+                                    <input type="text" 
+                                           name="local_address" 
+                                           x-model="localAddress" 
+                                           placeholder="Otomatis" 
+                                           class="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
+                                </div>
+                            </div>
+
+                            <!-- 5. Profile Dropdown -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                    Profile <span class="text-rose-600 font-bold">*</span>
+                                </label>
+                                <select name="ppp_profile" 
+                                        x-model="pppProfile" 
+                                        class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
+                                    <option value="">— Pilih profile —</option>
+                                    <option value="PROFILE 5 Mbps">PROFILE 5 Mbps</option>
+                                    <option value="PROFILE 10 Mbps">PROFILE 10 Mbps</option>
+                                    <option value="PROFILE 15 Mbps">PROFILE 15 Mbps</option>
+                                    <option value="PROFILE 20 Mbps">PROFILE 20 Mbps</option>
+                                    <option value="PROFILE 25 Mbps">PROFILE 25 Mbps</option>
+                                    <option value="PROFILE 30 Mbps">PROFILE 30 Mbps</option>
+                                    <option value="PROFILE 40 Mbps">PROFILE 40 Mbps</option>
+                                    <option value="PROFILE 50 Mbps">PROFILE 50 Mbps</option>
+                                    <option value="PROFILE 60 Mbps">PROFILE 60 Mbps</option>
+                                    <option value="PROFILE 100 Mbps">PROFILE 100 Mbps</option>
+                                    <option value="PROFILE 170 Mbps">PROFILE 170 Mbps</option>
+                                    <option value="PROFILE ISOLIR">PROFILE ISOLIR</option>
+                                    <option value="default">default</option>
+                                    <option value="default-encryption">default-encryption</option>
+                                </select>
+                            </div>
+
+                            <!-- 6. Remote Address (IP Pelanggan) -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Remote Address</label>
+                                    <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400">Opsional</span>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                                        </svg>
+                                    </span>
+                                    <input type="text" 
+                                           name="remote_address" 
+                                           x-model="remoteAddress" 
+                                           placeholder="10.0.0.0" 
+                                           class="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- 7. Section: INFORMASI TAMBAHAN -->
+                        <div class="pt-2">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="w-3 h-0.5 rounded bg-cyan-500"></span>
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    INFORMASI TAMBAHAN
+                                </span>
+                            </div>
+
+                            <!-- Comment -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="text-[11px] font-bold text-slate-700 dark:text-slate-300">Comment</label>
+                                    <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400">Opsional</span>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute top-3 left-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                                        </svg>
+                                    </span>
+                                    <textarea name="pppoe_comment" 
+                                              x-model="pppoeComment" 
+                                              rows="2" 
+                                              placeholder="Komentar untuk PPPoE secret ini..." 
+                                              class="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs resize-none transition"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                     <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200 dark:border-slate-800">
                         <button type="button" 
                                 @click="reportModalOpen = false; aktivasiModalOpen = false;" 

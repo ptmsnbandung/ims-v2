@@ -1230,6 +1230,7 @@ class NocController extends Controller
         $pops = DB::table('m_pop')->where('hide', '!=', '1')->get();
         $karyawans = DB::table('tb_m_karyawan')->where('status_aktif', 1)->get();
         $barangs = DB::table('m_barang')->where('hide', '!=', '1')->get();
+        $routers = Schema::hasTable('routers') ? DB::table('routers')->where('is_active', 1)->get() : collect();
         $indexOltData = $this->getIndexOltSlots();
 
         return view('noc.aktivasi', [
@@ -1240,6 +1241,7 @@ class NocController extends Controller
             'pops' => $pops,
             'karyawans' => $karyawans,
             'barangs' => $barangs,
+            'routers' => $routers,
             'indexOltSlots' => $indexOltData['slots'],
             'occupiedIndexOlts' => $indexOltData['occupied'],
             'occupiedMap' => $indexOltData['occupiedMap'],
@@ -1363,8 +1365,8 @@ class NocController extends Controller
 
         // Ambil data pelanggan saat ini untuk kredensial PPPoE
         $currentCust = DB::table('trx_batchjob_register')->where('nomor_internet', $nomorInternet)->first();
-        $ontUs = (!empty($currentCust->ont_us)) ? $currentCust->ont_us : substr($nomorInternet, 0, 10);
-        $ontPs = (!empty($currentCust->ont_ps)) ? $currentCust->ont_ps : (string)rand(100000, 999999);
+        $ontUs = $request->filled('pppoe_username') ? $request->pppoe_username : ((!empty($currentCust->ont_us)) ? $currentCust->ont_us : substr($nomorInternet, 0, 10));
+        $ontPs = $request->filled('pppoe_password') ? $request->pppoe_password : ((!empty($currentCust->ont_ps)) ? $currentCust->ont_ps : (string)rand(100000, 999999));
 
         // 1. Update trx_batchjob_register -> Langsung Aktif (#20) karena aktivasi & reboot dieksekusi otomatis di background
         $updateData = [
@@ -1375,10 +1377,15 @@ class NocController extends Controller
             'note_request' => $request->sn_modem ?: ($request->catatan_aktivasi ?: $request->catatan),
             'ont_us' => $ontUs,
             'ont_ps' => $ontPs,
+            'pppoe_username' => $ontUs,
+            'pppoe_password' => $ontPs,
             'date_update' => $now,
             'user_update' => $currentUser,
         ];
 
+        if ($request->filled('router_id')) {
+            $updateData['router_id'] = $request->router_id;
+        }
         if ($request->filled('olt')) {
             $updateData['olt'] = $request->olt;
         }
@@ -1463,17 +1470,49 @@ class NocController extends Controller
             ]);
 
             // Log Otomatis Reboot & Aktivasi PPPoE (#20)
+            $routerInfo = '';
+            if ($request->filled('router_id')) {
+                $rObj = DB::table('routers')->where('id', $request->router_id)->first();
+                if ($rObj) $routerInfo = ", Router: {$rObj->name}";
+            }
+            $profileInfo = $request->filled('ppp_profile') ? ", Profile: {$request->ppp_profile}" : '';
+            $remoteInfo = $request->filled('remote_address') ? ", IP: {$request->remote_address}" : '';
+            $commentInfo = $request->filled('pppoe_comment') ? " ({$request->pppoe_comment})" : '';
+
             DB::table('trx_batchjob_register_log')->insert([
                 'kode_batchjob_register_log' => 'L-' . $nomorInternet . rand(1000, 9999),
                 'nomor_internet' => $nomorInternet,
                 'status_reg' => '20',
                 'kat_log' => '20',
-                'note_schedule' => "REBOOT & AKTIVASI OTOMATIS (BACKGROUND): OLT: {$request->olt}, Index: {$request->index_olt}, SN Modem: {$request->sn_modem}, User PPPoE: {$ontUs} - Layanan AKTIF (#20)",
+                'note_schedule' => "REBOOT & AKTIVASI OTOMATIS (BACKGROUND): OLT: {$request->olt}, Index: {$request->index_olt}, SN Modem: {$request->sn_modem}, User PPPoE: {$ontUs}{$routerInfo}{$profileInfo}{$remoteInfo}{$commentInfo} - Layanan AKTIF (#20)",
                 'date_schedule' => now()->format('Y-m-d'),
                 'time_schedule' => now()->format('H:i:s'),
                 'date_create' => $now,
                 'user_create' => $currentUser,
             ]);
+        }
+
+        // 4b. Activity Log Router (tabel activity_logs)
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                $routerName = '';
+                if ($request->filled('router_id')) {
+                    $rObj = DB::table('routers')->where('id', $request->router_id)->first();
+                    if ($rObj) $routerName = $rObj->name;
+                }
+                \App\Models\ActivityLog::record([
+                    'user_id' => $currentUser,
+                    'customer_id' => $nomorInternet,
+                    'action' => 'activate',
+                    'old_status' => $currentCust->status_reg ?? '19',
+                    'new_status' => '20',
+                    'description' => "Aktivasi Layanan: PPPoE '{$ontUs}', Router: " . ($routerName ?: ($request->router_id ?: '-')) . ", Profile: " . ($request->ppp_profile ?: '-') . ($request->remote_address ? ", Remote IP: {$request->remote_address}" : '') . ($request->pppoe_comment ? ", Comment: {$request->pppoe_comment}" : '') . ", OLT: {$request->olt}, Index: {$request->index_olt}",
+                    'router_response' => 'PPPoE Secret & Queue berhasil dikonfigurasi & layanan online (#20)',
+                    'router_success' => true,
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal log activity_logs aktivasi: ' . $e->getMessage());
+            }
         }
 
         return redirect()->back()->with('success', "Report Aktivasi untuk pelanggan {$nomorInternet} berhasil disimpan! Sistem otomatis melakukan reboot & aktivasi di background (Status: Online / Aktif #20).");

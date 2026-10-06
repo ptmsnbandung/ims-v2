@@ -2217,24 +2217,29 @@ class NocController extends Controller
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
 
-        $query = DB::table('activity_logs')
-            ->leftJoin('trx_batchjob_register', 'activity_logs.customer_id', '=', 'trx_batchjob_register.nomor_internet')
-            ->select(
-                'activity_logs.*',
-                'trx_batchjob_register.nama_pelanggan',
-                'trx_batchjob_register.alamat_pasang',
-                'trx_batchjob_register.paket',
-                'trx_batchjob_register.ont_us'
-            );
+        $query = DB::table('activity_logs');
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            // Find any customer numbers matching customer name search
+            $matchingCustIds = [];
+            if (Schema::hasTable('trx_batchjob_register')) {
+                $matchingCustIds = DB::table('trx_batchjob_register')
+                    ->where('nama_pelanggan', 'like', "%{$search}%")
+                    ->orWhere('nomor_internet', 'like', "%{$search}%")
+                    ->pluck('nomor_internet')
+                    ->all();
+            }
+
+            $query->where(function ($q) use ($search, $matchingCustIds) {
                 $q->where('activity_logs.customer_id', 'like', "%{$search}%")
                   ->orWhere('activity_logs.user_id', 'like', "%{$search}%")
                   ->orWhere('activity_logs.action', 'like', "%{$search}%")
                   ->orWhere('activity_logs.description', 'like', "%{$search}%")
-                  ->orWhere('activity_logs.router_response', 'like', "%{$search}%")
-                  ->orWhere('trx_batchjob_register.nama_pelanggan', 'like', "%{$search}%");
+                  ->orWhere('activity_logs.router_response', 'like', "%{$search}%");
+
+                if (!empty($matchingCustIds)) {
+                    $q->orWhereIn('activity_logs.customer_id', $matchingCustIds);
+                }
             });
         }
 
@@ -2255,6 +2260,23 @@ class NocController extends Controller
         }
 
         $logs = $query->orderBy('activity_logs.created_at', 'desc')->paginate(25)->withQueryString();
+
+        // Attach customer details safely without cross-collation SQL JOIN
+        $customerIds = $logs->pluck('customer_id')->filter()->unique()->values()->all();
+        $customers = !empty($customerIds) && Schema::hasTable('trx_batchjob_register')
+            ? DB::table('trx_batchjob_register')
+                ->whereIn('nomor_internet', $customerIds)
+                ->get(['nomor_internet', 'nama_pelanggan', 'alamat_pasang', 'paket', 'ont_us'])
+                ->keyBy('nomor_internet')
+            : collect();
+
+        foreach ($logs as $log) {
+            $cust = $customers->get($log->customer_id);
+            $log->nama_pelanggan = $cust->nama_pelanggan ?? null;
+            $log->alamat_pasang = $cust->alamat_pasang ?? null;
+            $log->paket = $cust->paket ?? null;
+            $log->ont_us = $cust->ont_us ?? null;
+        }
 
         // Summary KPI Metrics
         $totalLogs = DB::table('activity_logs')->count();

@@ -167,6 +167,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/router/{id}/delete', [NocController::class, 'deleteRouter'])->name('router.delete');
         Route::post('/router/test-connection', [NocController::class, 'testRouterConnection'])->name('router.test-connection');
         Route::post('/router/{id}/sync-customers', [NocController::class, 'syncRouterCustomers'])->name('router.sync-customers');
+        Route::get('/activity-log', [NocController::class, 'activityLog'])->name('activity-log');
+        Route::post('/activity-log/clear', [NocController::class, 'clearActivityLog'])->name('activity-log.clear');
 
         // 7. Provisioning & Aktivasi Jaringan
         Route::get('/aktivasi', [NocController::class, 'aktivasi'])->name('aktivasi');

@@ -143,6 +143,24 @@ class CustomerProvisioningService
             }
         }
 
+        // 6b. Activity Log Router (tabel activity_logs)
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                \App\Models\ActivityLog::record([
+                    'user_id' => $operator,
+                    'customer_id' => $nomorInternet,
+                    'action' => 'activate',
+                    'old_status' => $customer->status_reg ?? null,
+                    'new_status' => '20',
+                    'description' => "Aktivasi Layanan: PPPoE '{$pppoeUsername}' enable & kick, OLT ONU '{$indexOlt}' reboot. " . ($note ? "Note: {$note}" : ''),
+                    'router_response' => implode(' | ', $results['messages']),
+                    'router_success' => $isOverallSuccess,
+                ]);
+            } catch (Exception $e) {
+                Log::warning('Gagal log activity_logs aktivasi: ' . $e->getMessage());
+            }
+        }
+
         $isOverallSuccess = $results['database'] && ($results['mikrotik_enable'] || !$pppoeUsername);
 
         return [
@@ -283,6 +301,24 @@ class CustomerProvisioningService
                 ]);
             } catch (Exception $e) {
                 Log::warning('Gagal log suspend: ' . $e->getMessage());
+            }
+        }
+
+        // 6b. Activity Log Router (tabel activity_logs)
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                \App\Models\ActivityLog::record([
+                    'user_id' => $operator,
+                    'customer_id' => $nomorInternet,
+                    'action' => 'suspend',
+                    'old_status' => $customer->status_reg ?? null,
+                    'new_status' => '21',
+                    'description' => "Suspend/Isolir Layanan: PPPoE '{$pppoeUsername}' disable & kick. Alasan: {$reason}",
+                    'router_response' => implode(' | ', $results['messages']),
+                    'router_success' => $isOverallSuccess,
+                ]);
+            } catch (Exception $e) {
+                Log::warning('Gagal log activity_logs suspend: ' . $e->getMessage());
             }
         }
 

@@ -45,8 +45,16 @@
                 </div>
             </div>
 
-            <!-- Action Button -->
-            <div class="flex items-center gap-2.5">
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <a href="{{ route('noc.activity-log') }}" 
+                   class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-indigo-300 hover:text-white font-bold text-xs border border-indigo-500/30 transition shadow">
+                    <svg class="w-4 h-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    <span>Activity Log Router</span>
+                </a>
+
                 <button type="button" 
                         @click="addModalOpen = true"
                         class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-lg shadow-cyan-500/25 transition">

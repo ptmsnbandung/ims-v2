@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Noc;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Services\Network\CustomerProvisioningService;
 use App\Services\Olt\OltConnectionService;
 use Carbon\Carbon;
@@ -1537,6 +1538,24 @@ class NocController extends Controller
             ]);
         }
 
+        // 3b. Activity Log Router (tabel activity_logs)
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                ActivityLog::record([
+                    'user_id' => $currentUser,
+                    'customer_id' => $nomorInternet,
+                    'action' => 'pppoe_activate',
+                    'old_status' => null,
+                    'new_status' => '20',
+                    'description' => "Aktivasi PPPoE Secret: User '{$request->pppoe_username}', Router: '{$request->router_mikrotik}', Profile: '{$request->ppp_profile}', Remote IP: " . ($request->remote_address ?: 'Dynamic/Pool'),
+                    'router_response' => 'PPPoE Secret & Queue berhasil dibuat di MikroTik',
+                    'router_success' => true,
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal log activity_logs pppoe: ' . $e->getMessage());
+            }
+        }
+
         return redirect()->back()->with('success', "PPPoE Secret berhasil dibuat di {$request->router_mikrotik} dan layanan pelanggan {$nomorInternet} resmi AKTIF!");
     }
 
@@ -1951,7 +1970,7 @@ class NocController extends Controller
         $now = now()->format('Y-m-d H:i:s');
         $encryptedPass = Crypt::encryptString($request->password);
 
-        DB::table('routers')->insert([
+        $routerId = DB::table('routers')->insertGetId([
             'name' => $request->name,
             'host' => $request->host,
             'port' => (int)$request->port,
@@ -1962,6 +1981,21 @@ class NocController extends Controller
             'created_at' => $now,
             'updated_at' => $now,
         ]);
+
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                ActivityLog::record([
+                    'user_id' => auth()->user()?->nama ?? auth()->user()?->username ?? 'System',
+                    'customer_id' => null,
+                    'action' => 'create_router',
+                    'description' => "Menambahkan router baru: {$request->name} ({$request->host}:{$request->port}) di wilayah " . ($request->kota ?: 'Umum'),
+                    'router_response' => "Router ID #{$routerId} berhasil dibuat",
+                    'router_success' => true,
+                ]);
+            } catch (\Exception $e) {
+                // Ignore log error
+            }
+        }
 
         return redirect()->route('noc.router')->with('success', "Router '{$request->name}' berhasil ditambahkan ke sistem.");
     }
@@ -2001,6 +2035,21 @@ class NocController extends Controller
 
         DB::table('routers')->where('id', $id)->update($updateData);
 
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                ActivityLog::record([
+                    'user_id' => auth()->user()?->nama ?? auth()->user()?->username ?? 'System',
+                    'customer_id' => null,
+                    'action' => 'update_router',
+                    'description' => "Memperbarui konfigurasi router [ID #{$id}]: {$request->name} ({$request->host}:{$request->port})",
+                    'router_response' => "Router ID #{$id} berhasil diperbarui",
+                    'router_success' => true,
+                ]);
+            } catch (\Exception $e) {
+                // Ignore log error
+            }
+        }
+
         return redirect()->route('noc.router')->with('success', "Konfigurasi Router '{$request->name}' berhasil diperbarui.");
     }
 
@@ -2021,6 +2070,21 @@ class NocController extends Controller
 
         DB::table('routers')->where('id', $id)->delete();
 
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                ActivityLog::record([
+                    'user_id' => auth()->user()?->nama ?? auth()->user()?->username ?? 'System',
+                    'customer_id' => null,
+                    'action' => 'delete_router',
+                    'description' => "Menghapus router MikroTik: {$router->name} ({$router->host})",
+                    'router_response' => "Router ID #{$id} dihapus dari master data",
+                    'router_success' => true,
+                ]);
+            } catch (\Exception $e) {
+                // Ignore log error
+            }
+        }
+
         return redirect()->route('noc.router')->with('success', "Router '{$router->name}' berhasil dihapus.");
     }
 
@@ -2034,10 +2098,12 @@ class NocController extends Controller
         $port = (int)$request->input('port', 18735);
         $username = $request->input('username');
         $password = $request->input('password');
+        $routerName = 'Custom Host';
 
         if ($id) {
             $router = DB::table('routers')->where('id', $id)->first();
             if ($router) {
+                $routerName = $router->name;
                 $host = $router->host;
                 $port = (int)($router->port ?: 18735);
                 $username = $router->username;
@@ -2065,6 +2131,21 @@ class NocController extends Controller
         ]);
 
         $result = $service->testConnection();
+
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                ActivityLog::record([
+                    'user_id' => auth()->user()?->nama ?? auth()->user()?->username ?? 'System',
+                    'customer_id' => null,
+                    'action' => 'test_connection',
+                    'description' => "Tes koneksi live ke router: {$routerName} ({$host}:{$port})",
+                    'router_response' => ($result['success'] ? 'Sukses terhubung' : 'Gagal terhubung') . ' - ' . ($result['message'] ?? ($result['identity'] ?? '')),
+                    'router_success' => (bool)$result['success'],
+                ]);
+            } catch (\Exception $e) {
+                // Ignore log error
+            }
+        }
 
         return response()->json($result);
     }
@@ -2103,10 +2184,124 @@ class NocController extends Controller
 
         $msg = "Sinkronisasi selesai! {$mappedCount} pelanggan di trx_batchjob_register berhasil dipetakan ke router '{$router->name}'.";
 
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                ActivityLog::record([
+                    'user_id' => auth()->user()?->nama ?? auth()->user()?->username ?? 'System',
+                    'customer_id' => null,
+                    'action' => 'sync_router',
+                    'description' => "Sinkronisasi mapping pelanggan ke router [ID #{$id}] '{$router->name}' (Wilayah: " . ($router->kota ?: 'Default / Semua') . ")",
+                    'router_response' => "{$mappedCount} pelanggan berhasil dipetakan",
+                    'router_success' => true,
+                ]);
+            } catch (\Exception $e) {
+                // Ignore log error
+            }
+        }
+
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json(['success' => true, 'mapped_count' => $mappedCount, 'message' => $msg]);
         }
 
         return redirect()->route('noc.router')->with('success', $msg);
+    }
+
+    /**
+     * Audit Trail & Activity Log Router MikroTik & Jaringan
+     */
+    public function activityLog(Request $request): View
+    {
+        $search = $request->query('search');
+        $action = $request->query('action');
+        $status = $request->query('status'); // '1' (sukses), '0' (gagal)
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $query = DB::table('activity_logs')
+            ->leftJoin('trx_batchjob_register', 'activity_logs.customer_id', '=', 'trx_batchjob_register.nomor_internet')
+            ->select(
+                'activity_logs.*',
+                'trx_batchjob_register.nama_pelanggan',
+                'trx_batchjob_register.alamat_pasang',
+                'trx_batchjob_register.paket',
+                'trx_batchjob_register.ont_us'
+            );
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('activity_logs.customer_id', 'like', "%{$search}%")
+                  ->orWhere('activity_logs.user_id', 'like', "%{$search}%")
+                  ->orWhere('activity_logs.action', 'like', "%{$search}%")
+                  ->orWhere('activity_logs.description', 'like', "%{$search}%")
+                  ->orWhere('activity_logs.router_response', 'like', "%{$search}%")
+                  ->orWhere('trx_batchjob_register.nama_pelanggan', 'like', "%{$search}%");
+            });
+        }
+
+        if ($action) {
+            $query->where('activity_logs.action', $action);
+        }
+
+        if ($status !== null && $status !== '') {
+            $query->where('activity_logs.router_success', (int)$status);
+        }
+
+        if ($startDate) {
+            $query->where('activity_logs.created_at', '>=', "{$startDate} 00:00:00");
+        }
+
+        if ($endDate) {
+            $query->where('activity_logs.created_at', '<=', "{$endDate} 23:59:59");
+        }
+
+        $logs = $query->orderBy('activity_logs.created_at', 'desc')->paginate(25)->withQueryString();
+
+        // Summary KPI Metrics
+        $totalLogs = DB::table('activity_logs')->count();
+        $successLogs = DB::table('activity_logs')->where('router_success', 1)->count();
+        $failedLogs = DB::table('activity_logs')->where('router_success', 0)->count();
+        $todayLogs = DB::table('activity_logs')->whereDate('created_at', Carbon::today())->count();
+        $activateLogs = DB::table('activity_logs')->whereIn('action', ['activate', 'pppoe_activate'])->count();
+        $suspendLogs = DB::table('activity_logs')->where('action', 'suspend')->count();
+
+        // Unique Actions list for filter dropdown
+        $availableActions = DB::table('activity_logs')
+            ->select('action')
+            ->distinct()
+            ->pluck('action')
+            ->all();
+
+        return view('noc.activity-log', [
+            'user' => $request->user(),
+            'logs' => $logs,
+            'search' => $search,
+            'action' => $action,
+            'status' => $status,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'totalLogs' => $totalLogs,
+            'successLogs' => $successLogs,
+            'failedLogs' => $failedLogs,
+            'todayLogs' => $todayLogs,
+            'activateLogs' => $activateLogs,
+            'suspendLogs' => $suspendLogs,
+            'availableActions' => $availableActions,
+        ]);
+    }
+
+    /**
+     * Clear / Prune Old Activity Logs
+     */
+    public function clearActivityLog(Request $request): RedirectResponse
+    {
+        $days = (int)$request->input('days', 30);
+        if ($days > 0) {
+            $deleted = DB::table('activity_logs')
+                ->where('created_at', '<', Carbon::now()->subDays($days))
+                ->delete();
+            return redirect()->route('noc.activity-log')->with('success', "Berhasil membersihkan {$deleted} log aktivitas router yang lebih lama dari {$days} hari.");
+        }
+
+        return redirect()->route('noc.activity-log')->with('error', 'Parameter hari tidak valid.');
     }
 }

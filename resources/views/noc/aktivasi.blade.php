@@ -42,7 +42,7 @@
          showPassword: false,
          selectedRouterId: '1',
          selectedRouter: 'Router Core Utama (CCR1036)',
-         localAddress: '10.10.10.1',
+         localAddress: '10.0.0.1',
          pppProfile: 'PROFILE 30 Mbps',
          remoteAddress: '',
          pppoeComment: '',
@@ -65,11 +65,27 @@
          isLoadingProfiles: false,
          profileFetchError: null,
 
+         getLocalAddressForRouter(routerId) {
+             let rId = String(routerId || this.selectedRouterId || '');
+             if (rId === '2') return '10.1.0.1';
+             let routerObj = (this.routersList || []).find(r => String(r.id) === rId);
+             if (routerObj && ((routerObj.name || '') + ' ' + (routerObj.kota || '')).toLowerCase().includes('soreang')) {
+                 return '10.1.0.1';
+             }
+             return '10.0.0.1';
+         },
+
+         onRouterChange(routerId) {
+             this.localAddress = this.getLocalAddressForRouter(routerId);
+             this.fetchPppProfiles(routerId);
+         },
+
          async fetchPppProfiles(routerId) {
              if (!routerId) {
                  this.mikrotikProfiles = [];
                  return;
              }
+             this.localAddress = this.getLocalAddressForRouter(routerId);
              this.isLoadingProfiles = true;
              this.profileFetchError = null;
              try {
@@ -82,7 +98,9 @@
                      const exactMatch = this.mikrotikProfiles.find(p => p.name === this.pppProfile || p.name.toLowerCase() === this.pppProfile.toLowerCase());
                      if (exactMatch) {
                          this.pppProfile = exactMatch.name;
-                         if (exactMatch.local_address) this.localAddress = exactMatch.local_address;
+                         if (exactMatch.local_address && exactMatch.local_address !== '0.0.0.0') {
+                             this.localAddress = exactMatch.local_address;
+                         }
                      } else {
                          // Coba cocokkan berdasarkan angka bandwidth (misal Broadband-20M / 20)
                          let bwMatch = null;
@@ -93,7 +111,9 @@
                          }
                          if (bwMatch) {
                              this.pppProfile = bwMatch.name;
-                             if (bwMatch.local_address) this.localAddress = bwMatch.local_address;
+                             if (bwMatch.local_address && bwMatch.local_address !== '0.0.0.0') {
+                                 this.localAddress = bwMatch.local_address;
+                             }
                          } else if (!this.pppProfile && this.mikrotikProfiles.length > 0) {
                              this.pppProfile = this.mikrotikProfiles[0].name;
                          }
@@ -116,8 +136,10 @@
          onProfileChange(profName) {
              const list = this.mikrotikProfiles.length > 0 ? this.mikrotikProfiles : this.fallbackProfiles;
              const found = list.find(p => p.name === profName);
-             if (found && found.local_address) {
+             if (found && found.local_address && found.local_address !== '0.0.0.0') {
                  this.localAddress = found.local_address;
+             } else if (!this.localAddress) {
+                 this.localAddress = this.getLocalAddressForRouter(this.selectedRouterId);
              }
          },
 
@@ -210,7 +232,7 @@
              }
              this.selectedRouterId = detectedRouterId || '1';
 
-             this.localAddress = this.selectedRouterId === '2' ? '10.1.8.1' : '10.0.0.1';
+             this.localAddress = this.getLocalAddressForRouter(this.selectedRouterId);
              let bw = item.nominal_bandwith || '';
              if (!bw && item.nama_kategori_bandwith) {
                  let match = String(item.nama_kategori_bandwith).match(/\d+/);
@@ -1154,7 +1176,7 @@
                                     </label>
                                     <select name="router_id" 
                                             x-model="selectedRouterId" 
-                                            @change="fetchPppProfiles(selectedRouterId)"
+                                            @change="onRouterChange(selectedRouterId)"
                                             class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
                                         <option value="">— Pilih router —</option>
                                         @if(isset($routers) && count($routers) > 0)

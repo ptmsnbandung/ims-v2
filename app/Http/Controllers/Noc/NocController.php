@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Noc;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Services\Network\CustomerProvisioningService;
+use App\Services\Network\MikrotikService;
 use App\Services\Olt\OltConnectionService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -2187,6 +2188,52 @@ class NocController extends Controller
         }
 
         return response()->json($result);
+    }
+
+    /**
+     * AJAX: Dapatkan list PPP Profiles langsung dari router MikroTik
+     */
+    public function getRouterPppProfiles(int|string $id): JsonResponse
+    {
+        $router = DB::table('routers')->where('id', $id)->first();
+        if (!$router) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Router tidak ditemukan.',
+                'profiles' => [],
+            ], 404);
+        }
+
+        try {
+            $pass = $router->password;
+            try {
+                $pass = Crypt::decryptString($pass);
+            } catch (\Exception $e) {
+                // Fallback to raw password
+            }
+
+            $service = new MikrotikService([
+                'host' => $router->host,
+                'port' => (int)($router->port ?: 18735),
+                'username' => $router->username,
+                'password' => $pass,
+                'timeout' => 4,
+            ]);
+
+            $profiles = $service->getPppProfiles();
+
+            return response()->json([
+                'success' => true,
+                'router_name' => $router->name,
+                'profiles' => $profiles,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil profile dari MikroTik: ' . $e->getMessage(),
+                'profiles' => [],
+            ], 500);
+        }
     }
 
     /**

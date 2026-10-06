@@ -364,4 +364,34 @@ class MikrotikService
             return [];
         }
     }
+
+    /**
+     * Ambil seluruh profile PPP dari MikroTik (/ppp/profile/print)
+     */
+    public function getPppProfiles(): array
+    {
+        try {
+            $client = $this->getClient();
+            $result = $client->comm('/ppp/profile/print');
+            $client->disconnect();
+            if (!is_array($result)) return [];
+
+            $profiles = [];
+            foreach ($result as $p) {
+                if (isset($p['name'])) {
+                    $profiles[] = [
+                        'name' => $p['name'],
+                        'local_address' => $p['local-address'] ?? '',
+                        'remote_address' => $p['remote-address'] ?? '',
+                        'rate_limit' => $p['rate-limit'] ?? '',
+                        'comment' => $p['comment'] ?? '',
+                    ];
+                }
+            }
+            return $profiles;
+        } catch (Throwable $e) {
+            Log::error('Mikrotik getPppProfiles error: ' . $e->getMessage());
+            return [];
+        }
+    }
 }

@@ -166,6 +166,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/router/{id}/update', [NocController::class, 'updateRouter'])->name('router.update');
         Route::post('/router/{id}/delete', [NocController::class, 'deleteRouter'])->name('router.delete');
         Route::post('/router/test-connection', [NocController::class, 'testRouterConnection'])->name('router.test-connection');
+        Route::get('/router/{id}/ppp-profiles', [NocController::class, 'getRouterPppProfiles'])->name('router.ppp-profiles');
         Route::post('/router/{id}/sync-customers', [NocController::class, 'syncRouterCustomers'])->name('router.sync-customers');
         Route::get('/activity-log', [NocController::class, 'activityLog'])->name('activity-log');
         Route::post('/activity-log/clear', [NocController::class, 'clearActivityLog'])->name('activity-log.clear');

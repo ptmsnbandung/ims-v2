@@ -20,15 +20,18 @@ class MikrotikTelnet
     private bool $connected = false;
 
     /** Prompt CLI MikroTik, contoh: [admin@MikroTik] > atau > */
-    private const PROMPT_REGEX = '/(\[[^\]\r\n]+\]\s*[>#]\s*$)|(>\s*$)/';
+    private const PROMPT_REGEX = '/(\[[^\]\r\n]+\]\s*[>#])|((^|\n)\s*>\s*$)/';
 
-    public function __construct(string $host, int $port = 23, string $user = 'admin', string $pass = '', int $timeout = 5)
+    public ?string $error = null;
+    public ?string $lastBuffer = '';
+
+    public function __construct(string $host, int $port = 23, string $user = 'admin', string $pass = '', int $timeout = 7)
     {
         $this->host = $host;
         $this->port = $port;
         $this->user = $user;
         $this->pass = $pass;
-        $this->timeout = $timeout;
+        $this->timeout = max($timeout, 7);
     }
 
     /**
@@ -37,6 +40,7 @@ class MikrotikTelnet
     public function connect(): bool
     {
         $this->error = null;
+        $this->lastBuffer = '';
 
         // 1. Open TCP connection
         $this->socket = @fsockopen($this->host, $this->port, $errno, $errstr, $this->timeout);
@@ -49,21 +53,24 @@ class MikrotikTelnet
         stream_set_blocking($this->socket, true);
 
         // 2. Read initial banner / negotiation (Telnet IAC commands + MikroTik login prompt)
-        $banner = $this->readUntil(['Login:', 'login:', 'Username:', 'username:'], 8);
+        $banner = $this->readUntil(['Login:', 'login:', 'Username:', 'username:'], max($this->timeout, 8));
 
         if ($banner === false) {
-            $this->error = "Timeout menunggu login prompt dari {$this->host}:{$this->port}";
+            $bufferSample = trim(preg_replace('/[\x00-\x1F\x7F]/', ' ', (string)$this->lastBuffer));
+            $this->error = "Timeout menunggu login prompt dari {$this->host}:{$this->port}" . ($bufferSample ? " (buffer: {$bufferSample})" : "");
             $this->disconnect();
             return false;
         }
 
-        // 3. Send username
-        $this->writeLine($this->user);
+        // 3. Send username (+ct = tanpa warna ANSI & cegah probe terminal detection MikroTik yang membuat hang)
+        $loginUser = str_contains($this->user, '+') ? $this->user : ($this->user . '+ct');
+        $this->writeLine($loginUser);
 
         // 4. Wait for password prompt
-        $pwPrompt = $this->readUntil(['Password:', 'password:'], 5);
+        $pwPrompt = $this->readUntil(['Password:', 'password:'], 6);
         if ($pwPrompt === false) {
-            $this->error = "Timeout menunggu password prompt dari {$this->host}:{$this->port}";
+            $bufferSample = trim(preg_replace('/[\x00-\x1F\x7F]/', ' ', (string)$this->lastBuffer));
+            $this->error = "Timeout menunggu password prompt dari {$this->host}:{$this->port}" . ($bufferSample ? " (buffer: {$bufferSample})" : "");
             $this->disconnect();
             return false;
         }
@@ -71,18 +78,46 @@ class MikrotikTelnet
         // 5. Send password
         $this->writeLine($this->pass);
 
-        // 6. Wait for CLI prompt (e.g. [admin@MikroTik] > ) atau pesan gagal login
-        $loginResult = $this->readUntil(['login failed', 'login failure', 'incorrect', 'invalid user'], 6, self::PROMPT_REGEX);
+        // 6. Wait for CLI prompt (e.g. [admin@MikroTik] > ) atau pesan gagal login / license
+        $loginResult = $this->readUntil(
+            ['login failed', 'login failure', 'incorrect', 'invalid user', 'failure', 'software license', 'new password'],
+            max($this->timeout, 8),
+            self::PROMPT_REGEX
+        );
+
         if ($loginResult === false) {
-            $this->error = "Timeout setelah login ke {$this->host}:{$this->port}";
+            $bufferSample = trim(preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', (string)$this->lastBuffer));
+            $bufferSample = trim(preg_replace('/[\x00-\x1F\x7F]/', ' ', $bufferSample));
+            $bufferSample = preg_replace('/\s+/', ' ', $bufferSample);
+            $extra = $bufferSample !== '' ? " (respon router: " . substr($bufferSample, 0, 120) . ")" : " (tidak ada teks dari router)";
+            $this->error = "Timeout setelah login ke {$this->host}:{$this->port}{$extra}";
             $this->disconnect();
             return false;
         }
 
+        // Handle license prompt jika router meminta persetujuan software license
+        if (stripos($loginResult, 'software license') !== false || stripos($loginResult, '[y/n]') !== false) {
+            $this->writeLine('n');
+            usleep(200000);
+            $loginResult = $this->readUntil([], 4, self::PROMPT_REGEX);
+        }
+
         // Check login failure
         $cleanResult = preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', (string)$loginResult);
-        if (!preg_match(self::PROMPT_REGEX, $cleanResult)) {
+        if (stripos($cleanResult, 'login failed') !== false || stripos($cleanResult, 'incorrect') !== false || stripos($cleanResult, 'invalid user') !== false) {
             $this->error = "Autentikasi Telnet gagal ke {$this->host}:{$this->port} (username/password salah)";
+            $this->disconnect();
+            return false;
+        }
+
+        if (stripos($cleanResult, 'new password') !== false) {
+            $this->error = "Router {$this->host}:{$this->port} meminta penggantian password baru (login pertama). Harap setel password permanen via Winbox.";
+            $this->disconnect();
+            return false;
+        }
+
+        if (!preg_match(self::PROMPT_REGEX, $cleanResult)) {
+            $this->error = "Autentikasi Telnet gagal atau prompt tidak dikenali ke {$this->host}:{$this->port}";
             $this->disconnect();
             return false;
         }
@@ -313,6 +348,7 @@ class MikrotikTelnet
             }
 
             $buffer .= $byte;
+            $this->lastBuffer = $buffer;
 
             $clean = preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', $buffer);
 
@@ -330,6 +366,7 @@ class MikrotikTelnet
 
         // Timeout fallback check
         if (!empty($buffer)) {
+            $this->lastBuffer = $buffer;
             $clean = preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', $buffer);
             foreach ($needles as $needle) {
                 if (stripos($clean, $needle) !== false) {

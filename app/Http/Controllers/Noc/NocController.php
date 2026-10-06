@@ -2266,7 +2266,7 @@ class NocController extends Controller
         $customers = !empty($customerIds) && Schema::hasTable('trx_batchjob_register')
             ? DB::table('trx_batchjob_register')
                 ->whereIn('nomor_internet', $customerIds)
-                ->get(['nomor_internet', 'nama_pelanggan', 'alamat_pasang', 'paket', 'ont_us'])
+                ->get(['nomor_internet', 'nama_pelanggan', 'alamat_pasang', 'kode_bandwith', 'ont_us'])
                 ->keyBy('nomor_internet')
             : collect();
 
@@ -2274,7 +2274,7 @@ class NocController extends Controller
             $cust = $customers->get($log->customer_id);
             $log->nama_pelanggan = $cust->nama_pelanggan ?? null;
             $log->alamat_pasang = $cust->alamat_pasang ?? null;
-            $log->paket = $cust->paket ?? null;
+            $log->paket = $cust->kode_bandwith ?? null;
             $log->ont_us = $cust->ont_us ?? null;
         }
 

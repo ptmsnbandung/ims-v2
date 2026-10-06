@@ -252,11 +252,15 @@
                                             bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-800
                                         @elseif($item->status_reg == '18')
                                             bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800
+                                        @elseif($item->status_reg == '18.1')
+                                            bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800
+                                        @elseif(in_array($item->status_reg, ['19', '19.1']))
+                                            bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-800
                                         @else
-                                            bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800
+                                            bg-slate-50 dark:bg-slate-950/50 text-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-800
                                         @endif">
                                         <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                        <span>{{ $item->desc_registrasi ?: 'Pendaftaran #' . $item->status_reg }}</span>
+                                        <span>{{ $item->desc_registrasi ?: ($item->status_reg == '18.1' ? 'Req Aktivasi NOC (#18.1)' : 'Pendaftaran #' . $item->status_reg) }}</span>
                                     </span>
                                 </div>
 
@@ -437,11 +441,37 @@
                                         </button>
                                     @endif
 
+                                    {{-- Tahap 5.1: Sudah Kirim Request Aktivasi ke NOC (#18.1) --}}
+                                    @if($item->status_reg == '18.1')
+                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[11px] font-bold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                            <span>Menunggu Jadwal NOC</span>
+                                        </div>
+                                        <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-bold"
+                                            title="Cetak Surat Tugas Instalasi">
+                                            <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                            </svg>
+                                            <span>Surat Tugas</span>
+                                        </a>
+                                        <button type="button" 
+                                                @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-semibold">
+                                            <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            </svg>
+                                            <span>Lihat Instalasi</span>
+                                        </button>
+                                    @endif
+
                                     {{-- Tahap 6: Jadwal Aktivasi Terbit (#19, #19.1) --}}
                                     @if(in_array($item->status_reg, ['19', '19.1']))
                                         <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
                                             <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
-                                            <span>Menunggu NOC</span>
+                                            <span>Terjadwal di NOC</span>
                                         </div>
                                         <button type="button" 
                                                 @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
@@ -2384,7 +2414,7 @@
                         </div>
 
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Setelah dikirim, status pelanggan akan berubah menjadi <strong class="text-amber-600 dark:text-amber-400">Jadwal Aktivasi Terbit (#19)</strong> dan akan langsung muncul pada antrean aktivasi Tim NOC.
+                            Setelah dikirim, status pelanggan akan berubah menjadi <strong class="text-amber-600 dark:text-amber-400">Request Aktivasi NOC (#18.1)</strong> dan akan langsung muncul pada antrean Tim NOC untuk dibuatkan jadwal aktivasi.
                         </p>
                     </div>
 

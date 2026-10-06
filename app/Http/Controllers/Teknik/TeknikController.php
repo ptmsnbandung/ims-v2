@@ -77,7 +77,7 @@ class TeknikController extends Controller
             // 7. Pemasangan Baru (status_reg proses pendaftaran baru)
             'pemasangan_baru' => Schema::hasTable('trx_batchjob_register')
                 ? DB::table('trx_batchjob_register')
-                    ->whereIn('status_reg', ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'])
+                    ->whereIn('status_reg', ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1'])
                     ->count()
                 : 0,
 
@@ -874,7 +874,7 @@ class TeknikController extends Controller
         }
 
         // Status pendaftaran baru yang sedang berjalan (sebelum terkonfirmasi menjadi pelanggan tetap)
-        $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'];
+        $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1'];
 
         $query = DB::table('view_batchjob')
             ->whereIn('status_reg', $registrationStatuses);
@@ -1797,7 +1797,7 @@ class TeknikController extends Controller
     }
 
     /**
-     * Kirim Request Aktivasi ke NOC -> Status #19
+     * Kirim Request Aktivasi ke NOC -> Status #18.1 (Menunggu Jadwal Aktivasi NOC)
      */
     public function requestAktivasiNoc(Request $request): RedirectResponse
     {
@@ -1810,11 +1810,11 @@ class TeknikController extends Controller
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'TEKNIK';
 
-        // Update status_reg -> 19 (Jadwal Aktivasi Terbit / Siap Aktivasi NOC)
+        // Update status_reg -> 18.1 (Request Aktivasi NOC / Siap Jadwal Aktivasi)
         DB::table('trx_batchjob_register')
             ->where('nomor_internet', $nomorInternet)
             ->update([
-                'status_reg' => '19',
+                'status_reg' => '18.1',
                 'date_update' => $now,
                 'user_update' => $currentUser,
             ]);
@@ -1825,8 +1825,6 @@ class TeknikController extends Controller
                 ['nomor_internet' => $nomorInternet],
                 [
                     'kode_instalasi' => 'INS-' . $nomorInternet,
-                    'aktivasi_date_start' => now()->format('Y-m-d'),
-                    'aktivasi_time' => now()->format('H:i:s'),
                     'aktivasi_note' => $request->catatan_aktivasi ?: 'Request aktivasi layanan dari tim Teknik',
                     'date_update' => $now,
                     'user_update' => $currentUser,
@@ -1837,17 +1835,17 @@ class TeknikController extends Controller
         DB::table('trx_batchjob_register_log')->insert([
             'kode_batchjob_register_log' => 'L-' . $nomorInternet . rand(1000, 9999),
             'nomor_internet' => $nomorInternet,
-            'status_reg' => '19',
-            'date_schedule' => now()->format('Y-m-d'),
-            'time_schedule' => now()->format('H:i:s'),
+            'status_reg' => '18.1',
+            'date_schedule' => null,
+            'time_schedule' => null,
             'note_schedule' => $request->catatan_aktivasi ?: 'Permintaan aktivasi ke NOC',
-            'kat_log' => '22',
+            'kat_log' => '18',
             'date_create' => $now,
             'user_create' => $currentUser,
             'hide' => '0',
         ]);
 
-        return redirect()->route('teknik.pendaftaran')->with('success', "Permintaan aktivasi jaringan An/ {$request->nama_pelanggan} ({$nomorInternet}) berhasil dikirim ke NOC!");
+        return redirect()->route('teknik.pendaftaran')->with('success', "Permintaan aktivasi jaringan An/ {$request->nama_pelanggan} ({$nomorInternet}) berhasil dikirim ke antrean NOC untuk dijadwalkan!");
     }
 
     /**
@@ -1855,7 +1853,7 @@ class TeknikController extends Controller
      */
     public function exportPendaftaran(Request $request): StreamedResponse
     {
-        $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'];
+        $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1'];
         $query = DB::table('view_batchjob')->whereIn('status_reg', $registrationStatuses);
 
         if ($request->filled('layanan')) {

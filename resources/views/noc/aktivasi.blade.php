@@ -306,7 +306,7 @@
                                     </div>
                                 @elseif(in_array($p->status_reg, ['18', '18.1']))
                                     <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 shadow-xs">
-                                        SIAP JADWAL (#18)
+                                        {{ $p->status_reg == '18.1' ? 'REQ AKTIVASI (#18.1)' : 'SIAP JADWAL (#18)' }}
                                     </span>
                                 @else
                                     <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/30">

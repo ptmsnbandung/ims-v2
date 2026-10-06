@@ -84,9 +84,65 @@ class MikrotikService
     }
 
     /**
-     * Dapatkan koneksi API client yang sudah terautentikasi
+     * Dapatkan koneksi client yang sudah terautentikasi (RouterosAPI atau MikrotikTelnetClient)
      */
-    private function getClient(): RouterosAPI
+    private function getClient(): object
+    {
+        // 1. Jika port adalah standar RouterOS API (8728 / 8729), coba API terlebih dahulu
+        if ((int)$this->port === 8728 || (int)$this->port === 8729) {
+            try {
+                return $this->getApiClient();
+            } catch (Throwable $apiErr) {
+                // Fallback ke Telnet jika API gagal
+                try {
+                    return $this->getTelnetClient();
+                } catch (Throwable) {
+                    throw $apiErr;
+                }
+            }
+        }
+
+        // 2. Jika port bukan standar API (misal port Telnet 23, 18735, dll),
+        // utamakan koneksi Telnet langsung sesuai konfigurasi
+        $telnetException = null;
+        try {
+            return $this->getTelnetClient();
+        } catch (Throwable $e) {
+            $telnetException = $e;
+        }
+
+        // 3. Fallback: jika Telnet gagal, coba RouterosAPI
+        try {
+            return $this->getApiClient();
+        } catch (Throwable $apiException) {
+            // Jika error Telnet adalah kegagalan otentikasi / kredensial, prioritaskan info tersebut
+            if ($telnetException) {
+                $telnetMsg = $telnetException->getMessage();
+                if (str_contains($telnetMsg, 'Autentikasi') || str_contains($telnetMsg, 'Password')) {
+                    throw new Exception("Telnet: {$telnetMsg}");
+                }
+            }
+            $telnetReason = $telnetException ? $telnetException->getMessage() : 'gagal';
+            throw new Exception("Telnet ({$telnetReason}) & API ({$apiException->getMessage()})");
+        }
+    }
+
+    /**
+     * Inisialisasi koneksi via Telnet client
+     */
+    private function getTelnetClient(): MikrotikTelnetClient
+    {
+        $telnet = new MikrotikTelnet($this->host, $this->port, $this->user, $this->pass, $this->timeout);
+        if (!$telnet->connect()) {
+            throw new Exception($telnet->error ?: "Gagal terhubung ke Telnet ({$this->host}:{$this->port})");
+        }
+        return new MikrotikTelnetClient($telnet);
+    }
+
+    /**
+     * Inisialisasi koneksi via RouterosAPI client
+     */
+    private function getApiClient(): RouterosAPI
     {
         $api = new RouterosAPI();
         $api->timeout = $this->timeout;
@@ -95,21 +151,20 @@ class MikrotikService
         if (!$connected) {
             $detail = trim((string)($api->error_str ?? ''));
             if ($detail === '') {
-                // Diagnosa: cek apakah port TCP terbuka untuk membedakan penyebab
                 $errno = 0;
                 $errstr = '';
                 $sock = @fsockopen($this->host, $this->port, $errno, $errstr, $this->timeout);
                 if ($sock === false) {
                     $reason = $errstr !== ''
                         ? "port TCP tidak dapat dijangkau ({$errstr}, errno {$errno})"
-                        : 'timeout / tidak ada respon (cek firewall, IP publik, NAT / port forward, atau service API MikroTik)';
+                        : 'timeout / port tertutup';
                 } else {
                     fclose($sock);
-                    $reason = 'port terbuka tetapi login API gagal (cek username/password atau izin user API)';
+                    $reason = 'port terbuka tetapi handshake/login API gagal (mungkin port ini adalah Telnet/SSH, bukan RouterOS API)';
                 }
-                $detail = "Tidak dapat terhubung ke MikroTik ({$this->host}:{$this->port}): {$reason}";
+                $detail = "Gagal via API ({$this->host}:{$this->port}): {$reason}";
             } else {
-                $detail = "{$detail} ({$this->host}:{$this->port})";
+                $detail = "API: {$detail} ({$this->host}:{$this->port})";
             }
             throw new Exception($detail);
         }
@@ -126,13 +181,14 @@ class MikrotikService
             $client = $this->getClient();
             $response = $client->comm('/system/identity/print');
             $identity = $response[0]['name'] ?? 'MikroTik Router';
+            $protocol = ($client instanceof MikrotikTelnetClient) ? 'Telnet' : 'API';
 
             $client->disconnect();
 
             return [
                 'success' => true,
                 'identity' => $identity,
-                'message' => "Terhubung ke MikroTik ({$identity})",
+                'message' => "Terhubung ke MikroTik via {$protocol} ({$identity})",
             ];
         } catch (Throwable $e) {
             return [

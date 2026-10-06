@@ -19,7 +19,8 @@ class MikrotikTelnet
     private int $timeout;
     private bool $connected = false;
 
-    public ?string $error = null;
+    /** Prompt CLI MikroTik, contoh: [admin@MikroTik] > atau > */
+    private const PROMPT_REGEX = '/(\[[^\]\r\n]+\]\s*[>#]\s*$)|(>\s*$)/';
 
     public function __construct(string $host, int $port = 23, string $user = 'admin', string $pass = '', int $timeout = 5)
     {
@@ -70,8 +71,8 @@ class MikrotikTelnet
         // 5. Send password
         $this->writeLine($this->pass);
 
-        // 6. Wait for CLI prompt (e.g. [admin@MikroTik] > )
-        $loginResult = $this->readUntil(['>', '#', 'Login failure', 'invalid user', 'Error'], 5);
+        // 6. Wait for CLI prompt (e.g. [admin@MikroTik] > ) atau pesan gagal login
+        $loginResult = $this->readUntil(['login failed', 'login failure', 'incorrect', 'invalid user'], 6, self::PROMPT_REGEX);
         if ($loginResult === false) {
             $this->error = "Timeout setelah login ke {$this->host}:{$this->port}";
             $this->disconnect();
@@ -79,9 +80,9 @@ class MikrotikTelnet
         }
 
         // Check login failure
-        $lower = strtolower($loginResult);
-        if (str_contains($lower, 'login failure') || str_contains($lower, 'invalid user') || str_contains($lower, 'error')) {
-            $this->error = "Autentikasi gagal ke {$this->host}:{$this->port} (username/password salah)";
+        $cleanResult = preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', (string)$loginResult);
+        if (!preg_match(self::PROMPT_REGEX, $cleanResult)) {
+            $this->error = "Autentikasi Telnet gagal ke {$this->host}:{$this->port} (username/password salah)";
             $this->disconnect();
             return false;
         }
@@ -119,25 +120,26 @@ class MikrotikTelnet
         $this->writeLine($command);
 
         // Read output until we see the CLI prompt again
-        $output = $this->readUntil(['>', '#'], $this->timeout);
+        $output = $this->readUntil([], $this->timeout + 5, self::PROMPT_REGEX);
         if ($output === false) {
             return '';
         }
 
-        // Clean output: remove the command echo and trailing prompt
-        $lines = explode("\n", $output);
+        // Clean output: remove ANSI escape codes, remove echoed command and prompt lines
+        $clean = preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', $output);
+        $lines = explode("\n", $clean);
         $cleaned = [];
         $skipFirst = true;
         foreach ($lines as $line) {
-            $trimmed = trim($line, "\r\n\0");
+            $trimmed = trim($line, "\r\n\0 ");
             // Skip the echoed command line
-            if ($skipFirst && str_contains($trimmed, $command)) {
+            if ($skipFirst && str_contains($trimmed, trim($command))) {
                 $skipFirst = false;
                 continue;
             }
             // Skip empty lines from telnet negotiation and prompt lines
-            if (preg_match('/^\[.*@.*\]\s*[>#]\s*$/', $trimmed)) {
-                continue; // This is the prompt line
+            if (preg_match('/^\[.*@.*\]\s*[>#]\s*$/', $trimmed) || $trimmed === '>') {
+                continue;
             }
             $cleaned[] = $trimmed;
         }
@@ -249,7 +251,7 @@ class MikrotikTelnet
      * Read from socket until one of the needle strings is found
      * Returns accumulated text or false on timeout
      */
-    private function readUntil(array $needles, int $timeout): string|false
+    private function readUntil(array $needles, int $timeout, ?string $endRegex = null): string|false
     {
         $buffer = '';
         $startTime = time();
@@ -312,17 +314,31 @@ class MikrotikTelnet
 
             $buffer .= $byte;
 
-            // Check if any needle is found
+            $clean = preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', $buffer);
+
+            // Check if any needle is found (case-insensitive)
             foreach ($needles as $needle) {
-                if (str_contains($buffer, $needle)) {
+                if (stripos($clean, $needle) !== false) {
                     return $buffer;
                 }
             }
+
+            if ($endRegex !== null && preg_match($endRegex, $clean)) {
+                return $buffer;
+            }
         }
 
-        // Timeout
+        // Timeout fallback check
         if (!empty($buffer)) {
-            return $buffer;
+            $clean = preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', $buffer);
+            foreach ($needles as $needle) {
+                if (stripos($clean, $needle) !== false) {
+                    return $buffer;
+                }
+            }
+            if ($endRegex !== null && preg_match($endRegex, $clean)) {
+                return $buffer;
+            }
         }
         return false;
     }
@@ -347,7 +363,7 @@ class MikrotikTelnet
      * Parse "terse" output format from MikroTik
      * Format: " 0 name=xxx service=pppoe password=yyy ..."
      */
-    private function parseTerseOutput(string $output): array
+    public function parseTerseOutput(string $output): array
     {
         $items = [];
         foreach (explode("\n", $output) as $line) {

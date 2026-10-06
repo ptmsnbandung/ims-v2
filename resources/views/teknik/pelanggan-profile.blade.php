@@ -30,7 +30,7 @@
 
 <div class="space-y-6"
      x-data="{
-         // Active Tab: 'log', 'arsip', 'layanan', 'suspend', 'tagihan', 'pengaduan', 'perangkat'
+         // Active Tab: 'log', 'arsip', 'layanan', 'suspend', 'tagihan', 'pengaduan', 'perangkat', 'activity_log'
          activeTab: 'perangkat',
 
          // Upload Modal State for Arsip Scan Dokumen
@@ -393,6 +393,19 @@
                             :class="activeTab === 'perangkat' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
                         Perangkat dsb.
+                    </button>
+
+                    <!-- 8. Tab Activity Log Router -->
+                    <button type="button"
+                            @click="activeTab = 'activity_log'"
+                            :class="activeTab === 'activity_log' ? 'bg-violet-600 text-white shadow-md shadow-violet-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer flex items-center gap-1.5">
+                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/></svg>
+                        Activity Log
+                        @if($customerActivityLogs->count() > 0)
+                            <span class="inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full bg-white/20 text-white" x-show="activeTab === 'activity_log'">{{ $customerActivityLogs->count() }}</span>
+                            <span class="inline-flex items-center justify-center w-4 h-4 text-[9px] font-bold rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400" x-show="activeTab !== 'activity_log'">{{ $customerActivityLogs->count() }}</span>
+                        @endif
                     </button>
                 </div>
 
@@ -1291,6 +1304,135 @@
                         </div>
 
                     </div>
+
+                </div>
+
+                <!-- ======================================================= -->
+                <!-- 8. TAB CONTENT: ACTIVITY LOG ROUTER                      -->
+                <!-- ======================================================= -->
+                <div x-show="activeTab === 'activity_log'" x-cloak class="p-6 space-y-4">
+
+                    <!-- Header -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+                                    <svg class="w-4 h-4 text-violet-600 dark:text-violet-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/></svg>
+                                </span>
+                                Riwayat Aktivitas Router
+                            </h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 ml-9">Log semua aksi router untuk pelanggan ini (aktivasi, suspend, reboot ONU, dll.)</p>
+                        </div>
+                        <a href="{{ route('noc.activity-log') }}?search={{ $customer->nomor_internet }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold transition duration-150">
+                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                            Lihat Semua Log
+                        </a>
+                    </div>
+
+                    @forelse($customerActivityLogs as $alog)
+                        @php
+                            $actionColors = [
+                                'activate'              => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
+                                'pppoe_activate'        => ['bg' => 'bg-emerald-100 dark:bg-emerald-900/30', 'text' => 'text-emerald-700 dark:text-emerald-400', 'dot' => 'bg-emerald-500'],
+                                'suspend'               => ['bg' => 'bg-amber-100 dark:bg-amber-900/30',    'text' => 'text-amber-700 dark:text-amber-400',    'dot' => 'bg-amber-500'],
+                                'pppoe_disable'         => ['bg' => 'bg-amber-100 dark:bg-amber-900/30',    'text' => 'text-amber-700 dark:text-amber-400',    'dot' => 'bg-amber-500'],
+                                'terminate'             => ['bg' => 'bg-rose-100 dark:bg-rose-900/30',      'text' => 'text-rose-700 dark:text-rose-400',      'dot' => 'bg-rose-500'],
+                                'pppoe_delete'          => ['bg' => 'bg-rose-100 dark:bg-rose-900/30',      'text' => 'text-rose-700 dark:text-rose-400',      'dot' => 'bg-rose-500'],
+                                'reboot_onu_background' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30',      'text' => 'text-blue-700 dark:text-blue-400',      'dot' => 'bg-blue-500'],
+                                'status_changed'        => ['bg' => 'bg-sky-100 dark:bg-sky-900/30',        'text' => 'text-sky-700 dark:text-sky-400',        'dot' => 'bg-sky-500'],
+                            ];
+                            $ac = $actionColors[$alog->action] ?? ['bg' => 'bg-slate-100 dark:bg-slate-800', 'text' => 'text-slate-600 dark:text-slate-400', 'dot' => 'bg-slate-400'];
+                            $actionLabel = match($alog->action) {
+                                'activate', 'pppoe_activate'   => 'Aktivasi',
+                                'suspend', 'pppoe_disable'     => 'Suspend / Isolir',
+                                'terminate', 'pppoe_delete'    => 'Terminasi',
+                                'reboot_onu_background'        => 'Reboot ONU',
+                                'status_changed'               => 'Ubah Status',
+                                default                        => ucwords(str_replace('_', ' ', $alog->action)),
+                            };
+                        @endphp
+
+                        <div class="flex gap-3 group">
+                            <!-- Timeline Dot & Line -->
+                            <div class="flex flex-col items-center">
+                                <div class="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 {{ $ac['dot'] }} ring-2 ring-white dark:ring-slate-900"></div>
+                                @if(!$loop->last)
+                                    <div class="w-px flex-1 bg-slate-200 dark:bg-slate-800 mt-1"></div>
+                                @endif
+                            </div>
+
+                            <!-- Log Card -->
+                            <div class="flex-1 pb-4">
+                                <div class="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/70 rounded-xl p-3.5 group-hover:border-violet-300 dark:group-hover:border-violet-800 transition duration-150">
+
+                                    <!-- Top Row: Action badge, Status change, Timestamp -->
+                                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold {{ $ac['bg'] }} {{ $ac['text'] }}">
+                                                {{ $actionLabel }}
+                                            </span>
+                                            @if($alog->old_status || $alog->new_status)
+                                                <div class="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                                                    @if($alog->old_status)
+                                                        <span class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-medium text-slate-600 dark:text-slate-300">{{ $alog->old_status }}</span>
+                                                    @endif
+                                                    @if($alog->old_status && $alog->new_status)
+                                                        <svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+                                                    @endif
+                                                    @if($alog->new_status)
+                                                        <span class="px-1.5 py-0.5 rounded {{ $ac['bg'] }} {{ $ac['text'] }} font-bold">{{ $alog->new_status }}</span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+                                            {{ \Carbon\Carbon::parse($alog->created_at)->locale('id')->isoFormat('D MMM YYYY, HH:mm') }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Description -->
+                                    @if($alog->description)
+                                        <p class="text-xs text-slate-700 dark:text-slate-300 font-medium mb-1.5">{{ $alog->description }}</p>
+                                    @endif
+
+                                    <!-- Router Response -->
+                                    @if($alog->router_response)
+                                        <div class="flex items-start gap-1.5">
+                                            <span class="mt-0.5 flex-shrink-0 w-4 h-4 rounded flex items-center justify-center
+                                                {{ $alog->router_success ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600' : 'bg-rose-100 dark:bg-rose-900/40 text-rose-500' }}">
+                                                @if($alog->router_success)
+                                                    <svg class="w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                                @else
+                                                    <svg class="w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                                                @endif
+                                            </span>
+                                            <code class="text-[10px] font-mono {{ $alog->router_success ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400' }} leading-relaxed">{{ $alog->router_response }}</code>
+                                        </div>
+                                    @endif
+
+                                    <!-- Footer: Operator -->
+                                    @if($alog->user_id)
+                                        <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/70 flex items-center gap-1.5">
+                                            <svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                                            <span class="text-[10px] text-slate-500 dark:text-slate-400">Operator: <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $alog->user_id }}</span></span>
+                                        </div>
+                                    @endif
+
+                                </div>
+                            </div>
+                        </div>
+
+                    @empty
+                        <!-- Empty State -->
+                        <div class="text-center py-14">
+                            <div class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-7 h-7 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/></svg>
+                            </div>
+                            <p class="text-sm font-semibold text-slate-600 dark:text-slate-400">Belum ada activity log</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Riwayat aksi router untuk pelanggan ini akan muncul di sini.</p>
+                        </div>
+                    @endforelse
 
                 </div>
 

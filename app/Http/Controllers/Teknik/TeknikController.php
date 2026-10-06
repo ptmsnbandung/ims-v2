@@ -2744,26 +2744,48 @@ class TeknikController extends Controller
 
         $indexOltData = $this->getIndexOltSlots();
 
+        // 10. Activity Log per Pelanggan (dari activity_logs, match by nomor_internet atau ont_us)
+        $customerActivityLogs = collect();
+        if (Schema::hasTable('activity_logs')) {
+            // Primary: match by nomor_internet (standard)
+            $customerActivityLogs = DB::table('activity_logs')
+                ->where('customer_id', (string) $nomorInternet)
+                ->orderBy('created_at', 'desc')
+                ->limit(100)
+                ->get();
+
+            // Secondary fallback: match by ont_us (for data imported from isp_manager)
+            if ($customerActivityLogs->isEmpty() && $regRecord && !empty($regRecord->ont_us)) {
+                $customerActivityLogs = DB::table('activity_logs')
+                    ->where('customer_id', (string) $regRecord->ont_us)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(100)
+                    ->get();
+            }
+        }
+
         return view('teknik.pelanggan-profile', [
-            'user' => $request->user(),
-            'customer' => $customer,
-            'logs' => $logs,
-            'instalasi' => $instalasi,
-            'teams' => $teams,
-            'billingReg' => $billingReg,
-            'billingLayanan' => $billingLayanan,
-            'suspendRecords' => $suspendRecords,
-            'tickets' => $tickets,
-            'perangkats' => $perangkats,
-            'masterBarang' => $masterBarang,
-            'pops' => $pops,
-            'olts' => $olts,
-            'indexOltSlots' => $indexOltData['slots'],
+            'user'              => $request->user(),
+            'customer'          => $customer,
+            'logs'              => $logs,
+            'instalasi'         => $instalasi,
+            'teams'             => $teams,
+            'billingReg'        => $billingReg,
+            'billingLayanan'    => $billingLayanan,
+            'suspendRecords'    => $suspendRecords,
+            'tickets'           => $tickets,
+            'perangkats'        => $perangkats,
+            'masterBarang'      => $masterBarang,
+            'pops'              => $pops,
+            'olts'              => $olts,
+            'indexOltSlots'     => $indexOltData['slots'],
             'occupiedIndexOlts' => $indexOltData['occupied'],
-            'occupiedMap' => $indexOltData['occupiedMap'],
-            'allPorts' => $indexOltData['allPorts'],
-            'portStats' => $indexOltData['portStats'],
+            'occupiedMap'       => $indexOltData['occupiedMap'],
+            'allPorts'          => $indexOltData['allPorts'],
+            'portStats'         => $indexOltData['portStats'],
+            'customerActivityLogs' => $customerActivityLogs,
         ]);
+
     }
 
     /**

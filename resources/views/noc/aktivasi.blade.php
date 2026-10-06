@@ -193,8 +193,24 @@
              this.pppoeUsername = item.pppoe_username || item.ont_us || item.nomor_internet || '';
              this.pppoePassword = item.pppoe_password || item.ont_ps || (Math.floor(100000 + Math.random() * 900000).toString());
              this.showPassword = false;
-             this.selectedRouterId = item.router_id ? String(item.router_id) : (this.routersList && this.routersList.length > 0 ? String(this.routersList[0].id) : '1');
-             this.localAddress = '10.0.0.1';
+
+             // Deteksi Router sesuai data pelanggan (router_id / POP / Kota / Alamat)
+             let detectedRouterId = '';
+             if (item.router_id) {
+                 detectedRouterId = String(item.router_id);
+             } else {
+                 let info = ((item.kode_pop || '') + ' ' + (item.nama_pop || '') + ' ' + (item.kota || '') + ' ' + (item.alamat || '')).toLowerCase();
+                 if (info.includes('sor') || info.includes('soreang')) {
+                     let sorR = (this.routersList || []).find(r => (r.name || '').toLowerCase().includes('soreang') || (r.kota || '').toLowerCase().includes('soreang'));
+                     if (sorR) detectedRouterId = String(sorR.id);
+                 }
+             }
+             if (!detectedRouterId && this.routersList && this.routersList.length > 0) {
+                 detectedRouterId = String(this.routersList[0].id);
+             }
+             this.selectedRouterId = detectedRouterId || '1';
+
+             this.localAddress = this.selectedRouterId === '2' ? '10.1.8.1' : '10.0.0.1';
              let bw = item.nominal_bandwith || '';
              if (!bw && item.nama_kategori_bandwith) {
                  let match = String(item.nama_kategori_bandwith).match(/\d+/);

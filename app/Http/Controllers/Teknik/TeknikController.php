@@ -2512,12 +2512,24 @@ class TeknikController extends Controller
             }
         }
 
+        // List Paket Bandwidth untuk modal UP/Downgrade
+        $paketList = Schema::hasTable('m_bandwith') && Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith as b')
+                ->join('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
+                ->select('b.kode_bandwith', 'b.nominal_bandwith', 'b.harga_bandwith', 'k.nama_kategori_bandwith')
+                ->where('b.hide', '0')
+                ->orderBy('k.nama_kategori_bandwith')
+                ->orderBy('b.nominal_bandwith')
+                ->get()
+            : collect();
+
         return view('teknik.pelanggan', [
             'user' => $request->user(),
             'pelanggan' => $pelanggan,
             'layananList' => $layananList,
             'statusList' => $statusList,
             'wilayahList' => $wilayahList,
+            'paketList' => $paketList,
             'bwCounts' => $bwCounts,
             'filters' => $request->only(['layanan', 'search', 'alamat', 'status', 'wilayah', 'per_page']),
         ]);

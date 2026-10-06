@@ -4,6 +4,13 @@
 @section('page_title', 'Data Pelanggan')
 
 @section('content')
+@php
+    $isFinance = request()->routeIs('finance.*') || auth()->user()?->hasRole(['finance', 'admin', 'direktur']);
+    $pelangganRoute = request()->routeIs('finance.*') ? 'finance.pelanggan' : 'teknik.pelanggan';
+    $profileRoute = request()->routeIs('finance.*') ? 'finance.pelanggan.profile' : 'teknik.pelanggan.profile';
+    $exportRoute = request()->routeIs('finance.*') ? 'finance.pelanggan.export' : 'teknik.pelanggan.export';
+@endphp
+
 <div class="space-y-6"
      x-data="{
          // Tab Status Active: 'aktif', 'terminasi', 'suspend', 'all'
@@ -11,14 +18,85 @@
          
          // Quick Search
          searchQuery: '{{ $filters['search'] ?? '' }}',
+
+         // Modal states for Permintaan ke NOC (Finance)
+         upDowngradeModalOpen: false,
+         suspendModalOpen: false,
+         terminasiModalOpen: false,
+         activeCustomer: {
+             nomor_internet: '',
+             nama_pelanggan: '',
+             nama_kategori_bandwith: '',
+             nominal_bandwith: '',
+             harga_bandwith: 0,
+             alamat: '',
+             kode_bandwith: ''
+         },
+
+         openUpDowngrade(cust) {
+             this.activeCustomer = cust;
+             this.upDowngradeModalOpen = true;
+         },
+         openSuspend(cust) {
+             this.activeCustomer = cust;
+             this.suspendModalOpen = true;
+         },
+         openTerminasi(cust) {
+             this.activeCustomer = cust;
+             this.terminasiModalOpen = true;
+         }
      }">
     
+<<<<<<< Updated upstream
     <!-- Top Header: Breadcrumbs & Total KPI Badges (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
     <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
         <!-- Subtle Glow Effect -->
         <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+=======
+    <!-- Flash Messages (Notifikasi Sukses / Gagal Permintaan) -->
+    @if(session('success'))
+        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-sm flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <span class="font-medium">{{ session('success') }}</span>
+            </div>
+            <button @click="$el.parentElement.remove()" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 text-lg font-bold cursor-pointer">&times;</button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-400 text-sm flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2.5">
+                <svg class="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                </svg>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
+            <button @click="$el.parentElement.remove()" class="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 text-lg font-bold cursor-pointer">&times;</button>
+        </div>
+    @endif
+
+    <!-- Top Header: Breadcrumbs & Total KPI Badges -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+        <!-- Breadcrumb & Title -->
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">IMS</a>
+                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                </svg>
+                <span class="text-slate-800 dark:text-slate-200 font-semibold">{{ $isFinance ? 'Finance' : 'Teknik' }}</span>
+                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                </svg>
+                <span class="text-blue-600 dark:text-blue-400 font-semibold">Pelanggan</span>
+            </div>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Data Pelanggan Terdaftar</h2>
+        </div>
+>>>>>>> Stashed changes
 
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <!-- Breadcrumb & Title -->
@@ -141,10 +219,17 @@
                         $count = $bwCounts['aktif'][$layanan->kode_kategori_bandwith] ?? 0;
                         $isActiveFilter = ($filters['status'] ?? '') == '20' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
                     @endphp
+<<<<<<< Updated upstream
                     <a href="{{ route('teknik.pelanggan', ['status' => '20', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
                        class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm {{ $isActiveFilter ? 'bg-blue-50/90 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700' }} flex flex-col justify-between min-h-[74px]">
                         <div class="flex items-center justify-between gap-1">
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
+=======
+                    <a href="{{ route($pelangganRoute, ['status' => '20', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
+                       class="group p-3.5 rounded-xl border transition-all duration-150 shadow-sm {{ $isActiveFilter ? 'bg-blue-50 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/20' : 'bg-white dark:bg-slate-950/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700' }} flex flex-col justify-between min-h-[82px]">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 group-hover:border-blue-300 dark:group-hover:border-blue-500/40 transition truncate max-w-[120px]">
+>>>>>>> Stashed changes
                                 {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-blue-600 dark:bg-blue-400' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
@@ -158,12 +243,21 @@
                     </a>
                 @endforeach
 
+<<<<<<< Updated upstream
                 <!-- Card Total Aktif (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route('teknik.pelanggan', ['status' => '20']) }}" 
                    class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-blue-600 hover:bg-blue-700 text-white border-blue-600 flex flex-col justify-between min-h-[74px]">
                     <div class="flex items-center justify-between gap-1">
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-blue-800/70 text-white border border-blue-400/30 truncate">
                             TOTAL AKTIF
+=======
+                <!-- Card Total Aktif -->
+                <a href="{{ route($pelangganRoute, ['status' => '20']) }}" 
+                   class="group p-3.5 rounded-xl border transition-all duration-150 shadow-sm {{ (($filters['status'] ?? '') == '20' && empty($filters['layanan'])) ? 'bg-blue-50 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/20' : 'bg-white dark:bg-slate-950/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700' }} flex flex-col justify-between min-h-[82px]">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white shadow-sm">
+                            Total Aktif
+>>>>>>> Stashed changes
                         </span>
                         <svg class="w-3.5 h-3.5 text-blue-200 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -211,12 +305,21 @@
                     </a>
                 @endforeach
 
+<<<<<<< Updated upstream
                 <!-- Card Total Terminasi (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route('teknik.pelanggan', ['status' => '23']) }}" 
                    class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-rose-600 hover:bg-rose-700 text-white border-rose-600 flex flex-col justify-between min-h-[74px]">
                     <div class="flex items-center justify-between gap-1">
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-800/70 text-white border border-rose-400/30 truncate">
                             TOTAL TERMINASI
+=======
+                <!-- Card Total Terminasi -->
+                <a href="{{ route($pelangganRoute, ['status' => '23']) }}" 
+                   class="group p-3.5 rounded-xl border transition-all duration-150 shadow-sm {{ (($filters['status'] ?? '') == '23' && empty($filters['layanan'])) ? 'bg-rose-50 dark:bg-rose-500/15 border-rose-500 ring-2 ring-rose-500/20' : 'bg-white dark:bg-slate-950/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700' }} flex flex-col justify-between min-h-[82px]">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-600 text-white shadow-sm">
+                            Total Terminasi
+>>>>>>> Stashed changes
                         </span>
                         <svg class="w-3.5 h-3.5 text-rose-200 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -247,10 +350,17 @@
                         $count = $bwCounts['suspend'][$layanan->kode_kategori_bandwith] ?? 0;
                         $isActiveFilter = ($filters['status'] ?? '') == '21' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
                     @endphp
+<<<<<<< Updated upstream
                     <a href="{{ route('teknik.pelanggan', ['status' => '21', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
                        class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm {{ $isActiveFilter ? 'bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700' }} flex flex-col justify-between min-h-[74px]">
                         <div class="flex items-center justify-between gap-1">
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-amber-300 dark:group-hover:border-amber-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
+=======
+                    <a href="{{ route($pelangganRoute, ['status' => '21', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
+                       class="group p-3.5 rounded-xl border transition-all duration-150 shadow-sm {{ $isActiveFilter ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/20' : 'bg-white dark:bg-slate-950/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700' }} flex flex-col justify-between min-h-[82px]">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 group-hover:border-amber-300 dark:group-hover:border-amber-500/40 transition truncate max-w-[120px]">
+>>>>>>> Stashed changes
                                 {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
@@ -264,12 +374,21 @@
                     </a>
                 @endforeach
 
+<<<<<<< Updated upstream
                 <!-- Card Total Suspend (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route('teknik.pelanggan', ['status' => '21']) }}" 
                    class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-amber-500 hover:bg-amber-600 text-white border-amber-500 flex flex-col justify-between min-h-[74px]">
                     <div class="flex items-center justify-between gap-1">
                         <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-700/70 text-white border border-amber-300/30 truncate">
                             TOTAL SUSPEND
+=======
+                <!-- Card Total Suspend -->
+                <a href="{{ route($pelangganRoute, ['status' => '21']) }}" 
+                   class="group p-3.5 rounded-xl border transition-all duration-150 shadow-sm {{ (($filters['status'] ?? '') == '21' && empty($filters['layanan'])) ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/20' : 'bg-white dark:bg-slate-950/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700' }} flex flex-col justify-between min-h-[82px]">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500 text-white shadow-sm">
+                            Total Suspend
+>>>>>>> Stashed changes
                         </span>
                         <svg class="w-3.5 h-3.5 text-amber-100 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -291,7 +410,7 @@
     <!-- FILTER BAR CONTAINER                                                -->
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-        <form method="GET" action="{{ route('teknik.pelanggan') }}" id="filterForm">
+        <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 items-end">
                 
                 <!-- 1. Dropdown Semua Layanan -->
@@ -356,7 +475,7 @@
 
                 <!-- 6. Action Buttons: Reset & Export Excel -->
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('teknik.pelanggan') }}" 
+                    <a href="{{ route($pelangganRoute) }}" 
                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold transition duration-150 shadow-sm">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -364,7 +483,7 @@
                         <span>Reset</span>
                     </a>
                     
-                    <a href="{{ route('teknik.pelanggan.export', request()->query()) }}" 
+                    <a href="{{ route($exportRoute, request()->query()) }}" 
                        class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-[#00a65a] hover:bg-[#008d4c] text-white transition duration-150 shadow-sm cursor-pointer"
                        title="Download data pelanggan ke format Excel">
                         <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -414,7 +533,7 @@
                         <th class="py-3.5 px-4">Lokasi Pemasangan</th>
                         <th class="py-3.5 px-4 min-w-[180px]">Status</th>
                         <th class="py-3.5 px-4 min-w-[170px]">Tanggal SO / Registrasi</th>
-                        <th class="py-3.5 px-4 text-center min-w-[100px]">Aksi</th>
+                        <th class="py-3.5 px-4 text-center min-w-[170px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -423,7 +542,7 @@
                             
                             <!-- 1. Pelanggan -->
                             <td class="py-4 px-4 align-top">
-                                <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                                <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
                                    class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline tracking-wide text-xs inline-block"
                                    title="Buka Profile Pelanggan">
                                     {{ $item->nomor_internet }}
@@ -467,13 +586,13 @@
                                 <div>
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border
                                         @if($item->status_reg == '20')
-                                            bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20
+                                             bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20
                                         @elseif(in_array($item->status_reg, ['21', '21.1']))
-                                            bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20
+                                             bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20
                                         @elseif(in_array($item->status_reg, ['23', '23.1']))
-                                            bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20
+                                             bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20
                                         @else
-                                            bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700
+                                             bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700
                                         @endif">
                                         <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
                                         <span>{{ $item->desc_registrasi ?: 'Status #' . $item->status_reg }}</span>
@@ -529,7 +648,7 @@
 
                                     <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}?download=pdf" 
                                        target="_blank"
-                                       class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500/30 transition" 
+                                       class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500/30 transition cursor-pointer" 
                                        title="Download PDF Form Berlangganan">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -537,20 +656,101 @@
                                     </a>
                                     <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}" 
                                        target="_blank"
-                                       class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-500/30 transition" 
+                                       class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 border border-slate-200 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-500/30 transition cursor-pointer" 
                                        title="Buka & Cetak Form Berlangganan">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                         </svg>
                                     </a>
-                                    <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                       class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/30 transition" 
+                                    <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
+                                       class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/30 transition cursor-pointer" 
                                        title="Lihat Profile Pelanggan">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                         </svg>
                                     </a>
+
+                                    @if($isFinance)
+                                        @php
+                                            $custJson = json_encode([
+                                                'nomor_internet' => $item->nomor_internet,
+                                                'nama_pelanggan' => $item->nama_pelanggan,
+                                                'nama_kategori_bandwith' => $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN'),
+                                                'nominal_bandwith' => $item->nominal_bandwith ?? '',
+                                                'harga_bandwith' => (float)($item->harga_bandwith ?? 0),
+                                                'alamat' => $item->alamat_p ?: ($item->alamat_pasang ?: '-'),
+                                                'kode_bandwith' => $item->kode_bandwith ?? '',
+                                                'status_reg' => $item->status_reg,
+                                            ]);
+                                        @endphp
+                                        <!-- Dropdown Permintaan (Khusus User Finance) -->
+                                        <div class="relative inline-block text-left" x-data="{ openPermintaan: false }">
+                                            <button type="button" 
+                                                    @click="openPermintaan = !openPermintaan" 
+                                                    @click.away="openPermintaan = false"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shadow-sm shadow-blue-500/25 transition cursor-pointer"
+                                                    title="Menu Permintaan ke NOC">
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                                                </svg>
+                                                <span>Permintaan</span>
+                                                <svg class="w-3 h-3 transition-transform duration-150" :class="openPermintaan ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                </svg>
+                                            </button>
+
+                                            <!-- Dropdown Menu Permintaan -->
+                                            <div x-show="openPermintaan"
+                                                 x-cloak
+                                                 x-transition:enter="transition ease-out duration-100"
+                                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                                 x-transition:leave="transition ease-in duration-75"
+                                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                                 class="absolute right-0 mt-1.5 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl py-1 z-30 divide-y divide-slate-100 dark:divide-slate-800 text-left">
+                                                <div class="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between">
+                                                    <span>Permintaan ke NOC</span>
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                                </div>
+                                                <div class="py-1">
+                                                    <!-- 1. Req UP / Downgrade -->
+                                                    <button type="button"
+                                                            @click="openPermintaan = false; openUpDowngrade({{ $custJson }})"
+                                                            class="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition text-left cursor-pointer group">
+                                                        <span class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 text-sm font-bold group-hover:scale-110 transition-transform">⚡</span>
+                                                        <div class="leading-tight">
+                                                            <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">Req UP / Downgrade</div>
+                                                            <div class="text-[10px] text-slate-400 font-normal">Ubah kecepatan bandwidth</div>
+                                                        </div>
+                                                    </button>
+
+                                                    <!-- 2. Req Suspend -->
+                                                    <button type="button"
+                                                            @click="openPermintaan = false; openSuspend({{ $custJson }})"
+                                                            class="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 transition text-left cursor-pointer group">
+                                                        <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 text-sm font-bold group-hover:scale-110 transition-transform">🛑</span>
+                                                        <div class="leading-tight">
+                                                            <div class="font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">Req Suspend (Isolir)</div>
+                                                            <div class="text-[10px] text-slate-400 font-normal">Isolir karena tunggakan</div>
+                                                        </div>
+                                                    </button>
+
+                                                    <!-- 3. Req Terminasi -->
+                                                    <button type="button"
+                                                            @click="openPermintaan = false; openTerminasi({{ $custJson }})"
+                                                            class="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition text-left cursor-pointer group">
+                                                        <span class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 text-sm font-bold group-hover:scale-110 transition-transform">🔌</span>
+                                                        <div class="leading-tight">
+                                                            <div class="font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400">Req Terminasi</div>
+                                                            <div class="text-[10px] text-slate-400 font-normal">Berhenti berlangganan</div>
+                                                        </div>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -585,6 +785,233 @@
                 <a href="{{ $pelanggan->nextPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Next</a>
                 <a href="{{ $pelanggan->url($pelanggan->lastPage()) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
             </div>
+        </div>
+    <!-- ======================================================================= -->
+    <!-- 1. MODAL: REQUEST UP / DOWNGRADE BANDWIDTH KE NOC                       -->
+    <!-- ======================================================================= -->
+    <div x-show="upDowngradeModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+        <div @click.away="upDowngradeModalOpen = false"
+             class="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>⚡ Ajukan UP / Downgrade Bandwidth ke NOC</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Permintaan akan otomatis diteruskan ke antrean kerja tim NOC.</p>
+                </div>
+                <button @click="upDowngradeModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+
+            <form action="{{ route('finance.permintaan.up-downgrade.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
+
+                <!-- Info Pelanggan Terpilih -->
+                <div class="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
+                        <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Paket Saat Ini:</span>
+                        <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '') + (activeCustomer.harga_bandwith > 0 ? ' - Rp ' + Number(activeCustomer.harga_bandwith).toLocaleString('id-ID') : '')"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
+                        <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+                    </div>
+                </div>
+
+                <!-- 2. Pilih Paket Baru -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Paket / Bandwidth Baru <span class="text-rose-500">*</span></label>
+                    <select name="kode_bandwith_baru" required class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                        <option value="">-- Pilih Paket Baru --</option>
+                        @if(isset($paketList))
+                            @foreach($paketList as $p)
+                                <option value="{{ $p->kode_bandwith }}">
+                                    {{ $p->nama_kategori_bandwith }} - {{ $p->nominal_bandwith }} Mbps (Rp {{ number_format((float)($p->harga_bandwith ?? 0), 0, ',', '.') }})
+                                </option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+
+                <!-- 3. Tanggal Jadwal Eksekusi -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Jadwal Eksekusi <span class="text-rose-500">*</span></label>
+                    <input type="date"
+                           name="date_schedule"
+                           value="{{ date('Y-m-d') }}"
+                           required
+                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                </div>
+
+                <!-- 4. Catatan / Alasan Permintaan -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Tambahan untuk Tim NOC</label>
+                    <textarea name="note_request"
+                              rows="2"
+                              placeholder="Contoh: Pengajuan ubah paket oleh Finance..."
+                              class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">Pengajuan ubah kecepatan/paket oleh Finance</textarea>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                    <button type="button"
+                            @click="upDowngradeModalOpen = false"
+                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition cursor-pointer">
+                        Kirim Request UP/Downgrade ke NOC
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- 2. MODAL: REQUEST SUSPEND (ISOLIR) KE NOC                               -->
+    <!-- ======================================================================= -->
+    <div x-show="suspendModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+        <div @click.away="suspendModalOpen = false"
+             class="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>🛑 Ajukan Permintaan Suspend (Isolir) ke NOC</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Digunakan untuk pelanggan yang menunggak atau belum membayar tagihan.</p>
+                </div>
+                <button @click="suspendModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+
+            <form action="{{ route('finance.permintaan.suspend.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
+
+                <!-- Info Pelanggan Terpilih -->
+                <div class="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
+                        <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Paket:</span>
+                        <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '')"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
+                        <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+                    </div>
+                </div>
+
+                <!-- Tanggal Mulai Isolir -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Mulai Isolir <span class="text-rose-500">*</span></label>
+                    <input type="date"
+                           name="suspend_start"
+                           value="{{ date('Y-m-d') }}"
+                           required
+                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium">
+                </div>
+
+                <!-- Alasan / Keterangan Suspend -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Keterangan / Alasan Suspend <span class="text-rose-500">*</span></label>
+                    <textarea name="desc_suspend"
+                              rows="3"
+                              required
+                              placeholder="Contoh: Melewati batas pembayaran tanggal jatuh tempo..."
+                              class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">Melewati batas pembayaran yang telah ditentukan</textarea>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                    <button type="button"
+                            @click="suspendModalOpen = false"
+                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-500/25 transition cursor-pointer">
+                        Kirim Request Suspend ke NOC
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- 3. MODAL: REQUEST TERMINASI KE NOC                                      -->
+    <!-- ======================================================================= -->
+    <div x-show="terminasiModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+        <div @click.away="terminasiModalOpen = false"
+             class="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>🔌 Ajukan Permintaan Terminasi ke NOC / Lapangan</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Digunakan untuk pelanggan yang berhenti berlangganan (tutup akun & penarikan perangkat).</p>
+                </div>
+                <button @click="terminasiModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+
+            <form action="{{ route('finance.permintaan.terminasi.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
+
+                <!-- Info Pelanggan Terpilih -->
+                <div class="p-3.5 rounded-xl bg-rose-50/70 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
+                        <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Paket:</span>
+                        <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '')"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
+                        <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+                    </div>
+                </div>
+
+                <!-- Alasan Berhenti Berlangganan -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alasan Berhenti Berlangganan <span class="text-rose-500">*</span></label>
+                    <select name="note_termin" required class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium">
+                        <option value="">-- Pilih Alasan Utama --</option>
+                        <option value="Permintaan Pelanggan (Pindah Rumah / Alamat)">Permintaan Pelanggan (Pindah Rumah / Alamat)</option>
+                        <option value="Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)">Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)</option>
+                        <option value="Tunggakan Pembayaran Tidak Diselesaikan">Tunggakan Pembayaran Tidak Diselesaikan</option>
+                        <option value="Beralih ke Provider Lain">Beralih ke Provider Lain</option>
+                        <option value="Lainnya">Lainnya (Tutup Akun)</option>
+                    </select>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                    <button type="button"
+                            @click="terminasiModalOpen = false"
+                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 transition cursor-pointer">
+                        Kirim Request Terminasi ke NOC
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -663,3 +1090,4 @@ function triggerUnifiedAction(nomorInternet, namaPelanggan, action) {
 }
 </script>
 @endsection
+

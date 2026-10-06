@@ -476,7 +476,7 @@
                         <th class="py-3.5 px-4">Lokasi Pemasangan</th>
                         <th class="py-3.5 px-4 min-w-[180px]">Status</th>
                         <th class="py-3.5 px-4 min-w-[170px]">Tanggal SO / Registrasi</th>
-                        <th class="py-3.5 px-4 text-center min-w-[170px]">Aksi</th>
+                        <th class="py-3.5 px-4 text-center min-w-[190px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -627,72 +627,36 @@
                                                 'status_reg' => $item->status_reg,
                                             ]);
                                         @endphp
-                                        <!-- Dropdown Permintaan (Khusus User Finance) -->
-                                        <div class="relative inline-block text-left" x-data="{ openPermintaan: false }">
-                                            <button type="button" 
-                                                    @click="openPermintaan = !openPermintaan" 
-                                                    @click.away="openPermintaan = false"
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shadow-sm shadow-blue-500/25 transition cursor-pointer"
-                                                    title="Menu Permintaan ke NOC">
-                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                                                </svg>
-                                                <span>Permintaan</span>
-                                                <svg class="w-3 h-3 transition-transform duration-150" :class="openPermintaan ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                                </svg>
-                                            </button>
+                                        <!-- Tombol Ikon Aksi Permintaan ke NOC (Khusus Finance) -->
+                                        <!-- 1. Req UP / Downgrade Bandwidth -->
+                                        <button type="button" 
+                                                @click="openUpDowngrade({{ $custJson }})" 
+                                                class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/30 transition cursor-pointer"
+                                                title="Ajukan Req UP / Downgrade Bandwidth ke NOC">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                                            </svg>
+                                        </button>
 
-                                            <!-- Dropdown Menu Permintaan -->
-                                            <div x-show="openPermintaan"
-                                                 x-cloak
-                                                 x-transition:enter="transition ease-out duration-100"
-                                                 x-transition:enter-start="transform opacity-0 scale-95"
-                                                 x-transition:enter-end="transform opacity-100 scale-100"
-                                                 x-transition:leave="transition ease-in duration-75"
-                                                 x-transition:leave-start="transform opacity-100 scale-100"
-                                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                                 class="absolute right-0 mt-1.5 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl py-1 z-30 divide-y divide-slate-100 dark:divide-slate-800 text-left">
-                                                <div class="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-950/60 flex items-center justify-between">
-                                                    <span>Permintaan ke NOC</span>
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                                                </div>
-                                                <div class="py-1">
-                                                    <!-- 1. Req UP / Downgrade -->
-                                                    <button type="button"
-                                                            @click="openPermintaan = false; openUpDowngrade({{ $custJson }})"
-                                                            class="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition text-left cursor-pointer group">
-                                                        <span class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 text-sm font-bold group-hover:scale-110 transition-transform">⚡</span>
-                                                        <div class="leading-tight">
-                                                            <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">Req UP / Downgrade</div>
-                                                            <div class="text-[10px] text-slate-400 font-normal">Ubah kecepatan bandwidth</div>
-                                                        </div>
-                                                    </button>
+                                        <!-- 2. Req Suspend (Isolir) -->
+                                        <button type="button" 
+                                                @click="openSuspend({{ $custJson }})" 
+                                                class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-500/30 transition cursor-pointer"
+                                                title="Ajukan Req Suspend (Isolir) ke NOC">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                            </svg>
+                                        </button>
 
-                                                    <!-- 2. Req Suspend -->
-                                                    <button type="button"
-                                                            @click="openPermintaan = false; openSuspend({{ $custJson }})"
-                                                            class="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 transition text-left cursor-pointer group">
-                                                        <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 text-sm font-bold group-hover:scale-110 transition-transform">🛑</span>
-                                                        <div class="leading-tight">
-                                                            <div class="font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">Req Suspend (Isolir)</div>
-                                                            <div class="text-[10px] text-slate-400 font-normal">Isolir karena tunggakan</div>
-                                                        </div>
-                                                    </button>
-
-                                                    <!-- 3. Req Terminasi -->
-                                                    <button type="button"
-                                                            @click="openPermintaan = false; openTerminasi({{ $custJson }})"
-                                                            class="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 transition text-left cursor-pointer group">
-                                                        <span class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 text-sm font-bold group-hover:scale-110 transition-transform">🔌</span>
-                                                        <div class="leading-tight">
-                                                            <div class="font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400">Req Terminasi</div>
-                                                            <div class="text-[10px] text-slate-400 font-normal">Berhenti berlangganan</div>
-                                                        </div>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <!-- 3. Req Terminasi -->
+                                        <button type="button" 
+                                                @click="openTerminasi({{ $custJson }})" 
+                                                class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-500/30 transition cursor-pointer"
+                                                title="Ajukan Req Terminasi (Cabut) ke NOC">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+                                            </svg>
+                                        </button>
                                     @endif
                                 </div>
                             </td>

@@ -757,7 +757,7 @@
                          x-data="{ permintaanFinanceOpen: {{ request()->routeIs('finance.permintaan.*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Permintaan ke NOC', [
                              { label: 'UP / Downgrade', url: '{{ route('finance.permintaan.up-downgrade') }}', active: {{ request()->routeIs('finance.permintaan.up-downgrade*') ? 'true' : 'false' }} },
-                             { label: 'Suspend (Isolir)', url: '{{ route('finance.permintaan.suspend') }}', active: {{ request()->routeIs('finance.permintaan.suspend*') ? 'true' : 'false' }} },
+                             { label: 'Suspend', url: '{{ route('finance.permintaan.suspend') }}', active: {{ request()->routeIs('finance.permintaan.suspend*') ? 'true' : 'false' }} },
                              { label: 'Terminasi', url: '{{ route('finance.permintaan.terminasi') }}', active: {{ request()->routeIs('finance.permintaan.terminasi*') ? 'true' : 'false' }} }
                          ])"
                          @mouseleave="closeFlyoutWithDelay()">
@@ -790,7 +790,7 @@
                             </a>
                             <a href="{{ route('finance.permintaan.suspend') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('finance.permintaan.suspend*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('finance.permintaan.suspend*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-                                <span>Suspend (Isolir)</span>
+                                <span>Suspend</span>
                             </a>
                             <a href="{{ route('finance.permintaan.terminasi') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('finance.permintaan.terminasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('finance.permintaan.terminasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>

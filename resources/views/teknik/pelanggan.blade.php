@@ -96,7 +96,7 @@
                     <span>Data Pelanggan Terdaftar</span>
                 </h2>
                 <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
-                    Database master pelanggan aktif, profil layanan bandwidth, status isolir, dan arsip terminasi.
+                    Database master pelanggan aktif, profil layanan bandwidth, status suspend, dan arsip terminasi.
                 </p>
             </div>
 
@@ -638,11 +638,11 @@
                                             </svg>
                                         </button>
 
-                                        <!-- 2. Req Suspend (Isolir) -->
+                                        <!-- 2. Req Suspend -->
                                         <button type="button" 
                                                 @click="openSuspend({{ $custJson }})" 
                                                 class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-500/30 transition cursor-pointer"
-                                                title="Ajukan Req Suspend (Isolir) ke NOC">
+                                                title="Ajukan Req Suspend ke NOC">
                                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                             </svg>
@@ -793,7 +793,7 @@
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>🛑 Ajukan Permintaan Suspend (Isolir) ke NOC</span>
+                        <span>🛑 Ajukan Permintaan Suspend ke NOC</span>
                     </h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Digunakan untuk pelanggan yang menunggak atau belum membayar tagihan.</p>
                 </div>
@@ -820,9 +820,9 @@
                     </div>
                 </div>
 
-                <!-- Tanggal Mulai Isolir -->
+                <!-- Tanggal Mulai Suspend -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Mulai Isolir <span class="text-rose-500">*</span></label>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Mulai Suspend <span class="text-rose-500">*</span></label>
                     <input type="date"
                            name="suspend_start"
                            value="{{ date('Y-m-d') }}"

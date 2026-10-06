@@ -795,11 +795,11 @@ class FinanceController extends Controller
                         ->where('kode_suspend', $activeSuspend->kode_suspend)
                         ->update([
                             'status_suspend' => '18', // 18: Request Unsuspend ke NOC
-                            'desc_suspend_cancel' => "Otomatis diajukan buka isolir: Pelanggan telah membayar lunas tagihan {$decodedKode} ({$bank})",
+                            'desc_suspend_cancel' => "Otomatis diajukan unsuspend: Pelanggan telah membayar lunas tagihan {$decodedKode} ({$bank})",
                             'date_update' => Carbon::now()->toDateTimeString(),
                             'user_update' => $userUpdate,
                         ]);
-                    $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
+                    $unsuspendInfo = " serta Permintaan Unsuspend otomatis dikirimkan ke tim NOC.";
                 } elseif ($customerReg && $customerReg->is_suspend == '1') {
                     $kodeSuspend = $nomorInternet . '-' . rand(1000000, 9999999);
                     DB::table('trx_suspend')->insert([
@@ -812,7 +812,7 @@ class FinanceController extends Controller
                         'user_create' => $userUpdate,
                         'hide' => '0',
                     ]);
-                    $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
+                    $unsuspendInfo = " serta Permintaan Unsuspend otomatis dikirimkan ke tim NOC.";
                 }
             }
 
@@ -1551,11 +1551,11 @@ class FinanceController extends Controller
                         ->where('kode_suspend', $activeSuspend->kode_suspend)
                         ->update([
                             'status_suspend' => '18', // 18: Request Unsuspend ke NOC
-                            'desc_suspend_cancel' => "Otomatis diajukan buka isolir: Pelanggan telah membayar lunas registrasi {$decodedKode} ({$bank})",
+                            'desc_suspend_cancel' => "Otomatis diajukan unsuspend: Pelanggan telah membayar lunas registrasi {$decodedKode} ({$bank})",
                             'date_update' => Carbon::now()->toDateTimeString(),
                             'user_update' => $userUpdate,
                         ]);
-                    $unsuspendInfo = " serta Permintaan Buka Isolir (Req Unsuspend) otomatis dikirimkan ke tim NOC.";
+                    $unsuspendInfo = " serta Permintaan Unsuspend otomatis dikirimkan ke tim NOC.";
                 }
             }
 
@@ -1950,7 +1950,7 @@ class FinanceController extends Controller
             'user_update' => $currentUser,
         ]);
 
-        return redirect()->back()->with('success', "Pengajuan Buka Isolir (Req Unsuspend) untuk {$kodeSuspend} berhasil dikirim ke tim NOC!");
+        return redirect()->back()->with('success', "Pengajuan Unsuspend untuk {$kodeSuspend} berhasil dikirim ke tim NOC!");
     }
 
     /**

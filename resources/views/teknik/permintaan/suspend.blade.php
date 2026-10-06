@@ -265,11 +265,11 @@
                                         </div>
                                     @elseif($item->status_suspend == '12')
                                         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[11px] font-bold">
-                                            <span>Terisolir Aktif</span>
+                                            <span>Suspend Aktif</span>
                                         </div>
                                     @elseif($item->status_suspend == '17')
                                         <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
-                                            <span>Isolir Dibuka</span>
+                                            <span>Unsuspend</span>
                                         </div>
                                     @elseif(in_array($item->status_suspend, ['13', '19']))
                                         <div class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 text-[11px] font-medium">

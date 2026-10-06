@@ -1,6 +1,6 @@
-@extends('layouts.app', ['title' => 'Request Suspend (Isolir) - Finance'])
+@extends('layouts.app', ['title' => 'Request Suspend - Finance'])
 
-@section('page_title', 'Permintaan Suspend (Isolir Layanan)')
+@section('page_title', 'Permintaan Suspend Layanan')
 
 @section('content')
 <div class="space-y-6"
@@ -63,10 +63,10 @@
                 </div>
 
                 <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
-                    <span>🛑 Permintaan Suspend / Isolir Tagihan</span>
+                    <span>🛑 Permintaan Suspend Tagihan</span>
                 </h2>
                 <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
-                    Pengajuan isolir jaringan untuk pelanggan yang menunggak / melewati batas jatuh tempo, dan pembukaan isolir saat lunas.
+                    Pengajuan suspend jaringan untuk pelanggan yang menunggak / melewati batas jatuh tempo, dan unsuspend saat lunas.
                 </p>
             </div>
 
@@ -88,7 +88,7 @@
                     <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
-                    <span>Request Suspend (Isolir)</span>
+                    <span>Request Suspend</span>
                 </button>
             </div>
         </div>
@@ -99,7 +99,7 @@
         <!-- 1. Request Suspend -->
         <div class="p-4 rounded-2xl bg-amber-50/70 dark:bg-slate-900/90 border border-amber-200 dark:border-amber-500/20 shadow-md">
             <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Menunggu Isolir NOC</span>
+                <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Menunggu Suspend NOC</span>
                 <span class="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-ping"></span>
             </div>
             <div class="mt-2 text-2xl font-black text-slate-900 dark:text-white">{{ number_format($countRequest) }}</div>
@@ -109,17 +109,17 @@
         <!-- 2. Suspend Aktif -->
         <div class="p-4 rounded-2xl bg-rose-50/70 dark:bg-slate-900/90 border border-rose-200 dark:border-rose-500/20 shadow-md">
             <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">Sedang Terisolir</span>
+                <span class="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider">Sedang Suspend</span>
                 <span class="w-2 h-2 rounded-full bg-rose-500 dark:bg-rose-400"></span>
             </div>
             <div class="mt-2 text-2xl font-black text-slate-900 dark:text-white">{{ number_format($countSuspend) }}</div>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Status (1012) Isolir Aktif</div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Status (1012) Suspend Aktif</div>
         </div>
 
         <!-- 3. Req Unsuspend -->
         <div class="p-4 rounded-2xl bg-cyan-50/70 dark:bg-slate-900/90 border border-cyan-200 dark:border-cyan-500/20 shadow-md">
             <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold text-cyan-700 dark:text-cyan-400 uppercase tracking-wider">Sudah Bayar / Buka Isolir</span>
+                <span class="text-[11px] font-bold text-cyan-700 dark:text-cyan-400 uppercase tracking-wider">Sudah Bayar / Unsuspend</span>
                 <span class="w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-pulse"></span>
             </div>
             <div class="mt-2 text-2xl font-black text-slate-900 dark:text-white">{{ number_format($countReqUnsuspend) }}</div>
@@ -161,7 +161,7 @@
                 <select name="status" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">SEMUA STATUS</option>
                     <option value="11" {{ request('status') === '11' ? 'selected' : '' }}>(1011) Request Suspend</option>
-                    <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>(1012) Suspend (Isolir)</option>
+                    <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>(1012) Suspend</option>
                     <option value="18" {{ request('status') === '18' ? 'selected' : '' }}>(1018) Req Unsuspend</option>
                     <option value="13" {{ request('status') === '13' ? 'selected' : '' }}>(1013) Selesai Unsuspend</option>
                     <option value="14" {{ request('status') === '14' ? 'selected' : '' }}>(1014) Batal Suspend</option>
@@ -190,7 +190,7 @@
                         <th class="py-3.5 px-4">KODE / TANGGAL MULAI</th>
                         <th class="py-3.5 px-4">PELANGGAN</th>
                         <th class="py-3.5 px-4">PAKET</th>
-                        <th class="py-3.5 px-4">ALASAN ISOLIR / JATUH TEMPO</th>
+                        <th class="py-3.5 px-4">ALASAN SUSPEND / JATUH TEMPO</th>
                         <th class="py-3.5 px-4 text-center">TGL SELESAI</th>
                         <th class="py-3.5 px-4 text-center">STATUS</th>
                         <th class="py-3.5 px-4 text-center">AKSI FINANCE</th>
@@ -247,7 +247,7 @@
                                 @elseif($s->status_suspend == '12')
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400"></span>
-                                        <span>Terisolir Aktif</span>
+                                        <span>Suspend Aktif</span>
                                     </span>
                                 @elseif($s->status_suspend == '18')
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20">
@@ -272,14 +272,14 @@
                             <td class="py-3.5 px-4 text-center">
                                 @if($s->status_suspend == '12')
                                     <!-- Pelanggan bayar: Ajukan Unsuspend -->
-                                    <form action="{{ route('finance.permintaan.suspend.unsuspend', $s->kode_suspend) }}" method="POST" onsubmit="return confirm('Pelanggan telah melunasi tagihan? Ajukan buka isolir ke tim NOC?')">
+                                    <form action="{{ route('finance.permintaan.suspend.unsuspend', $s->kode_suspend) }}" method="POST" onsubmit="return confirm('Pelanggan telah melunasi tagihan? Ajukan unsuspend ke tim NOC?')">
                                         @csrf
                                         <button type="submit"
                                                 class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-[11px] font-bold transition flex items-center gap-1.5 mx-auto cursor-pointer">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                             </svg>
-                                            <span>Ajukan Buka Isolir</span>
+                                            <span>Ajukan Unsuspend</span>
                                         </button>
                                     </form>
                                 @elseif($s->status_suspend == '11')
@@ -298,8 +298,8 @@
                     @empty
                         <tr>
                             <td colspan="7" class="py-12 text-center text-slate-500 dark:text-slate-400">
-                                <div class="text-sm font-medium">Tidak ada data suspend / isolir ditemukan</div>
-                                <div class="text-xs mt-1">Klik tombol "+ Request Suspend (Isolir)" untuk membuat pengajuan baru ke NOC.</div>
+                                <div class="text-sm font-medium">Tidak ada data suspend ditemukan</div>
+                                <div class="text-xs mt-1">Klik tombol "+ Request Suspend" untuk membuat pengajuan baru ke NOC.</div>
                             </td>
                         </tr>
                     @endforelse
@@ -315,7 +315,7 @@
     </div>
 
     <!-- ======================================================================= -->
-    <!-- MODAL: BUAT REQUEST SUSPEND (ISOLIR) KE NOC                             -->
+    <!-- MODAL: BUAT REQUEST SUSPEND KE NOC                                      -->
     <!-- ======================================================================= -->
     <div x-show="createModalOpen"
          x-cloak
@@ -326,7 +326,7 @@
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>🛑 Ajukan Permintaan Suspend (Isolir) ke NOC</span>
+                        <span>🛑 Ajukan Permintaan Suspend ke NOC</span>
                     </h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Digunakan untuk pelanggan yang menunggak atau belum membayar setelah tanggal jatuh tempo.</p>
                 </div>
@@ -385,7 +385,7 @@
 
                 <!-- 2. Tanggal Mulai Suspend -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Mulai Isolir <span class="text-rose-500 dark:text-rose-400">*</span></label>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Mulai Suspend <span class="text-rose-500 dark:text-rose-400">*</span></label>
                     <input type="date"
                            name="suspend_start"
                            value="{{ date('Y-m-d') }}"

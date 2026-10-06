@@ -77,7 +77,7 @@ class TeknikController extends Controller
             // 7. Pemasangan Baru (status_reg proses pendaftaran baru)
             'pemasangan_baru' => Schema::hasTable('trx_batchjob_register')
                 ? DB::table('trx_batchjob_register')
-                    ->whereIn('status_reg', ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1'])
+                    ->whereIn('status_reg', ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'])
                     ->count()
                 : 0,
 
@@ -874,7 +874,7 @@ class TeknikController extends Controller
         }
 
         // Status pendaftaran baru yang sedang berjalan (sebelum terkonfirmasi menjadi pelanggan tetap)
-        $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1'];
+        $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'];
 
         $query = DB::table('view_batchjob')
             ->whereIn('status_reg', $registrationStatuses);
@@ -1797,7 +1797,7 @@ class TeknikController extends Controller
     }
 
     /**
-     * Kirim Request Aktivasi ke NOC -> Status #18.1 (Menunggu Jadwal Aktivasi NOC)
+     * Kirim Request Aktivasi ke NOC -> Status #18 (Selesai Instalasi & Siap Jadwal Aktivasi di NOC)
      */
     public function requestAktivasiNoc(Request $request): RedirectResponse
     {
@@ -1809,23 +1809,24 @@ class TeknikController extends Controller
         $nomorInternet = $request->nomor_internet;
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'TEKNIK';
+        $catatanAktivasi = $request->catatan_aktivasi ?: 'Request aktivasi layanan ke Tim NOC';
 
-        // Update status_reg -> 18.1 (Request Aktivasi NOC / Siap Jadwal Aktivasi)
+        // Update timestamp di trx_batchjob_register (tetap status #18 agar valid FK di m_status_registrasi)
         DB::table('trx_batchjob_register')
             ->where('nomor_internet', $nomorInternet)
             ->update([
-                'status_reg' => '18.1',
+                'status_reg' => '18',
                 'date_update' => $now,
                 'user_update' => $currentUser,
             ]);
 
-        // Update trx_instalasi
+        // Simpan catatan request aktivasi di trx_instalasi
         DB::table('trx_instalasi')
             ->updateOrInsert(
                 ['nomor_internet' => $nomorInternet],
                 [
                     'kode_instalasi' => 'INS-' . $nomorInternet,
-                    'aktivasi_note' => $request->catatan_aktivasi ?: 'Request aktivasi layanan dari tim Teknik',
+                    'aktivasi_note' => $catatanAktivasi,
                     'date_update' => $now,
                     'user_update' => $currentUser,
                 ]
@@ -1835,10 +1836,10 @@ class TeknikController extends Controller
         DB::table('trx_batchjob_register_log')->insert([
             'kode_batchjob_register_log' => 'L-' . $nomorInternet . rand(1000, 9999),
             'nomor_internet' => $nomorInternet,
-            'status_reg' => '18.1',
+            'status_reg' => '18',
             'date_schedule' => null,
             'time_schedule' => null,
-            'note_schedule' => $request->catatan_aktivasi ?: 'Permintaan aktivasi ke NOC',
+            'note_schedule' => $catatanAktivasi,
             'kat_log' => '18',
             'date_create' => $now,
             'user_create' => $currentUser,
@@ -1853,7 +1854,7 @@ class TeknikController extends Controller
      */
     public function exportPendaftaran(Request $request): StreamedResponse
     {
-        $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '18.1', '19', '19.1'];
+        $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'];
         $query = DB::table('view_batchjob')->whereIn('status_reg', $registrationStatuses);
 
         if ($request->filled('layanan')) {

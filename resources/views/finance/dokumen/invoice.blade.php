@@ -850,8 +850,8 @@
                 <!-- SLIP SIGNATURES (ENLARGED FOR COMFORTABLE SIGNING) -->
                 <table class="slip-sig-table" style="margin-top: 6px; margin-bottom: 6px;">
                     <tr>
-                        <td style="padding-bottom: 50px; font-size: 9pt; font-weight: 500;">Petugas</td>
-                        <td style="padding-bottom: 50px; font-size: 9pt; font-weight: 500;">Pelanggan</td>
+                        <td style="padding-bottom: 70px; font-size: 9pt; font-weight: 500;">Petugas</td>
+                        <td style="padding-bottom: 70px; font-size: 9pt; font-weight: 500;">Pelanggan</td>
                     </tr>
                     <tr>
                         <td>
@@ -871,7 +871,7 @@
                             Apabila pelanggan belum melakukan pembayaran sampai dengan jatuh tempo (Maksimal Tanggal 20 setiap bulan), maka akan dilakukan pemutusan koneksi sementara terhitung mulai pukul 24.00 pada tanggal akhir periode sebelumnya.
                         </li>
                         <li>
-                            Untuk pelanggan yang melakukan pembayaran melalui <strong>Transfer Bank</strong>, mohon memberikan konfirmasi via Whatsapp ke nomor <strong>085220137627</strong> dengan mencantumkan bukti pembayaran.
+                            Untuk pelanggan yang melakukan pembayaran melalui <strong>Transfer Bank</strong>, mohon memberikan konfirmasi via Whatsapp ke nomor <strong>089508416636</strong> dengan mencantumkan bukti pembayaran.
                         </li>
                     </ol>
                 </div>

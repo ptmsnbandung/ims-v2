@@ -2263,19 +2263,43 @@ class NocController extends Controller
 
         // Attach customer details safely without cross-collation SQL JOIN
         $customerIds = $logs->pluck('customer_id')->filter()->unique()->values()->all();
-        $customers = !empty($customerIds) && Schema::hasTable('trx_batchjob_register')
+
+        // Primary lookup: match by nomor_internet (standard IMS v2 format)
+        $customersByNomor = !empty($customerIds) && Schema::hasTable('trx_batchjob_register')
             ? DB::table('trx_batchjob_register')
-                ->whereIn('nomor_internet', $customerIds)
+                ->whereIn('nomor_internet', array_map('strval', $customerIds))
                 ->get(['nomor_internet', 'nama_pelanggan', 'alamat_pasang', 'kode_bandwith', 'ont_us'])
-                ->keyBy('nomor_internet')
+                ->keyBy(fn($c) => (string) $c->nomor_internet)
+            : collect();
+
+        // Secondary lookup: for data imported from isp_manager, customer_id may store
+        // the old isp_manager customers.customer_id value which equals ont_us in our DB
+        $unmatchedIds = collect($customerIds)
+            ->filter(fn($id) => !$customersByNomor->has((string) $id))
+            ->values()
+            ->all();
+
+        $customersByOntUs = !empty($unmatchedIds) && Schema::hasTable('trx_batchjob_register')
+            ? DB::table('trx_batchjob_register')
+                ->whereIn('ont_us', array_map('strval', $unmatchedIds))
+                ->get(['nomor_internet', 'nama_pelanggan', 'alamat_pasang', 'kode_bandwith', 'ont_us'])
+                ->keyBy(fn($c) => (string) $c->ont_us)
             : collect();
 
         foreach ($logs as $log) {
-            $cust = $customers->get($log->customer_id);
+            $custId = (string) $log->customer_id;
+            // Try nomor_internet match first, then fallback to ont_us match
+            $cust = $customersByNomor->get($custId) ?? $customersByOntUs->get($custId);
             $log->nama_pelanggan = $cust->nama_pelanggan ?? null;
-            $log->alamat_pasang = $cust->alamat_pasang ?? null;
-            $log->paket = $cust->kode_bandwith ?? null;
-            $log->ont_us = $cust->ont_us ?? null;
+            $log->alamat_pasang  = $cust->alamat_pasang ?? null;
+            $log->paket          = $cust->kode_bandwith ?? null;
+            $log->ont_us         = $cust->ont_us ?? null;
+            // If matched via ont_us, override customer_id display with the real nomor_internet
+            if (!$customersByNomor->has($custId) && $cust) {
+                $log->display_customer_id = (string) $cust->nomor_internet;
+            } else {
+                $log->display_customer_id = $custId;
+            }
         }
 
         // Summary KPI Metrics

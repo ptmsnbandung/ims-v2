@@ -309,7 +309,7 @@
                             <td class="py-3.5 px-4">
                                 @if($log->customer_id && $log->customer_id !== '-')
                                     <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
-                                        <span class="font-mono text-cyan-500 dark:text-cyan-400">{{ $log->customer_id }}</span>
+                                        <span class="font-mono text-cyan-500 dark:text-cyan-400">{{ $log->display_customer_id ?? $log->customer_id }}</span>
                                     </div>
                                     @if(!empty($log->nama_pelanggan))
                                         <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs font-semibold">
@@ -452,7 +452,7 @@
                 </div>
                 <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                     <span class="text-slate-400 font-medium block text-[11px]">Target Nomor Internet</span>
-                    <span class="font-mono font-bold text-cyan-400 text-xs mt-0.5" x-text="selectedLog?.customer_id || '-'"></span>
+                    <span class="font-mono font-bold text-cyan-400 text-xs mt-0.5" x-text="selectedLog?.display_customer_id || selectedLog?.customer_id || '-'"></span>
                 </div>
                 <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                     <span class="text-slate-400 font-medium block text-[11px]">User / Operator Pelaksana</span>

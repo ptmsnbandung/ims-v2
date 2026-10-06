@@ -51,6 +51,17 @@
          // 2-Step Modal Aktivasi State & Live MikroTik Profiles
          aktivasiStep: 1,
          mikrotikProfiles: [],
+         fallbackProfiles: [
+             { name: 'default', rate_limit: '' },
+             { name: '779-Management-ONT', rate_limit: '' },
+             { name: 'Broadband-20M', rate_limit: '22M/22M' },
+             { name: 'SOHO', rate_limit: '75M/75M' },
+             { name: 'Broadband-25M', rate_limit: '27M/27M' },
+             { name: 'Broadband-30M', rate_limit: '32M/32M' },
+             { name: 'Broadband-35M', rate_limit: '37M/37M' },
+             { name: 'Broadband-Free', rate_limit: '11M/11M' },
+             { name: 'default-encryption', rate_limit: '' }
+         ],
          isLoadingProfiles: false,
          profileFetchError: null,
 
@@ -67,12 +78,25 @@
                  if (data.success && Array.isArray(data.profiles) && data.profiles.length > 0) {
                      this.mikrotikProfiles = data.profiles;
                      
-                     // Auto-select match if current profile matches one from MikroTik
+                     // Auto-select match if current profile or bandwidth matches one from MikroTik
                      const exactMatch = this.mikrotikProfiles.find(p => p.name === this.pppProfile || p.name.toLowerCase() === this.pppProfile.toLowerCase());
                      if (exactMatch) {
                          this.pppProfile = exactMatch.name;
-                     } else if (!this.pppProfile && this.mikrotikProfiles.length > 0) {
-                         this.pppProfile = this.mikrotikProfiles[0].name;
+                         if (exactMatch.local_address) this.localAddress = exactMatch.local_address;
+                     } else {
+                         // Coba cocokkan berdasarkan angka bandwidth (misal Broadband-20M / 20)
+                         let bwMatch = null;
+                         let numbers = (this.modalPaket || '').match(/\d+/);
+                         if (numbers) {
+                             let num = numbers[0];
+                             bwMatch = this.mikrotikProfiles.find(p => p.name.toLowerCase().includes(num));
+                         }
+                         if (bwMatch) {
+                             this.pppProfile = bwMatch.name;
+                             if (bwMatch.local_address) this.localAddress = bwMatch.local_address;
+                         } else if (!this.pppProfile && this.mikrotikProfiles.length > 0) {
+                             this.pppProfile = this.mikrotikProfiles[0].name;
+                         }
                      }
                  } else {
                      this.mikrotikProfiles = [];
@@ -86,6 +110,14 @@
                  this.profileFetchError = 'Gagal terhubung ke router MikroTik.';
              } finally {
                  this.isLoadingProfiles = false;
+             }
+         },
+
+         onProfileChange(profName) {
+             const list = this.mikrotikProfiles.length > 0 ? this.mikrotikProfiles : this.fallbackProfiles;
+             const found = list.find(p => p.name === profName);
+             if (found && found.local_address) {
+                 this.localAddress = found.local_address;
              }
          },
 
@@ -162,13 +194,13 @@
              this.pppoePassword = item.pppoe_password || item.ont_ps || (Math.floor(100000 + Math.random() * 900000).toString());
              this.showPassword = false;
              this.selectedRouterId = item.router_id ? String(item.router_id) : (this.routersList && this.routersList.length > 0 ? String(this.routersList[0].id) : '1');
-             this.localAddress = '10.10.10.1';
+             this.localAddress = '10.0.0.1';
              let bw = item.nominal_bandwith || '';
              if (!bw && item.nama_kategori_bandwith) {
                  let match = String(item.nama_kategori_bandwith).match(/\d+/);
                  if (match) bw = match[0];
              }
-             this.pppProfile = bw ? ('PROFILE ' + bw + ' Mbps') : 'PROFILE 30 Mbps';
+             this.pppProfile = bw ? ('Broadband-' + bw + 'M') : 'Broadband-20M';
              this.remoteAddress = '';
              this.pppoeComment = 'Aktivasi - ' + (item.nama_pelanggan || '') + ' (' + item.nomor_internet + ')';
 
@@ -181,6 +213,11 @@
              this.parseIndexOlt(item.index_olt);
              this.perangkatList = [];
              this.reportModalOpen = true;
+
+             // Langsung muat profile MikroTik di background begitu modal aktivasi terbuka
+             if (this.selectedRouterId) {
+                 this.fetchPppProfiles(this.selectedRouterId);
+             }
          },
 
          openAktivasiModal(item) {
@@ -1156,37 +1193,12 @@
                                     <div class="relative">
                                         <select name="ppp_profile" 
                                                 x-model="pppProfile" 
+                                                @change="onProfileChange($event.target.value)"
                                                 required
                                                 class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
                                             <option value="">— Pilih profile —</option>
-
-                                            <!-- Opsi Live dari MikroTik Router -->
-                                            <template x-if="mikrotikProfiles && mikrotikProfiles.length > 0">
-                                                <optgroup label="Profile dari MikroTik Router (Live)">
-                                                    <template x-for="prof in mikrotikProfiles" :key="prof.name">
-                                                        <option :value="prof.name" x-text="prof.name + (prof.rate_limit ? ' (' + prof.rate_limit + ')' : '')"></option>
-                                                    </template>
-                                                </optgroup>
-                                            </template>
-
-                                            <!-- Fallback Standar jika router offline/belum konek -->
-                                            <template x-if="!mikrotikProfiles || mikrotikProfiles.length === 0">
-                                                <optgroup label="Profile Standar (Fallback)">
-                                                    <option value="PROFILE 5 Mbps">PROFILE 5 Mbps</option>
-                                                    <option value="PROFILE 10 Mbps">PROFILE 10 Mbps</option>
-                                                    <option value="PROFILE 15 Mbps">PROFILE 15 Mbps</option>
-                                                    <option value="PROFILE 20 Mbps">PROFILE 20 Mbps</option>
-                                                    <option value="PROFILE 25 Mbps">PROFILE 25 Mbps</option>
-                                                    <option value="PROFILE 30 Mbps">PROFILE 30 Mbps</option>
-                                                    <option value="PROFILE 40 Mbps">PROFILE 40 Mbps</option>
-                                                    <option value="PROFILE 50 Mbps">PROFILE 50 Mbps</option>
-                                                    <option value="PROFILE 60 Mbps">PROFILE 60 Mbps</option>
-                                                    <option value="PROFILE 100 Mbps">PROFILE 100 Mbps</option>
-                                                    <option value="PROFILE 170 Mbps">PROFILE 170 Mbps</option>
-                                                    <option value="PROFILE ISOLIR">PROFILE ISOLIR</option>
-                                                    <option value="default">default</option>
-                                                    <option value="default-encryption">default-encryption</option>
-                                                </optgroup>
+                                            <template x-for="prof in (mikrotikProfiles.length > 0 ? mikrotikProfiles : fallbackProfiles)" :key="prof.name">
+                                                <option :value="prof.name" x-text="prof.name + (prof.rate_limit ? ' (' + prof.rate_limit + ')' : '')"></option>
                                             </template>
                                         </select>
                                     </div>

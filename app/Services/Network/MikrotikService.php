@@ -93,7 +93,25 @@ class MikrotikService
         $connected = $api->connect($this->host, $this->user, $this->pass, $this->port, $this->ssl);
         
         if (!$connected) {
-            throw new Exception($api->error_str ?: "Tidak dapat terhubung ke MikroTik ({$this->host}:{$this->port})");
+            $detail = trim((string)($api->error_str ?? ''));
+            if ($detail === '') {
+                // Diagnosa: cek apakah port TCP terbuka untuk membedakan penyebab
+                $errno = 0;
+                $errstr = '';
+                $sock = @fsockopen($this->host, $this->port, $errno, $errstr, $this->timeout);
+                if ($sock === false) {
+                    $reason = $errstr !== ''
+                        ? "port TCP tidak dapat dijangkau ({$errstr}, errno {$errno})"
+                        : 'timeout / tidak ada respon (cek firewall, IP publik, NAT / port forward, atau service API MikroTik)';
+                } else {
+                    fclose($sock);
+                    $reason = 'port terbuka tetapi login API gagal (cek username/password atau izin user API)';
+                }
+                $detail = "Tidak dapat terhubung ke MikroTik ({$this->host}:{$this->port}): {$reason}";
+            } else {
+                $detail = "{$detail} ({$this->host}:{$this->port})";
+            }
+            throw new Exception($detail);
         }
 
         return $api;

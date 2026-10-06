@@ -145,7 +145,7 @@
                             </td>
                             <td class="py-3.5 px-4 text-center">
                                 <template x-if="statusMap[{{ $router->id }}]">
-                                    <div class="inline-flex items-center justify-center gap-2">
+                                    <div class="inline-flex flex-wrap items-center justify-center gap-2" style="max-width: 240px;">
                                         <template x-if="statusMap[{{ $router->id }}].loading">
                                             <span class="inline-flex items-center gap-1.5 text-[11px] text-cyan-400 font-semibold animate-pulse">
                                                 <svg class="w-3.5 h-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -166,6 +166,9 @@
                                                 <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                                                 <span>Offline</span>
                                             </span>
+                                        </template>
+                                        <template x-if="!statusMap[{{ $router->id }}].loading && statusMap[{{ $router->id }}].status === 'offline'">
+                                            <div style="flex-basis: 100%;" class="text-[10px] leading-snug text-rose-400 text-center break-words" x-text="'Penyebab: ' + (statusMap[{{ $router->id }}].message || 'Tidak merespon')"></div>
                                         </template>
                                         <button type="button" 
                                                 x-show="!statusMap[{{ $router->id }}].loading"
@@ -471,7 +474,16 @@ function routerManagement() {
                     },
                     body: JSON.stringify({ id: id, host: host, port: port, username: username })
                 });
-                const data = await res.json();
+                const raw = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(raw);
+                } catch (parseErr) {
+                    data = { success: false, message: 'Server membalas HTTP ' + res.status + ' (bukan JSON): ' + raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 200) };
+                }
+                if (!res.ok && data.success !== true && !data.message) {
+                    data.message = 'HTTP ' + res.status + ' ' + res.statusText;
+                }
                 if (data.success) {
                     this.statusMap = Object.assign({}, this.statusMap, {
                         [id]: {

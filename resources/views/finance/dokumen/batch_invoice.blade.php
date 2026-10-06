@@ -389,6 +389,12 @@
             display: block;
         }
 
+        .kop-header-img, .kop-footer-img {
+            width: calc(100% + 2px);
+            max-width: none;
+            margin-left: -1px;
+        }
+
         @page {
             size: A4 portrait;
             margin: 0;
@@ -617,7 +623,7 @@
                             <!-- Column 2: Mengetahui (Ida Mayasari - Keuangan) -->
                             <td style="vertical-align: bottom;">
                                 <div class="sig-cell-content" style="min-height: 85px; justify-content: flex-end; padding-bottom: 4px;">
-                                    <div style="display: inline-block; min-width: 150px; text-align: center;">
+                                    <div style="display: inline-block; min-width: 200px; text-align: center;">
                                         <div style="font-weight: bold; font-size: 9pt;">Ida Mayasari</div>
                                         <div style="border-top: 1px solid #000; margin-top: 2px; padding-top: 2px; font-size: 8.5pt;">Keuangan</div>
                                     </div>
@@ -627,7 +633,7 @@
                             <!-- Column 3: Pelanggan (Customer Name) -->
                             <td style="vertical-align: bottom;">
                                 <div class="sig-cell-content" style="min-height: 85px; justify-content: flex-end; padding-bottom: 4px;">
-                                    <div style="display: inline-block; min-width: 150px; text-align: center;">
+                                    <div style="display: inline-block; min-width: 200px; text-align: center;">
                                         <div style="font-weight: bold; font-size: 9pt; text-transform: uppercase;">
                                             {{ $inv['customerName'] }}
                                         </div>
@@ -699,10 +705,10 @@
                     </tr>
                     <tr>
                         <td>
-                            <span style="font-size: 8.5pt; display: inline-block; min-width: 150px; border-top: 1px solid #94a3b8; padding-top: 2px;">TTD / Nama</span>
+                            <span style="font-size: 8.5pt; display: inline-block; min-width: 230px; border-top: 1px solid #94a3b8; padding-top: 2px;">TTD / Nama</span>
                         </td>
                         <td>
-                            <span style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase; display: inline-block; min-width: 150px; border-top: 1px solid #94a3b8; padding-top: 2px;">{{ $inv['customerName'] }}</span>
+                            <span style="font-size: 8.5pt; font-weight: bold; text-transform: uppercase; display: inline-block; min-width: 230px; border-top: 1px solid #94a3b8; padding-top: 2px;">{{ $inv['customerName'] }}</span>
                         </td>
                     </tr>
                 </table>

@@ -2087,7 +2087,7 @@
                                 @php
                                     $descLower = strtolower($sb->desc_bill_lay ?? '');
                                 @endphp
-                                @if(!str_contains($descLower, 'cancel midtrans') && !str_contains($descLower, 'expire midtrans') && !in_array((string)$sb->status_bill_lay, ['17', '18']))
+                                @if(!str_contains($descLower, 'cancel midtrans') && !str_contains($descLower, 'expire midtrans') && !str_contains($descLower, 'lunas') && !str_contains($descLower, 'paid') && !in_array((string)$sb->status_bill_lay, ['2', '15', '17', '18']))
                                 <option value="{{ $sb->status_bill_lay }}">{{ $sb->desc_bill_lay }}</option>
                                 @endif
                             @endforeach

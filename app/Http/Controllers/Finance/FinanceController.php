@@ -2773,7 +2773,8 @@ class FinanceController extends Controller
 
         $invoices = collect();
         try {
-            $query = DB::table('view_billing_layanan');
+            $query = DB::table('view_billing_layanan')
+                ->whereNotIn('status_bill_lay', ['15', '2']);
 
             if ($bulan !== '' && $bulan !== null) {
                 $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
@@ -2815,7 +2816,8 @@ class FinanceController extends Controller
             Log::info('searchBatchInvoiceJson view_billing_layanan query fallback: ' . $e->getMessage());
             try {
                 $query = DB::table('trx_billing_layanan')
-                    ->leftJoin('view_batchjob', 'trx_billing_layanan.nomor_internet', '=', 'view_batchjob.nomor_internet');
+                    ->leftJoin('view_batchjob', 'trx_billing_layanan.nomor_internet', '=', 'view_batchjob.nomor_internet')
+                    ->whereNotIn('trx_billing_layanan.status_bill_lay', ['15', '2']);
 
                 if ($bulan !== '' && $bulan !== null) {
                     $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);

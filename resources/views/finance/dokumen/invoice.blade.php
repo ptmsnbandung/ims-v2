@@ -494,7 +494,7 @@
                 background: #ffffff !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                width: 100% !important;
+                width: 210mm !important;
                 height: 100% !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -513,7 +513,9 @@
             .paper-sheet {
                 box-shadow: none !important;
                 border: none !important;
-                width: 100% !important;
+                width: 210mm !important;
+                min-width: 210mm !important;
+                max-width: 210mm !important;
                 min-height: 100vh !important;
                 height: 100% !important;
                 margin: 0 !important;
@@ -528,6 +530,16 @@
             .kop-header-container, .kop-footer-container {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .kop-header-img, .kop-footer-img {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                display: block !important;
             }
         }
 

@@ -50,20 +50,37 @@
 
          // 2-Step Modal Aktivasi State & Live MikroTik Profiles
          aktivasiStep: 1,
-         mikrotikProfiles: [],
-         fallbackProfiles: [
-             { name: 'default', rate_limit: '' },
-             { name: '779-Management-ONT', rate_limit: '' },
-             { name: 'Broadband-20M', rate_limit: '22M/22M' },
-             { name: 'SOHO', rate_limit: '75M/75M' },
-             { name: 'Broadband-25M', rate_limit: '27M/27M' },
-             { name: 'Broadband-30M', rate_limit: '32M/32M' },
-             { name: 'Broadband-35M', rate_limit: '37M/37M' },
-             { name: 'Broadband-Free', rate_limit: '11M/11M' },
-             { name: 'default-encryption', rate_limit: '' }
-         ],
-         isLoadingProfiles: false,
-         profileFetchError: null,
+         getFallbackProfiles(routerId) {
+             let rId = String(routerId || this.selectedRouterId || '');
+             if (rId === '2') {
+                 return [
+                     { name: 'default', rate_limit: '', local_address: '' },
+                     { name: 'SOHO-100M', rate_limit: '110M/110M', local_address: '172.21.0.1' },
+                     { name: '777-Management-ONT', rate_limit: '', local_address: '172.16.160.1' },
+                     { name: 'Management-ONT', rate_limit: '', local_address: '172.16.32.1' },
+                     { name: 'Broadband-5M', rate_limit: '', local_address: '10.1.48.1' },
+                     { name: 'Broadband-10M', rate_limit: '', local_address: '10.1.50.1' },
+                     { name: 'Broadband-15M', rate_limit: '', local_address: '10.1.0.1' },
+                     { name: 'Broadband-20M', rate_limit: '', local_address: '10.1.8.1' },
+                     { name: 'Broadband-25M', rate_limit: '', local_address: '10.1.16.1' },
+                     { name: 'Broadband-30M', rate_limit: '', local_address: '10.1.24.1' },
+                     { name: 'Broadband-35M', rate_limit: '', local_address: '10.1.32.1' },
+                     { name: 'Broadband-Free', rate_limit: '', local_address: '10.1.40.1' },
+                     { name: 'default-encryption', rate_limit: '', local_address: '' }
+                 ];
+             }
+             return [
+                 { name: 'default', rate_limit: '', local_address: '' },
+                 { name: '779-Management-ONT', rate_limit: '', local_address: '172.16.150.1' },
+                 { name: 'Broadband-20M', rate_limit: '22M/22M', local_address: '10.0.0.1' },
+                 { name: 'SOHO', rate_limit: '75M/75M', local_address: '172.19.0.1' },
+                 { name: 'Broadband-25M', rate_limit: '27M/27M', local_address: '10.0.8.1' },
+                 { name: 'Broadband-30M', rate_limit: '32M/32M', local_address: '10.0.16.1' },
+                 { name: 'Broadband-35M', rate_limit: '37M/37M', local_address: '10.0.24.1' },
+                 { name: 'Broadband-Free', rate_limit: '11M/11M', local_address: '10.0.64.1' },
+                 { name: 'default-encryption', rate_limit: '', local_address: '' }
+             ];
+         },
 
          getLocalAddressForRouter(routerId) {
              let rId = String(routerId || this.selectedRouterId || '');
@@ -77,6 +94,21 @@
 
          onRouterChange(routerId) {
              this.localAddress = this.getLocalAddressForRouter(routerId);
+             this.mikrotikProfiles = [];
+             
+             // Langsung cocokkan profile fallback untuk router yang dipilih
+             let fallbackList = this.getFallbackProfiles(routerId);
+             let numbers = (this.modalPaket || '').match(/\d+/);
+             if (numbers) {
+                 let num = numbers[0];
+                 let matched = fallbackList.find(p => p.name.toLowerCase().includes('-' + num + 'm') || p.name.toLowerCase().includes(num));
+                 if (matched) {
+                     this.pppProfile = matched.name;
+                 } else if (fallbackList.length > 0) {
+                     this.pppProfile = fallbackList[0].name;
+                 }
+             }
+             
              this.fetchPppProfiles(routerId);
          },
 
@@ -102,12 +134,12 @@
                              this.localAddress = exactMatch.local_address;
                          }
                      } else {
-                         // Coba cocokkan berdasarkan angka bandwidth (misal Broadband-20M / 20)
+                         // Coba cocokkan berdasarkan angka bandwidth (misal Broadband-15M / 15)
                          let bwMatch = null;
                          let numbers = (this.modalPaket || '').match(/\d+/);
                          if (numbers) {
                              let num = numbers[0];
-                             bwMatch = this.mikrotikProfiles.find(p => p.name.toLowerCase().includes(num));
+                             bwMatch = this.mikrotikProfiles.find(p => p.name.toLowerCase().includes('-' + num + 'm') || p.name.toLowerCase().includes(num));
                          }
                          if (bwMatch) {
                              this.pppProfile = bwMatch.name;
@@ -119,14 +151,14 @@
                          }
                      }
                  } else {
-                     this.mikrotikProfiles = [];
+                     this.mikrotikProfiles = this.getFallbackProfiles(routerId);
                      if (data.message) {
                          this.profileFetchError = data.message;
                      }
                  }
              } catch (e) {
                  console.error('Fetch PPP Profiles error:', e);
-                 this.mikrotikProfiles = [];
+                 this.mikrotikProfiles = this.getFallbackProfiles(routerId);
                  this.profileFetchError = 'Gagal terhubung ke router MikroTik.';
              } finally {
                  this.isLoadingProfiles = false;
@@ -134,7 +166,7 @@
          },
 
          onProfileChange(profName) {
-             const list = this.mikrotikProfiles.length > 0 ? this.mikrotikProfiles : this.fallbackProfiles;
+             const list = this.mikrotikProfiles.length > 0 ? this.mikrotikProfiles : this.getFallbackProfiles(this.selectedRouterId);
              const found = list.find(p => p.name === profName);
              if (found && found.local_address && found.local_address !== '0.0.0.0') {
                  this.localAddress = found.local_address;
@@ -238,7 +270,9 @@
                  let match = String(item.nama_kategori_bandwith).match(/\d+/);
                  if (match) bw = match[0];
              }
-             this.pppProfile = bw ? ('Broadband-' + bw + 'M') : 'Broadband-20M';
+             let initialProfiles = this.getFallbackProfiles(this.selectedRouterId);
+             let matchedProf = bw ? initialProfiles.find(p => p.name.toLowerCase().includes('-' + bw + 'm') || p.name.toLowerCase().includes(bw)) : null;
+             this.pppProfile = matchedProf ? matchedProf.name : (initialProfiles.length > 0 ? initialProfiles[0].name : (bw ? ('Broadband-' + bw + 'M') : 'Broadband-20M'));
              this.remoteAddress = '';
              this.pppoeComment = 'Aktivasi - ' + (item.nama_pelanggan || '') + ' (' + item.nomor_internet + ')';
 
@@ -1235,7 +1269,7 @@
                                                 required
                                                 class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs shadow-xs transition">
                                             <option value="">— Pilih profile —</option>
-                                            <template x-for="prof in (mikrotikProfiles.length > 0 ? mikrotikProfiles : fallbackProfiles)" :key="prof.name">
+                                            <template x-for="prof in (mikrotikProfiles.length > 0 ? mikrotikProfiles : getFallbackProfiles(selectedRouterId))" :key="prof.name">
                                                 <option :value="prof.name" x-text="prof.name + (prof.rate_limit ? ' (' + prof.rate_limit + ')' : '')"></option>
                                             </template>
                                         </select>

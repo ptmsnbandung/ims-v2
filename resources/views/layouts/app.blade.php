@@ -889,20 +889,10 @@
                 <!-- Sidebar Footer Info -->
                 <div class="p-3 border-t border-[#0d2a38] text-center overflow-hidden shrink-0">
                     <div class="ims-footer-full whitespace-nowrap">
-                        @if(auth()->user()?->isAdmin() || auth()->user()?->isDirektur())
-                            <span class="text-[11px] text-blue-400/90 font-medium">Master Admin &middot; v1.0</span>
-                        @elseif(auth()->user()?->isFinance())
-                            <span class="text-[11px] text-blue-400/90 font-medium">Modul Finance &middot; v1.0</span>
-                        @elseif(auth()->user()?->isNoc())
-                            <span class="text-[11px] text-blue-400/90 font-medium">Modul NOC &middot; v1.0</span>
-                        @elseif(auth()->user()?->isTeknik())
-                            <span class="text-[11px] text-blue-400/90 font-medium">Modul Teknik &middot; v1.0</span>
-                        @else
-                            <span class="text-[11px] text-[#9CA3AF] font-medium">IMS-V2 &middot; v1.0</span>
-                        @endif
+                        <span class="text-[11px] text-blue-400/90 font-medium">IMS-v2</span>
                     </div>
                     <div class="ims-footer-mini text-[10px] text-[#9CA3AF] font-mono font-bold">
-                        v1.0
+                        v2
                     </div>
                 </div>
             </aside>

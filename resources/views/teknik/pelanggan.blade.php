@@ -479,7 +479,8 @@
     <!-- CUSTOMER DATA TABLE CONTAINER                                       -->
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Desktop Table View (Hidden on Mobile) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
@@ -664,6 +665,151 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Cards View (Hidden on Desktop) -->
+        <div class="block md:hidden p-3 sm:p-4 space-y-3">
+            @forelse($pelanggan as $item)
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <!-- Top Row: No Internet & Status -->
+                    <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
+                        <div>
+                            <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
+                               class="font-mono font-black text-blue-600 dark:text-blue-400 hover:underline text-xs tracking-wide inline-block"
+                               title="Buka Profile Pelanggan">
+                                {{ $item->nomor_internet }}
+                            </a>
+                            <div class="font-bold text-slate-900 dark:text-white text-xs mt-0.5 flex items-center gap-1.5 uppercase">
+                                <span>{{ $item->nama_pelanggan }}</span>
+                                <span class="text-[10px] px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold lowercase">
+                                    ({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border
+                                @if($item->status_reg == '20')
+                                     bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20
+                                @elseif(in_array($item->status_reg, ['21', '21.1']))
+                                     bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20
+                                @elseif(in_array($item->status_reg, ['23', '23.1']))
+                                     bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20
+                                @else
+                                     bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700
+                                @endif">
+                                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                <span>{{ $item->desc_registrasi ?: 'Status #' . $item->status_reg }}</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Paket Layanan</span>
+                            <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200">
+                                {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }}
+                            </div>
+                            @if($item->nominal_bandwith)
+                                <div class="text-[10px] font-semibold text-blue-600 dark:text-blue-400">{{ $item->nominal_bandwith }} Mbps</div>
+                            @endif
+                        </div>
+
+                        <div>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Group & Bangunan</span>
+                            <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase">
+                                {{ $item->group_layanan ?: 'MEDIANET' }}
+                            </div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400 uppercase truncate">
+                                {{ $item->jenis_bangunan ?: 'RUMAH-PRIBADI' }}
+                            </div>
+                        </div>
+
+                        <div class="col-span-2">
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Alamat Pemasangan</span>
+                            <p class="text-[11px] text-slate-700 dark:text-slate-300 uppercase leading-snug">
+                                {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
+                            </p>
+                        </div>
+
+                        <div>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Tanggal Registrasi</span>
+                            <div class="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
+                                {{ \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y H:i') }}
+                            </div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-mono">By: {{ $item->user_create ?: 'SYSTEM' }}</div>
+                        </div>
+
+                        <div>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Kontak & Sales</span>
+                            @if($item->nomor_hp)
+                                <div class="text-[11px] font-mono text-slate-800 dark:text-slate-200">📱 {{ $item->nomor_hp }}</div>
+                            @endif
+                            <div class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold uppercase">Sales: {{ $item->nama_sales ?: '-' }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80">
+                        @if(in_array($item->status_reg, ['21', '21.1']) && !$isFinance)
+                            <button type="button" 
+                                    onclick="triggerUnifiedAction('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', 'activate')"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                                </svg>
+                                <span>Aktifkan Pelanggan</span>
+                            </button>
+                        @elseif($item->status_reg == '20' && !$isFinance)
+                            <button type="button" 
+                                    onclick="triggerUnifiedAction('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', 'suspend')"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                </svg>
+                                <span>Suspend Pelanggan</span>
+                            </button>
+                        @endif
+
+                        @if($isFinance)
+                            @php
+                                $custJsonMobile = json_encode([
+                                    'nomor_internet' => $item->nomor_internet,
+                                    'nama_pelanggan' => $item->nama_pelanggan,
+                                    'nama_kategori_bandwith' => $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN'),
+                                    'nominal_bandwith' => $item->nominal_bandwith ?? '',
+                                    'harga_bandwith' => (float)($item->harga_bandwith ?? 0),
+                                    'alamat' => $item->alamat_p ?: ($item->alamat_pasang ?: '-'),
+                                    'kode_bandwith' => $item->kode_bandwith ?? '',
+                                    'status_reg' => $item->status_reg,
+                                ]);
+                            @endphp
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <button type="button" 
+                                        @click="openUpDowngrade({{ $custJsonMobile }})" 
+                                        class="inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 text-xs font-bold transition cursor-pointer">
+                                    <span>Up/Down</span>
+                                </button>
+                                <button type="button" 
+                                        @click="openSuspend({{ $custJsonMobile }})" 
+                                        class="inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 text-xs font-bold transition cursor-pointer">
+                                    <span>Suspend</span>
+                                </button>
+                                <button type="button" 
+                                        @click="openTerminasi({{ $custJsonMobile }})" 
+                                        class="inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition cursor-pointer">
+                                    <span>Terminasi</span>
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-500 dark:text-slate-400">
+                    <p class="text-sm font-semibold">Tidak ada data pelanggan yang sesuai dengan filter pencarian.</p>
+                </div>
+            @endforelse
         </div>
 
         <!-- Pagination Controls -->

@@ -443,7 +443,8 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Desktop Table View (Hidden on Mobile) -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
@@ -904,6 +905,282 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Cards View (Hidden on Desktop) -->
+        <div class="block md:hidden p-3 sm:p-4 space-y-3">
+            @forelse($invoices as $inv)
+                @php
+                    $snapData = null;
+                    $snapUrl = null;
+                    $isSnapExpired = false;
+                    if (!empty($inv->payment_respond_post)) {
+                        $snapData = json_decode($inv->payment_respond_post, true);
+                        $snapUrl = $snapData['redirect_url'] ?? null;
+                    }
+                    if (!empty($inv->expiry)) {
+                        $isSnapExpired = \Carbon\Carbon::now()->greaterThan(\Carbon\Carbon::parse($inv->expiry));
+                    }
+                    
+                    $cleanHp = preg_replace('/[^0-9]/', '', $inv->nomor_hp ?? '');
+                    if (str_starts_with($cleanHp, '0')) {
+                        $cleanHp = '62' . substr($cleanHp, 1);
+                    }
+                    $nominalFormatted = number_format((float) ($inv->total_layanan ?? ($inv->harga_bandwith ?? 0)), 0, ',', '.');
+                    $expiryFormatted = $inv->expiry ? \Carbon\Carbon::parse($inv->expiry)->translatedFormat('d M Y H:i') : 'Jatuh Tempo';
+                    
+                    $waText = "Halo Pelanggan Yth. {$inv->nama_pelanggan},\nTagihan Internet IMS Periode {$inv->periode_tagihan} sebesar Rp {$nominalFormatted} telah terbit (No Inv: {$inv->kode_billing_layanan}).";
+                    if ($snapUrl) {
+                        $waText .= "\n\nSilakan lakukan pembayaran melalui link Midtrans resmi berikut:\n{$snapUrl}\n(Berlaku s/d {$expiryFormatted})";
+                    }
+                    $waText .= "\n\nTerima kasih telah berlangganan bersama IMS.";
+                    $waUrl = !empty($cleanHp) ? "https://wa.me/{$cleanHp}?text=" . urlencode($waText) : '';
+
+                    $confirmation = $inv->payment_confirmation ?? null;
+                    $hasUploadedProof = ($confirmation && !empty($confirmation->proof_file)) || !empty($inv->has_manual_transfer_proof);
+
+                    $merchantRaw = trim((string)($inv->merchant_type ?? ''));
+                    $merchantLower = strtolower($merchantRaw);
+                    $pType = (string)($inv->payment_type ?? '');
+
+                    $isTransfer = ($pType === '2')
+                        || !empty($inv->has_manual_transfer_proof)
+                        || !empty($confirmation)
+                        || (
+                            $merchantRaw !== '' && (
+                                str_contains($merchantLower, 'bca') ||
+                                str_contains($merchantLower, 'mandiri') ||
+                                str_contains($merchantLower, 'bri') ||
+                                str_contains($merchantLower, 'bni') ||
+                                str_contains($merchantLower, 'bsi') ||
+                                str_contains($merchantLower, 'permata') ||
+                                str_contains($merchantLower, 'cimb') ||
+                                str_contains($merchantLower, 'transfer') ||
+                                str_contains($merchantLower, 'bank')
+                            )
+                        );
+
+                    $isCash = ($pType === '3')
+                        || (
+                            $merchantRaw !== '' && (
+                                str_contains($merchantLower, 'cash') ||
+                                str_contains($merchantLower, 'kolektor') ||
+                                str_contains($merchantLower, 'collector') ||
+                                str_contains($merchantLower, 'kasir') ||
+                                str_contains($merchantLower, 'tunai')
+                            )
+                        );
+
+                    $isMidtrans = !$isTransfer && !$isCash;
+
+                    if (!empty($merchantRaw)) {
+                        $methodLabel = $merchantRaw;
+                        if (in_array(strtoupper($merchantRaw), ['BCA', 'MANDIRI', 'BRI', 'BNI', 'BSI', 'PERMATA', 'CIMB'])) {
+                            $methodLabel = 'Transfer ' . strtoupper($merchantRaw);
+                        }
+                    } elseif ($isTransfer) {
+                        $methodLabel = 'Manual Transfer';
+                    } elseif ($isCash) {
+                        $methodLabel = 'Cash To Collector';
+                    } else {
+                        $methodLabel = 'Midtrans';
+                    }
+                @endphp
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <!-- Top Card Row: Kode & Status Tagihan -->
+                    <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
+                        <div>
+                            <div class="font-black font-mono text-slate-900 dark:text-white text-xs tracking-wide">
+                                {{ $inv->kode_billing_layanan }}
+                            </div>
+                            <div class="font-bold text-blue-600 dark:text-blue-400 text-xs mt-0.5 flex items-center gap-1.5">
+                                <span>{{ $inv->nama_pelanggan }}</span>
+                                <span class="text-[10px] px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                                    {{ $inv->jenis_kelamin == 2 ? 'P' : 'L' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            @if($inv->status_bill_lay == '15')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span>PAID (Lunas)</span>
+                            </span>
+                            @elseif($confirmation && $confirmation->status === 'rejected')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                <span>Ditolak</span>
+                            </span>
+                            @elseif($hasUploadedProof || ($confirmation && !empty($confirmation->proof_file)))
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span>Verifikasi</span>
+                            </span>
+                            @elseif($inv->status_bill_lay == '13')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                <span>PUBLISH</span>
+                            </span>
+                            @elseif($inv->status_bill_lay == '14')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                                <span>WAITING</span>
+                            </span>
+                            @else
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                                <span>{{ $inv->desc_bill_lay ?? 'DRAFT' }}</span>
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Layanan / No Internet</span>
+                            <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200">
+                                {{ $inv->nama_kategori_bandwith ?? 'BROADBAND' }} {{ $inv->nominal_bandwith }} Mbps
+                            </div>
+                            <div class="font-mono text-[10px] text-slate-500 dark:text-slate-400">#{{ $inv->nomor_internet }}</div>
+                        </div>
+
+                        <div>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Periode & Wilayah</span>
+                            <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200">
+                                {{ $inv->periode_tagihan ?? ($inv->bulan_tagihan . '/' . $inv->tahun_tagihan) }}
+                            </div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">{{ $inv->nama_kota_pasang ?? '-' }}</div>
+                        </div>
+
+                        <div>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Total Tagihan</span>
+                            <div class="text-xs font-black text-slate-900 dark:text-white">
+                                Rp {{ number_format((float) ($inv->total_layanan ?? ($inv->harga_bandwith ?? 0)), 0, ',', '.') }}
+                            </div>
+                            @if((float)($inv->potongan ?? 0) > 0)
+                                <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Disc: -Rp {{ number_format((float)($inv->potongan), 0, ',', '.') }}</div>
+                            @endif
+                            @if((float)($inv->denda ?? 0) > 0)
+                                <div class="text-[10px] text-rose-600 dark:text-rose-400 font-medium">Denda: +Rp {{ number_format((float)($inv->denda), 0, ',', '.') }}</div>
+                            @endif
+                        </div>
+
+                        <div>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Tanggal Jatuh Tempo</span>
+                            <div class="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                {{ $inv->expiry ? date('d M Y', strtotime($inv->expiry)) : '-' }}
+                            </div>
+                            <div class="mt-1">
+                                <a href="{{ route('finance.dokumen.invoice', urlencode($inv->kode_billing_layanan)) }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 text-[10px] font-semibold">
+                                    <svg class="w-3 h-3 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                                    <span>PDF Inv</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Info & Notif Status -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/60">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold {{ $isTransfer ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : ($isCash ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400') }}">
+                                {{ $methodLabel }}
+                            </span>
+                            @if($isTransfer && $confirmation && !empty($confirmation->proof_file))
+                                <button type="button"
+                                        @click="openProofModalFromEl($el)"
+                                        data-kode="{{ $inv->kode_billing_layanan }}"
+                                        data-nama="{{ $inv->nama_pelanggan }}"
+                                        data-internet="{{ $inv->nomor_internet }}"
+                                        data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
+                                        data-proof-url="{{ $confirmation->proof_file }}"
+                                        data-notes="{{ $confirmation->notes ?? '-' }}"
+                                        data-proof-date="{{ !empty($confirmation->created_at) ? \Carbon\Carbon::parse($confirmation->created_at)->translatedFormat('d M Y H:i') : '-' }}"
+                                        data-status="{{ $confirmation->status ?? 'pending' }}"
+                                        data-destination-bank="{{ $inv->destination_bank ?? $confirmation->destination_bank ?? $confirmation->bank_name ?? $inv->merchant_type ?? '' }}"
+                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[9px] font-bold">
+                                    Bukti
+                                </button>
+                            @endif
+                        </div>
+
+                        <div class="flex items-center gap-1 text-[10px]">
+                            <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_wa ?? 0) > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800' }}">
+                                WA: {{ ($inv->notif_wa ?? 0) > 0 ? 'Sent' : 'Un' }}
+                            </span>
+                            <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_mail ?? 0) > 0 ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400' : 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800' }}">
+                                Mail: {{ ($inv->notif_mail ?? 0) > 0 ? 'Sent' : 'Un' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons in Mobile Card -->
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/80">
+                        @if($isMidtrans)
+                            @if($inv->status_bill_lay == '15')
+                            <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
+                                <span>Lunas</span>
+                            </span>
+                            @elseif($isSnapExpired)
+                            <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 text-xs font-bold">
+                                <span>Expired</span>
+                            </span>
+                            @else
+                            <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 text-xs font-bold">
+                                <span>Pending</span>
+                            </span>
+                            @endif
+                        @else
+                            @if($inv->status_bill_lay != '15')
+                            <button type="button"
+                                    @click="openPayModalFromEl($el)"
+                                    data-kode="{{ $inv->kode_billing_layanan }}"
+                                    data-internet="{{ $inv->nomor_internet }}"
+                                    data-nama="{{ $inv->nama_pelanggan }}"
+                                    data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
+                                    data-payment-type="{{ $inv->payment_type ?? 2 }}"
+                                    data-destination-bank="{{ $inv->destination_bank ?? $inv->merchant_type ?? '' }}"
+                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs">
+                                <span>Approve</span>
+                            </button>
+                            @else
+                            <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
+                                <span>Lunas</span>
+                            </span>
+                            @endif
+                        @endif
+
+                        <button type="button"
+                                @click="openChangePayModalFromEl($el)"
+                                data-kode="{{ $inv->kode_billing_layanan }}"
+                                data-nama="{{ $inv->nama_pelanggan }}"
+                                data-payment-type="{{ $inv->payment_type ?? 1 }}"
+                                class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-200 dark:border-blue-500/30 transition">
+                            <span>Ubah Metode</span>
+                        </button>
+
+                        <button type="button"
+                                @click="openDetailModalFromEl($el)"
+                                data-kode="{{ $inv->kode_billing_layanan }}"
+                                class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition">
+                            <span>Detail</span>
+                        </button>
+
+                        <form action="{{ route('finance.billing-layanan.delete.post') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tagihan {{ $inv->kode_billing_layanan }} ({{ $inv->nama_pelanggan }})?')" class="w-full m-0 p-0">
+                            @csrf
+                            <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
+                            <button type="submit"
+                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200 dark:border-rose-500/30 transition">
+                                <span>Hapus</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-500 dark:text-slate-400">
+                    <p class="text-sm font-semibold">Tidak ada data invoice ditemukan</p>
+                </div>
+            @endforelse
         </div>
 
         <!-- Pagination Bar -->

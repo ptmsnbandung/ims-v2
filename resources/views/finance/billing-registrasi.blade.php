@@ -55,7 +55,7 @@
      }">
 
     <!-- Page Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
-    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-4 sm:p-6 shadow-md border border-teal-500/20"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
         <!-- Subtle Glow Effect -->
@@ -64,16 +64,16 @@
         <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <div class="flex flex-wrap items-center gap-2 mb-2">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-white text-slate-800 shadow-xs">
-                        <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-white text-slate-800 shadow-xs">
+                        <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#00a8b5]"></span>
                         <span>Finance &amp; Billing</span>
                     </div>
-                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         <span>Registration Billing</span>
                     </div>
                 </div>
-                <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5" style="color: #FFFFFF !important;">
+                <h1 class="text-lg sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
                     Billing Registrasi (Pasang Baru)
                 </h1>
                 <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
@@ -81,10 +81,10 @@
                 </p>
             </div>
 
-            <div class="flex items-center gap-2 relative z-10 shrink-0">
+            <div class="flex items-center gap-2 relative z-10 w-full sm:w-auto pt-2 sm:pt-0">
                 <a href="{{ route('finance.billing-registrasi.export', request()->query()) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold shadow-xs backdrop-blur-xs transition cursor-pointer">
-                    <svg class="w-4 h-4 text-emerald-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                   class="w-full sm:w-auto justify-center inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold shadow-xs backdrop-blur-xs transition cursor-pointer">
+                    <svg class="w-4 h-4 text-emerald-300 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                     </svg>
                     <span>Export CSV</span>
@@ -94,72 +94,80 @@
     </div>
 
 
-    <!-- 4 KPI Summary Cards for Registration -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- 4 KPI Summary Cards for Registration (2x2 on Mobile, 4 Cols on Desktop) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <!-- 1. Total Registrasi -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 flex items-center justify-between">
-            <div>
-                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Registrasi</span>
-                <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ number_format($kpis['total'] ?? 0) }}</div>
-                <span class="text-[11px] text-slate-500 dark:text-slate-400">Total pendaftaran baru</span>
+        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Total Registrasi</span>
+                <div class="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                    </svg>
+                </div>
             </div>
-            <div class="p-3 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                </svg>
+            <div class="mt-2 sm:mt-2.5">
+                <div class="text-base sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">{{ number_format($kpis['total'] ?? 0) }}</div>
+                <span class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate block mt-0.5">Total pendaftaran baru</span>
             </div>
         </div>
 
         <!-- 2. Draft -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 flex items-center justify-between">
-            <div>
-                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Draft Registrasi</span>
-                <div class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{{ number_format($kpis['draft'] ?? 0) }}</div>
-                <span class="text-[11px] text-amber-700 dark:text-amber-400 font-medium">Belum di-publish</span>
+        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Draft Registrasi</span>
+                <div class="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                </div>
             </div>
-            <div class="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                </svg>
+            <div class="mt-2 sm:mt-2.5">
+                <div class="text-base sm:text-2xl font-black text-amber-600 dark:text-amber-400 leading-tight">{{ number_format($kpis['draft'] ?? 0) }}</div>
+                <span class="text-[10px] sm:text-[11px] text-amber-700 dark:text-amber-400 font-medium truncate block mt-0.5">Belum di-publish</span>
             </div>
         </div>
 
         <!-- 3. Published -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 flex items-center justify-between">
-            <div>
-                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Published</span>
-                <div class="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{{ number_format($kpis['published'] ?? 0) }}</div>
-                <span class="text-[11px] text-blue-600 dark:text-blue-300 font-medium">Masuk ke Billing Layanan</span>
+        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Published</span>
+                <div class="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                    </svg>
+                </div>
             </div>
-            <div class="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                </svg>
+            <div class="mt-2 sm:mt-2.5">
+                <div class="text-base sm:text-2xl font-black text-blue-600 dark:text-blue-400 leading-tight">{{ number_format($kpis['published'] ?? 0) }}</div>
+                <span class="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-300 font-medium truncate block mt-0.5">Billing Layanan</span>
             </div>
         </div>
 
         <!-- 4. Metode Pembayaran -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 flex items-center justify-between">
-            <div>
-                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Metode Pembayaran</span>
-                <div class="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1.5">
-                    <span>{{ number_format($kpis['midtrans'] ?? 0) }}</span>
-                    <span class="text-xs font-normal text-slate-500 dark:text-slate-400">Online /</span>
-                    <span>{{ number_format($kpis['manual'] ?? 0) }}</span>
-                    <span class="text-xs font-normal text-slate-500 dark:text-slate-400">Manual</span>
+        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Metode Bayar</span>
+                <div class="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                    </svg>
                 </div>
-                <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">Midtrans &bull; Transfer &bull; Cash</span>
             </div>
-            <div class="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-                </svg>
+            <div class="mt-2 sm:mt-2.5">
+                <div class="text-xs sm:text-lg font-black text-emerald-600 dark:text-emerald-400 leading-tight flex items-center gap-1 flex-wrap">
+                    <span>{{ number_format($kpis['midtrans'] ?? 0) }}</span>
+                    <span class="text-[10px] sm:text-xs font-normal text-slate-500 dark:text-slate-400">Online /</span>
+                    <span>{{ number_format($kpis['manual'] ?? 0) }}</span>
+                    <span class="text-[10px] sm:text-xs font-normal text-slate-500 dark:text-slate-400">Manual</span>
+                </div>
+                <span class="text-[10px] sm:text-[11px] text-emerald-700 dark:text-emerald-400 font-medium truncate block mt-0.5">Midtrans &bull; Manual</span>
             </div>
         </div>
     </div>
 
     <!-- Filter Bar Card -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 space-y-4">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 space-y-4">
         <form method="GET" action="{{ route('finance.billing-registrasi') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <!-- Layanan -->
             <div>

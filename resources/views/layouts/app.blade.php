@@ -900,8 +900,8 @@
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0 overflow-y-auto ims-main-scroll">
                 <!-- Top Navbar (Dual Light & Dark Mode) -->
-                <header class="min-h-16 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-50 py-2 shadow-xs transition-colors duration-200">
-                    <div class="flex items-center gap-3">
+                <header class="min-h-14 sm:min-h-16 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 flex items-center justify-between px-3 sm:px-6 lg:px-8 sticky top-0 z-50 py-2 shadow-xs transition-colors duration-200">
+                    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                         <!-- Sidebar Toggle Button in Navbar (Tombol Hamburger) -->
                         <button @click="toggleSidebar()" 
                                 :title="sidebarCollapsed ? 'Buka Sidebar Penuh' : 'Tutup Sidebar ke Mode Ikon'"
@@ -911,14 +911,14 @@
                             </svg>
                         </button>
 
-                        <div>
-                            <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">@yield('page_title', 'Dashboard')</h1>
+                        <div class="min-w-0">
+                            <h1 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">@yield('page_title', 'Dashboard')</h1>
                             <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Integrated Management System &middot; Portal</p>
                         </div>
                     </div>
 
                     <!-- Right Side Navbar -->
-                    <div class="flex items-center gap-2 sm:gap-3">
+                    <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
                         
                         <!-- Sound Voice Notification Control Dropdown -->
                         <div class="relative" x-data="{ soundOpen: false, soundEnabled: localStorage.getItem('ims_voice_sound_enabled') !== 'false' }">
@@ -1012,8 +1012,8 @@
                             </svg>
                         </button>
 
-                        <!-- Status Gateway & Jam Realtime WIB -->
-                        <div class="flex flex-col items-end gap-1"
+                        <!-- Status Gateway & Jam Realtime WIB (Hidden on small mobile screens to keep navbar tidy) -->
+                        <div class="hidden lg:flex flex-col items-end gap-0.5"
                              x-data="{
                                  timeWib: '',
                                  dateWib: '',
@@ -1056,14 +1056,14 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
                                 <span class="font-mono text-slate-900 dark:text-slate-100 font-bold" x-text="timeWib">--:--:-- WIB</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden sm:inline" x-text="'&middot; ' + dateWib"></span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden xl:inline" x-text="'&middot; ' + dateWib"></span>
                             </div>
                         </div>
 
                         <!-- User Profile Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
-                                    class="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
+                                    class="flex items-center gap-1.5 sm:gap-2.5 p-1 sm:p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
                                     {{ substr(auth()->user()->nama, 0, 1) }}
                                 </div>

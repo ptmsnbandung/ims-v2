@@ -5,33 +5,33 @@
 @section('content')
 <div class="space-y-6">
     <!-- Role Welcome Banner (Deep Oceanic Teal & Cyan Gradient Matching Reference) -->
-    <div class="ims-banner relative overflow-hidden rounded-2xl p-6 sm:p-7 shadow-md"
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-4 sm:p-6 lg:p-7 shadow-md"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
         <!-- Subtle Glow Effect -->
         <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
 
-        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-5">
             <!-- Left Info Area -->
             <div>
                 <!-- Top Mini Badges -->
-                <div class="flex flex-wrap items-center gap-2.5 mb-3">
+                <div class="flex flex-wrap items-center gap-2 mb-2.5">
                     <!-- Pill 1: White Pill -->
-                    <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-bold bg-white text-slate-800 shadow-xs">
-                        <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-white text-slate-800 shadow-xs">
+                        <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#00a8b5]"></span>
                         <span>ID: &middot; {{ $user->nama_level }}</span>
                     </div>
                     <!-- Pill 2: Dark Teal Pill -->
-                    <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         <span>Sistem Aktif (Online)</span>
                     </div>
                 </div>
 
                 <!-- Main Greeting -->
-                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
+                <h2 class="text-lg sm:text-2xl font-black text-white tracking-tight flex items-center flex-wrap gap-1.5" style="color: #FFFFFF !important;">
                     <span>Halo, {{ $user->nama }}!</span>
-                    <span class="text-2xl">👋</span>
+                    <span class="text-xl sm:text-2xl">👋</span>
                 </h2>
                 <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
                     {{ $user->role_description }} &middot; Pantau performa jaringan, pertumbuhan pelanggan baru, dan kelola operasional secara real-time.
@@ -39,10 +39,10 @@
             </div>
 
             <!-- Right Action Buttons / Badges -->
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full lg:w-auto pt-2 sm:pt-0">
                 <!-- Button 1: Outlined Clock Server Pill -->
-                <div class="px-4 py-2 rounded-full border border-white/50 bg-white/5 backdrop-blur-xs text-white text-xs font-semibold flex items-center gap-2 shadow-xs transition" style="color: #FFFFFF !important;">
-                    <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <div class="w-full sm:w-auto justify-center px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-full border border-white/40 bg-white/10 backdrop-blur-xs text-white text-xs font-semibold flex items-center gap-2 shadow-xs transition" style="color: #FFFFFF !important;">
+                    <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     <span style="color: #FFFFFF !important;">{{ now()->format('d M Y, H:i') }} WIB</span>
@@ -50,8 +50,8 @@
 
                 <!-- Button 2: Solid Emerald Status Layanan Pill -->
                 <a href="{{ route('teknik.tiket') }}" 
-                   class="px-4 py-2 rounded-full bg-[#00b074] hover:bg-[#009b66] text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-950/20 transition cursor-pointer" style="color: #FFFFFF !important;">
-                    <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                   class="w-full sm:w-auto justify-center px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-full bg-[#00b074] hover:bg-[#009b66] text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-950/20 transition cursor-pointer" style="color: #FFFFFF !important;">
+                    <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     <span style="color: #FFFFFF !important;">Status Layanan</span>
@@ -66,30 +66,32 @@
     <div class="space-y-5">
         
         <!-- Header & Quick Filter Bar -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white flex-shrink-0">
-                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-start sm:items-center gap-3">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white flex-shrink-0 mt-0.5 sm:mt-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                        <span>Analitik & Grafik Pertumbuhan</span>
-                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-cyan-400 border border-blue-200 dark:border-blue-500/20">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight">
+                            Analitik & Grafik Pertumbuhan
+                        </h3>
+                        <span class="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-cyan-400 border border-blue-200 dark:border-blue-500/20">
                             Tahun {{ $selectedTahun }}
                         </span>
-                    </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         Monitoring tren user baru bulanan, sebaran kategori bandwidth, dan pipeline instalasi.
                     </p>
                 </div>
             </div>
 
             <!-- Filter Tahun Saja -->
-            <form action="{{ route('dashboard') }}" method="GET" class="flex items-center gap-2">
-                <div class="relative">
-                    <select name="tahun" class="appearance-none pl-3.5 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer">
+            <form action="{{ route('dashboard') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:flex-initial">
+                    <select name="tahun" class="w-full sm:w-auto appearance-none pl-3.5 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer">
                         @foreach($availableYears as $year)
                             <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
                                 Tahun {{ $year }}
@@ -101,7 +103,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer">
+                <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer flex-shrink-0">
                     Terapkan
                 </button>
             </form>

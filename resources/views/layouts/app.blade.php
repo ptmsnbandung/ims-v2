@@ -530,20 +530,7 @@
                         </div>
                     </div>
 
-                    <!-- 1. NOC Dashboard -->
-                    <div class="ims-nav-wrapper">
-                        <a href="{{ route('noc.dashboard') }}"
-                           class="ims-nav-item {{ request()->routeIs('noc.dashboard*') ? 'active' : '' }}"
-                           title="NOC Command Dashboard">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.dashboard*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
-                            </svg>
-                            <span class="ims-nav-text">NOC Command</span>
-                        </a>
-                        <div class="ims-tooltip">NOC Command Dashboard</div>
-                    </div>
-
-                    <!-- 2. Permintaan NOC Dropdown -->
+                    <!-- 1. Permintaan NOC Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Permintaan NOC', [
@@ -593,6 +580,19 @@
                                 <span>Terminasi</span>
                             </a>
                         </div>
+                    </div>
+
+                    <!-- 2. NOC Dashboard -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('noc.dashboard') }}"
+                           class="ims-nav-item {{ request()->routeIs('noc.dashboard*') ? 'active' : '' }}"
+                           title="NOC Command Dashboard">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.dashboard*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
+                            </svg>
+                            <span class="ims-nav-text">NOC Command</span>
+                        </a>
+                        <div class="ims-tooltip">NOC Command Dashboard</div>
                     </div>
 
                     <!-- 3. Infrastruktur Dropdown -->

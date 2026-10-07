@@ -2411,16 +2411,24 @@ class TeknikController extends Controller
 
         $query = DB::table('view_batchjob');
 
-        if ($request->filled('status')) {
-            if ($request->status == '21') {
+        // Status Filter: Default pelanggan AKTIF ('20') saat pertama kali masuk
+        $statusFilter = $request->get('status');
+        if ($statusFilter === null) {
+            $statusFilter = '20'; // Default pelanggan aktif
+        }
+
+        if ($statusFilter !== 'all' && $statusFilter !== '') {
+            if ($statusFilter == '21') {
                 $query->whereIn('status_reg', ['21', '21.1']);
-            } elseif ($request->status == '23') {
+            } elseif ($statusFilter == '23') {
                 $query->whereIn('status_reg', ['23', '23.1']);
+            } elseif ($statusFilter == '20') {
+                $query->where('status_reg', '20');
             } else {
-                $query->where('status_reg', $request->status);
+                $query->where('status_reg', $statusFilter);
             }
         } else {
-            // Default menampilkan seluruh pelanggan terkonfirmasi
+            // Menampilkan seluruh status eksisting jika memilih 'all'
             $query->whereIn('status_reg', $confirmedStatuses);
         }
 
@@ -2530,7 +2538,7 @@ class TeknikController extends Controller
             'wilayahList' => $wilayahList,
             'paketList' => $paketList,
             'bwCounts' => $bwCounts,
-            'filters' => $request->only(['layanan', 'search', 'alamat', 'status', 'wilayah', 'per_page']),
+            'filters' => array_merge($request->only(['layanan', 'search', 'alamat', 'wilayah', 'per_page']), ['status' => $statusFilter]),
         ]);
     }
 
@@ -2542,13 +2550,20 @@ class TeknikController extends Controller
         $confirmedStatuses = ['20', '21', '21.1', '23', '23.1'];
         $query = DB::table('view_batchjob');
 
-        if ($request->filled('status')) {
-            if ($request->status == '21') {
+        $statusFilter = $request->get('status');
+        if ($statusFilter === null) {
+            $statusFilter = '20';
+        }
+
+        if ($statusFilter !== 'all' && $statusFilter !== '') {
+            if ($statusFilter == '21') {
                 $query->whereIn('status_reg', ['21', '21.1']);
-            } elseif ($request->status == '23') {
+            } elseif ($statusFilter == '23') {
                 $query->whereIn('status_reg', ['23', '23.1']);
+            } elseif ($statusFilter == '20') {
+                $query->where('status_reg', '20');
             } else {
-                $query->where('status_reg', $request->status);
+                $query->where('status_reg', $statusFilter);
             }
         } else {
             $query->whereIn('status_reg', $confirmedStatuses);

@@ -102,7 +102,7 @@
 
             <!-- Overall KPI Metric Pills -->
             <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
-                <a href="{{ route($pelangganRoute) }}" 
+                <a href="{{ route($pelangganRoute, ['status' => 'all']) }}" 
                    class="justify-center px-3.5 py-2 rounded-xl sm:rounded-full shadow-sm flex items-center gap-2 text-xs font-bold hover:opacity-95 transition cursor-pointer"
                    style="background-color: #ffffff; color: #1e293b; border: 1px solid rgba(255,255,255,0.8);"
                    title="Lihat Semua Pelanggan">
@@ -407,10 +407,10 @@
                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Status</label>
                     <select name="status" 
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-1 focus:ring-blue-600 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                        <option value="">SEMUA STATUS (EKSISTING)</option>
-                        <option value="20" {{ ($filters['status'] ?? '') == '20' ? 'selected' : '' }}>Aktif</option>
+                        <option value="20" {{ ($filters['status'] ?? '20') == '20' ? 'selected' : '' }}>Aktif (Default)</option>
                         <option value="21" {{ in_array(($filters['status'] ?? ''), ['21', '21.1']) ? 'selected' : '' }}>Suspend</option>
                         <option value="23" {{ in_array(($filters['status'] ?? ''), ['23', '23.1']) ? 'selected' : '' }}>Terminasi</option>
+                        <option value="all" {{ ($filters['status'] ?? '') == 'all' ? 'selected' : '' }}>SEMUA STATUS (EKSISTING)</option>
                     </select>
                 </div>
 

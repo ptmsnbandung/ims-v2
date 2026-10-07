@@ -102,26 +102,34 @@
 
             <!-- Overall KPI Metric Pills -->
             <div class="flex flex-wrap items-center gap-2.5">
-                <div class="px-3.5 py-1.5 rounded-full bg-white text-slate-800 shadow-xs flex items-center gap-2 text-xs font-bold">
-                    <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
-                    <span class="text-slate-600 font-medium">Total:</span>
-                    <strong class="text-slate-900 font-mono font-bold">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
-                </div>
-                <div class="px-3.5 py-1.5 rounded-full bg-[#04333e]/85 text-emerald-300 border border-teal-400/30 flex items-center gap-2 text-xs">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <a href="{{ route($pelangganRoute) }}" 
+                   class="px-3.5 py-1.5 rounded-full bg-white text-slate-800 shadow-sm border border-white/60 flex items-center gap-2 text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
+                   title="Lihat Semua Pelanggan">
+                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                    <span class="text-slate-600 font-semibold">Total:</span>
+                    <strong class="text-slate-900 font-mono font-black text-sm">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
+                </a>
+                <a href="{{ route($pelangganRoute, ['status' => '20']) }}" 
+                   class="px-3.5 py-1.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-400/50 shadow-sm flex items-center gap-2 text-xs hover:bg-emerald-900/90 transition cursor-pointer"
+                   title="Filter Pelanggan Aktif">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span class="text-emerald-300 font-semibold">Aktif:</span>
-                    <strong class="text-emerald-200 font-mono font-bold">{{ number_format($bwCounts['total_aktif']) }}</strong>
-                </div>
-                <div class="px-3.5 py-1.5 rounded-full bg-[#3e0413]/85 text-rose-300 border border-rose-400/30 flex items-center gap-2 text-xs">
-                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-                    <span class="text-rose-300 font-semibold">Terminasi:</span>
-                    <strong class="text-rose-200 font-mono font-bold">{{ number_format($bwCounts['total_terminasi']) }}</strong>
-                </div>
-                <div class="px-3.5 py-1.5 rounded-full bg-[#3e2e04]/85 text-amber-300 border border-amber-400/30 flex items-center gap-2 text-xs">
-                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <strong class="text-emerald-100 font-mono font-bold text-sm">{{ number_format($bwCounts['total_aktif']) }}</strong>
+                </a>
+                <a href="{{ route($pelangganRoute, ['status' => '23']) }}" 
+                   class="px-3.5 py-1.5 rounded-full bg-rose-950/85 text-rose-200 border border-rose-400/60 shadow-sm flex items-center gap-2 text-xs hover:bg-rose-900/90 transition cursor-pointer"
+                   title="Filter Pelanggan Terminasi">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+                    <span class="text-rose-200 font-semibold">Terminasi:</span>
+                    <strong class="text-rose-100 font-mono font-bold text-sm">{{ number_format($bwCounts['total_terminasi']) }}</strong>
+                </a>
+                <a href="{{ route($pelangganRoute, ['status' => '21']) }}" 
+                   class="px-3.5 py-1.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-400/50 shadow-sm flex items-center gap-2 text-xs hover:bg-amber-900/90 transition cursor-pointer"
+                   title="Filter Pelanggan Suspend">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                     <span class="text-amber-300 font-semibold">Suspend:</span>
-                    <strong class="text-amber-200 font-mono font-bold">{{ number_format($bwCounts['total_suspend']) }}</strong>
-                </div>
+                    <strong class="text-amber-100 font-mono font-bold text-sm">{{ number_format($bwCounts['total_suspend']) }}</strong>
+                </a>
             </div>
         </div>
     </div>

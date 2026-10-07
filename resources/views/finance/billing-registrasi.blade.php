@@ -417,74 +417,110 @@
         </div>
 
         <!-- Mobile Card View -->
-        <div class="block md:hidden p-3 sm:p-4 space-y-3">
+        <div class="block md:hidden p-3 sm:p-4 space-y-3.5">
             @forelse($registrations as $r)
-            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
-                <!-- Top Row: Kode Billing + Status State -->
-                <div class="flex items-start justify-between gap-2">
-                    <div>
-                        <div class="font-bold text-slate-900 dark:text-white tracking-wide text-xs">
-                            {{ $r->kode_billing_registrasi ?? ('REG-' . $r->nomor_internet) }}
+            @php
+                $custInitial = mb_substr($r->nama_pelanggan ?? 'P', 0, 1);
+                $isPublished = $r->status_bill_reg == '12' || $r->payment_publish;
+                $isPaid = $r->status_bill_reg == '14';
+            @endphp
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-md transition duration-200 space-y-3.5">
+                <!-- Top Row: Avatar + Name + Status -->
+                <div class="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20 uppercase">
+                            {{ $custInitial }}
                         </div>
-                        @if(!empty($r->nomor_internet))
-                            <div class="font-mono text-[11px] mt-0.5">
-                                <a href="{{ route('teknik.pelanggan.profile', $r->nomor_internet) }}" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-bold hover:underline" title="Buka Profile Pelanggan">
-                                    {{ $r->nomor_internet }}
-                                </a>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-tight truncate uppercase leading-tight">
+                                    {{ $r->nama_pelanggan }}
+                                </h4>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold {{ $r->jenis_kelamin == 2 ? 'bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/20' : 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' }}">
+                                    {{ $r->jenis_kelamin == 2 ? 'P' : ($r->jenis_kelamin == 1 ? 'L' : '-') }}
+                                </span>
                             </div>
-                        @endif
+                            <div class="font-mono text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                                <span class="text-blue-600 dark:text-blue-400 font-bold">{{ $r->kode_billing_registrasi ?? ('REG-' . $r->nomor_internet) }}</span>
+                                @if(!empty($r->nomor_internet))
+                                    <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+                                    <a href="{{ route('teknik.pelanggan.profile', $r->nomor_internet) }}" class="text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 hover:underline">
+                                        #{{ $r->nomor_internet }}
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        @if($r->status_bill_reg == '12' || $r->payment_publish)
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
+
+                    <!-- Status State Badge -->
+                    <div class="shrink-0">
+                        @if($isPublished)
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30 uppercase tracking-wide">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                             <span>PUBLISHED</span>
                         </span>
-                        @elseif($r->status_bill_reg == '14')
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                        @elseif($isPaid)
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 uppercase tracking-wide">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                             <span>PAID</span>
                         </span>
                         @else
-                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 uppercase tracking-wide">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                             <span>Draft</span>
                         </span>
                         @endif
                     </div>
                 </div>
 
-                <!-- Customer Name & Bandwidth -->
-                <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-100 dark:border-slate-800">
-                    <div class="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[180px]">
-                        {{ $r->nama_pelanggan }}
-                        <span class="text-[10px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 ml-1">
-                            {{ $r->jenis_kelamin == 2 ? 'P' : 'L' }}
+                <!-- Middle Info Tiles -->
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <!-- Tile 1: Paket Layanan -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                        <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" /></svg>
+                            <span>Paket Registrasi</span>
+                        </div>
+                        <div class="font-bold text-slate-900 dark:text-white truncate">
+                            {{ $r->nama_kategori_bandwith ?? 'BROADBAND' }}
+                        </div>
+                        <span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
+                            {{ $r->nominal_bandwith }} Mbps
                         </span>
                     </div>
-                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20 text-[10px] font-semibold flex-shrink-0">
-                        {{ $r->nama_kategori_bandwith ?? 'BROADBAND' }} {{ $r->nominal_bandwith }}M
-                    </span>
-                </div>
 
-                <!-- Amount & Date Box -->
-                <div class="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                    <div>
-                        <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold block">Total Tagihan</span>
-                        <span class="font-black text-slate-900 dark:text-white text-sm">
-                            Rp {{ number_format((float) ($r->total_reg ?? ($r->biaya_reg ?? 0)), 0, ',', '.') }}
-                        </span>
+                    <!-- Tile 2: Tanggal Terbit -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                        <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.253 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" /></svg>
+                            <span>Tanggal Terbit</span>
+                        </div>
+                        <div class="font-bold text-slate-900 dark:text-white text-[11px]">
+                            {{ $r->payment_publish ? date('d M Y H:i', strtotime($r->payment_publish)) : 'Belum Terbit' }}
+                        </div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400">
+                            Biaya Pemasangan Baru
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold block">Tanggal Terbit</span>
-                        <span class="text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                            {{ $r->payment_publish ? date('d M Y H:i', strtotime($r->payment_publish)) : '-' }}
-                        </span>
+
+                    <!-- Tile 3: Total Biaya Registrasi (Full Width) -->
+                    <div class="col-span-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Biaya Registrasi</span>
+                            <span class="text-base font-black text-slate-900 dark:text-white">
+                                Rp {{ number_format((float) ($r->total_reg ?? ($r->biaya_reg ?? 0)), 0, ',', '.') }}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold {{ (float)($r->total_reg ?? $r->biaya_reg ?? 0) > 0 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800' }}">
+                                {{ (float)($r->total_reg ?? $r->biaya_reg ?? 0) > 0 ? 'Berbayar' : 'Gratis / Promo' }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Payment Method Button & Notif Badges -->
-                <div class="flex items-center justify-between gap-2 pt-1">
+                <div class="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
                     <button type="button"
                             @click="openChangePayModalFromEl($el)"
                             data-kode="{{ $r->kode_billing_registrasi ?? ('REG-' . $r->nomor_internet) }}"
@@ -493,17 +529,14 @@
                             title="Klik untuk memilih / mengubah metode pembayaran"
                             class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer {{ ($r->payment_type ?? 1) == 1 ? 'bg-indigo-600 text-white' : (($r->payment_type ?? 1) == 2 ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white') }}">
                         <span>{{ ($r->payment_type ?? 1) == 1 ? 'Midtrans' : (($r->payment_type ?? 1) == 2 ? 'Manual Transfer' : 'Cash To Collector') }}</span>
-                        <svg class="w-3 h-3 text-white/80" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
-                        </svg>
+                        <svg class="w-3 h-3 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" /></svg>
                     </button>
 
-                    <div class="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <span class="{{ ($r->notif_wa ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-400' }}">
+                    <div class="flex items-center gap-1 text-[10px]">
+                        <span class="px-2 py-0.5 rounded font-medium {{ ($r->notif_wa ?? 0) > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-200/70 text-slate-500 dark:bg-slate-800' }}">
                             WA: {{ ($r->notif_wa ?? 0) > 0 ? '✓' : '✗' }}
                         </span>
-                        <span>&bull;</span>
-                        <span class="{{ ($r->notif_mail ?? 0) > 0 ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-slate-400' }}">
+                        <span class="px-2 py-0.5 rounded font-medium {{ ($r->notif_mail ?? 0) > 0 ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400' : 'bg-slate-200/70 text-slate-500 dark:bg-slate-800' }}">
                             Mail: {{ ($r->notif_mail ?? 0) > 0 ? '✓' : '✗' }}
                         </span>
                     </div>
@@ -512,14 +545,12 @@
                 <!-- Action Buttons: Publish & Rincian -->
                 <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                     @if(in_array($r->status_bill_reg, ['11', '11.1']) || !$r->payment_publish)
-                    <form method="POST" action="{{ route('finance.billing-registrasi.publish.post') }}" class="flex-1" onsubmit="return confirm('Publish tagihan registrasi ini ke Billing Layanan?')">
+                    <form method="POST" action="{{ route('finance.billing-registrasi.publish.post') }}" class="flex-1 m-0 p-0" onsubmit="return confirm('Publish tagihan registrasi ini ke Billing Layanan?')">
                         @csrf
                         <input type="hidden" name="kode_billing" value="{{ $r->kode_billing_registrasi ?? ('REG-' . $r->nomor_internet) }}">
                         <button type="submit"
-                                class="w-full justify-center inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-xs cursor-pointer">
-                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
-                            </svg>
+                                class="w-full justify-center inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition shadow-sm cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
                             <span>Publish</span>
                         </button>
                     </form>
@@ -528,11 +559,8 @@
                     <button type="button"
                             @click="openDetailModalFromEl($el)"
                             data-kode="{{ $r->kode_billing_registrasi ?? ('REG-' . $r->nomor_internet) }}"
-                            class="flex-1 justify-center inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition border border-slate-200 dark:border-slate-700 cursor-pointer">
-                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
+                            class="flex-1 justify-center inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition border border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                         <span>Rincian</span>
                     </button>
                 </div>

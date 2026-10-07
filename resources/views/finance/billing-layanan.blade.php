@@ -908,7 +908,7 @@
         </div>
 
         <!-- Mobile Cards View (Hidden on Desktop) -->
-        <div class="block md:hidden p-3 sm:p-4 space-y-3">
+        <div class="block md:hidden p-3 sm:p-4 space-y-3.5">
             @forelse($invoices as $inv)
                 @php
                     $snapData = null;
@@ -985,77 +985,104 @@
                     } else {
                         $methodLabel = 'Midtrans';
                     }
+                    $custInitial = mb_substr($inv->nama_pelanggan ?? 'P', 0, 1);
                 @endphp
-                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                    <!-- Top Card Row: Kode & Status Tagihan -->
-                    <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
-                        <div>
-                            <div class="font-black font-mono text-slate-900 dark:text-white text-xs tracking-wide">
-                                {{ $inv->kode_billing_layanan }}
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-md transition duration-200 space-y-3.5">
+                    <!-- Top Card Row: Avatar + Name + Status Badge -->
+                    <div class="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20 uppercase">
+                                {{ $custInitial }}
                             </div>
-                            <div class="font-bold text-blue-600 dark:text-blue-400 text-xs mt-0.5 flex items-center gap-1.5">
-                                <span>{{ $inv->nama_pelanggan }}</span>
-                                <span class="text-[10px] px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
-                                    {{ $inv->jenis_kelamin == 2 ? 'P' : 'L' }}
-                                </span>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-tight truncate uppercase leading-tight">
+                                        {{ $inv->nama_pelanggan }}
+                                    </h4>
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold {{ $inv->jenis_kelamin == 2 ? 'bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/20' : 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' }}">
+                                        {{ $inv->jenis_kelamin == 2 ? 'P' : ($inv->jenis_kelamin == 1 ? 'L' : '-') }}
+                                    </span>
+                                </div>
+                                <div class="font-mono text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                                    <span class="text-blue-600 dark:text-blue-400 font-bold">{{ $inv->kode_billing_layanan }}</span>
+                                    <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+                                    <span>#{{ $inv->nomor_internet }}</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div>
+                        <!-- Status Badge -->
+                        <div class="shrink-0">
                             @if($inv->status_bill_lay == '15')
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 uppercase tracking-wide">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                <span>PAID (Lunas)</span>
+                                <span>PAID</span>
                             </span>
                             @elseif($confirmation && $confirmation->status === 'rejected')
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 uppercase tracking-wide">
                                 <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                 <span>Ditolak</span>
                             </span>
                             @elseif($hasUploadedProof || ($confirmation && !empty($confirmation->proof_file)))
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 uppercase tracking-wide">
                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                 <span>Verifikasi</span>
                             </span>
                             @elseif($inv->status_bill_lay == '13')
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30 uppercase tracking-wide">
                                 <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                                 <span>PUBLISH</span>
                             </span>
                             @elseif($inv->status_bill_lay == '14')
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30 uppercase tracking-wide">
                                 <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
                                 <span>WAITING</span>
                             </span>
                             @else
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 uppercase tracking-wide">
                                 <span>{{ $inv->desc_bill_lay ?? 'DRAFT' }}</span>
                             </span>
                             @endif
                         </div>
                     </div>
 
-                    <!-- Details Grid -->
+                    <!-- Middle Info Cards (Tiles) -->
                     <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Layanan / No Internet</span>
-                            <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                                {{ $inv->nama_kategori_bandwith ?? 'BROADBAND' }} {{ $inv->nominal_bandwith }} Mbps
+                        <!-- Tile 1: Layanan & Bandwidth -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" /></svg>
+                                <span>Paket Layanan</span>
                             </div>
-                            <div class="font-mono text-[10px] text-slate-500 dark:text-slate-400">#{{ $inv->nomor_internet }}</div>
+                            <div class="font-bold text-slate-900 dark:text-white truncate">
+                                {{ $inv->nama_kategori_bandwith ?? 'BROADBAND' }}
+                            </div>
+                            <span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
+                                {{ $inv->nominal_bandwith }} Mbps
+                            </span>
                         </div>
 
-                        <div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Periode & Wilayah</span>
-                            <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200">
+                        <!-- Tile 2: Periode & Wilayah -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.253 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" /></svg>
+                                <span>Periode & Wilayah</span>
+                            </div>
+                            <div class="font-bold text-slate-900 dark:text-white truncate">
                                 {{ $inv->periode_tagihan ?? ($inv->bulan_tagihan . '/' . $inv->tahun_tagihan) }}
                             </div>
-                            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">{{ $inv->nama_kota_pasang ?? '-' }}</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                                {{ $inv->nama_kota_pasang ?? '-' }}
+                            </div>
                         </div>
 
-                        <div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Total Tagihan</span>
-                            <div class="text-xs font-black text-slate-900 dark:text-white">
+                        <!-- Tile 3: Total Tagihan -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-0.5">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                                <span>Total Tagihan</span>
+                            </div>
+                            <div class="text-sm font-black text-slate-900 dark:text-white">
                                 Rp {{ number_format((float) ($inv->total_layanan ?? ($inv->harga_bandwith ?? 0)), 0, ',', '.') }}
                             </div>
                             @if((float)($inv->potongan ?? 0) > 0)
@@ -1066,22 +1093,26 @@
                             @endif
                         </div>
 
-                        <div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Tanggal Jatuh Tempo</span>
-                            <div class="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                        <!-- Tile 4: Jatuh Tempo & PDF Invoice -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                <span>Jatuh Tempo</span>
+                            </div>
+                            <div class="text-[11px] font-bold text-amber-600 dark:text-amber-400">
                                 {{ $inv->expiry ? date('d M Y', strtotime($inv->expiry)) : '-' }}
                             </div>
-                            <div class="mt-1">
-                                <a href="{{ route('finance.dokumen.invoice', urlencode($inv->kode_billing_layanan)) }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 text-[10px] font-semibold">
-                                    <svg class="w-3 h-3 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
-                                    <span>PDF Inv</span>
+                            <div>
+                                <a href="{{ route('finance.dokumen.invoice', urlencode($inv->kode_billing_layanan)) }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 text-[10px] font-semibold transition shadow-xs">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                                    <span>Cetak PDF</span>
                                 </a>
                             </div>
                         </div>
                     </div>
 
                     <!-- Payment Info & Notif Status -->
-                    <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/60">
+                    <div class="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
                         <div class="flex items-center gap-1.5 flex-wrap">
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold {{ $isTransfer ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : ($isCash ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400') }}">
                                 {{ $methodLabel }}
@@ -1098,36 +1129,36 @@
                                         data-proof-date="{{ !empty($confirmation->created_at) ? \Carbon\Carbon::parse($confirmation->created_at)->translatedFormat('d M Y H:i') : '-' }}"
                                         data-status="{{ $confirmation->status ?? 'pending' }}"
                                         data-destination-bank="{{ $inv->destination_bank ?? $confirmation->destination_bank ?? $confirmation->bank_name ?? $inv->merchant_type ?? '' }}"
-                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[9px] font-bold">
-                                    Bukti
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300 text-[10px] font-bold">
+                                    Lihat Bukti
                                 </button>
                             @endif
                         </div>
 
                         <div class="flex items-center gap-1 text-[10px]">
-                            <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_wa ?? 0) > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800' }}">
-                                WA: {{ ($inv->notif_wa ?? 0) > 0 ? 'Sent' : 'Un' }}
+                            <span class="px-2 py-0.5 rounded font-medium {{ ($inv->notif_wa ?? 0) > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-200/70 text-slate-500 dark:bg-slate-800' }}">
+                                WA: {{ ($inv->notif_wa ?? 0) > 0 ? '✓' : '✗' }}
                             </span>
-                            <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_mail ?? 0) > 0 ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400' : 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800' }}">
-                                Mail: {{ ($inv->notif_mail ?? 0) > 0 ? 'Sent' : 'Un' }}
+                            <span class="px-2 py-0.5 rounded font-medium {{ ($inv->notif_mail ?? 0) > 0 ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400' : 'bg-slate-200/70 text-slate-500 dark:bg-slate-800' }}">
+                                Mail: {{ ($inv->notif_mail ?? 0) > 0 ? '✓' : '✗' }}
                             </span>
                         </div>
                     </div>
 
                     <!-- Action Buttons in Mobile Card -->
-                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/80">
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                         @if($isMidtrans)
                             @if($inv->status_bill_lay == '15')
-                            <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
-                                <span>Lunas</span>
+                            <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
+                                <span>✓ Lunas</span>
                             </span>
                             @elseif($isSnapExpired)
-                            <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 text-xs font-bold">
+                            <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 text-xs font-bold">
                                 <span>Expired</span>
                             </span>
                             @else
-                            <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 text-xs font-bold">
-                                <span>Pending</span>
+                            <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 text-xs font-bold">
+                                <span>Pending Midtrans</span>
                             </span>
                             @endif
                         @else
@@ -1140,12 +1171,13 @@
                                     data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
                                     data-payment-type="{{ $inv->payment_type ?? 2 }}"
                                     data-destination-bank="{{ $inv->destination_bank ?? $inv->merchant_type ?? '' }}"
-                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs">
+                                    class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                                 <span>Approve</span>
                             </button>
                             @else
-                            <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
-                                <span>Lunas</span>
+                            <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
+                                <span>✓ Lunas</span>
                             </span>
                             @endif
                         @endif
@@ -1155,22 +1187,25 @@
                                 data-kode="{{ $inv->kode_billing_layanan }}"
                                 data-nama="{{ $inv->nama_pelanggan }}"
                                 data-payment-type="{{ $inv->payment_type ?? 1 }}"
-                                class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-200 dark:border-blue-500/30 transition">
+                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-200 dark:border-blue-500/30 transition shadow-2xs cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
                             <span>Ubah Metode</span>
                         </button>
 
                         <button type="button"
                                 @click="openDetailModalFromEl($el)"
                                 data-kode="{{ $inv->kode_billing_layanan }}"
-                                class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition">
-                            <span>Detail</span>
+                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition shadow-2xs cursor-pointer">
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                            <span>Rincian</span>
                         </button>
 
                         <form action="{{ route('finance.billing-layanan.delete.post') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tagihan {{ $inv->kode_billing_layanan }} ({{ $inv->nama_pelanggan }})?')" class="w-full m-0 p-0">
                             @csrf
                             <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
                             <button type="submit"
-                                    class="w-full inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200 dark:border-rose-500/30 transition">
+                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200 dark:border-rose-500/30 transition shadow-2xs cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                                 <span>Hapus</span>
                             </button>
                         </form>

@@ -668,57 +668,87 @@
         </div>
 
         <!-- Mobile Cards View (Hidden on Desktop) -->
-        <div class="block md:hidden p-3 sm:p-4 space-y-3">
+        <div class="block md:hidden p-3 sm:p-4 space-y-3.5">
             @forelse($pelanggan as $item)
-                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                    <!-- Top Row: No Internet & Status -->
-                    <div class="flex items-start justify-between gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2.5">
-                        <div>
-                            <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
-                               class="font-mono font-black text-blue-600 dark:text-blue-400 hover:underline text-xs tracking-wide inline-block"
-                               title="Buka Profile Pelanggan">
-                                {{ $item->nomor_internet }}
-                            </a>
-                            <div class="font-bold text-slate-900 dark:text-white text-xs mt-0.5 flex items-center gap-1.5 uppercase">
-                                <span>{{ $item->nama_pelanggan }}</span>
-                                <span class="text-[10px] px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold lowercase">
-                                    ({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})
-                                </span>
+                @php
+                    $isStatusAktif = $item->status_reg == '20';
+                    $isStatusSuspend = in_array($item->status_reg, ['21', '21.1']);
+                    $isStatusTerminasi = in_array($item->status_reg, ['23', '23.1']);
+                    $cleanHp = preg_replace('/[^0-9]/', '', $item->nomor_hp ?? '');
+                    if (str_starts_with($cleanHp, '0')) {
+                        $cleanHp = '62' . substr($cleanHp, 1);
+                    }
+                    $custInitial = mb_substr($item->nama_pelanggan ?? 'P', 0, 1);
+                @endphp
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-md transition duration-200 space-y-3.5">
+                    
+                    <!-- Card Top Header: Avatar + Customer Name + Status Badge -->
+                    <div class="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20 uppercase">
+                                {{ $custInitial }}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-tight truncate uppercase leading-tight">
+                                        {{ $item->nama_pelanggan }}
+                                    </h4>
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold {{ $item->jenis_kelamin == 2 ? 'bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/20' : 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' }}">
+                                        {{ $item->jenis_kelamin == 2 ? 'P' : ($item->jenis_kelamin == 1 ? 'L' : '-') }}
+                                    </span>
+                                </div>
+                                <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
+                                   class="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 mt-0.5"
+                                   title="Buka Profile Pelanggan">
+                                    <span>#{{ $item->nomor_internet }}</span>
+                                    <svg class="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                                </a>
                             </div>
                         </div>
 
-                        <div>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border
-                                @if($item->status_reg == '20')
-                                     bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20
-                                @elseif(in_array($item->status_reg, ['21', '21.1']))
-                                     bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20
-                                @elseif(in_array($item->status_reg, ['23', '23.1']))
-                                     bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20
+                        <!-- Status Badge -->
+                        <div class="shrink-0">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border tracking-wide uppercase shadow-2xs
+                                @if($isStatusAktif)
+                                     bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30
+                                @elseif($isStatusSuspend)
+                                     bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30
+                                @elseif($isStatusTerminasi)
+                                     bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30
                                 @else
                                      bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700
                                 @endif">
-                                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                <span class="w-1.5 h-1.5 rounded-full {{ $isStatusAktif ? 'bg-emerald-500' : ($isStatusSuspend ? 'bg-amber-500' : 'bg-rose-500') }}"></span>
                                 <span>{{ $item->desc_registrasi ?: 'Status #' . $item->status_reg }}</span>
                             </span>
                         </div>
                     </div>
 
-                    <!-- Details Grid -->
+                    <!-- Middle Info Cards (Tiles) -->
                     <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Paket Layanan</span>
-                            <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200">
-                                {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }}
+                        <!-- Tile 1: Paket Layanan -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" /></svg>
+                                <span>Paket Layanan</span>
+                            </div>
+                            <div class="font-bold text-slate-900 dark:text-white truncate">
+                                {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'BROADBAND') }}
                             </div>
                             @if($item->nominal_bandwith)
-                                <div class="text-[10px] font-semibold text-blue-600 dark:text-blue-400">{{ $item->nominal_bandwith }} Mbps</div>
+                                <span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
+                                    {{ $item->nominal_bandwith }} Mbps
+                                </span>
                             @endif
                         </div>
 
-                        <div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Group & Bangunan</span>
-                            <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase">
+                        <!-- Tile 2: Group & Bangunan -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" /></svg>
+                                <span>Group & Bangunan</span>
+                            </div>
+                            <div class="font-bold text-slate-900 dark:text-white truncate uppercase">
                                 {{ $item->group_layanan ?: 'MEDIANET' }}
                             </div>
                             <div class="text-[10px] text-slate-500 dark:text-slate-400 uppercase truncate">
@@ -726,46 +756,66 @@
                             </div>
                         </div>
 
-                        <div class="col-span-2">
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Alamat Pemasangan</span>
-                            <p class="text-[11px] text-slate-700 dark:text-slate-300 uppercase leading-snug">
+                        <!-- Tile 3: Alamat Pemasangan (Full Width) -->
+                        <div class="col-span-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                                <span>Alamat Pemasangan</span>
+                            </div>
+                            <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-snug">
                                 {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
                             </p>
                         </div>
 
-                        <div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Tanggal Registrasi</span>
-                            <div class="text-[11px] font-semibold text-slate-800 dark:text-slate-200">
+                        <!-- Tile 4: Tanggal Registrasi & User Create -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-0.5">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.253 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" /></svg>
+                                <span>Registrasi SO</span>
+                            </div>
+                            <div class="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
                                 {{ \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y H:i') }}
                             </div>
-                            <div class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-mono">By: {{ $item->user_create ?: 'SYSTEM' }}</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400 uppercase truncate">
+                                By: {{ $item->user_create ?: 'SYSTEM' }}
+                            </div>
                         </div>
 
-                        <div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Kontak & Sales</span>
-                            @if($item->nomor_hp)
-                                <div class="text-[11px] font-mono text-slate-800 dark:text-slate-200">📱 {{ $item->nomor_hp }}</div>
+                        <!-- Tile 5: Kontak & Sales -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                            <div class="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+                                <span>Kontak / Sales</span>
+                            </div>
+                            @if(!empty($cleanHp))
+                                <a href="https://wa.me/{{ $cleanHp }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+                                    <span>📱 {{ $item->nomor_hp }}</span>
+                                </a>
+                            @else
+                                <div class="text-[11px] text-slate-400">-</div>
                             @endif
-                            <div class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold uppercase">Sales: {{ $item->nama_sales ?: '-' }}</div>
+                            <div class="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase truncate">
+                                Sales: {{ $item->nama_sales ?: '-' }}
+                            </div>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="pt-2 border-t border-slate-200 dark:border-slate-800/80">
-                        @if(in_array($item->status_reg, ['21', '21.1']) && !$isFinance)
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                        @if($isStatusSuspend && !$isFinance)
                             <button type="button" 
                                     onclick="triggerUnifiedAction('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', 'activate')"
-                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer">
-                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition cursor-pointer">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                                 </svg>
                                 <span>Aktifkan Pelanggan</span>
                             </button>
-                        @elseif($item->status_reg == '20' && !$isFinance)
+                        @elseif($isStatusAktif && !$isFinance)
                             <button type="button" 
                                     onclick="triggerUnifiedAction('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', 'suspend')"
-                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition cursor-pointer">
-                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold text-xs shadow-md shadow-amber-500/20 transition cursor-pointer">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                 </svg>
                                 <span>Suspend Pelanggan</span>
@@ -785,20 +835,23 @@
                                     'status_reg' => $item->status_reg,
                                 ]);
                             @endphp
-                            <div class="grid grid-cols-3 gap-1.5">
+                            <div class="grid grid-cols-3 gap-2">
                                 <button type="button" 
                                         @click="openUpDowngrade({{ $custJsonMobile }})" 
-                                        class="inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 text-xs font-bold transition cursor-pointer">
+                                        class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 text-xs font-bold transition shadow-xs cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" /></svg>
                                     <span>Up/Down</span>
                                 </button>
                                 <button type="button" 
                                         @click="openSuspend({{ $custJsonMobile }})" 
-                                        class="inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 text-xs font-bold transition cursor-pointer">
+                                        class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/15 dark:hover:bg-amber-500/25 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 text-xs font-bold transition shadow-xs cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
                                     <span>Suspend</span>
                                 </button>
                                 <button type="button" 
                                         @click="openTerminasi({{ $custJsonMobile }})" 
-                                        class="inline-flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition cursor-pointer">
+                                        class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/15 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition shadow-xs cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" /></svg>
                                     <span>Terminasi</span>
                                 </button>
                             </div>

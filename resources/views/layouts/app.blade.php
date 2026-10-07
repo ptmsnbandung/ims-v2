@@ -1129,7 +1129,7 @@
                         &copy; {{ date('Y') }} Media Solusi Network
                     </div>
                     <div>
-                        Media Solusi Network &middot; v3.0.1
+                        IMS-v2 &middot; v3.0.1
                     </div>
                 </footer>
             </div>

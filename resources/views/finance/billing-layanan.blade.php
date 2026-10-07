@@ -83,7 +83,7 @@
                      x-transition:leave="transition ease-in duration-75"
                      x-transition:leave-start="transform opacity-100 scale-100"
                      x-transition:leave-end="transform opacity-0 scale-95"
-                     class="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/40 py-1.5 z-50 divide-y divide-slate-100 dark:divide-slate-800/60 focus:outline-none">
+                     class="absolute left-0 lg:left-auto lg:right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/40 py-1.5 z-50 divide-y divide-slate-100 dark:divide-slate-800/60 focus:outline-none">
                     
                     <div class="py-1">
                         <!-- Generate Invoice Item -->

@@ -1179,36 +1179,111 @@
                 <!-- 6. TAB CONTENT: PENGADUAN                              -->
                 <!-- ======================================================= -->
                 <div x-show="activeTab === 'pengaduan'" x-cloak class="p-6 space-y-4">
-                    <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        Riwayat Pengaduan & Tiket Gangguan
-                    </h3>
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                            Riwayat Pengaduan & Tiket Gangguan (trx_tiket_gangguan)
+                        </h3>
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            Total: <strong class="text-slate-800 dark:text-slate-200">{{ $tickets->count() }}</strong> Tiket
+                        </span>
+                    </div>
 
-                    @if($tickets->count() > 0)
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="bg-slate-100 dark:bg-slate-950/60 text-slate-700 dark:text-slate-300">
-                                        <th class="py-2.5 px-4">No Tiket</th>
-                                        <th class="py-2.5 px-4">Keluhan</th>
-                                        <th class="py-2.5 px-4">Status</th>
-                                        <th class="py-2.5 px-4">Tanggal</th>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 dark:bg-slate-950/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800">
+                                    <th class="py-2.5 px-4">No Tiket</th>
+                                    <th class="py-2.5 px-4">Kategori</th>
+                                    <th class="py-2.5 px-4">Keluhan & Indikasi</th>
+                                    <th class="py-2.5 px-4">Penanganan / Solusi</th>
+                                    <th class="py-2.5 px-4">Status</th>
+                                    <th class="py-2.5 px-4">Waktu Dibuat</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                @forelse($tickets as $t)
+                                    @php
+                                        // Category label
+                                        $katLabel = match((string) $t->kat_tiket) {
+                                            '11' => 'Gangguan Layanan',
+                                            '12' => 'Ubah Password',
+                                            '13' => 'Relokasi',
+                                            default => 'Pengaduan'
+                                        };
+
+                                        // Status badge
+                                        $st = (string) $t->status;
+                                        $stLabel = match($st) {
+                                            '14' => 'SELESAI',
+                                            '12' => 'DIPROSES',
+                                            '13' => 'PENDING',
+                                            '11' => 'OPEN',
+                                            default => $st ?: 'OPEN'
+                                        };
+
+                                        $badgeClass = match($st) {
+                                            '14' => 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30',
+                                            '12' => 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30',
+                                            '13' => 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30',
+                                            default => 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                                        };
+                                    @endphp
+                                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition">
+                                        <td class="py-3 px-4 font-mono font-bold text-slate-800 dark:text-slate-200 align-top">
+                                            {{ $t->tiket }}
+                                        </td>
+                                        <td class="py-3 px-4 align-top">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                                {{ $katLabel }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 max-w-xs align-top">
+                                            @if($t->indikasi)
+                                                <div class="font-semibold text-slate-800 dark:text-slate-200 mb-0.5">{{ $t->indikasi }}</div>
+                                            @endif
+                                            <div class="text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed text-[11px]">
+                                                {{ $t->keluhan ?: '-' }}
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-4 max-w-xs align-top text-slate-700 dark:text-slate-300 text-[11px]">
+                                            @if($t->penanganan)
+                                                <div class="font-medium text-emerald-600 dark:text-emerald-400">{{ $t->penanganan }}</div>
+                                            @else
+                                                <span class="text-slate-400">&mdash;</span>
+                                            @endif
+                                            @if($t->note)
+                                                <div class="text-[10px] text-slate-400 mt-1 italic">{{ $t->note }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="py-3 px-4 align-top">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold {{ $badgeClass }}">
+                                                {{ $stLabel }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px] align-top whitespace-nowrap">
+                                            @if($t->date_create)
+                                                <div>{{ \Carbon\Carbon::parse($t->date_create)->format('d/m/Y H:i') }}</div>
+                                                @if($t->user_create)
+                                                    <div class="text-[10px] text-slate-400">oleh: {{ $t->user_create }}</div>
+                                                @endif
+                                            @else
+                                                &mdash;
+                                            @endif
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-                                    @foreach($tickets as $t)
-                                        <tr>
-                                            <td class="py-3 px-4 font-mono font-bold">{{ $t->tiket ?? '-' }}</td>
-                                            <td class="py-3 px-4">{{ $t->keluhan ?? '-' }}</td>
-                                            <td class="py-3 px-4">{{ $t->status ?? '-' }}</td>
-                                            <td class="py-3 px-4">{{ $t->date_create ?? '-' }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <p class="text-xs text-slate-500">Tidak ada riwayat pengaduan tiket gangguan.</p>
-                    @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="py-8 text-center text-slate-500 dark:text-slate-400">
+                                            <div class="flex flex-col items-center justify-center gap-1">
+                                                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                <span>Tidak ada riwayat pengaduan tiket gangguan.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- ======================================================= -->

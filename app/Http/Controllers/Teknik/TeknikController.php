@@ -2725,10 +2725,29 @@ class TeknikController extends Controller
             ? DB::table('trx_suspend')->where('nomor_internet', $nomorInternet)->orderBy('date_create', 'desc')->get()
             : collect();
 
-        // 6. Tiket Gangguan / Pengaduan
-        $tickets = Schema::hasTable('trx_tiket_gangguan')
-            ? DB::table('trx_tiket_gangguan')->where('nomor_internet', $nomorInternet)->orderBy('date_create', 'desc')->get()
-            : collect();
+        // 6. Tiket Gangguan / Pengaduan (dari trx_tiket_gangguan)
+        $tickets = collect();
+        if (Schema::hasTable('trx_tiket_gangguan')) {
+            $ticketCandidates = array_unique(array_filter([
+                $nomorInternet,
+                $regRecord->ont_us ?? null,
+                preg_replace('/^MS/i', '', (string)$nomorInternet),
+                preg_replace('/[^0-9]/', '', (string)$nomorInternet),
+            ]));
+
+            $ticketQuery = DB::table('trx_tiket_gangguan');
+            $ticketQuery->where(function ($q) use ($ticketCandidates) {
+                foreach ($ticketCandidates as $idx => $cand) {
+                    if ($idx === 0) {
+                        $q->where('nomor_internet', $cand)->orWhere('nomor_internet', 'LIKE', '%' . $cand . '%');
+                    } else {
+                        $q->orWhere('nomor_internet', $cand)->orWhere('nomor_internet', 'LIKE', '%' . $cand . '%');
+                    }
+                }
+            });
+
+            $tickets = $ticketQuery->orderBy('date_create', 'desc')->get();
+        }
 
         // 7. Perangkat & Material Pelanggan (trx_instalasi_barang joined with view_barang)
         $perangkats = Schema::hasTable('trx_instalasi_barang')

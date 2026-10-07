@@ -1210,6 +1210,7 @@
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                      :class="{
                          'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': t.type === 'pendaftaran' || t.type === 'pembayaran',
+                         'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30': t.type === 'instalasi',
                          'bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/30': t.type === 'request_invoice',
                          'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': t.type === 'tiket',
                          'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30': t.type === 'updown',
@@ -1217,6 +1218,11 @@
                          'bg-slate-500/15 text-slate-600 dark:text-slate-300 border border-slate-500/30': t.type === 'terminasi',
                          'bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30': !t.type
                      }">
+                    <template x-if="t.type === 'instalasi'">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                    </template>
                     <template x-if="t.type === 'pendaftaran'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />

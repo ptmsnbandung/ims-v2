@@ -422,6 +422,53 @@ class NotificationController extends Controller
             }
         }
 
+        // -------------------------------------------------------------
+        // 7. REPORT INSTALASI DARI TEKNISI (STATUS #18 SELESAI INSTALASI / SIAP AKTIVASI) -> DITUJUKAN UNTUK NOC & ADMIN
+        // -------------------------------------------------------------
+        if (($isAdminOrDirektur || $isNoc) && Schema::hasTable('trx_batchjob_register')) {
+            try {
+                $reportedInstalasi = DB::table('trx_batchjob_register')
+                    ->leftJoin('trx_instalasi', 'trx_batchjob_register.nomor_internet', '=', 'trx_instalasi.nomor_internet')
+                    ->where('trx_batchjob_register.status_reg', '18') // 18: Selesai Instalasi (Siap Aktivasi NOC)
+                    ->where(function ($q) use ($sinceFormatted) {
+                        $q->where('trx_batchjob_register.date_update', '>=', $sinceFormatted)
+                          ->orWhere('trx_instalasi.date_update', '>=', $sinceFormatted);
+                    })
+                    ->select([
+                        'trx_batchjob_register.nomor_internet',
+                        'trx_batchjob_register.nama_pelanggan',
+                        'trx_batchjob_register.date_update',
+                        'trx_batchjob_register.user_update',
+                        'trx_batchjob_register.media_akses',
+                        'trx_batchjob_register.olt',
+                        'trx_instalasi.instalasi_team',
+                        'trx_instalasi.instalasi_note_finish',
+                        'trx_instalasi.aktivasi_note',
+                    ])
+                    ->orderBy('trx_batchjob_register.date_update', 'desc')
+                    ->limit(5)
+                    ->get();
+
+                foreach ($reportedInstalasi as $inst) {
+                    $nama = $inst->nama_pelanggan ?: ($inst->nomor_internet ?: 'Pelanggan');
+                    $teknisi = $inst->instalasi_team ?: ($inst->user_update ?: 'Teknisi');
+                    $tgl = $inst->date_update ?? date('Y-m-d H:i:s');
+                    
+                    $notifications[] = [
+                        'id' => 'report_inst_' . $inst->nomor_internet . '_' . strtotime($tgl),
+                        'type' => 'instalasi',
+                        'title' => 'Report Instalasi Selesai (NOC)',
+                        'message' => "Teknisi ({$teknisi}) telah menyelesaikan instalasi untuk {$nama}. Siap dieksekusi aktivasi di NOC.",
+                        'speech_text' => "Ada report instalasi selesai dari teknisi untuk pelanggan {$nama}, siap diaktivasi NOC.",
+                        'url' => route('noc.aktivasi', ['status' => 'siap_aktivasi', 'search' => $inst->nomor_internet]),
+                        'created_at' => $tgl,
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Poll report instalasi error: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'status' => 'success',
             'timestamp' => Carbon::now('Asia/Jakarta')->timestamp,

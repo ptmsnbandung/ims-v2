@@ -1064,40 +1064,108 @@
                 </div>
 
                 <!-- ======================================================= -->
+                <!-- ======================================================= -->
                 <!-- 5. TAB CONTENT: TAGIHAN / BILLINGS                     -->
                 <!-- ======================================================= -->
                 <div x-show="activeTab === 'tagihan'" x-cloak class="p-6 space-y-4">
-                    <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        Daftar Tagihan & Pembayaran
-                    </h3>
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                            Daftar Tagihan & Pembayaran Layanan
+                        </h3>
+                        <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            Total: <strong class="text-slate-800 dark:text-slate-200">{{ $billingLayanan->count() }}</strong> Tagihan
+                        </span>
+                    </div>
 
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="bg-slate-100 dark:bg-slate-950/60 text-slate-700 dark:text-slate-300">
+                                <tr class="bg-slate-100 dark:bg-slate-950/60 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-800">
                                     <th class="py-2.5 px-4">Kode Billing</th>
-                                    <th class="py-2.5 px-4">Jenis</th>
+                                    <th class="py-2.5 px-4">Periode</th>
                                     <th class="py-2.5 px-4">Total</th>
                                     <th class="py-2.5 px-4">Status</th>
-                                    <th class="py-2.5 px-4">Metode</th>
+                                    <th class="py-2.5 px-4">Metode Bayar</th>
+                                    <th class="py-2.5 px-4">Tgl Bayar</th>
+                                    <th class="py-2.5 px-4 text-center">Invoice</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-                                @forelse($billingReg as $b)
-                                    <tr>
-                                        <td class="py-3 px-4 font-mono font-bold">{{ $b->kode_billing_registrasi }}</td>
-                                        <td class="py-3 px-4">Registrasi</td>
-                                        <td class="py-3 px-4 font-mono font-bold">Rp {{ number_format((float) ($b->total_reg ?? 0), 0, ',', '.') }}</td>
+                                @forelse($billingLayanan as $b)
+                                    @php
+                                        // Status badge mapping based on m_status_bill_lay
+                                        $stCode = (string) $b->status_bill_lay;
+                                        $isPaid = ($stCode === '15');
+                                        $isPublished = ($stCode === '13');
+                                        $isWaiting = ($stCode === '14');
+                                        $isDraft = in_array($stCode, ['11', '12']);
+                                        $isCancel = in_array($stCode, ['16', '17', '18']);
+
+                                        $badgeClass = 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400';
+                                        $statusLabel = $b->desc_bill_lay ?? 'Belum Lunas';
+
+                                        if ($isPaid) {
+                                            $badgeClass = 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30';
+                                            $statusLabel = 'LUNAS';
+                                        } elseif ($isPublished) {
+                                            $badgeClass = 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30';
+                                            $statusLabel = 'PUBLISHED';
+                                        } elseif ($isWaiting) {
+                                            $badgeClass = 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30';
+                                            $statusLabel = 'WAITING PAYMENT';
+                                        } elseif ($isCancel) {
+                                            $badgeClass = 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30';
+                                            $statusLabel = 'BATAL/EXPIRED';
+                                        }
+
+                                        $metode = $b->merchant_type ?: ($b->payment_type == 2 ? 'CASH' : ($b->payment_type == 1 ? 'Online/Payment Gateway' : '-'));
+                                    @endphp
+                                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition">
+                                        <td class="py-3 px-4 font-mono font-bold text-slate-800 dark:text-slate-200">
+                                            {{ $b->kode_billing_layanan }}
+                                        </td>
+                                        <td class="py-3 px-4 font-medium text-slate-700 dark:text-slate-300">
+                                            {{ $b->periode_tagihan ?: ($b->bulan_tagihan . '/' . $b->tahun_tagihan) }}
+                                        </td>
+                                        <td class="py-3 px-4 font-mono font-bold text-slate-900 dark:text-white">
+                                            Rp {{ number_format((float) ($b->total_layanan ?? 0), 0, ',', '.') }}
+                                        </td>
                                         <td class="py-3 px-4">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $b->status_bill_reg == '14' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-amber-500/15 text-amber-500' }}">
-                                                {{ $b->status_bill_reg == '14' ? 'LUNAS' : 'DRAFT' }}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold {{ $badgeClass }}">
+                                                {{ $statusLabel }}
                                             </span>
                                         </td>
-                                        <td class="py-3 px-4">{{ $b->merchant_type ?: 'Midtrans' }}</td>
+                                        <td class="py-3 px-4 text-slate-600 dark:text-slate-400">
+                                            {{ $metode }}
+                                        </td>
+                                        <td class="py-3 px-4 text-slate-500 dark:text-slate-400 font-sans">
+                                            @if($b->payment_paid)
+                                                <span class="text-emerald-600 dark:text-emerald-400 font-medium">
+                                                    {{ \Carbon\Carbon::parse($b->payment_paid)->format('d/m/Y') }}
+                                                </span>
+                                            @else
+                                                <span class="text-slate-400">&mdash;</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-3 px-4 text-center">
+                                            @if(!empty($b->invoice_file))
+                                                <a href="{{ asset('invoices/' . $b->invoice_file) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium hover:underline">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                    PDF
+                                                </a>
+                                            @else
+                                                <span class="text-slate-400 text-[11px]">-</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="py-4 text-center text-slate-500">Tidak ada data tagihan registrasi.</td>
+                                        <td colspan="7" class="py-8 text-center text-slate-500 dark:text-slate-400">
+                                            <div class="flex flex-col items-center justify-center gap-1">
+                                                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path></svg>
+                                                <span>Tidak ada data tagihan layanan bulanan.</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>

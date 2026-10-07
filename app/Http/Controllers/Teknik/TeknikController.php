@@ -2697,9 +2697,28 @@ class TeknikController extends Controller
             ? DB::table('trx_billing_registrasi')->where('nomor_internet', $nomorInternet)->get()
             : collect();
 
-        $billingLayanan = Schema::hasTable('trx_billing_layanan')
-            ? DB::table('trx_billing_layanan')->where('nomor_internet', $nomorInternet)->orderBy('tahun_tagihan', 'desc')->orderBy('bulan_tagihan', 'desc')->limit(12)->get()
-            : collect();
+        $billingLayanan = collect();
+        if (Schema::hasTable('trx_billing_layanan')) {
+            $billQuery = DB::table('trx_billing_layanan')
+                ->leftJoin('m_status_bill_lay', 'trx_billing_layanan.status_bill_lay', '=', 'm_status_bill_lay.status_bill_lay')
+                ->where('trx_billing_layanan.hide', '0');
+
+            if ($regRecord && !empty($regRecord->ont_us) && $regRecord->ont_us !== $nomorInternet) {
+                $billQuery->where(function ($q) use ($nomorInternet, $regRecord) {
+                    $q->where('trx_billing_layanan.nomor_internet', $nomorInternet)
+                      ->orWhere('trx_billing_layanan.nomor_internet', $regRecord->ont_us);
+                });
+            } else {
+                $billQuery->where('trx_billing_layanan.nomor_internet', $nomorInternet);
+            }
+
+            $billingLayanan = $billQuery
+                ->select('trx_billing_layanan.*', 'm_status_bill_lay.desc_bill_lay')
+                ->orderBy('trx_billing_layanan.tahun_tagihan', 'desc')
+                ->orderBy('trx_billing_layanan.bulan_tagihan', 'desc')
+                ->limit(100)
+                ->get();
+        }
 
         // 5. Suspend Records
         $suspendRecords = Schema::hasTable('trx_suspend')

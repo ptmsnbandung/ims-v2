@@ -2763,6 +2763,9 @@ class TeknikController extends Controller
             }
         }
 
+        // 11. Topologi Jaringan: OLT, PON, ODP dari database gomsn / external
+        $networkInfo = $this->getNetworkInfo((string) $nomorInternet, $customer);
+
         return view('teknik.pelanggan-profile', [
             'user'              => $request->user(),
             'customer'          => $customer,
@@ -2777,6 +2780,7 @@ class TeknikController extends Controller
             'masterBarang'      => $masterBarang,
             'pops'              => $pops,
             'olts'              => $olts,
+            'networkInfo'       => $networkInfo,
             'indexOltSlots'     => $indexOltData['slots'],
             'occupiedIndexOlts' => $indexOltData['occupied'],
             'occupiedMap'       => $indexOltData['occupiedMap'],
@@ -2785,6 +2789,92 @@ class TeknikController extends Controller
             'customerActivityLogs' => $customerActivityLogs,
         ]);
 
+    }
+
+    /**
+     * Helper: Fetch OLT, PON, and ODP info per customer from gomsn database
+     */
+    private function getNetworkInfo(string $nomorInternet, $customer = null): ?object
+    {
+        try {
+            $dbGomsn = null;
+            try {
+                $dbGomsn = DB::connection('gomsn');
+                $dbGomsn->getPdo();
+            } catch (\Throwable $e) {
+                $dbGomsn = null;
+            }
+
+            // A. Users 1 (MSN)
+            $q1 = "
+                SELECT 
+                    u.nomor_internet,
+                    u.nama_user,
+                    COALESCE(u.olt, o.nama_olt, 'MSN') as olt_name,
+                    p.nama_pon,
+                    odp.nama_odp,
+                    odp.latitude,
+                    odp.longitude
+                FROM " . ($dbGomsn ? "users1" : "gomsn.users1") . " u
+                LEFT JOIN " . ($dbGomsn ? "odp1" : "gomsn.odp1") . " odp ON u.odp_id = odp.id
+                LEFT JOIN " . ($dbGomsn ? "pon1" : "gomsn.pon1") . " p ON odp.pon_id = p.id
+                LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
+                WHERE u.nomor_internet = ?
+                LIMIT 1
+            ";
+            $data1 = $dbGomsn ? $dbGomsn->select($q1, [$nomorInternet]) : DB::select($q1, [$nomorInternet]);
+            if (!empty($data1)) {
+                return (object) $data1[0];
+            }
+
+            // B. Users 2 (Bagong)
+            $q2 = "
+                SELECT 
+                    u.nomor_internet,
+                    u.nama_user,
+                    COALESCE(u.olt, o.nama_olt, 'Bagong') as olt_name,
+                    p.nama_pon,
+                    odp.nama_odp,
+                    odp.latitude,
+                    odp.longitude
+                FROM " . ($dbGomsn ? "users2" : "gomsn.users2") . " u
+                LEFT JOIN " . ($dbGomsn ? "odp2" : "gomsn.odp2") . " odp ON u.odp_id = odp.id
+                LEFT JOIN " . ($dbGomsn ? "pon2" : "gomsn.pon2") . " p ON odp.pon_id = p.id
+                LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
+                WHERE u.nomor_internet = ?
+                LIMIT 1
+            ";
+            $data2 = $dbGomsn ? $dbGomsn->select($q2, [$nomorInternet]) : DB::select($q2, [$nomorInternet]);
+            if (!empty($data2)) {
+                return (object) $data2[0];
+            }
+
+            // C. Users 3 (Soreang)
+            $q3 = "
+                SELECT 
+                    u.nomor_internet,
+                    u.nama_user,
+                    COALESCE(u.olt, o.nama_olt, 'Soreang') as olt_name,
+                    p.nama_pon,
+                    odp.nama_odp,
+                    odp.latitude,
+                    odp.longitude
+                FROM " . ($dbGomsn ? "users3" : "gomsn.users3") . " u
+                LEFT JOIN " . ($dbGomsn ? "odp3" : "gomsn.odp3") . " odp ON u.odp_id = odp.id
+                LEFT JOIN " . ($dbGomsn ? "pon3" : "gomsn.pon3") . " p ON odp.pon_id = p.id
+                LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
+                WHERE u.nomor_internet = ?
+                LIMIT 1
+            ";
+            $data3 = $dbGomsn ? $dbGomsn->select($q3, [$nomorInternet]) : DB::select($q3, [$nomorInternet]);
+            if (!empty($data3)) {
+                return (object) $data3[0];
+            }
+        } catch (\Throwable $e) {
+            // Ignore if gomsn db not reachable
+        }
+
+        return null;
     }
 
     /**

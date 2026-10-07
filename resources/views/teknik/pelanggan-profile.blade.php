@@ -1236,6 +1236,28 @@
                                 </ul>
                             </div>
 
+                            <!-- 6. Data OLT / PON / ODP (Topologi Jaringan) -->
+                            <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                    Topologi Jaringan
+                                </h4>
+                                <ul class="space-y-1.5 text-slate-600 dark:text-slate-400 font-sans text-xs">
+                                    <li>&mdash; Server OLT : <span class="text-blue-600 dark:text-blue-400 font-semibold">{{ $networkInfo->olt_name ?? ($customer->olt ?: '-') }}</span></li>
+                                    <li>&mdash; PON : <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ $networkInfo->nama_pon ?? '-' }}</span></li>
+                                    <li>
+                                        &mdash; ODP : <span class="text-purple-600 dark:text-purple-400 font-semibold">{{ $networkInfo->nama_odp ?? '-' }}</span>
+                                        @if(!empty($networkInfo->latitude) && !empty($networkInfo->longitude))
+                                            <a href="https://www.google.com/maps?q={{ $networkInfo->latitude }},{{ $networkInfo->longitude }}" target="_blank" class="inline-flex items-center text-[10px] text-blue-500 hover:underline ml-1 font-medium">
+                                                (Maps)
+                                            </a>
+                                        @endif
+                                    </li>
+                                </ul>
+                            </div>
+
                         </div>
 
                         <!-- Right Column: Table of Perangkat & Material -->

@@ -28,7 +28,7 @@
 <div class="space-y-6" x-data="billingLayananPage()">
 
     <!-- Page Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
-    <div class="ims-banner relative rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20 z-30"
+    <div class="ims-banner relative rounded-2xl p-4 sm:p-6 shadow-md border border-teal-500/20 z-30"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
         <!-- Subtle Glow Effect (isolated overflow-hidden so child dropdowns are not clipped) -->
@@ -36,19 +36,19 @@
             <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
         </div>
 
-        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
                 <div class="flex flex-wrap items-center gap-2 mb-2">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-white text-slate-800 shadow-xs">
-                        <span class="w-2 h-2 rounded-full bg-[#00a8b5]"></span>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-white text-slate-800 shadow-xs">
+                        <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#00a8b5]"></span>
                         <span>Finance &amp; Billing</span>
                     </div>
-                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         <span>Recurring Invoicing</span>
                     </div>
                 </div>
-                <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5" style="color: #FFFFFF !important;">
+                <h1 class="text-lg sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
                     Billing Layanan Bulanan
                 </h1>
                 <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
@@ -57,14 +57,14 @@
             </div>
 
             <!-- Top Right Actions -->
-            <div class="flex items-center gap-2.5 relative z-10 shrink-0">
+            <div class="flex items-center gap-2 sm:gap-2.5 relative z-10 w-full lg:w-auto pt-2 lg:pt-0">
                 <!-- Dropdown Menu Aksi -->
-                <div class="relative z-50" @click.outside="actionDropdownOpen = false">
+                <div class="relative z-50 flex-1 sm:flex-initial" @click.outside="actionDropdownOpen = false">
                     <button @click="actionDropdownOpen = !actionDropdownOpen"
                             type="button"
-                            class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold flex items-center gap-2 shadow-xs backdrop-blur-xs transition cursor-pointer relative"
+                            class="w-full sm:w-auto justify-center px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold flex items-center gap-2 shadow-xs backdrop-blur-xs transition cursor-pointer relative"
                             :class="{ 'ring-2 ring-teal-400/50 border-teal-300': actionDropdownOpen }">
-                        <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
                         <span>Menu Aksi</span>
@@ -152,11 +152,11 @@
             <!-- Primary Action: Request Pelanggan (Di Luar) -->
             <button @click="openRequestModal()"
                     type="button"
-                    class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/25 border border-blue-400/20 transition duration-150 cursor-pointer shrink-0">
-                <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    class="flex-1 sm:flex-initial justify-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/25 border border-blue-400/20 transition duration-150 cursor-pointer shrink-0">
+                <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                 </svg>
-                <span>Request Pelanggan</span>
+                <span class="truncate">Request Pelanggan</span>
 
                 <!-- Counter Badge -->
                 <template x-if="requestCount > 0">
@@ -194,92 +194,92 @@
         </div>
     </template>
 
-    <!-- 4 KPI Financial Metric Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- 4 KPI Financial Metric Cards (2x2 on Mobile, 4 Cols on Desktop) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <!-- 1. Generating / Draft (Yellow / Amber) -->
-        <div class="p-4 rounded-2xl bg-amber-50/70 dark:bg-slate-900/90 border border-amber-200 dark:border-amber-500/20 shadow-lg relative overflow-hidden group hover:border-amber-400 dark:hover:border-amber-500/40 transition">
+        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50/70 dark:bg-slate-900/90 border border-amber-200 dark:border-amber-500/20 shadow-md relative overflow-hidden group hover:border-amber-400 dark:hover:border-amber-500/40 transition flex flex-col justify-between">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
-            <div class="flex items-center justify-between relative z-10">
-                <span class="text-xs font-bold text-amber-700 dark:text-amber-400 tracking-wide uppercase">Draft / Auto Publish</span>
-                <span class="p-2 rounded-xl bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="flex items-center justify-between gap-1 relative z-10">
+                <span class="text-[10px] sm:text-xs font-bold text-amber-700 dark:text-amber-400 tracking-wide uppercase truncate">Draft / Auto Publish</span>
+                <span class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-3 relative z-10">
-                <div class="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+            <div class="mt-2.5 sm:mt-3 relative z-10">
+                <div class="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                     Rp {{ number_format($kpis['generating']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-xs text-amber-700/90 dark:text-amber-300/80 font-medium mt-1 flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
-                    <span>{{ number_format($kpis['generating']['count']) }} Invoice Menunggu Terbit</span>
+                <div class="text-[10px] sm:text-xs text-amber-700/90 dark:text-amber-300/80 font-medium mt-1 flex items-center gap-1.5 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping flex-shrink-0"></span>
+                    <span class="truncate">{{ number_format($kpis['generating']['count']) }} Invoice Menunggu</span>
                 </div>
             </div>
         </div>
 
         <!-- 2. Publish Billing (Blue) -->
-        <div class="p-4 rounded-2xl bg-blue-50/70 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-500/20 shadow-lg relative overflow-hidden group hover:border-blue-400 dark:hover:border-blue-500/40 transition">
+        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-blue-50/70 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-500/20 shadow-md relative overflow-hidden group hover:border-blue-400 dark:hover:border-blue-500/40 transition flex flex-col justify-between">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
-            <div class="flex items-center justify-between relative z-10">
-                <span class="text-xs font-bold text-blue-700 dark:text-blue-400 tracking-wide uppercase">Publish Billing</span>
-                <span class="p-2 rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-300 dark:border-blue-500/20">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="flex items-center justify-between gap-1 relative z-10">
+                <span class="text-[10px] sm:text-xs font-bold text-blue-700 dark:text-blue-400 tracking-wide uppercase truncate">Publish Billing</span>
+                <span class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-300 dark:border-blue-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-3 relative z-10">
-                <div class="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+            <div class="mt-2.5 sm:mt-3 relative z-10">
+                <div class="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                     Rp {{ number_format($kpis['publish']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-xs text-blue-700/90 dark:text-blue-300/80 font-medium mt-1 flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                    <span>{{ number_format($kpis['publish']['count']) }} Invoice Terbit Aktif</span>
+                <div class="text-[10px] sm:text-xs text-blue-700/90 dark:text-blue-300/80 font-medium mt-1 flex items-center gap-1.5 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+                    <span class="truncate">{{ number_format($kpis['publish']['count']) }} Invoice Terbit</span>
                 </div>
             </div>
         </div>
 
         <!-- 3. Waiting Payment (Teal / Cyan) -->
-        <div class="p-4 rounded-2xl bg-cyan-50/70 dark:bg-slate-900/90 border border-cyan-200 dark:border-cyan-500/20 shadow-lg relative overflow-hidden group hover:border-cyan-400 dark:hover:border-cyan-500/40 transition">
+        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-cyan-50/70 dark:bg-slate-900/90 border border-cyan-200 dark:border-cyan-500/20 shadow-md relative overflow-hidden group hover:border-cyan-400 dark:hover:border-cyan-500/40 transition flex flex-col justify-between">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
-            <div class="flex items-center justify-between relative z-10">
-                <span class="text-xs font-bold text-cyan-700 dark:text-cyan-400 tracking-wide uppercase">Waiting Payment</span>
-                <span class="p-2 rounded-xl bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-500/20">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="flex items-center justify-between gap-1 relative z-10">
+                <span class="text-[10px] sm:text-xs font-bold text-cyan-700 dark:text-cyan-400 tracking-wide uppercase truncate">Waiting Payment</span>
+                <span class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-3 relative z-10">
-                <div class="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+            <div class="mt-2.5 sm:mt-3 relative z-10">
+                <div class="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                     Rp {{ number_format($kpis['waiting']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-xs text-cyan-700/90 dark:text-cyan-300/80 font-medium mt-1 flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
-                    <span>{{ number_format($kpis['waiting']['count']) }} Invoice Menunggu Pelunasan</span>
+                <div class="text-[10px] sm:text-xs text-cyan-700/90 dark:text-cyan-300/80 font-medium mt-1 flex items-center gap-1.5 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 flex-shrink-0"></span>
+                    <span class="truncate">{{ number_format($kpis['waiting']['count']) }} Invoice Menunggu</span>
                 </div>
             </div>
         </div>
 
         <!-- 4. Paid (Kas Masuk) -->
-        <div class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/20 shadow-lg relative overflow-hidden group hover:border-emerald-400 dark:hover:border-emerald-500/40 transition">
+        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-50/70 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/20 shadow-md relative overflow-hidden group hover:border-emerald-400 dark:hover:border-emerald-500/40 transition flex flex-col justify-between">
             <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
-            <div class="flex items-center justify-between relative z-10">
-                <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 tracking-wide uppercase">Paid (Kas Masuk)</span>
-                <span class="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="flex items-center justify-between gap-1 relative z-10">
+                <span class="text-[10px] sm:text-xs font-bold text-emerald-700 dark:text-emerald-400 tracking-wide uppercase truncate">Paid (Kas Masuk)</span>
+                <span class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043A3.746 3.746 0 0 1 21 12Z" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-3 relative z-10">
-                <div class="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+            <div class="mt-2.5 sm:mt-3 relative z-10">
+                <div class="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                     Rp {{ number_format($kpis['paid']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-xs text-emerald-700/90 dark:text-emerald-300/80 font-medium mt-1 flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    <span>{{ number_format($kpis['paid']['count']) }} Invoice Telah Terbayar</span>
+                <div class="text-[10px] sm:text-xs text-emerald-700/90 dark:text-emerald-300/80 font-medium mt-1 flex items-center gap-1.5 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                    <span class="truncate">{{ number_format($kpis['paid']['count']) }} Invoice Terbayar</span>
                 </div>
             </div>
         </div>

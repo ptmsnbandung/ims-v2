@@ -124,7 +124,7 @@
         <!-- =============================================================== -->
         <!-- LEFT COLUMN: PROFILE PELANGGAN CARD                            -->
         <!-- =============================================================== -->
-        <div class="lg:col-span-4 space-y-4">
+        <div class="lg:col-span-4 space-y-4 min-w-0">
             
             <!-- Profile Title Header -->
             <div class="text-center">
@@ -134,7 +134,7 @@
             </div>
 
             <!-- Profile Info Main Card -->
-            <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-5 shadow-xl shadow-black/10 dark:shadow-black/30 space-y-6">
+            <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-5 shadow-xl shadow-black/10 dark:shadow-black/30 space-y-6 overflow-hidden min-w-0">
                 
                 <!-- Center Hero Box -->
                 <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 text-center space-y-1.5">
@@ -296,25 +296,27 @@
                     </div>
 
                     <!-- LOKASI / KOORDINAT / MAPS -->
-                    <div>
+                    <div class="min-w-0 overflow-hidden">
                         <span class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                             LOKASI
                         </span>
-                        <div class="space-y-1 font-mono text-slate-700 dark:text-slate-300 text-xs">
+                        <div class="space-y-1.5 text-xs min-w-0">
                             @if($cleanLonLat)
-                                <div>{{ $cleanLonLat }}</div>
+                                <div class="font-mono text-[11px] text-slate-600 dark:text-slate-400 break-all leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                                    {{ $cleanLonLat }}
+                                </div>
                             @endif
                             @if($mapsUrl)
-                                <div class="pt-0.5">
+                                <div class="pt-0.5 min-w-0">
                                     <a href="{{ $mapsUrl }}" 
                                        target="_blank" 
-                                       class="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 hover:underline break-all"
+                                       class="inline-flex items-center gap-1.5 text-cyan-500 hover:text-cyan-400 hover:underline max-w-full font-medium"
                                        title="Buka Lokasi di Google Maps">
                                         <svg class="w-3.5 h-3.5 text-rose-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                                         </svg>
-                                        <span class="truncate max-w-[250px]">{{ $customer->loc_maps ?: 'Buka di Google Maps' }}</span>
+                                        <span class="truncate block">Buka di Google Maps</span>
                                     </a>
                                 </div>
                             @else
@@ -331,7 +333,7 @@
         <!-- =============================================================== -->
         <!-- RIGHT COLUMN: TABBED DETAIL PANEL                              -->
         <!-- =============================================================== -->
-        <div class="lg:col-span-8 space-y-4">
+        <div class="lg:col-span-8 space-y-4 min-w-0">
             
             <!-- Top Tab Switcher Bar & Button Kembali -->
             <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-3 sm:p-4 shadow-xl shadow-black/10 dark:shadow-black/20">
@@ -398,12 +400,12 @@
                     <!-- 8. Tab Activity Log Router -->
                     <button type="button"
                             @click="activeTab = 'activity_log'"
-                            :class="activeTab === 'activity_log' ? 'bg-violet-600 text-white shadow-md shadow-violet-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
+                            :class="activeTab === 'activity_log' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
                             class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer inline-flex items-center gap-1.5">
-                        Activity Log
+                        <span>Activity Log</span>
                         @if($customerActivityLogs->count() > 0)
                             <span class="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold rounded-full"
-                                  :class="activeTab === 'activity_log' ? 'bg-white/25 text-white' : 'bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300'">
+                                  :class="activeTab === 'activity_log' ? 'bg-white/25 text-white' : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'">
                                 {{ $customerActivityLogs->count() }}
                             </span>
                         @endif

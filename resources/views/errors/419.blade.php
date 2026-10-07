@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>419 - Sesi Kedaluwarsa | IMS</title>
+    <title>419 - Sesi Kedaluwarsa | IMSv2 | PT MEDIA SOLUSI NETWORK</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/images/logo.png') }}">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -91,6 +91,11 @@ class DashboardController extends Controller
             'bandwidthSeries' => [0, 0, 0, 0],
             'pipelineLabels' => ['Draft Pendaftaran', 'Survey Lokasi', 'Instalasi & Pasang', 'Aktivasi NOC', 'Aktif (Online)', 'Batal'],
             'pipelineSeries' => [0, 0, 0, 0, 0, 0],
+            'cityLabels' => [],
+            'citySeries' => [],
+            'cityAktifSeries' => [],
+            'cityBreakdown' => collect([]),
+            'totalCityUsers' => 0,
         ];
 
         $newUserStats = [
@@ -405,6 +410,40 @@ class DashboardController extends Controller
                     $batalBaru,
                 ];
 
+                // 1.E DATA GRAFIK: DISTRIBUSI USER BERDASARKAN NAMA_KOTA_PASANG (DARI VIEW_BATCHJOB)
+                $chartCityLabels = [];
+                $chartCitySeries = [];
+                $chartCityAktifSeries = [];
+                $cityBreakdown = collect([]);
+
+                if (Schema::hasTable('view_batchjob')) {
+                    $cityDistQuery = DB::table('view_batchjob')
+                        ->select(
+                            DB::raw("COALESCE(NULLIF(TRIM(nama_kota_pasang), ''), 'LAINNYA') as kota_name"),
+                            DB::raw('COUNT(*) as total'),
+                            DB::raw("COUNT(CASE WHEN status_reg IN ('20', '20.0', '20.1') THEN 1 END) as total_aktif")
+                        )
+                        ->groupBy('kota_name')
+                        ->orderByDesc('total')
+                        ->get();
+
+                    foreach ($cityDistQuery as $cityItem) {
+                        $cityName = trim((string)$cityItem->kota_name);
+                        if (!empty($cityName)) {
+                            $chartCityLabels[] = $cityName;
+                            $chartCitySeries[] = (int) $cityItem->total;
+                            $chartCityAktifSeries[] = (int) $cityItem->total_aktif;
+                        }
+                    }
+                    $cityBreakdown = $cityDistQuery;
+                }
+
+                if (empty($chartCityLabels)) {
+                    $chartCityLabels = ['KOTA BANDUNG', 'KABUPATEN BANDUNG', 'KAB. BANDUNG BARAT', 'KOTA CIMAHI', 'LAINNYA'];
+                    $chartCitySeries = [0, 0, 0, 0, 0];
+                    $chartCityAktifSeries = [0, 0, 0, 0, 0];
+                }
+
                 $chartData = [
                     'monthlyLabels' => $chartMonthlyLabels,
                     'monthlyRegistrasi' => $chartMonthlyRegistrasi,
@@ -415,6 +454,11 @@ class DashboardController extends Controller
                     'bandwidthSeries' => $chartBandwidthSeries,
                     'pipelineLabels' => $chartPipelineLabels,
                     'pipelineSeries' => $chartPipelineSeries,
+                    'cityLabels' => $chartCityLabels,
+                    'citySeries' => $chartCitySeries,
+                    'cityAktifSeries' => $chartCityAktifSeries,
+                    'cityBreakdown' => $cityBreakdown,
+                    'totalCityUsers' => array_sum($chartCitySeries),
                 ];
             }
         } catch (\Throwable $e) {

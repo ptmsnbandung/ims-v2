@@ -204,6 +204,104 @@
 
         </div>
 
+        <!-- Row: Distribusi User per Nama Kota Pasang (view_batchjob) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            <!-- 5. Grafik Sebaran User per Kota / Wilayah Pasang (8 Cols) -->
+            <div class="lg:col-span-8 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <div>
+                            <h4 class="text-sm font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                <svg class="w-4 h-4 text-blue-600 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                </svg>
+                                <span>Sebaran User per Wilayah / Kota Pasang</span>
+                            </h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Jumlah persebaran pelanggan berdasarkan <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono text-blue-600 dark:text-cyan-400 font-bold">nama_kota_pasang</code> dari <span class="font-semibold">view_batchjob</span>.
+                            </p>
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800/50 text-xs font-bold text-blue-700 dark:text-cyan-300 font-mono">
+                                {{ number_format($chartData['totalCityUsers']) }} Total User
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ApexChart Container -->
+                    <div class="pt-4">
+                        <div id="chart-city-distribution" class="w-full" style="min-height: 290px;"></div>
+                    </div>
+                </div>
+
+                <div class="mt-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                    <span>Sumber Data: Master Data Registrasi Pelanggan (<code class="font-mono text-[10px]">view_batchjob</code>)</span>
+                    <a href="{{ route('teknik.pelanggan') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline">
+                        Lihat Data Pelanggan &rarr;
+                    </a>
+                </div>
+            </div>
+
+            <!-- Breakdown Tabel Sebaran Kota / Wilayah (4 Cols) -->
+            <div class="lg:col-span-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                        <h4 class="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                            Peringkat Wilayah / Kota
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            Rincian jumlah total user & pelanggan aktif.
+                        </p>
+                    </div>
+
+                    <div class="pt-3 space-y-2.5 max-h-[310px] overflow-y-auto pr-1">
+                        @php
+                            $maxCityTotal = $chartData['totalCityUsers'] > 0 ? $chartData['totalCityUsers'] : 1;
+                            $cityColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'];
+                        @endphp
+                        @forelse($chartData['cityBreakdown'] as $cIdx => $cItem)
+                            @php
+                                $cName = trim((string)$cItem->kota_name);
+                                $cTot = (int) $cItem->total;
+                                $cAktif = (int) ($cItem->total_aktif ?? 0);
+                                $cPct = round(($cTot / $maxCityTotal) * 100, 1);
+                                $cBarColor = $cityColors[$cIdx % count($cityColors)];
+                            @endphp
+                            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 space-y-1.5">
+                                <div class="flex items-center justify-between text-xs">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black {{ $cIdx == 0 ? 'bg-amber-500 text-white' : ($cIdx == 1 ? 'bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400') }}">
+                                            {{ $cIdx + 1 }}
+                                        </span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $cName }}">{{ $cName }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 font-mono flex-shrink-0">
+                                        <span class="font-black text-slate-900 dark:text-white text-xs">{{ number_format($cTot) }}</span>
+                                        <span class="text-[10px] text-slate-400">({{ $cPct }}%)</span>
+                                    </div>
+                                </div>
+                                <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-500" style="width: {{ $cPct }}%; background-color: {{ $cBarColor }};"></div>
+                                </div>
+                                <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-medium">Aktif: {{ number_format($cAktif) }} User</span>
+                                    <a href="{{ route('teknik.pelanggan', ['wilayah' => $cName]) }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-semibold">Filter &rarr;</a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-4 text-center text-xs text-slate-400">
+                                Belum ada data wilayah pelanggan
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
         <!-- Row 2: Status Pipeline Pendaftaran & Paket Kecepatan Terpopuler -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
             
@@ -980,6 +1078,107 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const chartPipe = new ApexCharts(pipeEl, optionsPipe);
         chartPipe.render();
+    }
+
+    // -------------------------------------------------------------
+    // 4. CHART: SEBARAN USER PER NAMA KOTA PASANG (APEXCHARTS BAR)
+    // -------------------------------------------------------------
+    const cityLabels = @json($chartData['cityLabels']);
+    const citySeries = @json($chartData['citySeries']);
+    const cityAktifSeries = @json($chartData['cityAktifSeries'] ?? []);
+
+    const cityEl = document.querySelector('#chart-city-distribution');
+    if (cityEl) {
+        const optionsCity = {
+            series: [
+                {
+                    name: 'Total Pelanggan',
+                    data: citySeries
+                },
+                {
+                    name: 'Pelanggan Aktif Online',
+                    data: cityAktifSeries
+                }
+            ],
+            chart: {
+                type: 'bar',
+                height: 290,
+                fontFamily: 'inherit',
+                toolbar: { show: false },
+                background: 'transparent'
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '42%',
+                    borderRadius: 6,
+                    dataLabels: {
+                        position: 'top'
+                    }
+                }
+            },
+            colors: ['#0284c7', '#10b981'],
+            dataLabels: {
+                enabled: true,
+                style: {
+                    colors: isDark ? ['#e2e8f0'] : ['#1e293b'],
+                    fontSize: '10px',
+                    fontWeight: 700
+                },
+                offsetY: -16,
+                formatter: (val) => val > 0 ? val : ""
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            xaxis: {
+                categories: cityLabels,
+                labels: {
+                    style: {
+                        colors: textColor,
+                        fontSize: '11px',
+                        fontWeight: 600
+                    },
+                    rotate: -15,
+                    trim: true
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: textColor,
+                        fontSize: '11px'
+                    },
+                    formatter: (val) => Math.round(val)
+                }
+            },
+            grid: {
+                borderColor: gridColor,
+                strokeDashArray: 4,
+                yaxis: { lines: { show: true } },
+                xaxis: { lines: { show: false } }
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'right',
+                labels: {
+                    colors: textColor
+                }
+            },
+            tooltip: {
+                theme: tooltipTheme,
+                y: {
+                    formatter: (val) => val + " User"
+                }
+            }
+        };
+
+        const chartCity = new ApexCharts(cityEl, optionsCity);
+        chartCity.render();
     }
 });
 </script>

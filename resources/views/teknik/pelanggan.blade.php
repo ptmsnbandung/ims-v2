@@ -103,32 +103,36 @@
             <!-- Overall KPI Metric Pills -->
             <div class="flex flex-wrap items-center gap-2.5">
                 <a href="{{ route($pelangganRoute) }}" 
-                   class="px-3.5 py-1.5 rounded-full bg-white text-slate-800 shadow-sm border border-white/60 flex items-center gap-2 text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
+                   class="px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-2 text-xs font-bold hover:opacity-95 transition cursor-pointer"
+                   style="background-color: #ffffff; color: #1e293b; border: 1px solid rgba(255,255,255,0.8);"
                    title="Lihat Semua Pelanggan">
-                    <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
-                    <span class="text-slate-600 font-semibold">Total:</span>
-                    <strong class="text-slate-900 font-mono font-black text-sm">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: #0ea5e9;"></span>
+                    <span style="color: #475569; font-weight: 600;">Total:</span>
+                    <strong class="font-mono font-black text-sm" style="color: #0f172a;">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '20']) }}" 
-                   class="px-3.5 py-1.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-400/50 shadow-sm flex items-center gap-2 text-xs hover:bg-emerald-900/90 transition cursor-pointer"
+                   class="px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-2 text-xs hover:opacity-95 transition cursor-pointer"
+                   style="background-color: rgba(4, 51, 62, 0.9); color: #6ee7b7; border: 1px solid rgba(45, 212, 191, 0.5);"
                    title="Filter Pelanggan Aktif">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-emerald-300 font-semibold">Aktif:</span>
-                    <strong class="text-emerald-100 font-mono font-bold text-sm">{{ number_format($bwCounts['total_aktif']) }}</strong>
+                    <span class="w-2.5 h-2.5 rounded-full animate-pulse" style="background-color: #34d399;"></span>
+                    <span style="color: #6ee7b7; font-weight: 600;">Aktif:</span>
+                    <strong class="font-mono font-bold text-sm" style="color: #d1fae5;">{{ number_format($bwCounts['total_aktif']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '23']) }}" 
-                   class="px-3.5 py-1.5 rounded-full bg-rose-950/85 text-rose-200 border border-rose-400/60 shadow-sm flex items-center gap-2 text-xs hover:bg-rose-900/90 transition cursor-pointer"
+                   class="px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-2 text-xs hover:opacity-95 transition cursor-pointer"
+                   style="background-color: rgba(62, 4, 19, 0.9); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.7);"
                    title="Filter Pelanggan Terminasi">
-                    <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
-                    <span class="text-rose-200 font-semibold">Terminasi:</span>
-                    <strong class="text-rose-100 font-mono font-bold text-sm">{{ number_format($bwCounts['total_terminasi']) }}</strong>
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: #fb7185;"></span>
+                    <span style="color: #fda4af; font-weight: 600;">Terminasi:</span>
+                    <strong class="font-mono font-bold text-sm" style="color: #ffe4e6;">{{ number_format($bwCounts['total_terminasi']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '21']) }}" 
-                   class="px-3.5 py-1.5 rounded-full bg-amber-950/80 text-amber-300 border border-amber-400/50 shadow-sm flex items-center gap-2 text-xs hover:bg-amber-900/90 transition cursor-pointer"
+                   class="px-3.5 py-1.5 rounded-full shadow-sm flex items-center gap-2 text-xs hover:opacity-95 transition cursor-pointer"
+                   style="background-color: rgba(62, 46, 4, 0.9); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.6);"
                    title="Filter Pelanggan Suspend">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                    <span class="text-amber-300 font-semibold">Suspend:</span>
-                    <strong class="text-amber-100 font-mono font-bold text-sm">{{ number_format($bwCounts['total_suspend']) }}</strong>
+                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: #fbbf24;"></span>
+                    <span style="color: #fcd34d; font-weight: 600;">Suspend:</span>
+                    <strong class="font-mono font-bold text-sm" style="color: #fef3c7;">{{ number_format($bwCounts['total_suspend']) }}</strong>
                 </a>
             </div>
         </div>

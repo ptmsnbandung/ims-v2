@@ -2805,70 +2805,144 @@ class TeknikController extends Controller
                 $dbGomsn = null;
             }
 
-            // A. Users 1 (MSN)
-            $q1 = "
-                SELECT 
-                    u.nomor_internet,
-                    u.nama_user,
-                    COALESCE(u.olt, o.nama_olt, 'MSN') as olt_name,
-                    p.nama_pon,
-                    odp.nama_odp,
-                    odp.latitude,
-                    odp.longitude
-                FROM " . ($dbGomsn ? "users1" : "gomsn.users1") . " u
-                LEFT JOIN " . ($dbGomsn ? "odp1" : "gomsn.odp1") . " odp ON u.odp_id = odp.id
-                LEFT JOIN " . ($dbGomsn ? "pon1" : "gomsn.pon1") . " p ON odp.pon_id = p.id
-                LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
-                WHERE u.nomor_internet = ?
-                LIMIT 1
-            ";
-            $data1 = $dbGomsn ? $dbGomsn->select($q1, [$nomorInternet]) : DB::select($q1, [$nomorInternet]);
-            if (!empty($data1)) {
-                return (object) $data1[0];
-            }
+            $candidates = array_unique(array_filter([
+                $nomorInternet,
+                $customer->ont_us ?? null,
+                preg_replace('/^MS/i', '', (string)$nomorInternet),
+                preg_replace('/[^0-9]/', '', (string)$nomorInternet),
+            ]));
 
-            // B. Users 2 (Bagong)
-            $q2 = "
-                SELECT 
-                    u.nomor_internet,
-                    u.nama_user,
-                    COALESCE(u.olt, o.nama_olt, 'Bagong') as olt_name,
-                    p.nama_pon,
-                    odp.nama_odp,
-                    odp.latitude,
-                    odp.longitude
-                FROM " . ($dbGomsn ? "users2" : "gomsn.users2") . " u
-                LEFT JOIN " . ($dbGomsn ? "odp2" : "gomsn.odp2") . " odp ON u.odp_id = odp.id
-                LEFT JOIN " . ($dbGomsn ? "pon2" : "gomsn.pon2") . " p ON odp.pon_id = p.id
-                LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
-                WHERE u.nomor_internet = ?
-                LIMIT 1
-            ";
-            $data2 = $dbGomsn ? $dbGomsn->select($q2, [$nomorInternet]) : DB::select($q2, [$nomorInternet]);
-            if (!empty($data2)) {
-                return (object) $data2[0];
-            }
+            foreach ($candidates as $cand) {
+                if (empty($cand)) continue;
 
-            // C. Users 3 (Soreang)
-            $q3 = "
-                SELECT 
-                    u.nomor_internet,
-                    u.nama_user,
-                    COALESCE(u.olt, o.nama_olt, 'Soreang') as olt_name,
-                    p.nama_pon,
-                    odp.nama_odp,
-                    odp.latitude,
-                    odp.longitude
-                FROM " . ($dbGomsn ? "users3" : "gomsn.users3") . " u
-                LEFT JOIN " . ($dbGomsn ? "odp3" : "gomsn.odp3") . " odp ON u.odp_id = odp.id
-                LEFT JOIN " . ($dbGomsn ? "pon3" : "gomsn.pon3") . " p ON odp.pon_id = p.id
-                LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
-                WHERE u.nomor_internet = ?
-                LIMIT 1
-            ";
-            $data3 = $dbGomsn ? $dbGomsn->select($q3, [$nomorInternet]) : DB::select($q3, [$nomorInternet]);
-            if (!empty($data3)) {
-                return (object) $data3[0];
+                // 1. Users 1 (MSN)
+                $q1 = "
+                    SELECT 
+                        u.nomor_internet,
+                        u.nama_user,
+                        COALESCE(u.olt, o.nama_olt, 'MSN') as olt_name,
+                        p.nama_pon,
+                        odp.nama_odp,
+                        odp.latitude,
+                        odp.longitude
+                    FROM " . ($dbGomsn ? "users1" : "gomsn.users1") . " u
+                    LEFT JOIN " . ($dbGomsn ? "odp1" : "gomsn.odp1") . " odp ON u.odp_id = odp.id
+                    LEFT JOIN " . ($dbGomsn ? "pon1" : "gomsn.pon1") . " p ON odp.pon_id = p.id
+                    LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
+                    WHERE u.nomor_internet = ? OR u.nomor_internet LIKE ?
+                    LIMIT 1
+                ";
+                $data1 = $dbGomsn ? $dbGomsn->select($q1, [$cand, "%$cand%"]) : DB::select($q1, [$cand, "%$cand%"]);
+                if (!empty($data1)) {
+                    return (object) $data1[0];
+                }
+
+                // 2. Users 2 (Bagong)
+                $q2 = "
+                    SELECT 
+                        u.nomor_internet,
+                        u.nama_user,
+                        COALESCE(u.olt, o.nama_olt, 'Bagong') as olt_name,
+                        p.nama_pon,
+                        odp.nama_odp,
+                        odp.latitude,
+                        odp.longitude
+                    FROM " . ($dbGomsn ? "users2" : "gomsn.users2") . " u
+                    LEFT JOIN " . ($dbGomsn ? "odp2" : "gomsn.odp2") . " odp ON u.odp_id = odp.id
+                    LEFT JOIN " . ($dbGomsn ? "pon2" : "gomsn.pon2") . " p ON odp.pon_id = p.id
+                    LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
+                    WHERE u.nomor_internet = ? OR u.nomor_internet LIKE ?
+                    LIMIT 1
+                ";
+                $data2 = $dbGomsn ? $dbGomsn->select($q2, [$cand, "%$cand%"]) : DB::select($q2, [$cand, "%$cand%"]);
+                if (!empty($data2)) {
+                    return (object) $data2[0];
+                }
+
+                // 3. Users 3 (Soreang)
+                $q3 = "
+                    SELECT 
+                        u.nomor_internet,
+                        u.nama_user,
+                        COALESCE(u.olt, o.nama_olt, 'Soreang') as olt_name,
+                        p.nama_pon,
+                        odp.nama_odp,
+                        odp.latitude,
+                        odp.longitude
+                    FROM " . ($dbGomsn ? "users3" : "gomsn.users3") . " u
+                    LEFT JOIN " . ($dbGomsn ? "odp3" : "gomsn.odp3") . " odp ON u.odp_id = odp.id
+                    LEFT JOIN " . ($dbGomsn ? "pon3" : "gomsn.pon3") . " p ON odp.pon_id = p.id
+                    LEFT JOIN " . ($dbGomsn ? "olt" : "gomsn.olt") . " o ON p.olt_id = o.olt_id
+                    WHERE u.nomor_internet = ? OR u.nomor_internet LIKE ?
+                    LIMIT 1
+                ";
+                $data3 = $dbGomsn ? $dbGomsn->select($q3, [$cand, "%$cand%"]) : DB::select($q3, [$cand, "%$cand%"]);
+                if (!empty($data3)) {
+                    return (object) $data3[0];
+                }
+
+                // 4. History User (MSN)
+                $qh1 = "
+                    SELECT 
+                        h.nomor_internet,
+                        h.nama_user,
+                        'MSN' as olt_name,
+                        h.nama_pon,
+                        h.nama_odp,
+                        odp.latitude,
+                        odp.longitude
+                    FROM " . ($dbGomsn ? "history_user" : "gomsn.history_user") . " h
+                    LEFT JOIN " . ($dbGomsn ? "odp1" : "gomsn.odp1") . " odp ON h.odp_id = odp.id
+                    WHERE h.nomor_internet = ? OR h.nomor_internet LIKE ?
+                    ORDER BY h.id DESC
+                    LIMIT 1
+                ";
+                $dataH1 = $dbGomsn ? $dbGomsn->select($qh1, [$cand, "%$cand%"]) : DB::select($qh1, [$cand, "%$cand%"]);
+                if (!empty($dataH1)) {
+                    return (object) $dataH1[0];
+                }
+
+                // 5. History User 2 (Bagong)
+                $qh2 = "
+                    SELECT 
+                        h.nomor_internet,
+                        h.nama_user,
+                        'Bagong' as olt_name,
+                        h.nama_pon,
+                        h.nama_odp,
+                        odp.latitude,
+                        odp.longitude
+                    FROM " . ($dbGomsn ? "history_user2" : "gomsn.history_user2") . " h
+                    LEFT JOIN " . ($dbGomsn ? "odp2" : "gomsn.odp2") . " odp ON h.odp_id = odp.id
+                    WHERE h.nomor_internet = ? OR h.nomor_internet LIKE ?
+                    ORDER BY h.id DESC
+                    LIMIT 1
+                ";
+                $dataH2 = $dbGomsn ? $dbGomsn->select($qh2, [$cand, "%$cand%"]) : DB::select($qh2, [$cand, "%$cand%"]);
+                if (!empty($dataH2)) {
+                    return (object) $dataH2[0];
+                }
+
+                // 6. History User 3 (Soreang)
+                $qh3 = "
+                    SELECT 
+                        h.nomor_internet,
+                        h.nama_user,
+                        'Soreang' as olt_name,
+                        h.nama_pon,
+                        h.nama_odp,
+                        odp.latitude,
+                        odp.longitude
+                    FROM " . ($dbGomsn ? "history_user3" : "gomsn.history_user3") . " h
+                    LEFT JOIN " . ($dbGomsn ? "odp3" : "gomsn.odp3") . " odp ON h.odp_id = odp.id
+                    WHERE h.nomor_internet = ? OR h.nomor_internet LIKE ?
+                    ORDER BY h.id DESC
+                    LIMIT 1
+                ";
+                $dataH3 = $dbGomsn ? $dbGomsn->select($qh3, [$cand, "%$cand%"]) : DB::select($qh3, [$cand, "%$cand%"]);
+                if (!empty($dataH3)) {
+                    return (object) $dataH3[0];
+                }
             }
         } catch (\Throwable $e) {
             // Ignore if gomsn db not reachable

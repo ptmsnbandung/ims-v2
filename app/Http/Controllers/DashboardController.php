@@ -409,6 +409,7 @@ class DashboardController extends Controller
                 ];
 
                 // 1.E DATA GRAFIK: DISTRIBUSI USER BERDASARKAN NAMA_KOTA_PASANG (DARI VIEW_BATCHJOB)
+                // Dikelompokkan khusus: KOTA BANDUNG, KABUPATEN BANDUNG, dan LAINNYA
                 $chartCityLabels = [];
                 $chartCitySeries = [];
                 $chartCityAktifSeries = [];
@@ -417,12 +418,24 @@ class DashboardController extends Controller
                 try {
                     $cityDistQuery = DB::table('view_batchjob')
                         ->select(
-                            DB::raw("COALESCE(NULLIF(TRIM(nama_kota_pasang), ''), 'LAINNYA') as kota_name"),
+                            DB::raw("
+                                CASE 
+                                    WHEN UPPER(TRIM(nama_kota_pasang)) = 'KOTA BANDUNG' THEN 'KOTA BANDUNG'
+                                    WHEN UPPER(TRIM(nama_kota_pasang)) IN ('KABUPATEN BANDUNG', 'KAB. BANDUNG') THEN 'KABUPATEN BANDUNG'
+                                    ELSE 'LAINNYA'
+                                END as kota_name
+                            "),
                             DB::raw('COUNT(*) as total'),
                             DB::raw("COUNT(CASE WHEN status_reg IN ('20', '20.0', '20.1') THEN 1 END) as total_aktif")
                         )
                         ->groupBy('kota_name')
-                        ->orderByDesc('total')
+                        ->orderByRaw("
+                            CASE kota_name 
+                                WHEN 'KOTA BANDUNG' THEN 1 
+                                WHEN 'KABUPATEN BANDUNG' THEN 2 
+                                ELSE 3 
+                            END
+                        ")
                         ->get();
 
                     foreach ($cityDistQuery as $cityItem) {
@@ -439,9 +452,9 @@ class DashboardController extends Controller
                 }
 
                 if (empty($chartCityLabels)) {
-                    $chartCityLabels = ['KOTA BANDUNG', 'KABUPATEN BANDUNG', 'KAB. BANDUNG BARAT', 'KOTA CIMAHI', 'LAINNYA'];
-                    $chartCitySeries = [0, 0, 0, 0, 0];
-                    $chartCityAktifSeries = [0, 0, 0, 0, 0];
+                    $chartCityLabels = ['KOTA BANDUNG', 'KABUPATEN BANDUNG', 'LAINNYA'];
+                    $chartCitySeries = [0, 0, 0];
+                    $chartCityAktifSeries = [0, 0, 0];
                 }
 
                 $chartData = [

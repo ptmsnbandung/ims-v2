@@ -1110,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', function () {
             plotOptions: {
                 bar: {
                     horizontal: false,
-                    columnWidth: '42%',
+                    columnWidth: '28%',
                     borderRadius: 6,
                     dataLabels: {
                         position: 'top'
@@ -1122,10 +1122,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 enabled: true,
                 style: {
                     colors: isDark ? ['#e2e8f0'] : ['#1e293b'],
-                    fontSize: '10px',
+                    fontSize: '11px',
                     fontWeight: 700
                 },
-                offsetY: -16,
+                offsetY: -18,
                 formatter: (val) => val > 0 ? val : ""
             },
             stroke: {
@@ -1138,11 +1138,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels: {
                     style: {
                         colors: textColor,
-                        fontSize: '11px',
-                        fontWeight: 600
+                        fontSize: '12px',
+                        fontWeight: 700
                     },
-                    rotate: -15,
-                    trim: true
+                    rotate: 0,
+                    trim: false
                 },
                 axisBorder: { show: false },
                 axisTicks: { show: false }

@@ -124,9 +124,7 @@ class DashboardController extends Controller
         ];
 
         try {
-            $sourceTable = Schema::hasTable('view_batchjob') 
-                ? 'view_batchjob' 
-                : (Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : null);
+            $sourceTable = 'view_batchjob';
 
             if ($sourceTable) {
                 // Aggregated counts for the selected year
@@ -402,10 +400,10 @@ class DashboardController extends Controller
                 // 1.D DATA GRAFIK: PIPELINE STATUS REGISTRASI
                 $chartPipelineLabels = ['Draft Pendaftaran', 'Survey Lokasi', 'Instalasi & Pasang', 'Aktivasi NOC', 'Aktif (Online)', 'Batal'];
                 $chartPipelineSeries = [
-                    (int) ($monthStats->draft_count ?? 0),
-                    (int) ($monthStats->survey_count ?? 0),
-                    (int) ($monthStats->instalasi_count ?? 0),
-                    (int) ($monthStats->aktivasi_count ?? 0),
+                    (int) ($yearStats->draft_count ?? 0),
+                    (int) ($yearStats->survey_count ?? 0),
+                    (int) ($yearStats->instalasi_count ?? 0),
+                    (int) ($yearStats->aktivasi_count ?? 0),
                     $aktifBaru,
                     $batalBaru,
                 ];
@@ -416,7 +414,7 @@ class DashboardController extends Controller
                 $chartCityAktifSeries = [];
                 $cityBreakdown = collect([]);
 
-                if (Schema::hasTable('view_batchjob')) {
+                try {
                     $cityDistQuery = DB::table('view_batchjob')
                         ->select(
                             DB::raw("COALESCE(NULLIF(TRIM(nama_kota_pasang), ''), 'LAINNYA') as kota_name"),
@@ -436,6 +434,8 @@ class DashboardController extends Controller
                         }
                     }
                     $cityBreakdown = $cityDistQuery;
+                } catch (\Throwable $e) {
+                    Log::warning('City dist query fallback: ' . $e->getMessage());
                 }
 
                 if (empty($chartCityLabels)) {

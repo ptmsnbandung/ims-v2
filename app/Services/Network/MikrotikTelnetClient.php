@@ -55,7 +55,7 @@ class MikrotikTelnetClient
         }
 
         if ($action === 'print') {
-            $cmd = "{$base} print terse" . ($where ? ' where ' . implode(' ', $where) : '');
+            $cmd = "{$base} print terse without-paging" . ($where ? ' where ' . implode(' ', $where) : '');
             $output = $this->telnet->exec($cmd);
             $items = $this->telnet->parseTerseOutput($output);
 

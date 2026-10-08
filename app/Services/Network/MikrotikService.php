@@ -129,8 +129,8 @@ class MikrotikService
      */
     private function getClient(): object
     {
-        // 1. Jika port 23, ini adalah port Telnet murni
-        if ((int)$this->port === 23) {
+        // 1. Jika port 23 atau 2329, ini adalah port Telnet
+        if ((int)$this->port === 23 || (int)$this->port === 2329) {
             try {
                 return $this->getTelnetClient();
             } catch (Throwable $telnetErr) {

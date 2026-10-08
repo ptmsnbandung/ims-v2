@@ -83,7 +83,7 @@ class MikrotikTelnet
             ['login failed', 'login failure', 'incorrect', 'invalid user', 'failure', 'software license', 'new password'],
             max($this->timeout, 8),
             self::PROMPT_REGEX
-        );
+        );                                                                                                                                                                                                                      
 
         if ($loginResult === false) {
             $bufferSample = trim(preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', (string)$this->lastBuffer));
@@ -151,11 +151,18 @@ class MikrotikTelnet
             return '';
         }
 
-        // Send command
+        // 1. Flush residual data in socket buffer before sending command
+        stream_set_blocking($this->socket, false);
+        while (($d = @fread($this->socket, 4096)) !== false && $d !== '') {
+            // drained
+        }
+        stream_set_blocking($this->socket, true);
+
+        // 2. Send command
         $this->writeLine($command);
 
-        // Read output until we see the CLI prompt again
-        $output = $this->readUntil([], $this->timeout + 5, self::PROMPT_REGEX);
+        // 3. Read output until we see the CLI prompt at the END of response ($ anchor)
+        $output = $this->readUntil([], $this->timeout + 5, '/(\[[^\]\r\n]+\]\s*[>#]\s*)$/');
         if ($output === false) {
             return '';
         }
@@ -297,59 +304,45 @@ class MikrotikTelnet
                 break;
             }
 
-            $byte = @fread($this->socket, 1);
-            if ($byte === false || strlen($byte) === 0) {
+            $chunk = @fread($this->socket, 4096);
+            if ($chunk === false || strlen($chunk) === 0) {
                 // Check if socket is still alive
                 if (feof($this->socket)) {
                     break;
                 }
-                usleep(10000); // 10ms
+                usleep(15000); // 15ms
                 continue;
             }
 
-            $ord = ord($byte);
+            $len = strlen($chunk);
+            for ($i = 0; $i < $len; $i++) {
+                $ord = ord($chunk[$i]);
 
-            // Handle Telnet IAC (Interpret As Command) negotiation
-            if ($ord === 255) { // IAC
-                $cmd = @fread($this->socket, 1);
-                if ($cmd === false) continue;
-                $cmdOrd = ord($cmd);
-
-                if ($cmdOrd >= 251 && $cmdOrd <= 254) {
-                    // WILL(251)/WONT(252)/DO(253)/DONT(254) + option byte
-                    $opt = @fread($this->socket, 1);
-                    if ($opt === false) continue;
-
-                    // Respond: refuse all options
-                    if ($cmdOrd === 251 || $cmdOrd === 252) {
-                        // WILL/WONT -> reply DONT
-                        @fwrite($this->socket, chr(255) . chr(254) . $opt);
-                    } elseif ($cmdOrd === 253 || $cmdOrd === 254) {
-                        // DO/DONT -> reply WONT
-                        @fwrite($this->socket, chr(255) . chr(252) . $opt);
-                    }
-                } elseif ($cmdOrd === 250) {
-                    // SB (subnegotiation) - read until IAC SE (255 240)
-                    while (true) {
-                        $sb = @fread($this->socket, 1);
-                        if ($sb === false || ord($sb) === 240) break;
-                        if (ord($sb) === 255) {
-                            $next = @fread($this->socket, 1);
-                            if ($next !== false && ord($next) === 240) break;
+                // Handle Telnet IAC (Interpret As Command) negotiation
+                if ($ord === 255) { // IAC
+                    if ($i + 1 < $len) {
+                        $cmdOrd = ord($chunk[++$i]);
+                        if ($cmdOrd >= 251 && $cmdOrd <= 254 && $i + 1 < $len) {
+                            $opt = $chunk[++$i];
+                            if ($cmdOrd === 251 || $cmdOrd === 252) {
+                                @fwrite($this->socket, chr(255) . chr(254) . $opt);
+                            } elseif ($cmdOrd === 253 || $cmdOrd === 254) {
+                                @fwrite($this->socket, chr(255) . chr(252) . $opt);
+                            }
                         }
                     }
+                    continue;
                 }
-                continue;
+
+                // Skip null bytes and other control chars (except CR/LF)
+                if ($ord < 32 && $ord !== 10 && $ord !== 13) {
+                    continue;
+                }
+
+                $buffer .= $chunk[$i];
             }
 
-            // Skip null bytes and other control chars (except CR/LF)
-            if ($ord < 32 && $ord !== 10 && $ord !== 13) {
-                continue;
-            }
-
-            $buffer .= $byte;
             $this->lastBuffer = $buffer;
-
             $clean = preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', $buffer);
 
             // Check if any needle is found (case-insensitive)

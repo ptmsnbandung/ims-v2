@@ -70,13 +70,34 @@
             width: 4.75rem !important;
         }
 
-        @media (max-width: 1023px) {
+        @media (max-width: 1023.98px) {
             .ims-sidebar {
                 transform: translateX(-100%);
                 width: 16rem !important;
+                position: fixed !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                height: 100vh !important;
+                height: 100dvh !important;
+                z-index: 60 !important;
             }
             .ims-sidebar.mobile-open {
                 transform: translateX(0) !important;
+            }
+            html, body {
+                min-height: 100% !important;
+                overflow-x: hidden !important;
+            }
+            .ims-layout-root {
+                min-height: 100vh !important;
+                min-height: 100dvh !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .ims-main-scroll {
+                height: auto !important;
+                overflow: visible !important;
             }
         }
 
@@ -368,11 +389,11 @@
             <div x-show="mobileSidebarOpen"
                  x-cloak
                  @click="mobileSidebarOpen = false"
-                 class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden transition-opacity"></div>
+                 class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm lg:hidden transition-opacity"></div>
 
             <!-- Sidebar (Deep Oceanic Navy Charcoal & Cyan Highlights) -->
             <aside :class="{ 'collapsed': sidebarCollapsed, 'mobile-open': mobileSidebarOpen }"
-                   class="ims-sidebar fixed inset-y-0 left-0 z-40 bg-[#061d28] border-r border-[#0d2a38] flex flex-col lg:sticky lg:top-0 lg:h-screen shrink-0 overflow-visible">
+                   class="ims-sidebar fixed inset-y-0 left-0 z-[60] lg:z-40 bg-[#061d28] border-r border-[#0d2a38] flex flex-col lg:sticky lg:top-0 lg:h-screen shrink-0 overflow-visible">
                 
                 <!-- Sidebar Header / Logo -->
                 <div class="h-16 px-3.5 flex items-center justify-between border-b border-[#0d2a38] shrink-0">
@@ -385,6 +406,16 @@
                             <span class="block text-[9.5px] text-[#94A3B8] tracking-normal font-medium leading-tight">Integrated Management System</span>
                         </div>
                     </a>
+
+                    <!-- Mobile Close Button -->
+                    <button type="button" 
+                            @click="mobileSidebarOpen = false"
+                            class="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                            title="Tutup Menu">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
 
                 <!-- Sidebar Navigation Menu -->
@@ -1117,7 +1148,7 @@
                 </header>
 
                 <!-- Page Content (Dual Light & Dark Mode Container) -->
-                <main class="flex-1 p-4 sm:p-6 lg:p-8 bg-[#F8FAFC] dark:bg-[#071520] transition-colors duration-200">
+                <main class="flex-1 p-3.5 sm:p-6 lg:p-8 bg-[#F8FAFC] dark:bg-[#071520] transition-colors duration-200">
                     <!-- Flash Message -->
                     @if(session('success'))
                         <div class="mb-6 p-4 rounded-xl bg-[#ECFDF5] dark:bg-emerald-950/40 border border-[#A7F3D0] dark:border-emerald-800/60 text-[#047857] dark:text-emerald-300 text-sm flex items-center gap-3 shadow-xs">

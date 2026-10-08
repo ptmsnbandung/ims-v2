@@ -152,7 +152,7 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
@@ -305,6 +305,103 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card List View -->
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3.5 divide-y divide-slate-100 dark:divide-slate-800/80">
+            @forelse($suspends as $item)
+                <div class="pt-3.5 first:pt-0 space-y-3">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                               class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-sm inline-block">
+                                {{ $item->nomor_internet }}
+                            </a>
+                            <div class="font-bold text-slate-800 dark:text-slate-100 uppercase text-xs mt-0.5">
+                                {{ $item->nama_pelanggan }}
+                                <span class="text-slate-500 font-normal">({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase mt-0.5">
+                                {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }} {{ $item->nominal_bandwith ? $item->nominal_bandwith . ' Mbps' : '' }}
+                            </div>
+                        </div>
+                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide shrink-0
+                            @if(in_array($item->status_suspend, ['11']))
+                                bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30
+                            @elseif(in_array($item->status_suspend, ['12']))
+                                bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30
+                            @elseif(in_array($item->status_suspend, ['18']))
+                                bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
+                            @elseif(in_array($item->status_suspend, ['13']))
+                                bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30
+                            @else
+                                bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
+                            @endif">
+                            (10{{ $item->status_suspend }}) {{ $item->desc_status_suspend ?: 'Request' }}
+                        </span>
+                    </div>
+
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/70 dark:border-slate-800/60 text-xs">
+                        <span class="text-slate-500 text-[11px] block font-medium">Alasan:</span>
+                        <p class="text-slate-700 dark:text-slate-300 text-[11px] mt-0.5 leading-relaxed">
+                            {{ $item->desc_suspend ?: ($item->note_suspend ?? 'Melewati batas pembayaran yang telah ditentukan') }}
+                        </p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2 pt-1">
+                        @if($item->status_suspend == '11')
+                            <button type="button" 
+                                    @click="openApproveModal('suspend', '{{ $item->kode_suspend }}', '{{ $item->nomor_internet }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, {{ json_encode(($item->nama_kategori_bandwith ?: 'BROADBAND') . ($item->nominal_bandwith ? ' ' . $item->nominal_bandwith . ' Mbps' : '')) }})"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition active:scale-98">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                                <span>Approve Suspend</span>
+                            </button>
+                            <form action="{{ route('noc.suspend.cancel', $item->kode_suspend) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan (Cancel) suspend pelanggan {{ $item->nomor_internet }}?');">
+                                @csrf
+                                <button type="submit" 
+                                        class="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-semibold transition active:scale-98">
+                                    Cancel
+                                </button>
+                            </form>
+                        @elseif($item->status_suspend == '18')
+                            <button type="button" 
+                                    @click="openApproveModal('unsuspend', '{{ $item->kode_suspend }}', '{{ $item->nomor_internet }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, {{ json_encode(($item->nama_kategori_bandwith ?: 'BROADBAND') . ($item->nominal_bandwith ? ' ' . $item->nominal_bandwith . ' Mbps' : '')) }})"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition active:scale-98">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                                <span>Approve Buka</span>
+                            </button>
+                            <form action="{{ route('noc.suspend.cancel', $item->kode_suspend) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan unsuspend pelanggan {{ $item->nomor_internet }}?');">
+                                @csrf
+                                <button type="submit" 
+                                        class="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-semibold transition active:scale-98">
+                                    Cancel
+                                </button>
+                            </form>
+                        @elseif($item->status_suspend == '12')
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                                Terisolir Aktif
+                            </span>
+                        @elseif($item->status_suspend == '13')
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                Layanan Normal
+                            </span>
+                        @else
+                            <span class="text-xs text-slate-500 dark:text-slate-400">Status: {{ $item->desc_status_suspend ?: 'Dibatalkan' }}</span>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-400 text-xs">
+                    Tidak ada data suspend layanan yang cocok.
+                </div>
+            @endforelse
         </div>
 
         <!-- Pagination Bar matching reference -->

@@ -396,7 +396,8 @@
             </div>
 
             <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
-                <div class="overflow-x-auto">
+                <!-- Desktop Table View -->
+                <div class="ims-desktop-only hidden md:block overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
@@ -486,6 +487,82 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Mobile Card View (block md:hidden) -->
+                <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3">
+                    @forelse($recentAktivasi as $item)
+                        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-2.5">
+                            <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                <div>
+                                    <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                                       class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-xs inline-block">
+                                        {{ $item->nomor_internet }}
+                                    </a>
+                                    <h4 class="font-bold text-slate-900 dark:text-white text-xs uppercase mt-0.5">
+                                        {{ $item->nama_pelanggan }}
+                                    </h4>
+                                </div>
+                                <div>
+                                    @if(in_array($item->status_reg, ['19', '19.1']))
+                                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400">
+                                            TERJADWAL (#19)
+                                        </span>
+                                    @elseif(in_array($item->status_reg, ['18', '18.1']))
+                                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400">
+                                            SIAP JADWAL (#18)
+                                        </span>
+                                    @else
+                                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                            #{{ $item->status_reg }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block">Paket:</span>
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $item->nama_kategori_bandwith ?: ($item->alias_nama_kategori ?: 'INTERNET') }}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-slate-400 block">Bandwidth:</span>
+                                    <span class="font-mono text-blue-600 dark:text-blue-400 font-extrabold">{{ $item->nominal_bandwith ?: '10' }} Mbps</span>
+                                </div>
+                            </div>
+
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                                📍 {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
+                            </p>
+
+                            @if(in_array($item->status_reg, ['18', '18.1']))
+                                <button type="button" 
+                                        @click="openScheduleModal({{ json_encode($item) }})" 
+                                        class="w-full py-2 px-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/></svg>
+                                    <span>Schedule Aktivasi</span>
+                                </button>
+                            @elseif(in_array($item->status_reg, ['19', '19.1']))
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" 
+                                            @click="openReportModal({{ json_encode($item) }})" 
+                                            class="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 shadow-sm">
+                                        <span>Aktivasi</span>
+                                    </button>
+                                    <button type="button" 
+                                            @click="openScheduleModal({{ json_encode($item) }})" 
+                                            class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+                                        <span>Reschedule</span>
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="py-8 text-center text-slate-400 text-xs">
+                            Tidak ada antrean aktivasi yang pending.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
             </div>
         </div>
 

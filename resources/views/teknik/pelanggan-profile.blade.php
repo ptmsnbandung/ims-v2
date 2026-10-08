@@ -338,14 +338,14 @@
             <!-- Top Tab Switcher Bar & Button Kembali -->
             <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-3 sm:p-4 shadow-xl shadow-black/10 dark:shadow-black/20">
                 
-                <!-- Segmented Tabs -->
-                <div class="flex flex-wrap items-center gap-1.5">
+                <!-- Segmented Tabs (Swipeable on Mobile) -->
+                <div class="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none flex-nowrap sm:flex-wrap">
                     
                     <!-- 1. Tab Log -->
                     <button type="button" 
                             @click="activeTab = 'log'"
                             :class="activeTab === 'log' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
-                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
+                            class="px-3.5 sm:px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer whitespace-nowrap shrink-0">
                         Log
                     </button>
 
@@ -353,7 +353,7 @@
                     <button type="button" 
                             @click="activeTab = 'arsip'"
                             :class="activeTab === 'arsip' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
-                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
+                            class="px-3.5 sm:px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer whitespace-nowrap shrink-0">
                         Arsip
                     </button>
 
@@ -361,7 +361,7 @@
                     <button type="button" 
                             @click="activeTab = 'layanan'"
                             :class="activeTab === 'layanan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
-                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
+                            class="px-3.5 sm:px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer whitespace-nowrap shrink-0">
                         Layanan
                     </button>
 
@@ -369,7 +369,7 @@
                     <button type="button" 
                             @click="activeTab = 'suspend'"
                             :class="activeTab === 'suspend' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
-                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
+                            class="px-3.5 sm:px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer whitespace-nowrap shrink-0">
                         Suspend
                     </button>
 
@@ -377,7 +377,7 @@
                     <button type="button" 
                             @click="activeTab = 'tagihan'"
                             :class="activeTab === 'tagihan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
-                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
+                            class="px-3.5 sm:px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer whitespace-nowrap shrink-0">
                         Tagihan
                     </button>
 
@@ -385,7 +385,7 @@
                     <button type="button" 
                             @click="activeTab = 'pengaduan'"
                             :class="activeTab === 'pengaduan' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
-                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
+                            class="px-3.5 sm:px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer whitespace-nowrap shrink-0">
                         Pengaduan
                     </button>
 
@@ -393,7 +393,7 @@
                     <button type="button" 
                             @click="activeTab = 'perangkat'"
                             :class="activeTab === 'perangkat' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
-                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer">
+                            class="px-3.5 sm:px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer whitespace-nowrap shrink-0">
                         Perangkat dsb.
                     </button>
 
@@ -401,7 +401,7 @@
                     <button type="button"
                             @click="activeTab = 'activity_log'"
                             :class="activeTab === 'activity_log' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium hover:bg-slate-100 dark:hover:bg-slate-800'"
-                            class="px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer inline-flex items-center gap-1.5">
+                            class="px-3.5 sm:px-4 py-2 rounded-xl text-xs transition duration-150 cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0">
                         <span>Activity Log</span>
                         @if($customerActivityLogs->count() > 0)
                             <span class="inline-flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold rounded-full"

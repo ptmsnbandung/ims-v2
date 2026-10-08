@@ -42,3 +42,12 @@ body {
     font-family: var(--font-sans);
     transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* Responsive utilities */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

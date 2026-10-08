@@ -97,7 +97,7 @@
     <!-- 3. ROUTER DATA TABLE                                                -->
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
                 <thead class="bg-slate-100 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-200 dark:border-slate-800">
                     <tr>
@@ -253,6 +253,131 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card List View -->
+        <div class="ims-mobile-only block md:hidden p-3.5 sm:p-4 space-y-3.5 divide-y divide-slate-100 dark:divide-slate-800/80">
+            @forelse($routers as $router)
+                <div class="pt-3.5 first:pt-0 space-y-3">
+                    <!-- Router Header: Name & Status -->
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <span class="font-mono text-[10px] text-slate-400 font-semibold block">#{{ $router->id }}</span>
+                            <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2 text-sm">
+                                <span class="w-2.5 h-2.5 rounded-full {{ $router->is_active ? 'bg-emerald-400 ring-2 ring-emerald-500/30' : 'bg-rose-500 ring-2 ring-rose-500/30' }}"></span>
+                                <span>{{ $router->name }}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                Wilayah: <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $router->kota ?: '-' }}</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-1 shrink-0">
+                            @if($router->is_active)
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    Aktif
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-700 text-slate-400">
+                                    Nonaktif
+                                </span>
+                            @endif
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold {{ $router->customer_count > 0 ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30' : 'bg-slate-800 text-slate-400' }}">
+                                {{ $router->customer_count }} User
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Connection & Live Ping Status Box -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/70 dark:border-slate-800/70 text-xs space-y-2">
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-slate-500">Host & Port:</span>
+                            <span class="font-mono text-cyan-500 dark:text-cyan-400 font-bold">{{ $router->host }}:{{ $router->port ?: 18735 }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-slate-500">Username:</span>
+                            <span class="font-mono text-slate-700 dark:text-slate-300 font-semibold">{{ $router->username }}</span>
+                        </div>
+                        
+                        <!-- Live Ping Status Row -->
+                        <div class="pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-2">
+                            <span class="text-slate-500 text-[11px]">Live Status:</span>
+                            <div>
+                                <template x-if="statusMap[{{ $router->id }}]">
+                                    <div class="inline-flex items-center gap-2">
+                                        <template x-if="statusMap[{{ $router->id }}].loading">
+                                            <span class="inline-flex items-center gap-1 text-[11px] text-cyan-400 font-semibold animate-pulse">
+                                                <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                Testing...
+                                            </span>
+                                        </template>
+                                        <template x-if="!statusMap[{{ $router->id }}].loading && statusMap[{{ $router->id }}].status === 'online'">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-400 font-bold">
+                                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                                <span x-text="statusMap[{{ $router->id }}].identity || 'Online'"></span>
+                                            </span>
+                                        </template>
+                                        <template x-if="!statusMap[{{ $router->id }}].loading && statusMap[{{ $router->id }}].status === 'offline'">
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-[10px] text-rose-400 font-semibold">
+                                                Offline
+                                            </span>
+                                        </template>
+                                        <button type="button" 
+                                                x-show="!statusMap[{{ $router->id }}].loading"
+                                                @click="testPingRouter({{ $router->id }}, '{{ $router->host }}', {{ $router->port ?: 18735 }}, '{{ $router->username }}')"
+                                                class="p-1 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                                        </button>
+                                    </div>
+                                </template>
+                                <template x-if="!statusMap[{{ $router->id }}]">
+                                    <button type="button" 
+                                            @click="testPingRouter({{ $router->id }}, '{{ $router->host }}', {{ $router->port ?: 18735 }}, '{{ $router->username }}')"
+                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-cyan-500/10 hover:bg-cyan-500 text-cyan-600 dark:text-cyan-400 hover:text-white border border-cyan-500/20 transition">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></svg>
+                                        <span>Tes Live</span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons Toolbar -->
+                    <div class="grid grid-cols-4 gap-2 pt-1">
+                        <button type="button"
+                                @click="openSecretsModal({{ $router->id }}, '{{ addslashes($router->name) }}', '{{ $router->host }}')"
+                                title="PPPoE Secrets"
+                                class="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white text-[10px] font-bold border border-emerald-500/20 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>
+                            <span>PPPoE</span>
+                        </button>
+                        <button type="button"
+                                @click="syncCustomers({{ $router->id }}, '{{ addslashes($router->name) }}')"
+                                title="Sinkron Pelanggan"
+                                class="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl bg-blue-500/10 hover:bg-blue-500 text-blue-600 dark:text-blue-400 hover:text-white text-[10px] font-bold border border-blue-500/20 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+                            <span>Sync</span>
+                        </button>
+                        <button type="button"
+                                @click="openEditModal({{ $router->id }}, '{{ addslashes($router->name) }}', '{{ $router->host }}', {{ $router->port ?: 18735 }}, '{{ addslashes($router->username) }}', '{{ addslashes($router->kota ?? '') }}', {{ $router->is_active ? 1 : 0 }})"
+                                title="Edit Router"
+                                class="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl bg-amber-500/10 hover:bg-amber-500 text-amber-600 dark:text-amber-400 hover:text-white text-[10px] font-bold border border-amber-500/20 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+                            <span>Edit</span>
+                        </button>
+                        <button type="button"
+                                @click="confirmDelete({{ $router->id }}, '{{ addslashes($router->name) }}')"
+                                title="Hapus Router"
+                                class="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white text-[10px] font-bold border border-rose-500/20 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+                            <span>Hapus</span>
+                        </button>
+                    </div>
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-500 text-xs">
+                    Belum ada router MikroTik yang terdaftar.
+                </div>
+            @endforelse
         </div>
     </div>
 

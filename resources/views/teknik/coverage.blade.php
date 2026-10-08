@@ -42,6 +42,12 @@
             display: block !important;
             border-radius: 0 0 16px 16px;
         }
+        @media (max-width: 767.98px) {
+            .ims-google-map-canvas {
+                height: 380px !important;
+                min-height: 300px !important;
+            }
+        }
         html.dark .ims-google-map-canvas {
             background: #0b1329 !important;
         }
@@ -182,14 +188,14 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2.5 self-start md:self-auto">
-            <div class="ims-inner-box px-4 py-2.5 text-left">
+        <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
+            <div class="ims-inner-box px-3.5 sm:px-4 py-2.5 text-left">
                 <span class="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total ODP Terdata</span>
                 <strong class="text-sm font-black text-sky-600 dark:text-sky-400 font-mono block mt-0.5">
                     {{ count($odps) }} Node
                 </strong>
             </div>
-            <div class="ims-inner-box px-4 py-2.5 text-left">
+            <div class="ims-inner-box px-3.5 sm:px-4 py-2.5 text-left">
                 <span class="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Max Radius Tercover</span>
                 <strong class="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono block mt-0.5">
                     &le; 300 Meter

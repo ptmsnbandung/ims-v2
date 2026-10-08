@@ -444,7 +444,7 @@
         </div>
 
         <!-- Desktop Table View (Hidden on Mobile) -->
-        <div class="hidden md:block overflow-x-auto">
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
@@ -908,7 +908,7 @@
         </div>
 
         <!-- Mobile Cards View (Hidden on Desktop) -->
-        <div class="block md:hidden p-3 sm:p-4 space-y-3.5">
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3.5">
             @forelse($invoices as $inv)
                 @php
                     $snapData = null;

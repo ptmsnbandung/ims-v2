@@ -213,7 +213,7 @@
 
     <!-- Data Table Card Container -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
@@ -571,6 +571,168 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card List View -->
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3.5 divide-y divide-slate-100 dark:divide-slate-800/80">
+            @forelse($registrasi as $item)
+                <div class="pt-3.5 first:pt-0 space-y-3">
+                    <!-- Top Info: Pelanggan & Status -->
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                               class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-sm inline-block">
+                                {{ $item->nomor_internet }}
+                            </a>
+                            <div class="font-bold text-slate-900 dark:text-white uppercase text-xs mt-0.5">
+                                {{ $item->nama_pelanggan }}
+                                <span class="text-slate-500 font-normal">({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                                {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }}
+                                @if($item->nominal_bandwith)
+                                    <span class="font-bold text-slate-700 dark:text-slate-300">{{ $item->nominal_bandwith }} Mbps</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-1 shrink-0">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border shadow-xs
+                                @if(in_array($item->status_reg, ['17', '17.1']))
+                                    bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-800
+                                @elseif($item->status_reg == '18')
+                                    @if(!empty($item->aktivasi_note))
+                                        bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800
+                                    @else
+                                        bg-indigo-50 dark:bg-indigo-950/50 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800
+                                    @endif
+                                @elseif(in_array($item->status_reg, ['19', '19.1']))
+                                    bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800
+                                @elseif($item->status_reg == '20')
+                                    bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border-rose-300 dark:border-rose-800
+                                @else
+                                    bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800
+                                @endif">
+                                {{ $item->desc_status_registrasi ?: 'Pendaftaran Baru' }}
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-400 uppercase">{{ $item->group_layanan ?: 'MEDIANET' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Details Box -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/70 dark:border-slate-800/60 text-xs space-y-1.5">
+                        <div class="text-[11px]">
+                            <span class="text-slate-500">Alamat:</span>
+                            <p class="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed uppercase">
+                                {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
+                            </p>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+                            <span class="text-slate-500">Tanggal SO:</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">
+                                {{ \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y H:i') }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-slate-500">Sales:</span>
+                            <span class="font-bold text-blue-600 dark:text-blue-400 font-mono">{{ $item->nama_sales ?: '-' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Primary Actions -->
+                    <div class="space-y-2 pt-1">
+                        {{-- Workflow Buttons by Status --}}
+                        @if(in_array($item->status_reg, ['11', '11.1', '12']))
+                            <button type="button" 
+                                    @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                                <span>Schedule Survey</span>
+                            </button>
+                        @elseif(in_array($item->status_reg, ['13', '13.1']))
+                            <div class="flex items-center gap-2">
+                                <button type="button" 
+                                        @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    <span>Report Survey</span>
+                                </button>
+                                <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" target="_blank"
+                                   class="py-2 px-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
+                                    Surat Tugas
+                                </a>
+                            </div>
+                        @elseif($item->status_reg == '16')
+                            <div class="flex items-center gap-2">
+                                <button type="button" 
+                                        @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877"/></svg>
+                                    <span>Schedule Instalasi</span>
+                                </button>
+                                <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" target="_blank"
+                                   class="py-2 px-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
+                                    Surat Tugas
+                                </a>
+                            </div>
+                        @elseif(in_array($item->status_reg, ['17', '17.1']))
+                            <div class="flex items-center gap-2">
+                                <button type="button" 
+                                        @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    <span>Report Instalasi</span>
+                                </button>
+                                <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" target="_blank"
+                                   class="py-2 px-3 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 text-xs font-bold">
+                                    Surat Tugas
+                                </a>
+                            </div>
+                        @elseif($item->status_reg == '18')
+                            @if(empty($item->aktivasi_note))
+                                <button type="button" 
+                                        @click="openRequestAktivasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.59 14.37a5 5 0 0 1-5.84 7.38v-4.8"/></svg>
+                                    <span>Request Aktivasi NOC</span>
+                                </button>
+                            @else
+                                <div class="w-full text-center py-2 px-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-500/20">
+                                    Menunggu Aktivasi NOC
+                                </div>
+                            @endif
+                        @endif
+
+                        <!-- Secondary Actions Grid -->
+                        <div class="flex items-center gap-2 pt-1">
+                            <button type="button" 
+                                    @click="openBillingModal('{{ $item->nomor_internet }}')"
+                                    class="flex-1 py-1.5 px-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[11px] font-bold text-center">
+                                Billing
+                            </button>
+                            <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}?download=pdf" target="_blank"
+                               class="py-1.5 px-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-center">
+                                Unduh PDF
+                            </a>
+                            <button type="button" 
+                                    @click="openEditModal('{{ $item->nomor_internet }}')"
+                                    class="py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
+                                Edit
+                            </button>
+                            @if(!in_array($item->status_reg, ['14', '15', '20']))
+                                <button type="button" 
+                                        @click="openBatalModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="py-1.5 px-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-[11px] font-bold">
+                                    Batal
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-400 text-xs">
+                    Tidak ada antrean pendaftaran baru yang sedang berlangsung.
+                </div>
+            @endforelse
         </div>
 
         <!-- Pagination Controls -->

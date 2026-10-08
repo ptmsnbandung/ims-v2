@@ -212,7 +212,7 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
@@ -374,6 +374,113 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card List View -->
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3.5 divide-y divide-slate-100 dark:divide-slate-800/80">
+            @forelse($terminasis as $item)
+                <div class="pt-3.5 first:pt-0 space-y-3">
+                    <!-- Top Info: Kode & Status -->
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <span class="font-mono text-[10px] text-slate-400 font-semibold block">{{ $item->kode_trx_terminasi }}</span>
+                            <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                               class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-sm inline-block">
+                                {{ $item->nomor_internet }}
+                            </a>
+                            <div class="font-bold text-slate-800 dark:text-slate-100 uppercase text-xs mt-0.5">
+                                {{ $item->nama_pelanggan }} 
+                                <span class="text-slate-500 font-normal">({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})</span>
+                            </div>
+                        </div>
+                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide shrink-0
+                            @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
+                                bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
+                            @elseif(in_array($item->status_terminasi, ['13', '15', '17']))
+                                bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30
+                            @elseif(in_array($item->status_terminasi, ['14', '16']))
+                                bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30
+                            @else
+                                bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
+                            @endif">
+                            (KD{{ $item->status_terminasi }}) {{ $item->desc_terminasi ?: 'Req. Terminasi' }}
+                        </span>
+                    </div>
+
+                    <!-- Meta Details -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/70 dark:border-slate-800/60 text-xs space-y-1.5">
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-slate-500">Bandwidth:</span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">
+                                {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }} {{ $item->nominal_bandwith ? $item->nominal_bandwith . ' Mbps' : '' }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-slate-500">Collect Perangkat:</span>
+                            @if($item->collect_perangkat == 1)
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Done &#10004;</span>
+                            @else
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400">Undone &#128274;</span>
+                            @endif
+                        </div>
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-slate-500">Pending Tagihan:</span>
+                            @if($item->collect_payment == 1)
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Done &#10004;</span>
+                            @else
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400">Undone &#128274;</span>
+                            @endif
+                        </div>
+                        <div class="pt-1 border-t border-slate-200/50 dark:border-slate-800/50 text-[11px]">
+                            <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ $item->alamat_p ?: '-' }}</p>
+                            @if($item->nomor_hp)
+                                <div class="mt-1 flex items-center gap-2">
+                                    <span class="text-slate-500">HP:</span>
+                                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $item->nomor_hp) }}" target="_blank" class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
+                                        {{ $item->nomor_hp }}
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2 pt-1">
+                        @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
+                            <button type="button" 
+                                    @click="modalKodeTrx = '{{ $item->kode_trx_terminasi }}'; modalNamaPelanggan = {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}; modalNomorInternet = '{{ $item->nomor_internet }}'; scheduleModalOpen = true;"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition active:scale-98">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                </svg>
+                                <span>Schedule Collect</span>
+                            </button>
+                            <form action="{{ route('noc.terminasi.cancel', $item->kode_trx_terminasi) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan terminasi {{ $item->nomor_internet }}?');">
+                                @csrf
+                                <button type="submit" 
+                                        class="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-semibold transition active:scale-98">
+                                    Cancel
+                                </button>
+                            </form>
+                        @elseif($item->status_terminasi == '14')
+                            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                Terminasi Selesai
+                            </span>
+                        @elseif($item->status_terminasi == '16')
+                            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                Dibatalkan
+                            </span>
+                        @else
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Status: {{ $item->desc_terminasi ?: 'Dalam Proses' }}</span>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-400 text-xs">
+                    Tidak ada data permintaan terminasi.
+                </div>
+            @endforelse
         </div>
 
         @if($terminasis->hasPages())

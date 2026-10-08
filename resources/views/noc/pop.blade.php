@@ -49,7 +49,8 @@
             <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">Total: {{ $pops->total() }} Node</span>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Desktop Table View -->
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
@@ -102,6 +103,54 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card View (block md:hidden) -->
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3">
+            @forelse($pops as $pop)
+                @php $cCount = $popCustomerCounts[$pop->kode_pop] ?? 0; @endphp
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-2.5">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-xs">
+                            {{ $pop->kode_pop }}
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
+                            <span>AKTIF</span>
+                        </span>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-xs">
+                            📍 {{ $pop->nama_pop }}
+                        </h4>
+                        @if($pop->desc_pop)
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                                {{ $pop->desc_pop }}
+                            </p>
+                        @endif
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px]">
+                        <div>
+                            @if($cCount > 0)
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
+                                    👥 {{ number_format($cCount) }} Client
+                                </span>
+                            @else
+                                <span class="text-slate-400 text-xs">0 Client</span>
+                            @endif
+                        </div>
+                        <span class="text-slate-400 font-mono text-[10px]">
+                            {{ $pop->date_create ? \Carbon\Carbon::parse($pop->date_create)->translatedFormat('d M Y') : '-' }}
+                        </span>
+                    </div>
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-500 dark:text-slate-400 text-xs">
+                    Tidak ada data POP ditemukan.
+                </div>
+            @endforelse
         </div>
 
         @if($pops->hasPages())

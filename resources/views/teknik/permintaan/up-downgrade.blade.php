@@ -271,7 +271,8 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Desktop Table View -->
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
@@ -471,6 +472,131 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card View (block md:hidden) -->
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3.5">
+            @forelse($ubahLayanans as $item)
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-3">
+                    
+                    <!-- Header Card: No Internet + Status -->
+                    <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
+                        <div>
+                            <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                               class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-xs inline-block">
+                                {{ $item->nomor_internet }}
+                            </a>
+                            <h4 class="font-bold text-slate-900 dark:text-white text-xs uppercase mt-0.5">
+                                {{ $item->nama_pelanggan }}
+                                <span class="text-slate-400 font-normal">
+                                    ({{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }})
+                                </span>
+                            </h4>
+                        </div>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide shrink-0
+                            @if(in_array($item->status_ubah_layanan, ['11']))
+                                bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
+                            @elseif(in_array($item->status_ubah_layanan, ['12']))
+                                bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30
+                            @elseif(in_array($item->status_ubah_layanan, ['13']))
+                                bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30
+                            @elseif(in_array($item->status_ubah_layanan, ['14']))
+                                bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
+                            @else
+                                bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
+                            @endif">
+                            {{ $item->desc_ubah_layanan ?: 'Request' }}
+                        </span>
+                    </div>
+
+                    <!-- Package Comparison Row (Old -> New) -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+                        <div class="flex-1">
+                            <span class="text-[10px] text-slate-400 font-medium block">Paket Lama</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-300 block truncate">{{ $item->nama_kategori_bandwith_lama ?: 'BROADBAND' }}</span>
+                            <span class="font-mono text-blue-600 dark:text-blue-400 font-extrabold text-[11px]">{{ $item->nominal_bandwith_lama ?: '10' }} Mbps</span>
+                        </div>
+                        <div class="text-slate-400 font-bold px-1">&rarr;</div>
+                        <div class="flex-1 text-right">
+                            <span class="text-[10px] text-slate-400 font-medium block">Paket Baru</span>
+                            <span class="font-bold text-slate-900 dark:text-white block truncate">{{ $item->nama_kategori_bandwith_baru ?: 'BROADBAND FREE' }}</span>
+                            <span class="font-mono text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px]">{{ $item->nominal_bandwith_baru ?: '10' }} Mbps</span>
+                        </div>
+                    </div>
+
+                    <!-- Alamat & Tanggal -->
+                    <div class="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+                        <p class="line-clamp-2 leading-relaxed text-[11px]">
+                            📍 {{ $item->alamat_p ?? ($item->alamat_pasang ?? '-') }}
+                        </p>
+                        <div class="flex items-center justify-between text-[10px] font-mono pt-1 text-slate-400">
+                            <span>Bangunan: <strong class="text-slate-600 dark:text-slate-300">{{ $item->jenis_bangunan ?? 'RUMAH' }}</strong></span>
+                            <span>{{ $item->date_create ? \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y') : '-' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
+                        <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                            @if($item->status_ubah_layanan === '11')
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" 
+                                            @click="openScheduleModal({{ json_encode($item) }})"
+                                            class="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/></svg>
+                                        <span>Schedule</span>
+                                    </button>
+                                    <form action="{{ route('teknik.permintaan.up-downgrade.cancel', $item->kode_trx_ubah_layanan) }}" method="POST" onsubmit="return confirm('Batalkan permohonan ubah layanan {{ $item->nomor_internet }}?');">
+                                        @csrf
+                                        <button type="submit" class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1">
+                                            <span>Batalkan</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            @elseif($item->status_ubah_layanan === '12')
+                                <div class="space-y-2">
+                                    <button type="button" 
+                                            @click="openExecuteModal({{ json_encode($item) }})"
+                                            class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-md">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+                                        <span>Eksekusi UP/Downgrade</span>
+                                    </button>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button type="button" 
+                                                @click="openScheduleModal({{ json_encode($item) }})"
+                                                class="py-1.5 px-3 rounded-lg text-xs font-semibold text-amber-600 bg-amber-500/10 border border-amber-500/30">
+                                            Reschedule
+                                        </button>
+                                        <form action="{{ route('teknik.permintaan.up-downgrade.cancel', $item->kode_trx_ubah_layanan) }}" method="POST" onsubmit="return confirm('Batalkan permohonan ubah layanan {{ $item->nomor_internet }}?');">
+                                            @csrf
+                                            <button type="submit" class="w-full py-1.5 px-3 rounded-lg text-xs font-semibold text-rose-500 bg-rose-500/10 border border-rose-500/30">
+                                                Batalkan
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @elseif($item->status_ubah_layanan == '13')
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                        Selesai Diubah
+                                    </span>
+                                    @if(!empty($item->foto_ss))
+                                        <a href="{{ asset('uploads/up_downgrade/' . $item->foto_ss) }}" target="_blank" class="text-blue-500 font-semibold underline text-[11px]">
+                                            Foto Bukti &rarr;
+                                        </a>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-400 text-xs">
+                    Tidak ada data permintaan ubah layanan.
+                </div>
+            @endforelse
         </div>
 
         @if($ubahLayanans->hasPages())

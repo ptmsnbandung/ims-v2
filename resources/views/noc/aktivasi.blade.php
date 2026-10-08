@@ -362,16 +362,16 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/10">
         
         <!-- Segmented Tab Switcher: Permintaan Siap Aktivasi (#18) vs Riwayat Selesai (#20) -->
-        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs">
+        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs overflow-x-auto max-w-full scrollbar-none">
             <a href="{{ route('noc.aktivasi', ['status' => 'siap_aktivasi']) }}"
-               class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $statusTab === 'siap_aktivasi' ? 'bg-[#0891b2] text-white shadow-md shadow-cyan-600/25' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold' }}">
+               class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap {{ $statusTab === 'siap_aktivasi' ? 'bg-[#0891b2] text-white shadow-md shadow-cyan-600/25' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold' }}">
                 <span>Antrean Siap Aktivasi (#18)</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold {{ $statusTab === 'siap_aktivasi' ? 'bg-white/25 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200' }}">
                     {{ $countSiapAktivasi }}
                 </span>
             </a>
             <a href="{{ route('noc.aktivasi', ['status' => 'riwayat_aktif']) }}"
-               class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 {{ $statusTab === 'riwayat_aktif' ? 'bg-[#0891b2] text-white shadow-md shadow-cyan-600/25' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold' }}">
+               class="px-4 py-2 rounded-lg font-bold transition flex items-center gap-2 whitespace-nowrap {{ $statusTab === 'riwayat_aktif' ? 'bg-[#0891b2] text-white shadow-md shadow-cyan-600/25' : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold' }}">
                 <span>Riwayat Selesai Aktivasi (#20)</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold {{ $statusTab === 'riwayat_aktif' ? 'bg-white/25 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200' }}">
                     {{ $countRiwayatAktif }}
@@ -380,7 +380,7 @@
         </div>
 
         <!-- Search Input -->
-        <form method="GET" action="{{ route('noc.aktivasi') }}" class="relative flex-1 max-w-xs">
+        <form method="GET" action="{{ route('noc.aktivasi') }}" class="relative flex-1 max-w-xs w-full">
             <input type="hidden" name="status" value="{{ $statusTab }}">
             <input type="text" 
                    name="search" 
@@ -407,7 +407,8 @@
             <span class="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">Total: {{ $pelanggans->total() }} Data</span>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Desktop Table View -->
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -553,6 +554,122 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card View (block md:hidden) -->
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3.5">
+            @forelse($pelanggans as $p)
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-3">
+                    
+                    <!-- Top: Customer + Status -->
+                    <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
+                        <div class="min-w-0">
+                            <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
+                               class="font-mono font-bold text-cyan-600 dark:text-cyan-400 hover:underline text-xs inline-block">
+                                {{ $p->nomor_internet }}
+                            </a>
+                            <h4 class="font-bold text-slate-900 dark:text-white text-xs uppercase mt-0.5 truncate">
+                                {{ $p->nama_pelanggan }}
+                            </h4>
+                            @if($p->nomor_hp)
+                                @php
+                                    $cleanHp = preg_replace('/[^0-9]/', '', $p->nomor_hp);
+                                    if (str_starts_with($cleanHp, '0')) $cleanHp = '62' . substr($cleanHp, 1);
+                                @endphp
+                                <a href="https://wa.me/{{ $cleanHp }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline mt-0.5">
+                                    <span>📱 {{ $p->nomor_hp }}</span>
+                                </a>
+                            @endif
+                        </div>
+
+                        <!-- Status badge -->
+                        <div class="shrink-0 text-right">
+                            @if(in_array($p->status_reg, ['20']))
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
+                                    ONLINE (#20)
+                                </span>
+                            @elseif(in_array($p->status_reg, ['19', '19.1']))
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $p->status_reg == '19.1' ? 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/15 dark:text-sky-400' : 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400' }}">
+                                    {{ $p->status_reg == '19.1' ? 'RESCHEDULE (#19.1)' : 'TERJADWAL (#19)' }}
+                                </span>
+                                @if($p->aktivasi_date_start)
+                                    <div class="text-[10px] text-slate-500 font-mono mt-0.5">
+                                        📅 {{ \Carbon\Carbon::parse($p->aktivasi_date_start)->translatedFormat('d M Y') }}
+                                    </div>
+                                @endif
+                            @elseif(in_array($p->status_reg, ['18', '18.1']))
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
+                                    SIAP JADWAL (#18)
+                                </span>
+                            @else
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    #{{ $p->status_reg }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Middle: Package & Node -->
+                    <div class="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-medium block">Paket Bandwidth</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200 truncate block">{{ $p->nama_kategori_bandwith ?: ($p->alias_nama_kategori ?: 'INTERNET') }}</span>
+                            <span class="font-mono text-cyan-600 dark:text-cyan-400 font-extrabold text-[11px]">{{ $p->nominal_bandwith ?: '10' }} Mbps</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-medium block">Node POP / OLT</span>
+                            <span class="font-semibold text-slate-800 dark:text-slate-200 truncate block">{{ $p->nama_pop ?: ($p->kode_pop ?: '-') }}</span>
+                            <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400 block truncate">{{ $p->index_olt ?: '-' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Alamat -->
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                        <span class="line-clamp-2 leading-relaxed">📍 {{ $p->alamat_p ?: ($p->alamat_pasang ?: '-') }}</span>
+                        @if($p->loc_maps)
+                            <a href="{{ $p->loc_maps }}" target="_blank" class="text-cyan-600 dark:text-cyan-400 hover:underline font-semibold block mt-1">
+                                🗺️ Buka di Google Maps &rarr;
+                            </a>
+                        @endif
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                        @if(in_array($p->status_reg, ['18', '18.1']))
+                            <button type="button"
+                                    @click="openScheduleModal({{ json_encode($p) }})"
+                                    class="w-full py-2.5 px-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/></svg>
+                                <span>Schedule Aktivasi</span>
+                            </button>
+                        @elseif(in_array($p->status_reg, ['19', '19.1']))
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button"
+                                        @click="openReportModal({{ json_encode($p) }})"
+                                        class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+                                    <span>Aktivasi</span>
+                                </button>
+                                <button type="button"
+                                        @click="openScheduleModal({{ json_encode($p) }})"
+                                        class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+                                    <span>Reschedule</span>
+                                </button>
+                            </div>
+                        @else
+                            <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
+                               class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center justify-center gap-1">
+                                <span>Lihat Profil Pelanggan</span>
+                            </a>
+                        @endif
+                    </div>
+
+                </div>
+            @empty
+                <div class="py-8 text-center text-slate-400 text-xs">
+                    {{ $statusTab === 'siap_aktivasi' ? 'Tidak ada antrean aktivasi yang pending.' : 'Tidak ada data pelanggan yang cocok.' }}
+                </div>
+            @endforelse
         </div>
 
         @if($pelanggans->hasPages())

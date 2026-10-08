@@ -40,7 +40,9 @@ class CustomerProvisioningService
         if (!$customer) {
             return [
                 'success' => false,
-                'message' => "Pelanggan dengan nomor internet {$nomorInternet} tidak ditemukan di database.",
+                'title' => 'Pelanggan Tidak Ditemukan',
+                'summary' => "Pelanggan dengan nomor internet {$nomorInternet} tidak ditemukan di database.",
+                'details' => ['database' => false, 'messages' => ["Pelanggan {$nomorInternet} tidak ditemukan."]],
             ];
         }
 
@@ -60,7 +62,50 @@ class CustomerProvisioningService
             'messages' => [],
         ];
 
-        // 2. Update Database: Status Reg -> 20 (Aktif)
+        // 2. MikroTik: Enable PPPoE Secret terlebih dahulu
+        if ($pppoeUsername) {
+            try {
+                $mkEnable = $this->mikrotik->enableUser($pppoeUsername);
+                $results['mikrotik_enable'] = (bool)($mkEnable['success'] ?? false);
+                $results['messages'][] = 'MikroTik Enable: ' . ($mkEnable['message'] ?? 'Tidak ada respon');
+            } catch (Exception $e) {
+                $results['mikrotik_enable'] = false;
+                $results['messages'][] = 'MikroTik Enable Error: ' . $e->getMessage();
+            }
+
+            // JIKA ROUTER GAGAL: JANGAN UBAH DATABASE!
+            if (!$results['mikrotik_enable']) {
+                $results['messages'][] = 'Database TIDAK diubah karena router MikroTik gagal mengaktifkan PPPoE secret.';
+
+                if (Schema::hasTable('activity_logs')) {
+                    try {
+                        \App\Models\ActivityLog::record([
+                            'user_id' => $operator,
+                            'customer_id' => $nomorInternet,
+                            'action' => 'activate',
+                            'old_status' => $customer->status_reg ?? null,
+                            'new_status' => $customer->status_reg ?? null,
+                            'description' => "Gagal Aktivasi: MikroTik gagal mengaktifkan PPPoE '{$pppoeUsername}'. Database tidak diubah. " . ($note ? "Note: {$note}" : ''),
+                            'router_response' => implode(' | ', $results['messages']),
+                            'router_success' => false,
+                        ]);
+                    } catch (Exception $e) {
+                        Log::warning('Gagal log activity_logs aktivasi failed: ' . $e->getMessage());
+                    }
+                }
+
+                return [
+                    'success' => false,
+                    'title' => 'Aktivasi Gagal di Router MikroTik',
+                    'summary' => implode(' | ', $results['messages']),
+                    'details' => $results,
+                ];
+            }
+        } else {
+            $results['messages'][] = 'MikroTik: User PPPoE (ont_us) kosong, lewati verifikasi router.';
+        }
+
+        // 3. Update Database: Status Reg -> 20 (Aktif) HANYA JIKA ROUTER BERHASIL
         try {
             DB::table('trx_batchjob_register')
                 ->where('nomor_internet', $nomorInternet)
@@ -89,34 +134,23 @@ class CustomerProvisioningService
             $results['messages'][] = 'Gagal update database: ' . $e->getMessage();
         }
 
-        // 3. MikroTik: Enable PPPoE Secret
+        // 4. MikroTik: Kick Active Connection (Re-auth)
         if ($pppoeUsername) {
             try {
-                $mkEnable = $this->mikrotik->enableUser($pppoeUsername);
-                $results['mikrotik_enable'] = $mkEnable['success'];
-                $results['messages'][] = 'MikroTik Enable: ' . $mkEnable['message'];
-            } catch (Exception $e) {
-                $results['messages'][] = 'MikroTik Enable Error: ' . $e->getMessage();
-            }
-
-            // 4. MikroTik: Kick Active Connection (Re-auth)
-            try {
                 $mkKick = $this->mikrotik->kickActiveConnection($pppoeUsername);
-                $results['mikrotik_kick'] = $mkKick['success'];
-                $results['messages'][] = 'MikroTik Kick: ' . $mkKick['message'];
+                $results['mikrotik_kick'] = (bool)($mkKick['success'] ?? false);
+                $results['messages'][] = 'MikroTik Kick: ' . ($mkKick['message'] ?? '');
             } catch (Exception $e) {
                 $results['messages'][] = 'MikroTik Kick Error: ' . $e->getMessage();
             }
-        } else {
-            $results['messages'][] = 'MikroTik: User PPPoE (ont_us) kosong, lewati konfigurasi router.';
         }
 
         // 5. OLT: Remote Reboot ONU
         if ($indexOlt) {
             try {
                 $oltReboot = $this->olt->rebootOnu($indexOlt, $kodeOlt);
-                $results['olt_reboot'] = $oltReboot['success'];
-                $results['messages'][] = 'OLT Reboot: ' . $oltReboot['message'];
+                $results['olt_reboot'] = (bool)($oltReboot['success'] ?? false);
+                $results['messages'][] = 'OLT Reboot: ' . ($oltReboot['message'] ?? '');
             } catch (Exception $e) {
                 $results['messages'][] = 'OLT Reboot Error: ' . $e->getMessage();
             }
@@ -124,7 +158,7 @@ class CustomerProvisioningService
             $results['messages'][] = 'OLT: index_olt belum terdaftar, lewati remote reboot.';
         }
 
-        // 6. Audit Trail Logging
+        // 6. Audit Trail Logging (trx_batchjob_register_log)
         if (Schema::hasTable('trx_batchjob_register_log')) {
             try {
                 DB::table('trx_batchjob_register_log')->insert([
@@ -174,8 +208,8 @@ class CustomerProvisioningService
 
     /**
      * UNIFIED ACTION: SUSPEND / ISOLIR LAYANAN
-     * 1. Update Database Status -> 21 (Suspend / Isolir)
-     * 2. MikroTik -> Disable PPPoE Secret (disabled=yes)
+     * 1. MikroTik -> Disable PPPoE Secret (disabled=yes) - FIRST
+     * 2. JIKA BERHASIL -> Update Database Status -> 21 (Suspend / Isolir)
      * 3. MikroTik -> Kick Active Session (Langsung Terputus)
      * 4. OLT -> Remote Reboot ONU (mode pon-onu-mng)
      * 5. Log ke Activity Audit Trail
@@ -194,7 +228,9 @@ class CustomerProvisioningService
         if (!$customer) {
             return [
                 'success' => false,
-                'message' => "Pelanggan dengan nomor internet {$nomorInternet} tidak ditemukan di database.",
+                'title' => 'Pelanggan Tidak Ditemukan',
+                'summary' => "Pelanggan dengan nomor internet {$nomorInternet} tidak ditemukan di database.",
+                'details' => ['database' => false, 'messages' => ["Pelanggan {$nomorInternet} tidak ditemukan."]],
             ];
         }
 
@@ -214,7 +250,50 @@ class CustomerProvisioningService
             'messages' => [],
         ];
 
-        // 2. Update Database: Status Reg -> 21 (Suspend)
+        // 2. MikroTik: Disable PPPoE Secret terlebih dahulu
+        if ($pppoeUsername) {
+            try {
+                $mkDisable = $this->mikrotik->disableUser($pppoeUsername);
+                $results['mikrotik_disable'] = (bool)($mkDisable['success'] ?? false);
+                $results['messages'][] = 'MikroTik Disable: ' . ($mkDisable['message'] ?? 'Tidak ada respon');
+            } catch (Exception $e) {
+                $results['mikrotik_disable'] = false;
+                $results['messages'][] = 'MikroTik Disable Error: ' . $e->getMessage();
+            }
+
+            // JIKA ROUTER GAGAL: JANGAN UBAH DATABASE!
+            if (!$results['mikrotik_disable']) {
+                $results['messages'][] = 'Database TIDAK diubah karena router MikroTik gagal menonaktifkan PPPoE secret.';
+
+                if (Schema::hasTable('activity_logs')) {
+                    try {
+                        \App\Models\ActivityLog::record([
+                            'user_id' => $operator,
+                            'customer_id' => $nomorInternet,
+                            'action' => 'suspend',
+                            'old_status' => $customer->status_reg ?? null,
+                            'new_status' => $customer->status_reg ?? null,
+                            'description' => "Gagal Suspend: MikroTik gagal menonaktifkan PPPoE '{$pppoeUsername}'. Database tidak diubah. Alasan: {$reason}",
+                            'router_response' => implode(' | ', $results['messages']),
+                            'router_success' => false,
+                        ]);
+                    } catch (Exception $e) {
+                        Log::warning('Gagal log activity_logs suspend failed: ' . $e->getMessage());
+                    }
+                }
+
+                return [
+                    'success' => false,
+                    'title' => 'Suspend Gagal di Router MikroTik',
+                    'summary' => implode(' | ', $results['messages']),
+                    'details' => $results,
+                ];
+            }
+        } else {
+            $results['messages'][] = 'MikroTik: User PPPoE (ont_us) kosong, lewati verifikasi router.';
+        }
+
+        // 3. Update Database: Status Reg -> 21 (Suspend) HANYA JIKA ROUTER BERHASIL
         try {
             DB::table('trx_batchjob_register')
                 ->where('nomor_internet', $nomorInternet)
@@ -250,34 +329,23 @@ class CustomerProvisioningService
             $results['messages'][] = 'Gagal update database: ' . $e->getMessage();
         }
 
-        // 3. MikroTik: Disable PPPoE Secret
+        // 4. MikroTik: Kick Active Connection (Seketika Terputus)
         if ($pppoeUsername) {
             try {
-                $mkDisable = $this->mikrotik->disableUser($pppoeUsername);
-                $results['mikrotik_disable'] = $mkDisable['success'];
-                $results['messages'][] = 'MikroTik Disable: ' . $mkDisable['message'];
-            } catch (Exception $e) {
-                $results['messages'][] = 'MikroTik Disable Error: ' . $e->getMessage();
-            }
-
-            // 4. MikroTik: Kick Active Connection (Seketika Terputus)
-            try {
                 $mkKick = $this->mikrotik->kickActiveConnection($pppoeUsername);
-                $results['mikrotik_kick'] = $mkKick['success'];
-                $results['messages'][] = 'MikroTik Kick: ' . $mkKick['message'];
+                $results['mikrotik_kick'] = (bool)($mkKick['success'] ?? false);
+                $results['messages'][] = 'MikroTik Kick: ' . ($mkKick['message'] ?? '');
             } catch (Exception $e) {
                 $results['messages'][] = 'MikroTik Kick Error: ' . $e->getMessage();
             }
-        } else {
-            $results['messages'][] = 'MikroTik: User PPPoE (ont_us) kosong, lewati konfigurasi router.';
         }
 
         // 5. OLT: Remote Reboot ONU
         if ($indexOlt) {
             try {
                 $oltReboot = $this->olt->rebootOnu($indexOlt, $kodeOlt);
-                $results['olt_reboot'] = $oltReboot['success'];
-                $results['messages'][] = 'OLT Reboot: ' . $oltReboot['message'];
+                $results['olt_reboot'] = (bool)($oltReboot['success'] ?? false);
+                $results['messages'][] = 'OLT Reboot: ' . ($oltReboot['message'] ?? '');
             } catch (Exception $e) {
                 $results['messages'][] = 'OLT Reboot Error: ' . $e->getMessage();
             }
@@ -285,7 +353,7 @@ class CustomerProvisioningService
             $results['messages'][] = 'OLT: index_olt belum terdaftar, lewati remote reboot.';
         }
 
-        // 6. Audit Trail Logging
+        // 6. Audit Trail Logging (trx_batchjob_register_log)
         if (Schema::hasTable('trx_batchjob_register_log')) {
             try {
                 DB::table('trx_batchjob_register_log')->insert([

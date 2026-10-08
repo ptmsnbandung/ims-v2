@@ -1682,10 +1682,16 @@ class NocController extends Controller
         if ($suspend->status_suspend == '18') {
             // UNsuspend / Buka Isolir -> Aktifkan
             $res = $provisioning->activateCustomer($nomorInternet, $currentUser, 'Approve Unsuspend dari NOC');
+            if (!($res['success'] ?? false)) {
+                return redirect()->back()->with('error', "Gagal buka isolir {$nomorInternet}: " . ($res['summary'] ?? 'Gagal pada router MikroTik'));
+            }
             return redirect()->back()->with('success', "Buka isolir {$nomorInternet} berhasil! PPPoE di-enable, koneksi di-kick, dan ONU OLT berhasil direboot.");
         } else {
             // Suspend / Isolir
             $res = $provisioning->suspendCustomer($nomorInternet, $currentUser, $suspend->desc_suspend ?: 'Approve Suspend dari NOC');
+            if (!($res['success'] ?? false)) {
+                return redirect()->back()->with('error', "Gagal suspend {$nomorInternet}: " . ($res['summary'] ?? 'Gagal pada router MikroTik'));
+            }
             return redirect()->back()->with('success', "Suspend {$nomorInternet} berhasil! PPPoE di-disable, sesi aktif seketika diputus (kicked), dan ONU OLT berhasil direboot.");
         }
     }

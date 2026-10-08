@@ -1063,255 +1063,281 @@
                     <input type="hidden" name="nomor_internet" :value="editNomorInternet">
                     
                     <!-- STEP 1: DATA PELANGGAN & KTP -->
-                    <div x-show="currentStep === 1" class="space-y-3">
+                    <div x-show="currentStep === 1" class="space-y-3.5">
                         
-                        <!-- Row 1: NIK, Nama, Jenis Kelamin, Tanggal Lahir -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3">
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    NIK Penduduk <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="nikPenduduk"
-                                       name="nik_penduduk" 
-                                       required
-                                       placeholder="nik penduduk" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                        <!-- Section 1: Identitas Pelanggan -->
+                        <div class="space-y-2.5">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                <span>Identitas & Kontak Pelanggan</span>
                             </div>
-                            <div class="md:col-span-4">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Nama Pelanggan <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="namaPelanggan"
-                                       name="nama_pelanggan" 
-                                       required
-                                       placeholder="NAMA PELANGGAN" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Jenis Kelamin <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="flex items-center gap-3 pt-1">
-                                    <label class="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
-                                        <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="1" class="w-3.5 h-3.5 text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
-                                        <span class="text-[11px]">Laki-laki</span>
+
+                            <!-- Row 1: NIK, Nama, Jenis Kelamin, Tanggal Lahir (4 equal columns) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        NIK Penduduk <span class="text-rose-500">*</span>
                                     </label>
-                                    <label class="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
-                                        <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="2" class="w-3.5 h-3.5 text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
-                                        <span class="text-[11px]">Perempuan</span>
+                                    <input type="text" 
+                                           x-model="nikPenduduk"
+                                           name="nik_penduduk" 
+                                           required
+                                           placeholder="16 Digit NIK" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Nama Pelanggan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="namaPelanggan"
+                                           name="nama_pelanggan" 
+                                           required
+                                           placeholder="NAMA LENGKAP PELANGGAN" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Jenis Kelamin <span class="text-rose-500">*</span>
+                                    </label>
+                                    <div class="h-[36px] flex items-center justify-around px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950">
+                                        <label class="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
+                                            <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="1" class="w-3.5 h-3.5 text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer">
+                                            <span class="text-[11px]">Laki-laki</span>
+                                        </label>
+                                        <label class="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
+                                            <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="2" class="w-3.5 h-3.5 text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer">
+                                            <span class="text-[11px]">Perempuan</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Tanggal Lahir <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="date" 
+                                           x-model="tanggalLahir"
+                                           name="tanggal_lahir" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Kontak & Corporate Checkbox (4 equal columns) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Email <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="email" 
+                                           x-model="email"
+                                           name="email" 
+                                           placeholder="nama@email.com" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Nomor Handphone (Utama) <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="nomorHp"
+                                           name="nomor_hp" 
+                                           required
+                                           placeholder="08xxxxxxxxxx" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Nomor HP Keluarga (Darurat)
+                                    </label>
+                                    <input type="text" 
+                                           x-model="nomorHp2"
+                                           name="nomor_hp_2" 
+                                           placeholder="08xxxxxxxxxx" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Tipe Pelanggan
+                                    </label>
+                                    <label class="flex items-center gap-2 h-[36px] px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium hover:border-blue-400 transition">
+                                        <input type="checkbox" 
+                                               x-model="isCorporate" 
+                                               name="is_corporate" 
+                                               value="1" 
+                                               class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer">
+                                        <span class="text-[11px]">Ya, Corporate / Instansi</span>
                                     </label>
                                 </div>
                             </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Tanggal Lahir <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="date" 
-                                       x-model="tanggalLahir"
-                                       name="tanggal_lahir" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+
+                            <!-- Row 2b: Nama PIC (Shown when Corporate is checked) -->
+                            <div x-show="isCorporate" x-cloak class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center gap-2.5">
+                                <div class="w-full sm:w-80 shrink-0">
+                                    <label class="block text-[10.5px] font-bold text-amber-700 dark:text-amber-400 mb-1">
+                                        Nama PIC (Penanggung Jawab Perusahaan) <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="pic"
+                                           name="pic" 
+                                           :disabled="!isCorporate"
+                                           placeholder="NAMA PENANGGUNG JAWAB" 
+                                           class="w-full h-[34px] bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-lg px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <span class="text-[10.5px] text-amber-700 dark:text-amber-400 leading-tight">
+                                    Isikan nama perwakilan resmi atau PIC yang bertanggung jawab atas tagihan dan layanan instansi.
+                                </span>
                             </div>
                         </div>
 
-                        <!-- Row 2: Corporate, PIC, Email, HP 1, HP 2 -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3 items-end">
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Pelanggan Instansi / Corporate?
-                                </label>
-                                <label class="flex items-center gap-2 h-[34px] px-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
-                                    <input type="checkbox" 
-                                           x-model="isCorporate" 
-                                           name="is_corporate" 
-                                           value="1" 
-                                           class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
-                                    <span class="text-[11px]">Ya, Corporate / Badan Usaha</span>
-                                </label>
+                        <!-- Section 2: Alamat KTP & Lampiran Dokumen -->
+                        <div class="space-y-2.5 pt-1.5 border-t border-slate-200/80 dark:border-slate-800/80">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                <span>Alamat KTP & Lampiran Dokumen</span>
                             </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Nama PIC (Penanggung Jawab)
-                                </label>
-                                <input type="text" 
-                                       x-model="pic"
-                                       name="pic" 
-                                       :disabled="!isCorporate"
-                                       placeholder="NAMA PENANGGUNG JAWAB" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition disabled:bg-slate-100 dark:disabled:bg-slate-900 disabled:opacity-60 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Email <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="email" 
-                                       x-model="email"
-                                       name="email" 
-                                       placeholder="email pelanggan" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Nomor Handphone <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="nomorHp"
-                                       name="nomor_hp" 
-                                       required
-                                       placeholder="0812xxxx" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Nomor HP Keluarga
-                                </label>
-                                <input type="text" 
-                                       x-model="nomorHp2"
-                                       name="nomor_hp_2" 
-                                       placeholder="0813xxxx" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                        </div>
 
-                        <!-- Row 3: Wilayah KTP (Provinsi, Kota, Kecamatan, Kelurahan) -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Provinsi KTP <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="provinsiKtp" 
-                                        @change="fetchKotaKtp()"
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Provinsi</option>
-                                    @foreach($provinces as $prov)
-                                        <option value="{{ $prov->kode_wilayah_provinsi }}">{{ $prov->nama_provinsi }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Kota/Kabupaten KTP <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="kotaKtp" 
-                                        @change="fetchKecamatanKtp()"
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Kota/Kabupaten</option>
-                                    <template x-for="item in kotaKtpList" :key="item.kode_wilayah_kota">
-                                        <option :value="item.kode_wilayah_kota" x-text="item.nama_kota"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Kecamatan KTP <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="kecamatanKtp" 
-                                        @change="fetchKelurahanKtp()"
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Kecamatan</option>
-                                    <template x-for="item in kecamatanKtpList" :key="item.kode_wilayah_kecamatan">
-                                        <option :value="item.kode_wilayah_kecamatan" x-text="item.nama_kecamatan"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Kelurahan KTP <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="kelurahanKtp" 
-                                        name="kode_wilayah_kelurahan_ktp"
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Kelurahan</option>
-                                    <template x-for="item in kelurahanKtpList" :key="item.kode_wilayah_kelurahan">
-                                        <option :value="item.kode_wilayah_kelurahan" x-text="item.nama_kelurahan"></option>
-                                    </template>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Row 4: RT, RW, Alamat KTP, Foto KTP, Foto Rumah -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3 items-end">
-                            <div class="md:col-span-1">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    RT KTP <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="rtKtp"
-                                       name="rt_ktp" 
-                                       placeholder="RT" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-1">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    RW KTP <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="rwKtp"
-                                       name="rw_ktp" 
-                                       placeholder="RW" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-4">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Alamat Sesuai KTP <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="alamatKtp"
-                                       name="alamat_ktp" 
-                                       placeholder="Jalan / Nomor Bangunan..."
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Foto KTP <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex items-center justify-center h-[34px]">
-                                    <input type="file" 
-                                           name="foto_ktp" 
-                                           accept="image/*"
-                                           @change="handleFilePreview($event, 'ktp')"
-                                           class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
-                                    <template x-if="!fotoKtpPreview">
-                                        <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                                            <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
-                                            </svg>
-                                            <span class="text-[10px] font-medium truncate">Pilih Foto KTP</span>
-                                        </div>
-                                    </template>
-                                    <template x-if="fotoKtpPreview">
-                                        <div class="flex items-center gap-1.5">
-                                            <img :src="fotoKtpPreview" class="h-6 w-8 rounded object-cover">
-                                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Terpilih</span>
-                                        </div>
-                                    </template>
+                            <!-- Row 3: Wilayah KTP (4 equal columns) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Provinsi KTP <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="provinsiKtp" 
+                                            @change="fetchKotaKtp()"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Provinsi</option>
+                                        @foreach($provinces as $prov)
+                                            <option value="{{ $prov->kode_wilayah_provinsi }}">{{ $prov->nama_provinsi }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Kota/Kabupaten KTP <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="kotaKtp" 
+                                            @change="fetchKecamatanKtp()"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Kota/Kabupaten</option>
+                                        <template x-for="item in kotaKtpList" :key="item.kode_wilayah_kota">
+                                            <option :value="item.kode_wilayah_kota" x-text="item.nama_kota"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Kecamatan KTP <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="kecamatanKtp" 
+                                            @change="fetchKelurahanKtp()"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Kecamatan</option>
+                                        <template x-for="item in kecamatanKtpList" :key="item.kode_wilayah_kecamatan">
+                                            <option :value="item.kode_wilayah_kecamatan" x-text="item.nama_kecamatan"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Kelurahan KTP <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="kelurahanKtp" 
+                                            name="kode_wilayah_kelurahan_ktp"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Kelurahan</option>
+                                        <template x-for="item in kelurahanKtpList" :key="item.kode_wilayah_kelurahan">
+                                            <option :value="item.kode_wilayah_kelurahan" x-text="item.nama_kelurahan"></option>
+                                        </template>
+                                    </select>
                                 </div>
                             </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Foto Rumah / Lokasi <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-lg p-1.5 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex items-center justify-center h-[34px]">
-                                    <input type="file" 
-                                           name="foto_rumah" 
-                                           accept="image/*"
-                                           @change="handleFilePreview($event, 'rumah')"
-                                           class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
-                                    <template x-if="!fotoRumahPreview">
-                                        <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                                            <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
-                                            </svg>
-                                            <span class="text-[10px] font-medium truncate">Pilih Foto Rumah</span>
-                                        </div>
-                                    </template>
-                                    <template x-if="fotoRumahPreview">
-                                        <div class="flex items-center gap-1.5">
-                                            <img :src="fotoRumahPreview" class="h-6 w-8 rounded object-cover">
-                                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Terpilih</span>
-                                        </div>
-                                    </template>
+
+                            <!-- Row 4: RT/RW, Alamat KTP, Foto KTP, Foto Rumah (4 equal columns) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        RT / RW KTP <span class="text-rose-500">*</span>
+                                    </label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" 
+                                               x-model="rtKtp"
+                                               name="rt_ktp" 
+                                               placeholder="RT (001)" 
+                                               class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
+                                        <input type="text" 
+                                               x-model="rwKtp"
+                                               name="rw_ktp" 
+                                               placeholder="RW (002)" 
+                                               class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Alamat Sesuai KTP <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="alamatKtp"
+                                           name="alamat_ktp" 
+                                           placeholder="Jalan, No Rumah, Dusun..." 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Foto KTP <span class="text-rose-500">*</span>
+                                    </label>
+                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-lg px-2.5 py-1 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex items-center justify-center h-[36px]">
+                                        <input type="file" 
+                                               name="foto_ktp" 
+                                               accept="image/*"
+                                               @change="handleFilePreview($event, 'ktp')"
+                                               class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                                        <template x-if="!fotoKtpPreview">
+                                            <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                                                <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                                                </svg>
+                                                <span class="text-[11px] font-medium truncate">Pilih Foto KTP</span>
+                                            </div>
+                                        </template>
+                                        <template x-if="fotoKtpPreview">
+                                            <div class="flex items-center gap-1.5">
+                                                <img :src="fotoKtpPreview" class="h-6 w-8 rounded object-cover border border-slate-200">
+                                                <span class="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
+                                                    <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                                    Terpilih
+                                                </span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Foto Rumah / Lokasi <span class="text-rose-500">*</span>
+                                    </label>
+                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-lg px-2.5 py-1 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex items-center justify-center h-[36px]">
+                                        <input type="file" 
+                                               name="foto_rumah" 
+                                               accept="image/*"
+                                               @change="handleFilePreview($event, 'rumah')"
+                                               class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                                        <template x-if="!fotoRumahPreview">
+                                            <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                                                <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                                                </svg>
+                                                <span class="text-[11px] font-medium truncate">Pilih Foto Rumah</span>
+                                            </div>
+                                        </template>
+                                        <template x-if="fotoRumahPreview">
+                                            <div class="flex items-center gap-1.5">
+                                                <img :src="fotoRumahPreview" class="h-6 w-8 rounded object-cover border border-slate-200">
+                                                <span class="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5">
+                                                    <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                                    Terpilih
+                                                </span>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1319,225 +1345,232 @@
                     </div>
 
                     <!-- STEP 2: DATA LAYANAN, LOKASI PASANG & SALES ORDER -->
-                    <div x-show="currentStep === 2" class="space-y-3">
+                    <div x-show="currentStep === 2" class="space-y-3.5">
                         
-                        <!-- Row 1: Layanan, Paket, Jenis Bangunan, No Bangunan, Group Layanan -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3">
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Layanan <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="selectedLayanan"
-                                        @change="fetchPaket()"
-                                        name="kode_kategori_bandwith"
-                                        required
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Layanan</option>
-                                    @foreach($layananList as $l)
-                                        <option value="{{ $l->kode_kategori_bandwith }}">{{ $l->nama_kategori_bandwith }}</option>
-                                    @endforeach
-                                </select>
+                        <!-- Section 1: Paket Layanan & Sales -->
+                        <div class="space-y-2.5">
+                            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                <span>Paket Layanan & Informasi Sales</span>
                             </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Paket Bandwidth <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="selectedPaket"
-                                        name="kode_bandwith" 
-                                        required
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Paket Layanan</option>
-                                    <template x-for="p in paketList" :key="p.kode_bandwith">
-                                        <option :value="p.kode_bandwith" x-text="p.nominal_bandwith + ' Mbps - Rp ' + Number(p.harga_bandwith).toLocaleString('id-ID')"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Jenis Bangunan <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="jenisBangunan"
-                                        name="jenis_bangunan" 
-                                        required
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Jenis</option>
-                                    @foreach($bangunanList as $b)
-                                        <option value="{{ $b->jenis_bangunan }}">{{ $b->jenis_bangunan }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    No Bangunan <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="nomorBangunan"
-                                       name="nomor_bangunan" 
-                                       placeholder="LT2/15, BLOK C/22" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Group Layanan
-                                </label>
-                                <select x-model="groupLayanan"
-                                        name="group_layanan" 
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="MEDIANET">MEDIANET</option>
-                                    <option value="DNET">DNET</option>
-                                    <option value="CORPORATE">CORPORATE</option>
-                                </select>
+
+                            <!-- Row 1: Layanan, Paket Bandwidth, Group Layanan, Nama Sales (4 equal columns) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Layanan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="selectedLayanan"
+                                            @change="fetchPaket()"
+                                            name="kode_kategori_bandwith"
+                                            required
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Layanan</option>
+                                        @foreach($layananList as $l)
+                                            <option value="{{ $l->kode_kategori_bandwith }}">{{ $l->nama_kategori_bandwith }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Paket Bandwidth <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="selectedPaket"
+                                            name="kode_bandwith" 
+                                            required
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Paket Layanan</option>
+                                        <template x-for="p in paketList" :key="p.kode_bandwith">
+                                            <option :value="p.kode_bandwith" x-text="p.nominal_bandwith + ' Mbps - Rp ' + Number(p.harga_bandwith).toLocaleString('id-ID')"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Group Layanan
+                                    </label>
+                                    <select x-model="groupLayanan"
+                                            name="group_layanan" 
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="MEDIANET">MEDIANET</option>
+                                        <option value="DNET">DNET</option>
+                                        <option value="CORPORATE">CORPORATE</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Nama Sales <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="namaSales"
+                                           name="nama_sales" 
+                                           required
+                                           placeholder="NAMA SALES" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Row 2: Sync KTP Checkbox, Titik Koordinat, Sharelock Maps -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3 items-end">
-                            <div class="md:col-span-4">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Data Pemasangan
-                                </label>
-                                <label class="flex items-center justify-between h-[34px] px-3 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 cursor-pointer">
-                                    <span class="text-[11px] font-semibold text-blue-800 dark:text-blue-300">Sama dengan KTP?</span>
-                                    <span class="flex items-center gap-1.5">
-                                        <input type="checkbox" 
-                                               x-model="sameAsKtp"
-                                               @change="syncKtpToPasang()"
-                                               class="w-3.5 h-3.5 rounded text-blue-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-blue-500">
-                                        <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Ya, Sama</span>
-                                    </span>
+                        <!-- Section 2: Detail Lokasi & Alamat Pemasangan -->
+                        <div class="space-y-2.5 pt-1.5 border-t border-slate-200/80 dark:border-slate-800/80">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                    <span>Lokasi & Alamat Pemasangan</span>
+                                </div>
+                                <label class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">
+                                    <input type="checkbox" 
+                                           x-model="sameAsKtp"
+                                           @change="syncKtpToPasang()"
+                                           class="w-3.5 h-3.5 rounded text-blue-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer">
+                                    <span class="text-[11px] font-semibold text-blue-800 dark:text-blue-300">Sama dengan Alamat KTP?</span>
                                 </label>
                             </div>
-                            <div class="md:col-span-4">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Titik Koordinat (Lat, Long)
-                                </label>
-                                <input type="text" 
-                                       x-model="lonLat"
-                                       name="lon_lat" 
-                                       placeholder="-6.914744, 107.609810" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-4">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Sharelock Lokasi Maps <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="locMaps"
-                                       name="loc_maps" 
-                                       placeholder="https://maps.app.goo.gl/..." 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                        </div>
 
-                        <!-- Row 3: Wilayah Pemasangan (Provinsi, Kota, Kecamatan, Kelurahan) -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Provinsi Pemasangan <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="provinsiPasang" 
-                                        @change="fetchKotaPasang()"
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Provinsi</option>
-                                    @foreach($provinces as $prov)
-                                        <option value="{{ $prov->kode_wilayah_provinsi }}">{{ $prov->nama_provinsi }}</option>
-                                    @endforeach
-                                </select>
+                            <!-- Row 2: Jenis Bangunan, No Bangunan, Koordinat, Sharelock (4 equal columns) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Jenis Bangunan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="jenisBangunan"
+                                            name="jenis_bangunan" 
+                                            required
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Jenis Bangunan</option>
+                                        @foreach($bangunanList as $b)
+                                            <option value="{{ $b->jenis_bangunan }}">{{ $b->jenis_bangunan }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        No / Blok Bangunan <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="nomorBangunan"
+                                           name="nomor_bangunan" 
+                                           placeholder="LT2/15, BLOK C/22" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Titik Koordinat (Lat, Long)
+                                    </label>
+                                    <input type="text" 
+                                           x-model="lonLat"
+                                           name="lon_lat" 
+                                           placeholder="-6.914744, 107.609810" 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Sharelock Maps <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="locMaps"
+                                           name="loc_maps" 
+                                           placeholder="https://maps.app.goo.gl/..." 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Kota/Kabupaten Pemasangan <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="kotaPasang" 
-                                        @change="fetchKecamatanPasang()"
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Kota/Kabupaten</option>
-                                    <template x-for="item in kotaPasangList" :key="item.kode_wilayah_kota">
-                                        <option :value="item.kode_wilayah_kota" x-text="item.nama_kota"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Kecamatan Pemasangan <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="kecamatanPasang" 
-                                        @change="fetchKelurahanPasang()"
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Kecamatan</option>
-                                    <template x-for="item in kecamatanPasangList" :key="item.kode_wilayah_kecamatan">
-                                        <option :value="item.kode_wilayah_kecamatan" x-text="item.nama_kecamatan"></option>
-                                    </template>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Kelurahan Pemasangan <span class="text-rose-500">*</span>
-                                </label>
-                                <select x-model="kelurahanPasang" 
-                                        name="kode_wilayah_kelurahan_pasang"
-                                        class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                    <option value="">Pilih Kelurahan</option>
-                                    <template x-for="item in kelurahanPasangList" :key="item.kode_wilayah_kelurahan">
-                                        <option :value="item.kode_wilayah_kelurahan" x-text="item.nama_kelurahan"></option>
-                                    </template>
-                                </select>
-                            </div>
-                        </div>
 
-                        <!-- Row 4: RT, RW, Alamat Lengkap, Catatan Khusus, Nama Sales -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2.5 sm:gap-3">
-                            <div class="md:col-span-1">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    RT Pasang <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="rtPasang"
-                                       name="rt_pasang" 
-                                       placeholder="RT" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                            <!-- Row 3: Wilayah Pemasangan (4 equal columns) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Provinsi Pasang <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="provinsiPasang" 
+                                            @change="fetchKotaPasang()"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Provinsi</option>
+                                        @foreach($provinces as $prov)
+                                            <option value="{{ $prov->kode_wilayah_provinsi }}">{{ $prov->nama_provinsi }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Kota/Kabupaten Pasang <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="kotaPasang" 
+                                            @change="fetchKecamatanPasang()"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Kota/Kabupaten</option>
+                                        <template x-for="item in kotaPasangList" :key="item.kode_wilayah_kota">
+                                            <option :value="item.kode_wilayah_kota" x-text="item.nama_kota"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Kecamatan Pasang <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="kecamatanPasang" 
+                                            @change="fetchKelurahanPasang()"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Kecamatan</option>
+                                        <template x-for="item in kecamatanPasangList" :key="item.kode_wilayah_kecamatan">
+                                            <option :value="item.kode_wilayah_kecamatan" x-text="item.nama_kecamatan"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Kelurahan Pasang <span class="text-rose-500">*</span>
+                                    </label>
+                                    <select x-model="kelurahanPasang" 
+                                            name="kode_wilayah_kelurahan_pasang"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                        <option value="">Pilih Kelurahan</option>
+                                        <template x-for="item in kelurahanPasangList" :key="item.kode_wilayah_kelurahan">
+                                            <option :value="item.kode_wilayah_kelurahan" x-text="item.nama_kelurahan"></option>
+                                        </template>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="md:col-span-1">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    RW Pasang <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="rwPasang"
-                                       name="rw_pasang" 
-                                       placeholder="RW" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-4">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Alamat Pemasangan Lengkap <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="alamatPasang"
-                                       name="alamat_pasang" 
-                                       required
-                                       placeholder="Jalan, Blok, Patokan lokasi..."
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Permintaan Khusus Pelanggan
-                                </label>
-                                <input type="text" 
-                                       x-model="noteRequest"
-                                       name="note_request" 
-                                       placeholder="Catatan instalasi (opsional)..." 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
-                            </div>
-                            <div class="md:col-span-3">
-                                <label class="block text-[10px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    Nama Sales <span class="text-rose-500">*</span>
-                                </label>
-                                <input type="text" 
-                                       x-model="namaSales"
-                                       name="nama_sales" 
-                                       required
-                                       placeholder="nama sales" 
-                                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+
+                            <!-- Row 4: RT/RW Pasang, Alamat Lengkap Pasang, Catatan Khusus (4 columns) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        RT / RW Pasang <span class="text-rose-500">*</span>
+                                    </label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="text" 
+                                               x-model="rtPasang"
+                                               name="rt_pasang" 
+                                               placeholder="RT (001)" 
+                                               class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
+                                        <input type="text" 
+                                               x-model="rwPasang"
+                                               name="rw_pasang" 
+                                               placeholder="RW (002)" 
+                                               class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
+                                    </div>
+                                </div>
+                                <div class="lg:col-span-2">
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Alamat Pemasangan Lengkap <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           x-model="alamatPasang"
+                                           name="alamat_pasang" 
+                                           required
+                                           placeholder="Jalan, Blok, Patokan lokasi pemasangan..." 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                        Permintaan Khusus Pelanggan
+                                    </label>
+                                    <input type="text" 
+                                           x-model="noteRequest"
+                                           name="note_request" 
+                                           placeholder="Catatan instalasi (opsional)..." 
+                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                </div>
                             </div>
                         </div>
 

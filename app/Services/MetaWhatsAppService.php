@@ -374,8 +374,10 @@ class MetaWhatsAppService
 
             // Default mapping based on template name
             $defaultParamsMap = [];
-            if (str_contains($name, 'tagihan') || str_contains($name, 'invoice')) {
-                $defaultParamsMap = ['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran'];
+            if ($name === 'tagihan_bulanan') {
+                $defaultParamsMap = ['periode', 'bulan_jatuh_tempo', 'bulan_suspend'];
+            } elseif (str_contains($name, 'tagihan') || str_contains($name, 'invoice')) {
+                $defaultParamsMap = ['periode', 'bulan_jatuh_tempo', 'bulan_suspend', 'nominal', 'nomor_internet'];
             } elseif (str_contains($name, 'report') || str_contains($name, 'work')) {
                 $defaultParamsMap = ['nama', 'nomor_internet', 'alamat', 'paket'];
             } else {

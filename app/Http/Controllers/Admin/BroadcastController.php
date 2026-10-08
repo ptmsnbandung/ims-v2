@@ -48,10 +48,10 @@ class BroadcastController extends Controller
                         'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
                         'meta_template_name' => 'tagihan_bulanan',
                         'meta_language'      => 'id',
-                        'meta_params_map'    => json_encode(['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran']),
-                        'subjek'             => 'Tagihan Bulanan Internet IMS',
+                        'meta_params_map'    => json_encode(['periode', 'bulan_jatuh_tempo', 'bulan_suspend']),
+                        'subjek'             => 'Tagihan Bulanan Internet MEDIANET',
                         'kategori'           => 'utility',
-                        'pesan'              => "Halo, Bapak/Ibu *{nama}*,\n\nKami menginformasikan tagihan layanan internet IMS Anda periode *{periode}* sebesar *{nominal}* dengan batas jatuh tempo pada *{jatuh_tempo}*.\n\nNomor Internet: *{nomor_internet}*\nPaket: *{paket}*\n\nSilakan lakukan pembayaran melalui link resmi berikut:\n{link_pembayaran}\n\nTerima kasih atas kerja samanya.",
+                        'pesan'              => "Halo, Bapak/Ibu 👋\nTerima kasih telah menjadi pelanggan setia MEDIANET! ✨\n\nTagihan internet Anda SUDAH BISA DIBAYARKAN untuk periode {periode}.\nJatuh Tempo Pembayaran: 20 {bulan_jatuh_tempo}\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik link berikut untuk melakukan pembayaran:\n\n🔗 https://ptmsn.co.id/portal/login\n\n🔍 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.",
                         'is_default'         => 1,
                         'created_at'         => now(),
                         'updated_at'         => now(),
@@ -91,28 +91,31 @@ class BroadcastController extends Controller
                     ->orWhere('meta_template_name', '')
                     ->delete();
 
-                // Daftarkan template resmi tagihan_bulanan jika belum ada
+                // Selaraskan template tagihan_bulanan dengan parameter resmi Meta
                 $hasTagihanBulanan = DB::table('tb_broadcast_wa_template')
                     ->where('meta_template_name', 'tagihan_bulanan')
                     ->exists();
 
+                $tagihanData = [
+                    'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
+                    'meta_template_name' => 'tagihan_bulanan',
+                    'meta_language'      => 'id',
+                    'meta_params_map'    => json_encode(['periode', 'bulan_jatuh_tempo', 'bulan_suspend']),
+                    'subjek'             => 'Tagihan Bulanan Internet MEDIANET',
+                    'kategori'           => 'utility',
+                    'pesan'              => "Halo, Bapak/Ibu 👋\nTerima kasih telah menjadi pelanggan setia MEDIANET! ✨\n\nTagihan internet Anda SUDAH BISA DIBAYARKAN untuk periode {periode}.\nJatuh Tempo Pembayaran: 20 {bulan_jatuh_tempo}\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik link berikut untuk melakukan pembayaran:\n\n🔗 https://ptmsn.co.id/portal/login\n\n🔍 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.",
+                    'is_default'         => 1,
+                    'updated_at'         => now(),
+                ];
+
                 if (!$hasTagihanBulanan) {
                     DB::table('tb_broadcast_wa_template')->where('is_default', 1)->update(['is_default' => 0]);
-
-                    DB::table('tb_broadcast_wa_template')->insert([
-                        [
-                            'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
-                            'meta_template_name' => 'tagihan_bulanan',
-                            'meta_language'      => 'id',
-                            'meta_params_map'    => json_encode(['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran']),
-                            'subjek'             => 'Tagihan Bulanan Internet IMS',
-                            'kategori'           => 'utility',
-                            'pesan'              => "Halo, Bapak/Ibu *{nama}*,\n\nKami menginformasikan tagihan layanan internet IMS Anda periode *{periode}* sebesar *{nominal}* dengan batas jatuh tempo pada *{jatuh_tempo}*.\n\nNomor Internet: *{nomor_internet}*\nPaket: *{paket}*\n\nSilakan lakukan pembayaran melalui link resmi berikut:\n{link_pembayaran}\n\nTerima kasih atas kerja samanya.",
-                            'is_default'         => 1,
-                            'created_at'         => now(),
-                            'updated_at'         => now(),
-                        ],
-                    ]);
+                    $tagihanData['created_at'] = now();
+                    DB::table('tb_broadcast_wa_template')->insert($tagihanData);
+                } else {
+                    DB::table('tb_broadcast_wa_template')
+                        ->where('meta_template_name', 'tagihan_bulanan')
+                        ->update($tagihanData);
                 }
             }
 
@@ -422,13 +425,26 @@ class BroadcastController extends Controller
     {
         $nama = $data->nama_pelanggan ?? 'Pelanggan';
         $noInternet = $data->nomor_internet ?? '-';
-        $periode = !empty($data->periode_tagihan) ? $data->periode_tagihan : (!empty($data->bulan_tagihan) ? $data->bulan_tagihan . '/' . $data->tahun_tagihan : date('m/Y'));
+
+        $bulanNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $bulanNum = !empty($data->bulan_tagihan) ? (int)$data->bulan_tagihan : (int)date('n');
+        $tahunNum = !empty($data->tahun_tagihan) ? (int)$data->tahun_tagihan : (int)date('Y');
+        $namaBulanTahun = ($bulanNames[$bulanNum] ?? date('F')) . ' ' . $tahunNum;
+
+        $periode = !empty($data->periode_tagihan) ? $data->periode_tagihan : $namaBulanTahun;
+        $bulanJatuhTempo = $namaBulanTahun;
+        $bulanSuspend = $namaBulanTahun;
         
         $nominalVal = $data->total_layanan ?? ($data->harga_bandwith ?? ($data->harga ?? 0));
         $nominal = 'Rp ' . number_format((float) $nominalVal, 0, ',', '.');
         
         $expiryRaw = !empty($data->expiry) ? $data->expiry : (!empty($data->tgl_jatuh_tempo) ? $data->tgl_jatuh_tempo : null);
-        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : date('d F Y', strtotime('+5 days'));
+        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : ('20 ' . $namaBulanTahun);
 
         $linkPembayaran = '';
         if (!empty($data->payment_respond_post)) {
@@ -436,21 +452,26 @@ class BroadcastController extends Controller
             $linkPembayaran = $snapData['redirect_url'] ?? '';
         }
         if (empty($linkPembayaran)) {
-            $linkPembayaran = config('app.url') . '/finance/billing-layanan';
+            $linkPembayaran = 'https://ptmsn.co.id/portal/login';
         }
 
         $paket = $data->nama_kategori_bandwith ?? ($data->nama_bandwith ?? 'Internet Fiber');
         $alamat = $data->alamat_pasang ?? ($data->alamat_p ?? ($data->nama_kota_pasang ?? 'Area IMS'));
 
         $replacements = [
-            '{nama}'            => $nama,
-            '{nomor_internet}'  => $noInternet,
-            '{periode}'         => $periode,
-            '{nominal}'         => $nominal,
-            '{jatuh_tempo}'     => $jatuhTempo,
-            '{link_pembayaran}' => $linkPembayaran,
-            '{paket}'           => $paket,
-            '{alamat}'          => $alamat,
+            '{nama}'              => $nama,
+            '{nomor_internet}'    => $noInternet,
+            '{periode}'           => $periode,
+            '{bulan_jatuh_tempo}' => $bulanJatuhTempo,
+            '{bulan_suspend}'     => $bulanSuspend,
+            '{nominal}'           => $nominal,
+            '{jatuh_tempo}'       => $jatuhTempo,
+            '{link_pembayaran}'   => $linkPembayaran,
+            '{paket}'             => $paket,
+            '{alamat}'            => $alamat,
+            '{{1}}'               => $periode,
+            '{{2}}'               => $bulanJatuhTempo,
+            '{{3}}'               => $bulanSuspend,
         ];
 
         return strtr($template, $replacements);
@@ -463,13 +484,26 @@ class BroadcastController extends Controller
     {
         $nama = $data->nama_pelanggan ?? 'Pelanggan';
         $noInternet = $data->nomor_internet ?? '-';
-        $periode = !empty($data->periode_tagihan) ? $data->periode_tagihan : (!empty($data->bulan_tagihan) ? $data->bulan_tagihan . '/' . $data->tahun_tagihan : date('m/Y'));
+
+        $bulanNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $bulanNum = !empty($data->bulan_tagihan) ? (int)$data->bulan_tagihan : (int)date('n');
+        $tahunNum = !empty($data->tahun_tagihan) ? (int)$data->tahun_tagihan : (int)date('Y');
+        $namaBulanTahun = ($bulanNames[$bulanNum] ?? date('F')) . ' ' . $tahunNum;
+
+        $periode = !empty($data->periode_tagihan) ? $data->periode_tagihan : $namaBulanTahun;
+        $bulanJatuhTempo = $namaBulanTahun;
+        $bulanSuspend = $namaBulanTahun;
         
         $nominalVal = $data->total_layanan ?? ($data->harga_bandwith ?? ($data->harga ?? 0));
         $nominal = 'Rp ' . number_format((float) $nominalVal, 0, ',', '.');
         
         $expiryRaw = !empty($data->expiry) ? $data->expiry : (!empty($data->tgl_jatuh_tempo) ? $data->tgl_jatuh_tempo : null);
-        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : date('d F Y', strtotime('+5 days'));
+        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : ('20 ' . $namaBulanTahun);
 
         $linkPembayaran = '';
         if (!empty($data->payment_respond_post)) {
@@ -477,26 +511,28 @@ class BroadcastController extends Controller
             $linkPembayaran = $snapData['redirect_url'] ?? '';
         }
         if (empty($linkPembayaran)) {
-            $linkPembayaran = config('app.url') . '/finance/billing-layanan';
+            $linkPembayaran = 'https://ptmsn.co.id/portal/login';
         }
 
         $paket = $data->nama_kategori_bandwith ?? ($data->nama_bandwith ?? 'Internet Fiber');
         $alamat = $data->alamat_pasang ?? ($data->alamat_p ?? ($data->nama_kota_pasang ?? 'Area IMS'));
 
         $dict = [
-            'nama'            => $nama,
-            'nomor_internet'  => $noInternet,
-            'periode'         => $periode,
-            'nominal'         => $nominal,
-            'jatuh_tempo'     => $jatuhTempo,
-            'link_pembayaran' => $linkPembayaran,
-            'paket'           => $paket,
-            'alamat'          => $alamat,
+            'nama'              => $nama,
+            'nomor_internet'    => $noInternet,
+            'periode'           => $periode,
+            'bulan_jatuh_tempo' => $bulanJatuhTempo,
+            'bulan_suspend'     => $bulanSuspend,
+            'nominal'           => $nominal,
+            'jatuh_tempo'       => $jatuhTempo,
+            'link_pembayaran'   => $linkPembayaran,
+            'paket'             => $paket,
+            'alamat'            => $alamat,
         ];
 
         if (empty($paramsMap)) {
-            // Default 4-parameter standard
-            return [$nama, $periode, $nominal, $jatuhTempo];
+            // Default 3-parameter standard for tagihan_bulanan (periode, bulan_jatuh_tempo, bulan_suspend)
+            return [$periode, $bulanJatuhTempo, $bulanSuspend];
         }
 
         $result = [];

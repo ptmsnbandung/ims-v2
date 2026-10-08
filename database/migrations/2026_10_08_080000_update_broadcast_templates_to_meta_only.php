@@ -42,19 +42,25 @@ return new class extends Migration
                 ->where('meta_template_name', 'tagihan_bulanan')
                 ->exists();
 
+            $tagihanData = [
+                'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
+                'meta_template_name' => 'tagihan_bulanan',
+                'meta_language'      => 'id',
+                'meta_params_map'    => json_encode(['periode', 'bulan_jatuh_tempo', 'bulan_suspend']),
+                'subjek'             => 'Tagihan Bulanan Internet MEDIANET',
+                'kategori'           => 'utility',
+                'pesan'              => "Halo, Bapak/Ibu 👋\nTerima kasih telah menjadi pelanggan setia MEDIANET! ✨\n\nTagihan internet Anda SUDAH BISA DIBAYARKAN untuk periode {periode}.\nJatuh Tempo Pembayaran: 20 {bulan_jatuh_tempo}\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik link berikut untuk melakukan pembayaran:\n\n🔗 https://ptmsn.co.id/portal/login\n\n🔍 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.",
+                'is_default'         => 1,
+                'updated_at'         => now(),
+            ];
+
             if (!$hasTagihanBulanan) {
-                DB::table('tb_broadcast_wa_template')->insert([
-                    'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
-                    'meta_template_name' => 'tagihan_bulanan',
-                    'meta_language'      => 'id',
-                    'meta_params_map'    => json_encode(['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran']),
-                    'subjek'             => 'Tagihan Bulanan Internet IMS',
-                    'kategori'           => 'utility',
-                    'pesan'              => "Halo, Bapak/Ibu *{nama}*,\n\nKami menginformasikan tagihan layanan internet IMS Anda periode *{periode}* sebesar *{nominal}* dengan batas jatuh tempo pada *{jatuh_tempo}*.\n\nNomor Internet: *{nomor_internet}*\nPaket: *{paket}*\n\nSilakan lakukan pembayaran melalui link resmi berikut:\n{link_pembayaran}\n\nTerima kasih atas kerja samanya.",
-                    'is_default'         => 1,
-                    'created_at'         => now(),
-                    'updated_at'         => now(),
-                ]);
+                $tagihanData['created_at'] = now();
+                DB::table('tb_broadcast_wa_template')->insert($tagihanData);
+            } else {
+                DB::table('tb_broadcast_wa_template')
+                    ->where('meta_template_name', 'tagihan_bulanan')
+                    ->update($tagihanData);
             }
 
             // Pastikan template resmi work_report ada

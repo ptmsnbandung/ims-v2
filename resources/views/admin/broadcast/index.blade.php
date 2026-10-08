@@ -187,31 +187,15 @@
                     <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
                         Mapping Parameter Otomatis ke Template Meta:
                     </label>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
-                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;1&#125;&#125; &rarr; Nama Pelanggan</div>
-                            <div class="text-[10px] text-slate-500 dark:text-slate-400">diambil dari m_pelanggan</div>
-                        </div>
-                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;2&#125;&#125; &rarr; Periode Tagihan</div>
-                            <div class="text-[10px] text-slate-500 dark:text-slate-400">diambil dari invoice aktif</div>
-                        </div>
-                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;3&#125;&#125; &rarr; Nominal Tagihan</div>
-                            <div class="text-[10px] text-slate-500 dark:text-slate-400">total tagihan layanan</div>
-                        </div>
-                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;4&#125;&#125; &rarr; Tgl Jatuh Tempo</div>
-                            <div class="text-[10px] text-slate-500 dark:text-slate-400">tanggal batas bayar</div>
-                        </div>
-                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;5&#125;&#125; &rarr; ID Internet</div>
-                            <div class="text-[10px] text-slate-500 dark:text-slate-400">nomor internet pelanggan</div>
-                        </div>
-                        <div class="p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">&#123;&#123;6&#125;&#125; &rarr; Link Pembayaran</div>
-                            <div class="text-[10px] text-slate-500 dark:text-slate-400">link payment gateway</div>
-                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
+                        <template x-for="card in currentParamCards" :key="card.num">
+                            <div class="p-2.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                                <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                                    <span x-text="card.num"></span> &rarr; <span x-text="card.label"></span>
+                                </div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400" x-text="card.desc"></div>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -592,6 +576,7 @@ function broadcastApp() {
         selectedTemplateId: "{{ $defaultTemplate->id ?? '' }}",
         currentMetaName: "{{ $defaultTemplate->meta_template_name ?? 'tagihan_bulanan' }}",
         currentMetaLang: "{{ $defaultTemplate->meta_language ?? 'id' }}",
+        currentMetaParamsMap: "{{ addslashes($defaultTemplate->meta_params_map ?? '[]') }}",
         customPesan: `{!! addslashes($defaultTemplate->pesan ?? '') !!}`,
         metodeKirim: "{{ $isMetaConfigured ? 'meta_api' : 'wa_web' }}",
         showSingleModal: false,
@@ -610,6 +595,44 @@ function broadcastApp() {
         bulkSentCount: 0,
         bulkProgressPercent: 0,
         isSendingBulk: false,
+
+        get currentParamCards() {
+            try {
+                let params = JSON.parse(this.currentMetaParamsMap || '[]');
+                if (!Array.isArray(params) || params.length === 0) {
+                    if (this.currentMetaName === 'tagihan_bulanan') {
+                        params = ['periode', 'bulan_jatuh_tempo', 'bulan_suspend'];
+                    } else if (this.currentMetaName === 'work_report') {
+                        params = ['nama', 'nomor_internet', 'alamat', 'paket'];
+                    } else {
+                        params = [];
+                    }
+                }
+                const dictLabels = {
+                    'periode': { label: 'Periode Tagihan', desc: 'Bulan & tahun tagihan (contoh: Oktober 2026)' },
+                    'bulan_jatuh_tempo': { label: 'Bulan Jatuh Tempo', desc: 'Menjadi: 20 Oktober 2026' },
+                    'bulan_suspend': { label: 'Bulan Suspend/Isolir', desc: 'Menjadi: 24 Oktober 2026' },
+                    'nama': { label: 'Nama Pelanggan', desc: 'Diambil dari data pelanggan' },
+                    'nomor_internet': { label: 'Nomor Internet / ID', desc: 'Nomor internet pelanggan' },
+                    'alamat': { label: 'Alamat Pasang', desc: 'Alamat domisili/pemasangan' },
+                    'paket': { label: 'Paket Layanan', desc: 'Nama kategori bandwith' },
+                    'nominal': { label: 'Nominal Tagihan', desc: 'Total tagihan layanan (Rp)' },
+                    'jatuh_tempo': { label: 'Tgl Jatuh Tempo', desc: 'Format tanggal lengkap' },
+                    'link_pembayaran': { label: 'Link Pembayaran', desc: 'Portal login / link snap' }
+                };
+                return params.map((p, idx) => {
+                    const cleanP = String(p).replace(/[{}]/g, '').trim();
+                    const meta = dictLabels[cleanP] || { label: cleanP, desc: 'Parameter {{' + (idx + 1) + '}}' };
+                    return {
+                        num: `{{${idx + 1}}}`,
+                        label: meta.label,
+                        desc: meta.desc
+                    };
+                });
+            } catch (e) {
+                return [];
+            }
+        },
 
         init() {
             this.loadSelectedTemplate();
@@ -634,9 +657,11 @@ function broadcastApp() {
                 const rawPesan = opt.getAttribute('data-pesan');
                 const metaName = opt.getAttribute('data-meta-name');
                 const metaLang = opt.getAttribute('data-meta-lang');
+                const metaParams = opt.getAttribute('data-meta-params');
                 if (rawPesan) this.customPesan = rawPesan;
                 if (metaName) this.currentMetaName = metaName;
                 if (metaLang) this.currentMetaLang = metaLang;
+                if (metaParams) this.currentMetaParamsMap = metaParams;
             }
         },
 

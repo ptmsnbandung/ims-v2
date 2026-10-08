@@ -101,22 +101,41 @@ class BroadcastController extends Controller
                         $table->string('meta_language', 20)->default('id')->after('meta_template_name');
                         $table->text('meta_params_map')->nullable()->after('meta_language');
                     });
+                }
 
-                    // Set default meta names for known templates
-                    DB::table('tb_broadcast_wa_template')->where('id', 1)->update([
-                        'meta_template_name' => 'pengingat_jatuh_tempo_v1',
-                        'meta_language'      => 'id',
-                        'meta_params_map'    => json_encode(['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran']),
-                    ]);
-                    DB::table('tb_broadcast_wa_template')->where('id', 2)->update([
-                        'meta_template_name' => 'pengumuman_maintenance',
-                        'meta_language'      => 'id',
-                        'meta_params_map'    => json_encode(['nama', 'alamat', 'jatuh_tempo']),
-                    ]);
-                    DB::table('tb_broadcast_wa_template')->where('id', 3)->update([
-                        'meta_template_name' => 'peringatan_isolir_layanan',
-                        'meta_language'      => 'id',
-                        'meta_params_map'    => json_encode(['nama', 'nomor_internet', 'periode', 'nominal', 'jatuh_tempo', 'link_pembayaran']),
+                // Daftarkan template resmi tagihan_bulanan jika belum ada
+                $hasTagihanBulanan = DB::table('tb_broadcast_wa_template')
+                    ->where('meta_template_name', 'tagihan_bulanan')
+                    ->exists();
+
+                if (!$hasTagihanBulanan) {
+                    DB::table('tb_broadcast_wa_template')->where('is_default', 1)->update(['is_default' => 0]);
+
+                    DB::table('tb_broadcast_wa_template')->insert([
+                        [
+                            'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
+                            'meta_template_name' => 'tagihan_bulanan',
+                            'meta_language'      => 'id',
+                            'meta_params_map'    => json_encode(['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran']),
+                            'subjek'             => 'Tagihan Bulanan Internet IMS',
+                            'kategori'           => 'jatuh_tempo',
+                            'pesan'              => "Halo, Bapak/Ibu *{nama}*,\n\nKami menginformasikan tagihan layanan internet IMS Anda periode *{periode}* sebesar *{nominal}* dengan batas jatuh tempo pada *{jatuh_tempo}*.\n\nNomor Internet: *{nomor_internet}*\nPaket: *{paket}*\n\nSilakan lakukan pembayaran melalui link resmi berikut:\n{link_pembayaran}\n\nTerima kasih atas kerja samanya.",
+                            'is_default'         => 1,
+                            'created_at'         => now(),
+                            'updated_at'         => now(),
+                        ],
+                        [
+                            'nama_template'      => 'Work Report / Assignment (Meta)',
+                            'meta_template_name' => 'work_report',
+                            'meta_language'      => 'en',
+                            'meta_params_map'    => json_encode(['nama', 'nomor_internet', 'alamat', 'paket']),
+                            'subjek'             => 'Work Report Assignment',
+                            'kategori'           => 'utility',
+                            'pesan'              => "🛠 ASSIGNMENT WORK REPORT\n\nCustomer: *{nama}*\nID: *{nomor_internet}*\nAddress: *{alamat}*\nPackage: *{paket}*\n\nPlease process immediately.",
+                            'is_default'         => 0,
+                            'created_at'         => now(),
+                            'updated_at'         => now(),
+                        ],
                     ]);
                 }
             }

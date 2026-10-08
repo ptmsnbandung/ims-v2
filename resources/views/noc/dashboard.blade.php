@@ -401,31 +401,31 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                <th class="py-3.5 px-4">No Internet / Nama</th>
-                                <th class="py-3.5 px-4">Paket & Bandwidth</th>
-                                <th class="py-3.5 px-4">Alamat Pemasangan</th>
-                                <th class="py-3.5 px-4">Status</th>
-                                <th class="py-3.5 px-4 text-center">Aksi NOC</th>
+                                <th class="py-3 px-3">No Internet / Nama</th>
+                                <th class="py-3 px-3">Paket & Bandwidth</th>
+                                <th class="py-3 px-3">Alamat Pemasangan</th>
+                                <th class="py-3 px-3 text-center">Status</th>
+                                <th class="py-3 px-3 text-center">Aksi NOC</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
                             @forelse($recentAktivasi as $item)
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                    <td class="py-3.5 px-4">
+                                    <td class="py-3 px-3">
                                         <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
                                            class="font-bold text-blue-600 dark:text-blue-400 font-mono hover:underline">
                                             {{ $item->nomor_internet }}
                                         </a>
-                                        <div class="font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5">{{ $item->nama_pelanggan }}</div>
+                                        <div class="font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5 text-[11px]">{{ $item->nama_pelanggan }}</div>
                                     </td>
-                                    <td class="py-3.5 px-4">
-                                        <div class="font-medium text-slate-700 dark:text-slate-300">{{ $item->nama_kategori_bandwith ?: ($item->alias_nama_kategori ?: 'INTERNET') }}</div>
+                                    <td class="py-3 px-3 whitespace-nowrap">
+                                        <div class="font-medium text-slate-700 dark:text-slate-300 text-[11px]">{{ $item->nama_kategori_bandwith ?: ($item->alias_nama_kategori ?: 'INTERNET') }}</div>
                                         <div class="text-[11px] text-blue-600 dark:text-blue-400 font-bold font-mono">{{ $item->nominal_bandwith ?: '10' }} Mbps</div>
                                     </td>
-                                    <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400 truncate max-w-[200px]">
+                                    <td class="py-3 px-3 text-slate-600 dark:text-slate-400 truncate max-w-[130px] xl:max-w-[170px]" title="{{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}">
                                         {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
                                     </td>
-                                    <td class="py-3.5 px-4">
+                                    <td class="py-3 px-3 text-center whitespace-nowrap">
                                         @if(in_array($item->status_reg, ['19', '19.1']))
                                             <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30">
                                                 TERJADWAL (#19)
@@ -440,7 +440,7 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="py-3.5 px-4 text-center">
+                                    <td class="py-3 px-3 text-center whitespace-nowrap">
                                         @if(in_array($item->status_reg, ['18', '18.1']))
                                             <div class="flex items-center justify-center">
                                                 <button type="button" 
@@ -562,7 +562,6 @@
                         </div>
                     @endforelse
                 </div>
-            </div>
             </div>
         </div>
 
@@ -1289,4 +1288,5 @@
         </div>
     </div>
 
+</div>
 @endsection

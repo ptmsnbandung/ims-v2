@@ -15,27 +15,27 @@
         this.modalNomorInternet = nomor;
         this.scheduleModalOpen = true;
     }
-}" class="space-y-5">
+}" class="space-y-3.5">
 
     <!-- Breadcrumbs -->
-    <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+    <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
         <span>IMS</span>
         <span>&gt;</span>
         <span class="text-blue-500 font-semibold">Terminasi</span>
     </div>
 
     <!-- =================================================================== -->
-    <!-- 1. TOP FILTER BAR (EXACT MATCHING SCREENSHOT)                       -->
+    <!-- 1. TOP FILTER BAR (COMPACT DENSITY)                                 -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/10">
-        <form method="GET" action="{{ route('teknik.permintaan.terminasi') }}" class="space-y-3">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-xl p-3 sm:p-3.5 shadow-xs">
+        <form method="GET" action="{{ route('teknik.permintaan.terminasi') }}" class="space-y-2">
             
             <!-- Row 1: Layanan, Search, Wilayah, Status, Action Buttons -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-2.5 items-center">
                 
                 <!-- 1. Dropdown Semua Layanan -->
                 <div class="lg:col-span-3">
-                    <select name="layanan" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="layanan" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="">SEMUA LAYANAN</option>
                         @if(isset($layananList))
                             @foreach($layananList as $lay)
@@ -51,7 +51,7 @@
                            name="search" 
                            value="{{ $search }}"
                            placeholder="NAMA / NOMOR LAYANAN" 
-                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
 
                 <!-- 3. Dropdown / Input Semua Wilayah -->
@@ -60,12 +60,12 @@
                            name="wilayah" 
                            value="{{ request('wilayah') }}"
                            placeholder="SEMUA WILAYAH" 
-                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
 
                 <!-- 4. Dropdown Semua Status -->
                 <div class="lg:col-span-2">
-                    <select name="status" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="status" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="">SEMUA STATUS</option>
                         <option value="11" {{ request('status') === '11' ? 'selected' : '' }}>(KD11) Req. Terminasi</option>
                         <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>(KD12) Collecting</option>
@@ -79,9 +79,9 @@
                 </div>
 
                 <!-- 5. Action Buttons (Reset & Cari) -->
-                <div class="lg:col-span-2 flex items-center gap-2">
+                <div class="lg:col-span-2 flex items-center gap-1.5">
                     <a href="{{ route('teknik.permintaan.terminasi') }}" 
-                       class="flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition cursor-pointer"
+                       class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition cursor-pointer"
                        title="Reset Filter">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -90,7 +90,7 @@
                     </a>
 
                     <button type="submit" 
-                            class="flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold shadow-md shadow-amber-500/20 transition cursor-pointer"
+                            class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold shadow-xs transition cursor-pointer"
                             title="Filter / Cari">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -102,9 +102,9 @@
             </div>
 
             <!-- Row 2: Bulan & Tahun Filter -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center pt-1 border-t border-slate-100 dark:border-slate-800/60">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-2.5 items-center pt-1 border-t border-slate-100 dark:border-slate-800/60">
                 <div class="lg:col-span-3">
-                    <select name="bulan" class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="bulan" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="">SEMUA BULAN TERMINASI</option>
                         @for($m = 1; $m <= 12; $m++)
                             <option value="{{ $m }}" {{ request('bulan') == $m ? 'selected' : '' }}>
@@ -115,7 +115,7 @@
                 </div>
 
                 <div class="lg:col-span-3">
-                    <select name="tahun" class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="tahun" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
                         <option value="">SEMUA TAHUN</option>
                         @for($y = date('Y'); $y >= 2020; $y--)
                             <option value="{{ $y }}" {{ request('tahun') == $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -128,72 +128,72 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 2. STATUS PILL 8 KPI BANNERS GRID (2 ROWS X 4 COLS)                 -->
+    <!-- 2. STATUS PILL 8 KPI BANNERS GRID (COMPACT DENSITY)                 -->
     <!-- =================================================================== -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
         
         <!-- Row 1: KD11, KD12, KD12.1, KD13 -->
         <a href="{{ route('teknik.permintaan.terminasi', ['status' => '11']) }}" 
-           class="p-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition flex items-center justify-between cursor-pointer group">
-            <span class="tracking-wide text-[11px]">(KD11) Req. Terminasi : {{ $count11 ?? 0 }} User</span>
-            <svg class="w-3.5 h-3.5 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+           class="px-2.5 py-2 rounded-lg bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-xs transition flex items-center justify-between cursor-pointer group">
+            <span class="tracking-wide text-[10.5px]">(KD11) Req. Terminasi : {{ $count11 ?? 0 }} User</span>
+            <svg class="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
         </a>
 
         <a href="{{ route('teknik.permintaan.terminasi', ['status' => '12']) }}" 
-           class="p-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition flex items-center justify-between cursor-pointer group">
-            <span class="tracking-wide text-[11px]">(KD12) Collecting : {{ $count12 ?? 0 }} User</span>
-            <svg class="w-3.5 h-3.5 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+           class="px-2.5 py-2 rounded-lg bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-xs transition flex items-center justify-between cursor-pointer group">
+            <span class="tracking-wide text-[10.5px]">(KD12) Collecting : {{ $count12 ?? 0 }} User</span>
+            <svg class="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
         </a>
 
         <a href="{{ route('teknik.permintaan.terminasi', ['status' => '12.1']) }}" 
-           class="p-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-md shadow-rose-500/20 transition flex items-center justify-between cursor-pointer group">
-            <span class="tracking-wide text-[11px]">(KD12.1) Reschedule Collecting : {{ $count12_1 ?? 0 }} User</span>
-            <svg class="w-3.5 h-3.5 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+           class="px-2.5 py-2 rounded-lg bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-xs shadow-xs transition flex items-center justify-between cursor-pointer group">
+            <span class="tracking-wide text-[10.5px]">(KD12.1) Reschedule Collecting : {{ $count12_1 ?? 0 }} User</span>
+            <svg class="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
         </a>
 
         <a href="{{ route('teknik.permintaan.terminasi', ['status' => '13']) }}" 
-           class="p-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-bold text-xs shadow-md shadow-amber-500/20 transition flex items-center justify-between cursor-pointer group">
-            <span class="tracking-wide text-[11px]">(KD13) Collect Perangkat Done : {{ $count13 ?? 0 }} User</span>
-            <svg class="w-3.5 h-3.5 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+           class="px-2.5 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-bold text-xs shadow-xs transition flex items-center justify-between cursor-pointer group">
+            <span class="tracking-wide text-[10.5px]">(KD13) Collect Perangkat Done : {{ $count13 ?? 0 }} User</span>
+            <svg class="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
         </a>
 
         <!-- Row 2: KD14, KD15, KD16, KD17 -->
         <a href="{{ route('teknik.permintaan.terminasi', ['status' => '14']) }}" 
-           class="p-3 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition flex items-center justify-between cursor-pointer group">
-            <span class="tracking-wide text-[11px]">(KD14) Terminasi : {{ $count14 ?? 0 }} User</span>
-            <svg class="w-3.5 h-3.5 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+           class="px-2.5 py-2 rounded-lg bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs shadow-xs transition flex items-center justify-between cursor-pointer group">
+            <span class="tracking-wide text-[10.5px]">(KD14) Terminasi : {{ $count14 ?? 0 }} User</span>
+            <svg class="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
         </a>
 
         <a href="{{ route('teknik.permintaan.terminasi', ['status' => '15']) }}" 
-           class="p-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-bold text-xs shadow-md shadow-amber-500/20 transition flex items-center justify-between cursor-pointer group">
-            <span class="tracking-wide text-[11px]">(KD15) Pending Terminasi : {{ $count15 ?? 0 }} User</span>
-            <svg class="w-3.5 h-3.5 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+           class="px-2.5 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-bold text-xs shadow-xs transition flex items-center justify-between cursor-pointer group">
+            <span class="tracking-wide text-[10.5px]">(KD15) Pending Terminasi : {{ $count15 ?? 0 }} User</span>
+            <svg class="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
         </a>
 
         <a href="{{ route('teknik.permintaan.terminasi', ['status' => '16']) }}" 
-           class="p-3 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-500 hover:to-cyan-600 text-white font-bold text-xs shadow-md shadow-teal-500/20 transition flex items-center justify-between cursor-pointer group">
-            <span class="tracking-wide text-[11px]">(KD16) Cancel Terminasi : {{ $count16 ?? 0 }} User</span>
-            <svg class="w-3.5 h-3.5 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+           class="px-2.5 py-2 rounded-lg bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-500 hover:to-cyan-600 text-white font-bold text-xs shadow-xs transition flex items-center justify-between cursor-pointer group">
+            <span class="tracking-wide text-[10.5px]">(KD16) Cancel Terminasi : {{ $count16 ?? 0 }} User</span>
+            <svg class="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
         </a>
 
         <a href="{{ route('teknik.permintaan.terminasi', ['status' => '17']) }}" 
-           class="p-3 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-bold text-xs shadow-md shadow-amber-500/20 transition flex items-center justify-between cursor-pointer group">
-            <span class="tracking-wide text-[11px]">(KD17) Req. Cancel Terminasi : {{ $count17 ?? 0 }} User</span>
-            <svg class="w-3.5 h-3.5 opacity-70 group-hover:translate-x-1 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+           class="px-2.5 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-slate-900 font-bold text-xs shadow-xs transition flex items-center justify-between cursor-pointer group">
+            <span class="tracking-wide text-[10.5px]">(KD17) Req. Cancel Terminasi : {{ $count17 ?? 0 }} User</span>
+            <svg class="w-3 h-3 opacity-70 group-hover:translate-x-0.5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
         </a>
@@ -203,9 +203,9 @@
     <!-- =================================================================== -->
     <!-- 3. TABLE OF TERMINATED CUSTOMERS WITH SCHEDULE / CANCEL ACTIONS     -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl shadow-xl shadow-black/10 overflow-hidden">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-xl shadow-xs overflow-hidden">
         
-        <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <div class="px-3.5 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <div>
                 show <span class="font-bold text-slate-800 dark:text-slate-200">10</span> entries
             </div>
@@ -217,12 +217,12 @@
         <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                        <th class="py-3.5 px-4 min-w-[200px]">Customer</th>
-                        <th class="py-3.5 px-4 min-w-[280px]">Info</th>
-                        <th class="py-3.5 px-4 min-w-[170px]">Detail</th>
-                        <th class="py-3.5 px-4 min-w-[150px]">State</th>
-                        <th class="py-3.5 px-4 text-center min-w-[140px]">Action</th>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[10.5px] font-bold text-slate-700 dark:text-slate-300">
+                        <th class="py-2.5 px-3 min-w-[190px]">Customer</th>
+                        <th class="py-2.5 px-3 min-w-[270px]">Info</th>
+                        <th class="py-2.5 px-3 min-w-[160px]">Detail</th>
+                        <th class="py-2.5 px-3 min-w-[140px]">State</th>
+                        <th class="py-2.5 px-3 text-center min-w-[130px]">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
@@ -230,75 +230,75 @@
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                             
                             <!-- 1. Customer Column -->
-                            <td class="py-4 px-4 align-top">
-                                <div class="font-mono text-[10px] text-slate-400 font-semibold">
+                            <td class="py-2.5 px-3 align-top">
+                                <div class="font-mono text-[9.5px] text-slate-400 font-semibold leading-tight">
                                     {{ $item->kode_trx_terminasi }}
                                 </div>
 
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                   class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline tracking-wide text-xs inline-block mt-0.5"
+                                   class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline tracking-wide text-xs inline-block"
                                    title="Buka Profile Pelanggan">
                                     {{ $item->nomor_internet }}
                                 </a>
 
-                                <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-xs mt-0.5">
+                                <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-xs leading-tight">
                                     <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 font-normal">
-                                        ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
+                                        ({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})
                                     </span>
                                 </div>
 
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase mt-0.5">
+                                <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium uppercase leading-tight mt-0.5">
                                     {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }}
                                     @if($item->nominal_bandwith)
                                         <span>{{ $item->nominal_bandwith }} Mbps</span>
                                     @endif
                                 </div>
 
-                                <div class="font-mono text-[10px] text-slate-400 mt-1">
+                                <div class="font-mono text-[9.5px] text-slate-400 mt-0.5">
                                     {{ $item->date_create ? \Carbon\Carbon::parse($item->date_create)->format('Y-m-d H:i:s') : '-' }}
                                 </div>
                             </td>
 
                             <!-- 2. Info Column (Building, Address, Contact) -->
-                            <td class="py-4 px-4 align-top text-xs space-y-1">
-                                <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-[11px]">
+                            <td class="py-2.5 px-3 align-top text-xs space-y-0.5">
+                                <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-[10.5px] leading-tight">
                                     {{ $item->jenis_bangunan ?: 'RUMAH-PRIBADI' }}
                                 </div>
-                                <div class="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
+                                <div class="text-slate-600 dark:text-slate-400 text-[10.5px] leading-snug">
                                     {{ $item->alamat_p ?: '-' }}
                                 </div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400 pt-0.5">
-                                    <span>HP : <strong class="text-slate-700 dark:text-slate-300 font-mono">{{ $item->nomor_hp ?: '-' }}</strong></span>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
+                                    <span>HP: <strong class="text-slate-700 dark:text-slate-300 font-mono">{{ $item->nomor_hp ?: '-' }}</strong></span>
                                     @if($item->email)
-                                        <span class="block text-[10px] text-slate-400 truncate max-w-[240px]">Email : {{ $item->email }}</span>
+                                        <span class="block text-[9.5px] text-slate-400 truncate max-w-[240px]">Email: {{ $item->email }}</span>
                                     @endif
                                 </div>
                             </td>
 
                             <!-- 3. Detail Column (Collect Perangkat & Pending Tagihan Badges) -->
-                            <td class="py-4 px-4 align-top text-[11px] space-y-1.5 font-medium">
+                            <td class="py-2.5 px-3 align-top text-[10.5px] space-y-1 font-medium">
                                 <div class="flex items-center justify-between gap-1">
-                                    <span class="text-slate-600 dark:text-slate-400">Collect Perangkat :</span>
+                                    <span class="text-slate-600 dark:text-slate-400">Collect Perangkat:</span>
                                     @if($item->collect_perangkat == 1)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Done &#10004;</span>
+                                        <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Done &#10004;</span>
                                     @else
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">Undone &#128274;</span>
+                                        <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">Undone &#128274;</span>
                                     @endif
                                 </div>
                                 <div class="flex items-center justify-between gap-1">
-                                    <span class="text-slate-600 dark:text-slate-400">Pending Tagihan :</span>
+                                    <span class="text-slate-600 dark:text-slate-400">Pending Tagihan:</span>
                                     @if($item->collect_payment == 1)
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Done &#10004;</span>
+                                        <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Done &#10004;</span>
                                     @else
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">Undone &#128274;</span>
+                                        <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">Undone &#128274;</span>
                                     @endif
                                 </div>
                             </td>
 
                             <!-- 4. State Column -->
-                            <td class="py-4 px-4 align-top">
-                                <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold font-mono tracking-wide
+                            <td class="py-2.5 px-3 align-top">
+                                <span class="inline-block px-2 py-0.5 rounded-md text-[9.5px] font-bold font-mono tracking-wide
                                     @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
                                         bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
                                     @elseif(in_array($item->status_terminasi, ['13', '15', '17']))
@@ -310,23 +310,23 @@
                                     @endif">
                                     (KD{{ $item->status_terminasi }}) {{ $item->desc_terminasi ?: 'Req. Terminasi' }}
                                 </span>
-                                <div class="font-mono text-[10px] text-slate-400 mt-1.5">
+                                <div class="font-mono text-[9.5px] text-slate-400 mt-1">
                                     {{ $item->date_create ? \Carbon\Carbon::parse($item->date_create)->format('Y-m-d H:i:s') : '-' }}
                                 </div>
                             </td>
 
                             <!-- 5. Action Column (Schedule Collect & Cancel Buttons) -->
-                            <td class="py-4 px-4 align-top text-center">
+                            <td class="py-2.5 px-3 align-top text-center">
                                 @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
                                     @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
-                                        <div class="flex flex-col items-center justify-center gap-1.5">
+                                        <div class="flex flex-col items-center justify-center gap-1">
                                             
                                             <!-- Schedule Collect Button (Opens Schedule Collect Modal) -->
                                         <button type="button" 
                                                 @click="modalKodeTrx = '{{ $item->kode_trx_terminasi }}'; modalNamaPelanggan = {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}; modalNomorInternet = '{{ $item->nomor_internet }}'; scheduleModalOpen = true;"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white dark:hover:text-white text-[11px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white dark:hover:text-white text-[10px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
                                                 title="Jadwalkan Penarikan Perangkat">
-                                            <svg class="w-3.5 h-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                             </svg>
                                             <span>Schedule Collect</span>
@@ -336,9 +336,9 @@
                                         <form action="{{ route('noc.terminasi.cancel', $item->kode_trx_terminasi) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan terminasi {{ $item->nomor_internet }}?');">
                                             @csrf
                                             <button type="submit" 
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[11px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+                                                    class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[10px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
                                                     title="Batalkan Permintaan Terminasi">
-                                                <svg class="w-3.5 h-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <svg class="w-3 h-3 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                                 </svg>
                                                 <span>Cancel</span>
@@ -347,14 +347,14 @@
 
                                     </div>
                                 @elseif($item->status_terminasi == '14')
-                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
-                                        <svg class="w-3.5 h-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                                        <svg class="w-3 h-3 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                         </svg>
                                         <span>Terminasi Selesai</span>
                                     </div>
                                 @elseif($item->status_terminasi == '16')
-                                    <div class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 text-[11px] font-medium">
+                                    <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 text-[10px] font-medium">
                                         <span>Dibatalkan</span>
                                     </div>
                                 @else
@@ -362,8 +362,8 @@
                                 @endif
                                 @else
                                     <!-- Role Teknik: Read-only mode -->
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-[11px] font-medium border border-slate-200 dark:border-slate-700/60">
-                                        <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-[10px] font-medium border border-slate-200 dark:border-slate-700/60">
+                                        <svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                         </svg>
@@ -375,7 +375,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-10 text-center text-slate-400 text-xs">
+                            <td colspan="5" class="py-8 text-center text-slate-400 text-xs">
                                 Tidak ada data permintaan terminasi yang cocok dengan kriteria filter.
                             </td>
                         </tr>
@@ -385,23 +385,23 @@
         </div>
 
         <!-- Mobile Card List View -->
-        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3.5 divide-y divide-slate-100 dark:divide-slate-800/80">
+        <div class="ims-mobile-only block md:hidden p-2.5 sm:p-3 space-y-2.5 divide-y divide-slate-100 dark:divide-slate-800/80">
             @forelse($terminasis as $item)
-                <div class="pt-3.5 first:pt-0 space-y-3">
+                <div class="pt-2.5 first:pt-0 space-y-2">
                     <!-- Top Info: Kode & Status -->
                     <div class="flex items-start justify-between gap-2">
                         <div>
-                            <span class="font-mono text-[10px] text-slate-400 font-semibold block">{{ $item->kode_trx_terminasi }}</span>
+                            <span class="font-mono text-[9.5px] text-slate-400 font-semibold block">{{ $item->kode_trx_terminasi }}</span>
                             <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                               class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-sm inline-block">
+                               class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-xs inline-block">
                                 {{ $item->nomor_internet }}
                             </a>
-                            <div class="font-bold text-slate-800 dark:text-slate-100 uppercase text-xs mt-0.5">
+                            <div class="font-bold text-slate-800 dark:text-slate-100 uppercase text-xs">
                                 {{ $item->nama_pelanggan }} 
                                 <span class="text-slate-500 font-normal">({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})</span>
                             </div>
                         </div>
-                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide shrink-0
+                        <span class="inline-block px-1.5 py-0.5 rounded-md text-[9.5px] font-bold font-mono tracking-wide shrink-0
                             @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
                                 bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
                             @elseif(in_array($item->status_terminasi, ['13', '15', '17']))
@@ -416,33 +416,33 @@
                     </div>
 
                     <!-- Meta Details -->
-                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/70 dark:border-slate-800/60 text-xs space-y-1.5">
-                        <div class="flex items-center justify-between text-[11px]">
+                    <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/40 border border-slate-200/70 dark:border-slate-800/60 text-xs space-y-1">
+                        <div class="flex items-center justify-between text-[10.5px]">
                             <span class="text-slate-500">Bandwidth:</span>
                             <span class="font-semibold text-slate-700 dark:text-slate-300">
                                 {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }} {{ $item->nominal_bandwith ? $item->nominal_bandwith . ' Mbps' : '' }}
                             </span>
                         </div>
-                        <div class="flex items-center justify-between text-[11px]">
+                        <div class="flex items-center justify-between text-[10.5px]">
                             <span class="text-slate-500">Collect Perangkat:</span>
                             @if($item->collect_perangkat == 1)
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Done &#10004;</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Done &#10004;</span>
                             @else
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400">Undone &#128274;</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400">Undone &#128274;</span>
                             @endif
                         </div>
-                        <div class="flex items-center justify-between text-[11px]">
+                        <div class="flex items-center justify-between text-[10.5px]">
                             <span class="text-slate-500">Pending Tagihan:</span>
                             @if($item->collect_payment == 1)
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Done &#10004;</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Done &#10004;</span>
                             @else
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400">Undone &#128274;</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400">Undone &#128274;</span>
                             @endif
                         </div>
-                        <div class="pt-1 border-t border-slate-200/50 dark:border-slate-800/50 text-[11px]">
+                        <div class="pt-1 border-t border-slate-200/50 dark:border-slate-800/50 text-[10.5px]">
                             <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ $item->alamat_p ?: '-' }}</p>
                             @if($item->nomor_hp)
-                                <div class="mt-1 flex items-center gap-2">
+                                <div class="mt-0.5 flex items-center gap-1.5">
                                     <span class="text-slate-500">HP:</span>
                                     <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $item->nomor_hp) }}" target="_blank" class="font-mono text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
                                         {{ $item->nomor_hp }}
@@ -453,13 +453,13 @@
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex items-center gap-2 pt-1">
+                    <div class="flex items-center gap-1.5 pt-0.5">
                         @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
                             @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
                                 <button type="button" 
                                         @click="modalKodeTrx = '{{ $item->kode_trx_terminasi }}'; modalNamaPelanggan = {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}; modalNomorInternet = '{{ $item->nomor_internet }}'; scheduleModalOpen = true;"
-                                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition active:scale-98">
-                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        class="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition active:scale-98">
+                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                     </svg>
                                     <span>Schedule Collect</span>
@@ -467,13 +467,13 @@
                                 <form action="{{ route('noc.terminasi.cancel', $item->kode_trx_terminasi) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan terminasi {{ $item->nomor_internet }}?');">
                                     @csrf
                                     <button type="submit" 
-                                            class="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-semibold transition active:scale-98">
+                                            class="py-1.5 px-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-semibold transition active:scale-98">
                                         Cancel
                                     </button>
                                 </form>
                             @elseif($item->status_terminasi == '14')
                                 <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
                                     Terminasi Selesai
                                 </span>
                             @else
@@ -481,14 +481,14 @@
                             @endif
                         @else
                             <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                               class="flex-1 text-center py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold transition">
+                               class="flex-1 text-center py-1.5 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold transition">
                                 Lihat Detail Profile &rarr;
                             </a>
                         @endif
                     </div>
                 </div>
             @empty
-                <div class="py-8 text-center text-slate-400 text-xs">
+                <div class="py-6 text-center text-slate-400 text-xs">
                     Tidak ada data permintaan terminasi.
                 </div>
             @endforelse

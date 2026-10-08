@@ -24,9 +24,6 @@
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        html {
-            font-size: 13.5px;
-        }
         [x-cloak] { display: none !important; }
 
         /* Responsive helpers for Desktop Table vs Mobile Cards */

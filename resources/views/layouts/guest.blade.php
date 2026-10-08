@@ -25,9 +25,6 @@
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        html {
-            font-size: 13.5px;
-        }
         [x-cloak] { display: none !important; }
         @keyframes pulseGlow {
             0%, 100% { opacity: 0.35; transform: scale(1); }

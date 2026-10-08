@@ -83,6 +83,29 @@ class MikrotikService
         return $this;
     }
 
+    public function getHost(): string
+    {
+        return $this->host ?? '';
+    }
+
+    /**
+     * Cek apakah user PPPoE terdaftar di router ini (/ppp/secret)
+     */
+    public function userExists(string $username): bool
+    {
+        try {
+            $client = $this->getClient();
+            $secrets = $client->comm('/ppp/secret/print', [
+                '?name' => $username,
+            ]);
+            $client->disconnect();
+
+            return !empty($secrets) && isset($secrets[0]['.id']);
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+
     /**
      * Dapatkan koneksi client yang sudah terautentikasi (RouterosAPI atau MikrotikTelnetClient)
      */

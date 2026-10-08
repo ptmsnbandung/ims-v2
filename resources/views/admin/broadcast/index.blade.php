@@ -622,9 +622,10 @@ function broadcastApp() {
                 };
                 return params.map((p, idx) => {
                     const cleanP = String(p).replace(/[{}]/g, '').trim();
-                    const meta = dictLabels[cleanP] || { label: cleanP, desc: 'Parameter {{' + (idx + 1) + '}}' };
+                    const paramNum = '{' + '{' + (idx + 1) + '}' + '}';
+                    const meta = dictLabels[cleanP] || { label: cleanP, desc: 'Parameter ' + paramNum };
                     return {
-                        num: `{{${idx + 1}}}`,
+                        num: paramNum,
                         label: meta.label,
                         desc: meta.desc
                     };

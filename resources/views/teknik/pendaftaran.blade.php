@@ -4,29 +4,29 @@
 @section('page_title', 'Pendaftaran')
 
 @section('content')
-<div class="space-y-6"
+<div class="space-y-3.5"
      x-data="pendaftaranWorkflowComponent()">
     
     <!-- Top Header: Breadcrumbs & Registrasi Baru Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
         <!-- Breadcrumb Navigation -->
         <div>
-            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
                 <a href="{{ route('dashboard') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">IMS</a>
-                <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <svg class="w-3 h-3 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
                 <span class="text-slate-800 dark:text-slate-200 font-semibold">Pendaftaran Pelanggan</span>
             </div>
-            <h2 class="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Antrean Pendaftaran Baru</h2>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">Antrean Pendaftaran Baru</h2>
         </div>
 
         <!-- Button + Registrasi Baru (Buka Modal Form) -->
         <div>
             <button type="button" 
                     @click="openNewModal()"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition duration-150 transform hover:-translate-y-0.5 cursor-pointer">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition duration-150 transform hover:-translate-y-0.5 cursor-pointer">
+                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
                 </svg>
                 <span>Registrasi Baru</span>
@@ -36,41 +36,41 @@
 
     {{-- Banner Notifikasi Registrasi Baru dengan Tombol Cetak Form Berlangganan Langsung --}}
     @if(session('nomor_internet_baru'))
-        <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-center gap-3.5">
-                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-300 shrink-0">
-                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <div class="p-3 sm:p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-300 shrink-0">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                     </svg>
                 </div>
                 <div>
-                    <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>Registrasi Baru Berhasil Disimpan!</span>
-                        <span class="px-2 py-0.5 rounded text-[11px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-mono font-bold">No. Internet: {{ session('nomor_internet_baru') }}</span>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 font-mono font-bold">No: {{ session('nomor_internet_baru') }}</span>
                     </h4>
-                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
                         Dokumen Form Berlangganan untuk <strong class="text-slate-900 dark:text-white">{{ session('nama_pelanggan_baru') }}</strong> telah terbuat secara otomatis dan siap dicetak.
                     </p>
                 </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0 flex-wrap">
+            <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                 <a href="{{ route('teknik.dokumen.langganan', session('nomor_internet_baru')) }}?download=pdf" target="_blank" 
-                   class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                     </svg>
                     <span>Unduh PDF</span>
                 </a>
                 <a href="{{ route('teknik.dokumen.langganan', session('nomor_internet_baru')) }}?download=word" target="_blank" 
-                   class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                     </svg>
-                    <span>Unduh Word (.doc)</span>
+                    <span>Unduh Word</span>
                 </a>
                 <a href="{{ route('teknik.dokumen.langganan', session('nomor_internet_baru')) }}" target="_blank" 
-                   class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                   class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
                     </svg>
                     <span>Cetak Form</span>
@@ -80,16 +80,16 @@
     @endif
 
     <!-- Filter Card Container -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
         <form method="GET" action="{{ route('teknik.pendaftaran') }}" id="filterForm">
             <!-- 5 Kolom Filter Responsif -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
                 
                 <!-- 1. Dropdown Semua Layanan -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Layanan</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Layanan</label>
                     <select name="layanan" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
                         <option value="">SEMUA LAYANAN</option>
                         @foreach($layananList as $layanan)
                             <option value="{{ $layanan->kode_kategori_bandwith }}" {{ ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith ? 'selected' : '' }}>
@@ -101,9 +101,9 @@
 
                 <!-- 2. Input Nama -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Nama</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Nama</label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                             </svg>
@@ -112,15 +112,15 @@
                                name="nama" 
                                value="{{ $filters['nama'] ?? '' }}" 
                                placeholder="Cari Nama..." 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xs">
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xs">
                     </div>
                 </div>
 
                 <!-- 3. Input Alamat -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Alamat</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Alamat</label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
@@ -130,15 +130,15 @@
                                name="alamat" 
                                value="{{ $filters['alamat'] ?? '' }}" 
                                placeholder="Cari Alamat..." 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xs">
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-xs">
                     </div>
                 </div>
 
                 <!-- 4. Dropdown Semua Status -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
                     <select name="status" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
                         <option value="">SEMUA STATUS (PENDAFTARAN)</option>
                         @foreach($statusList as $status)
                             <option value="{{ $status->status_reg }}" {{ ($filters['status'] ?? '') == $status->status_reg ? 'selected' : '' }}>
@@ -150,9 +150,9 @@
 
                 <!-- 5. Dropdown Semua Wilayah -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Wilayah</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Wilayah</label>
                     <select name="wilayah" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
                         <option value="">SEMUA WILAYAH</option>
                         @foreach($wilayahList as $wilayah)
                             <option value="{{ $wilayah->name_w }}" {{ ($filters['wilayah'] ?? '') == $wilayah->name_w ? 'selected' : '' }}>
@@ -164,13 +164,13 @@
             </div>
 
             <!-- Baris Bawah: Show Entries & Group Tombol Aksi -->
-            <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
                 <!-- Kiri: Show Entries -->
                 <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
                     <span>Show</span>
                     <select name="per_page" 
                             onchange="document.getElementById('filterForm').submit()"
-                            class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer">
+                            class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer">
                         <option value="10" {{ ($filters['per_page'] ?? '10') == '10' ? 'selected' : '' }}>10</option>
                         <option value="25" {{ ($filters['per_page'] ?? '') == '25' ? 'selected' : '' }}>25</option>
                         <option value="50" {{ ($filters['per_page'] ?? '') == '50' ? 'selected' : '' }}>50</option>
@@ -182,7 +182,7 @@
                 <!-- Kanan: Group Tombol Aksi (Reset, Export Excel, Terapkan Filter) -->
                 <div class="flex flex-wrap items-center gap-2">
                     <a href="{{ route('teknik.pendaftaran') }}" 
-                       class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition duration-150"
+                       class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition duration-150"
                        title="Reset seluruh filter pencarian">
                         <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -191,16 +191,16 @@
                     </a>
                     
                     <a href="{{ route('teknik.pendaftaran.export', request()->query()) }}" 
-                       class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition duration-150 shadow-sm shadow-emerald-600/20 cursor-pointer"
+                       class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition duration-150 shadow-xs cursor-pointer"
                        title="Download data pendaftaran baru ke format Excel">
-                        <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                         </svg>
                         <span>Export Excel</span>
                     </a>
 
                     <button type="submit" 
-                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm shadow-blue-600/25 transition duration-150 cursor-pointer">
+                            class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition duration-150 cursor-pointer">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                         </svg>
@@ -212,17 +212,17 @@
     </div>
 
     <!-- Data Table Card Container -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
         <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">Pelanggan</th>
-                        <th class="py-3.5 px-4">Group Layanan</th>
-                        <th class="py-3.5 px-4">Lokasi Pemasangan</th>
-                        <th class="py-3.5 px-4 min-w-[200px]">Status</th>
-                        <th class="py-3.5 px-4 min-w-[170px]">Tanggal SO</th>
-                        <th class="py-3.5 px-4 text-center min-w-[120px]">Aksi</th>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        <th class="py-2.5 px-3">Pelanggan</th>
+                        <th class="py-2.5 px-3">Group Layanan</th>
+                        <th class="py-2.5 px-3">Lokasi Pemasangan</th>
+                        <th class="py-2.5 px-3 min-w-[190px]">Status</th>
+                        <th class="py-2.5 px-3 min-w-[160px]">Tanggal SO</th>
+                        <th class="py-2.5 px-3 text-center min-w-[120px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs text-slate-700 dark:text-slate-300">
@@ -230,19 +230,19 @@
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150">
                             
                             <!-- 1. Pelanggan -->
-                            <td class="py-4 px-4 align-top">
+                            <td class="py-2.5 px-3 align-top">
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
                                    class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline tracking-wide text-xs inline-block"
                                    title="Buka Profile Pelanggan">
                                     {{ $item->nomor_internet }}
                                 </a>
-                                <div class="mt-1 font-bold text-slate-900 dark:text-white uppercase text-xs">
+                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs">
                                     <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 dark:text-slate-400 font-normal">
                                         ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
-                                <div class="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
+                                <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                                     {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }} 
                                     @if($item->nominal_bandwith)
                                         <span class="text-slate-900 dark:text-white font-bold">{{ $item->nominal_bandwith }} Mbps</span>
@@ -251,26 +251,26 @@
                             </td>
 
                             <!-- 2. Group Layanan -->
-                            <td class="py-4 px-4 align-top font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
+                            <td class="py-2.5 px-3 align-top font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
                                 {{ $item->group_layanan ?: 'MEDIANET' }}
                             </td>
 
                             <!-- 3. Lokasi Pemasangan -->
-                            <td class="py-4 px-4 align-top max-w-xs">
-                                <span class="font-bold text-slate-900 dark:text-white uppercase text-[11px] tracking-wide block mb-1">
+                            <td class="py-2.5 px-3 align-top max-w-xs">
+                                <span class="font-bold text-slate-900 dark:text-white uppercase text-[10px] tracking-wide block mb-0.5">
                                     {{ $item->jenis_bangunan ?: 'RUMAH-PRIBADI' }}
                                 </span>
-                                <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed uppercase">
+                                <p class="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed uppercase">
                                     {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
                                 </p>
                             </td>
 
                             <!-- 4. Status & Tombol Billing -->
-                            <td class="py-4 px-4 align-top space-y-2">
+                            <td class="py-2.5 px-3 align-top space-y-1.5">
                                 <div>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border shadow-xs
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold border shadow-xs
                                         @if(in_array($item->status_reg, ['17', '17.1']))
-                                            bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-800
+                                             bg-sky-50 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-800
                                         @elseif($item->status_reg == '18')
                                             @if(!empty($item->aktivasi_note))
                                                 bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800
@@ -304,9 +304,9 @@
                                 <div>
                                     <button type="button" 
                                             @click="openBillingModal('{{ $item->nomor_internet }}')"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition shadow-xs cursor-pointer"
+                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                             title="Lihat Rincian Billing">
-                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
                                         </svg>
                                         <span>Billing</span>
@@ -315,11 +315,11 @@
                             </td>
 
                             <!-- 5. Tanggal SO -->
-                            <td class="py-4 px-4 align-top text-xs space-y-1">
-                                <div class="text-slate-900 dark:text-white font-bold text-[11px]">
+                            <td class="py-2.5 px-3 align-top text-xs space-y-0.5">
+                                <div class="text-slate-900 dark:text-white font-bold text-[10px]">
                                     {{ \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y H:i') }} WIB
                                 </div>
-                                <div class="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-semibold">
+                                <div class="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-semibold">
                                     {{ $item->user_create ?: 'DRAFFTER' }}
                                 </div>
                                 <div class="text-[10px] text-blue-700 dark:text-blue-400 font-mono font-bold">
@@ -328,16 +328,16 @@
                             </td>
 
                             <!-- 6. Aksi Workflow -->
-                            <td class="py-4 px-4 align-top text-xs">
-                                <div class="flex flex-col gap-1.5 min-w-[130px]">
+                            <td class="py-2.5 px-3 align-top text-xs">
+                                <div class="flex flex-col gap-1 min-w-[120px]">
                                     
                                     {{-- Tahap 1: Pendaftaran Baru / Menunggu Verifikasi (#11, #11.1, #12) --}}
                                     @if(in_array($item->status_reg, ['11', '11.1', '12']))
                                         <button type="button" 
                                                 @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition shadow-xs cursor-pointer"
+                                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                 title="Buat Jadwal Survey Lapangan">
-                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                             </svg>
                                             <span>Schedule Survey</span>
@@ -348,26 +348,26 @@
                                     @if(in_array($item->status_reg, ['13', '13.1']))
                                         <button type="button" 
                                                 @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition shadow-xs cursor-pointer"
+                                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                 title="Input Laporan Hasil Survey Lokasi">
-                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
                                             <span>Report Survey</span>
                                         </button>
                                         <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-[10px] transition font-bold"
                                             title="Cetak Surat Tugas Survey untuk Tim Teknisi">
-                                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
                                                 @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
+                                            <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                             <span>Ubah Survey</span>
@@ -378,26 +378,26 @@
                                     @if($item->status_reg == '16')
                                         <button type="button" 
                                                 @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition shadow-xs cursor-pointer"
+                                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                 title="Buat Jadwal Instalasi & Pemasangan">
-                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 9.75v1.409l4.26 4.26" />
                                             </svg>
                                             <span>Schedule Instalasi</span>
                                         </button>
                                         <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-[10px] transition font-bold"
                                             title="Cetak Surat Tugas Survey">
-                                            <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
                                                 @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-semibold">
+                                            <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                             </svg>
                                             <span>Edit Hasil Survey</span>
@@ -408,82 +408,81 @@
                                     @if(in_array($item->status_reg, ['17', '17.1']))
                                         <button type="button" 
                                                 @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold transition shadow-xs cursor-pointer"
+                                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                 title="Input Laporan Hasil Instalasi & Barang">
-                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
                                             <span>Report Instalasi</span>
                                         </button>
                                         <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-bold"
                                             title="Cetak Surat Tugas Instalasi untuk Tim Teknisi">
-                                            <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Surat Tugas</span>
                                         </a>
                                         <button type="button" 
                                                 @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
+                                            <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                             <span>Ubah Instalasi</span>
                                         </button>
                                     @endif
 
-                                    {{-- Tahap 5: Selesai Instalasi (#18) -> Kirim Request Aktivasi ke NOC --}}
                                     {{-- Tahap 5: Selesai Instalasi (#18) --}}
                                     @if($item->status_reg == '18')
                                         @if(empty($item->aktivasi_note))
                                             {{-- Belum kirim request ke NOC: tampilkan tombol kirim request --}}
                                             <button type="button" 
                                                     @click="openRequestAktivasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-[11px] font-bold transition shadow-xs cursor-pointer"
+                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
                                                     title="Kirim Permintaan Aktivasi Layanan ke Tim NOC">
-                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a5 5 0 0 1-5.84 7.38v-4.8m5.84-2.58a5 5 0 0 0-7.38-5.84l3.4 3.4M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM6.166 5.106a.75.75 0 0 1 1.06 0l1.592 1.592a.75.75 0 0 1-1.06 1.06L6.166 6.166a.75.75 0 0 1 0-1.06Zm11.668 0a.75.75 0 0 1 0 1.06l-1.592 1.592a.75.75 0 1 1-1.06-1.06l1.592-1.592a.75.75 0 0 1 1.06 0Z" />
                                                 </svg>
                                                 <span>Request Aktivasi NOC</span>
                                             </button>
                                             <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
                                                 target="_blank"
-                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-bold"
+                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-bold"
                                                 title="Cetak Surat Tugas Instalasi">
-                                                <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                 </svg>
                                                 <span>Surat Tugas</span>
                                             </a>
                                             <button type="button" 
                                                     @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-semibold">
-                                                <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
+                                                <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                                 </svg>
                                                 <span>Edit Hasil Instalasi</span>
                                             </button>
                                         @else
                                             {{-- Sudah dikirim ke NOC: menunggu jadwal aktivasi oleh NOC --}}
-                                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[11px] font-bold">
+                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                                 <span>Menunggu Jadwal NOC</span>
                                             </div>
                                             <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
                                                 target="_blank"
-                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-bold"
+                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-bold"
                                                 title="Cetak Surat Tugas Instalasi">
-                                                <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                 </svg>
                                                 <span>Surat Tugas</span>
                                             </a>
                                             <button type="button" 
                                                     @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-semibold">
-                                                <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
+                                                <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                                 </svg>
@@ -494,14 +493,14 @@
 
                                     {{-- Tahap 6: Jadwal Aktivasi Terbit (#19, #19.1) --}}
                                     @if(in_array($item->status_reg, ['19', '19.1']))
-                                        <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
+                                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
                                             <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
                                             <span>Terjadwal di NOC</span>
                                         </div>
                                         <button type="button" 
                                                 @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[11px] transition font-semibold">
-                                            <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
+                                            <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                             </svg>
@@ -513,8 +512,8 @@
                                     @if(!in_array($item->status_reg, ['14', '15', '20']))
                                         <button type="button" 
                                                 @click="openBatalModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-[11px] transition font-semibold cursor-pointer">
-                                            <svg class="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-[10px] transition font-semibold cursor-pointer">
+                                            <svg class="w-3 h-3 text-rose-500 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
                                             <span>Batal Pasang</span>
@@ -524,10 +523,10 @@
                                     {{-- Tombol Dokumen Form Berlangganan & Download --}}
                                     <div class="inline-flex items-center gap-1.5">
                                         <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}?download=pdf" 
-                                           target="_blank"
-                                           class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[11px] transition font-bold"
-                                           title="Download PDF Form Berlangganan">
-                                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-bold"
+                                            title="Download PDF Form Berlangganan">
+                                            <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                             </svg>
                                             <span>Unduh PDF</span>
@@ -535,9 +534,9 @@
                                         <span class="text-slate-300 dark:text-slate-700">|</span>
                                         <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}" 
                                             target="_blank"
-                                            class="inline-flex items-center gap-1 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[11px] transition font-bold"
+                                            class="inline-flex items-center gap-1 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-bold"
                                             title="Buka & Cetak Form Berlangganan Pelanggan Ini">
-                                            <svg class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                             </svg>
                                             <span>Form</span>
@@ -547,8 +546,8 @@
                                     {{-- Tombol Edit Pendaftaran Pelanggan --}}
                                     <button type="button" 
                                             @click="openEditModal('{{ $item->nomor_internet }}')"
-                                            class="inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-[11px] transition font-bold cursor-pointer">
-                                        <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            class="inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-[10px] transition font-bold cursor-pointer">
+                                        <svg class="w-3 h-3 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                         </svg>
                                         <span>Edit Data</span>
@@ -559,9 +558,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-500 dark:text-slate-400 text-sm">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="w-10 h-10 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <td colspan="6" class="py-8 text-center text-slate-500 dark:text-slate-400 text-xs">
+                                <div class="flex flex-col items-center justify-center gap-1.5">
+                                    <svg class="w-8 h-8 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                                     </svg>
                                     <span>Tidak ada antrean pendaftaran baru yang sedang berlangsung.</span>
@@ -736,19 +735,19 @@
         </div>
 
         <!-- Pagination Controls -->
-        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-xs text-slate-600 dark:text-slate-400">
+        <div class="px-3.5 py-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 flex flex-col sm:flex-row items-center justify-between gap-2.5">
+            <div class="text-[11px] text-slate-600 dark:text-slate-400">
                 Showing <span class="text-slate-900 dark:text-white font-bold">{{ $registrasi->firstItem() ?? 0 }}</span> 
                 to <span class="text-slate-900 dark:text-white font-bold">{{ $registrasi->lastItem() ?? 0 }}</span> 
                 of <span class="text-slate-900 dark:text-white font-bold">{{ $registrasi->total() }}</span> entries
             </div>
 
             <div class="flex items-center gap-1">
-                <a href="{{ $registrasi->url(1) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }}">First</a>
-                <a href="{{ $registrasi->previousPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }}">Previous</a>
-                <span class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-xs">{{ $registrasi->currentPage() }}</span>
-                <a href="{{ $registrasi->nextPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Next</a>
-                <a href="{{ $registrasi->url($registrasi->lastPage()) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $registrasi->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
+                <a href="{{ $registrasi->url(1) }}" class="px-2 py-1 rounded-md border text-xs font-medium transition {{ $registrasi->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }}">First</a>
+                <a href="{{ $registrasi->previousPageUrl() }}" class="px-2 py-1 rounded-md border text-xs font-medium transition {{ $registrasi->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' }}">Previous</a>
+                <span class="px-2.5 py-1 rounded-md bg-blue-600 text-white text-xs font-bold shadow-xs">{{ $registrasi->currentPage() }}</span>
+                <a href="{{ $registrasi->nextPageUrl() }}" class="px-2 py-1 rounded-md border text-xs font-medium transition {{ $registrasi->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Next</a>
+                <a href="{{ $registrasi->url($registrasi->lastPage()) }}" class="px-2 py-1 rounded-md border text-xs font-medium transition {{ $registrasi->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
             </div>
         </div>
     </div>

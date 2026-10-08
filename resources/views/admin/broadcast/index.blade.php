@@ -687,12 +687,13 @@ function broadcastApp() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 }
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(async res => {
                 this.isSyncingTemplates = false;
+                const data = await res.json().catch(() => ({}));
                 if (data.success) {
                     alert("✅ " + data.message + "\n\nHalaman akan dimuat ulang untuk memperbarui daftar template.");
                     window.location.reload();
@@ -702,7 +703,7 @@ function broadcastApp() {
             })
             .catch(err => {
                 this.isSyncingTemplates = false;
-                alert("Gagal menghubungi server untuk sinkronisasi template Meta.");
+                alert("Gagal menghubungi server untuk sinkronisasi template Meta: " + (err.message || ''));
             });
         },
 
@@ -711,19 +712,20 @@ function broadcastApp() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 }
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
                 if (data.success) {
                     alert("✅ " + data.message + "\n\nNomor: " + (data.data?.display_phone_number || '-') + "\nNama Bisnis: " + (data.data?.verified_name || '-'));
                 } else {
-                    alert("⚠️ Status Meta API:\n" + data.message);
+                    alert("⚠️ Status Meta API:\n" + (data.message || 'Gagal tersambung ke Meta API'));
                 }
             })
             .catch(err => {
-                alert("Gagal melakukan tes koneksi Meta API!");
+                alert("Gagal melakukan tes koneksi Meta API: " + (err.message || ''));
             });
         },
 
@@ -733,9 +735,13 @@ function broadcastApp() {
             this.singleTarget.hp = hp;
             this.singleTarget.metode = this.metodeKirim;
             
-            fetch("{{ route('admin.broadcast.preview') }}?nomor_internet=" + encodeURIComponent(noInternet) + "&template_id=" + this.selectedTemplateId + "&pesan=" + encodeURIComponent(this.customPesan))
-                .then(res => res.json())
-                .then(data => {
+            fetch("{{ route('admin.broadcast.preview') }}?nomor_internet=" + encodeURIComponent(noInternet) + "&template_id=" + this.selectedTemplateId + "&pesan=" + encodeURIComponent(this.customPesan), {
+                headers: {
+                    "Accept": "application/json"
+                }
+            })
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
                     if (data.success) {
                         this.singleTarget.renderedPesan = data.rendered_message;
                     } else {
@@ -756,6 +762,7 @@ function broadcastApp() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
                 body: JSON.stringify({
@@ -768,16 +775,16 @@ function broadcastApp() {
                     kategori: "jatuh_tempo"
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(async res => {
                 this.isSingleSending = false;
+                const data = await res.json().catch(() => ({}));
                 this.showSingleModal = false;
 
                 if (data.success) {
                     if (data.metode_kirim === 'wa_web' && data.wa_url) {
                         window.open(data.wa_url, '_blank');
                     } else {
-                        alert("✅ " + data.message);
+                        alert("✅ " + (data.message || 'Pesan berhasil dikirim!'));
                     }
                 } else {
                     alert("⚠️ " + (data.message || "Gagal mengirim pesan!"));
@@ -785,7 +792,7 @@ function broadcastApp() {
             })
             .catch(err => {
                 this.isSingleSending = false;
-                alert('Terjadi kesalahan koneksi saat mengirim pesan WhatsApp!');
+                alert('Terjadi kesalahan koneksi saat mengirim pesan WhatsApp: ' + (err.message || ''));
             });
         },
 
@@ -799,6 +806,7 @@ function broadcastApp() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
                 body: JSON.stringify({
@@ -809,8 +817,8 @@ function broadcastApp() {
                     kategori: "jatuh_tempo"
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
                 if (data.success && data.queue) {
                     this.bulkQueue = data.queue.map(q => ({
                         ...q,
@@ -821,10 +829,12 @@ function broadcastApp() {
                     this.bulkSentCount = 0;
                     this.bulkProgressPercent = 0;
                     this.showBulkModal = true;
+                } else {
+                    alert("⚠️ " + (data.message || 'Gagal menyiapkan antrean broadcast!'));
                 }
             })
             .catch(err => {
-                alert('Terjadi kesalahan saat memproses antrean broadcast massal!');
+                alert('Terjadi kesalahan saat memproses antrean broadcast massal: ' + (err.message || ''));
             });
         },
 
@@ -844,6 +854,7 @@ function broadcastApp() {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
+                            "Accept": "application/json",
                             "X-CSRF-TOKEN": "{{ csrf_token() }}"
                         },
                         body: JSON.stringify({

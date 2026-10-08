@@ -849,10 +849,11 @@ class BroadcastController extends Controller
         $templateId = $request->input('template_id');
 
         if (empty($cleanHp)) {
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Nomor HP WhatsApp tidak valid atau kosong!'], 422);
+            $msg = 'Nomor HP WhatsApp tidak valid atau kosong!';
+            if ($request->wantsJson() || $request->isJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg], 200);
             }
-            return redirect()->back()->with('error', 'Nomor HP WhatsApp tidak valid atau kosong!');
+            return redirect()->back()->with('error', $msg);
         }
 
         $kodeBroadcast = 'BC-SGL-' . date('YmdHis') . '-' . rand(100, 999);
@@ -925,18 +926,18 @@ class BroadcastController extends Controller
 
         $waUrl = 'https://wa.me/' . $cleanHp . '?text=' . urlencode($request->input('pesan'));
 
-        if ($request->wantsJson()) {
+        if ($request->wantsJson() || $request->isJson() || $request->ajax()) {
             return response()->json([
                 'success'         => $apiSuccess,
                 'message'         => $apiSuccess 
                     ? ($metodeKirim === 'meta_api' ? 'Pesan WhatsApp resmi berhasil dikirim via Meta API!' : 'Pesan siap dibuka di WhatsApp Web.') 
-                    : 'Gagal kirim Meta API: ' . $metaErrorMessage,
+                    : ('Gagal kirim via Meta API: ' . ($metaErrorMessage ?: 'Periksa pengaturan nomor/koneksi')),
                 'metode_kirim'    => $metodeKirim,
                 'status_kirim'    => $statusKirim,
                 'wa_url'          => $waUrl,
                 'meta_message_id' => $metaMessageId,
                 'kode_broadcast'  => $kodeBroadcast,
-            ], $apiSuccess ? 200 : 422);
+            ], 200);
         }
 
         return redirect()->away($waUrl);

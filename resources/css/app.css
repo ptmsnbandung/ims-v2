@@ -36,6 +36,15 @@
     --accent-emerald: #34D399;
 }
 
+html {
+    font-size: 13px;
+}
+@media (max-width: 639.98px) {
+    html {
+        font-size: 14.5px;
+    }
+}
+
 body {
     background-color: var(--bg-main);
     color: var(--text-main);

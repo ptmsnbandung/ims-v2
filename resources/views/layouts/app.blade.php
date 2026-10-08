@@ -7,6 +7,18 @@
 
     <title>{{ isset($title) && $title ? ($title . ' | IMSv2 | PT MEDIA SOLUSI NETWORK') : 'IMSv2 | PT MEDIA SOLUSI NETWORK' }}</title>
 
+    <!-- Compact Density Base Scale (~80% Browser Zoom Scale) -->
+    <style>
+        html {
+            font-size: 13px !important;
+        }
+        @media (max-width: 639.98px) {
+            html {
+                font-size: 14.5px !important;
+            }
+        }
+    </style>
+
     <!-- Anti-flicker Theme Initialization (Default to Light Mode) -->
     <script>
         if (localStorage.getItem('theme') === 'dark') {

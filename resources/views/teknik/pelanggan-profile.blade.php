@@ -915,34 +915,34 @@
                             @endphp
 
                             @foreach($masterTemplates as $tmpl)
-                                <div class="p-4 rounded-2xl border {{ $tmpl['active'] ? 'border-blue-500/40 bg-blue-500/[0.03] hover:border-blue-500/70 shadow-sm' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70 shadow-sm' }} transition flex flex-col items-center justify-between text-center min-h-[210px] group">
+                                <div class="p-4 rounded-2xl border {{ $tmpl['active'] ? 'border-blue-300 dark:border-blue-500/40 bg-blue-50/40 dark:bg-blue-950/20 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-md' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm' }} transition-all duration-200 flex flex-col items-center justify-between text-center min-h-[220px] group">
                                     
                                     <!-- Top Status & Format Badges -->
                                     <div class="w-full flex items-center justify-between gap-2 mb-2">
                                         @if($tmpl['active'])
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 shrink-0">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/25 shrink-0">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
                                                 <span>Siap Cetak</span>
                                             </span>
-                                            <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">DOCX</span>
+                                            <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/25 shrink-0">DOCX</span>
                                         @else
-                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700/50 shrink-0">
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60 shrink-0">
                                                 Template
                                             </span>
-                                            <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-slate-800 text-slate-500 border border-slate-700/50 shrink-0">DOCX</span>
+                                            <span class="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-md bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/60 shrink-0">DOCX</span>
                                         @endif
                                     </div>
 
                                     <!-- Clean Document Icon -->
                                     <div class="my-2">
                                         @if($tmpl['active'])
-                                            <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-sm group-hover:scale-105 group-hover:bg-blue-500/20 transition duration-200">
+                                            <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-xs group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-200">
                                                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                 </svg>
                                             </div>
                                         @else
-                                            <div class="w-12 h-12 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center text-slate-500">
+                                            <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-400 dark:text-slate-500 group-hover:scale-105 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-all duration-200">
                                                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                 </svg>
@@ -951,11 +951,11 @@
                                     </div>
 
                                     <!-- Label & Desc -->
-                                    <div class="my-1 space-y-0.5 w-full px-1">
-                                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-100 truncate" title="{{ $tmpl['desc'] }}">
+                                    <div class="my-1.5 space-y-0.5 w-full px-1">
+                                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title="{{ $tmpl['desc'] }}">
                                             {{ $tmpl['desc'] }}
                                         </span>
-                                        <span class="block text-[11px] text-slate-400 dark:text-slate-500 font-mono truncate" title="{{ $tmpl['label'] }}">
+                                        <span class="block text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate" title="{{ $tmpl['label'] }}">
                                             {{ $tmpl['label'] }}
                                         </span>
                                     </div>
@@ -972,21 +972,27 @@
 
                                                 <!-- Secondary Format Download Buttons -->
                                                 <div class="grid grid-cols-2 gap-1.5 w-full">
-                                                    <a href="{{ $tmpl['url'] }}?download=pdf" target="_blank" class="py-1.5 px-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[11px] font-semibold transition flex items-center justify-center gap-1 border border-emerald-500/25" title="Download PDF">
+                                                    <a href="{{ $tmpl['url'] }}?download=pdf" target="_blank" class="py-1.5 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white dark:bg-emerald-500/15 dark:hover:bg-emerald-600 dark:text-emerald-400 text-[11px] font-semibold transition flex items-center justify-center gap-1 border border-emerald-200 dark:border-emerald-500/25" title="Download PDF">
                                                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                                         <span>PDF</span>
                                                     </a>
-                                                    <a href="{{ $tmpl['url'] }}?download=word" target="_blank" class="py-1.5 px-2 rounded-lg bg-indigo-500/15 hover:bg-indigo-600 text-indigo-400 hover:text-white text-[11px] font-semibold transition flex items-center justify-center gap-1 border border-indigo-500/25" title="Download Word (.doc)">
+                                                    <a href="{{ $tmpl['url'] }}?download=word" target="_blank" class="py-1.5 px-2 rounded-lg bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white dark:bg-indigo-500/15 dark:hover:bg-indigo-600 dark:text-indigo-400 text-[11px] font-semibold transition flex items-center justify-center gap-1 border border-indigo-200 dark:border-indigo-500/25" title="Download Word (.doc)">
                                                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                                                         <span>Word</span>
                                                     </a>
                                                 </div>
                                             </div>
                                         @else
-                                            <div class="w-full py-3 flex items-center justify-center">
-                                                <span class="text-[11px] text-slate-500 font-medium bg-slate-800/60 border border-slate-700/50 px-3 py-1 rounded-lg">
-                                                    Draft Master
-                                                </span>
+                                            <div class="space-y-1.5 w-full">
+                                                <div class="w-full py-2 px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700/80">
+                                                    <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                                    </svg>
+                                                    <span>Draft Master</span>
+                                                </div>
+                                                <div class="w-full py-1.5 px-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 text-slate-400 dark:text-slate-500 text-[10.5px] font-medium text-center border border-dashed border-slate-200 dark:border-slate-800">
+                                                    Dalam Pengembangan
+                                                </div>
                                             </div>
                                         @endif
                                     </div>

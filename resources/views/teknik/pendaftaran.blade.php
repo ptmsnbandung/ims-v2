@@ -355,15 +355,6 @@
                                             </svg>
                                             <span>Report Survey</span>
                                         </button>
-                                        <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
-                                            target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-[10px] transition font-bold"
-                                            title="Cetak Surat Tugas Survey untuk Tim Teknisi">
-                                            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                            </svg>
-                                            <span>Surat Tugas</span>
-                                        </a>
                                         <button type="button" 
                                                 @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
@@ -385,15 +376,6 @@
                                             </svg>
                                             <span>Schedule Instalasi</span>
                                         </button>
-                                        <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" 
-                                            target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 text-[10px] transition font-bold"
-                                            title="Cetak Surat Tugas Survey">
-                                            <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                            </svg>
-                                            <span>Surat Tugas</span>
-                                        </a>
                                         <button type="button" 
                                                 @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-semibold">
@@ -415,15 +397,6 @@
                                             </svg>
                                             <span>Report Instalasi</span>
                                         </button>
-                                        <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
-                                            target="_blank"
-                                            class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-bold"
-                                            title="Cetak Surat Tugas Instalasi untuk Tim Teknisi">
-                                            <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                            </svg>
-                                            <span>Surat Tugas</span>
-                                        </a>
                                         <button type="button" 
                                                 @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                 class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
@@ -447,15 +420,6 @@
                                                 </svg>
                                                 <span>Request Aktivasi NOC</span>
                                             </button>
-                                            <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
-                                                target="_blank"
-                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-bold"
-                                                title="Cetak Surat Tugas Instalasi">
-                                                <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                                </svg>
-                                                <span>Surat Tugas</span>
-                                            </a>
                                             <button type="button" 
                                                     @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                     class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
@@ -470,15 +434,6 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                                 <span>Menunggu Jadwal NOC</span>
                                             </div>
-                                            <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" 
-                                                target="_blank"
-                                                class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-bold"
-                                                title="Cetak Surat Tugas Instalasi">
-                                                <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                                </svg>
-                                                <span>Surat Tugas</span>
-                                            </a>
                                             <button type="button" 
                                                     @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
                                                     class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
@@ -519,29 +474,6 @@
                                             <span>Batal Pasang</span>
                                         </button>
                                     @endif
-
-                                    {{-- Tombol Dokumen Form Berlangganan & Download --}}
-                                    <div class="inline-flex items-center gap-1.5">
-                                        <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}?download=pdf" 
-                                            target="_blank"
-                                            class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-bold"
-                                            title="Download PDF Form Berlangganan">
-                                            <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                            </svg>
-                                            <span>Unduh PDF</span>
-                                        </a>
-                                        <span class="text-slate-300 dark:text-slate-700">|</span>
-                                        <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}" 
-                                            target="_blank"
-                                            class="inline-flex items-center gap-1 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-bold"
-                                            title="Buka & Cetak Form Berlangganan Pelanggan Ini">
-                                            <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                            </svg>
-                                            <span>Form</span>
-                                        </a>
-                                    </div>
 
                                     {{-- Tombol Edit Pendaftaran Pelanggan --}}
                                     <button type="button" 
@@ -648,44 +580,26 @@
                                 <span>Schedule Survey</span>
                             </button>
                         @elseif(in_array($item->status_reg, ['13', '13.1']))
-                            <div class="flex items-center gap-2">
-                                <button type="button" 
-                                        @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                    <span>Report Survey</span>
-                                </button>
-                                <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" target="_blank"
-                                   class="py-2 px-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
-                                    Surat Tugas
-                                </a>
-                            </div>
+                            <button type="button" 
+                                    @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                <span>Report Survey</span>
+                            </button>
                         @elseif($item->status_reg == '16')
-                            <div class="flex items-center gap-2">
-                                <button type="button" 
-                                        @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877"/></svg>
-                                    <span>Schedule Instalasi</span>
-                                </button>
-                                <a href="{{ route('teknik.dokumen.survey', $item->nomor_internet) }}" target="_blank"
-                                   class="py-2 px-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold">
-                                    Surat Tugas
-                                </a>
-                            </div>
+                            <button type="button" 
+                                    @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877"/></svg>
+                                <span>Schedule Instalasi</span>
+                            </button>
                         @elseif(in_array($item->status_reg, ['17', '17.1']))
-                            <div class="flex items-center gap-2">
-                                <button type="button" 
-                                        @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                    <span>Report Instalasi</span>
-                                </button>
-                                <a href="{{ route('teknik.dokumen.instalasi', $item->nomor_internet) }}" target="_blank"
-                                   class="py-2 px-3 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 text-xs font-bold">
-                                    Surat Tugas
-                                </a>
-                            </div>
+                            <button type="button" 
+                                    @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                <span>Report Instalasi</span>
+                            </button>
                         @elseif($item->status_reg == '18')
                             @if(empty($item->aktivasi_note))
                                 <button type="button" 
@@ -708,19 +622,15 @@
                                     class="flex-1 py-1.5 px-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[11px] font-bold text-center">
                                 Billing
                             </button>
-                            <a href="{{ route('teknik.dokumen.langganan', $item->nomor_internet) }}?download=pdf" target="_blank"
-                               class="py-1.5 px-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-center">
-                                Unduh PDF
-                            </a>
                             <button type="button" 
                                     @click="openEditModal('{{ $item->nomor_internet }}')"
-                                    class="py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
+                                    class="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-center">
                                 Edit
                             </button>
                             @if(!in_array($item->status_reg, ['14', '15', '20']))
                                 <button type="button" 
                                         @click="openBatalModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                        class="py-1.5 px-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-[11px] font-bold">
+                                        class="flex-1 py-1.5 px-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-[11px] font-bold text-center">
                                     Batal
                                 </button>
                             @endif

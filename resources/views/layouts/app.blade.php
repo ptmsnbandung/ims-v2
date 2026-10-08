@@ -656,10 +656,24 @@
                         <div class="ims-tooltip">NOC Command Dashboard</div>
                     </div>
 
+                    <!-- 3.1 Menu Utama OLT (Dropdown OLT -> PON -> ODP -> Users) -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('noc.olt-explorer') }}"
+                           class="ims-nav-item {{ request()->routeIs('noc.olt-explorer*') ? 'active' : '' }}"
+                           title="Hierarki OLT & PON">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.olt-explorer*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.75 5.1a2.25 2.25 0 0 1 1.8-.85h8.9a2.25 2.25 0 0 1 1.8.85l2.1 3.15a4.5 4.5 0 0 1 .9 2.7" />
+                            </svg>
+                            <span class="ims-nav-text">Menu OLT</span>
+                        </a>
+                        <div class="ims-tooltip">Hierarki OLT, PON, ODP & Users</div>
+                    </div>
+
                     <!-- 4. Infrastruktur Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ infraOpen: {{ request()->routeIs('noc.olt*', 'noc.gpon*', 'noc.odp*', 'noc.pop*', 'noc.wilayah*', 'noc.router*', 'noc.activity-log*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Infrastruktur Jaringan', [
+                             { label: 'Hierarki OLT (PON & ODP)', url: '{{ route('noc.olt-explorer') }}', active: {{ request()->routeIs('noc.olt-explorer*') ? 'true' : 'false' }} },
                              { label: 'Topologi & GPON Port', url: '{{ route('noc.gpon') }}', active: {{ request()->routeIs('noc.gpon*') ? 'true' : 'false' }} },
                              { label: 'OLT & Master Node', url: '{{ route('noc.olt') }}', active: {{ request()->routeIs('noc.olt*') ? 'true' : 'false' }} },
                              { label: 'Router MikroTik', url: '{{ route('noc.router') }}', active: {{ request()->routeIs('noc.router*') ? 'true' : 'false' }} },
@@ -692,6 +706,10 @@
                              x-cloak
                              x-collapse
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
+                            <a href="{{ route('noc.olt-explorer') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.olt-explorer*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
+                                <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.olt-explorer*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
+                                <span>Hierarki OLT (PON & ODP)</span>
+                            </a>
                             <a href="{{ route('noc.gpon') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.gpon*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.gpon*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
                                 <span>Topologi & GPON Port</span>

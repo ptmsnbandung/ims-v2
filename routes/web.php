@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\FinanceController;
 use App\Http\Controllers\Noc\NocController;
+use App\Http\Controllers\Noc\OltExplorerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Teknik\TeknikController;
 use Illuminate\Support\Facades\Route;
@@ -138,6 +139,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [NocController::class, 'dashboard'])->name('dashboard.index');
 
         // 2. Infrastruktur: OLT, GPON, & Port PON
+        Route::get('/olt-explorer', [OltExplorerController::class, 'index'])->name('olt-explorer');
         Route::get('/olt', [NocController::class, 'olt'])->name('olt');
         Route::get('/olt/create', [NocController::class, 'oltCreate'])->name('olt.create');
         Route::get('/olt/{kode_olt}/edit', [NocController::class, 'oltEdit'])->name('olt.edit');

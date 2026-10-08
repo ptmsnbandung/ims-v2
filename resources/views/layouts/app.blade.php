@@ -445,7 +445,20 @@
                         </div>
                     @endif
 
-                    <!-- 4. Permintaan -->
+                    <!-- 4. Data Pelanggan -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('teknik.pelanggan') }}"
+                           class="ims-nav-item {{ request()->routeIs('teknik.pelanggan*') ? 'active' : '' }}"
+                           title="Data Pelanggan">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pelanggan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                            </svg>
+                            <span class="ims-nav-text">Data Pelanggan</span>
+                        </a>
+                        <div class="ims-tooltip">Data Pelanggan</div>
+                    </div>
+
+                    <!-- 5. Permintaan -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          @mouseenter="openFlyout($el, 'Permintaan Layanan', [
                              @if(auth()->user()?->hasRole(['noc', 'direktur']))
@@ -508,21 +521,7 @@
                         </div>
                     </div>
 
-                    <!-- 5. Pelanggan -->
-                    <div class="ims-nav-wrapper">
-                        <a href="{{ route('teknik.pelanggan') }}"
-                           class="ims-nav-item {{ request()->routeIs('teknik.pelanggan*') ? 'active' : '' }}"
-                           title="Data Pelanggan">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pelanggan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                            </svg>
-                            <span class="ims-nav-text">Pelanggan</span>
-                        </a>
-                        <div class="ims-tooltip">Data Pelanggan</div>
-                    </div>
-
-
-                    <!-- 7. Cek Coverage ODP -->
+                    <!-- 6. Cek Coverage ODP -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('teknik.coverage') }}"
                            class="ims-nav-item {{ request()->routeIs('teknik.coverage*') ? 'active' : '' }}"
@@ -548,7 +547,20 @@
                         </div>
                     </div>
 
-                    <!-- 1. Permintaan NOC Dropdown -->
+                    <!-- 1. Data Pelanggan -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('teknik.pelanggan') }}"
+                           class="ims-nav-item {{ request()->routeIs('teknik.pelanggan*') ? 'active' : '' }}"
+                           title="Data Pelanggan">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pelanggan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                            </svg>
+                            <span class="ims-nav-text">Data Pelanggan</span>
+                        </a>
+                        <div class="ims-tooltip">Data Pelanggan</div>
+                    </div>
+
+                    <!-- 2. Permintaan NOC Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Permintaan NOC', [
@@ -600,7 +612,7 @@
                         </div>
                     </div>
 
-                    <!-- 2. NOC Dashboard -->
+                    <!-- 3. NOC Dashboard -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('noc.dashboard') }}"
                            class="ims-nav-item {{ request()->routeIs('noc.dashboard*') ? 'active' : '' }}"
@@ -613,7 +625,7 @@
                         <div class="ims-tooltip">NOC Command Dashboard</div>
                     </div>
 
-                    <!-- 3. Infrastruktur Dropdown -->
+                    <!-- 4. Infrastruktur Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ infraOpen: {{ request()->routeIs('noc.olt*', 'noc.gpon*', 'noc.odp*', 'noc.pop*', 'noc.wilayah*', 'noc.router*', 'noc.activity-log*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Infrastruktur Jaringan', [
@@ -680,7 +692,7 @@
                         </div>
                     </div>
 
-                    <!-- 4. Inventaris Perangkat -->
+                    <!-- 5. Inventaris Perangkat -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('noc.perangkat') }}"
                            class="ims-nav-item {{ request()->routeIs('noc.perangkat*') ? 'active' : '' }}"
@@ -693,7 +705,7 @@
                         <div class="ims-tooltip">Inventaris Perangkat</div>
                     </div>
 
-                    <!-- 5. Tiket -->
+                    <!-- 6. Tiket -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('teknik.tiket') }}"
                            class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
@@ -704,19 +716,6 @@
                             <span class="ims-nav-text">Tiket</span>
                         </a>
                         <div class="ims-tooltip">Tiket & Permintaan</div>
-                    </div>
-
-                    <!-- 6. Data Pelanggan -->
-                    <div class="ims-nav-wrapper">
-                        <a href="{{ route('teknik.pelanggan') }}"
-                           class="ims-nav-item {{ request()->routeIs('teknik.pelanggan*') ? 'active' : '' }}"
-                           title="Data Pelanggan">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pelanggan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-                            </svg>
-                            <span class="ims-nav-text">Data Pelanggan</span>
-                        </a>
-                        <div class="ims-tooltip">Data Pelanggan</div>
                     </div>
                     @endif
 

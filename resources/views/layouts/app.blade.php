@@ -24,6 +24,9 @@
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        html {
+            zoom: 80%;
+        }
         [x-cloak] { display: none !important; }
 
         /* Responsive helpers for Desktop Table vs Mobile Cards */

@@ -25,6 +25,9 @@
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        html {
+            zoom: 80%;
+        }
         [x-cloak] { display: none !important; }
         @keyframes pulseGlow {
             0%, 100% { opacity: 0.35; transform: scale(1); }

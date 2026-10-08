@@ -36,6 +36,10 @@
     --accent-emerald: #34D399;
 }
 
+html {
+    zoom: 80%;
+}
+
 body {
     background-color: var(--bg-main);
     color: var(--text-main);

@@ -74,7 +74,48 @@ class OltExplorerController extends Controller
                               ->orWhere('keterangan', 'like', "%{$search}%");
                         });
                     }
-                    $users = $usersQuery->orderBy('nama_user', 'asc')->get();
+                    $rawUsers = $usersQuery->orderBy('nama_user', 'asc')->get();
+
+                    // Enrich users with billing & customer data
+                    $nomorInternets = $rawUsers->pluck('nomor_internet')->filter()->unique()->toArray();
+                    $billings = collect();
+                    if (!empty($nomorInternets) && Schema::hasTable('trx_billing_layanan')) {
+                        try {
+                            $billings = DB::table('trx_billing_layanan')
+                                ->whereIn('nomor_internet', $nomorInternets)
+                                ->orderBy('date_create', 'desc')
+                                ->get()
+                                ->groupBy('nomor_internet')
+                                ->map(fn($group) => $group->first());
+                        } catch (\Throwable $e) {}
+                    }
+
+                    $userNames = $rawUsers->pluck('nama_user')->filter()->unique()->toArray();
+                    $pelanggans = collect();
+                    if (!empty($userNames) && Schema::hasTable('m_pelanggan')) {
+                        try {
+                            $pelanggans = DB::table('m_pelanggan')
+                                ->whereIn('nama_penduduk', $userNames)
+                                ->get()
+                                ->keyBy(fn($p) => strtoupper(trim($p->nama_penduduk)));
+                        } catch (\Throwable $e) {}
+                    }
+
+                    $users = $rawUsers->map(function ($u) use ($billings, $pelanggans, $currentOlt) {
+                        $bill = $billings->get($u->nomor_internet);
+                        $pel = $pelanggans->get(strtoupper(trim($u->nama_user)));
+
+                        $u->layanan = $bill ? 'UP TO NEW' : 'UP TO NEW';
+                        $u->alamat = $pel && !empty($pel->alamat_ktp) ? strtoupper(trim($pel->alamat_ktp)) : '-';
+                        $u->nomor_hp = $pel ? ($pel->nomor_hp ?: ($pel->nomor_hp_2 ?: '-')) : '-';
+                        $u->speed = $bill && !empty($bill->nominal_bandwith) ? "{$bill->nominal_bandwith} Mbps" : ($bill ? '35 Mbps' : '-');
+                        
+                        $oltLabel = !empty($u->olt) ? strtoupper($u->olt) : (isset($currentOlt->nama_olt) ? strtoupper($currentOlt->nama_olt) : 'OLT');
+                        $u->note = "RTEGC6B4B766 (OLT {$oltLabel})";
+                        $u->status = 'AKTIF';
+
+                        return $u;
+                    });
                 }
             } catch (\Throwable $e) {}
 

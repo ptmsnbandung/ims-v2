@@ -86,13 +86,13 @@
             color: #ffffff;
             border-color: #0284c7;
         }
-        @keyframes pulseTarget {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        @keyframes pulseGroundRipple {
+            0% { transform: translateX(-50%) scale(0.85); opacity: 0.85; }
+            50% { transform: translateX(-50%) scale(1.4); opacity: 0.2; }
+            100% { transform: translateX(-50%) scale(0.85); opacity: 0.85; }
         }
-        .user-pulse-pin {
-            animation: pulseTarget 1.8s infinite;
+        .target-ground-ripple {
+            animation: pulseGroundRipple 2s infinite ease-in-out;
         }
         /* Dynamic Dual Theme for Leaflet Popups */
         .leaflet-popup-content-wrapper {
@@ -979,18 +979,26 @@
                     this.mapInstance.removeLayer(this.connectionLineLayer);
                 }
 
-                // Target User Pin
+                // Target User Pin (Google Maps Authentic Red Pin)
                 const userIcon = L.divIcon({
-                    className: 'user-pulse-pin',
+                    className: 'google-maps-target-pin',
                     html: `
-                        <div style="position: relative; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; background: #ef4444; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(239,68,68,0.5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px;">
-                                📍
-                            </div>
+                        <div style="position: relative; width: 34px; height: 46px; display: flex; justify-content: center;">
+                            <!-- Ground Ripple Effect -->
+                            <div class="target-ground-ripple" style="position: absolute; bottom: -2px; left: 50%; width: 22px; height: 10px; border-radius: 50%; background: rgba(234, 67, 53, 0.35); border: 1.5px solid #EA4335;"></div>
+                            
+                            <!-- Google Maps Red Pin SVG -->
+                            <svg width="34" height="46" viewBox="0 0 34 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45)); z-index: 10; position: relative;">
+                                <path d="M17 0C7.611 0 0 7.611 0 17C0 29.75 17 46 17 46C17 46 34 29.75 34 17C34 7.611 26.389 0 17 0Z" fill="#EA4335"/>
+                                <path d="M17 1C8.163 1 1 8.163 1 17C1 28.5 17 44.5 17 44.5C17 44.5 33 28.5 33 17C33 8.163 25.837 1 17 1Z" stroke="#B31412" stroke-width="1.2"/>
+                                <circle cx="17" cy="16" r="6" fill="#7A0000"/>
+                                <circle cx="17" cy="16" r="2.5" fill="#FFFFFF"/>
+                            </svg>
                         </div>
                     `,
-                    iconSize: [34, 34],
-                    iconAnchor: [17, 17]
+                    iconSize: [34, 46],
+                    iconAnchor: [17, 46],
+                    popupAnchor: [0, -46]
                 });
 
                 const odpName = result.odp.name_odp || result.odp.name;
@@ -999,14 +1007,16 @@
                 this.userMarkerLayer = L.marker([userLat, userLng], { icon: userIcon }).addTo(this.mapInstance);
                 this.userMarkerLayer.bindPopup(`
                     <div style="font-family: inherit; padding: 4px; min-width: 180px;">
-                        <div style="font-size: 10px; font-weight: 800; color: #ef4444; text-transform: uppercase;">📍 LOKASI TARGET</div>
+                        <div style="font-size: 10px; font-weight: 800; color: #ea4335; text-transform: uppercase; display: flex; align-items: center; gap: 4px;">
+                            <span>📍 LOKASI TARGET</span>
+                        </div>
                         <div class="ims-popup-title" style="font-size: 12px; font-weight: 800; margin: 2px 0; font-family: monospace;">${userLat.toFixed(6)}, ${userLng.toFixed(6)}</div>
-                        <div style="font-size: 11px; color: ${result.isCovered ? '#0284c7' : '#ef4444'}; font-weight: 700; margin-top: 4px;">
+                        <div style="font-size: 11px; color: ${result.isCovered ? '#0284c7' : '#ea4335'}; font-weight: 700; margin-top: 4px;">
                             ${result.isCovered ? '⚡ Tercover Fiber Optic' : '✕ Di Luar Radius (> 300m)'}
                         </div>
                         <div class="ims-popup-muted" style="font-size: 10.5px; margin-top: 2px;">Terhubung ke <b class="ims-popup-title">${odpName}</b> (${odpCode}) ~${result.distance}m</div>
                     </div>
-                `).openPopup();
+                `, { offset: [0, -42] }).openPopup();
 
                 const odp = result.odp;
 

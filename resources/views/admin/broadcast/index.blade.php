@@ -590,7 +590,7 @@ function broadcastApp() {
     return {
         selectedTargets: [],
         selectedTemplateId: "{{ $defaultTemplate->id ?? '' }}",
-        currentMetaName: "{{ $defaultTemplate->meta_template_name ?? 'pengingat_jatuh_tempo_v1' }}",
+        currentMetaName: "{{ $defaultTemplate->meta_template_name ?? 'tagihan_bulanan' }}",
         currentMetaLang: "{{ $defaultTemplate->meta_language ?? 'id' }}",
         customPesan: `{!! addslashes($defaultTemplate->pesan ?? '') !!}`,
         metodeKirim: "{{ $isMetaConfigured ? 'meta_api' : 'wa_web' }}",

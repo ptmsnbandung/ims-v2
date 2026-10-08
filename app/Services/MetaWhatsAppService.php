@@ -424,6 +424,13 @@ class MetaWhatsAppService
             $syncedNames[] = $name;
         }
 
+        // Hapus template lama dari database yang sudah tidak ada di Meta
+        if (!empty($syncedNames)) {
+            \Illuminate\Support\Facades\DB::table('tb_broadcast_wa_template')
+                ->whereNotIn('meta_template_name', $syncedNames)
+                ->delete();
+        }
+
         return [
             'success' => true,
             'message' => "Berhasil mengambil {$syncedCount} template resmi dari Meta WhatsApp (" . implode(', ', $syncedNames) . ")!",

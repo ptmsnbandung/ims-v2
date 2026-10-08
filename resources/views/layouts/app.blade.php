@@ -26,6 +26,24 @@
     <style>
         [x-cloak] { display: none !important; }
 
+        /* Responsive helpers for Desktop Table vs Mobile Cards */
+        @media (min-width: 768px) {
+            .ims-mobile-only {
+                display: none !important;
+            }
+            .ims-desktop-only {
+                display: block !important;
+            }
+        }
+        @media (max-width: 767.98px) {
+            .ims-desktop-only {
+                display: none !important;
+            }
+            .ims-mobile-only {
+                display: block !important;
+            }
+        }
+
         /* Custom scrollbar for sidebar */
         .ims-sidebar-nav::-webkit-scrollbar {
             width: 4px;

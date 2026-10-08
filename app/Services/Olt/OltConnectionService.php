@@ -406,7 +406,11 @@ class OltConnectionService
             $olt = DB::table('m_olt')->where('kode_olt', $kodeOlt)->first();
         }
         if (!$olt && Schema::hasTable('m_olt')) {
-            $olt = DB::table('m_olt')->where('hide', '!=', '1')->first();
+            $query = DB::table('m_olt');
+            if (Schema::hasColumn('m_olt', 'hide')) {
+                $query->where('hide', '!=', '1');
+            }
+            $olt = $query->first();
         }
 
         $ip = $olt->ip_address ?? env('OLT_HOST', '103.161.206.214');

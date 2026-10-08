@@ -30,22 +30,36 @@ class ActivityLog extends Model
     /**
      * Helper to record an activity log entry conveniently
      */
-    public static function record(array $data): self
+    public static function record(array $data): ?self
     {
         $userId = $data['user_id'] ?? (auth()->user()?->username ?? auth()->user()?->nama ?? 'System');
-        
-        return self::create([
-            'user_id' => $userId,
-            'customer_id' => $data['customer_id'] ?? null,
-            'action' => $data['action'] ?? 'unknown',
-            'old_status' => $data['old_status'] ?? null,
-            'new_status' => $data['new_status'] ?? null,
+        $rawResponse = isset($data['router_response']) && is_array($data['router_response']) 
+            ? json_encode($data['router_response'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) 
+            : ($data['router_response'] ?? null);
+
+        $payload = [
+            'user_id' => mb_substr((string)$userId, 0, 100),
+            'customer_id' => isset($data['customer_id']) ? mb_substr((string)$data['customer_id'], 0, 100) : null,
+            'action' => mb_substr((string)($data['action'] ?? 'unknown'), 0, 100),
+            'old_status' => isset($data['old_status']) ? mb_substr((string)$data['old_status'], 0, 50) : null,
+            'new_status' => isset($data['new_status']) ? mb_substr((string)$data['new_status'], 0, 50) : null,
             'description' => $data['description'] ?? null,
-            'router_response' => isset($data['router_response']) && is_array($data['router_response']) 
-                ? json_encode($data['router_response']) 
-                : ($data['router_response'] ?? null),
+            'router_response' => $rawResponse,
             'router_success' => (bool)($data['router_success'] ?? false),
-        ]);
+        ];
+
+        try {
+            return self::create($payload);
+        } catch (\Throwable $e) {
+            // Fallback jika database masih VARCHAR(255) atau kena strict mode MySQL
+            try {
+                $payload['router_response'] = $rawResponse ? mb_substr((string)$rawResponse, 0, 250) : null;
+                return self::create($payload);
+            } catch (\Throwable $e2) {
+                \Illuminate\Support\Facades\Log::warning('Gagal mencatat ActivityLog: ' . $e2->getMessage());
+                return null;
+            }
+        }
     }
 
     /**

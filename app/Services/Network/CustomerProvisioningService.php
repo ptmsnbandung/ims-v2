@@ -183,6 +183,22 @@ class CustomerProvisioningService
 
         $isOverallSuccess = $results['database'] && ($results['mikrotik_enable'] || empty($usernameCandidates));
 
+        // Format summary yang bersih dan ringkas untuk alert user
+        if ($isOverallSuccess) {
+            $summaryParts = [];
+            $summaryParts[] = "PPPoE '{$pppoeUsername}' berhasil diaktifkan kembali di MikroTik.";
+            if ($results['mikrotik_kick']) {
+                $summaryParts[] = "Sesi koneksi di-kick untuk re-autentikasi.";
+            }
+            if ($results['olt_reboot']) {
+                $summaryParts[] = "ONT OLT direboot.";
+            }
+            $summaryParts[] = "Status pelanggan kini Aktif (#20).";
+            $cleanSummary = implode(' ', $summaryParts);
+        } else {
+            $cleanSummary = "Aktivasi belum selesai secara penuh. " . implode('; ', array_slice($results['messages'], 0, 2));
+        }
+
         // 6b. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {
             try {
@@ -203,8 +219,8 @@ class CustomerProvisioningService
 
         return [
             'success' => $isOverallSuccess,
-            'title' => 'Layanan Pelanggan Berhasil Diaktifkan',
-            'summary' => implode(' | ', $results['messages']),
+            'title' => $isOverallSuccess ? 'Layanan Pelanggan Berhasil Diaktifkan' : 'Gagal Menyelesaikan Aktivasi',
+            'summary' => $cleanSummary,
             'details' => $results,
         ];
     }
@@ -311,28 +327,59 @@ class CustomerProvisioningService
                     'user_update' => $operator,
                 ]);
 
-            // Jika ada tabel trx_suspend, buat atau perbarui record suspend aktif (12)
-            if (Schema::hasTable('trx_suspend')) {
-                $kodeSuspend = 'SUS-' . $nomorInternet . '-' . date('Ymd');
-                $existing = DB::table('trx_suspend')->where('nomor_internet', $nomorInternet)->where('status_suspend', '12')->first();
-                if (!$existing) {
-                    DB::table('trx_suspend')->insert([
-                        'kode_suspend' => $kodeSuspend,
-                        'nomor_internet' => $nomorInternet,
-                        'desc_suspend' => $reason,
-                        'status_suspend' => '12',
-                        'suspend_start' => now()->format('Y-m-d'),
-                        'date_create' => $now,
-                        'user_create' => $operator,
-                        'date_update' => $now,
-                        'user_update' => $operator,
-                        'hide' => '0',
-                    ]);
-                }
-            }
-
             $results['database'] = true;
             $results['messages'][] = 'Status database berhasil diubah menjadi SUSPEND (#21)';
+
+            // Jika ada tabel trx_suspend, buat atau perbarui record suspend aktif (12)
+            if (Schema::hasTable('trx_suspend')) {
+                try {
+                    $activeSuspend = DB::table('trx_suspend')
+                        ->where('nomor_internet', $nomorInternet)
+                        ->where('status_suspend', '12')
+                        ->first();
+
+                    if ($activeSuspend) {
+                        DB::table('trx_suspend')
+                            ->where('kode_suspend', $activeSuspend->kode_suspend)
+                            ->update([
+                                'desc_suspend' => $reason,
+                                'date_update'  => $now,
+                                'user_update'  => $operator,
+                            ]);
+                    } else {
+                        $baseKode = 'SUS-' . $nomorInternet . '-' . date('Ymd');
+                        $existingByKode = DB::table('trx_suspend')->where('kode_suspend', $baseKode)->first();
+
+                        if ($existingByKode && $existingByKode->nomor_internet == $nomorInternet) {
+                            // Record dengan kode ini milik pelanggan yang sama, perbarui status menjadi 12
+                            DB::table('trx_suspend')->where('kode_suspend', $baseKode)->update([
+                                'desc_suspend'   => $reason,
+                                'status_suspend' => '12',
+                                'suspend_start'  => now()->format('Y-m-d'),
+                                'suspend_end'    => null,
+                                'date_update'    => $now,
+                                'user_update'    => $operator,
+                            ]);
+                        } else {
+                            $kodeSuspend = $existingByKode ? ($baseKode . '-' . date('His')) : $baseKode;
+                            DB::table('trx_suspend')->insert([
+                                'kode_suspend'   => $kodeSuspend,
+                                'nomor_internet' => $nomorInternet,
+                                'desc_suspend'   => $reason,
+                                'status_suspend' => '12',
+                                'suspend_start'  => now()->format('Y-m-d'),
+                                'date_create'    => $now,
+                                'user_create'    => $operator,
+                                'date_update'    => $now,
+                                'user_update'    => $operator,
+                                'hide'           => '0',
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $exSuspend) {
+                    \Illuminate\Support\Facades\Log::warning("Notice update trx_suspend {$nomorInternet}: " . $exSuspend->getMessage());
+                }
+            }
         } catch (Exception $e) {
             $results['messages'][] = 'Gagal update database: ' . $e->getMessage();
         }
@@ -382,6 +429,22 @@ class CustomerProvisioningService
 
         $isOverallSuccess = $results['database'] && ($results['mikrotik_disable'] || empty($usernameCandidates));
 
+        // Format summary yang bersih dan ringkas untuk alert user
+        if ($isOverallSuccess) {
+            $summaryParts = [];
+            $summaryParts[] = "PPPoE '{$pppoeUsername}' berhasil dinonaktifkan di MikroTik.";
+            if ($results['mikrotik_kick']) {
+                $summaryParts[] = "Sesi koneksi diputus seketika.";
+            }
+            if ($results['olt_reboot']) {
+                $summaryParts[] = "ONT OLT direboot.";
+            }
+            $summaryParts[] = "Status pelanggan kini Disuspend / Diisolir (#21).";
+            $cleanSummary = implode(' ', $summaryParts);
+        } else {
+            $cleanSummary = "Suspend belum selesai secara penuh. " . implode('; ', array_slice($results['messages'], 0, 2));
+        }
+
         // 6b. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {
             try {
@@ -402,8 +465,8 @@ class CustomerProvisioningService
 
         return [
             'success' => $isOverallSuccess,
-            'title' => 'Layanan Pelanggan Berhasil Disuspend / Diisolir',
-            'summary' => implode(' | ', $results['messages']),
+            'title' => $isOverallSuccess ? 'Layanan Pelanggan Berhasil Disuspend / Diisolir' : 'Gagal Menyelesaikan Suspend',
+            'summary' => $cleanSummary,
             'details' => $results,
         ];
     }

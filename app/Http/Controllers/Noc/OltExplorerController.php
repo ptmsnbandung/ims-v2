@@ -14,10 +14,10 @@ class OltExplorerController extends Controller
      * Menampilkan Halaman Utama Menu OLT
      * Berisi Dropdown Master OLT, Hierarki Data PON -> ODP -> Users / Pelanggan
      */
-    public function index(Request $request): View
+    public function index(Request $request, $olt_id = null): View
     {
         $search = trim((string) $request->input('search', ''));
-        $selectedOltId = $request->input('olt_id');
+        $selectedOltId = $olt_id ?: $request->input('olt_id');
 
         // 1. Ambil List Master OLT dari database gomsn
         $olts = collect();

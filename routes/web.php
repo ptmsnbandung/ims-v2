@@ -138,8 +138,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [NocController::class, 'dashboard'])->name('dashboard');
         Route::get('/dashboard', [NocController::class, 'dashboard'])->name('dashboard.index');
 
-        // 2. Infrastruktur: OLT, GPON, & Port PON
-        Route::get('/olt-explorer', [OltExplorerController::class, 'index'])->name('olt-explorer');
+        // 2. Menu OLT (Dropdown OLT -> PON -> ODP -> Users)
+        Route::get('/network-olt/{olt_id?}', [OltExplorerController::class, 'index'])->name('network-olt');
         Route::get('/olt', [NocController::class, 'olt'])->name('olt');
         Route::get('/olt/create', [NocController::class, 'oltCreate'])->name('olt.create');
         Route::get('/olt/{kode_olt}/edit', [NocController::class, 'oltEdit'])->name('olt.edit');

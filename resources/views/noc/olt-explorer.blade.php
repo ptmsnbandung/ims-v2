@@ -24,7 +24,7 @@
 }">
 
     <!-- ============================================== -->
-    <!-- 1. HEADER & OLT SELECTOR DROPDOWN             -->
+    <!-- 1. HEADER & ACTIVE OLT BADGE                   -->
     <!-- ============================================== -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs relative overflow-hidden">
         <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-cyan-500/10 dark:bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
@@ -39,52 +39,26 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2.5">
-                        <h1 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Monitoring & Hierarki Jaringan OLT</h1>
-                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20">
-                            FTTH Topology
+                        <h1 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                            OLT {{ $selectedOltId }}: <span class="text-cyan-600 dark:text-cyan-400 uppercase">{{ $currentOlt->nama_olt ?? 'OLT' }}</span>
+                        </h1>
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Active Node
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Struktur data pohon hierarki: <span class="text-slate-700 dark:text-slate-200 font-semibold">Master OLT</span> &rarr; <span class="text-cyan-600 dark:text-cyan-400 font-semibold">Port PON</span> &rarr; <span class="text-blue-600 dark:text-blue-400 font-semibold">ODP</span> &rarr; <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Pelanggan (Users)</span>
+                        Hierarki Jaringan FTTH: <span class="text-cyan-600 dark:text-cyan-400 font-semibold">{{ $pons->count() }} Port PON</span> &rarr; <span class="text-blue-600 dark:text-blue-400 font-semibold">{{ $odps->count() }} ODP</span> &rarr; <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ $users->count() }} Pelanggan (Users)</span>
                     </p>
                 </div>
             </div>
 
-            <!-- Right: OLT Dropdown Selector -->
-            <div class="flex flex-wrap items-center gap-3">
-                <form method="GET" action="{{ route('noc.olt-explorer') }}" id="oltSelectForm" class="flex items-center gap-2">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                        </svg>
-                        Pilih OLT:
-                    </label>
-                    <div class="relative min-w-[200px]">
-                        <select name="olt_id" 
-                                onchange="document.getElementById('oltSelectForm').submit()"
-                                class="w-full appearance-none bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 pr-9 text-xs font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 shadow-xs cursor-pointer">
-                            @forelse($olts as $o)
-                                <option value="{{ $o->olt_id }}" {{ (string)$selectedOltId === (string)$o->olt_id ? 'selected' : '' }}>
-                                    OLT {{ $o->olt_id }} &mdash; {{ strtoupper($o->nama_olt) }}
-                                </option>
-                            @empty
-                                <option value="">Tidak ada OLT di Master</option>
-                            @endforelse
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        </div>
-                    </div>
-                </form>
-
-                @if($currentOlt)
-                    <div class="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-xs">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">{{ $currentOlt->nama_olt }}</span>
-                    </div>
-                @endif
+            <!-- Right Info Badge -->
+            <div class="flex items-center gap-2">
+                <div class="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs flex items-center gap-2">
+                    <span class="text-slate-500 dark:text-slate-400">Database Source:</span>
+                    <span class="font-mono font-bold text-slate-800 dark:text-slate-200">gomsn.pon{{ $selectedOltId }} / odp{{ $selectedOltId }} / users{{ $selectedOltId }}</span>
+                </div>
             </div>
         </div>
     </div>
@@ -161,8 +135,7 @@
     <!-- ============================================== -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <!-- Search input -->
-        <form method="GET" action="{{ route('noc.olt-explorer') }}" class="relative flex-1 max-w-md">
-            <input type="hidden" name="olt_id" value="{{ $selectedOltId }}">
+        <form method="GET" action="{{ route('noc.network-olt', ['olt_id' => $selectedOltId]) }}" class="relative flex-1 max-w-md">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -174,7 +147,7 @@
                    placeholder="Cari nama user, nomor internet, catatan..." 
                    class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl pl-10 pr-20 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition">
             @if($search)
-                <a href="{{ route('noc.olt-explorer', ['olt_id' => $selectedOltId]) }}" class="absolute inset-y-0 right-10 flex items-center px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+                <a href="{{ route('noc.network-olt', ['olt_id' => $selectedOltId]) }}" class="absolute inset-y-0 right-10 flex items-center px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
                     &times;
                 </a>
             @endif

@@ -5,6 +5,9 @@ namespace App\Providers;
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +25,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer('layouts.app', function ($view) {
+            try {
+                $sidebarOlts = Schema::hasTable('gomsn.olt')
+                    ? DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get()
+                    : collect();
+            } catch (\Throwable $e) {
+                $sidebarOlts = collect();
+            }
+            $view->with('sidebarOlts', $sidebarOlts);
+        });
+
         Auth::provider('legacy_eloquent', function ($app, array $config) {
             return new class($app['hash'], $config['model']) extends EloquentUserProvider {
                 /**

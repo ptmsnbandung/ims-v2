@@ -70,17 +70,6 @@
             width: 4.75rem !important;
         }
 
-        /* Global full-width & modal safety rules */
-        html, body {
-            width: 100% !important;
-            min-height: 100% !important;
-        }
-
-        .ims-layout-root {
-            width: 100% !important;
-            min-width: 0 !important;
-        }
-
         @media (max-width: 1023.98px) {
             .ims-sidebar {
                 transform: translateX(-100%);
@@ -107,7 +96,6 @@
                 overflow: visible !important;
             }
             .ims-main-scroll {
-                width: 100% !important;
                 height: auto !important;
                 overflow: visible !important;
             }
@@ -133,20 +121,11 @@
                 z-index: 40 !important;
             }
             .ims-main-scroll {
-                flex: 1 1 0% !important;
-                min-width: 0 !important;
-                width: 100% !important;
                 height: 100vh !important;
                 max-height: 100vh !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
             }
-        }
-
-        /* Modal dialog viewport safety */
-        .fixed.inset-0 {
-            width: 100% !important;
-            height: 100% !important;
         }
 
         /* Nav Item Styles */

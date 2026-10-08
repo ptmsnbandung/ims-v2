@@ -36,7 +36,6 @@
     --accent-emerald: #34D399;
 }
 
-
 body {
     background-color: var(--bg-main);
     color: var(--text-main);

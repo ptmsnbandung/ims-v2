@@ -276,4 +276,159 @@ class MetaWhatsAppService
             ];
         }
     }
+
+    /**
+     * Fetch All Registered & Approved Message Templates from Meta WABA Account
+     */
+    public function getMessageTemplates(): array
+    {
+        if (empty($this->token)) {
+            return [
+                'success' => false,
+                'message' => 'META_WA_TOKEN belum diatur di file .env'
+            ];
+        }
+
+        $wabaId = $this->businessAccountId;
+        if (empty($wabaId)) {
+            return [
+                'success' => false,
+                'message' => 'META_WA_BUSINESS_ACCOUNT_ID belum diatur di file .env'
+            ];
+        }
+
+        try {
+            $url = "{$this->baseUrl}/{$wabaId}/message_templates";
+            $response = Http::withToken($this->token)
+                ->timeout(15)
+                ->get($url, [
+                    'limit' => 100,
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'success' => true,
+                    'templates' => $data['data'] ?? [],
+                    'paging' => $data['paging'] ?? null,
+                ];
+            }
+
+            $error = $response->json()['error'] ?? [];
+            return [
+                'success' => false,
+                'message' => $error['message'] ?? 'Gagal mengambil daftar template dari Meta API (' . $response->status() . ')',
+                'error' => $error
+            ];
+        } catch (\Exception $e) {
+            Log::error('Meta WhatsApp getMessageTemplates exception: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Sync Message Templates from Meta into tb_broadcast_wa_template Database
+     */
+    public function syncTemplatesToDatabase(): array
+    {
+        $res = $this->getMessageTemplates();
+        if (!$res['success']) {
+            return $res;
+        }
+
+        $templates = $res['templates'] ?? [];
+        $syncedCount = 0;
+        $syncedNames = [];
+
+        foreach ($templates as $tpl) {
+            $name = $tpl['name'] ?? '';
+            $status = strtoupper($tpl['status'] ?? 'APPROVED');
+            $language = $tpl['language'] ?? 'id';
+            $category = strtolower($tpl['category'] ?? 'utility');
+
+            if (empty($name)) continue;
+
+            // Extract body text & parameters
+            $bodyText = '';
+            if (!empty($tpl['components'])) {
+                foreach ($tpl['components'] as $comp) {
+                    if (($comp['type'] ?? '') === 'BODY') {
+                        $bodyText = $comp['text'] ?? '';
+                    }
+                }
+            }
+
+            if (empty($bodyText)) {
+                $bodyText = "Template Meta WhatsApp: {$name}";
+            }
+
+            // Extract parameter count (e.g. {{1}}, {{2}})
+            preg_match_all('/\{\{(\d+)\}\}/', $bodyText, $matches);
+            $paramCount = !empty($matches[1]) ? count(array_unique($matches[1])) : 0;
+            
+            // Format nice human-readable name
+            $humanName = ucwords(str_replace('_', ' ', $name));
+
+            // Default mapping based on template name
+            $defaultParamsMap = [];
+            if (str_contains($name, 'tagihan') || str_contains($name, 'invoice')) {
+                $defaultParamsMap = ['nama', 'periode', 'nominal', 'jatuh_tempo', 'nomor_internet', 'paket', 'link_pembayaran'];
+            } elseif (str_contains($name, 'report') || str_contains($name, 'work')) {
+                $defaultParamsMap = ['nama', 'nomor_internet', 'alamat', 'paket'];
+            } else {
+                for ($i = 1; $i <= max($paramCount, 1); $i++) {
+                    $defaultParamsMap[] = 'param_' . $i;
+                }
+            }
+
+            // Slice params to match actual parameter count in template if any
+            if ($paramCount > 0 && count($defaultParamsMap) > $paramCount) {
+                $defaultParamsMap = array_slice($defaultParamsMap, 0, $paramCount);
+            }
+
+            // Check if exists in tb_broadcast_wa_template
+            $existing = \Illuminate\Support\Facades\DB::table('tb_broadcast_wa_template')
+                ->where('meta_template_name', $name)
+                ->first();
+
+            if ($existing) {
+                \Illuminate\Support\Facades\DB::table('tb_broadcast_wa_template')
+                    ->where('id', $existing->id)
+                    ->update([
+                        'nama_template'   => $existing->nama_template ?: $humanName,
+                        'meta_language'   => $language,
+                        'meta_params_map' => json_encode($defaultParamsMap),
+                        'pesan'           => $bodyText,
+                        'kategori'        => $category,
+                        'updated_at'      => now(),
+                    ]);
+            } else {
+                \Illuminate\Support\Facades\DB::table('tb_broadcast_wa_template')->insert([
+                    'nama_template'      => $humanName . ' (' . strtoupper($language) . ')',
+                    'meta_template_name' => $name,
+                    'meta_language'      => $language,
+                    'meta_params_map'    => json_encode($defaultParamsMap),
+                    'subjek'             => $humanName,
+                    'kategori'           => $category,
+                    'pesan'              => $bodyText,
+                    'is_default'         => ($name === 'tagihan_bulanan' || $syncedCount === 0 ? 1 : 0),
+                    'created_at'         => now(),
+                    'updated_at'         => now(),
+                ]);
+            }
+
+            $syncedCount++;
+            $syncedNames[] = $name;
+        }
+
+        return [
+            'success' => true,
+            'message' => "Berhasil mengambil {$syncedCount} template resmi dari Meta WhatsApp (" . implode(', ', $syncedNames) . ")!",
+            'count' => $syncedCount,
+            'templates' => $syncedNames,
+        ];
+    }
 }

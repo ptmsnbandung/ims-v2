@@ -593,12 +593,26 @@ class BroadcastController extends Controller
             $p->is_due_soon = in_array($p->status_bill_lay ?? '', ['13', '14']);
         }
 
-        $templates = DB::table('tb_broadcast_wa_template')->orderBy('is_default', 'desc')->orderBy('nama_template', 'asc')->get();
-        $defaultTemplate = $templates->where('is_default', 1)->first() ?? $templates->first();
-
         // Check Meta API status
         $isMetaConfigured = $this->metaWaService->isConfigured();
         $metaPhoneId = config('services.meta_whatsapp.phone_number_id');
+
+        // Auto-sync templates from Meta if configured and no approved meta templates synced yet
+        if ($isMetaConfigured) {
+            $hasMetaTemplates = DB::table('tb_broadcast_wa_template')
+                ->whereIn('meta_template_name', ['tagihan_bulanan', 'work_report'])
+                ->exists();
+            if (!$hasMetaTemplates) {
+                try {
+                    $this->metaWaService->syncTemplatesToDatabase();
+                } catch (\Throwable $ex) {
+                    Log::warning('Auto sync templates notice: ' . $ex->getMessage());
+                }
+            }
+        }
+
+        $templates = DB::table('tb_broadcast_wa_template')->orderBy('is_default', 'desc')->orderBy('nama_template', 'asc')->get();
+        $defaultTemplate = $templates->where('is_default', 1)->first() ?? $templates->first();
 
         $totalTargetCount = $pelangganList->total();
         
@@ -670,6 +684,15 @@ class BroadcastController extends Controller
     public function testConnection(): JsonResponse
     {
         $result = $this->metaWaService->testConnection();
+        return response()->json($result);
+    }
+
+    /**
+     * Sync Message Templates from Meta WhatsApp Cloud API
+     */
+    public function syncTemplates(Request $request): JsonResponse
+    {
+        $result = $this->metaWaService->syncTemplatesToDatabase();
         return response()->json($result);
     }
 

@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/broadcast/send-bulk', [BroadcastController::class, 'sendBulk'])->name('broadcast.send-bulk');
         Route::post('/broadcast/send-api-item', [BroadcastController::class, 'sendApiItem'])->name('broadcast.send-api-item');
         Route::post('/broadcast/test-connection', [BroadcastController::class, 'testConnection'])->name('broadcast.test-connection');
+        Route::post('/broadcast/sync-templates', [BroadcastController::class, 'syncTemplates'])->name('broadcast.sync-templates');
         Route::post('/broadcast/template/store', [BroadcastController::class, 'saveTemplate'])->name('broadcast.template.store');
         Route::post('/broadcast/template/{id}/delete', [BroadcastController::class, 'deleteTemplate'])->name('broadcast.template.delete');
         Route::get('/broadcast/history', [BroadcastController::class, 'history'])->name('broadcast.history');

@@ -134,19 +134,30 @@
             <div class="lg:col-span-7 space-y-4">
                 <!-- Template Selector -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center justify-between">
-                        <span>Pilih Template Resmi Meta yang Digunakan:</span>
-                        <span class="text-[11px] font-normal text-emerald-600 dark:text-emerald-400">Terdaftar di Meta Dashboard</span>
-                    </label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                            Pilih Template Resmi Meta yang Digunakan:
+                        </label>
+                        <button type="button" 
+                                @click="syncMetaTemplates()" 
+                                :disabled="isSyncingTemplates"
+                                class="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800 transition cursor-pointer"
+                                title="Ambil template yang sudah didaftarkan dan disetujui di Meta Dashboard (tagihan_bulanan, work_report, dll)">
+                            <svg class="w-3.5 h-3.5" :class="isSyncingTemplates ? 'animate-spin text-blue-500' : 'text-blue-600 dark:text-blue-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            <span x-text="isSyncingTemplates ? 'Menarik...' : 'Tarik Template dari Meta'"></span>
+                        </button>
+                    </div>
                     <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
                         @foreach($templates as $tpl)
                             <option value="{{ $tpl->id }}" 
                                     data-pesan="{{ addslashes($tpl->pesan) }}" 
-                                    data-meta-name="{{ $tpl->meta_template_name ?? 'pengingat_jatuh_tempo_v1' }}"
+                                    data-meta-name="{{ $tpl->meta_template_name ?? 'tagihan_bulanan' }}"
                                     data-meta-lang="{{ $tpl->meta_language ?? 'id' }}"
                                     data-meta-params="{{ addslashes($tpl->meta_params_map ?? '[]') }}"
                                     data-kategori="{{ $tpl->kategori }}">
-                                📌 {{ $tpl->nama_template }} {{ $tpl->is_default ? '(Default)' : '' }}
+                                📌 {{ $tpl->nama_template }} ({{ $tpl->meta_template_name }}) {{ $tpl->is_default ? '⭐ [Default]' : '' }}
                             </option>
                         @endforeach
                     </select>
@@ -640,6 +651,33 @@ function broadcastApp() {
                 .replace(/~(.*?)~/g, '<del>$1</del>')
                 .replace(/\n/g, '<br>');
             return formatted;
+        },
+
+        isSyncingTemplates: false,
+
+        syncMetaTemplates() {
+            this.isSyncingTemplates = true;
+            fetch("{{ route('admin.broadcast.sync-templates') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                this.isSyncingTemplates = false;
+                if (data.success) {
+                    alert("✅ " + data.message + "\n\nHalaman akan dimuat ulang untuk memperbarui daftar template.");
+                    window.location.reload();
+                } else {
+                    alert("⚠️ Gagal sinkronisasi template Meta:\n" + (data.message || "Pastikan kredensial META_WA_TOKEN dan META_WA_BUSINESS_ACCOUNT_ID di .env sudah benar."));
+                }
+            })
+            .catch(err => {
+                this.isSyncingTemplates = false;
+                alert("Gagal menghubungi server untuk sinkronisasi template Meta.");
+            });
         },
 
         testMetaApi() {

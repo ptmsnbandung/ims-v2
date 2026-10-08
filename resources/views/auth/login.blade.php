@@ -4,16 +4,12 @@
 <div x-data="{
     username: '{{ old('username', '') }}',
     password: '',
-    showPassword: false,
-    setDemo(demoUsername) {
-        this.username = demoUsername;
-        this.password = '123456';
-    }
+    showPassword: false
 }">
     <!-- Header Form -->
     <div class="mb-5">
         <h2 class="text-xl font-bold text-slate-900">Masuk ke Akun Pengguna</h2>
-        <p class="text-xs font-medium text-slate-500 mt-1">Gunakan akun dari database router_ims untuk mengakses portal</p>
+        <p class="text-xs font-medium text-slate-500 mt-1">Silakan masukkan akun Anda untuk mengakses portal sistem</p>
     </div>
 
     <!-- Alert Messages -->
@@ -54,56 +50,6 @@
             </ul>
         </div>
     @endif
-
-    <!-- Demo Role Selector Buttons (Akun Asli Database router_ims) -->
-    <div class="mb-5 bg-slate-50/90 p-3.5 rounded-2xl border border-slate-200/90">
-        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-amber-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
-            </svg>
-            Quick Demo Accounts (Database router_ims)
-        </label>
-        <div class="grid grid-cols-3 gap-2">
-            <!-- Teknik -->
-            <button type="button"
-                    @click="setDemo('nunu@ptmsn.co.id')"
-                    :class="username === 'nunu@ptmsn.co.id' ? 'ring-2 ring-sky-500 bg-sky-50 border-sky-300 text-slate-900 shadow-sm' : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-700 shadow-sm'"
-                    class="p-2.5 rounded-xl border text-left transition duration-150 flex flex-col justify-between group cursor-pointer">
-                <div>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-100 text-sky-800 border border-sky-200">
-                        Teknik
-                    </span>
-                </div>
-                <span class="text-[11px] text-slate-500 font-medium mt-1.5">Drafter Pelanggan</span>
-            </button>
-
-            <!-- NOC -->
-            <button type="button"
-                    @click="setDemo('kelvin@ptmsn.co.id')"
-                    :class="username === 'kelvin@ptmsn.co.id' ? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300 text-slate-900 shadow-sm' : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-700 shadow-sm'"
-                    class="p-2.5 rounded-xl border text-left transition duration-150 flex flex-col justify-between group cursor-pointer">
-                <div>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
-                        NOC
-                    </span>
-                </div>
-                <span class="text-[11px] text-slate-500 font-medium mt-1.5">Aktivasi & Router</span>
-            </button>
-
-            <!-- Finance -->
-            <button type="button"
-                    @click="setDemo('karmelia@ptmsn.co.id')"
-                    :class="username === 'karmelia@ptmsn.co.id' ? 'ring-2 ring-emerald-500 bg-emerald-50 border-emerald-300 text-slate-900 shadow-sm' : 'bg-white hover:bg-slate-50 border-slate-200/90 text-slate-700 shadow-sm'"
-                    class="p-2.5 rounded-xl border text-left transition duration-150 flex flex-col justify-between group cursor-pointer">
-                <div>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        Finance
-                    </span>
-                </div>
-                <span class="text-[11px] text-slate-500 font-medium mt-1.5">Billing & Suspend</span>
-            </button>
-        </div>
-    </div>
 
     <!-- Login Form -->
     <form action="{{ route('login.submit') }}" method="POST" class="space-y-4">

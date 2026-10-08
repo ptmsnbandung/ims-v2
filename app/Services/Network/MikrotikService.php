@@ -129,42 +129,35 @@ class MikrotikService
      */
     private function getClient(): object
     {
-        // 1. Jika port adalah standar RouterOS API (8728 / 8729), coba API terlebih dahulu
-        if ((int)$this->port === 8728 || (int)$this->port === 8729) {
+        // 1. Jika port 23, ini adalah port Telnet murni
+        if ((int)$this->port === 23) {
             try {
-                return $this->getApiClient();
-            } catch (Throwable $apiErr) {
-                // Fallback ke Telnet jika API gagal
+                return $this->getTelnetClient();
+            } catch (Throwable $telnetErr) {
                 try {
-                    return $this->getTelnetClient();
+                    return $this->getApiClient();
                 } catch (Throwable) {
-                    throw $apiErr;
+                    throw $telnetErr;
                 }
             }
         }
 
-        // 2. Jika port bukan standar API (misal port Telnet 23, 18735, dll),
-        // utamakan koneksi Telnet langsung sesuai konfigurasi
-        $telnetException = null;
-        try {
-            return $this->getTelnetClient();
-        } catch (Throwable $e) {
-            $telnetException = $e;
-        }
-
-        // 3. Fallback: jika Telnet gagal, coba RouterosAPI
+        // 2. Untuk port standar API (8728, 8729) dan port custom (18735, dll),
+        // utamakan RouterosAPI terlebih dahulu karena merespon instan (0.1s - 0.5s)
+        // dan menghindari delay 8 detik Telnet prompt negotiation.
+        $apiException = null;
         try {
             return $this->getApiClient();
-        } catch (Throwable $apiException) {
-            // Jika error Telnet adalah kegagalan otentikasi / kredensial, prioritaskan info tersebut
-            if ($telnetException) {
-                $telnetMsg = $telnetException->getMessage();
-                if (str_contains($telnetMsg, 'Autentikasi') || str_contains($telnetMsg, 'Password')) {
-                    throw new Exception("Telnet: {$telnetMsg}");
-                }
-            }
-            $telnetReason = $telnetException ? $telnetException->getMessage() : 'gagal';
-            throw new Exception("Telnet ({$telnetReason}) & API ({$apiException->getMessage()})");
+        } catch (Throwable $e) {
+            $apiException = $e;
+        }
+
+        // 3. Fallback: jika API gagal, coba Telnet client
+        try {
+            return $this->getTelnetClient();
+        } catch (Throwable $telnetException) {
+            $apiReason = $apiException ? $apiException->getMessage() : 'gagal';
+            throw new Exception("API ({$apiReason}) & Telnet ({$telnetException->getMessage()})");
         }
     }
 

@@ -66,8 +66,8 @@ class NocController extends Controller
         // POP Summary List
         $pops = DB::table('m_pop')->where('hide', '!=', '1')->get();
 
-        // Master Karyawan / Tim Aktivasi
-        $karyawans = DB::table('tb_m_karyawan')->where('status_aktif', 1)->get();
+        // Master Karyawan / Tim Aktivasi (divisi NOC & role karyawan dari gomsn.users_unified)
+        $karyawans = $this->getTeamAktivasi();
 
         // Master Barang / Perangkat
         $barangs = DB::table('m_barang')->where('hide', '!=', '1')->get();
@@ -1229,7 +1229,7 @@ class NocController extends Controller
         $olts = DB::table('m_olt')->get();
         $odps = DB::table('m_odp')->get();
         $pops = DB::table('m_pop')->where('hide', '!=', '1')->get();
-        $karyawans = DB::table('tb_m_karyawan')->where('status_aktif', 1)->get();
+        $karyawans = $this->getTeamAktivasi();
         $barangs = DB::table('m_barang')->where('hide', '!=', '1')->get();
         $routers = Schema::hasTable('routers') ? DB::table('routers')->where('is_active', 1)->get() : collect();
         $indexOltData = $this->getIndexOltSlots();
@@ -1807,7 +1807,7 @@ class NocController extends Controller
         $count17 = DB::table('view_terminasi')->where('status_terminasi', '17')->count();
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
-        $karyawans = DB::table('tb_m_karyawan')->where('status_aktif', 1)->orderBy('nama_karyawan')->get();
+        $karyawans = $this->getTeamAktivasi();
 
         return view('noc.terminasi', [
             'user' => $request->user(),
@@ -2544,5 +2544,36 @@ class NocController extends Controller
         }
 
         return redirect()->route('noc.activity-log')->with('error', 'Parameter hari tidak valid.');
+    }
+
+    /**
+     * Get Team Aktivasi (Divisi NOC & Role Karyawan dari gomsn.users_unified)
+     */
+    private function getTeamAktivasi()
+    {
+        try {
+            $users = DB::table('gomsn.users_unified')
+                ->where('divisi', 'NOC')
+                ->where('role', 'karyawan')
+                ->where('status', '!=', 'Inactive')
+                ->select('id', 'nama_lengkap as nama_karyawan', 'nama_lengkap', 'kode_karyawan', 'nomor_telepon as hp_karyawan')
+                ->orderBy('nama_lengkap', 'asc')
+                ->get();
+
+            if ($users->isNotEmpty()) {
+                return $users;
+            }
+        } catch (\Throwable $e) {
+            // Fallback to local tb_m_karyawan if gomsn database is not accessible
+        }
+
+        if (Schema::hasTable('tb_m_karyawan')) {
+            return DB::table('tb_m_karyawan')
+                ->where('status_aktif', 1)
+                ->orderBy('nama_karyawan', 'asc')
+                ->get();
+        }
+
+        return collect();
     }
 }

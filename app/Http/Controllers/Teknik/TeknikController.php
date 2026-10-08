@@ -250,9 +250,7 @@ class TeknikController extends Controller
             ? DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique()
             : collect();
 
-        $karyawanTeknisi = Schema::hasTable('tb_m_karyawan')
-            ? DB::table('tb_m_karyawan')->where('status_aktif', 1)->orderBy('nama_karyawan')->get(['kode_karyawan', 'nama_karyawan'])
-            : collect();
+        $karyawanTeknisi = $this->getTeamTeknik();
 
         return view('teknik.tiket-gangguan', [
             'user' => $request->user(),
@@ -941,26 +939,8 @@ class TeknikController extends Controller
             ? DB::table('m_wilayah_perangkat')->get()
             : collect();
 
-        // Karyawan Tim Teknisi Lapangan (divisi teknisi / aktif)
-        $karyawanTeknisi = DB::table('tb_m_karyawan')
-            ->leftJoin('tb_m_jabatan', 'tb_m_karyawan.kode_jabatan', '=', 'tb_m_jabatan.kode_jabatan')
-            ->where('tb_m_karyawan.status_aktif', 1)
-            ->where(function($q) {
-                $q->where('tb_m_jabatan.kode_divisi', 'divisi31955')
-                  ->orWhere('tb_m_karyawan.kode_jabatan', 'jabatan3383')
-                  ->orWhereNull('tb_m_jabatan.kode_divisi');
-            })
-            ->select('tb_m_karyawan.kode_karyawan', 'tb_m_karyawan.nama_karyawan')
-            ->orderBy('tb_m_karyawan.nama_karyawan', 'asc')
-            ->get();
-
-        if ($karyawanTeknisi->isEmpty()) {
-            $karyawanTeknisi = DB::table('tb_m_karyawan')
-                ->where('status_aktif', 1)
-                ->select('kode_karyawan', 'nama_karyawan')
-                ->orderBy('nama_karyawan', 'asc')
-                ->get();
-        }
+        // Karyawan Tim Teknisi / Team Instalasi (divisi Teknik & role karyawan dari gomsn.users_unified)
+        $karyawanTeknisi = $this->getTeamTeknik();
 
         // Pilihan Waktu Pekerjaan (Time Job)
         $timeJobs = Schema::hasTable('m_time_job')
@@ -1205,13 +1185,8 @@ class TeknikController extends Controller
 
         // Get names of selected team
         $teamKaryawanIds = $request->input('team_survey', []);
-        $teamNames = [];
-        if (!empty($teamKaryawanIds)) {
-            $teamNames = DB::table('tb_m_karyawan')
-                ->whereIn('kode_karyawan', $teamKaryawanIds)
-                ->pluck('nama_karyawan')
-                ->toArray();
-        }
+        $karyawans = $this->getTeknisiByKeys($teamKaryawanIds);
+        $teamNames = $karyawans->pluck('nama_karyawan')->toArray();
         $teamString = implode(', ', $teamNames);
 
         // Update/Insert trx_instalasi
@@ -1246,14 +1221,13 @@ class TeknikController extends Controller
             ->where('kat_team', '10')
             ->delete();
 
-        if (!empty($teamKaryawanIds)) {
-            $karyawans = DB::table('tb_m_karyawan')->whereIn('kode_karyawan', $teamKaryawanIds)->get();
+        if ($karyawans->isNotEmpty()) {
             foreach ($karyawans as $k) {
                 DB::table('trx_instalasi_team')->insert([
-                    'kode_instalasi_team' => $nomorInternet . '-' . $k->kode_karyawan . '-10',
+                    'kode_instalasi_team' => $nomorInternet . '-' . ($k->kode_karyawan ?: $k->id) . '-10',
                     'nomor_internet' => $nomorInternet,
                     'kat_team' => '10',
-                    'kode_karyawan' => $k->kode_karyawan,
+                    'kode_karyawan' => $k->kode_karyawan ?: (string) $k->id,
                     'nama_karyawan' => $k->nama_karyawan,
                     'date_create' => $now,
                     'user_create' => $currentUser,
@@ -1340,13 +1314,8 @@ class TeknikController extends Controller
 
         // Get names of selected team
         $teamKaryawanIds = $request->input('team_survey', []);
-        $teamNames = [];
-        if (!empty($teamKaryawanIds)) {
-            $teamNames = DB::table('tb_m_karyawan')
-                ->whereIn('kode_karyawan', $teamKaryawanIds)
-                ->pluck('nama_karyawan')
-                ->toArray();
-        }
+        $karyawans = $this->getTeknisiByKeys($teamKaryawanIds);
+        $teamNames = $karyawans->pluck('nama_karyawan')->toArray();
         $teamString = implode(', ', $teamNames);
 
         // Update/Insert team survey
@@ -1355,14 +1324,13 @@ class TeknikController extends Controller
             ->where('kat_team', '10')
             ->delete();
 
-        if (!empty($teamKaryawanIds)) {
-            $karyawans = DB::table('tb_m_karyawan')->whereIn('kode_karyawan', $teamKaryawanIds)->get();
+        if ($karyawans->isNotEmpty()) {
             foreach ($karyawans as $k) {
                 DB::table('trx_instalasi_team')->insert([
-                    'kode_instalasi_team' => $nomorInternet . '-' . $k->kode_karyawan . '-10',
+                    'kode_instalasi_team' => $nomorInternet . '-' . ($k->kode_karyawan ?: $k->id) . '-10',
                     'nomor_internet' => $nomorInternet,
                     'kat_team' => '10',
-                    'kode_karyawan' => $k->kode_karyawan,
+                    'kode_karyawan' => $k->kode_karyawan ?: (string) $k->id,
                     'nama_karyawan' => $k->nama_karyawan,
                     'date_create' => $now,
                     'user_create' => $currentUser,
@@ -1509,13 +1477,8 @@ class TeknikController extends Controller
 
         // Get names of selected team
         $teamKaryawanIds = $request->input('team_instalasi', []);
-        $teamNames = [];
-        if (!empty($teamKaryawanIds)) {
-            $teamNames = DB::table('tb_m_karyawan')
-                ->whereIn('kode_karyawan', $teamKaryawanIds)
-                ->pluck('nama_karyawan')
-                ->toArray();
-        }
+        $karyawans = $this->getTeknisiByKeys($teamKaryawanIds);
+        $teamNames = $karyawans->pluck('nama_karyawan')->toArray();
         $teamString = implode(', ', $teamNames);
 
         // Update/Insert team instalasi
@@ -1524,14 +1487,13 @@ class TeknikController extends Controller
             ->where('kat_team', '11')
             ->delete();
 
-        if (!empty($teamKaryawanIds)) {
-            $karyawans = DB::table('tb_m_karyawan')->whereIn('kode_karyawan', $teamKaryawanIds)->get();
+        if ($karyawans->isNotEmpty()) {
             foreach ($karyawans as $k) {
                 DB::table('trx_instalasi_team')->insert([
-                    'kode_instalasi_team' => $nomorInternet . '-' . $k->kode_karyawan . '-11',
+                    'kode_instalasi_team' => $nomorInternet . '-' . ($k->kode_karyawan ?: $k->id) . '-11',
                     'nomor_internet' => $nomorInternet,
                     'kat_team' => '11',
-                    'kode_karyawan' => $k->kode_karyawan,
+                    'kode_karyawan' => $k->kode_karyawan ?: (string) $k->id,
                     'nama_karyawan' => $k->nama_karyawan,
                     'date_create' => $now,
                     'user_create' => $currentUser,
@@ -1665,13 +1627,8 @@ class TeknikController extends Controller
 
         // Get names of selected team
         $teamKaryawanIds = $request->input('team_instalasi', []);
-        $teamNames = [];
-        if (!empty($teamKaryawanIds)) {
-            $teamNames = DB::table('tb_m_karyawan')
-                ->whereIn('kode_karyawan', $teamKaryawanIds)
-                ->pluck('nama_karyawan')
-                ->toArray();
-        }
+        $karyawans = $this->getTeknisiByKeys($teamKaryawanIds);
+        $teamNames = $karyawans->pluck('nama_karyawan')->toArray();
         $teamString = implode(', ', $teamNames);
 
         // Update team instalasi
@@ -1680,14 +1637,13 @@ class TeknikController extends Controller
             ->where('kat_team', '11')
             ->delete();
 
-        if (!empty($teamKaryawanIds)) {
-            $karyawans = DB::table('tb_m_karyawan')->whereIn('kode_karyawan', $teamKaryawanIds)->get();
+        if ($karyawans->isNotEmpty()) {
             foreach ($karyawans as $k) {
                 DB::table('trx_instalasi_team')->insert([
-                    'kode_instalasi_team' => $nomorInternet . '-' . $k->kode_karyawan . '-11',
+                    'kode_instalasi_team' => $nomorInternet . '-' . ($k->kode_karyawan ?: $k->id) . '-11',
                     'nomor_internet' => $nomorInternet,
                     'kat_team' => '11',
-                    'kode_karyawan' => $k->kode_karyawan,
+                    'kode_karyawan' => $k->kode_karyawan ?: (string) $k->id,
                     'nama_karyawan' => $k->nama_karyawan,
                     'date_create' => $now,
                     'user_create' => $currentUser,
@@ -3963,7 +3919,7 @@ class TeknikController extends Controller
         $count17 = (int) ($counts->c17 ?? 0);
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
-        $karyawans = DB::table('tb_m_karyawan')->where('status_aktif', 1)->orderBy('nama_karyawan')->get();
+        $karyawans = $this->getTeamTeknik();
 
         return view('teknik.permintaan.terminasi', [
             'user' => $request->user(),
@@ -4156,6 +4112,74 @@ class TeknikController extends Controller
             'success' => true,
             'message' => "Status tiket {$request->id_message} berhasil diperbarui menjadi {$request->status}!",
         ]);
+    }
+
+    /**
+     * Get Team Teknisi / Team Instalasi (Divisi Teknik & Role Karyawan dari gomsn.users_unified)
+     */
+    private function getTeamTeknik()
+    {
+        try {
+            $users = DB::table('gomsn.users_unified')
+                ->where('divisi', 'Teknik')
+                ->where('role', 'karyawan')
+                ->where('status', '!=', 'Inactive')
+                ->select('id', 'nama_lengkap as nama_karyawan', 'nama_lengkap', 'kode_karyawan', 'nomor_telepon as hp_karyawan')
+                ->orderBy('nama_lengkap', 'asc')
+                ->get();
+
+            if ($users->isNotEmpty()) {
+                return $users;
+            }
+        } catch (\Throwable $e) {
+            // Fallback to local table if gomsn database is not accessible
+        }
+
+        if (Schema::hasTable('tb_m_karyawan')) {
+            return DB::table('tb_m_karyawan')
+                ->where('status_aktif', 1)
+                ->orderBy('nama_karyawan', 'asc')
+                ->get(['kode_karyawan', 'nama_karyawan']);
+        }
+
+        return collect();
+    }
+
+    /**
+     * Cari Data Teknisi berdasarkan Kode Karyawan / ID / Nama dari gomsn.users_unified
+     */
+    private function getTeknisiByKeys(array $keys)
+    {
+        if (empty($keys)) {
+            return collect();
+        }
+
+        try {
+            $users = DB::table('gomsn.users_unified')
+                ->where('divisi', 'Teknik')
+                ->where('role', 'karyawan')
+                ->where(function ($q) use ($keys) {
+                    $q->whereIn('kode_karyawan', $keys)
+                      ->orWhereIn('id', $keys)
+                      ->orWhereIn('nama_lengkap', $keys);
+                })
+                ->select('id', 'kode_karyawan', 'nama_lengkap as nama_karyawan', 'nama_lengkap')
+                ->get();
+
+            if ($users->isNotEmpty()) {
+                return $users;
+            }
+        } catch (\Throwable $e) {
+        }
+
+        if (Schema::hasTable('tb_m_karyawan')) {
+            return DB::table('tb_m_karyawan')
+                ->whereIn('kode_karyawan', $keys)
+                ->select('kode_karyawan', 'nama_karyawan')
+                ->get();
+        }
+
+        return collect();
     }
 }
 

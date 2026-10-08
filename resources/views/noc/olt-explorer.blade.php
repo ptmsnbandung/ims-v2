@@ -4,11 +4,15 @@
 
 @section('content')
 <style>
-    /* Styling tombol OLT agar selalu memiliki warna solid */
+    /* Styling tombol OLT agar selalu memiliki warna solid & cursor pointer */
+    button, [type='button'], [type='submit'] {
+        cursor: pointer !important;
+    }
     .btn-olt-lihat {
         background-color: #0c4d58 !important;
         color: #ffffff !important;
         border: 1px solid #083e47 !important;
+        cursor: pointer !important;
     }
     .btn-olt-lihat:hover {
         background-color: #083e47 !important;
@@ -17,6 +21,7 @@
         background-color: #f59e0b !important;
         color: #ffffff !important;
         border: 1px solid #d97706 !important;
+        cursor: pointer !important;
     }
     .btn-olt-edit:hover {
         background-color: #d97706 !important;
@@ -25,6 +30,7 @@
         background-color: #ef4444 !important;
         color: #ffffff !important;
         border: 1px solid #dc2626 !important;
+        cursor: pointer !important;
     }
     .btn-olt-hapus:hover {
         background-color: #dc2626 !important;
@@ -32,11 +38,13 @@
     .badge-olt-active {
         background-color: #0c4d58 !important;
         color: #ffffff !important;
+        cursor: pointer !important;
     }
     .badge-olt-inactive {
         background-color: #f1f5f9 !important;
         color: #334155 !important;
         border: 1px solid #e2e8f0 !important;
+        cursor: pointer !important;
     }
     .badge-olt-inactive:hover {
         background-color: #e2e8f0 !important;

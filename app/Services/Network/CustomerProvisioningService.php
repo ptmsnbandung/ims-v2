@@ -46,13 +46,14 @@ class CustomerProvisioningService
             ];
         }
 
-        $pppoeUsername = trim($customer->ont_us ?? '');
+        $usernameCandidates = $this->getUsernameCandidates($customer, $nomorInternet);
+        $pppoeUsername = $usernameCandidates[0] ?? '';
         $indexOlt = trim($customer->index_olt ?? '');
         $kodeOlt = trim($customer->olt ?? '');
         $routerId = $customer->router_id ?? null;
 
         // 1b. Resolve router spesifik pelanggan dari trx_batchjob_register.router_id (dengan auto-discovery multi-router)
-        $this->resolveCustomerRouter($routerId, $nomorInternet, $pppoeUsername);
+        $this->resolveCustomerRouter($routerId, $nomorInternet, $usernameCandidates);
 
         $results = [
             'database' => false,
@@ -63,11 +64,14 @@ class CustomerProvisioningService
         ];
 
         // 2. MikroTik: Enable PPPoE Secret terlebih dahulu
-        if ($pppoeUsername) {
+        if (!empty($usernameCandidates)) {
             try {
-                $mkEnable = $this->mikrotik->enableUser($pppoeUsername);
+                $mkEnable = $this->mikrotik->enableUser($usernameCandidates);
                 $results['mikrotik_enable'] = (bool)($mkEnable['success'] ?? false);
                 $results['messages'][] = 'MikroTik Enable: ' . ($mkEnable['message'] ?? 'Tidak ada respon');
+                if (!empty($mkEnable['matched_user'])) {
+                    $pppoeUsername = $mkEnable['matched_user'];
+                }
             } catch (Exception $e) {
                 $results['mikrotik_enable'] = false;
                 $results['messages'][] = 'MikroTik Enable Error: ' . $e->getMessage();
@@ -135,9 +139,9 @@ class CustomerProvisioningService
         }
 
         // 4. MikroTik: Kick Active Connection (Re-auth)
-        if ($pppoeUsername) {
+        if (!empty($usernameCandidates)) {
             try {
-                $mkKick = $this->mikrotik->kickActiveConnection($pppoeUsername);
+                $mkKick = $this->mikrotik->kickActiveConnection($usernameCandidates);
                 $results['mikrotik_kick'] = (bool)($mkKick['success'] ?? false);
                 $results['messages'][] = 'MikroTik Kick: ' . ($mkKick['message'] ?? '');
             } catch (Exception $e) {
@@ -177,7 +181,7 @@ class CustomerProvisioningService
             }
         }
 
-        $isOverallSuccess = $results['database'] && ($results['mikrotik_enable'] || !$pppoeUsername);
+        $isOverallSuccess = $results['database'] && ($results['mikrotik_enable'] || empty($usernameCandidates));
 
         // 6b. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {
@@ -234,13 +238,14 @@ class CustomerProvisioningService
             ];
         }
 
-        $pppoeUsername = trim($customer->ont_us ?? '');
+        $usernameCandidates = $this->getUsernameCandidates($customer, $nomorInternet);
+        $pppoeUsername = $usernameCandidates[0] ?? '';
         $indexOlt = trim($customer->index_olt ?? '');
         $kodeOlt = trim($customer->olt ?? '');
         $routerId = $customer->router_id ?? null;
 
         // 1b. Resolve router spesifik pelanggan dari trx_batchjob_register.router_id (dengan auto-discovery multi-router)
-        $this->resolveCustomerRouter($routerId, $nomorInternet, $pppoeUsername);
+        $this->resolveCustomerRouter($routerId, $nomorInternet, $usernameCandidates);
 
         $results = [
             'database' => false,
@@ -251,11 +256,14 @@ class CustomerProvisioningService
         ];
 
         // 2. MikroTik: Disable PPPoE Secret terlebih dahulu
-        if ($pppoeUsername) {
+        if (!empty($usernameCandidates)) {
             try {
-                $mkDisable = $this->mikrotik->disableUser($pppoeUsername);
+                $mkDisable = $this->mikrotik->disableUser($usernameCandidates);
                 $results['mikrotik_disable'] = (bool)($mkDisable['success'] ?? false);
                 $results['messages'][] = 'MikroTik Disable: ' . ($mkDisable['message'] ?? 'Tidak ada respon');
+                if (!empty($mkDisable['matched_user'])) {
+                    $pppoeUsername = $mkDisable['matched_user'];
+                }
             } catch (Exception $e) {
                 $results['mikrotik_disable'] = false;
                 $results['messages'][] = 'MikroTik Disable Error: ' . $e->getMessage();
@@ -330,9 +338,9 @@ class CustomerProvisioningService
         }
 
         // 4. MikroTik: Kick Active Connection (Seketika Terputus)
-        if ($pppoeUsername) {
+        if (!empty($usernameCandidates)) {
             try {
-                $mkKick = $this->mikrotik->kickActiveConnection($pppoeUsername);
+                $mkKick = $this->mikrotik->kickActiveConnection($usernameCandidates);
                 $results['mikrotik_kick'] = (bool)($mkKick['success'] ?? false);
                 $results['messages'][] = 'MikroTik Kick: ' . ($mkKick['message'] ?? '');
             } catch (Exception $e) {
@@ -372,7 +380,7 @@ class CustomerProvisioningService
             }
         }
 
-        $isOverallSuccess = $results['database'] && ($results['mikrotik_disable'] || !$pppoeUsername);
+        $isOverallSuccess = $results['database'] && ($results['mikrotik_disable'] || empty($usernameCandidates));
 
         // 6b. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {
@@ -401,12 +409,38 @@ class CustomerProvisioningService
     }
 
     /**
+     * Helper untuk mengambil seluruh kandidat username PPPoE (ont_us, nomor_internet, pppoe_username, non-MS)
+     */
+    private function getUsernameCandidates(object $customer, string $nomorInternet): array
+    {
+        $raw = [
+            trim($customer->ont_us ?? ''),
+            trim($customer->pppoe_username ?? ''),
+            trim($nomorInternet),
+        ];
+
+        $candidates = [];
+        foreach ($raw as $val) {
+            if ($val !== '') {
+                $candidates[] = $val;
+                // Add version without 'MS' or 'ms' prefix
+                $stripped = preg_replace('/^MS/i', '', $val);
+                if ($stripped !== '' && $stripped !== $val) {
+                    $candidates[] = $stripped;
+                }
+            }
+        }
+
+        return array_values(array_unique(array_filter($candidates)));
+    }
+
+    /**
      * Resolve router MikroTik spesifik yang menangani pelanggan ini.
      * Mengambil konfigurasi dari tabel `routers` berdasarkan `router_id` pelanggan di `trx_batchjob_register`.
      * Jika user PPPoE tidak ditemukan pada router utama, otomatis mencari di seluruh router aktif lain
      * dan memperbarui router_id pelanggan di database agar sinkron secara otomatis.
      */
-    private function resolveCustomerRouter(?int $routerId, string $nomorInternet, ?string $pppoeUsername = null): void
+    private function resolveCustomerRouter(?int $routerId, string $nomorInternet, string|array|null $pppoeUsername = null): void
     {
         try {
             if (!Schema::hasTable('routers')) {
@@ -439,8 +473,10 @@ class CustomerProvisioningService
 
             // 2. Jika ada pppoeUsername dan ada lebih dari 1 router, lakukan auto-discovery jika tidak ada di primary router
             if (!empty($pppoeUsername) && $routers->count() > 1) {
-                if (!$this->mikrotik->userExists($pppoeUsername)) {
-                    Log::info("[CustomerProvisioning] User '{$pppoeUsername}' tidak ditemukan di [{$primaryRouter->name}] ({$primaryRouter->host}). Mencoba auto-discovery ke router aktif lainnya...");
+                $foundOnPrimary = $this->mikrotik->userExists($pppoeUsername);
+                if (!$foundOnPrimary) {
+                    $testNames = is_array($pppoeUsername) ? implode(', ', $pppoeUsername) : $pppoeUsername;
+                    Log::info("[CustomerProvisioning] User '{$testNames}' tidak ditemukan di [{$primaryRouter->name}] ({$primaryRouter->host}). Mencoba auto-discovery ke router aktif lainnya...");
 
                     foreach ($routers as $otherRouter) {
                         if ($otherRouter->id === $primaryRouter->id) {
@@ -448,8 +484,9 @@ class CustomerProvisioningService
                         }
 
                         $this->applyRouterConfig($otherRouter);
-                        if ($this->mikrotik->userExists($pppoeUsername)) {
-                            Log::info("[CustomerProvisioning] Auto-Discovery SUKSES: User '{$pppoeUsername}' ditemukan di router [{$otherRouter->name}] ({$otherRouter->host})! Memperbarui router_id pelanggan {$nomorInternet} -> {$otherRouter->id}");
+                        $foundOther = $this->mikrotik->userExists($pppoeUsername);
+                        if ($foundOther) {
+                            Log::info("[CustomerProvisioning] Auto-Discovery SUKSES: User '{$foundOther}' ditemukan di router [{$otherRouter->name}] ({$otherRouter->host})! Memperbarui router_id pelanggan {$nomorInternet} -> {$otherRouter->id}");
 
                             try {
                                 DB::table('trx_batchjob_register')

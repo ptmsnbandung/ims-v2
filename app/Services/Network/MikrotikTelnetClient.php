@@ -58,6 +58,21 @@ class MikrotikTelnetClient
             $cmd = "{$base} print terse" . ($where ? ' where ' . implode(' ', $where) : '');
             $output = $this->telnet->exec($cmd);
             $items = $this->telnet->parseTerseOutput($output);
+
+            // Fallback jika parseTerseOutput kosong padahal mencari spesifik ?name
+            if (empty($items) && isset($params['?name'])) {
+                $targetName = (string)$params['?name'];
+                $escName = $this->esc($targetName);
+                $chkOut = $this->telnet->exec(":put [:len [{$base} find name=\"{$escName}\"]]");
+                $chkClean = trim(preg_replace('/\x1b\[[0-9;]*[a-zA-Z]/', '', $chkOut));
+                if (preg_match('/\b[1-9][0-9]*\b/', $chkClean)) {
+                    $items[] = [
+                        '.id' => 'name:' . $targetName,
+                        'name' => $targetName,
+                    ];
+                }
+            }
+
             foreach ($items as &$item) {
                 if (isset($item['name'])) {
                     $item['.id'] = 'name:' . $item['name'];

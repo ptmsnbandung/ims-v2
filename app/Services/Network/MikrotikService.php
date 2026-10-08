@@ -90,17 +90,31 @@ class MikrotikService
 
     /**
      * Cek apakah user PPPoE terdaftar di router ini (/ppp/secret)
+     * Mengembalikan nama secret yang cocok jika ditemukan, atau false jika tidak ada.
      */
-    public function userExists(string $username): bool
+    public function userExists(string|array $username): string|false
     {
+        $usernames = is_array($username) ? array_values(array_unique(array_filter($username))) : [$username];
+        if (empty($usernames)) {
+            return false;
+        }
+
         try {
             $client = $this->getClient();
-            $secrets = $client->comm('/ppp/secret/print', [
-                '?name' => $username,
-            ]);
-            $client->disconnect();
+            $foundName = false;
 
-            return !empty($secrets) && isset($secrets[0]['.id']);
+            foreach ($usernames as $u) {
+                $secrets = $client->comm('/ppp/secret/print', [
+                    '?name' => $u,
+                ]);
+                if (!empty($secrets) && isset($secrets[0]['.id'])) {
+                    $foundName = $u;
+                    break;
+                }
+            }
+
+            $client->disconnect();
+            return $foundName;
         } catch (Throwable $e) {
             return false;
         }
@@ -225,25 +239,37 @@ class MikrotikService
     /**
      * Enable PPPoE Secret (Aktifkan Layanan)
      */
-    public function enableUser(string $username): array
+    public function enableUser(string|array $username): array
     {
+        $usernames = is_array($username) ? array_values(array_unique(array_filter($username))) : [$username];
+        if (empty($usernames)) {
+            return ['success' => false, 'message' => 'Username PPPoE kosong.'];
+        }
+
         try {
             $client = $this->getClient();
+            $secretId = null;
+            $matchedUser = null;
 
-            // 1. Cari user di /ppp/secret
-            $secrets = $client->comm('/ppp/secret/print', [
-                '?name' => $username,
-            ]);
-
-            if (empty($secrets) || !isset($secrets[0]['.id'])) {
-                $client->disconnect();
-                return [
-                    'success' => false,
-                    'message' => "User PPPoE '{$username}' tidak ditemukan di MikroTik ({$this->host}).",
-                ];
+            foreach ($usernames as $u) {
+                $secrets = $client->comm('/ppp/secret/print', [
+                    '?name' => $u,
+                ]);
+                if (!empty($secrets) && isset($secrets[0]['.id'])) {
+                    $secretId = $secrets[0]['.id'];
+                    $matchedUser = $u;
+                    break;
+                }
             }
 
-            $secretId = $secrets[0]['.id'];
+            if (!$secretId) {
+                $client->disconnect();
+                $tested = implode(' / ', $usernames);
+                return [
+                    'success' => false,
+                    'message' => "User PPPoE '{$tested}' tidak ditemukan di MikroTik ({$this->host}).",
+                ];
+            }
 
             // 2. Set disabled=no
             $client->comm('/ppp/secret/set', [
@@ -255,7 +281,8 @@ class MikrotikService
 
             return [
                 'success' => true,
-                'message' => "User PPPoE '{$username}' berhasil diaktifkan (disabled=no).",
+                'matched_user' => $matchedUser,
+                'message' => "User PPPoE '{$matchedUser}' berhasil diaktifkan (disabled=no).",
             ];
         } catch (Throwable $e) {
             return [
@@ -268,25 +295,37 @@ class MikrotikService
     /**
      * Disable PPPoE Secret (Suspend / Isolir Layanan)
      */
-    public function disableUser(string $username): array
+    public function disableUser(string|array $username): array
     {
+        $usernames = is_array($username) ? array_values(array_unique(array_filter($username))) : [$username];
+        if (empty($usernames)) {
+            return ['success' => false, 'message' => 'Username PPPoE kosong.'];
+        }
+
         try {
             $client = $this->getClient();
+            $secretId = null;
+            $matchedUser = null;
 
-            // 1. Cari user di /ppp/secret
-            $secrets = $client->comm('/ppp/secret/print', [
-                '?name' => $username,
-            ]);
-
-            if (empty($secrets) || !isset($secrets[0]['.id'])) {
-                $client->disconnect();
-                return [
-                    'success' => false,
-                    'message' => "User PPPoE '{$username}' tidak ditemukan di MikroTik ({$this->host}).",
-                ];
+            foreach ($usernames as $u) {
+                $secrets = $client->comm('/ppp/secret/print', [
+                    '?name' => $u,
+                ]);
+                if (!empty($secrets) && isset($secrets[0]['.id'])) {
+                    $secretId = $secrets[0]['.id'];
+                    $matchedUser = $u;
+                    break;
+                }
             }
 
-            $secretId = $secrets[0]['.id'];
+            if (!$secretId) {
+                $client->disconnect();
+                $tested = implode(' / ', $usernames);
+                return [
+                    'success' => false,
+                    'message' => "User PPPoE '{$tested}' tidak ditemukan di MikroTik ({$this->host}).",
+                ];
+            }
 
             // 2. Set disabled=yes
             $client->comm('/ppp/secret/set', [
@@ -298,7 +337,8 @@ class MikrotikService
 
             return [
                 'success' => true,
-                'message' => "User PPPoE '{$username}' berhasil dinonaktifkan / diisolir (disabled=yes).",
+                'matched_user' => $matchedUser,
+                'message' => "User PPPoE '{$matchedUser}' berhasil dinonaktifkan / diisolir (disabled=yes).",
             ];
         } catch (Throwable $e) {
             return [
@@ -312,40 +352,49 @@ class MikrotikService
      * Kick Active Connection (/ppp/active/remove)
      * Memutus sesi aktif PPPoE sehingga pelanggan langsung reconnect dengan konfigurasi baru atau seketika terputus
      */
-    public function kickActiveConnection(string $username): array
+    public function kickActiveConnection(string|array $username): array
     {
+        $usernames = is_array($username) ? array_values(array_unique(array_filter($username))) : [$username];
+        if (empty($usernames)) {
+            return ['success' => true, 'kicked' => false, 'message' => 'Username kosong.'];
+        }
+
         try {
             $client = $this->getClient();
+            $kickedCount = 0;
 
-            // 1. Cari koneksi aktif di /ppp/active
-            $activeList = $client->comm('/ppp/active/print', [
-                '?name' => $username,
-            ]);
+            foreach ($usernames as $u) {
+                $activeList = $client->comm('/ppp/active/print', [
+                    '?name' => $u,
+                ]);
 
-            if (empty($activeList) || !isset($activeList[0]['.id'])) {
-                $client->disconnect();
-                return [
-                    'success' => true,
-                    'kicked' => false,
-                    'message' => "Tidak ada sesi aktif untuk user '{$username}' (User sedang offline/idle).",
-                ];
-            }
-
-            // 2. Hapus sesi aktif
-            foreach ($activeList as $act) {
-                if (isset($act['.id'])) {
-                    $client->comm('/ppp/active/remove', [
-                        '=.id' => $act['.id'],
-                    ]);
+                if (!empty($activeList)) {
+                    foreach ($activeList as $act) {
+                        if (isset($act['.id'])) {
+                            $client->comm('/ppp/active/remove', [
+                                '=.id' => $act['.id'],
+                            ]);
+                            $kickedCount++;
+                        }
+                    }
                 }
             }
 
             $client->disconnect();
 
+            $primaryName = $usernames[0];
+            if ($kickedCount === 0) {
+                return [
+                    'success' => true,
+                    'kicked' => false,
+                    'message' => "Tidak ada sesi aktif untuk user '{$primaryName}' (User sedang offline/idle).",
+                ];
+            }
+
             return [
                 'success' => true,
                 'kicked' => true,
-                'message' => "Sesi aktif user '{$username}' berhasil di-kick (koneksi diputus seketika).",
+                'message' => "Sesi aktif user '{$primaryName}' ({$kickedCount} koneksi) berhasil di-kick (koneksi diputus seketika).",
             ];
         } catch (Throwable $e) {
             return [

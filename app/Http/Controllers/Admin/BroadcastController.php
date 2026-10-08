@@ -394,8 +394,16 @@ class BroadcastController extends Controller
             $trxBillingCols = Schema::getColumnListing('trx_billing_layanan');
 
             if (in_array('kode_billing_layanan', $trxBillingCols)) {
+                $orderClause = "CONCAT(COALESCE(tbl_sub.tahun_tagihan, '0000'), LPAD(COALESCE(tbl_sub.bulan_tagihan, '00'), 2, '0')) DESC";
+                if (in_array('status_bill_lay', $trxBillingCols)) {
+                    $orderClause = "(tbl_sub.status_bill_lay IN ('13', '14')) DESC, " . $orderClause;
+                }
+                if (in_array('date_create', $trxBillingCols)) {
+                    $orderClause .= ", tbl_sub.date_create DESC";
+                }
+
                 $subLatest = DB::table('trx_billing_layanan as tbl_sub')
-                    ->selectRaw('tbl_sub.nomor_internet, MAX(tbl_sub.kode_billing_layanan) as max_kode')
+                    ->selectRaw("tbl_sub.nomor_internet, SUBSTRING_INDEX(GROUP_CONCAT(tbl_sub.kode_billing_layanan ORDER BY {$orderClause}), ',', 1) as max_kode")
                     ->groupBy('tbl_sub.nomor_internet');
 
                 $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
@@ -432,19 +440,33 @@ class BroadcastController extends Controller
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
 
-        $bulanNum = !empty($data->bulan_tagihan) ? (int)$data->bulan_tagihan : (int)date('n');
-        $tahunNum = !empty($data->tahun_tagihan) ? (int)$data->tahun_tagihan : (int)date('Y');
-        $namaBulanTahun = ($bulanNames[$bulanNum] ?? date('F')) . ' ' . $tahunNum;
-
-        $periode = !empty($data->periode_tagihan) ? $data->periode_tagihan : $namaBulanTahun;
-        $bulanJatuhTempo = $namaBulanTahun;
-        $bulanSuspend = $namaBulanTahun;
+        // Format bulan & tahun dalam Bahasa Indonesia yang tepat
+        if (!empty($data->bulan_tagihan) && !empty($data->tahun_tagihan)) {
+            $bNum = (int)$data->bulan_tagihan;
+            $namaBulanTahun = ($bulanNames[$bNum] ?? date('F')) . ' ' . $data->tahun_tagihan;
+            $periode = $namaBulanTahun;
+            $bulanJatuhTempo = $namaBulanTahun;
+            $bulanSuspend = $namaBulanTahun;
+        } elseif (!empty($data->periode_tagihan)) {
+            $enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            $idMonths = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $periode = str_ireplace($enMonths, $idMonths, $data->periode_tagihan);
+            $bulanJatuhTempo = $periode;
+            $bulanSuspend = $periode;
+        } else {
+            $curMonth = (int)date('n');
+            $curYear = (int)date('Y');
+            $namaBulanTahun = ($bulanNames[$curMonth] ?? date('F')) . ' ' . $curYear;
+            $periode = $namaBulanTahun;
+            $bulanJatuhTempo = $namaBulanTahun;
+            $bulanSuspend = $namaBulanTahun;
+        }
         
         $nominalVal = $data->total_layanan ?? ($data->harga_bandwith ?? ($data->harga ?? 0));
         $nominal = 'Rp ' . number_format((float) $nominalVal, 0, ',', '.');
         
         $expiryRaw = !empty($data->expiry) ? $data->expiry : (!empty($data->tgl_jatuh_tempo) ? $data->tgl_jatuh_tempo : null);
-        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : ('20 ' . $namaBulanTahun);
+        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : ('20 ' . $bulanJatuhTempo);
 
         $linkPembayaran = '';
         if (!empty($data->payment_respond_post)) {
@@ -491,19 +513,32 @@ class BroadcastController extends Controller
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
 
-        $bulanNum = !empty($data->bulan_tagihan) ? (int)$data->bulan_tagihan : (int)date('n');
-        $tahunNum = !empty($data->tahun_tagihan) ? (int)$data->tahun_tagihan : (int)date('Y');
-        $namaBulanTahun = ($bulanNames[$bulanNum] ?? date('F')) . ' ' . $tahunNum;
-
-        $periode = !empty($data->periode_tagihan) ? $data->periode_tagihan : $namaBulanTahun;
-        $bulanJatuhTempo = $namaBulanTahun;
-        $bulanSuspend = $namaBulanTahun;
+        if (!empty($data->bulan_tagihan) && !empty($data->tahun_tagihan)) {
+            $bNum = (int)$data->bulan_tagihan;
+            $namaBulanTahun = ($bulanNames[$bNum] ?? date('F')) . ' ' . $data->tahun_tagihan;
+            $periode = $namaBulanTahun;
+            $bulanJatuhTempo = $namaBulanTahun;
+            $bulanSuspend = $namaBulanTahun;
+        } elseif (!empty($data->periode_tagihan)) {
+            $enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            $idMonths = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $periode = str_ireplace($enMonths, $idMonths, $data->periode_tagihan);
+            $bulanJatuhTempo = $periode;
+            $bulanSuspend = $periode;
+        } else {
+            $curMonth = (int)date('n');
+            $curYear = (int)date('Y');
+            $namaBulanTahun = ($bulanNames[$curMonth] ?? date('F')) . ' ' . $curYear;
+            $periode = $namaBulanTahun;
+            $bulanJatuhTempo = $namaBulanTahun;
+            $bulanSuspend = $namaBulanTahun;
+        }
         
         $nominalVal = $data->total_layanan ?? ($data->harga_bandwith ?? ($data->harga ?? 0));
         $nominal = 'Rp ' . number_format((float) $nominalVal, 0, ',', '.');
         
         $expiryRaw = !empty($data->expiry) ? $data->expiry : (!empty($data->tgl_jatuh_tempo) ? $data->tgl_jatuh_tempo : null);
-        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : ('20 ' . $namaBulanTahun);
+        $jatuhTempo = $expiryRaw ? Carbon::parse($expiryRaw)->translatedFormat('d F Y') : ('20 ' . $bulanJatuhTempo);
 
         $linkPembayaran = '';
         if (!empty($data->payment_respond_post)) {

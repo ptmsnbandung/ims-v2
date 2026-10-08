@@ -4,30 +4,87 @@
 
 @section('content')
 <div class="space-y-5" x-data="{ 
-    activeTab: 'odp',
-    selectedPonFilter: '',
-    searchQuery: '',
-    
-    // Modal ODP Detail
-    showOdpModal: false,
-    modalOdp: null,
-    modalOdpUsers: [],
+    // Navigation Level: 'pon' -> 'odp' -> 'users'
+    currentLevel: 'pon',
+    selectedPon: null,
+    selectedOdp: null,
 
-    openDetailOdp(odp) {
-        this.modalOdp = odp;
-        this.modalOdpUsers = odp.users || [];
-        this.showOdpModal = true;
+    // Data dari backend
+    ponsData: @js($pons),
+    odpsData: @js($odps),
+    usersData: @js($users),
+
+    // Filter & Search
+    searchQuery: '',
+
+    // Actions
+    goToPonList() {
+        this.currentLevel = 'pon';
+        this.selectedPon = null;
+        this.selectedOdp = null;
+        this.searchQuery = '';
     },
 
-    // Modal PON Detail
-    showPonModal: false,
-    modalPon: null,
-    modalPonOdps: [],
+    goToOdpList(pon) {
+        this.selectedPon = pon;
+        this.selectedOdp = null;
+        this.currentLevel = 'odp';
+        this.searchQuery = '';
+    },
 
-    openDetailPon(pon) {
-        this.modalPon = pon;
-        this.modalPonOdps = pon.odps || [];
-        this.showPonModal = true;
+    goToUsersList(odp) {
+        this.selectedOdp = odp;
+        // Pastikan selectedPon terisi jika langsung dari ODP
+        if (!this.selectedPon && odp.pon_id) {
+            this.selectedPon = this.ponsData.find(p => p.id == odp.pon_id) || null;
+        }
+        this.currentLevel = 'users';
+        this.searchQuery = '';
+    },
+
+    // Getters / Computed
+    get filteredPons() {
+        if (!this.searchQuery.trim()) return this.ponsData;
+        const q = this.searchQuery.toLowerCase();
+        return this.ponsData.filter(p => 
+            (p.nama_pon && p.nama_pon.toLowerCase().includes(q)) ||
+            String(p.id).includes(q)
+        );
+    },
+
+    get filteredOdps() {
+        let list = this.odpsData;
+        if (this.selectedPon) {
+            list = list.filter(o => o.pon_id == this.selectedPon.id);
+        }
+        if (!this.searchQuery.trim()) return list;
+        const q = this.searchQuery.toLowerCase();
+        return list.filter(o => 
+            (o.nama_odp && o.nama_odp.toLowerCase().includes(q)) ||
+            String(o.id).includes(q)
+        );
+    },
+
+    get filteredUsers() {
+        let list = [];
+        if (this.selectedOdp) {
+            // Users spesifik ODP
+            list = this.usersData.filter(u => u.odp_id == this.selectedOdp.id);
+        } else if (this.selectedPon) {
+            // Users di semua ODP milik PON ini
+            const odpIds = this.odpsData.filter(o => o.pon_id == this.selectedPon.id).map(o => o.id);
+            list = this.usersData.filter(u => odpIds.includes(u.odp_id));
+        } else {
+            list = this.usersData;
+        }
+
+        if (!this.searchQuery.trim()) return list;
+        const q = this.searchQuery.toLowerCase();
+        return list.filter(u => 
+            (u.nama_user && u.nama_user.toLowerCase().includes(q)) ||
+            (u.nomor_internet && u.nomor_internet.toLowerCase().includes(q)) ||
+            (u.keterangan && u.keterangan.toLowerCase().includes(q))
+        );
     }
 }">
 
@@ -134,83 +191,98 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- 3. CONTROLS, FILTER, & TAB SWITCHER            -->
+    <!-- 3. BREADCRUMB & DRILL-DOWN NAVIGATION BAR      -->
     <!-- ============================================== -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         
-        <!-- Search & Filter Input -->
-        <form method="GET" action="{{ route('noc.network-olt', ['olt_id' => $selectedOltId]) }}" class="flex flex-wrap items-center gap-2 flex-1">
-            
-            <div class="relative flex-1 min-w-[200px] max-w-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                    </svg>
-                </div>
-                <input type="text" 
-                       name="search" 
-                       value="{{ $search }}" 
-                       placeholder="Cari user, nomor internet, catatan..." 
-                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg pl-9 pr-8 py-1.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
-                @if($search)
-                    <a href="{{ route('noc.network-olt', ['olt_id' => $selectedOltId]) }}" class="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
-                        &times;
-                    </a>
-                @endif
-            </div>
-
-            <button type="submit" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition shrink-0">
-                Cari
-            </button>
-        </form>
-
-        <!-- Tab Switcher (ODP, PON, Users) -->
-        <div class="inline-flex p-0.5 bg-slate-100 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 shrink-0">
+        <!-- Breadcrumb Steps -->
+        <div class="flex items-center flex-wrap gap-2 text-xs">
+            <!-- Step 1: OLT (PON List) -->
             <button type="button" 
-                    @click="activeTab = 'odp'"
-                    :class="activeTab === 'odp' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-semibold' : 'text-slate-500 dark:text-slate-400 font-normal'"
-                    class="px-3 py-1 rounded text-xs transition flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-                </svg>
-                <span>Tabel ODP</span>
-                <span class="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px]">{{ $odps->count() }}</span>
-            </button>
-
-            <button type="button" 
-                    @click="activeTab = 'pon'"
-                    :class="activeTab === 'pon' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-semibold' : 'text-slate-500 dark:text-slate-400 font-normal'"
-                    class="px-3 py-1 rounded text-xs transition flex items-center gap-1.5">
+                    @click="goToPonList()"
+                    :class="currentLevel === 'pon' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium'"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
                 </svg>
-                <span>Tabel PON</span>
-                <span class="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px]">{{ $pons->count() }}</span>
+                <span>1. Tabel PON</span>
+                <span class="px-1.5 py-0.2 rounded text-[10px]" :class="currentLevel === 'pon' ? 'bg-blue-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'" x-text="ponsData.length"></span>
             </button>
 
+            <!-- Separator -->
+            <svg class="w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+
+            <!-- Step 2: ODP List -->
             <button type="button" 
-                    @click="activeTab = 'users'"
-                    :class="activeTab === 'users' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-semibold' : 'text-slate-500 dark:text-slate-400 font-normal'"
-                    class="px-3 py-1 rounded text-xs transition flex items-center gap-1.5">
+                    @click="if (selectedPon) { goToOdpList(selectedPon); } else if (ponsData.length > 0) { goToOdpList(ponsData[0]); }"
+                    :class="currentLevel === 'odp' ? 'bg-blue-600 text-white font-bold' : (selectedPon ? 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium' : 'bg-slate-50 dark:bg-slate-950 text-slate-400 cursor-not-allowed')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition">
+                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                </svg>
+                <span>2. Tabel ODP</span>
+                <template x-if="selectedPon">
+                    <span class="font-bold text-xs" x-text="'(' + selectedPon.nama_pon + ')'"></span>
+                </template>
+            </button>
+
+            <!-- Separator -->
+            <svg class="w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+
+            <!-- Step 3: Users List -->
+            <button type="button" 
+                    :class="currentLevel === 'users' ? 'bg-blue-600 text-white font-bold' : (selectedOdp ? 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium' : 'bg-slate-50 dark:bg-slate-950 text-slate-400 cursor-not-allowed')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                 </svg>
-                <span>Tabel Pelanggan</span>
-                <span class="px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px]">{{ $users->count() }}</span>
+                <span>3. Tabel Users</span>
+                <template x-if="selectedOdp">
+                    <span class="font-bold text-xs" x-text="'(' + selectedOdp.nama_odp + ')'"></span>
+                </template>
             </button>
         </div>
+
+        <!-- Search Input -->
+        <div class="relative min-w-[240px]">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+            </div>
+            <input type="text" 
+                   x-model="searchQuery" 
+                   :placeholder="currentLevel === 'pon' ? 'Cari port PON...' : (currentLevel === 'odp' ? 'Cari ODP...' : 'Cari user / nomor internet...')" 
+                   class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg pl-9 pr-8 py-1.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+            <button type="button" 
+                    x-show="searchQuery" 
+                    @click="searchQuery = ''" 
+                    class="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs">
+                &times;
+            </button>
+        </div>
+
     </div>
 
     <!-- ============================================== -->
-    <!-- 4. TAB 1: TABEL DATA ODP                       -->
+    <!-- 4. LEVEL 1: TABEL UTAMA - TABEL PON            -->
     <!-- ============================================== -->
-    <div x-show="activeTab === 'odp'" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
+    <div x-show="currentLevel === 'pon'" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
         <div class="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">
-                Daftar ODP pada OLT {{ strtoupper($currentOlt->nama_olt ?? '') }}
-            </h3>
-            <span class="text-xs text-slate-500 dark:text-slate-400">
-                Total <span class="font-bold text-slate-800 dark:text-slate-200">{{ $odps->count() }}</span> Titik ODP
+            <div>
+                <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                    Tabel Port PON &mdash; OLT {{ strtoupper($currentOlt->nama_olt ?? '') }}
+                </h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    Pilih port PON dan klik tombol <span class="font-semibold text-blue-600 dark:text-blue-400">Detail ODP</span> untuk melihat daftar ODP di bawahnya.
+                </p>
+            </div>
+            <span class="px-2.5 py-1 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 text-xs font-bold">
+                <span x-text="filteredPons.length"></span> Port PON
             </span>
         </div>
 
@@ -218,406 +290,323 @@
             <table class="w-full text-left text-xs">
                 <thead class="bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                        <th class="px-3.5 py-2.5 w-10 text-center">No</th>
-                        <th class="px-3.5 py-2.5">Nama ODP</th>
-                        <th class="px-3.5 py-2.5">Port PON Asal</th>
-                        <th class="px-3.5 py-2.5 text-center">Kapasitas Port</th>
-                        <th class="px-3.5 py-2.5 text-center">Total Pelanggan</th>
-                        <th class="px-3.5 py-2.5">Utilisasi Port</th>
-                        <th class="px-3.5 py-2.5">Koordinat GPS</th>
-                        <th class="px-3.5 py-2.5 text-center w-28">Aksi</th>
+                        <th class="px-4 py-3 w-12 text-center">No</th>
+                        <th class="px-4 py-3">Nama Port PON</th>
+                        <th class="px-4 py-3">PON ID</th>
+                        <th class="px-4 py-3 text-center">Maks Port</th>
+                        <th class="px-4 py-3 text-center">Total ODP Terhubung</th>
+                        <th class="px-4 py-3 text-center">Total Pelanggan</th>
+                        <th class="px-4 py-3">Utilisasi Port</th>
+                        <th class="px-4 py-3 text-center w-36">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @forelse($odps as $odpItem)
-                        @php
-                            $parentPon = $pons->firstWhere('id', $odpItem->pon_id);
-                        @endphp
-                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-950/40 transition">
-                            <td class="px-3.5 py-2.5 text-center text-slate-400 font-mono">{{ $loop->iteration }}</td>
+                    <template x-for="(pon, index) in filteredPons" :key="pon.id">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-950/50 transition">
+                            <td class="px-4 py-3 text-center text-slate-400 font-mono" x-text="index + 1"></td>
                             
-                            <!-- Nama ODP -->
-                            <td class="px-3.5 py-2.5">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full {{ $odpItem->is_full ? 'bg-amber-500' : ($odpItem->user_count > 0 ? 'bg-emerald-500' : 'bg-slate-400') }}"></span>
-                                    <span class="font-bold text-slate-900 dark:text-white uppercase">{{ $odpItem->nama_odp }}</span>
-                                    <span class="text-[10px] text-slate-400 font-mono">#{{ $odpItem->id }}</span>
+                            <!-- Nama Port PON -->
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold flex items-center justify-center text-xs">
+                                        <span x-text="'P' + pon.id"></span>
+                                    </div>
+                                    <span class="font-bold text-slate-900 dark:text-white uppercase" x-text="pon.nama_pon"></span>
                                 </div>
                             </td>
 
-                            <!-- PON Asal -->
-                            <td class="px-3.5 py-2.5">
-                                @if($parentPon)
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                                        {{ $parentPon->nama_pon }}
-                                    </span>
-                                @else
-                                    <span class="text-slate-400 italic">PON #{{ $odpItem->pon_id }}</span>
-                                @endif
+                            <!-- PON ID -->
+                            <td class="px-4 py-3 font-mono text-slate-500" x-text="'#' + pon.id"></td>
+
+                            <!-- Maks Port -->
+                            <td class="px-4 py-3 text-center font-mono">
+                                <span class="font-semibold text-slate-800 dark:text-slate-200" x-text="(pon.port_max || 8) + ' Port'"></span>
                             </td>
 
-                            <!-- Kapasitas Port -->
-                            <td class="px-3.5 py-2.5 text-center font-mono">
-                                <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $odpItem->port_max ?? 8 }}</span> Port
+                            <!-- Total ODP -->
+                            <td class="px-4 py-3 text-center font-mono">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                                      x-text="(pon.odp_count || 0) + ' ODP'"></span>
                             </td>
 
                             <!-- Total Pelanggan -->
-                            <td class="px-3.5 py-2.5 text-center font-mono">
-                                <span class="px-2 py-0.5 rounded text-[11px] font-bold {{ $odpItem->is_full ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : ($odpItem->user_count > 0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400') }}">
-                                    {{ $odpItem->user_count }} Users
-                                </span>
+                            <td class="px-4 py-3 text-center font-mono">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                      x-text="(pon.user_count || 0) + ' Users'"></span>
                             </td>
 
-                            <!-- Utilisasi Bar -->
-                            <td class="px-3.5 py-2.5">
-                                <div class="flex items-center gap-2 max-w-[140px]">
-                                    <div class="flex-1 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                        <div class="h-full rounded-full {{ $odpItem->is_full ? 'bg-amber-500' : 'bg-blue-600' }}"
-                                             style="width: {{ $odpItem->utilization_percent }}%"></div>
+                            <!-- Utilisasi -->
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2 max-w-[150px]">
+                                    <div class="flex-1 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full transition-all"
+                                             :class="pon.utilization_percent >= 90 ? 'bg-rose-500' : (pon.utilization_percent >= 75 ? 'bg-amber-500' : 'bg-blue-600')"
+                                             :style="'width: ' + pon.utilization_percent + '%'"></div>
                                     </div>
-                                    <span class="text-[11px] font-mono text-slate-600 dark:text-slate-400">{{ $odpItem->utilization_percent }}%</span>
+                                    <span class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300" x-text="pon.utilization_percent + '%'"></span>
                                 </div>
                             </td>
 
-                            <!-- Koordinat GPS -->
-                            <td class="px-3.5 py-2.5">
-                                @if(!empty($odpItem->latitude) && !empty($odpItem->longitude))
-                                    <a href="https://maps.google.com/?q={{ $odpItem->latitude }},{{ $odpItem->longitude }}" 
-                                       target="_blank" 
-                                       class="inline-flex items-center gap-1 text-[11px] font-mono text-blue-600 dark:text-blue-400 hover:underline">
-                                        <span>{{ round($odpItem->latitude, 4) }}, {{ round($odpItem->longitude, 4) }}</span>
-                                    </a>
-                                @else
-                                    <span class="text-slate-400 italic text-[11px]">Tidak ada</span>
-                                @endif
-                            </td>
-
-                            <!-- Aksi Detail Button -->
-                            <td class="px-3.5 py-2.5 text-center">
+                            <!-- Tombol Aksi Detail -> Masuk ke Tabel ODP -->
+                            <td class="px-4 py-3 text-center">
                                 <button type="button" 
-                                        @click="openDetailOdp({{ json_encode($odpItem) }})"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 font-semibold text-xs transition">
+                                        @click="goToOdpList(pon)"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition transform hover:scale-[1.02] active:scale-[0.98]">
                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                    </svg>
-                                    <span>Detail</span>
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-3.5 py-6 text-center text-slate-400 italic">
-                                Belum ada data ODP pada OLT ini.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- 5. TAB 2: TABEL DATA PON                       -->
-    <!-- ============================================== -->
-    <div x-show="activeTab === 'pon'" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
-        <div class="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">
-                Daftar Port PON pada OLT {{ strtoupper($currentOlt->nama_olt ?? '') }}
-            </h3>
-            <span class="text-xs text-slate-500 dark:text-slate-400">
-                Total <span class="font-bold text-slate-800 dark:text-slate-200">{{ $pons->count() }}</span> Port PON
-            </span>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
-                    <tr>
-                        <th class="px-3.5 py-2.5 w-10 text-center">No</th>
-                        <th class="px-3.5 py-2.5">Nama Port PON</th>
-                        <th class="px-3.5 py-2.5">PON ID</th>
-                        <th class="px-3.5 py-2.5 text-center">Maks Port</th>
-                        <th class="px-3.5 py-2.5 text-center">Total ODP Terhubung</th>
-                        <th class="px-3.5 py-2.5 text-center">Total Pelanggan</th>
-                        <th class="px-3.5 py-2.5">Utilisasi Port</th>
-                        <th class="px-3.5 py-2.5 text-center w-28">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @forelse($pons as $ponItem)
-                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-950/40 transition">
-                            <td class="px-3.5 py-2.5 text-center text-slate-400 font-mono">{{ $loop->iteration }}</td>
-                            <td class="px-3.5 py-2.5">
-                                <span class="font-bold text-slate-900 dark:text-white uppercase">{{ $ponItem->nama_pon }}</span>
-                            </td>
-                            <td class="px-3.5 py-2.5 font-mono text-slate-500">
-                                #{{ $ponItem->id }}
-                            </td>
-                            <td class="px-3.5 py-2.5 text-center font-mono">
-                                {{ $ponItem->port_max ?? 8 }}
-                            </td>
-                            <td class="px-3.5 py-2.5 text-center font-mono font-bold text-slate-800 dark:text-slate-200">
-                                {{ $ponItem->odp_count }} ODP
-                            </td>
-                            <td class="px-3.5 py-2.5 text-center font-mono">
-                                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                                    {{ $ponItem->user_count }} Users
-                                </span>
-                            </td>
-                            <td class="px-3.5 py-2.5">
-                                <div class="flex items-center gap-2 max-w-[140px]">
-                                    <div class="flex-1 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                        <div class="h-full rounded-full {{ $ponItem->utilization_percent >= 90 ? 'bg-rose-500' : 'bg-blue-600' }}"
-                                             style="width: {{ $ponItem->utilization_percent }}%"></div>
-                                    </div>
-                                    <span class="text-[11px] font-mono text-slate-600 dark:text-slate-400">{{ $ponItem->utilization_percent }}%</span>
-                                </div>
-                            </td>
-                            <td class="px-3.5 py-2.5 text-center">
-                                <button type="button" 
-                                        @click="openDetailPon({{ json_encode($ponItem) }})"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 font-semibold text-xs transition">
-                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
                                     </svg>
                                     <span>Detail ODP</span>
+                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                    </svg>
                                 </button>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="px-3.5 py-6 text-center text-slate-400 italic">
-                                Belum ada data PON pada OLT ini.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+                    </template>
 
-    <!-- ============================================== -->
-    <!-- 6. TAB 3: TABEL DATA PELANGGAN (USERS)         -->
-    <!-- ============================================== -->
-    <div x-show="activeTab === 'users'" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
-        <div class="p-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">
-                Daftar Pelanggan pada OLT {{ strtoupper($currentOlt->nama_olt ?? '') }}
-            </h3>
-            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                Total {{ $users->count() }} Pelanggan
-            </span>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
-                    <tr>
-                        <th class="px-3.5 py-2.5 w-10 text-center">No</th>
-                        <th class="px-3.5 py-2.5">Nama Pelanggan</th>
-                        <th class="px-3.5 py-2.5">Nomor Internet</th>
-                        <th class="px-3.5 py-2.5">ODP Asal</th>
-                        <th class="px-3.5 py-2.5">Port PON</th>
-                        <th class="px-3.5 py-2.5">OLT Label</th>
-                        <th class="px-3.5 py-2.5">Keterangan</th>
+                    <tr x-show="filteredPons.length === 0">
+                        <td colspan="8" class="px-4 py-8 text-center text-slate-400 italic">
+                            Tidak ada data Port PON yang ditemukan.
+                        </td>
                     </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @forelse($users as $userItem)
-                        @php
-                            $userOdp = $odps->firstWhere('id', $userItem->odp_id);
-                            $userPon = $userOdp ? $pons->firstWhere('id', $userOdp->pon_id) : null;
-                        @endphp
-                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-950/40 transition">
-                            <td class="px-3.5 py-2 text-center text-slate-400 font-mono">{{ $loop->iteration }}</td>
-                            <td class="px-3.5 py-2 font-semibold text-slate-900 dark:text-white">
-                                {{ $userItem->nama_user }}
-                            </td>
-                            <td class="px-3.5 py-2 font-mono font-semibold text-blue-600 dark:text-blue-400">
-                                {{ $userItem->nomor_internet }}
-                            </td>
-                            <td class="px-3.5 py-2">
-                                @if($userOdp)
-                                    <span class="font-medium text-slate-800 dark:text-slate-200">
-                                        {{ $userOdp->nama_odp }}
-                                    </span>
-                                @else
-                                    <span class="text-slate-400">ODP #{{ $userItem->odp_id }}</span>
-                                @endif
-                            </td>
-                            <td class="px-3.5 py-2 text-slate-700 dark:text-slate-300">
-                                {{ $userPon->nama_pon ?? '-' }}
-                            </td>
-                            <td class="px-3.5 py-2 text-slate-600 dark:text-slate-400 font-mono">
-                                {{ $userItem->olt ?? '-' }}
-                            </td>
-                            <td class="px-3.5 py-2 text-slate-500 dark:text-slate-400">
-                                {{ $userItem->keterangan ?: '-' }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-3.5 py-6 text-center text-slate-400 italic">
-                                Tidak ada data user yang sesuai.
-                            </td>
-                        </tr>
-                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 
     <!-- ============================================== -->
-    <!-- 7. MODAL DETAIL ODP & DAFTAR PELANGGAN         -->
+    <!-- 5. LEVEL 2: TABEL ODP (MILIK PON TERPILIH)     -->
     <!-- ============================================== -->
-    <div x-show="showOdpModal" 
-         x-cloak 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
-         @keydown.escape.window="showOdpModal = false">
+    <div x-show="currentLevel === 'odp'" class="space-y-3">
         
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden"
-             @click.outside="showOdpModal = false">
-            
-            <!-- Modal Header -->
-            <div class="px-5 py-4 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <!-- Bar Navigasi Kembali & Banner Info PON -->
+        <div class="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <button type="button" 
+                        @click="goToPonList()"
+                        class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold text-xs shadow-xs transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                    </svg>
+                    <span>Kembali ke Daftar PON</span>
+                </button>
+                
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight" x-text="'Detail ODP: ' + (modalOdp?.nama_odp || '')"></h3>
-                        <span class="px-2 py-0.2 rounded text-[10px] font-mono text-slate-500 bg-slate-200 dark:bg-slate-800" x-text="'ID #' + (modalOdp?.id || '')"></span>
-                    </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Kapasitas Port: <span class="font-bold text-slate-800 dark:text-slate-200" x-text="(modalOdpUsers.length || 0) + ' / ' + (modalOdp?.port_max || 8) + ' Port'"></span>
+                    <h3 class="text-xs font-bold text-blue-950 dark:text-blue-200 uppercase tracking-tight"
+                        x-text="'Daftar ODP di ' + (selectedPon?.nama_pon || 'Port PON')"></h3>
+                    <p class="text-[11px] text-blue-700 dark:text-blue-300 mt-0.2">
+                        Klik tombol <span class="font-semibold text-blue-900 dark:text-white">Detail Users</span> pada baris ODP untuk melihat pelanggan terpasang.
                     </p>
                 </div>
-                <button type="button" @click="showOdpModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none p-1">
-                    &times;
-                </button>
             </div>
 
-            <!-- Modal Body: Table Users -->
-            <div class="p-5 max-h-[60vh] overflow-y-auto space-y-3">
-                <div class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
-                    <span class="font-semibold">Daftar Pelanggan Terpasang:</span>
-                    <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-bold" x-text="modalOdpUsers.length + ' Pelanggan'"></span>
-                </div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200 text-xs font-bold font-mono"
+                      x-text="'PON ID #' + (selectedPon?.id || '')"></span>
+                <span class="px-2.5 py-1 rounded bg-blue-600 text-white text-xs font-bold font-mono"
+                      x-text="filteredOdps.length + ' ODP Terdaftar'"></span>
+            </div>
+        </div>
 
-                <div class="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
-                            <tr>
-                                <th class="px-3 py-2 w-10 text-center">No</th>
-                                <th class="px-3 py-2">Nama Pelanggan</th>
-                                <th class="px-3 py-2">Nomor Internet</th>
-                                <th class="px-3 py-2">OLT</th>
-                                <th class="px-3 py-2">Keterangan</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                            <template x-for="(user, index) in modalOdpUsers" :key="user.id">
-                                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-950/40">
-                                    <td class="px-3 py-2 text-center text-slate-400 font-mono" x-text="index + 1"></td>
-                                    <td class="px-3 py-2 font-semibold text-slate-900 dark:text-white" x-text="user.nama_user"></td>
-                                    <td class="px-3 py-2 font-mono font-semibold text-blue-600 dark:text-blue-400" x-text="user.nomor_internet"></td>
-                                    <td class="px-3 py-2 text-slate-600 dark:text-slate-400 font-mono text-[11px]" x-text="user.olt || '-'"></td>
-                                    <td class="px-3 py-2 text-slate-500 italic text-[11px]" x-text="user.keterangan || '-'"></td>
-                                </tr>
-                            </template>
-                            <tr x-show="modalOdpUsers.length === 0">
-                                <td colspan="5" class="px-3 py-6 text-center text-slate-400 italic">
-                                    Belum ada pelanggan terpasang pada ODP ini.
+        <!-- Tabel ODP -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                            <th class="px-4 py-3 w-12 text-center">No</th>
+                            <th class="px-4 py-3">Nama ODP</th>
+                            <th class="px-4 py-3">ODP ID</th>
+                            <th class="px-4 py-3 text-center">Kapasitas Port</th>
+                            <th class="px-4 py-3 text-center">Total Pelanggan</th>
+                            <th class="px-4 py-3">Utilisasi Port</th>
+                            <th class="px-4 py-3">Koordinat GPS</th>
+                            <th class="px-4 py-3 text-center w-36">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <template x-for="(odp, index) in filteredOdps" :key="odp.id">
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-950/50 transition">
+                                <td class="px-4 py-3 text-center text-slate-400 font-mono" x-text="index + 1"></td>
+                                
+                                <!-- Nama ODP -->
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full"
+                                              :class="odp.is_full ? 'bg-amber-500 ring-2 ring-amber-200 dark:ring-amber-900' : (odp.user_count > 0 ? 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900' : 'bg-slate-300')"></span>
+                                        <span class="font-bold text-slate-900 dark:text-white uppercase" x-text="odp.nama_odp"></span>
+                                    </div>
+                                </td>
+
+                                <!-- ODP ID -->
+                                <td class="px-4 py-3 font-mono text-slate-500" x-text="'#' + odp.id"></td>
+
+                                <!-- Kapasitas Port -->
+                                <td class="px-4 py-3 text-center font-mono">
+                                    <span class="font-semibold text-slate-800 dark:text-slate-200" x-text="(odp.port_max || 8) + ' Port'"></span>
+                                </td>
+
+                                <!-- Total Pelanggan -->
+                                <td class="px-4 py-3 text-center font-mono">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold"
+                                          :class="odp.is_full ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : (odp.user_count > 0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400')"
+                                          x-text="(odp.user_count || 0) + ' Users'"></span>
+                                </td>
+
+                                <!-- Utilisasi Bar -->
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center gap-2 max-w-[150px]">
+                                        <div class="flex-1 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                            <div class="h-full rounded-full transition-all"
+                                                 :class="odp.is_full ? 'bg-amber-500' : (odp.utilization_percent >= 75 ? 'bg-amber-500' : 'bg-blue-600')"
+                                                 :style="'width: ' + (odp.utilization_percent || 0) + '%'"></div>
+                                        </div>
+                                        <span class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300" x-text="(odp.utilization_percent || 0) + '%'"></span>
+                                    </div>
+                                </td>
+
+                                <!-- Koordinat GPS -->
+                                <td class="px-4 py-3">
+                                    <template x-if="odp.latitude && odp.longitude">
+                                        <a :href="'https://maps.google.com/?q=' + odp.latitude + ',' + odp.longitude" 
+                                           target="_blank" 
+                                           class="inline-flex items-center gap-1 font-mono text-[11px] text-blue-600 dark:text-blue-400 hover:underline">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                            </svg>
+                                            <span x-text="Number(odp.latitude).toFixed(4) + ', ' + Number(odp.longitude).toFixed(4)"></span>
+                                        </a>
+                                    </template>
+                                    <template x-if="!odp.latitude || !odp.longitude">
+                                        <span class="text-slate-400 italic text-[11px]">-</span>
+                                    </template>
+                                </td>
+
+                                <!-- Tombol Aksi Detail -> Masuk ke Tabel Users -->
+                                <td class="px-4 py-3 text-center">
+                                    <button type="button" 
+                                            @click="goToUsersList(odp)"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs transition transform hover:scale-[1.02] active:scale-[0.98]">
+                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                                        </svg>
+                                        <span>Detail Users</span>
+                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
                                 </td>
                             </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                        </template>
 
-            <!-- Modal Footer -->
-            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 text-right">
-                <button type="button" @click="showOdpModal = false" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-semibold transition">
-                    Tutup
-                </button>
+                        <tr x-show="filteredOdps.length === 0">
+                            <td colspan="8" class="px-4 py-8 text-center text-slate-400 italic">
+                                Belum ada data ODP terdaftar pada Port PON ini.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-
         </div>
+
     </div>
 
     <!-- ============================================== -->
-    <!-- 8. MODAL DETAIL PON & DAFTAR ODP               -->
+    <!-- 6. LEVEL 3: TABEL USERS (MILIK ODP TERPILIH)   -->
     <!-- ============================================== -->
-    <div x-show="showPonModal" 
-         x-cloak 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
-         @keydown.escape.window="showPonModal = false">
+    <div x-show="currentLevel === 'users'" class="space-y-3">
         
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden"
-             @click.outside="showPonModal = false">
-            
-            <!-- Modal Header -->
-            <div class="px-5 py-4 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <!-- Bar Navigasi Kembali & Banner Info ODP -->
+        <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <button type="button" 
+                        @click="if (selectedPon) { goToOdpList(selectedPon); } else { goToPonList(); }"
+                        class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-semibold text-xs shadow-xs transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                    </svg>
+                    <span>Kembali ke Tabel ODP</span>
+                </button>
+                
                 <div>
                     <div class="flex items-center gap-2">
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight" x-text="'Detail PON: ' + (modalPon?.nama_pon || '')"></h3>
-                        <span class="px-2 py-0.2 rounded text-[10px] font-mono text-slate-500 bg-slate-200 dark:bg-slate-800" x-text="'ID #' + (modalPon?.id || '')"></span>
+                        <h3 class="text-xs font-bold text-emerald-950 dark:text-emerald-200 uppercase tracking-tight"
+                            x-text="'Daftar Pelanggan pada ODP: ' + (selectedOdp?.nama_odp || 'ODP')"></h3>
+                        <template x-if="selectedPon">
+                            <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-400" x-text="'(' + selectedPon.nama_pon + ')'"></span>
+                        </template>
                     </div>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Total ODP: <span class="font-bold text-slate-800 dark:text-slate-200" x-text="modalPonOdps.length + ' ODP Terdaftar'"></span>
+                    <p class="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.2">
+                        Kapasitas Port: <span class="font-bold text-emerald-950 dark:text-white" x-text="(filteredUsers.length || 0) + ' / ' + (selectedOdp?.port_max || 8) + ' Port'"></span>
                     </p>
                 </div>
-                <button type="button" @click="showPonModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none p-1">
-                    &times;
-                </button>
             </div>
 
-            <!-- Modal Body: Table ODPs inside this PON -->
-            <div class="p-5 max-h-[60vh] overflow-y-auto space-y-3">
-                <div class="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
-                            <tr>
-                                <th class="px-3 py-2 w-10 text-center">No</th>
-                                <th class="px-3 py-2">Nama ODP</th>
-                                <th class="px-3 py-2 text-center">Kapasitas</th>
-                                <th class="px-3 py-2 text-center">Pelanggan</th>
-                                <th class="px-3 py-2 text-center w-24">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                            <template x-for="(odp, index) in modalPonOdps" :key="odp.id">
-                                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-950/40">
-                                    <td class="px-3 py-2 text-center text-slate-400 font-mono" x-text="index + 1"></td>
-                                    <td class="px-3 py-2 font-bold text-slate-900 dark:text-white uppercase" x-text="odp.nama_odp"></td>
-                                    <td class="px-3 py-2 text-center font-mono" x-text="(odp.port_max || 8) + ' Port'"></td>
-                                    <td class="px-3 py-2 text-center font-mono font-bold text-emerald-600" x-text="(odp.user_count || 0) + ' Users'"></td>
-                                    <td class="px-3 py-2 text-center">
-                                        <button type="button" 
-                                                @click="showPonModal = false; openDetailOdp(odp)"
-                                                class="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-semibold text-[11px] transition">
-                                            Lihat User
-                                        </button>
-                                    </td>
-                                </tr>
-                            </template>
-                            <tr x-show="modalPonOdps.length === 0">
-                                <td colspan="5" class="px-3 py-6 text-center text-slate-400 italic">
-                                    Belum ada ODP terdaftar pada PON ini.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded bg-emerald-100 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 text-xs font-bold font-mono"
+                      x-text="'ODP ID #' + (selectedOdp?.id || '')"></span>
+                <span class="px-2.5 py-1 rounded bg-emerald-600 text-white text-xs font-bold font-mono"
+                      x-text="filteredUsers.length + ' Pelanggan'"></span>
             </div>
-
-            <!-- Modal Footer -->
-            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 text-right">
-                <button type="button" @click="showPonModal = false" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-semibold transition">
-                    Tutup
-                </button>
-            </div>
-
         </div>
+
+        <!-- Tabel Users -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                            <th class="px-4 py-3 w-12 text-center">No</th>
+                            <th class="px-4 py-3">Nama Pelanggan</th>
+                            <th class="px-4 py-3">Nomor Internet</th>
+                            <th class="px-4 py-3">ODP Asal</th>
+                            <th class="px-4 py-3">Port PON</th>
+                            <th class="px-4 py-3">OLT Label</th>
+                            <th class="px-4 py-3">Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <template x-for="(user, index) in filteredUsers" :key="user.id">
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-950/50 transition">
+                                <td class="px-4 py-2.5 text-center text-slate-400 font-mono" x-text="index + 1"></td>
+                                
+                                <!-- Nama User -->
+                                <td class="px-4 py-2.5">
+                                    <span class="font-bold text-slate-900 dark:text-white" x-text="user.nama_user"></span>
+                                </td>
+
+                                <!-- Nomor Internet -->
+                                <td class="px-4 py-2.5 font-mono font-semibold text-blue-600 dark:text-blue-400" x-text="user.nomor_internet"></td>
+
+                                <!-- ODP Asal -->
+                                <td class="px-4 py-2.5">
+                                    <span class="font-semibold text-slate-800 dark:text-slate-200" x-text="selectedOdp?.nama_odp || ('ODP #' + user.odp_id)"></span>
+                                </td>
+
+                                <!-- PON -->
+                                <td class="px-4 py-2.5 text-slate-700 dark:text-slate-300">
+                                    <span x-text="selectedPon?.nama_pon || '-'"></span>
+                                </td>
+
+                                <!-- OLT Label -->
+                                <td class="px-4 py-2.5 text-slate-600 dark:text-slate-400 font-mono text-[11px]" x-text="user.olt || '-'"></td>
+
+                                <!-- Keterangan -->
+                                <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400 italic" x-text="user.keterangan || '-'"></td>
+                            </tr>
+                        </template>
+
+                        <tr x-show="filteredUsers.length === 0">
+                            <td colspan="7" class="px-4 py-8 text-center text-slate-400 italic">
+                                Belum ada data pelanggan yang terpasang pada ODP ini.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
 </div>

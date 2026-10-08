@@ -261,12 +261,12 @@
                         </button>
                     </div>
 
-                    <!-- Preset Selector from Master Database m_odp -->
+                    <!-- Preset Selector from Master Database -->
                     <div class="pt-2.5 border-t border-slate-200 dark:border-slate-800 space-y-1">
                         <label class="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                             <span class="flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-                                <span>Pilih ODP dari Database:</span>
+                                <span>Pilih ODP dari Database OLT:</span>
                             </span>
                             <span class="text-[10px] text-sky-600 dark:text-sky-400 font-mono font-bold">{{ count($odps) }} ODP Aktif</span>
                         </label>
@@ -274,11 +274,18 @@
                             @change="selectOdpPreset($event.target.value)" 
                             class="w-full h-10 px-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 cursor-pointer"
                         >
-                            <option value="">-- Pilih ODP Master Database --</option>
-                            @foreach($odps as $o)
-                                <option value="{{ $o['lat'] }},{{ $o['lng'] }}|{{ $o['kode_odp'] }}">
-                                    {{ $o['name_odp'] }} ({{ $o['kode_odp'] }}) - PON: {{ $o['kode_pon'] }}
-                                </option>
+                            <option value="">-- Pilih ODP Master Database ({{ count($odps) }} Titik ODP) --</option>
+                            @php
+                                $odpsGrouped = collect($odps)->groupBy('olt_name');
+                            @endphp
+                            @foreach($odpsGrouped as $oltName => $group)
+                                <optgroup label="🏢 {{ $oltName }} ({{ count($group) }} Titik ODP)">
+                                    @foreach($group as $o)
+                                        <option value="{{ $o['lat'] }},{{ $o['lng'] }}|{{ $o['kode_odp'] }}">
+                                            {{ $o['name_odp'] }} ({{ $o['kode_odp'] }}) - {{ $o['kode_pon'] }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>
@@ -506,7 +513,7 @@
                     :class="activeBottomTab === 'odp_master' ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'"
                     class="px-3.5 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-2"
                 >
-                    <span>📍 Data Master ODP Database (m_odp)</span>
+                    <span>📍 Data Master ODP Database OLT</span>
                     <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/80 dark:bg-slate-900/80 font-mono font-bold text-sky-700 dark:text-sky-300">{{ count($odps) }} Node</span>
                 </button>
                 <button 
@@ -520,22 +527,23 @@
                 </button>
             </div>
             <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                Database: <strong class="text-sky-600 dark:text-sky-400">m_odp</strong> &amp; <strong class="text-amber-600 dark:text-amber-400">trx_coverage_area</strong>
+                Database: <strong class="text-sky-600 dark:text-sky-400">gomsn.odp / pon</strong> &amp; <strong class="text-amber-600 dark:text-amber-400">trx_coverage_area</strong>
             </span>
         </div>
 
-        <!-- TAB 1: DAFTAR MASTER ODP DARI DATABASE m_odp -->
+        <!-- TAB 1: DAFTAR MASTER ODP DARI DATABASE OLT -->
         <div x-show="activeBottomTab === 'odp_master'" class="space-y-2">
             <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pb-1">
-                <span>Daftar seluruh titik ODP yang tersimpan aktif pada tabel database <code>m_odp</code>.</span>
+                <span>Daftar seluruh titik koordinat ODP aktif dari master database OLT.</span>
                 <span class="font-mono text-sky-600 dark:text-sky-400 font-bold">Total: {{ count($odps) }} Titik ODP</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            <th class="py-3 px-4">OLT Asal</th>
                             <th class="py-3 px-4">Kode ODP</th>
-                            <th class="py-3 px-4">Nama ODP (Database)</th>
+                            <th class="py-3 px-4">Nama ODP</th>
                             <th class="py-3 px-4">Port PON Induk</th>
                             <th class="py-3 px-4">Kapasitas Core</th>
                             <th class="py-3 px-4">Titik Koordinat GPS</th>
@@ -546,6 +554,11 @@
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-800 dark:text-slate-200">
                         @forelse ($odps as $o)
                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="py-3.5 px-4 align-top font-bold text-slate-800 dark:text-slate-200">
+                                    <span class="px-2 py-0.5 rounded text-[10.5px] bg-slate-100 dark:bg-slate-800 font-mono">
+                                        {{ $o['olt_name'] ?? 'OLT' }}
+                                    </span>
+                                </td>
                                 <td class="py-3.5 px-4 align-top font-mono font-bold text-sky-600 dark:text-sky-400">
                                     {{ $o['kode_odp'] }}
                                 </td>
@@ -579,8 +592,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
-                                    Tidak ada data ODP di database <code>m_odp</code>.
+                                <td colspan="8" class="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+                                    Tidak ada data ODP di database OLT.
                                 </td>
                             </tr>
                         @endforelse

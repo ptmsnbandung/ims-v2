@@ -4013,54 +4013,155 @@ class TeknikController extends Controller
 
     /**
      * Halaman Cek Coverage Lokasi ke ODP Terdekat (GIS Dropcore Routing)
+     * Mengambil seluruh data titik koordinat ODP dari database master OLT (gomsn.odp1, odp2, odp3)
      */
     public function coverage(Request $request): View
     {
-        $allOdpsFromDb = DB::table('m_odp')->get();
-        $odps = $allOdpsFromDb->map(function ($odp, $idx) {
-            $lat = !empty($odp->latitude) ? (float) $odp->latitude : null;
-            $lng = !empty($odp->longitude) ? (float) $odp->longitude : null;
+        $odps = collect();
 
-            // Extract coordinates from note_odp if latitude/longitude is null
-            if (($lat === null || $lng === null) && !empty($odp->note_odp) && preg_match('/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/', $odp->note_odp, $matches)) {
-                $lat = (float) $matches[1];
-                $lng = (float) $matches[2];
+        try {
+            if (Schema::hasTable('gomsn.olt')) {
+                $olts = DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get();
+
+                foreach ($olts as $olt) {
+                    $odpTable = "gomsn.odp{$olt->olt_id}";
+                    $ponTable = "gomsn.pon{$olt->olt_id}";
+                    $userTable = "gomsn.users{$olt->olt_id}";
+
+                    if (Schema::hasTable($odpTable)) {
+                        $pons = Schema::hasTable($ponTable) ? DB::table($ponTable)->get()->keyBy('id') : collect();
+                        $userCounts = Schema::hasTable($userTable) 
+                            ? DB::table($userTable)->select('odp_id', DB::raw('count(*) as total'))->groupBy('odp_id')->pluck('total', 'odp_id') 
+                            : collect();
+
+                        $odpRows = DB::table($odpTable)->get();
+                        foreach ($odpRows as $odp) {
+                            $rawLat = $odp->latitude;
+                            $rawLng = $odp->longitude;
+
+                            $lat = null;
+                            $lng = null;
+
+                            if ($rawLat !== null && $rawLat !== '' && is_numeric($rawLat)) {
+                                $lat = (float) $rawLat;
+                            }
+                            if ($rawLng !== null && $rawLng !== '' && is_numeric($rawLng)) {
+                                $lng = (float) $rawLng;
+                            }
+
+                            // Normalisasi typo koordinat (contoh: -703585 -> -7.03585, 10754093 -> 107.54093)
+                            if ($lat !== null) {
+                                if ($lat < -1000) {
+                                    while ($lat < -90) $lat /= 10;
+                                } elseif ($lat > 1000) {
+                                    while ($lat > 180) $lat /= 10;
+                                }
+                            }
+                            if ($lng !== null) {
+                                if ($lng > 1000) {
+                                    while ($lng > 180) $lng /= 10;
+                                }
+                            }
+
+                            // Normalisasi jika koordinat tertukar
+                            if ($lat !== null && $lng !== null) {
+                                if ($lat > 0 && $lng < 0) {
+                                    $temp = $lat;
+                                    $lat = $lng;
+                                    $lng = $temp;
+                                }
+                            }
+
+                            // Lewatkan jika koordinat kosong atau di luar batas Indonesia
+                            if ($lat === null || $lng === null || $lat > 0 || $lat < -15 || $lng < 90 || $lng > 145) {
+                                continue;
+                            }
+
+                            $pon = $pons->get($odp->pon_id);
+                            $ponName = $pon->nama_pon ?? "PON #{$odp->pon_id}";
+                            $used = (int) ($userCounts->get($odp->id, 0));
+                            $max = (int) ($odp->port_max ?? 8);
+                            if ($max <= 0) $max = 8;
+
+                            $code = "ODP-OLT{$olt->olt_id}-#{$odp->id}";
+                            $name = $odp->nama_odp ?: "ODP #{$odp->id}";
+                            $oltName = strtoupper($olt->nama_olt ?? "OLT {$olt->olt_id}");
+
+                            $odps->push([
+                                'id' => $odp->id,
+                                'olt_id' => $olt->olt_id,
+                                'olt_name' => $oltName,
+                                'kode_odp' => $code,
+                                'name_odp' => $name,
+                                'code' => $code,
+                                'name' => $name,
+                                'display_name' => "{$name} ({$oltName} - {$ponName})",
+                                'kode_pon' => $ponName,
+                                'pon_name' => $ponName,
+                                'capacity_odp' => $max,
+                                'total_ports' => $max,
+                                'used_ports' => $used,
+                                'has_slot' => $used < $max,
+                                'latitude' => $lat,
+                                'longitude' => $lng,
+                                'lat' => $lat,
+                                'lng' => $lng,
+                                'note_odp' => "OLT: {$oltName} | Port: {$ponName} | Terpakai: {$used}/{$max} Port",
+                                'note' => "OLT: {$oltName} | Port: {$ponName}",
+                                'status' => 'active',
+                            ]);
+                        }
+                    }
+                }
             }
+        } catch (\Throwable $e) {
+            Log::warning("Coverage ODP gomsn fetch warning: " . $e->getMessage());
+        }
 
-            // Fallback coordinate if still empty
-            if ($lat === null || $lng === null) {
-                $baseLat = -6.936988;
-                $baseLng = 107.5904512;
-                $lat = $baseLat + (($idx % 4) * 0.002 - 0.003);
-                $lng = $baseLng + ((floor($idx / 4) % 4) * 0.002 - 0.003);
-            }
+        // Fallback jika database gomsn tidak ada / kosong
+        if ($odps->isEmpty() && Schema::hasTable('m_odp')) {
+            $allOdpsFromDb = DB::table('m_odp')->get();
+            $odps = $allOdpsFromDb->map(function ($odp, $idx) {
+                $lat = !empty($odp->latitude) ? (float) $odp->latitude : null;
+                $lng = !empty($odp->longitude) ? (float) $odp->longitude : null;
 
-            $used = (int) ($odp->used_ports ?? 0);
-            $max = (int) ($odp->capacity_odp ?: 16);
-            $name = $odp->name_odp ?: $odp->kode_odp;
-            $code = $odp->kode_odp ?: '-';
+                if ($lat === null || $lng === null) {
+                    $baseLat = -6.936988;
+                    $baseLng = 107.5904512;
+                    $lat = $baseLat + (($idx % 4) * 0.002 - 0.003);
+                    $lng = $baseLng + ((floor($idx / 4) % 4) * 0.002 - 0.003);
+                }
 
-            return [
-                'kode_odp' => $code,
-                'name_odp' => $name,
-                'code' => $code,
-                'name' => $name,
-                'display_name' => "{$name} ({$code})",
-                'kode_pon' => $odp->kode_pon ?? '-',
-                'pon_name' => $odp->kode_pon ?? '-',
-                'capacity_odp' => $max,
-                'total_ports' => $max,
-                'used_ports' => $used,
-                'has_slot' => $used < $max,
-                'latitude' => $lat,
-                'longitude' => $lng,
-                'lat' => $lat,
-                'lng' => $lng,
-                'note_odp' => $odp->note_odp ?? '',
-                'note' => $odp->note_odp ?? '',
-                'status' => $odp->status ?? 'active',
-            ];
-        });
+                $used = (int) ($odp->used_ports ?? 0);
+                $max = (int) ($odp->capacity_odp ?: 16);
+                $name = $odp->name_odp ?: $odp->kode_odp;
+                $code = $odp->kode_odp ?: '-';
+
+                return [
+                    'id' => $odp->id ?? $idx + 1,
+                    'olt_id' => 1,
+                    'olt_name' => 'OLT',
+                    'kode_odp' => $code,
+                    'name_odp' => $name,
+                    'code' => $code,
+                    'name' => $name,
+                    'display_name' => "{$name} ({$code})",
+                    'kode_pon' => $odp->kode_pon ?? '-',
+                    'pon_name' => $odp->kode_pon ?? '-',
+                    'capacity_odp' => $max,
+                    'total_ports' => $max,
+                    'used_ports' => $used,
+                    'has_slot' => $used < $max,
+                    'latitude' => $lat,
+                    'longitude' => $lng,
+                    'lat' => $lat,
+                    'lng' => $lng,
+                    'note_odp' => $odp->note_odp ?? '',
+                    'note' => $odp->note_odp ?? '',
+                    'status' => $odp->status ?? 'active',
+                ];
+            });
+        }
 
         $tickets = Schema::hasTable('trx_coverage_area')
             ? DB::table('trx_coverage_area')

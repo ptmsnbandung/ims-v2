@@ -14,7 +14,7 @@ class NotificationController extends Controller
     /**
      * Polling endpoint untuk notifikasi baru saat aplikasi sedang dibuka.
      * Mengembalikan event sesuai hak akses Role pengguna:
-     * - NOC & Teknik: Tiket Gangguan, Jadwal Survey/Aktivasi, Request Eksekusi UP/Down, Suspend, Terminasi.
+     * - NOC & Teknik: Tiket Gangguan, Jadwal Survey/Aktivasi, Request Eksekusi UP/Down, Suspend, Terminasi, Report Instalasi.
      * - Finance: Pembayaran Tagihan Masuk (Layanan & Registrasi), Konfirmasi Bukti Transfer, Request Invoice, Pendaftaran Baru.
      * - Admin & Direktur: Mendapatkan semua notifikasi.
      */
@@ -29,11 +29,11 @@ class NotificationController extends Controller
         $sinceTimestamp = $request->input('since');
         $tz = 'Asia/Jakarta';
         
-        // Default to last 2 minutes if no since provided
+        // Default to last 30 seconds if no since timestamp provided
         if (!empty($sinceTimestamp) && is_numeric($sinceTimestamp)) {
             $since = Carbon::createFromTimestamp((int) $sinceTimestamp, $tz);
         } else {
-            $since = Carbon::now($tz)->subMinutes(2);
+            $since = Carbon::now($tz)->subSeconds(30);
         }
 
         $sinceFormatted = $since->format('Y-m-d H:i:s');
@@ -50,17 +50,28 @@ class NotificationController extends Controller
         if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_tiket_gangguan')) {
             try {
                 $newTickets = DB::table('trx_tiket_gangguan')
-                    ->where('status', '11') // 11: Request Baru
-                    ->where('date_create', '>=', $sinceFormatted)
-                    ->orderBy('date_create', 'desc')
+                    ->leftJoin('view_batchjob', 'trx_tiket_gangguan.nomor_internet', '=', 'view_batchjob.nomor_internet')
+                    ->where('trx_tiket_gangguan.status', '11') // 11: Request Baru
+                    ->where('trx_tiket_gangguan.date_create', '>=', $sinceFormatted)
+                    ->select([
+                        'trx_tiket_gangguan.tiket',
+                        'trx_tiket_gangguan.nomor_internet',
+                        'trx_tiket_gangguan.keluhan',
+                        'trx_tiket_gangguan.date_create',
+                        'view_batchjob.nama_pelanggan',
+                    ])
+                    ->orderBy('trx_tiket_gangguan.date_create', 'desc')
                     ->limit(5)
                     ->get();
 
                 foreach ($newTickets as $t) {
-                    $nama = $t->nama_pelanggan ?: 'Pelanggan';
+                    $nama = $t->nama_pelanggan ?: ($t->nomor_internet ?: 'Pelanggan');
                     $keluhan = $t->keluhan ? ' - ' . substr($t->keluhan, 0, 40) : '';
+                    $tKey = $t->tiket ?: $t->nomor_internet;
+                    $tDate = $t->date_create ?: 'created';
+
                     $notifications[] = [
-                        'id' => 'tiket_' . ($t->id ?? $t->nomor_internet ?? uniqid()) . '_' . strtotime($t->date_create ?? 'now'),
+                        'id' => 'tiket_' . $tKey . '_' . md5($tDate),
                         'type' => 'tiket',
                         'title' => 'Tiket Gangguan Baru',
                         'message' => "Tiket gangguan dari {$nama}{$keluhan}",
@@ -81,11 +92,14 @@ class NotificationController extends Controller
             try {
                 $newRegistrations = DB::table('trx_pendaftaran')
                     ->where('hide', 0)
-                    ->where(function ($q) use ($sinceFormatted) {
-                        $q->where('date_create', '>=', $sinceFormatted)
-                          ->orWhere('date_update', '>=', $sinceFormatted);
-                    })
+                    ->where('date_create', '>=', $sinceFormatted)
                     ->whereIn('status_reg', ['11', '12', '13']) // Pendaftaran Baru / Draft
+                    ->select([
+                        'nomor_internet',
+                        'nama_pelanggan',
+                        'date_create',
+                        'date_update',
+                    ])
                     ->orderBy('date_create', 'desc')
                     ->limit(5)
                     ->get();
@@ -95,9 +109,12 @@ class NotificationController extends Controller
                     $speechText = $isFinance 
                         ? "Ada pendaftaran pelanggan baru atas nama {$nama} untuk penagihan registrasi"
                         : "Ada pelanggan baru terdaftar, atas nama {$nama}";
+                    
+                    $regKey = $reg->nomor_internet ?: md5($reg->nama_pelanggan);
+                    $regDate = $reg->date_create ?: 'reg';
 
                     $notifications[] = [
-                        'id' => 'reg_' . $reg->nomor_internet . '_' . strtotime($reg->date_create ?? 'now'),
+                        'id' => 'reg_' . $regKey . '_' . md5($regDate),
                         'type' => 'pendaftaran',
                         'title' => 'Pelanggan Baru Terdaftar',
                         'message' => "Pendaftaran baru atas nama {$nama} (No: {$reg->nomor_internet})",
@@ -144,10 +161,11 @@ class NotificationController extends Controller
                         $nama = $inv->nama_pelanggan ?: ($inv->nomor_internet ?: 'Pelanggan');
                         $nominal = (float) ($inv->amount_paid ?: $inv->total_layanan ?: 0);
                         $nominalFmt = 'Rp ' . number_format($nominal, 0, ',', '.');
-                        $tgl = $inv->payment_paid ?: $inv->date_update;
+                        $tgl = $inv->payment_paid ?: ($inv->date_update ?: 'paid');
+                        $invKey = str_replace(['/', '-', ' '], '_', $inv->kode_billing_layanan ?: $inv->nomor_internet);
 
                         $notifications[] = [
-                            'id' => 'paid_inv_' . str_replace(['/', '-'], '_', $inv->kode_billing_layanan) . '_' . strtotime($tgl ?? 'now'),
+                            'id' => 'paid_inv_' . $invKey . '_' . md5($tgl),
                             'type' => 'pembayaran',
                             'title' => 'Pembayaran Tagihan Lunas',
                             'message' => "Pembayaran {$inv->kode_billing_layanan} sebesar {$nominalFmt} diterima dari {$nama}",
@@ -188,10 +206,11 @@ class NotificationController extends Controller
                         $nama = $r->nama_pelanggan ?: ($r->nomor_internet ?: 'Pelanggan');
                         $nominal = (float) ($r->amount_paid ?: $r->total_reg ?: 0);
                         $nominalFmt = 'Rp ' . number_format($nominal, 0, ',', '.');
-                        $tgl = $r->payment_paid ?: $r->date_update;
+                        $tgl = $r->payment_paid ?: ($r->date_update ?: 'paid');
+                        $regBillKey = str_replace(['/', '-', ' '], '_', $r->kode_billing_registrasi ?: $r->nomor_internet);
 
                         $notifications[] = [
-                            'id' => 'paid_reg_' . str_replace(['/', '-'], '_', $r->kode_billing_registrasi) . '_' . strtotime($tgl ?? 'now'),
+                            'id' => 'paid_reg_' . $regBillKey . '_' . md5($tgl),
                             'type' => 'pembayaran',
                             'title' => 'Pembayaran Biaya Pasang Lunas',
                             'message' => "Biaya registrasi {$r->kode_billing_registrasi} sebesar {$nominalFmt} diterima dari {$nama}",
@@ -211,10 +230,7 @@ class NotificationController extends Controller
                     $waitingInvoices = DB::table('trx_billing_layanan')
                         ->leftJoin('view_batchjob', 'trx_billing_layanan.nomor_internet', '=', 'view_batchjob.nomor_internet')
                         ->where('trx_billing_layanan.status_bill_lay', '14') // 14 = Menunggu Verifikasi
-                        ->where(function ($q) use ($sinceFormatted) {
-                            $q->where('trx_billing_layanan.date_update', '>=', $sinceFormatted)
-                              ->orWhere('trx_billing_layanan.date_create', '>=', $sinceFormatted);
-                        })
+                        ->where('trx_billing_layanan.date_update', '>=', $sinceFormatted)
                         ->select([
                             'trx_billing_layanan.kode_billing_layanan',
                             'trx_billing_layanan.nomor_internet',
@@ -230,10 +246,11 @@ class NotificationController extends Controller
                         $nama = $w->nama_pelanggan ?: ($w->nomor_internet ?: 'Pelanggan');
                         $nominal = (float) ($w->total_layanan ?: 0);
                         $nominalFmt = $nominal > 0 ? ' (Rp ' . number_format($nominal, 0, ',', '.') . ')' : '';
-                        $tgl = $w->date_update ?? date('Y-m-d H:i:s');
+                        $tgl = $w->date_update ?: 'waiting';
+                        $waitBillKey = str_replace(['/', '-', ' '], '_', $w->kode_billing_layanan ?: $w->nomor_internet);
 
                         $notifications[] = [
-                            'id' => 'waiting_verif_' . str_replace(['/', '-'], '_', $w->kode_billing_layanan) . '_' . strtotime($tgl),
+                            'id' => 'waiting_verif_' . $waitBillKey . '_' . md5($tgl),
                             'type' => 'pembayaran',
                             'title' => 'Konfirmasi Pembayaran Masuk',
                             'message' => "Bukti transfer {$w->kode_billing_layanan}{$nominalFmt} dari {$nama} menunggu verifikasi",
@@ -262,9 +279,12 @@ class NotificationController extends Controller
                         ->get();
 
                     foreach ($newPayments as $pay) {
-                        $nama = $pay->nama_pelanggan ?? $pay->nomor_internet ?? 'Pelanggan';
+                        $nama = $pay->nama_pelanggan ?? ($pay->nomor_internet ?? 'Pelanggan');
+                        $payId = $pay->id ?: ($pay->kode_billing_layanan ?: 'pay');
+                        $payDate = $pay->created_at ?: ($pay->updated_at ?: 'pending');
+
                         $notifications[] = [
-                            'id' => 'pay_conf_' . ($pay->id ?? uniqid()) . '_' . strtotime($pay->created_at ?? 'now'),
+                            'id' => 'pay_conf_' . $payId . '_' . md5($payDate),
                             'type' => 'pembayaran',
                             'title' => 'Konfirmasi Pembayaran Masuk',
                             'message' => "Konfirmasi transfer dari {$nama} (" . ($pay->kode_billing_layanan ?? '') . ")",
@@ -288,9 +308,12 @@ class NotificationController extends Controller
                 ");
 
                 foreach ($ptmsnPayments as $pay) {
-                    $nama = $pay->nama_pelanggan ?? $pay->nomor_internet ?? 'Pelanggan';
+                    $nama = $pay->nama_pelanggan ?? ($pay->nomor_internet ?? 'Pelanggan');
+                    $payId = $pay->id ?: ($pay->kode_billing_layanan ?: 'ptmsn_pay');
+                    $payDate = $pay->created_at ?: ($pay->updated_at ?: 'pending');
+
                     $notifications[] = [
-                        'id' => 'ptmsn_pay_conf_' . ($pay->id ?? uniqid()) . '_' . strtotime($pay->created_at ?? 'now'),
+                        'id' => 'ptmsn_pay_conf_' . $payId . '_' . md5($payDate),
                         'type' => 'pembayaran',
                         'title' => 'Konfirmasi Pembayaran Masuk',
                         'message' => "Konfirmasi transfer dari {$nama} (" . ($pay->kode_billing_layanan ?? '') . ")",
@@ -303,15 +326,12 @@ class NotificationController extends Controller
                 // Ignore if ptmsn cross-db table unavailable
             }
 
-            // 3.4 Request Invoice Tagihan Mandiri dari Pelanggan (trx_billing_request)
+            // 3.5 Request Invoice Tagihan Mandiri dari Pelanggan (trx_billing_request)
             if (Schema::hasTable('trx_billing_request')) {
                 try {
                     $newBillingRequests = DB::table('trx_billing_request')
                         ->where('status_request', 'pending')
-                        ->where(function ($q) use ($sinceFormatted) {
-                            $q->where('created_at', '>=', $sinceFormatted)
-                              ->orWhere('updated_at', '>=', $sinceFormatted);
-                        })
+                        ->where('created_at', '>=', $sinceFormatted)
                         ->orderBy('created_at', 'desc')
                         ->limit(5)
                         ->get();
@@ -319,8 +339,11 @@ class NotificationController extends Controller
                     foreach ($newBillingRequests as $breq) {
                         $nama = $breq->nama_pelanggan ?: 'Pelanggan';
                         $bulanThn = ($breq->bulan_tagihan ?? '') . '/' . ($breq->tahun_tagihan ?? '');
+                        $breqId = $breq->id ?: ($breq->nomor_internet ?: 'breq');
+                        $breqDate = $breq->created_at ?: 'req';
+
                         $notifications[] = [
-                            'id' => 'breq_' . $breq->id . '_' . strtotime($breq->created_at ?? 'now'),
+                            'id' => 'breq_' . $breqId . '_' . md5($breqDate),
                             'type' => 'request_invoice',
                             'title' => 'Permintaan Invoice Tagihan',
                             'message' => "Pelanggan {$nama} mengajukan penerbitan invoice ({$bulanThn})",
@@ -348,9 +371,12 @@ class NotificationController extends Controller
                     ->get();
 
                 foreach ($newUpdowns as $u) {
-                    $nama = $u->nama_pelanggan ?? $u->nomor_internet ?? 'Pelanggan';
+                    $nama = $u->nama_pelanggan ?? ($u->nomor_internet ?? 'Pelanggan');
+                    $uKey = $u->kode_trx_ubah_layanan ?: ($u->nomor_internet ?: 'updown');
+                    $uDate = $u->date_create ?: 'req';
+
                     $notifications[] = [
-                        'id' => 'updown_' . $u->kode_trx_ubah_layanan,
+                        'id' => 'updown_' . $uKey . '_' . md5($uDate),
                         'type' => 'updown',
                         'title' => 'Request Ubah Bandwidth (NOC)',
                         'message' => "Finance mengajukan perubahan paket untuk {$nama}",
@@ -377,9 +403,12 @@ class NotificationController extends Controller
                     ->get();
 
                 foreach ($newSuspends as $s) {
-                    $nama = $s->nama_pelanggan ?? $s->nomor_internet ?? 'Pelanggan';
+                    $nama = $s->nama_pelanggan ?? ($s->nomor_internet ?? 'Pelanggan');
+                    $sKey = $s->kode_suspend ?: ($s->nomor_internet ?: 'suspend');
+                    $sDate = $s->date_create ?: 'req';
+
                     $notifications[] = [
-                        'id' => 'suspend_' . ($s->kode_suspend ?? uniqid()),
+                        'id' => 'suspend_' . $sKey . '_' . md5($sDate),
                         'type' => 'suspend',
                         'title' => 'Request Isolir Jaringan (NOC)',
                         'message' => "Finance mengajukan isolir tagihan untuk {$nama}",
@@ -406,9 +435,12 @@ class NotificationController extends Controller
                     ->get();
 
                 foreach ($newTerminasis as $term) {
-                    $nama = $term->nama_pelanggan ?? $term->nomor_internet ?? 'Pelanggan';
+                    $nama = $term->nama_pelanggan ?? ($term->nomor_internet ?? 'Pelanggan');
+                    $termKey = $term->kode_terminasi ?: ($term->nomor_internet ?: 'terminasi');
+                    $termDate = $term->date_create ?: 'req';
+
                     $notifications[] = [
-                        'id' => 'terminasi_' . ($term->kode_terminasi ?? uniqid()),
+                        'id' => 'terminasi_' . $termKey . '_' . md5($termDate),
                         'type' => 'terminasi',
                         'title' => 'Request Terminasi (NOC/Teknik)',
                         'message' => "Finance mengajukan putus berlangganan & penarikan ONT untuk {$nama}",
@@ -452,16 +484,17 @@ class NotificationController extends Controller
                 foreach ($reportedInstalasi as $inst) {
                     $nama = $inst->nama_pelanggan ?: ($inst->nomor_internet ?: 'Pelanggan');
                     $teknisi = $inst->instalasi_team ?: ($inst->user_update ?: 'Teknisi');
-                    $tgl = $inst->date_update ?? date('Y-m-d H:i:s');
+                    $tgl = $inst->date_update ?: 'done';
+                    $instKey = $inst->nomor_internet ?: 'inst';
                     
                     $notifications[] = [
-                        'id' => 'report_inst_' . $inst->nomor_internet . '_' . strtotime($tgl),
+                        'id' => 'report_inst_' . $instKey . '_' . md5($tgl),
                         'type' => 'instalasi',
                         'title' => 'Report Instalasi Selesai (NOC)',
                         'message' => "Teknisi ({$teknisi}) telah menyelesaikan instalasi untuk {$nama}. Siap dieksekusi aktivasi di NOC.",
                         'speech_text' => "Ada report instalasi selesai dari teknisi untuk pelanggan {$nama}, siap diaktivasi NOC.",
                         'url' => route('noc.aktivasi', ['status' => 'siap_aktivasi', 'search' => $inst->nomor_internet]),
-                        'created_at' => $tgl,
+                        'created_at' => $inst->date_update,
                     ];
                 }
             } catch (\Throwable $e) {
@@ -476,3 +509,4 @@ class NotificationController extends Controller
         ]);
     }
 }
+

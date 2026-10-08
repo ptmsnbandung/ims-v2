@@ -1388,14 +1388,19 @@
     <script>
         window.ImsVoice = {
             soundEnabled: localStorage.getItem('ims_voice_sound_enabled') !== 'false',
-            lastCheck: Math.floor(Date.now() / 1000) - 30, // Cek 30 detik ke belakang saat start
+            lastCheck: Math.max(
+                parseInt(localStorage.getItem('ims_last_notif_poll_ts') || '0', 10),
+                Math.floor(Date.now() / 1000) - 60
+            ),
             chimeAudio: new Audio('{{ asset("assets/sound/anoun.mp3") }}'),
             audioUnlocked: false,
             voicesReady: false,
+            queue: [],
+            isProcessingQueue: false,
 
             getPlayedIds() {
                 try {
-                    const stored = sessionStorage.getItem('ims_played_notifications');
+                    const stored = localStorage.getItem('ims_played_notifications');
                     return stored ? JSON.parse(stored) : [];
                 } catch(e) {
                     return [];
@@ -1408,8 +1413,8 @@
                     const list = this.getPlayedIds();
                     if (!list.includes(id)) {
                         list.push(id);
-                        if (list.length > 120) list.shift();
-                        sessionStorage.setItem('ims_played_notifications', JSON.stringify(list));
+                        if (list.length > 200) list.shift();
+                        localStorage.setItem('ims_played_notifications', JSON.stringify(list));
                     }
                 } catch(e) {}
             },
@@ -1427,7 +1432,7 @@
                     };
                 }
 
-                // Unlock audio autoplay on first click/key
+                // Unlock audio autoplay on first user interaction
                 const unlock = () => {
                     if (!this.audioUnlocked) {
                         this.chimeAudio.muted = true;
@@ -1444,60 +1449,102 @@
                 document.addEventListener('click', unlock, { once: true });
                 document.addEventListener('keydown', unlock, { once: true });
 
-                // Initial poll on load, then poll every 10 seconds when app is open
-                setTimeout(() => this.pollNotifications(), 2000);
+                // Initial poll on load, then poll every 10 seconds
+                setTimeout(() => this.pollNotifications(), 1500);
                 setInterval(() => this.pollNotifications(), 10000);
             },
 
             testSound() {
-                this.playNotificationVoice({
-                    type: '',
+                this.enqueueNotification({
+                    type: 'test',
                     title: 'Uji Coba Suara IMS',
                     message: 'Sistem notifikasi suara Web Speech API & Chime berfungsi dengan baik.',
                     speech_text: 'Tes notifikasi suara IMS berhasil. Selamat bertugas!',
                 });
             },
 
-            playNotificationVoice(item) {
-                // Trigger Toast Banner in UI
-                window.dispatchEvent(new CustomEvent('ims-new-toast', { detail: item }));
-
-                if (!this.soundEnabled) return;
-
-                // 1. Play Chime MP3
-                this.chimeAudio.currentTime = 0;
-                this.chimeAudio.play().then(() => {
-                    // 2. Play Web Speech API voice after short chime delay (650ms)
-                    setTimeout(() => {
-                        this.speak(item.speech_text || item.title);
-                    }, 650);
-                }).catch(() => {
-                    // Fallback to speech if chime play is blocked
-                    this.speak(item.speech_text || item.title);
-                });
+            enqueueNotification(item) {
+                this.queue.push(item);
+                this.processQueue();
             },
 
-            speak(text) {
-                if (!('speechSynthesis' in window) || !text) return;
+            async processQueue() {
+                if (this.isProcessingQueue || this.queue.length === 0) return;
+                this.isProcessingQueue = true;
+                const item = this.queue.shift();
+
                 try {
-                    window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = 'id-ID';
-                    utterance.rate = 1.0;
-                    utterance.pitch = 1.0;
+                    // Trigger Toast Banner in UI
+                    window.dispatchEvent(new CustomEvent('ims-new-toast', { detail: item }));
 
-                    const voices = window.speechSynthesis.getVoices();
-                    const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang === 'id_ID' || (v.lang && v.lang.toLowerCase().startsWith('id')));
-                    if (idVoice) utterance.voice = idVoice;
-
-                    window.speechSynthesis.speak(utterance);
-                } catch(e) {
-                    console.warn('Speech synthesis error:', e);
+                    if (this.soundEnabled) {
+                        await this.playChimeAndSpeak(item);
+                    }
+                } catch (e) {
+                    console.warn('Notification play error:', e);
+                } finally {
+                    setTimeout(() => {
+                        this.isProcessingQueue = false;
+                        this.processQueue();
+                    }, 500);
                 }
             },
 
+            playChimeAndSpeak(item) {
+                return new Promise((resolve) => {
+                    const text = item.speech_text || item.title;
+                    if (!text) {
+                        resolve();
+                        return;
+                    }
+
+                    let resolved = false;
+                    const done = () => {
+                        if (!resolved) {
+                            resolved = true;
+                            resolve();
+                        }
+                    };
+
+                    const speakText = () => {
+                        if (!('speechSynthesis' in window)) {
+                            done();
+                            return;
+                        }
+                        try {
+                            const utterance = new SpeechSynthesisUtterance(text);
+                            utterance.lang = 'id-ID';
+                            utterance.rate = 1.0;
+                            utterance.pitch = 1.0;
+
+                            const voices = window.speechSynthesis.getVoices();
+                            const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang === 'id_ID' || (v.lang && v.lang.toLowerCase().startsWith('id')));
+                            if (idVoice) utterance.voice = idVoice;
+
+                            utterance.onend = () => done();
+                            utterance.onerror = () => done();
+
+                            // Safety timeout in case utterance onend never fires
+                            setTimeout(() => done(), 7000);
+
+                            window.speechSynthesis.speak(utterance);
+                        } catch(e) {
+                            done();
+                        }
+                    };
+
+                    // Try playing Chime MP3 first
+                    this.chimeAudio.currentTime = 0;
+                    this.chimeAudio.play().then(() => {
+                        setTimeout(speakText, 550);
+                    }).catch(() => {
+                        speakText();
+                    });
+                });
+            },
+
             async pollNotifications() {
-                if (document.hidden) return; // Hanya jalankan jika tab browser sedang aktif dibuka
+                if (document.hidden) return; // Skip if tab is hidden
                 try {
                     const res = await fetch(`{{ route('api.notifications.poll') }}?since=${this.lastCheck}`, {
                         headers: {
@@ -1509,16 +1556,15 @@
                     const data = await res.json();
                     if (data.status === 'success') {
                         this.lastCheck = data.timestamp;
+                        localStorage.setItem('ims_last_notif_poll_ts', String(data.timestamp));
+
                         if (Array.isArray(data.notifications) && data.notifications.length > 0) {
-                            let delayCount = 0;
                             data.notifications.forEach((notif) => {
-                                const notifId = notif.id || (notif.type + '_' + notif.created_at);
-                                if (!this.hasPlayed(notifId)) {
+                                const notifId = notif.id;
+                                if (notifId && !this.hasPlayed(notifId)) {
+                                    // Mark immediately to prevent duplicate runs across tabs
                                     this.markAsPlayed(notifId);
-                                    setTimeout(() => {
-                                        this.playNotificationVoice(notif);
-                                    }, delayCount * 4000); // Jeda 4 detik antar ucapan notifikasi jika ada lebih dari 1
-                                    delayCount++;
+                                    this.enqueueNotification(notif);
                                 }
                             });
                         }

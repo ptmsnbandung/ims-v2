@@ -612,9 +612,9 @@
                                 @else
                                     bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800
                                 @endif">
-                                {{ $item->desc_status_registrasi ?: 'Pendaftaran Baru' }}
+                                {{ ($item->status_reg == '18' && !empty($item->aktivasi_note)) ? 'Menunggu Jadwal NOC (#18)' : (($item->desc_registrasi ?? '') ?: ('Pendaftaran #' . $item->status_reg)) }}
                             </span>
-                            <span class="text-[10px] font-mono text-slate-400 uppercase">{{ $item->group_layanan ?: 'MEDIANET' }}</span>
+                            <span class="text-[10px] font-mono text-slate-400 uppercase">{{ ($item->group_layanan ?? '') ?: 'MEDIANET' }}</span>
                         </div>
                     </div>
 

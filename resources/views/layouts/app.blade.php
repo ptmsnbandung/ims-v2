@@ -21,10 +21,24 @@
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ asset('assets/images/logo.png') }}">
 
+    <!-- Root Scale (Inline before external assets to prevent any layout flash) -->
+    <style>
+        /* Compact Root Scale (~84% dense enterprise dashboard scale without breaking viewport) */
+        html {
+            font-size: 13.5px;
+        }
+        @media (max-width: 639.98px) {
+            html {
+                font-size: 15px;
+            }
+        }
+
+        [x-cloak] { display: none !important; }
+    </style>
+
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        [x-cloak] { display: none !important; }
 
         /* Responsive helpers for Desktop Table vs Mobile Cards */
         @media (min-width: 768px) {

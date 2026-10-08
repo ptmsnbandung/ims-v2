@@ -2153,10 +2153,15 @@ class NocController extends Controller
                 $host = $router->host;
                 $port = (int)($router->port ?: 18735);
                 $username = $router->username;
+                $pass = $router->password ?: config('mikrotik.pass', 'kayuagung2-9');
                 try {
-                    $password = Crypt::decryptString($router->password);
-                } catch (\Exception $e) {
-                    $password = $router->password;
+                    $password = Crypt::decryptString($pass);
+                } catch (\Throwable $e) {
+                    if (is_string($pass) && str_starts_with($pass, 'eyJ')) {
+                        $password = config('mikrotik.pass', 'kayuagung2-9');
+                    } else {
+                        $password = $pass;
+                    }
                 }
             }
         }
@@ -2239,17 +2244,19 @@ class NocController extends Controller
         ];
 
         try {
-            $pass = $router->password;
+            $pass = $router->password ?: config('mikrotik.pass', 'kayuagung2-9');
             try {
                 $pass = Crypt::decryptString($pass);
-            } catch (\Exception $e) {
-                // Fallback to raw password
+            } catch (\Throwable $e) {
+                if (is_string($pass) && str_starts_with($pass, 'eyJ')) {
+                    $pass = config('mikrotik.pass', 'kayuagung2-9');
+                }
             }
 
             $service = new MikrotikService([
                 'host' => $router->host,
                 'port' => (int)($router->port ?: 18735),
-                'username' => $router->username,
+                'username' => $router->username ?: 'aplikasi',
                 'password' => $pass,
                 'timeout' => 6,
             ]);
@@ -2283,38 +2290,42 @@ class NocController extends Controller
         if (!$router) {
             return response()->json([
                 'success' => false,
-                'message' => 'Router tidak ditemukan.',
+                'message' => 'Router tidak ditemukan di database.',
                 'secrets' => [],
             ], 404);
         }
 
         try {
-            $pass = $router->password;
+            $pass = $router->password ?: config('mikrotik.pass', 'kayuagung2-9');
             try {
                 $pass = Crypt::decryptString($pass);
             } catch (\Throwable $e) {
-                // Password plain text
+                if (is_string($pass) && str_starts_with($pass, 'eyJ')) {
+                    $pass = config('mikrotik.pass', 'kayuagung2-9');
+                }
             }
 
             $service = new \App\Services\Network\MikrotikService([
                 'host' => $router->host,
                 'port' => (int)($router->port ?: 18735),
-                'username' => $router->username,
+                'username' => $router->username ?: 'aplikasi',
                 'password' => $pass,
-                'timeout' => 5,
+                'timeout' => 8,
             ]);
 
             $secrets = $service->getUsers();
-            $search = trim((string)$request->query('search', ''));
+            $search = trim((string)($request->query('q') ?? $request->query('search', '')));
 
             if ($search !== '') {
                 $secrets = array_values(array_filter($secrets, function ($s) use ($search) {
                     $name = $s['name'] ?? '';
                     $comment = $s['comment'] ?? '';
                     $profile = $s['profile'] ?? '';
+                    $caller = $s['last-caller-id'] ?? $s['remote-address'] ?? $s['caller-id'] ?? '';
                     return stripos($name, $search) !== false 
                         || stripos($comment, $search) !== false 
-                        || stripos($profile, $search) !== false;
+                        || stripos($profile, $search) !== false
+                        || stripos($caller, $search) !== false;
                 }));
             }
 

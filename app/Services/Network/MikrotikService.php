@@ -44,13 +44,17 @@ class MikrotikService
             $this->port = (int)($router->port ?: 18735);
             $this->user = $router->username ?: 'aplikasi';
             
-            $pass = $router->password ?: 'kayuagung2-9';
+            $pass = $router->password ?: config('mikrotik.pass', 'kayuagung2-9');
             try {
                 $this->pass = Crypt::decryptString($pass);
-            } catch (Exception $e) {
-                $this->pass = $pass;
+            } catch (Throwable $e) {
+                if (is_string($pass) && str_starts_with($pass, 'eyJ')) {
+                    $this->pass = config('mikrotik.pass', 'kayuagung2-9');
+                } else {
+                    $this->pass = $pass;
+                }
             }
-            $this->timeout = 4;
+            $this->timeout = 5;
             $this->ssl = false;
         } else {
             // 3. Fallback
@@ -58,7 +62,7 @@ class MikrotikService
             $this->port = (int)config('mikrotik.port', 18735);
             $this->user = config('mikrotik.user', 'aplikasi');
             $this->pass = config('mikrotik.pass', 'kayuagung2-9');
-            $this->timeout = 4;
+            $this->timeout = 5;
             $this->ssl = false;
         }
     }
@@ -417,7 +421,7 @@ class MikrotikService
             return is_array($result) ? $result : [];
         } catch (Throwable $e) {
             Log::error('Mikrotik getUsers error: ' . $e->getMessage());
-            return [];
+            throw new Exception("Gagal membaca secret dari MikroTik ({$this->host}): " . $e->getMessage(), 0, $e);
         }
     }
 

@@ -569,7 +569,12 @@
                                 <template x-if="filteredSecrets.length === 0">
                                     <tr>
                                         <td colspan="6" class="py-8 text-center text-slate-500 text-xs">
-                                            Tidak ada user PPPoE secret yang cocok dengan pencarian.
+                                            <template x-if="secretsData.length === 0">
+                                                <span>Tidak ada user PPPoE secret yang ditemukan di router ini. Klik tombol Refresh atau periksa koneksi.</span>
+                                            </template>
+                                            <template x-if="secretsData.length > 0">
+                                                <span>Tidak ada user PPPoE secret yang cocok dengan kata kunci pencarian.</span>
+                                            </template>
                                         </td>
                                     </tr>
                                 </template>
@@ -653,11 +658,18 @@ function routerManagement() {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
                 });
-                const data = await res.json();
+                const raw = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(raw);
+                } catch (e) {
+                    data = { success: false, message: 'Server membalas HTTP ' + res.status + ' (bukan JSON): ' + raw.substring(0, 150) };
+                }
+
                 if (data.success) {
                     this.secretsData = data.secrets || [];
                 } else {
-                    this.secretsError = data.message || 'Gagal mengambil user PPPoE dari router.';
+                    this.secretsError = data.message || ('Gagal mengambil user dari router (HTTP ' + res.status + ')');
                 }
             } catch (err) {
                 this.secretsError = 'Koneksi error: ' + err.message;

@@ -11,7 +11,7 @@
     $exportRoute = request()->routeIs('finance.*') ? 'finance.pelanggan.export' : 'teknik.pelanggan.export';
 @endphp
 
-<div class="space-y-6"
+<div class="space-y-3.5"
      x-data="{
          // Tab Status Active: 'aktif', 'terminasi', 'suspend', 'all'
          activeTab: '{{ ($filters['status'] ?? '') == '23' ? 'terminasi' : (($filters['status'] ?? '') == '21' ? 'suspend' : 'aktif') }}',
@@ -49,90 +49,90 @@
     
     <!-- Flash Messages (Notifikasi Sukses / Gagal Permintaan) -->
     @if(session('success'))
-        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-sm flex items-center justify-between shadow-sm">
-            <div class="flex items-center gap-2.5">
-                <svg class="w-5 h-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <div class="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs flex items-center justify-between shadow-xs">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
                 <span class="font-medium">{{ session('success') }}</span>
             </div>
-            <button @click="$el.parentElement.remove()" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 text-lg font-bold cursor-pointer">&times;</button>
+            <button @click="$el.parentElement.remove()" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 text-base font-bold cursor-pointer">&times;</button>
         </div>
     @endif
     @if(session('error'))
-        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-400 text-sm flex items-center justify-between shadow-sm">
-            <div class="flex items-center gap-2.5">
-                <svg class="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <div class="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-400 text-xs flex items-center justify-between shadow-xs">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 flex-shrink-0 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                 </svg>
                 <span class="font-medium">{{ session('error') }}</span>
             </div>
-            <button @click="$el.parentElement.remove()" class="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 text-lg font-bold cursor-pointer">&times;</button>
+            <button @click="$el.parentElement.remove()" class="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 text-base font-bold cursor-pointer">&times;</button>
         </div>
     @endif
 
     <!-- Top Header: Breadcrumbs & Total KPI Badges (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
-    <div class="ims-banner relative overflow-hidden rounded-2xl p-5 sm:p-6 shadow-md border border-teal-500/20"
+    <div class="ims-banner relative overflow-hidden rounded-xl p-3.5 sm:p-4 shadow-sm border border-teal-500/20"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
         <!-- Subtle Glow Effect -->
-        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
 
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3">
             <!-- Breadcrumb & Title -->
             <div>
-                <div class="flex items-center gap-2 text-xs text-[#c6edf3] mb-1.5 font-medium">
+                <div class="flex items-center gap-1.5 text-[11px] text-[#c6edf3] mb-1 font-medium">
                     <a href="{{ route('dashboard') }}" class="hover:text-white transition">IMS</a>
-                    <svg class="w-3.5 h-3.5 text-teal-300/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <svg class="w-3 h-3 text-teal-300/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                     </svg>
                     <span class="text-[#c6edf3] font-semibold">{{ $isFinance ? 'Finance' : 'Teknik' }}</span>
-                    <svg class="w-3.5 h-3.5 text-teal-300/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <svg class="w-3 h-3 text-teal-300/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                     </svg>
                     <span class="text-white font-semibold">Pelanggan</span>
                 </div>
-                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
+                <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
                     <span>Data Pelanggan Terdaftar</span>
                 </h2>
-                <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
+                <p class="text-[11px] text-[#c6edf3] mt-0.5 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
                     Database master pelanggan aktif, profil layanan bandwidth, status suspend, dan arsip terminasi.
                 </p>
             </div>
 
             <!-- Overall KPI Metric Pills -->
-            <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
+            <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto">
                 <a href="{{ route($pelangganRoute, ['status' => 'all']) }}" 
-                   class="justify-center px-3.5 py-2 rounded-xl sm:rounded-full shadow-sm flex items-center gap-2 text-xs font-bold hover:opacity-95 transition cursor-pointer"
+                   class="justify-center px-2.5 py-1 rounded-lg sm:rounded-full shadow-2xs flex items-center gap-1.5 text-[11px] font-bold hover:opacity-95 transition cursor-pointer"
                    style="background-color: #ffffff; color: #1e293b; border: 1px solid rgba(255,255,255,0.8);"
                    title="Lihat Semua Pelanggan">
-                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: #0ea5e9;"></span>
+                    <span class="w-2 h-2 rounded-full" style="background-color: #0ea5e9;"></span>
                     <span style="color: #475569; font-weight: 600;">Total:</span>
-                    <strong class="font-mono font-black text-sm" style="color: #0f172a;">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
+                    <strong class="font-mono font-black text-xs" style="color: #0f172a;">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '20']) }}" 
-                   class="justify-center px-3.5 py-2 rounded-xl sm:rounded-full shadow-sm flex items-center gap-2 text-xs hover:opacity-95 transition cursor-pointer"
+                   class="justify-center px-2.5 py-1 rounded-lg sm:rounded-full shadow-2xs flex items-center gap-1.5 text-[11px] hover:opacity-95 transition cursor-pointer"
                    style="background-color: rgba(4, 51, 62, 0.9); color: #6ee7b7; border: 1px solid rgba(45, 212, 191, 0.5);"
                    title="Filter Pelanggan Aktif">
-                    <span class="w-2.5 h-2.5 rounded-full animate-pulse" style="background-color: #34d399;"></span>
+                    <span class="w-2 h-2 rounded-full animate-pulse" style="background-color: #34d399;"></span>
                     <span style="color: #6ee7b7; font-weight: 600;">Aktif:</span>
-                    <strong class="font-mono font-bold text-sm" style="color: #d1fae5;">{{ number_format($bwCounts['total_aktif']) }}</strong>
+                    <strong class="font-mono font-bold text-xs" style="color: #d1fae5;">{{ number_format($bwCounts['total_aktif']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '23']) }}" 
-                   class="justify-center px-3.5 py-2 rounded-xl sm:rounded-full shadow-sm flex items-center gap-2 text-xs hover:opacity-95 transition cursor-pointer"
+                   class="justify-center px-2.5 py-1 rounded-lg sm:rounded-full shadow-2xs flex items-center gap-1.5 text-[11px] hover:opacity-95 transition cursor-pointer"
                    style="background-color: rgba(62, 4, 19, 0.9); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.7);"
                    title="Filter Pelanggan Terminasi">
-                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: #fb7185;"></span>
+                    <span class="w-2 h-2 rounded-full" style="background-color: #fb7185;"></span>
                     <span style="color: #fda4af; font-weight: 600;">Terminasi:</span>
-                    <strong class="font-mono font-bold text-sm" style="color: #ffe4e6;">{{ number_format($bwCounts['total_terminasi']) }}</strong>
+                    <strong class="font-mono font-bold text-xs" style="color: #ffe4e6;">{{ number_format($bwCounts['total_terminasi']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '21']) }}" 
-                   class="justify-center px-3.5 py-2 rounded-xl sm:rounded-full shadow-sm flex items-center gap-2 text-xs hover:opacity-95 transition cursor-pointer"
+                   class="justify-center px-2.5 py-1 rounded-lg sm:rounded-full shadow-2xs flex items-center gap-1.5 text-[11px] hover:opacity-95 transition cursor-pointer"
                    style="background-color: rgba(62, 46, 4, 0.9); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.6);"
                    title="Filter Pelanggan Suspend">
-                    <span class="w-2.5 h-2.5 rounded-full" style="background-color: #fbbf24;"></span>
+                    <span class="w-2 h-2 rounded-full" style="background-color: #fbbf24;"></span>
                     <span style="color: #fcd34d; font-weight: 600;">Suspend:</span>
-                    <strong class="font-mono font-bold text-sm" style="color: #fef3c7;">{{ number_format($bwCounts['total_suspend']) }}</strong>
+                    <strong class="font-mono font-bold text-xs" style="color: #fef3c7;">{{ number_format($bwCounts['total_suspend']) }}</strong>
                 </a>
             </div>
         </div>
@@ -141,19 +141,19 @@
     <!-- =================================================================== -->
     <!-- TAB CONTROLLER: BERSIH & RAPI                                       -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 sm:space-y-5">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs space-y-3">
         
         <!-- Segmented Tab Navigation -->
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
-            <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-x-auto max-w-full scrollbar-none">
+        <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+            <div class="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto max-w-full scrollbar-none">
                 <!-- Tab Aktif -->
                 <button type="button" 
                         @click="activeTab = 'aktif'"
-                        :class="activeTab === 'aktif' ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
-                        class="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs transition duration-150 cursor-pointer flex-shrink-0">
-                    <span class="w-2 h-2 rounded-full" :class="activeTab === 'aktif' ? 'bg-white' : 'bg-blue-500'"></span>
+                        :class="activeTab === 'aktif' ? 'bg-blue-600 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
+                        class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] transition duration-150 cursor-pointer flex-shrink-0">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'aktif' ? 'bg-white' : 'bg-blue-500'"></span>
                     <span>Pelanggan Aktif</span>
-                    <span class="px-1.5 py-0.5 rounded text-[10px]" :class="activeTab === 'aktif' ? 'bg-white/20 text-white font-extrabold' : 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'">
+                    <span class="px-1.5 py-0.2 rounded text-[9px]" :class="activeTab === 'aktif' ? 'bg-white/20 text-white font-extrabold' : 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'">
                         {{ number_format($bwCounts['total_aktif']) }}
                     </span>
                 </button>
@@ -161,11 +161,11 @@
                 <!-- Tab Terminasi -->
                 <button type="button" 
                         @click="activeTab = 'terminasi'"
-                        :class="activeTab === 'terminasi' ? 'bg-rose-600 text-white shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
-                        class="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs transition duration-150 cursor-pointer flex-shrink-0">
-                    <span class="w-2 h-2 rounded-full" :class="activeTab === 'terminasi' ? 'bg-white' : 'bg-rose-500'"></span>
+                        :class="activeTab === 'terminasi' ? 'bg-rose-600 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
+                        class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] transition duration-150 cursor-pointer flex-shrink-0">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'terminasi' ? 'bg-white' : 'bg-rose-500'"></span>
                     <span>Terminasi</span>
-                    <span class="px-1.5 py-0.5 rounded text-[10px]" :class="activeTab === 'terminasi' ? 'bg-white/20 text-white font-extrabold' : 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30'">
+                    <span class="px-1.5 py-0.2 rounded text-[9px]" :class="activeTab === 'terminasi' ? 'bg-white/20 text-white font-extrabold' : 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30'">
                         {{ number_format($bwCounts['total_terminasi']) }}
                     </span>
                 </button>
@@ -173,11 +173,11 @@
                 <!-- Tab Suspend -->
                 <button type="button" 
                         @click="activeTab = 'suspend'"
-                        :class="activeTab === 'suspend' ? 'bg-amber-500 text-white shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
-                        class="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs transition duration-150 cursor-pointer flex-shrink-0">
-                    <span class="w-2 h-2 rounded-full" :class="activeTab === 'suspend' ? 'bg-white' : 'bg-amber-500'"></span>
+                        :class="activeTab === 'suspend' ? 'bg-amber-500 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
+                        class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] transition duration-150 cursor-pointer flex-shrink-0">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'suspend' ? 'bg-white' : 'bg-amber-500'"></span>
                     <span>Suspend</span>
-                    <span class="px-1.5 py-0.5 rounded text-[10px]" :class="activeTab === 'suspend' ? 'bg-white/20 text-white font-extrabold' : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30'">
+                    <span class="px-1.5 py-0.2 rounded text-[9px]" :class="activeTab === 'suspend' ? 'bg-white/20 text-white font-extrabold' : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30'">
                         {{ number_format($bwCounts['total_suspend']) }}
                     </span>
                 </button>
@@ -185,9 +185,9 @@
                 <!-- Tab Semua Overview -->
                 <button type="button" 
                         @click="activeTab = 'all'"
-                        :class="activeTab === 'all' ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-sm font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
-                        class="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs transition duration-150 cursor-pointer flex-shrink-0">
-                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        :class="activeTab === 'all' ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
+                        class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] transition duration-150 cursor-pointer flex-shrink-0">
+                    <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
                     </svg>
                     <span>Semua Status</span>
@@ -195,165 +195,165 @@
             </div>
 
             <!-- Hint text -->
-            <span class="text-[11px] text-slate-500 dark:text-slate-400 hidden lg:inline-block">
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 hidden lg:inline-block">
                 💡 Klik kartu bandwidth di bawah untuk filter cepat ke tabel.
             </span>
         </div>
 
         <!-- ==================== 1. PANEL AKTIF ==================== -->
-        <div x-show="activeTab === 'aktif' || activeTab === 'all'" x-cloak class="space-y-3">
+        <div x-show="activeTab === 'aktif' || activeTab === 'all'" x-cloak class="space-y-2.5">
             <div class="flex items-center justify-between" x-show="activeTab === 'all'">
-                <h4 class="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400"></span>
+                <h4 class="text-[11px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></span>
                     <span>Pelanggan Aktif (Total: {{ number_format($bwCounts['total_aktif']) }} User)</span>
                 </h4>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2">
                 @foreach($layananList as $layanan)
                     @php
                         $count = $bwCounts['aktif'][$layanan->kode_kategori_bandwith] ?? 0;
                         $isActiveFilter = ($filters['status'] ?? '') == '20' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
                     @endphp
                     <a href="{{ route($pelangganRoute, ['status' => '20', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
-                       class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm {{ $isActiveFilter ? 'bg-blue-50/90 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700' }} flex flex-col justify-between min-h-[74px]">
+                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-blue-50/90 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700' }} flex flex-col justify-between min-h-[58px]">
                         <div class="flex items-center justify-between gap-1">
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
                                 {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-blue-600 dark:bg-blue-400' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
-                        <div class="mt-2 flex items-baseline justify-between">
-                            <span class="text-base font-extrabold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-600' }}">
+                        <div class="mt-1.5 flex items-baseline justify-between">
+                            <span class="text-sm font-bold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400' : 'text-slate-400 dark:text-slate-600' }}">
                                 {{ number_format($count) }}
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">User</span>
+                            <span class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">User</span>
                         </div>
                     </a>
                 @endforeach
 
                 <!-- Card Total Aktif (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route($pelangganRoute, ['status' => '20']) }}" 
-                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-blue-600 hover:bg-blue-700 text-white border-blue-600 flex flex-col justify-between min-h-[74px]">
+                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-blue-600 hover:bg-blue-700 text-white border-blue-600 flex flex-col justify-between min-h-[58px]">
                     <div class="flex items-center justify-between gap-1">
-                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-blue-800/70 text-white border border-blue-400/30 truncate">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-blue-800/70 text-white border border-blue-400/30 truncate">
                             TOTAL AKTIF
                         </span>
-                        <svg class="w-3.5 h-3.5 text-blue-200 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <svg class="w-3 h-3 text-blue-200 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
-                    <div class="mt-2 flex items-baseline justify-between">
-                        <span class="text-base font-black tracking-tight text-white">
+                    <div class="mt-1.5 flex items-baseline justify-between">
+                        <span class="text-sm font-black tracking-tight text-white">
                             {{ number_format($bwCounts['total_aktif']) }}
                         </span>
-                        <span class="text-[10px] text-blue-100 font-semibold">User</span>
+                        <span class="text-[9px] text-blue-100 font-semibold">User</span>
                     </div>
                 </a>
             </div>
         </div>
 
         <!-- ==================== 2. PANEL TERMINASI ==================== -->
-        <div x-show="activeTab === 'terminasi' || activeTab === 'all'" x-cloak class="space-y-3" :class="activeTab === 'all' ? 'pt-4 border-t border-slate-200 dark:border-slate-800' : ''">
+        <div x-show="activeTab === 'terminasi' || activeTab === 'all'" x-cloak class="space-y-2.5" :class="activeTab === 'all' ? 'pt-3 border-t border-slate-200 dark:border-slate-800' : ''">
             <div class="flex items-center justify-between" x-show="activeTab === 'all'">
-                <h4 class="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-rose-600 dark:bg-rose-400"></span>
+                <h4 class="text-[11px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-600 dark:bg-rose-400"></span>
                     <span>Pelanggan Terminasi (Total: {{ number_format($bwCounts['total_terminasi']) }} User)</span>
                 </h4>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2">
                 @foreach($layananList as $layanan)
                     @php
                         $count = $bwCounts['terminasi'][$layanan->kode_kategori_bandwith] ?? 0;
                         $isActiveFilter = ($filters['status'] ?? '') == '23' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
                     @endphp
                     <a href="{{ route($pelangganRoute, ['status' => '23', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
-                       class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm {{ $isActiveFilter ? 'bg-rose-50/90 dark:bg-rose-500/15 border-rose-500 ring-2 ring-rose-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700' }} flex flex-col justify-between min-h-[74px]">
+                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-rose-50/90 dark:bg-rose-500/15 border-rose-500 ring-2 ring-rose-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700' }} flex flex-col justify-between min-h-[58px]">
                         <div class="flex items-center justify-between gap-1">
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-rose-300 dark:group-hover:border-rose-600 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-rose-300 dark:group-hover:border-rose-600 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
                                 {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-rose-600 dark:bg-rose-400' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
-                        <div class="mt-2 flex items-baseline justify-between">
-                            <span class="text-base font-extrabold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400' : 'text-slate-400 dark:text-slate-600' }}">
+                        <div class="mt-1.5 flex items-baseline justify-between">
+                            <span class="text-sm font-bold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400' : 'text-slate-400 dark:text-slate-600' }}">
                                 {{ number_format($count) }}
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">User</span>
+                            <span class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">User</span>
                         </div>
                     </a>
                 @endforeach
 
                 <!-- Card Total Terminasi (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route($pelangganRoute, ['status' => '23']) }}" 
-                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-rose-600 hover:bg-rose-700 text-white border-rose-600 flex flex-col justify-between min-h-[74px]">
+                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-rose-600 hover:bg-rose-700 text-white border-rose-600 flex flex-col justify-between min-h-[58px]">
                     <div class="flex items-center justify-between gap-1">
-                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-800/70 text-white border border-rose-400/30 truncate">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-800/70 text-white border border-rose-400/30 truncate">
                             TOTAL TERMINASI
                         </span>
-                        <svg class="w-3.5 h-3.5 text-rose-200 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <svg class="w-3 h-3 text-rose-200 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
-                    <div class="mt-2 flex items-baseline justify-between">
-                        <span class="text-base font-black tracking-tight text-white">
+                    <div class="mt-1.5 flex items-baseline justify-between">
+                        <span class="text-sm font-black tracking-tight text-white">
                             {{ number_format($bwCounts['total_terminasi']) }}
                         </span>
-                        <span class="text-[10px] text-rose-100 font-semibold">User</span>
+                        <span class="text-[9px] text-rose-100 font-semibold">User</span>
                     </div>
                 </a>
             </div>
         </div>
 
         <!-- ==================== 3. PANEL SUSPEND ==================== -->
-        <div x-show="activeTab === 'suspend' || activeTab === 'all'" x-cloak class="space-y-3" :class="activeTab === 'all' ? 'pt-4 border-t border-slate-200 dark:border-slate-800' : ''">
+        <div x-show="activeTab === 'suspend' || activeTab === 'all'" x-cloak class="space-y-2.5" :class="activeTab === 'all' ? 'pt-3 border-t border-slate-200 dark:border-slate-800' : ''">
             <div class="flex items-center justify-between" x-show="activeTab === 'all'">
-                <h4 class="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <h4 class="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                     <span>Pelanggan Suspend (Total: {{ number_format($bwCounts['total_suspend']) }} User)</span>
                 </h4>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2">
                 @foreach($layananList as $layanan)
                     @php
                         $count = $bwCounts['suspend'][$layanan->kode_kategori_bandwith] ?? 0;
                         $isActiveFilter = ($filters['status'] ?? '') == '21' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
                     @endphp
                     <a href="{{ route($pelangganRoute, ['status' => '21', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
-                       class="group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm {{ $isActiveFilter ? 'bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700' }} flex flex-col justify-between min-h-[74px]">
+                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700' }} flex flex-col justify-between min-h-[58px]">
                         <div class="flex items-center justify-between gap-1">
-                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-amber-300 dark:group-hover:border-amber-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-amber-300 dark:group-hover:border-amber-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
                                 {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
-                        <div class="mt-2 flex items-baseline justify-between">
-                            <span class="text-base font-extrabold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400' : 'text-slate-400 dark:text-slate-600' }}">
+                        <div class="mt-1.5 flex items-baseline justify-between">
+                            <span class="text-sm font-bold tracking-tight {{ $count > 0 ? 'text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400' : 'text-slate-400 dark:text-slate-600' }}">
                                 {{ number_format($count) }}
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">User</span>
+                            <span class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">User</span>
                         </div>
                     </a>
                 @endforeach
 
                 <!-- Card Total Suspend (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route($pelangganRoute, ['status' => '21']) }}" 
-                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2.5 rounded-xl border transition-all duration-150 shadow-xs hover:shadow-sm bg-amber-500 hover:bg-amber-600 text-white border-amber-500 flex flex-col justify-between min-h-[74px]">
+                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-amber-500 hover:bg-amber-600 text-white border-amber-500 flex flex-col justify-between min-h-[58px]">
                     <div class="flex items-center justify-between gap-1">
-                        <span class="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-700/70 text-white border border-amber-300/30 truncate">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-700/70 text-white border border-amber-300/30 truncate">
                             TOTAL SUSPEND
                         </span>
-                        <svg class="w-3.5 h-3.5 text-amber-100 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <svg class="w-3 h-3 text-amber-100 group-hover:text-white group-hover:translate-x-0.5 transition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </div>
-                    <div class="mt-2 flex items-baseline justify-between">
-                        <span class="text-base font-black tracking-tight text-white">
+                    <div class="mt-1.5 flex items-baseline justify-between">
+                        <span class="text-sm font-black tracking-tight text-white">
                             {{ number_format($bwCounts['total_suspend']) }}
                         </span>
-                        <span class="text-[10px] text-amber-100 font-semibold">User</span>
+                        <span class="text-[9px] text-amber-100 font-semibold">User</span>
                     </div>
                 </a>
             </div>
@@ -364,16 +364,16 @@
     <!-- =================================================================== -->
     <!-- FILTER BAR CONTAINER                                                -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
         <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm">
             <!-- 5 Kolom Filter Responsif -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
                 
                 <!-- 1. Dropdown Semua Layanan -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Layanan</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Layanan</label>
                     <select name="layanan" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                         <option value="">SEMUA LAYANAN</option>
                         @foreach($layananList as $layanan)
                             <option value="{{ $layanan->kode_kategori_bandwith }}" {{ ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith ? 'selected' : '' }}>
@@ -385,9 +385,9 @@
 
                 <!-- 2. Search No Internet / Nama / NIK / HP -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Cari Pelanggan</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cari Pelanggan</label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                             </svg>
@@ -396,15 +396,15 @@
                                name="search" 
                                value="{{ $filters['search'] ?? '' }}" 
                                placeholder="No Internet, Nama, NIK..." 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
                     </div>
                 </div>
 
                 <!-- 3. Input Alamat -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Alamat</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Alamat</label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
@@ -414,15 +414,15 @@
                                name="alamat" 
                                value="{{ $filters['alamat'] ?? '' }}" 
                                placeholder="Cari Alamat..." 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
                     </div>
                 </div>
 
                 <!-- 4. Dropdown Semua Status -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
                     <select name="status" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                         <option value="20" {{ ($filters['status'] ?? '20') == '20' ? 'selected' : '' }}>Aktif (Default)</option>
                         <option value="21" {{ in_array(($filters['status'] ?? ''), ['21', '21.1']) ? 'selected' : '' }}>Suspend</option>
                         <option value="23" {{ in_array(($filters['status'] ?? ''), ['23', '23.1']) ? 'selected' : '' }}>Terminasi</option>
@@ -432,9 +432,9 @@
 
                 <!-- 5. Dropdown Semua Wilayah -->
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Wilayah</label>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Wilayah</label>
                     <select name="wilayah" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                         <option value="">SEMUA WILAYAH</option>
                         @foreach($wilayahList as $wilayah)
                             <option value="{{ $wilayah->name_w }}" {{ ($filters['wilayah'] ?? '') == $wilayah->name_w ? 'selected' : '' }}>
@@ -446,13 +446,13 @@
             </div>
 
             <!-- Baris Bawah: Show Entries & Group Tombol Aksi -->
-            <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
                 <!-- Kiri: Show Entries -->
-                <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                <div class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
                     <span>Show</span>
                     <select name="per_page" 
                             onchange="document.getElementById('filterForm').submit()"
-                            class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer">
+                            class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer">
                         <option value="10" {{ ($filters['per_page'] ?? '10') == '10' ? 'selected' : '' }}>10</option>
                         <option value="25" {{ ($filters['per_page'] ?? '') == '25' ? 'selected' : '' }}>25</option>
                         <option value="50" {{ ($filters['per_page'] ?? '') == '50' ? 'selected' : '' }}>50</option>
@@ -462,9 +462,9 @@
                 </div>
 
                 <!-- Kanan: Group Tombol Aksi (Reset, Export Excel, Terapkan Filter) -->
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap items-center gap-1.5">
                     <a href="{{ route($pelangganRoute) }}" 
-                       class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition duration-150"
+                       class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition duration-150"
                        title="Reset seluruh filter pencarian">
                         <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -473,16 +473,16 @@
                     </a>
                     
                     <a href="{{ route($exportRoute, request()->query()) }}" 
-                       class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#00a65a] hover:bg-[#008d4c] text-white text-xs font-semibold transition duration-150 shadow-sm cursor-pointer"
+                       class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#00a65a] hover:bg-[#008d4c] text-white text-xs font-semibold transition duration-150 shadow-2xs cursor-pointer"
                        title="Download data pelanggan ke format Excel">
-                        <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                         </svg>
                         <span>Export Excel</span>
                     </a>
 
                     <button type="submit" 
-                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm shadow-blue-600/25 transition duration-150 cursor-pointer">
+                            class="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-2xs transition duration-150 cursor-pointer">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                         </svg>
@@ -496,18 +496,18 @@
     <!-- =================================================================== -->
     <!-- CUSTOMER DATA TABLE CONTAINER                                       -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
         <!-- Desktop Table View (Hidden on Mobile) -->
         <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">Pelanggan</th>
-                        <th class="py-3.5 px-4">Group Layanan</th>
-                        <th class="py-3.5 px-4">Lokasi Pemasangan</th>
-                        <th class="py-3.5 px-4 min-w-[180px]">Status</th>
-                        <th class="py-3.5 px-4 min-w-[170px]">Tanggal SO / Registrasi</th>
-                        <th class="py-3.5 px-4 text-center min-w-[240px]">Aksi</th>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[10px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider">
+                        <th class="py-2.5 px-3">Pelanggan</th>
+                        <th class="py-2.5 px-3">Group Layanan</th>
+                        <th class="py-2.5 px-3">Lokasi Pemasangan</th>
+                        <th class="py-2.5 px-3 min-w-[160px]">Status</th>
+                        <th class="py-2.5 px-3 min-w-[150px]">Tanggal SO / Registrasi</th>
+                        <th class="py-2.5 px-3 text-center min-w-[200px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -515,50 +515,50 @@
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition duration-150">
                             
                             <!-- 1. Pelanggan -->
-                            <td class="py-4 px-4 align-top">
+                            <td class="py-2.5 px-3 align-top">
                                 <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
                                    class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline tracking-wide text-xs inline-block"
                                    title="Buka Profile Pelanggan">
                                     {{ $item->nomor_internet }}
                                 </a>
-                                <div class="mt-1 font-bold text-slate-900 dark:text-white uppercase text-xs">
+                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs">
                                     <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 dark:text-slate-400 font-normal">
                                         ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
-                                <div class="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
+                                <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                                     {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }} 
                                     @if($item->nominal_bandwith)
                                         <span class="text-slate-800 dark:text-slate-200 font-bold">{{ $item->nominal_bandwith }} Mbps</span>
                                     @endif
                                 </div>
                                 @if($item->nomor_hp)
-                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                                    <div class="text-[9px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                                         📱 {{ $item->nomor_hp }}
                                     </div>
                                 @endif
                             </td>
 
                             <!-- 2. Group Layanan -->
-                            <td class="py-4 px-4 align-top font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px]">
+                            <td class="py-2.5 px-3 align-top font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[10px]">
                                 {{ $item->group_layanan ?: 'MEDIANET' }}
                             </td>
 
                             <!-- 3. Lokasi Pemasangan -->
-                            <td class="py-4 px-4 align-top max-w-xs">
-                                <span class="font-bold text-slate-900 dark:text-white uppercase text-[11px] tracking-wide block mb-1">
+                            <td class="py-2.5 px-3 align-top max-w-xs">
+                                <span class="font-bold text-slate-900 dark:text-white uppercase text-[10px] tracking-wide block mb-0.5">
                                     {{ $item->jenis_bangunan ?: 'RUMAH-PRIBADI' }}
                                 </span>
-                                <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed uppercase">
+                                <p class="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed uppercase">
                                     {{ $item->alamat_p ?: ($item->alamat_pasang ?: '-') }}
                                 </p>
                             </td>
 
                             <!-- 4. Status -->
-                            <td class="py-4 px-4 align-top space-y-2">
+                            <td class="py-2.5 px-3 align-top space-y-1.5">
                                 <div>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border
                                         @if($item->status_reg == '20')
                                              bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20
                                         @elseif(in_array($item->status_reg, ['21', '21.1']))
@@ -574,35 +574,35 @@
                                 </div>
 
                                 @if($item->date_update)
-                                    <div class="text-[10px] text-slate-500 dark:text-slate-400">
+                                    <div class="text-[9px] text-slate-500 dark:text-slate-400">
                                         Updated: <span class="text-slate-700 dark:text-slate-300">{{ \Carbon\Carbon::parse($item->date_update)->translatedFormat('d M Y H:i') }} WIB</span>
                                     </div>
                                 @endif
                             </td>
 
                             <!-- 5. Tanggal SO / Registrasi -->
-                            <td class="py-4 px-4 align-top text-xs space-y-1">
-                                <div class="text-slate-900 dark:text-white font-semibold text-[11px]">
+                            <td class="py-2.5 px-3 align-top text-xs space-y-0.5">
+                                <div class="text-slate-900 dark:text-white font-semibold text-[10px]">
                                     {{ \Carbon\Carbon::parse($item->date_create)->translatedFormat('d M Y H:i') }} WIB
                                 </div>
-                                <div class="text-[11px] text-slate-600 dark:text-slate-400 uppercase font-medium">
+                                <div class="text-[10px] text-slate-600 dark:text-slate-400 uppercase font-medium">
                                     {{ $item->user_create ?: 'SYSTEM' }}
                                 </div>
-                                <div class="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-semibold">
+                                <div class="text-[9px] text-blue-600 dark:text-blue-400 font-mono font-semibold">
                                     SALES: {{ $item->nama_sales ?: '-' }}
                                 </div>
                             </td>
 
                             <!-- 6. Aksi -->
-                            <td class="py-4 px-4 align-top text-center text-xs">
-                                <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                            <td class="py-2.5 px-3 align-top text-center text-xs">
+                                <div class="flex items-center justify-center gap-1 flex-wrap">
                                     @if(in_array($item->status_reg, ['21', '21.1']) && !$isFinance)
                                         <!-- 1-Click UNIFIED AKTIFKAN (Khusus Non-Finance) -->
                                         <button type="button" 
                                                 onclick="triggerUnifiedAction('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', 'activate')"
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition cursor-pointer whitespace-nowrap"
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[10px] shadow-2xs transition cursor-pointer whitespace-nowrap"
                                                 title="Aktifkan PPPoE MikroTik, Kick Koneksi, dan Reboot ONT OLT">
-                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                                             </svg>
                                             <span>Aktifkan</span>
@@ -611,9 +611,9 @@
                                         <!-- 1-Click UNIFIED SUSPEND (Khusus Non-Finance) -->
                                         <button type="button" 
                                                 onclick="triggerUnifiedAction('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', 'suspend')"
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shadow-xs transition cursor-pointer whitespace-nowrap"
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white font-semibold text-[10px] shadow-2xs transition cursor-pointer whitespace-nowrap"
                                                 title="Suspend PPPoE MikroTik, Kick Koneksi, dan Reboot ONT OLT">
-                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                             </svg>
                                             <span>Suspend</span>
@@ -636,9 +636,9 @@
                                         <!-- 1. Req UP / Downgrade Bandwidth -->
                                         <button type="button" 
                                                 @click="openUpDowngrade({{ $custJson }})" 
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[11px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
                                                 title="Ajukan Req UP / Downgrade Bandwidth ke NOC">
-                                            <svg class="w-3.5 h-3.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
                                             </svg>
                                             <span>Up/Down</span>
@@ -647,9 +647,9 @@
                                         <!-- 2. Req Suspend -->
                                         <button type="button" 
                                                 @click="openSuspend({{ $custJson }})" 
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-[11px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
                                                 title="Ajukan Req Suspend ke NOC">
-                                            <svg class="w-3.5 h-3.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                             </svg>
                                             <span>Suspend</span>
@@ -658,9 +658,9 @@
                                         <!-- 3. Req Terminasi -->
                                         <button type="button" 
                                                 @click="openTerminasi({{ $custJson }})" 
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-[11px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
                                                 title="Ajukan Req Terminasi (Cabut) ke NOC">
-                                            <svg class="w-3.5 h-3.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
                                             </svg>
                                             <span>Terminasi</span>
@@ -671,9 +671,9 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-500 dark:text-slate-400 text-sm">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="w-10 h-10 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <td colspan="6" class="py-6 text-center text-slate-500 dark:text-slate-400 text-xs">
+                                <div class="flex flex-col items-center justify-center gap-1.5">
+                                    <svg class="w-8 h-8 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                                     </svg>
                                     <span>Tidak ada data pelanggan yang sesuai dengan filter pencarian.</span>
@@ -884,19 +884,19 @@
         </div>
 
         <!-- Pagination Controls -->
-        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-xs text-slate-600 dark:text-slate-400">
+        <div class="px-3.5 py-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-[11px]">
+            <div class="text-[11px] text-slate-600 dark:text-slate-400">
                 Showing <span class="text-slate-900 dark:text-white font-semibold">{{ $pelanggan->firstItem() ?? 0 }}</span> 
                 to <span class="text-slate-900 dark:text-white font-semibold">{{ $pelanggan->lastItem() ?? 0 }}</span> 
                 of <span class="text-slate-900 dark:text-white font-semibold">{{ $pelanggan->total() }}</span> entries
             </div>
 
             <div class="flex items-center gap-1">
-                <a href="{{ $pelanggan->url(1) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $pelanggan->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}">First</a>
-                <a href="{{ $pelanggan->previousPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $pelanggan->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}">Previous</a>
-                <span class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-xs">{{ $pelanggan->currentPage() }}</span>
-                <a href="{{ $pelanggan->nextPageUrl() }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Next</a>
-                <a href="{{ $pelanggan->url($pelanggan->lastPage()) }}" class="px-2.5 py-1.5 rounded-lg border text-xs font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
+                <a href="{{ $pelanggan->url(1) }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}">First</a>
+                <a href="{{ $pelanggan->previousPageUrl() }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}">Previous</a>
+                <span class="px-2.5 py-1 rounded-md bg-blue-600 text-white text-[11px] font-bold shadow-2xs">{{ $pelanggan->currentPage() }}</span>
+                <a href="{{ $pelanggan->nextPageUrl() }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Next</a>
+                <a href="{{ $pelanggan->url($pelanggan->lastPage()) }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
             </div>
         </div>
     <!-- ======================================================================= -->

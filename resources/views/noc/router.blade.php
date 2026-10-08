@@ -202,6 +202,16 @@
                             </td>
                             <td class="py-3.5 px-4 text-right whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-1.5">
+                                    <!-- Lihat User PPPoE -->
+                                    <button type="button"
+                                            @click="openSecretsModal({{ $router->id }}, '{{ addslashes($router->name) }}', '{{ $router->host }}')"
+                                            title="Lihat Daftar User PPPoE di Router ini"
+                                            class="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-400 transition">
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                                        </svg>
+                                    </button>
+
                                     <!-- Sync Pelanggan -->
                                     <button type="button"
                                             @click="syncCustomers({{ $router->id }}, '{{ addslashes($router->name) }}')"
@@ -433,6 +443,151 @@
             </form>
         </div>
     </div>
+
+    <!-- =================================================================== -->
+    <!-- 7. MODAL LIHAT USER PPPOE DI MIKROTIK                                -->
+    <!-- =================================================================== -->
+    <div x-show="secretsModalOpen" 
+         x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div @click.away="secretsModalOpen = false" 
+             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <!-- Header Modal -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-slate-900 dark:text-white text-base">User PPPoE Secret di MikroTik</h3>
+                        <p class="text-xs text-slate-500">Router: <span class="font-bold text-slate-800 dark:text-slate-200" x-text="secretsRouter.name"></span> (<span class="font-mono text-cyan-500" x-text="secretsRouter.host"></span>)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="fetchSecrets(secretsRouter.id, secretsSearch)" :disabled="secretsLoading" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" :class="{'animate-spin': secretsLoading}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh
+                    </button>
+                    <button type="button" @click="secretsModalOpen = false" class="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter & Search Toolbar -->
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
+                <div class="relative flex-1 min-w-[240px]">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </span>
+                    <input type="text" 
+                           x-model="secretsSearch" 
+                           placeholder="Cari username PPPoE, profile, comment..." 
+                           class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500">
+                </div>
+                <div class="text-xs text-slate-500 font-medium">
+                    Total: <span class="font-bold text-cyan-400" x-text="filteredSecrets.length"></span> / <span x-text="secretsData.length"></span> User
+                </div>
+            </div>
+
+            <!-- Content Area: Table of Secrets -->
+            <div class="p-4 flex-1 overflow-y-auto">
+                <!-- Loading State -->
+                <template x-if="secretsLoading">
+                    <div class="py-12 flex flex-col items-center justify-center gap-3 text-cyan-400">
+                        <svg class="w-8 h-8 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        <p class="text-xs font-semibold text-slate-400">Mengambil data user PPPoE dari router MikroTik...</p>
+                    </div>
+                </template>
+
+                <!-- Error State -->
+                <template x-if="!secretsLoading && secretsError">
+                    <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-start gap-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                            <div class="font-bold mb-1">Gagal Terhubung ke Router</div>
+                            <div x-text="secretsError"></div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Table of Secrets -->
+                <template x-if="!secretsLoading && !secretsError">
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                            <thead class="bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 uppercase text-[10px] font-extrabold tracking-wider border-b border-slate-200 dark:border-slate-800">
+                                <tr>
+                                    <th class="py-2.5 px-3">#</th>
+                                    <th class="py-2.5 px-3">Username PPPoE</th>
+                                    <th class="py-2.5 px-3 text-center">Status</th>
+                                    <th class="py-2.5 px-3">Profile</th>
+                                    <th class="py-2.5 px-3">Caller ID / Remote</th>
+                                    <th class="py-2.5 px-3">Comment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
+                                <template x-for="(sec, idx) in filteredSecrets" :key="sec.name || idx">
+                                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
+                                        <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500" x-text="idx + 1"></td>
+                                        <td class="py-2.5 px-3">
+                                            <div class="font-bold font-mono text-cyan-400" x-text="sec.name || '-'"></div>
+                                            <div class="text-[10px] text-slate-500 font-mono" x-show="sec.service" x-text="'Service: ' + sec.service"></div>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-center">
+                                            <template x-if="sec.disabled === 'true' || sec.disabled === true">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                                    Disabled / Isolir
+                                                </span>
+                                            </template>
+                                            <template x-if="sec.disabled !== 'true' && sec.disabled !== true">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                                    Aktif
+                                                </span>
+                                            </template>
+                                        </td>
+                                        <td class="py-2.5 px-3">
+                                            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[11px]" x-text="sec.profile || 'default'"></span>
+                                        </td>
+                                        <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400">
+                                            <span x-text="sec['remote-address'] || sec['last-caller-id'] || sec['caller-id'] || '-'"></span>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-[11px] text-slate-400 max-w-[200px] truncate" :title="sec.comment || ''" x-text="sec.comment || '-'"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="filteredSecrets.length === 0">
+                                    <tr>
+                                        <td colspan="6" class="py-8 text-center text-slate-500 text-xs">
+                                            Tidak ada user PPPoE secret yang cocok dengan pencarian.
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-between text-xs text-slate-500">
+                <span>Data dibaca langsung via koneksi API/Telnet MikroTik Router.</span>
+                <button type="button" @click="secretsModalOpen = false" class="px-4 py-1.5 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -443,6 +598,12 @@ function routerManagement() {
         addModalOpen: false,
         editModalOpen: false,
         deleteModalOpen: false,
+        secretsModalOpen: false,
+        secretsLoading: false,
+        secretsError: '',
+        secretsData: [],
+        secretsSearch: '',
+        secretsRouter: { id: null, name: '', host: '' },
         currentRouter: { id: '', name: '', host: '', port: 18735, username: '', password: '', kota: '', is_active: 1 },
         deleteRouterId: null,
         deleteRouterName: '',
@@ -466,6 +627,57 @@ function routerManagement() {
             this.deleteRouterId = id;
             this.deleteRouterName = name;
             this.deleteModalOpen = true;
+        },
+
+        openSecretsModal(id, name, host) {
+            this.secretsRouter = { id: id, name: name, host: host };
+            this.secretsSearch = '';
+            this.secretsData = [];
+            this.secretsError = '';
+            this.secretsModalOpen = true;
+            this.fetchSecrets(id);
+        },
+
+        async fetchSecrets(id, query = '') {
+            if (!id) return;
+            this.secretsLoading = true;
+            this.secretsError = '';
+            try {
+                const url = new URL(`{{ url('/noc/router') }}/${id}/secrets`, window.location.origin);
+                if (query) {
+                    url.searchParams.set('q', query);
+                }
+                const res = await fetch(url.toString(), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.secretsData = data.secrets || [];
+                } else {
+                    this.secretsError = data.message || 'Gagal mengambil user PPPoE dari router.';
+                }
+            } catch (err) {
+                this.secretsError = 'Koneksi error: ' + err.message;
+            } finally {
+                this.secretsLoading = false;
+            }
+        },
+
+        get filteredSecrets() {
+            if (!this.secretsSearch) {
+                return this.secretsData;
+            }
+            const q = this.secretsSearch.toLowerCase();
+            return this.secretsData.filter(item => {
+                const name = (item.name || '').toLowerCase();
+                const profile = (item.profile || '').toLowerCase();
+                const comment = (item.comment || '').toLowerCase();
+                const caller = (item['last-caller-id'] || item['remote-address'] || '').toLowerCase();
+                return name.includes(q) || profile.includes(q) || comment.includes(q) || caller.includes(q);
+            });
         },
 
         async testPingRouter(id, host, port, username) {

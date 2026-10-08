@@ -2275,6 +2275,66 @@ class NocController extends Controller
     }
 
     /**
+     * AJAX: Dapatkan daftar seluruh user PPPoE Secret langsung dari router MikroTik
+     */
+    public function getRouterSecrets(Request $request, int|string $id): JsonResponse
+    {
+        $router = DB::table('routers')->where('id', $id)->first();
+        if (!$router) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Router tidak ditemukan.',
+                'secrets' => [],
+            ], 404);
+        }
+
+        try {
+            $pass = $router->password;
+            try {
+                $pass = Crypt::decryptString($pass);
+            } catch (\Throwable $e) {
+                // Password plain text
+            }
+
+            $service = new \App\Services\Network\MikrotikService([
+                'host' => $router->host,
+                'port' => (int)($router->port ?: 18735),
+                'username' => $router->username,
+                'password' => $pass,
+                'timeout' => 5,
+            ]);
+
+            $secrets = $service->getUsers();
+            $search = trim((string)$request->query('search', ''));
+
+            if ($search !== '') {
+                $secrets = array_values(array_filter($secrets, function ($s) use ($search) {
+                    $name = $s['name'] ?? '';
+                    $comment = $s['comment'] ?? '';
+                    $profile = $s['profile'] ?? '';
+                    return stripos($name, $search) !== false 
+                        || stripos($comment, $search) !== false 
+                        || stripos($profile, $search) !== false;
+                }));
+            }
+
+            return response()->json([
+                'success' => true,
+                'router_name' => $router->name,
+                'router_host' => $router->host,
+                'total' => count($secrets),
+                'secrets' => $secrets,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil user dari router: ' . $e->getMessage(),
+                'secrets' => [],
+            ], 500);
+        }
+    }
+
+    /**
      * Sync / Map Customers to Router by City or Default in trx_batchjob_register
      */
     public function syncRouterCustomers(Request $request, int $id): JsonResponse|RedirectResponse

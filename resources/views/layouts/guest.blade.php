@@ -22,22 +22,10 @@
         })();
     </script>
 
-    <!-- Root Scale (Inline before external assets to prevent any layout flash) -->
-    <style>
-        html {
-            font-size: 13.5px;
-        }
-        @media (max-width: 639.98px) {
-            html {
-                font-size: 15px;
-            }
-        }
-        [x-cloak] { display: none !important; }
-    </style>
-
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        [x-cloak] { display: none !important; }
         @keyframes pulseGlow {
             0%, 100% { opacity: 0.35; transform: scale(1); }
             50% { opacity: 0.65; transform: scale(1.08); }

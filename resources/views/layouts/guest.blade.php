@@ -118,30 +118,30 @@
     </div>
 
     <!-- Main Container -->
-    <div class="min-h-full flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative z-10">
+    <div class="min-h-full flex flex-col justify-center py-6 sm:py-8 sm:px-6 lg:px-8 relative z-10">
         <div class="sm:mx-auto sm:w-full sm:max-w-md">
             <!-- Brand Logo / Header -->
             <div class="flex flex-col items-center text-center">
-                <div class="w-20 h-20 rounded-3xl bg-white/95 backdrop-blur-md p-3 shadow-2xl shadow-cyan-950/50 border border-white/80 mb-3.5 flex items-center justify-center transition duration-300 hover:scale-105">
+                <div class="w-14 h-14 rounded-2xl bg-white/95 backdrop-blur-md p-2 shadow-xl shadow-cyan-950/40 border border-white/80 mb-2.5 flex items-center justify-center transition duration-300 hover:scale-105">
                     <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
                 </div>
-                <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
                     IMS<span class="bg-gradient-to-r from-cyan-300 via-teal-200 to-sky-300 bg-clip-text text-transparent font-black">-V2</span>
                 </h1>
-                <p class="mt-1 text-sm font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">
+                <p class="mt-0.5 text-xs font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">
                     Internet System Management Portal
                 </p>
             </div>
         </div>
 
-        <div class="mt-7 sm:mx-auto sm:w-full sm:max-w-xl px-4">
+        <div class="mt-4 sm:mx-auto sm:w-full sm:max-w-[420px] px-4">
             <!-- Elevated Glassmorphism White Card -->
-            <div class="bg-white/95 backdrop-blur-2xl border border-white/80 shadow-[0_25px_65px_rgba(3,43,67,0.45)] rounded-3xl p-6 sm:p-9 text-slate-800 transition duration-200">
+            <div class="bg-white/95 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(3,43,67,0.35)] rounded-2xl p-5 sm:p-6 text-slate-800 transition duration-200">
                 @yield('content')
             </div>
 
             <!-- Footer -->
-            <div class="mt-6 text-center text-xs font-semibold text-cyan-100/80 drop-shadow">
+            <div class="mt-4 text-center text-[11px] font-semibold text-cyan-100/80 drop-shadow">
                 &copy; {{ date('Y') }} PT. Media Solusi Network &bull; IMS-V2
             </div>
         </div>

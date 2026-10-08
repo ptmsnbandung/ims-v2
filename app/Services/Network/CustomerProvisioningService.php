@@ -143,6 +143,8 @@ class CustomerProvisioningService
             }
         }
 
+        $isOverallSuccess = $results['database'] && ($results['mikrotik_enable'] || !$pppoeUsername);
+
         // 6b. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {
             try {
@@ -160,8 +162,6 @@ class CustomerProvisioningService
                 Log::warning('Gagal log activity_logs aktivasi: ' . $e->getMessage());
             }
         }
-
-        $isOverallSuccess = $results['database'] && ($results['mikrotik_enable'] || !$pppoeUsername);
 
         return [
             'success' => $isOverallSuccess,
@@ -304,6 +304,8 @@ class CustomerProvisioningService
             }
         }
 
+        $isOverallSuccess = $results['database'] && ($results['mikrotik_disable'] || !$pppoeUsername);
+
         // 6b. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {
             try {
@@ -321,8 +323,6 @@ class CustomerProvisioningService
                 Log::warning('Gagal log activity_logs suspend: ' . $e->getMessage());
             }
         }
-
-        $isOverallSuccess = $results['database'] && ($results['mikrotik_disable'] || !$pppoeUsername);
 
         return [
             'success' => $isOverallSuccess,

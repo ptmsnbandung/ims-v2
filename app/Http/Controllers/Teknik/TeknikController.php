@@ -2796,24 +2796,26 @@ class TeknikController extends Controller
 
         $indexOltData = $this->getIndexOltSlots();
 
-        // 10. Activity Log per Pelanggan (dari activity_logs, match by nomor_internet atau ont_us)
+        // 10. Activity Log per Pelanggan (dari activity_logs, match by nomor_internet, ont_us, atau keyword)
         $customerActivityLogs = collect();
         if (Schema::hasTable('activity_logs')) {
-            // Primary: match by nomor_internet (standard)
+            $candidates = array_unique(array_filter([
+                (string) $nomorInternet,
+                !empty($regRecord->ont_us) ? (string) $regRecord->ont_us : null,
+                !empty($customer->nik_penduduk) ? (string) $customer->nik_penduduk : null,
+            ]));
+
             $customerActivityLogs = DB::table('activity_logs')
-                ->where('customer_id', (string) $nomorInternet)
+                ->where(function ($q) use ($candidates, $nomorInternet) {
+                    $q->whereIn('customer_id', $candidates);
+                    if (!empty($nomorInternet)) {
+                        $q->orWhere('description', 'LIKE', '%' . $nomorInternet . '%')
+                          ->orWhere('router_response', 'LIKE', '%' . $nomorInternet . '%');
+                    }
+                })
                 ->orderBy('created_at', 'desc')
                 ->limit(100)
                 ->get();
-
-            // Secondary fallback: match by ont_us (for data imported from isp_manager)
-            if ($customerActivityLogs->isEmpty() && $regRecord && !empty($regRecord->ont_us)) {
-                $customerActivityLogs = DB::table('activity_logs')
-                    ->where('customer_id', (string) $regRecord->ont_us)
-                    ->orderBy('created_at', 'desc')
-                    ->limit(100)
-                    ->get();
-            }
         }
 
         // 11. Topologi Jaringan: OLT, PON, ODP dari database gomsn / external

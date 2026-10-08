@@ -162,44 +162,51 @@
         }
     </style>
 
-    <!-- ── 1. HEADER BANNER WITH BREADCRUMBS & KPI METRICS ── -->
-    <div class="ims-coverage-card p-3 sm:p-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 shadow-xs">
-        <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 shadow-inner bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-500/30 text-sky-600 dark:text-sky-400">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-            </div>
-            <div>
-                <nav class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest mb-0.5 text-sky-600 dark:text-sky-400">
-                    <span>IMS</span>
-                    <span class="text-slate-400 dark:text-slate-600">&gt;</span>
-                    <span>Modul Teknik</span>
-                    <span class="text-slate-400 dark:text-slate-600">&gt;</span>
-                    <span class="text-slate-500 dark:text-slate-300">GIS Coverage</span>
-                </nav>
-                <h1 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-                    Cek Coverage Lokasi ke ODP Terdekat
-                </h1>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Gunakan peta Google Maps untuk memeriksa kelayakan tarikan kabel dropcore fiber optik ke titik ODP terdekat secara presisi.
-                </p>
-            </div>
-        </div>
+    <!-- ── 1. HEADER BANNER WITH BREADCRUMBS & KPI METRICS (OCEANIC TEAL & GREEN GRADIENT) ── -->
+    <div class="ims-banner relative overflow-hidden rounded-xl p-3 sm:p-3.5 shadow-sm border border-teal-500/20"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        
+        <!-- Subtle Glow Effect -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
 
-        <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full md:w-auto">
-            <div class="ims-inner-box px-3 py-1.5 text-left">
-                <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total ODP Terdata</span>
-                <strong class="text-xs sm:text-sm font-bold text-sky-600 dark:text-sky-400 font-mono block mt-0.5">
-                    {{ count($odps) }} Node
-                </strong>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 shadow-inner bg-white/10 border border-white/20 text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <nav class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest mb-0.5 text-[#c6edf3]">
+                        <a href="{{ route('dashboard') }}" class="hover:text-white transition">IMS</a>
+                        <span class="text-teal-300/70">&gt;</span>
+                        <span>Modul Teknik</span>
+                        <span class="text-teal-300/70">&gt;</span>
+                        <span class="text-white">GIS Coverage</span>
+                    </nav>
+                    <h1 class="text-sm sm:text-base font-bold text-white tracking-tight leading-tight" style="color: #FFFFFF !important;">
+                        Cek Coverage Lokasi ke ODP Terdekat
+                    </h1>
+                    <p class="text-[11px] text-[#c6edf3] mt-0.5 leading-relaxed" style="color: #C6EDF3 !important;">
+                        Gunakan peta Google Maps untuk memeriksa kelayakan tarikan kabel dropcore fiber optik ke titik ODP terdekat secara presisi.
+                    </p>
+                </div>
             </div>
-            <div class="ims-inner-box px-3 py-1.5 text-left">
-                <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Max Radius Tercover</span>
-                <strong class="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 font-mono block mt-0.5">
-                    &le; 300 Meter
-                </strong>
+
+            <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full md:w-auto">
+                <div class="px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-left backdrop-blur-xs">
+                    <span class="text-[9px] font-bold text-[#c6edf3] uppercase tracking-wider block">Total ODP Terdata</span>
+                    <strong class="text-xs sm:text-sm font-bold text-white font-mono block mt-0.5" style="color: #FFFFFF !important;">
+                        {{ count($odps) }} Node
+                    </strong>
+                </div>
+                <div class="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-left backdrop-blur-xs">
+                    <span class="text-[9px] font-bold text-emerald-200 uppercase tracking-wider block">Max Radius Tercover</span>
+                    <strong class="text-xs sm:text-sm font-bold text-emerald-300 font-mono block mt-0.5">
+                        &le; 300 Meter
+                    </strong>
+                </div>
             </div>
         </div>
     </div>

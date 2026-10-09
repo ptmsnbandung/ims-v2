@@ -1694,6 +1694,15 @@
                 }
             }, { passive: true });
 
+            document.addEventListener('touchstart', function(e) {
+                const a = e.target.closest('a');
+                if (a && a.href && !a.hasAttribute('download') && a.target !== '_blank') {
+                    prefetch(a.href);
+                }
+            }, { passive: true });
+        })();
+    </script>
+
     <!-- Global Debounced Auto-Search & Focus Restoration Engine -->
     <script>
         (function() {

@@ -290,7 +290,22 @@
         <form method="GET" action="{{ route('finance.billing-layanan') }}" class="space-y-3">
             <!-- Row 1: Primary Quick Filters -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-                <!-- Bulan -->
+                <!-- 1. Real-time Search Box (Paling Kiri) -->
+                <div>
+                    <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Pencarian</label>
+                    <div class="relative">
+                        <input type="text"
+                               name="search"
+                               value="{{ request('search') }}"
+                               placeholder="Nama / No Layanan / Inv..."
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg pl-8 pr-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-slate-400 dark:placeholder-slate-500">
+                        <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 2. Bulan -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Bulan</label>
                     <select name="bulan" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
@@ -301,7 +316,7 @@
                     </select>
                 </div>
 
-                <!-- Tahun -->
+                <!-- 3. Tahun -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Tahun</label>
                     <select name="tahun" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
@@ -312,7 +327,7 @@
                     </select>
                 </div>
 
-                <!-- Layanan / Kategori -->
+                <!-- 4. Layanan / Kategori -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Kategori Layanan</label>
                     <select name="layanan" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
@@ -323,7 +338,7 @@
                     </select>
                 </div>
 
-                <!-- Status Bayar -->
+                <!-- 5. Status Bayar -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Status Bayar</label>
                     <select name="status_bayar" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
@@ -340,21 +355,6 @@
                             @endif
                         @endforeach
                     </select>
-                </div>
-
-                <!-- Real-time Search Box -->
-                <div>
-                    <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Pencarian</label>
-                    <div class="relative">
-                        <input type="text"
-                               name="search"
-                               value="{{ request('search') }}"
-                               placeholder="Nama / No Layanan / Inv..."
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg pl-8 pr-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-slate-400 dark:placeholder-slate-500">
-                        <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                        </svg>
-                    </div>
                 </div>
             </div>
 

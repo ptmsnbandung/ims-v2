@@ -169,7 +169,17 @@
     <!-- Filter Bar Card -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 space-y-4">
         <form method="GET" action="{{ route('finance.billing-registrasi') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            <!-- Layanan -->
+            <!-- 1. Pencarian (Paling Kiri) -->
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pencarian</label>
+                <input type="text"
+                       name="search"
+                       value="{{ request('search') }}"
+                       placeholder="Nama / Kode REG..."
+                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 placeholder-slate-400 dark:placeholder-slate-500">
+            </div>
+
+            <!-- 2. Layanan -->
             <div>
                 <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Kategori Layanan</label>
                 <select name="layanan" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
@@ -180,7 +190,7 @@
                 </select>
             </div>
 
-            <!-- Status Tagihan -->
+            <!-- 3. Status Tagihan -->
             <div>
                 <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Status Tagihan</label>
                 <select name="status_bayar" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
@@ -197,7 +207,7 @@
                 </select>
             </div>
 
-            <!-- Wilayah -->
+            <!-- 4. Wilayah -->
             <div>
                 <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Wilayah</label>
                 <select name="wilayah" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
@@ -208,17 +218,7 @@
                 </select>
             </div>
 
-            <!-- Pencarian -->
-            <div>
-                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pencarian</label>
-                <input type="text"
-                       name="search"
-                       value="{{ request('search') }}"
-                       placeholder="Nama / Kode REG..."
-                       class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 placeholder-slate-400 dark:placeholder-slate-500">
-            </div>
-
-            <!-- Action Buttons -->
+            <!-- 5. Action Buttons -->
             <div class="flex items-end gap-2">
                 <a href="{{ route('finance.billing-registrasi') }}" class="w-full px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition text-center">
                     Reset Filter

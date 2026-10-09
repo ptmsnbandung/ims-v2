@@ -337,25 +337,25 @@
                                 </span>
                             </div>
 
-                            <!-- Route Mode Selector (Tiang Langsung vs Rute Jalan) -->
+                            <!-- Route Mode Selector (Mengikuti Jalan vs Garis Lurus Tiang) -->
                             <div class="flex items-center justify-between p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px]">
-                                <span class="font-bold text-slate-600 dark:text-slate-300 px-1.5">Mode Jalur:</span>
+                                <span class="font-bold text-slate-600 dark:text-slate-300 px-1.5">Jalur Kabel:</span>
                                 <div class="flex items-center gap-1">
-                                    <button 
-                                        type="button" 
-                                        @click="setRoutingMode('direct')"
-                                        :class="routingMode === 'direct' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
-                                        class="px-2 py-1 rounded-md transition cursor-pointer"
-                                    >
-                                        ⚡ Jalur Tiang Dropcore (<span x-text="selectedOdpResult.dropcoreDistance"></span>m)
-                                    </button>
                                     <button 
                                         type="button" 
                                         @click="setRoutingMode('street')"
                                         :class="routingMode === 'street' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
-                                        class="px-2 py-1 rounded-md transition cursor-pointer"
+                                        class="px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1"
                                     >
-                                        🚶 Rute Jalan/Gang (<span x-text="selectedOdpResult.roadDistance"></span>m)
+                                        <span>🛣️ Mengikuti Jalan</span> (<span x-text="selectedOdpResult.roadDistance"></span>m)
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        @click="setRoutingMode('direct')"
+                                        :class="routingMode === 'direct' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                                        class="px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1"
+                                    >
+                                        <span>⚡ Garis Lurus Span</span> (<span x-text="selectedOdpResult.dropcoreDistance"></span>m)
                                     </button>
                                 </div>
                             </div>
@@ -615,7 +615,7 @@
             isSearchingLocation: false,
             filterOnlyAvailable: false,
             showRadiusCircles: true,
-            routingMode: 'direct', // 'direct' (tiang dropcore) atau 'street' (rute jalan)
+            routingMode: 'street', // 'street' (mengikuti jalur jalan raya/gang akurat) atau 'direct' (garis lurus tiang)
             nearestCandidates: [],
             selectedOdpResult: null,
             streetRouteGeometry: null,
@@ -1055,17 +1055,20 @@
                     [odp.lat, odp.lng]
                 ];
 
-                // Real Street Route via OSRM (Walking Profile)
+                // High-Precision Real Street Route via OSRM (Foot/Alleyway/Road Network)
                 this.streetRouteGeometry = null;
                 const routingUrls = [
-                    `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson`,
-                    `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson`
+                    `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`,
+                    `https://routing.openstreetmap.de/routed-bike/route/v1/bicycle/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`,
+                    `https://router.project-osrm.org/route/v1/foot/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`,
+                    `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`,
+                    `https://routing.openstreetmap.de/routed-car/route/v1/driving/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`
                 ];
 
                 for (const url of routingUrls) {
                     try {
                         const ctrl = new AbortController();
-                        const timeoutId = setTimeout(() => ctrl.abort(), 3000);
+                        const timeoutId = setTimeout(() => ctrl.abort(), 3500);
                         const res = await fetch(url, { signal: ctrl.signal });
                         clearTimeout(timeoutId);
                         if (res.ok) {
@@ -1074,12 +1077,16 @@
                                 this.streetRouteGeometry = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
                                 if (data.routes[0].distance) {
                                     result.roadDistance = Math.round(data.routes[0].distance);
+                                    // Update estimasi kabel dropcore mengikuti rute jalan nyata (+8% slack drop ke tiang)
+                                    result.dropcoreDistance = Math.round(result.roadDistance * 1.08 + 10);
+                                    const approxLoss = (0.35 * (result.dropcoreDistance / 1000) + 0.3).toFixed(2);
+                                    result.opticalPowerEstimate = `-${(16.5 + parseFloat(approxLoss)).toFixed(1)} dBm (Loss ~${approxLoss} dB)`;
                                 }
                                 break;
                             }
                         }
                     } catch (e) {
-                        // Fallback
+                        // Fallback to next endpoint
                     }
                 }
 
@@ -1093,27 +1100,46 @@
 
                 let routeCoords = this.directRouteGeometry;
 
-                // Jika mode street dipilih dan route geometry jalan tersedia & masuk akal
+                // Jika mode street aktif dan rute jalan tersedia, ikuti setiap lekuk jalan secara presisi
                 if (this.routingMode === 'street' && this.streetRouteGeometry && this.streetRouteGeometry.length >= 2) {
                     routeCoords = [...this.streetRouteGeometry];
-                    routeCoords.unshift([userLat, userLng]);
-                    routeCoords.push([result.odp.lat, result.odp.lng]);
+                    
+                    // Sambungkan titik target ke simpul jalan terdekat jika ada jarak drop
+                    const firstCoord = routeCoords[0];
+                    if (Math.abs(firstCoord[0] - userLat) > 0.00001 || Math.abs(firstCoord[1] - userLng) > 0.00001) {
+                        routeCoords.unshift([userLat, userLng]);
+                    }
+                    
+                    // Sambungkan simpul jalan ke tiang ODP
+                    const lastCoord = routeCoords[routeCoords.length - 1];
+                    if (Math.abs(lastCoord[0] - result.odp.lat) > 0.00001 || Math.abs(lastCoord[1] - result.odp.lng) > 0.00001) {
+                        routeCoords.push([result.odp.lat, result.odp.lng]);
+                    }
                 }
 
-                // Cyan glow line
+                // 1. Cyan Glow Aura Outer Line
                 L.polyline(routeCoords, {
-                    color: '#38bdf8',
-                    weight: 6,
-                    opacity: 0.5,
+                    color: '#0284c7',
+                    weight: 8,
+                    opacity: 0.3,
                     lineCap: 'round',
                     lineJoin: 'round'
                 }).addTo(this.connectionLineLayer);
 
-                // Blue dashed dropcore line
+                // 2. High-Visibility Solid Street Fiber Route Line
                 L.polyline(routeCoords, {
                     color: '#0284c7',
-                    weight: 3.5,
-                    dashArray: '8, 6',
+                    weight: 4,
+                    opacity: 0.95,
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                }).addTo(this.connectionLineLayer);
+
+                // 3. Crisp Center Core Tracer Line
+                L.polyline(routeCoords, {
+                    color: '#e0f2fe',
+                    weight: 1.5,
+                    dashArray: '6, 8',
                     lineCap: 'round',
                     lineJoin: 'round'
                 }).addTo(this.connectionLineLayer);

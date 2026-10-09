@@ -3993,13 +3993,15 @@ class TeknikController extends Controller
         $statusResult = $request->status_result ?? 'done'; // 'done' or 'reschedule'
         $collectPerangkat = $request->collect_perangkat == '1' ? '1' : '0';
         $collectPayment = $request->collect_payment == '1' ? '1' : '0';
-        $note = $request->note ?: ($request->note_collect_end ?? '');
+        $dateCollect = $request->date_collect ?: ($request->date_collect_end ?: ($request->date_schedule ?: now()->format('Y-m-d')));
+        $timeCollect = $request->time_collect ?: ($request->time_collect_end ?: ($request->time_schedule ?: now()->format('H:i:s')));
+        $note = $request->note ?: ($request->keterangan ?: ($request->note_collect_end ?: ($request->note_collect_start ?? '')));
 
         if ($statusResult === 'reschedule') {
-            $newDate = $request->date_schedule ?: now()->format('Y-m-d');
             DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
                 'status_terminasi' => '12.1', // (KD12.1) Reschedule Collecting
-                'date_collect_start' => $newDate,
+                'date_collect_start' => $dateCollect,
+                'time_collect_start' => $timeCollect,
                 'note_collect_start' => $note ?: 'Reschedule penarikan perangkat',
                 'date_update' => $now,
                 'user_update' => $currentUser,
@@ -4013,7 +4015,8 @@ class TeknikController extends Controller
             'status_terminasi' => '13', // (KD13) Collect Perangkat Done
             'collect_perangkat' => $collectPerangkat ?: '1',
             'collect_payment' => $collectPayment,
-            'date_collect_end' => now()->format('Y-m-d'),
+            'date_collect_end' => $dateCollect,
+            'time_collect_end' => $timeCollect,
             'note_collect_end' => $note ?: 'Perangkat berhasil ditarik oleh teknisi',
             'date_update' => $now,
             'user_update' => $currentUser,

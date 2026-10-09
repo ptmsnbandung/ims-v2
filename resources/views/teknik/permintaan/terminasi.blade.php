@@ -785,7 +785,36 @@
                         </div>
                     </div>
 
-                    <!-- 2. Checklist Status Perangkat & Tagihan (Saat Done) -->
+                    <!-- 2. Tanggal & Jam Penarikan (Grid 2 Kolom) -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Tanggal -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                <span x-text="modalReportStatus === 'done' ? 'Tanggal Penarikan' : 'Tanggal Reschedule Baru'"></span>
+                                <span class="text-rose-500 font-bold">*</span>
+                            </label>
+                            <input type="date" 
+                                   name="date_collect" 
+                                   required
+                                   value="{{ date('Y-m-d') }}"
+                                   class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <!-- Jam / Waktu -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                <span x-text="modalReportStatus === 'done' ? 'Jam Penarikan' : 'Jam Reschedule'"></span>
+                                <span class="text-rose-500 font-bold">*</span>
+                            </label>
+                            <input type="time" 
+                                   name="time_collect" 
+                                   required
+                                   value="{{ date('H:i') }}"
+                                   class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                    </div>
+
+                    <!-- 3. Checklist Status Perangkat & Tagihan (Saat Done) -->
                     <div x-show="modalReportStatus === 'done'" class="space-y-2.5 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="checkbox" 
@@ -811,21 +840,10 @@
                         </label>
                     </div>
 
-                    <!-- 3. Tanggal Reschedule (Saat Reschedule) -->
-                    <div x-show="modalReportStatus === 'reschedule'" class="space-y-1">
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Tanggal Jadwal Baru <span class="text-amber-500 font-bold">*</span>
-                        </label>
-                        <input type="date" 
-                               name="date_schedule" 
-                               value="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                               class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                    </div>
-
-                    <!-- 4. Catatan Hasil Collecting -->
+                    <!-- 4. Keterangan -->
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Catatan Hasil Penarikan <span class="text-rose-500 font-bold">*</span>
+                            Keterangan <span class="text-rose-500 font-bold">*</span>
                         </label>
                         <textarea name="note" 
                                   rows="3" 

@@ -459,11 +459,11 @@ class BroadcastController extends Controller
         // Join WA Broadcast sent log count
         if ($this->hasTableCached('tb_broadcast_wa_log')) {
             $subLog = DB::table('tb_broadcast_wa_log as tbl_log')
-                ->selectRaw("tbl_log.nomor_internet, COUNT(*) as total_sent_count, MAX(tbl_log.created_at) as last_sent_at")
+                ->selectRaw("tbl_log.nomor_internet COLLATE utf8mb4_general_ci as nomor_internet, COUNT(*) as total_sent_count, MAX(tbl_log.created_at) as last_sent_at")
                 ->where('tbl_log.status_kirim', 'sent')
                 ->whereNotNull('tbl_log.nomor_internet')
                 ->where('tbl_log.nomor_internet', '!=', '')
-                ->groupBy('tbl_log.nomor_internet');
+                ->groupBy(DB::raw("tbl_log.nomor_internet COLLATE utf8mb4_general_ci"));
 
             $query->leftJoinSub($subLog, 'log_sent', function ($join) {
                 $join->on('c.nomor_internet', '=', 'log_sent.nomor_internet');

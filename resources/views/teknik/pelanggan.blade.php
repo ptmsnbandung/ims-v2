@@ -980,82 +980,92 @@
     <!-- ======================================================================= -->
     <div x-show="upDowngradeModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="upDowngradeModalOpen = false"
-             class="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
+             style="max-height: 90vh;">
             
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                <div>
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>⚡ Ajukan UP / Downgrade Bandwidth ke NOC</span>
-                    </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Permintaan akan otomatis diteruskan ke antrean kerja tim NOC.</p>
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                            Ajukan UP / Downgrade Bandwidth ke NOC
+                        </h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Permintaan akan otomatis diteruskan ke antrean kerja tim NOC.</p>
+                    </div>
                 </div>
-                <button @click="upDowngradeModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+                <button type="button" @click="upDowngradeModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
             </div>
 
-            <form action="{{ route('finance.permintaan.up-downgrade.store') }}" method="POST" class="space-y-4">
+            <form action="{{ route('finance.permintaan.up-downgrade.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
                 @csrf
                 <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
 
-                <!-- Info Pelanggan Terpilih -->
-                <div class="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-xs space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
-                        <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                <div class="p-5 space-y-4 overflow-y-auto flex-1">
+                    <!-- Info Pelanggan Terpilih -->
+                    <div class="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-xs space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
+                            <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Paket Saat Ini:</span>
+                            <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '') + (activeCustomer.harga_bandwith > 0 ? ' - Rp ' + Number(activeCustomer.harga_bandwith).toLocaleString('id-ID') : '')"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
+                            <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Paket Saat Ini:</span>
-                        <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '') + (activeCustomer.harga_bandwith > 0 ? ' - Rp ' + Number(activeCustomer.harga_bandwith).toLocaleString('id-ID') : '')"></span>
+
+                    <!-- 2. Pilih Paket Baru -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Paket / Bandwidth Baru <span class="text-rose-500">*</span></label>
+                        <select name="kode_bandwith_baru" required class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                            <option value="">-- Pilih Paket Baru --</option>
+                            @if(isset($paketList))
+                                @foreach($paketList as $p)
+                                    <option value="{{ $p->kode_bandwith }}">
+                                        {{ $p->nama_kategori_bandwith }} - {{ $p->nominal_bandwith }} Mbps (Rp {{ number_format((float)($p->harga_bandwith ?? 0), 0, ',', '.') }})
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
-                        <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+
+                    <!-- 3. Tanggal Jadwal Eksekusi -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Jadwal Eksekusi <span class="text-rose-500">*</span></label>
+                        <input type="date"
+                               name="date_schedule"
+                               value="{{ date('Y-m-d') }}"
+                               required
+                               class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                    </div>
+
+                    <!-- 4. Catatan / Alasan Permintaan -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Tambahan untuk Tim NOC</label>
+                        <textarea name="note_request"
+                                  rows="2"
+                                  placeholder="Contoh: Pengajuan ubah paket oleh Finance..."
+                                  class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">Pengajuan ubah kecepatan/paket oleh Finance</textarea>
                     </div>
                 </div>
 
-                <!-- 2. Pilih Paket Baru -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Paket / Bandwidth Baru <span class="text-rose-500">*</span></label>
-                    <select name="kode_bandwith_baru" required class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                        <option value="">-- Pilih Paket Baru --</option>
-                        @if(isset($paketList))
-                            @foreach($paketList as $p)
-                                <option value="{{ $p->kode_bandwith }}">
-                                    {{ $p->nama_kategori_bandwith }} - {{ $p->nominal_bandwith }} Mbps (Rp {{ number_format((float)($p->harga_bandwith ?? 0), 0, ',', '.') }})
-                                </option>
-                            @endforeach
-                        @endif
-                    </select>
-                </div>
-
-                <!-- 3. Tanggal Jadwal Eksekusi -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Jadwal Eksekusi <span class="text-rose-500">*</span></label>
-                    <input type="date"
-                           name="date_schedule"
-                           value="{{ date('Y-m-d') }}"
-                           required
-                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                </div>
-
-                <!-- 4. Catatan / Alasan Permintaan -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Tambahan untuk Tim NOC</label>
-                    <textarea name="note_request"
-                              rows="2"
-                              placeholder="Contoh: Pengajuan ubah paket oleh Finance..."
-                              class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">Pengajuan ubah kecepatan/paket oleh Finance</textarea>
-                </div>
-
-                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
                     <button type="button"
                             @click="upDowngradeModalOpen = false"
-                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition cursor-pointer">
+                            class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">
                         Batal
                     </button>
                     <button type="submit"
-                            class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-500/25 transition cursor-pointer">
+                            class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">
                         Kirim Request UP/Downgrade ke NOC
                     </button>
                 </div>
@@ -1068,68 +1078,78 @@
     <!-- ======================================================================= -->
     <div x-show="suspendModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="suspendModalOpen = false"
-             class="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
+             style="max-height: 90vh;">
             
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                <div>
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>🛑 Ajukan Permintaan Suspend ke NOC</span>
-                    </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Digunakan untuk pelanggan yang menunggak atau belum membayar tagihan.</p>
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                            Ajukan Permintaan Suspend ke NOC
+                        </h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Digunakan untuk pelanggan yang menunggak atau belum membayar tagihan.</p>
+                    </div>
                 </div>
-                <button @click="suspendModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+                <button type="button" @click="suspendModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
             </div>
 
-            <form action="{{ route('finance.permintaan.suspend.store') }}" method="POST" class="space-y-4">
+            <form action="{{ route('finance.permintaan.suspend.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
                 @csrf
                 <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
 
-                <!-- Info Pelanggan Terpilih -->
-                <div class="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
-                        <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                <div class="p-5 space-y-4 overflow-y-auto flex-1">
+                    <!-- Info Pelanggan Terpilih -->
+                    <div class="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
+                            <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Paket:</span>
+                            <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '')"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
+                            <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Paket:</span>
-                        <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '')"></span>
+
+                    <!-- Tanggal Mulai Suspend -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Mulai Suspend <span class="text-rose-500">*</span></label>
+                        <input type="date"
+                               name="suspend_start"
+                               value="{{ date('Y-m-d') }}"
+                               required
+                               class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium">
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
-                        <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+
+                    <!-- Alasan / Keterangan Suspend -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Keterangan / Alasan Suspend <span class="text-rose-500">*</span></label>
+                        <textarea name="desc_suspend"
+                                  rows="3"
+                                  required
+                                  placeholder="Contoh: Melewati batas pembayaran tanggal jatuh tempo..."
+                                  class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">Melewati batas pembayaran yang telah ditentukan</textarea>
                     </div>
                 </div>
 
-                <!-- Tanggal Mulai Suspend -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tanggal Mulai Suspend <span class="text-rose-500">*</span></label>
-                    <input type="date"
-                           name="suspend_start"
-                           value="{{ date('Y-m-d') }}"
-                           required
-                           class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium">
-                </div>
-
-                <!-- Alasan / Keterangan Suspend -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Keterangan / Alasan Suspend <span class="text-rose-500">*</span></label>
-                    <textarea name="desc_suspend"
-                              rows="3"
-                              required
-                              placeholder="Contoh: Melewati batas pembayaran tanggal jatuh tempo..."
-                              class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">Melewati batas pembayaran yang telah ditentukan</textarea>
-                </div>
-
-                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
                     <button type="button"
                             @click="suspendModalOpen = false"
-                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer">
+                            class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">
                         Batal
                     </button>
                     <button type="submit"
-                            class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-500/25 transition cursor-pointer">
+                            class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">
                         Kirim Request Suspend ke NOC
                     </button>
                 </div>
@@ -1142,61 +1162,71 @@
     <!-- ======================================================================= -->
     <div x-show="terminasiModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="terminasiModalOpen = false"
-             class="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
+             style="max-height: 90vh;">
             
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                <div>
-                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>🔌 Ajukan Permintaan Terminasi ke NOC / Lapangan</span>
-                    </h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Digunakan untuk pelanggan yang berhenti berlangganan (tutup akun & penarikan perangkat).</p>
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                            Ajukan Permintaan Terminasi ke NOC / Lapangan
+                        </h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Digunakan untuk pelanggan yang berhenti berlangganan (tutup akun & penarikan perangkat).</p>
+                    </div>
                 </div>
-                <button @click="terminasiModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+                <button type="button" @click="terminasiModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
             </div>
 
-            <form action="{{ route('finance.permintaan.terminasi.store') }}" method="POST" class="space-y-4">
+            <form action="{{ route('finance.permintaan.terminasi.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
                 @csrf
                 <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
 
-                <!-- Info Pelanggan Terpilih -->
-                <div class="p-3.5 rounded-xl bg-rose-50/70 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
-                        <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                <div class="p-5 space-y-4 overflow-y-auto flex-1">
+                    <!-- Info Pelanggan Terpilih -->
+                    <div class="p-3.5 rounded-xl bg-rose-50/70 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
+                            <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="activeCustomer.nomor_internet + ' - ' + activeCustomer.nama_pelanggan"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Paket:</span>
+                            <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '')"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
+                            <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Paket:</span>
-                        <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="activeCustomer.nama_kategori_bandwith + (activeCustomer.nominal_bandwith ? ' (' + activeCustomer.nominal_bandwith + ' Mbps)' : '')"></span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Alamat Pasang:</span>
-                        <span class="text-slate-700 dark:text-slate-300 text-right truncate max-w-[280px]" x-text="activeCustomer.alamat"></span>
+
+                    <!-- Alasan Berhenti Berlangganan -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alasan Berhenti Berlangganan <span class="text-rose-500">*</span></label>
+                        <select name="note_termin" required class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium">
+                            <option value="">-- Pilih Alasan Utama --</option>
+                            <option value="Permintaan Pelanggan (Pindah Rumah / Alamat)">Permintaan Pelanggan (Pindah Rumah / Alamat)</option>
+                            <option value="Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)">Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)</option>
+                            <option value="Tunggakan Pembayaran Tidak Diselesaikan">Tunggakan Pembayaran Tidak Diselesaikan</option>
+                            <option value="Beralih ke Provider Lain">Beralih ke Provider Lain</option>
+                            <option value="Lainnya">Lainnya (Tutup Akun)</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- Alasan Berhenti Berlangganan -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alasan Berhenti Berlangganan <span class="text-rose-500">*</span></label>
-                    <select name="note_termin" required class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium">
-                        <option value="">-- Pilih Alasan Utama --</option>
-                        <option value="Permintaan Pelanggan (Pindah Rumah / Alamat)">Permintaan Pelanggan (Pindah Rumah / Alamat)</option>
-                        <option value="Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)">Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)</option>
-                        <option value="Tunggakan Pembayaran Tidak Diselesaikan">Tunggakan Pembayaran Tidak Diselesaikan</option>
-                        <option value="Beralih ke Provider Lain">Beralih ke Provider Lain</option>
-                        <option value="Lainnya">Lainnya (Tutup Akun)</option>
-                    </select>
-                </div>
-
-                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
                     <button type="button"
                             @click="terminasiModalOpen = false"
-                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer">
+                            class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">
                         Batal
                     </button>
                     <button type="submit"
-                            class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 transition cursor-pointer">
+                            class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">
                         Kirim Request Terminasi ke NOC
                     </button>
                 </div>
@@ -1209,158 +1239,161 @@
     <!-- ======================================================================= -->
     <div x-show="adjustModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="adjustModalOpen = false"
-             class="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
+             style="max-height: 90vh;">
             
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
                             Penyesuaian Potongan / Diskon & PPN
                         </h3>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Atur skema diskon dan pajak PPN tagihan rutin pelanggan ini.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Atur skema diskon dan pajak PPN tagihan rutin pelanggan ini.</p>
                     </div>
                 </div>
-                <button @click="adjustModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+                <button type="button" @click="adjustModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
             </div>
 
-            <form action="{{ route('finance.pelanggan.adjust.post') }}" method="POST" class="space-y-4">
+            <form action="{{ route('finance.pelanggan.adjust.post') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
                 @csrf
                 <input type="hidden" name="nomor_internet" :value="adjustData.nomor_internet" required>
 
-                <!-- Info Pelanggan Terpilih -->
-                <div class="p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-xs space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
-                        <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="adjustData.nomor_internet + ' - ' + adjustData.nama_pelanggan"></span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Paket Terdaftar:</span>
-                        <span class="font-semibold text-purple-700 dark:text-purple-300" x-text="adjustData.nama_kategori_bandwith + (adjustData.nominal_bandwith ? ' (' + adjustData.nominal_bandwith + ' Mbps)' : '')"></span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Harga Dasar Paket:</span>
-                        <span class="font-bold text-slate-900 dark:text-white" x-text="'Rp ' + Number(adjustData.harga_bandwith).toLocaleString('id-ID')"></span>
-                    </div>
-                </div>
-
-                <!-- Input Potongan / Diskon -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nominal Potongan / Diskon (Rp)</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400">Rp</span>
-                            <input type="number"
-                                   name="potongan"
-                                   x-model="adjustData.potongan"
-                                   min="0"
-                                   step="1000"
-                                   placeholder="0"
-                                   class="w-full text-xs pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium font-mono">
+                <div class="p-5 space-y-4 overflow-y-auto flex-1">
+                    <!-- Info Pelanggan Terpilih -->
+                    <div class="p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-xs space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
+                            <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="adjustData.nomor_internet + ' - ' + adjustData.nama_pelanggan"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Paket Terdaftar:</span>
+                            <span class="font-semibold text-purple-700 dark:text-purple-300" x-text="adjustData.nama_kategori_bandwith + (adjustData.nominal_bandwith ? ' (' + adjustData.nominal_bandwith + ' Mbps)' : '')"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Harga Dasar Paket:</span>
+                            <span class="font-bold text-slate-900 dark:text-white" x-text="'Rp ' + Number(adjustData.harga_bandwith).toLocaleString('id-ID')"></span>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Keterangan Diskon / Potongan</label>
-                        <input type="text"
-                               name="potongan_note"
-                               x-model="adjustData.potongan_note"
-                               placeholder="Contoh: Diskon Promo Mitra / Toko"
-                               class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium">
-                    </div>
-                </div>
 
-                <!-- Pengaturan PPN -->
-                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">Skema Pengenaan PPN</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                        <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
-                               :class="adjustData.ppn_type === 'none' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
-                            <input type="radio" name="ppn_type" value="none" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
-                            <span>Tanpa PPN (0%)</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
-                               :class="adjustData.ppn_type === 'exclude' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
-                            <input type="radio" name="ppn_type" value="exclude" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
-                            <span>+ PPN Tambahan</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
-                               :class="adjustData.ppn_type === 'include' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
-                            <input type="radio" name="ppn_type" value="include" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
-                            <span>Sudah Termasuk PPN</span>
-                        </label>
-                    </div>
-
-                    <div x-show="adjustData.ppn_type !== 'none'" class="pt-2 flex items-center justify-between gap-3 text-xs">
-                        <span class="text-slate-600 dark:text-slate-400 font-medium">Persentase PPN:</span>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number"
-                                   name="ppn_percent"
-                                   x-model="adjustData.ppn_percent"
-                                   min="0"
-                                   max="100"
-                                   step="1"
-                                   class="w-20 text-xs px-2.5 py-1.5 text-right rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold font-mono">
-                            <span class="font-bold text-slate-500">%</span>
+                    <!-- Input Potongan / Diskon -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nominal Potongan / Diskon (Rp)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400">Rp</span>
+                                <input type="number"
+                                       name="potongan"
+                                       x-model="adjustData.potongan"
+                                       min="0"
+                                       step="1000"
+                                       placeholder="0"
+                                       class="w-full text-xs pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium font-mono">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Keterangan Diskon / Potongan</label>
+                            <input type="text"
+                                   name="potongan_note"
+                                   x-model="adjustData.potongan_note"
+                                   placeholder="Contoh: Diskon Promo Mitra / Toko"
+                                   class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium">
                         </div>
                     </div>
+
+                    <!-- Pengaturan PPN -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">Skema Pengenaan PPN</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
+                                   :class="adjustData.ppn_type === 'none' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
+                                <input type="radio" name="ppn_type" value="none" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
+                                <span>Tanpa PPN (0%)</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
+                                   :class="adjustData.ppn_type === 'exclude' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
+                                <input type="radio" name="ppn_type" value="exclude" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
+                                <span>+ PPN Tambahan</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
+                                   :class="adjustData.ppn_type === 'include' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
+                                <input type="radio" name="ppn_type" value="include" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
+                                <span>Sudah Termasuk PPN</span>
+                            </label>
+                        </div>
+
+                        <div x-show="adjustData.ppn_type !== 'none'" class="pt-2 flex items-center justify-between gap-3 text-xs">
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">Persentase PPN:</span>
+                            <div class="flex items-center gap-1.5">
+                                <input type="number"
+                                       name="ppn_percent"
+                                       x-model="adjustData.ppn_percent"
+                                       min="0"
+                                       max="100"
+                                       step="1"
+                                       class="w-20 text-xs px-2.5 py-1.5 text-right rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold font-mono">
+                                <span class="font-bold text-slate-500">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview Ringkasan Tagihan Baru -->
+                    <div class="p-3.5 rounded-xl bg-slate-900 text-white dark:bg-black/50 border border-slate-800 space-y-2 text-xs">
+                        <div class="text-[11px] font-bold tracking-wider uppercase text-purple-400 flex items-center justify-between">
+                            <span>Ringkasan Estimasi Tagihan Bulanan</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Live Preview</span>
+                        </div>
+                        <div class="flex justify-between text-slate-300 pt-1">
+                            <span>Harga Paket Pokok:</span>
+                            <span class="font-mono font-semibold" x-text="'Rp ' + Number(adjustData.harga_bandwith).toLocaleString('id-ID')"></span>
+                        </div>
+                        <div class="flex justify-between text-rose-400" x-show="adjustData.potongan > 0">
+                            <span>Potongan / Diskon:</span>
+                            <span class="font-mono font-semibold" x-text="'- Rp ' + Number(adjustData.potongan).toLocaleString('id-ID')"></span>
+                        </div>
+                        <div class="flex justify-between text-slate-300" x-show="adjustData.ppn_type === 'exclude'">
+                            <span x-text="'PPN (' + adjustData.ppn_percent + '%):'"></span>
+                            <span class="font-mono font-semibold text-amber-400" x-text="'+ Rp ' + Number(adjustPpnNominal).toLocaleString('id-ID')"></span>
+                        </div>
+                        <div class="flex justify-between text-slate-300" x-show="adjustData.ppn_type === 'include'">
+                            <span x-text="'PPN (' + adjustData.ppn_percent + '%):'"></span>
+                            <span class="font-mono text-[11px] text-emerald-400">Termasuk dalam harga</span>
+                        </div>
+                        <div class="pt-2 border-t border-slate-700 flex justify-between items-center font-bold text-sm">
+                            <span class="text-white">Estimasi Total Tagihan:</span>
+                            <span class="text-emerald-400 font-mono text-base" x-text="'Rp ' + Number(adjustTotalEstimasi).toLocaleString('id-ID')"></span>
+                        </div>
+                    </div>
+
+                    <!-- Checkbox Sync ke Invoices Aktif / Unpaid -->
+                    <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/50 text-xs">
+                        <input type="checkbox"
+                               name="update_unpaid_invoices"
+                               id="update_unpaid_invoices"
+                               value="1"
+                               x-model="adjustData.update_unpaid_invoices"
+                               class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer">
+                        <label for="update_unpaid_invoices" class="text-slate-700 dark:text-slate-300 cursor-pointer leading-tight">
+                            <span class="font-semibold block text-slate-900 dark:text-white">Otomatis sinkronkan ke tagihan invoice berjalan</span>
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400">Terapkan langsung nilai potongan & PPN baru ini pada seluruh invoice bulan berjalan yang berstatus belum lunas.</span>
+                        </label>
+                    </div>
                 </div>
 
-                <!-- Live Preview Ringkasan Tagihan Baru -->
-                <div class="p-3.5 rounded-xl bg-slate-900 text-white dark:bg-black/50 border border-slate-800 space-y-2 text-xs">
-                    <div class="text-[11px] font-bold tracking-wider uppercase text-purple-400 flex items-center justify-between">
-                        <span>Ringkasan Estimasi Tagihan Bulanan</span>
-                        <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Live Preview</span>
-                    </div>
-                    <div class="flex justify-between text-slate-300 pt-1">
-                        <span>Harga Paket Pokok:</span>
-                        <span class="font-mono font-semibold" x-text="'Rp ' + Number(adjustData.harga_bandwith).toLocaleString('id-ID')"></span>
-                    </div>
-                    <div class="flex justify-between text-rose-400" x-show="adjustData.potongan > 0">
-                        <span>Potongan / Diskon:</span>
-                        <span class="font-mono font-semibold" x-text="'- Rp ' + Number(adjustData.potongan).toLocaleString('id-ID')"></span>
-                    </div>
-                    <div class="flex justify-between text-slate-300" x-show="adjustData.ppn_type === 'exclude'">
-                        <span x-text="'PPN (' + adjustData.ppn_percent + '%):'"></span>
-                        <span class="font-mono font-semibold text-amber-400" x-text="'+ Rp ' + Number(adjustPpnNominal).toLocaleString('id-ID')"></span>
-                    </div>
-                    <div class="flex justify-between text-slate-300" x-show="adjustData.ppn_type === 'include'">
-                        <span x-text="'PPN (' + adjustData.ppn_percent + '%):'"></span>
-                        <span class="font-mono text-[11px] text-emerald-400">Termasuk dalam harga</span>
-                    </div>
-                    <div class="pt-2 border-t border-slate-700 flex justify-between items-center font-bold text-sm">
-                        <span class="text-white">Estimasi Total Tagihan:</span>
-                        <span class="text-emerald-400 font-mono text-base" x-text="'Rp ' + Number(adjustTotalEstimasi).toLocaleString('id-ID')"></span>
-                    </div>
-                </div>
-
-                <!-- Checkbox Sync ke Invoices Aktif / Unpaid -->
-                <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/50 text-xs">
-                    <input type="checkbox"
-                           name="update_unpaid_invoices"
-                           id="update_unpaid_invoices"
-                           value="1"
-                           x-model="adjustData.update_unpaid_invoices"
-                           class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer">
-                    <label for="update_unpaid_invoices" class="text-slate-700 dark:text-slate-300 cursor-pointer leading-tight">
-                        <span class="font-semibold block text-slate-900 dark:text-white">Otomatis sinkronkan ke tagihan invoice berjalan</span>
-                        <span class="text-[11px] text-slate-500 dark:text-slate-400">Terapkan langsung nilai potongan & PPN baru ini pada seluruh invoice bulan berjalan yang berstatus belum lunas.</span>
-                    </label>
-                </div>
-
-                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
                     <button type="button"
                             @click="adjustModalOpen = false"
-                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition cursor-pointer">
+                            class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">
                         Batal
                     </button>
                     <button type="submit"
-                            class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-500/25 transition cursor-pointer">
+                            class="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">
                         Simpan Penyesuaian
                     </button>
                 </div>

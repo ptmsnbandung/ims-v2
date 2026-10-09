@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -47,6 +49,7 @@ class AdminController extends Controller
                 'p.kode_karyawan',
                 'p.kode_level',
                 'p.username',
+                'p.foto as foto_pengguna',
                 'p.status_aktif',
                 'p.last_ip',
                 'p.las_login',
@@ -55,6 +58,7 @@ class AdminController extends Controller
                 'k.nama_karyawan',
                 'k.nip',
                 'k.hp_karyawan',
+                'k.foto as foto_karyawan',
                 'k.kode_jabatan',
                 'j.nama_jabatan',
                 'l.nama_level',
@@ -97,6 +101,8 @@ class AdminController extends Controller
             $u->nama_karyawan = $u->nama_karyawan ?: ($u->username ?: $u->kode_pengguna);
             $u->nama_level = $u->nama_level ?: 'Pengguna';
             $u->nama_jabatan = $u->nama_jabatan ?: 'Staff';
+            $u->foto = $u->foto_pengguna ?: $u->foto_karyawan;
+            $u->foto_url = \App\Models\Pengguna::resolveFotoUrl($u->foto);
         }
 
         // 6. Master Levels for Dropdown
@@ -142,12 +148,21 @@ class AdminController extends Controller
             'kode_level' => 'required|string|max:50',
             'jabatan' => 'nullable|string|max:100',
             'status_aktif' => 'required|in:1,2',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:3072',
             'password' => 'required|string|min:6',
             'password_confirmation' => 'required|same:password',
         ]);
 
         $now = Carbon::now()->toDateTimeString();
         $currentUser = substr(Auth::user()?->username ?? 'admin', 0, 20);
+
+        // Upload foto jika ada
+        $fotoFilename = null;
+        if ($request->hasFile('foto') && $request->file('foto')->isValid()) {
+            $file = $request->file('foto');
+            $fotoFilename = 'avatar_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('avatars', $fotoFilename, 'public');
+        }
 
         // Generate unique kode_pengguna & kode_karyawan
         $kodePengguna = 'pg' . rand(10000, 99999);
@@ -193,7 +208,7 @@ class AdminController extends Controller
                     'kode_golongan_darah' => 'gd56e3fdd542aaa',
                     'kode_wilayah_kelurahan' => '32.73.13.1005',
                     'ktp' => '',
-                    'foto' => '',
+                    'foto' => $fotoFilename ?? '',
                     'cv' => '',
                     'ijazah_pendidikan_terakhir' => '',
                     'alamat_asal' => '',
@@ -229,6 +244,7 @@ class AdminController extends Controller
                 'kode_karyawan' => $kodeKaryawan,
                 'kode_level' => $request->kode_level,
                 'username' => trim($request->username),
+                'foto' => $fotoFilename,
                 'password' => md5($request->password),
                 'status_aktif' => (string) $request->status_aktif,
                 'date_create' => $now,
@@ -262,6 +278,8 @@ class AdminController extends Controller
             'kode_level' => 'required|string|max:50',
             'jabatan' => 'nullable|string|max:100',
             'status_aktif' => 'required|in:1,2',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:3072',
+            'hapus_foto' => 'nullable|string',
             'password' => 'nullable|string|min:6',
             'password_confirmation' => 'nullable|same:password',
         ]);
@@ -283,6 +301,21 @@ class AdminController extends Controller
                 $userPayload['password'] = md5($request->password);
             }
 
+            $fotoFilename = null;
+            $fotoUpdated = false;
+
+            if ($request->input('hapus_foto') === '1' || $request->input('hapus_foto') === 'true') {
+                $userPayload['foto'] = null;
+                $fotoUpdated = true;
+                $fotoFilename = '';
+            } elseif ($request->hasFile('foto') && $request->file('foto')->isValid()) {
+                $file = $request->file('foto');
+                $fotoFilename = 'avatar_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('avatars', $fotoFilename, 'public');
+                $userPayload['foto'] = $fotoFilename;
+                $fotoUpdated = true;
+            }
+
             DB::table('tb_pengguna')->where('kode_pengguna', $kode_pengguna)->update($userPayload);
 
             // Update tb_m_karyawan jika ada
@@ -292,6 +325,9 @@ class AdminController extends Controller
                     'status_aktif' => (string) $request->status_aktif,
                     'date_update' => $now,
                 ];
+                if ($fotoUpdated) {
+                    $karyawanPayload['foto'] = $fotoFilename ?? '';
+                }
                 if ($request->filled('jabatan')) {
                     $foundJabatan = DB::table('tb_m_jabatan')->where('nama_jabatan', 'like', '%' . trim($request->jabatan) . '%')->first();
                     if ($foundJabatan) {

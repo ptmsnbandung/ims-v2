@@ -23,6 +23,7 @@ class Pengguna extends Model implements AuthenticatableContract
         'kode_karyawan',
         'kode_level',
         'username',
+        'foto',
         'password',
         'status_aktif',
         'as_sales',
@@ -94,6 +95,51 @@ class Pengguna extends Model implements AuthenticatableContract
     public function getNamaAttribute(): string
     {
         return $this->karyawan?->nama_karyawan ?? $this->username ?? $this->kode_pengguna;
+    }
+
+    /**
+     * Helper to resolve foto URL
+     */
+    public static function resolveFotoUrl(?string $foto): ?string
+    {
+        if (!$foto) {
+            return null;
+        }
+
+        if (str_starts_with($foto, 'http://') || str_starts_with($foto, 'https://')) {
+            return $foto;
+        }
+
+        if (file_exists(public_path('storage/avatars/' . $foto))) {
+            return asset('storage/avatars/' . $foto);
+        }
+
+        if (file_exists(public_path('uploads/avatars/' . $foto))) {
+            return asset('uploads/avatars/' . $foto);
+        }
+
+        if (file_exists(storage_path('app/public/avatars/' . $foto))) {
+            return asset('storage/avatars/' . $foto);
+        }
+
+        if (file_exists(public_path('storage/' . $foto))) {
+            return asset('storage/' . $foto);
+        }
+
+        if (file_exists(public_path('uploads/' . $foto))) {
+            return asset('uploads/' . $foto);
+        }
+
+        return asset('storage/avatars/' . $foto);
+    }
+
+    /**
+     * Get Photo / Avatar URL
+     */
+    public function getFotoUrlAttribute(): ?string
+    {
+        $foto = $this->foto ?: ($this->karyawan?->foto ?? null);
+        return self::resolveFotoUrl($foto);
     }
 
     /**

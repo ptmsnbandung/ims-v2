@@ -204,11 +204,20 @@
                             <!-- PENGGUNA -->
                             <td class="px-5 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 p-0.5 flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
-                                        <div class="w-full h-full bg-blue-50 dark:bg-slate-900 rounded-full flex items-center justify-center font-bold text-sm text-blue-700 dark:text-blue-400">
-                                            {{ strtoupper(substr($u->nama_karyawan, 0, 1)) }}
+                                    @if(!empty($u->foto_url))
+                                        <div class="w-10 h-10 rounded-full ring-2 ring-blue-500/20 dark:ring-blue-500/40 flex-shrink-0 overflow-hidden shadow-xs bg-slate-100 dark:bg-slate-800">
+                                            <img src="{{ $u->foto_url }}" alt="{{ $u->nama_karyawan }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="w-full h-full hidden items-center justify-center font-bold text-sm bg-blue-50 dark:bg-slate-900 text-blue-700 dark:text-blue-400">
+                                                {{ strtoupper(substr($u->nama_karyawan, 0, 1)) }}
+                                            </div>
                                         </div>
-                                    </div>
+                                    @else
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 p-0.5 flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
+                                            <div class="w-full h-full bg-blue-50 dark:bg-slate-900 rounded-full flex items-center justify-center font-bold text-sm text-blue-700 dark:text-blue-400">
+                                                {{ strtoupper(substr($u->nama_karyawan, 0, 1)) }}
+                                            </div>
+                                        </div>
+                                    @endif
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <span class="font-bold text-slate-900 dark:text-white text-sm tracking-wide">{{ $u->nama_karyawan }}</span>
@@ -390,9 +399,49 @@
                 </div>
 
                 <!-- Modal Form -->
-                <form action="{{ route('admin.users.store') }}" method="POST">
+                <form action="{{ route('admin.users.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="p-6 space-y-4">
+                        <!-- Foto Profil -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Foto Profil Pengguna (Opsional)</label>
+                            <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+                                <!-- Avatar Preview -->
+                                <div class="w-14 h-14 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-2 border-blue-500/30 flex-shrink-0 shadow-inner">
+                                    <template x-if="createPhotoPreview">
+                                        <img :src="createPhotoPreview" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!createPhotoPreview">
+                                        <svg class="w-7 h-7 text-slate-400 dark:text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                        </svg>
+                                    </template>
+                                </div>
+                                <!-- Input & Actions -->
+                                <div class="flex-1 min-w-0">
+                                    <input type="file"
+                                           id="create_user_foto"
+                                           name="foto"
+                                           accept="image/png,image/jpeg,image/jpg,image/webp"
+                                           @change="handleCreatePhotoChange($event)"
+                                           class="hidden">
+                                    <div class="flex items-center gap-2">
+                                        <label for="create_user_foto"
+                                               class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 text-xs font-semibold cursor-pointer transition">
+                                            Pilih Foto
+                                        </label>
+                                        <button type="button"
+                                                x-show="createPhotoPreview"
+                                                @click="clearCreatePhoto()"
+                                                class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-semibold cursor-pointer transition">
+                                            Hapus
+                                        </button>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Format: JPG, PNG, WEBP (Maksimal 3MB)</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Nama Lengkap / Karyawan -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nama Lengkap / Karyawan <span class="text-rose-500">*</span></label>
@@ -540,9 +589,59 @@
                 </div>
 
                 <!-- Modal Form -->
-                <form :action="'{{ url('admin/users') }}/' + editForm.kode_pengguna + '/update'" method="POST">
+                <form :action="'{{ url('admin/users') }}/' + editForm.kode_pengguna + '/update'" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="p-6 space-y-4">
+                        <!-- Foto Profil -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Foto Profil Pengguna</label>
+                            <input type="hidden" name="hapus_foto" :value="editForm.hapus_foto ? '1' : '0'">
+                            <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+                                <!-- Avatar Preview -->
+                                <div class="w-14 h-14 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-2 border-blue-500/30 flex-shrink-0 shadow-inner">
+                                    <template x-if="editPhotoPreview">
+                                        <img :src="editPhotoPreview" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!editPhotoPreview && editForm.foto_url && !editForm.hapus_foto">
+                                        <img :src="editForm.foto_url" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                                    </template>
+                                    <template x-if="!editPhotoPreview && (!editForm.foto_url || editForm.hapus_foto)">
+                                        <div class="w-full h-full bg-blue-50 dark:bg-slate-900 flex items-center justify-center font-bold text-sm text-blue-700 dark:text-blue-400">
+                                            <span x-text="(editForm.nama_karyawan || 'U').charAt(0).toUpperCase()"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                                <!-- Input & Actions -->
+                                <div class="flex-1 min-w-0">
+                                    <input type="file"
+                                           id="edit_user_foto"
+                                           name="foto"
+                                           accept="image/png,image/jpeg,image/jpg,image/webp"
+                                           @change="handleEditPhotoChange($event)"
+                                           class="hidden">
+                                    <div class="flex items-center gap-2">
+                                        <label for="edit_user_foto"
+                                               class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 text-xs font-semibold cursor-pointer transition">
+                                            Ubah Foto
+                                        </label>
+                                        <button type="button"
+                                                x-show="editPhotoPreview || (editForm.foto_url && !editForm.hapus_foto)"
+                                                @click="removeEditPhoto()"
+                                                class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-semibold cursor-pointer transition">
+                                            Hapus Foto
+                                        </button>
+                                        <button type="button"
+                                                x-show="editForm.hapus_foto"
+                                                @click="cancelRemoveEditPhoto()"
+                                                class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-semibold cursor-pointer transition">
+                                            Batal Hapus
+                                        </button>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Format: JPG, PNG, WEBP (Maksimal 3MB)</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Nama Lengkap / Karyawan -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nama Lengkap / Karyawan <span class="text-rose-500">*</span></label>
@@ -643,6 +742,8 @@ function userManagement() {
     return {
         isCreateOpen: false,
         isEditOpen: false,
+        createPhotoPreview: null,
+        editPhotoPreview: null,
         editForm: {
             kode_pengguna: '',
             kode_karyawan: '',
@@ -651,11 +752,31 @@ function userManagement() {
             kode_level: '',
             nama_jabatan: '',
             status_aktif: '1',
+            foto: '',
+            foto_url: '',
+            hapus_foto: false,
         },
         openCreateModal() {
+            this.createPhotoPreview = null;
+            const input = document.getElementById('create_user_foto');
+            if (input) input.value = '';
             this.isCreateOpen = true;
         },
+        handleCreatePhotoChange(e) {
+            const file = e.target.files[0];
+            if (file) {
+                this.createPhotoPreview = URL.createObjectURL(file);
+            }
+        },
+        clearCreatePhoto() {
+            this.createPhotoPreview = null;
+            const input = document.getElementById('create_user_foto');
+            if (input) input.value = '';
+        },
         openEditModal(userData) {
+            this.editPhotoPreview = null;
+            const input = document.getElementById('edit_user_foto');
+            if (input) input.value = '';
             this.editForm = {
                 kode_pengguna: userData.kode_pengguna,
                 kode_karyawan: userData.kode_karyawan || '',
@@ -664,8 +785,27 @@ function userManagement() {
                 kode_level: userData.kode_level,
                 nama_jabatan: userData.nama_jabatan || 'Staff',
                 status_aktif: userData.status_aktif || '1',
+                foto: userData.foto || '',
+                foto_url: userData.foto_url || '',
+                hapus_foto: false,
             };
             this.isEditOpen = true;
+        },
+        handleEditPhotoChange(e) {
+            const file = e.target.files[0];
+            if (file) {
+                this.editPhotoPreview = URL.createObjectURL(file);
+                this.editForm.hapus_foto = false;
+            }
+        },
+        removeEditPhoto() {
+            this.editPhotoPreview = null;
+            const input = document.getElementById('edit_user_foto');
+            if (input) input.value = '';
+            this.editForm.hapus_foto = true;
+        },
+        cancelRemoveEditPhoto() {
+            this.editForm.hapus_foto = false;
         }
     }
 }

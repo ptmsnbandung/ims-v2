@@ -1096,9 +1096,18 @@
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
                                     class="flex items-center gap-1.5 sm:gap-2.5 p-1 sm:p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
-                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
-                                    {{ substr(auth()->user()->nama, 0, 1) }}
-                                </div>
+                                @if(auth()->user()?->foto_url)
+                                    <div class="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 flex-shrink-0 shadow-xs bg-slate-100 dark:bg-slate-800">
+                                        <img src="{{ auth()->user()->foto_url }}" alt="{{ auth()->user()->nama }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="w-full h-full hidden items-center justify-center font-bold text-xs text-white bg-gradient-to-tr from-[#05404f] to-[#0891b2]">
+                                            {{ substr(auth()->user()->nama, 0, 1) }}
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
+                                        {{ substr(auth()->user()->nama, 0, 1) }}
+                                    </div>
+                                @endif
                                 <div class="text-left hidden md:block">
                                     <span class="block text-xs font-bold text-slate-900 dark:text-white leading-tight">{{ auth()->user()->nama }}</span>
                                     <span class="block text-[10px] text-[#0891b2] font-semibold">{{ auth()->user()->nama_level }}</span>
@@ -1113,9 +1122,16 @@
                                  x-cloak
                                  @click.away="open = false"
                                  class="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/80 dark:shadow-black/60 py-1.5 z-50">
-                                <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700/60 text-xs">
-                                    <p class="font-bold text-slate-900 dark:text-white">{{ auth()->user()->nama }}</p>
-                                    <p class="text-slate-500 dark:text-slate-400 truncate">{{ auth()->user()->username }}</p>
+                                <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-700/60 text-xs flex items-center gap-2.5">
+                                    @if(auth()->user()?->foto_url)
+                                        <div class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-slate-200 dark:ring-slate-700">
+                                            <img src="{{ auth()->user()->foto_url }}" class="w-full h-full object-cover">
+                                        </div>
+                                    @endif
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-bold text-slate-900 dark:text-white truncate">{{ auth()->user()->nama }}</p>
+                                        <p class="text-slate-500 dark:text-slate-400 truncate">{{ auth()->user()->username }}</p>
+                                    </div>
                                 </div>
                                 <form action="{{ route('logout') }}" method="POST" onsubmit="localStorage.removeItem('theme');">
                                     @csrf

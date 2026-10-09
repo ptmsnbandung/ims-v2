@@ -133,6 +133,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/pelanggan/{nomor_internet}/update-pppoe', [TeknikController::class, 'updatePppoe'])->name('pelanggan.update-pppoe');
         Route::post('/pelanggan/{nomor_internet}/unified-activate', [NocController::class, 'unifiedActivate'])->name('pelanggan.unified-activate');
         Route::post('/pelanggan/{nomor_internet}/unified-suspend', [NocController::class, 'unifiedSuspend'])->name('pelanggan.unified-suspend');
+        Route::post('/pelanggan/adjust', [FinanceController::class, 'adjustCustomerPricing'])->name('pelanggan.adjust.post');
+        Route::post('/pelanggan/{nomor_internet}/adjust', [FinanceController::class, 'adjustCustomerPricing'])->name('pelanggan.adjust');
 
         // Cek Coverage Lokasi ke ODP Terdekat (GIS Dropcore Routing)
         Route::get('/coverage', [TeknikController::class, 'coverage'])->name('coverage');
@@ -285,6 +287,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/pelanggan', [TeknikController::class, 'pelanggan'])->name('pelanggan');
         Route::get('/pelanggan/export', [TeknikController::class, 'exportPelanggan'])->name('pelanggan.export');
         Route::get('/pelanggan/{nomor_internet}', [TeknikController::class, 'profilePelanggan'])->name('pelanggan.profile');
+        Route::post('/pelanggan/adjust', [FinanceController::class, 'adjustCustomerPricing'])->name('pelanggan.adjust.post');
+        Route::post('/pelanggan/{nomor_internet}/adjust', [FinanceController::class, 'adjustCustomerPricing'])->name('pelanggan.adjust');
 
         // 8. Tiket Gangguan (Monitoring Finance)
         Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');

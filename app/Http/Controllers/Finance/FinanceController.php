@@ -901,6 +901,98 @@ class FinanceController extends Controller
     }
 
     /**
+     * Penyesuaian Harga, Potongan/Diskon, dan PPN Pelanggan (trx_batchjob_register)
+     */
+    public function adjustCustomerPricing(Request $request, ?string $nomorInternet = null): RedirectResponse
+    {
+        $nomorInternet = $request->input('nomor_internet', $nomorInternet);
+
+        $request->validate([
+            'nomor_internet' => 'required|string',
+            'potongan' => 'nullable|numeric|min:0',
+            'potongan_note' => 'nullable|string|max:255',
+            'ppn_type' => 'required|in:none,include,exclude',
+            'ppn_percent' => 'nullable|numeric|min:0|max:100',
+            'update_unpaid_invoices' => 'nullable',
+        ]);
+
+        $user = Auth::user()?->nama ?? 'FINANCE';
+        $customer = DB::table('trx_batchjob_register')->where('nomor_internet', $nomorInternet)->first();
+        if (!$customer) {
+            return redirect()->back()->with('error', "Pelanggan dengan No. Internet {$nomorInternet} tidak ditemukan.");
+        }
+
+        $potongan = (float) $request->input('potongan', 0);
+        $potonganNote = $request->input('potongan_note', '');
+        $ppnType = $request->input('ppn_type', 'none');
+        $ppnPercent = (float) $request->input('ppn_percent', 11);
+
+        if ($ppnType === 'none') {
+            $ppn = '2'; // Non-PPN
+            $ppnNom = 0;
+        } else {
+            $ppn = '1'; // Include / Exclude PPN
+            $ppnNom = round($ppnPercent / 100, 4);
+        }
+
+        try {
+            DB::table('trx_batchjob_register')
+                ->where('nomor_internet', $nomorInternet)
+                ->update([
+                    'potongan' => (string) $potongan,
+                    'potongan_note' => $potonganNote ?: null,
+                    'ppn' => $ppn,
+                    'ppn_nom' => (string) $ppnNom,
+                    'date_update' => Carbon::now()->toDateTimeString(),
+                    'user_update' => $user,
+                ]);
+
+            $updatedInvoices = 0;
+            $shouldUpdateInvoices = $request->has('update_unpaid_invoices') && ($request->input('update_unpaid_invoices') == '1' || $request->input('update_unpaid_invoices') === true || $request->input('update_unpaid_invoices') === 'on');
+
+            if ($shouldUpdateInvoices) {
+                // Update open/unpaid monthly invoices
+                $unpaidInvoices = DB::table('trx_billing_layanan')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->where('status_bayar', '!=', '1')
+                    ->get();
+
+                foreach ($unpaidInvoices as $inv) {
+                    $hargaBw = (float) ($inv->harga_bandwith ?? 0);
+                    if ($hargaBw <= 0) {
+                        $paket = DB::table('m_bandwith')->where('kode_bandwith', $customer->kode_bandwith)->first();
+                        $hargaBw = (float) ($paket->harga_bandwith ?? 0);
+                    }
+                    $subtotal = max(0, $hargaBw - $potongan);
+                    $ppnVal = ($ppnType === 'exclude') ? ($subtotal * $ppnNom) : 0;
+                    $totalLayanan = $subtotal + $ppnVal;
+
+                    DB::table('trx_billing_layanan')
+                        ->where('kode_billing_layanan', $inv->kode_billing_layanan)
+                        ->update([
+                            'potongan' => (string) $potongan,
+                            'desc_potongan' => $potonganNote ?: ($inv->desc_potongan ?? '-'),
+                            'ppn' => (string) $ppnVal,
+                            'total_layanan' => (string) $totalLayanan,
+                            'date_update' => Carbon::now()->toDateTimeString(),
+                            'user_update' => $user,
+                        ]);
+                    $updatedInvoices++;
+                }
+            }
+
+            $infoMsg = "Berhasil memperbarui potongan & PPN untuk pelanggan {$customer->nama_pelanggan} ({$nomorInternet}).";
+            if ($updatedInvoices > 0) {
+                $infoMsg .= " Otomatis memperbarui {$updatedInvoices} invoice tagihan berjalan.";
+            }
+
+            return redirect()->back()->with('success', $infoMsg);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menyimpan penyesuaian: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Rollback Status Tagihan ke Draft / Generating
      */
     public function rollbackBillingLayanan(Request $request, ?string $kodeBilling = null): RedirectResponse

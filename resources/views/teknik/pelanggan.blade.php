@@ -44,6 +44,55 @@
          openTerminasi(cust) {
              this.activeCustomer = cust;
              this.terminasiModalOpen = true;
+         },
+
+         // Modal Adjust Potongan / Diskon & PPN
+         adjustModalOpen: false,
+         adjustData: {
+             nomor_internet: '',
+             nama_pelanggan: '',
+             nama_kategori_bandwith: '',
+             nominal_bandwith: '',
+             harga_bandwith: 0,
+             potongan: 0,
+             potongan_note: '',
+             ppn_type: 'none',
+             ppn_percent: 11,
+             update_unpaid_invoices: true
+         },
+         openAdjust(cust) {
+             this.activeCustomer = cust;
+             const ppnNomVal = parseFloat(cust.ppn_nom || 0);
+             const ppnPercent = ppnNomVal > 0 ? (ppnNomVal <= 1 ? Math.round(ppnNomVal * 100) : ppnNomVal) : 11;
+             const isPpnActive = (cust.ppn == '1' || ppnNomVal > 0);
+             
+             this.adjustData = {
+                 nomor_internet: cust.nomor_internet,
+                 nama_pelanggan: cust.nama_pelanggan,
+                 nama_kategori_bandwith: cust.nama_kategori_bandwith,
+                 nominal_bandwith: cust.nominal_bandwith,
+                 harga_bandwith: parseFloat(cust.harga_bandwith || 0),
+                 potongan: parseFloat(cust.potongan || 0),
+                 potongan_note: cust.potongan_note || '',
+                 ppn_type: isPpnActive ? 'exclude' : 'none',
+                 ppn_percent: ppnPercent,
+                 update_unpaid_invoices: true
+             };
+             this.adjustModalOpen = true;
+         },
+         get adjustSubtotal() {
+             return Math.max(0, (parseFloat(this.adjustData.harga_bandwith) || 0) - (parseFloat(this.adjustData.potongan) || 0));
+         },
+         get adjustPpnNominal() {
+             if (this.adjustData.ppn_type === 'none') return 0;
+             const pct = (parseFloat(this.adjustData.ppn_percent) || 0) / 100;
+             return Math.round(this.adjustSubtotal * pct);
+         },
+         get adjustTotalEstimasi() {
+             if (this.adjustData.ppn_type === 'include') {
+                 return this.adjustSubtotal;
+             }
+             return this.adjustSubtotal + this.adjustPpnNominal;
          }
      }">
     
@@ -631,40 +680,57 @@
                                                 'alamat' => $item->alamat_p ?: ($item->alamat_pasang ?: '-'),
                                                 'kode_bandwith' => $item->kode_bandwith ?? '',
                                                 'status_reg' => $item->status_reg,
+                                                'potongan' => (float)($item->potongan ?? 0),
+                                                'potongan_note' => (string)($item->potongan_note ?? ''),
+                                                'ppn' => (string)($item->ppn ?? '2'),
+                                                'ppn_nom' => (float)($item->ppn_nom ?? 0),
                                             ]);
                                         @endphp
-                                        <!-- 1. Req UP / Downgrade Bandwidth -->
-                                        <button type="button" 
-                                                @click="openUpDowngrade({{ $custJson }})" 
-                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
-                                                title="Ajukan Req UP / Downgrade Bandwidth ke NOC">
-                                            <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
-                                            </svg>
-                                            <span>Up/Down</span>
-                                        </button>
+                                        <div class="grid grid-cols-2 gap-1.5 min-w-[170px]">
+                                            <!-- 1. Req UP / Downgrade Bandwidth -->
+                                            <button type="button" 
+                                                    @click="openUpDowngrade({{ $custJson }})" 
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    title="Ajukan Req UP / Downgrade Bandwidth ke NOC">
+                                                <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                                                </svg>
+                                                <span>Up/Down</span>
+                                            </button>
 
-                                        <!-- 2. Req Suspend -->
-                                        <button type="button" 
-                                                @click="openSuspend({{ $custJson }})" 
-                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
-                                                title="Ajukan Req Suspend ke NOC">
-                                            <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                                            </svg>
-                                            <span>Suspend</span>
-                                        </button>
+                                            <!-- 2. Req Suspend -->
+                                            <button type="button" 
+                                                    @click="openSuspend({{ $custJson }})" 
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    title="Ajukan Req Suspend ke NOC">
+                                                <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                                </svg>
+                                                <span>Suspend</span>
+                                            </button>
 
-                                        <!-- 3. Req Terminasi -->
-                                        <button type="button" 
-                                                @click="openTerminasi({{ $custJson }})" 
-                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
-                                                title="Ajukan Req Terminasi (Cabut) ke NOC">
-                                            <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
-                                            </svg>
-                                            <span>Terminasi</span>
-                                        </button>
+                                            <!-- 3. Adjust Potongan & PPN -->
+                                            <button type="button" 
+                                                    @click="openAdjust({{ $custJson }})" 
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-purple-50 hover:bg-purple-100 dark:bg-purple-500/10 dark:hover:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    title="Atur Potongan / Diskon & PPN Tagihan Pelanggan">
+                                                <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                                                </svg>
+                                                <span>Adjust</span>
+                                            </button>
+
+                                            <!-- 4. Req Terminasi -->
+                                            <button type="button" 
+                                                    @click="openTerminasi({{ $custJson }})" 
+                                                    class="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-[10px] font-semibold transition cursor-pointer shadow-2xs whitespace-nowrap"
+                                                    title="Ajukan Req Terminasi (Cabut) ke NOC">
+                                                <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+                                                </svg>
+                                                <span>Terminasi</span>
+                                            </button>
+                                        </div>
                                     @endif
                                 </div>
                             </td>
@@ -851,9 +917,13 @@
                                     'alamat' => $item->alamat_p ?: ($item->alamat_pasang ?: '-'),
                                     'kode_bandwith' => $item->kode_bandwith ?? '',
                                     'status_reg' => $item->status_reg,
+                                    'potongan' => (float)($item->potongan ?? 0),
+                                    'potongan_note' => (string)($item->potongan_note ?? ''),
+                                    'ppn' => (string)($item->ppn ?? '2'),
+                                    'ppn_nom' => (float)($item->ppn_nom ?? 0),
                                 ]);
                             @endphp
-                            <div class="grid grid-cols-3 gap-2">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <button type="button" 
                                         @click="openUpDowngrade({{ $custJsonMobile }})" 
                                         class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 text-xs font-bold transition shadow-xs cursor-pointer">
@@ -867,9 +937,15 @@
                                     <span>Suspend</span>
                                 </button>
                                 <button type="button" 
+                                        @click="openAdjust({{ $custJsonMobile }})" 
+                                        class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-500/15 dark:hover:bg-purple-500/25 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30 text-xs font-bold transition shadow-xs cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>
+                                    <span>Adjust</span>
+                                </button>
+                                <button type="button" 
                                         @click="openTerminasi({{ $custJsonMobile }})" 
                                         class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/15 dark:hover:bg-rose-500/25 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition shadow-xs cursor-pointer">
-                                    <svg class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" /></svg>
+                                    <svg class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke-currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" /></svg>
                                     <span>Terminasi</span>
                                 </button>
                             </div>
@@ -1122,6 +1198,170 @@
                     <button type="submit"
                             class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 transition cursor-pointer">
                         Kirim Request Terminasi ke NOC
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- 4. MODAL: ADJUST POTONGAN / DISKON & PPN PELANGGAN                      -->
+    <!-- ======================================================================= -->
+    <div x-show="adjustModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+        <div @click.away="adjustModalOpen = false"
+             class="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                            Penyesuaian Potongan / Diskon & PPN
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Atur skema diskon dan pajak PPN tagihan rutin pelanggan ini.</p>
+                    </div>
+                </div>
+                <button @click="adjustModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+
+            <form action="{{ route('finance.pelanggan.adjust.post') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="nomor_internet" :value="adjustData.nomor_internet" required>
+
+                <!-- Info Pelanggan Terpilih -->
+                <div class="p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-xs space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Pelanggan:</span>
+                        <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="adjustData.nomor_internet + ' - ' + adjustData.nama_pelanggan"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Paket Terdaftar:</span>
+                        <span class="font-semibold text-purple-700 dark:text-purple-300" x-text="adjustData.nama_kategori_bandwith + (adjustData.nominal_bandwith ? ' (' + adjustData.nominal_bandwith + ' Mbps)' : '')"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Harga Dasar Paket:</span>
+                        <span class="font-bold text-slate-900 dark:text-white" x-text="'Rp ' + Number(adjustData.harga_bandwith).toLocaleString('id-ID')"></span>
+                    </div>
+                </div>
+
+                <!-- Input Potongan / Diskon -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nominal Potongan / Diskon (Rp)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-xs font-bold text-slate-400">Rp</span>
+                            <input type="number"
+                                   name="potongan"
+                                   x-model="adjustData.potongan"
+                                   min="0"
+                                   step="1000"
+                                   placeholder="0"
+                                   class="w-full text-xs pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium font-mono">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Keterangan Diskon / Potongan</label>
+                        <input type="text"
+                               name="potongan_note"
+                               x-model="adjustData.potongan_note"
+                               placeholder="Contoh: Diskon Promo Mitra / Toko"
+                               class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium">
+                    </div>
+                </div>
+
+                <!-- Pengaturan PPN -->
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">Skema Pengenaan PPN</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                        <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
+                               :class="adjustData.ppn_type === 'none' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
+                            <input type="radio" name="ppn_type" value="none" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
+                            <span>Tanpa PPN (0%)</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
+                               :class="adjustData.ppn_type === 'exclude' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
+                            <input type="radio" name="ppn_type" value="exclude" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
+                            <span>+ PPN Tambahan</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-lg border transition cursor-pointer"
+                               :class="adjustData.ppn_type === 'include' ? 'border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
+                            <input type="radio" name="ppn_type" value="include" x-model="adjustData.ppn_type" class="text-purple-600 focus:ring-purple-500">
+                            <span>Sudah Termasuk PPN</span>
+                        </label>
+                    </div>
+
+                    <div x-show="adjustData.ppn_type !== 'none'" class="pt-2 flex items-center justify-between gap-3 text-xs">
+                        <span class="text-slate-600 dark:text-slate-400 font-medium">Persentase PPN:</span>
+                        <div class="flex items-center gap-1.5">
+                            <input type="number"
+                                   name="ppn_percent"
+                                   x-model="adjustData.ppn_percent"
+                                   min="0"
+                                   max="100"
+                                   step="1"
+                                   class="w-20 text-xs px-2.5 py-1.5 text-right rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold font-mono">
+                            <span class="font-bold text-slate-500">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Preview Ringkasan Tagihan Baru -->
+                <div class="p-3.5 rounded-xl bg-slate-900 text-white dark:bg-black/50 border border-slate-800 space-y-2 text-xs">
+                    <div class="text-[11px] font-bold tracking-wider uppercase text-purple-400 flex items-center justify-between">
+                        <span>Ringkasan Estimasi Tagihan Bulanan</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Live Preview</span>
+                    </div>
+                    <div class="flex justify-between text-slate-300 pt-1">
+                        <span>Harga Paket Pokok:</span>
+                        <span class="font-mono font-semibold" x-text="'Rp ' + Number(adjustData.harga_bandwith).toLocaleString('id-ID')"></span>
+                    </div>
+                    <div class="flex justify-between text-rose-400" x-show="adjustData.potongan > 0">
+                        <span>Potongan / Diskon:</span>
+                        <span class="font-mono font-semibold" x-text="'- Rp ' + Number(adjustData.potongan).toLocaleString('id-ID')"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-300" x-show="adjustData.ppn_type === 'exclude'">
+                        <span x-text="'PPN (' + adjustData.ppn_percent + '%):'"></span>
+                        <span class="font-mono font-semibold text-amber-400" x-text="'+ Rp ' + Number(adjustPpnNominal).toLocaleString('id-ID')"></span>
+                    </div>
+                    <div class="flex justify-between text-slate-300" x-show="adjustData.ppn_type === 'include'">
+                        <span x-text="'PPN (' + adjustData.ppn_percent + '%):'"></span>
+                        <span class="font-mono text-[11px] text-emerald-400">Termasuk dalam harga</span>
+                    </div>
+                    <div class="pt-2 border-t border-slate-700 flex justify-between items-center font-bold text-sm">
+                        <span class="text-white">Estimasi Total Tagihan:</span>
+                        <span class="text-emerald-400 font-mono text-base" x-text="'Rp ' + Number(adjustTotalEstimasi).toLocaleString('id-ID')"></span>
+                    </div>
+                </div>
+
+                <!-- Checkbox Sync ke Invoices Aktif / Unpaid -->
+                <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/50 text-xs">
+                    <input type="checkbox"
+                           name="update_unpaid_invoices"
+                           id="update_unpaid_invoices"
+                           value="1"
+                           x-model="adjustData.update_unpaid_invoices"
+                           class="mt-0.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer">
+                    <label for="update_unpaid_invoices" class="text-slate-700 dark:text-slate-300 cursor-pointer leading-tight">
+                        <span class="font-semibold block text-slate-900 dark:text-white">Otomatis sinkronkan ke tagihan invoice berjalan</span>
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400">Terapkan langsung nilai potongan & PPN baru ini pada seluruh invoice bulan berjalan yang berstatus belum lunas.</span>
+                    </label>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                    <button type="button"
+                            @click="adjustModalOpen = false"
+                            class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-500/25 transition cursor-pointer">
+                        Simpan Penyesuaian
                     </button>
                 </div>
             </form>

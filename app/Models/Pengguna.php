@@ -124,6 +124,18 @@ class Pengguna extends Model implements AuthenticatableContract
             return asset('storage/avatars/' . $foto);
         }
 
+        if (file_exists(public_path('uploads/karyawan/' . $foto))) {
+            return asset('uploads/karyawan/' . $foto);
+        }
+
+        if (file_exists(public_path('uploads/users/' . $foto))) {
+            return asset('uploads/users/' . $foto);
+        }
+
+        if (file_exists(public_path('uploads/profil/' . $foto))) {
+            return asset('uploads/profil/' . $foto);
+        }
+
         if (file_exists(public_path('uploads/' . $foto))) {
             return asset('uploads/' . $foto);
         }
@@ -132,7 +144,11 @@ class Pengguna extends Model implements AuthenticatableContract
             return asset('storage/' . $foto);
         }
 
-        return asset('uploads/avatars/' . $foto);
+        if (file_exists(public_path('assets/images/' . $foto))) {
+            return asset('assets/images/' . $foto);
+        }
+
+        return null;
     }
 
     /**

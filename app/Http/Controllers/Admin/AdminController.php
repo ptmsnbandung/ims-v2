@@ -148,7 +148,7 @@ class AdminController extends Controller
             'kode_level' => 'required|string|max:50',
             'jabatan' => 'nullable|string|max:100',
             'status_aktif' => 'required|in:1,2',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:3072',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
             'password' => 'required|string|min:6',
             'password_confirmation' => 'required|same:password',
         ]);
@@ -161,7 +161,26 @@ class AdminController extends Controller
         if ($request->hasFile('foto') && $request->file('foto')->isValid()) {
             $file = $request->file('foto');
             $fotoFilename = 'avatar_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('avatars', $fotoFilename, 'public');
+
+            // 1. Simpan ke public/uploads/avatars
+            $targetDir = public_path('uploads/avatars');
+            if (!file_exists($targetDir)) {
+                @mkdir($targetDir, 0777, true);
+            }
+            $file->move($targetDir, $fotoFilename);
+
+            // 2. Salin ke storage/app/public/avatars & public/storage/avatars
+            $storageDir = storage_path('app/public/avatars');
+            if (!file_exists($storageDir)) {
+                @mkdir($storageDir, 0777, true);
+            }
+            @copy($targetDir . DIRECTORY_SEPARATOR . $fotoFilename, $storageDir . DIRECTORY_SEPARATOR . $fotoFilename);
+
+            $publicStorageDir = public_path('storage/avatars');
+            if (!file_exists($publicStorageDir)) {
+                @mkdir($publicStorageDir, 0777, true);
+            }
+            @copy($targetDir . DIRECTORY_SEPARATOR . $fotoFilename, $publicStorageDir . DIRECTORY_SEPARATOR . $fotoFilename);
         }
 
         // Generate unique kode_pengguna & kode_karyawan
@@ -225,7 +244,7 @@ class AdminController extends Controller
                     'date_create' => $now,
                     'user_create' => $currentUser,
                     'date_update' => $now,
-                    'user_update' => $now,
+                    'user_update' => $currentUser,
                     'tinggi' => '0',
                     'berat' => '0',
                     'status_kontrak' => 1,
@@ -274,14 +293,14 @@ class AdminController extends Controller
 
         $request->validate([
             'nama_lengkap' => 'required|string|max:150',
-            'username' => 'required|string|max:100|unique:tb_pengguna,username,' . $kode_pengguna . ',kode_pengguna',
+            'username' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::unique('tb_pengguna', 'username')->ignore($kode_pengguna, 'kode_pengguna')],
             'kode_level' => 'required|string|max:50',
             'jabatan' => 'nullable|string|max:100',
             'status_aktif' => 'required|in:1,2',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:3072',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
             'hapus_foto' => 'nullable|string',
             'password' => 'nullable|string|min:6',
-            'password_confirmation' => 'nullable|same:password',
+            'password_confirmation' => 'nullable|required_with:password|same:password',
         ]);
 
         $now = Carbon::now()->toDateTimeString();
@@ -311,30 +330,120 @@ class AdminController extends Controller
             } elseif ($request->hasFile('foto') && $request->file('foto')->isValid()) {
                 $file = $request->file('foto');
                 $fotoFilename = 'avatar_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('avatars', $fotoFilename, 'public');
+
+                // 1. Simpan ke public/uploads/avatars
+                $targetDir = public_path('uploads/avatars');
+                if (!file_exists($targetDir)) {
+                    @mkdir($targetDir, 0777, true);
+                }
+                $file->move($targetDir, $fotoFilename);
+
+                // 2. Salin ke storage/app/public/avatars & public/storage/avatars
+                $storageDir = storage_path('app/public/avatars');
+                if (!file_exists($storageDir)) {
+                    @mkdir($storageDir, 0777, true);
+                }
+                @copy($targetDir . DIRECTORY_SEPARATOR . $fotoFilename, $storageDir . DIRECTORY_SEPARATOR . $fotoFilename);
+
+                $publicStorageDir = public_path('storage/avatars');
+                if (!file_exists($publicStorageDir)) {
+                    @mkdir($publicStorageDir, 0777, true);
+                }
+                @copy($targetDir . DIRECTORY_SEPARATOR . $fotoFilename, $publicStorageDir . DIRECTORY_SEPARATOR . $fotoFilename);
+
                 $userPayload['foto'] = $fotoFilename;
                 $fotoUpdated = true;
             }
 
             DB::table('tb_pengguna')->where('kode_pengguna', $kode_pengguna)->update($userPayload);
 
-            // Update tb_m_karyawan jika ada
-            if ($user->kode_karyawan && Schema::hasTable('tb_m_karyawan')) {
-                $karyawanPayload = [
-                    'nama_karyawan' => trim($request->nama_lengkap),
-                    'status_aktif' => (string) $request->status_aktif,
-                    'date_update' => $now,
-                ];
-                if ($fotoUpdated) {
-                    $karyawanPayload['foto'] = $fotoFilename ?? '';
-                }
+            // Update atau Insert ke tb_m_karyawan
+            if (Schema::hasTable('tb_m_karyawan')) {
+                $kodeJabatan = 'jabatan11644';
                 if ($request->filled('jabatan')) {
                     $foundJabatan = DB::table('tb_m_jabatan')->where('nama_jabatan', 'like', '%' . trim($request->jabatan) . '%')->first();
                     if ($foundJabatan) {
-                        $karyawanPayload['kode_jabatan'] = $foundJabatan->kode_jabatan;
+                        $kodeJabatan = $foundJabatan->kode_jabatan;
                     }
                 }
-                DB::table('tb_m_karyawan')->where('kode_karyawan', $user->kode_karyawan)->update($karyawanPayload);
+
+                $karyawanExists = $user->kode_karyawan ? DB::table('tb_m_karyawan')->where('kode_karyawan', $user->kode_karyawan)->exists() : false;
+
+                if ($user->kode_karyawan && $karyawanExists) {
+                    $karyawanPayload = [
+                        'nama_karyawan' => trim($request->nama_lengkap),
+                        'status_aktif' => (string) $request->status_aktif,
+                        'date_update' => $now,
+                        'user_update' => $currentUser,
+                    ];
+                    if ($request->filled('jabatan')) {
+                        $karyawanPayload['kode_jabatan'] = $kodeJabatan;
+                    }
+                    if ($fotoUpdated) {
+                        $karyawanPayload['foto'] = $fotoFilename ?? '';
+                    }
+                    DB::table('tb_m_karyawan')->where('kode_karyawan', $user->kode_karyawan)->update($karyawanPayload);
+                } else {
+                    // Buat kode karyawan baru jika belum ada
+                    $targetKodeKaryawan = $user->kode_karyawan ?: ('KR' . rand(10000, 99999));
+                    while (DB::table('tb_m_karyawan')->where('kode_karyawan', $targetKodeKaryawan)->exists()) {
+                        $targetKodeKaryawan = 'KR' . rand(10000, 99999);
+                    }
+
+                    DB::table('tb_m_karyawan')->insert([
+                        'kode_karyawan' => $targetKodeKaryawan,
+                        'nik' => '',
+                        'nip' => '',
+                        'nama_karyawan' => trim($request->nama_lengkap),
+                        'cuti' => 12,
+                        'kode_jabatan' => $kodeJabatan,
+                        'jenis_kelamin' => '1',
+                        'hp_karyawan' => '',
+                        'kode_agama' => 'ag56e3fc23c84ee',
+                        'email_karyawan' => '',
+                        'email_msn' => trim($request->username),
+                        'tempat_lahir' => '',
+                        'tanggal_lahir' => null,
+                        'tempat_pendidikan_terakhir' => '-',
+                        'kode_pendidikan' => 'jp5902e923eceb8',
+                        'jmlh_tanggungan' => '0',
+                        'desc_tanggungan' => '-',
+                        'kode_golongan_darah' => 'gd56e3fdd542aaa',
+                        'kode_wilayah_kelurahan' => '32.73.13.1005',
+                        'ktp' => '',
+                        'foto' => $fotoFilename ?? '',
+                        'cv' => '',
+                        'ijazah_pendidikan_terakhir' => '',
+                        'alamat_asal' => '',
+                        'domisili' => '',
+                        'kode_status_kawin' => 'kw56e3ff91bc3f0',
+                        'npwp' => '',
+                        'bpjs' => '',
+                        'bank_rek' => '',
+                        'no_rek' => '',
+                        'tanggal_masuk' => date('Y-m-d'),
+                        'tanggal_keluar' => null,
+                        'status_aktif' => (string) $request->status_aktif,
+                        'uid' => '',
+                        'date_create' => $now,
+                        'user_create' => $currentUser,
+                        'date_update' => $now,
+                        'user_update' => $currentUser,
+                        'tinggi' => '0',
+                        'berat' => '0',
+                        'status_kontrak' => 1,
+                        'tanggal_kontrak_akhir' => null,
+                        'kendaraan' => '',
+                        'sim' => '',
+                        'status_rumah' => '',
+                        'kantor' => 'Bandung',
+                        'kota_kerja' => '32.73'
+                    ]);
+
+                    DB::table('tb_pengguna')->where('kode_pengguna', $kode_pengguna)->update([
+                        'kode_karyawan' => $targetKodeKaryawan
+                    ]);
+                }
             }
 
             DB::commit();

@@ -102,35 +102,37 @@ class Pengguna extends Model implements AuthenticatableContract
      */
     public static function resolveFotoUrl(?string $foto): ?string
     {
-        if (!$foto) {
+        if (!$foto || trim($foto) === '') {
             return null;
         }
 
+        $foto = trim($foto);
+
         if (str_starts_with($foto, 'http://') || str_starts_with($foto, 'https://')) {
             return $foto;
-        }
-
-        if (file_exists(public_path('storage/avatars/' . $foto))) {
-            return asset('storage/avatars/' . $foto);
         }
 
         if (file_exists(public_path('uploads/avatars/' . $foto))) {
             return asset('uploads/avatars/' . $foto);
         }
 
-        if (file_exists(storage_path('app/public/avatars/' . $foto))) {
+        if (file_exists(public_path('storage/avatars/' . $foto))) {
             return asset('storage/avatars/' . $foto);
         }
 
-        if (file_exists(public_path('storage/' . $foto))) {
-            return asset('storage/' . $foto);
+        if (file_exists(storage_path('app/public/avatars/' . $foto))) {
+            return asset('storage/avatars/' . $foto);
         }
 
         if (file_exists(public_path('uploads/' . $foto))) {
             return asset('uploads/' . $foto);
         }
 
-        return asset('storage/avatars/' . $foto);
+        if (file_exists(public_path('storage/' . $foto))) {
+            return asset('storage/' . $foto);
+        }
+
+        return asset('uploads/avatars/' . $foto);
     }
 
     /**

@@ -437,7 +437,7 @@
                                             Hapus
                                         </button>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Format: JPG, PNG, WEBP (Maksimal 3MB)</p>
+                                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Format: JPG, PNG, WEBP (Maksimal 5MB)</p>
                                 </div>
                             </div>
                         </div>
@@ -637,7 +637,7 @@
                                             Batal Hapus
                                         </button>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Format: JPG, PNG, WEBP (Maksimal 3MB)</p>
+                                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Format: JPG, PNG, WEBP (Maksimal 5MB)</p>
                                 </div>
                             </div>
                         </div>

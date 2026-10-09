@@ -22,6 +22,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/profile/update', [DashboardController::class, 'updateProfile'])->name('profile.update');
     Route::get('/api/notifications/poll', [NotificationController::class, 'poll'])->name('api.notifications.poll');
 
     // Routes Role Master Admin & Direktur

@@ -1095,22 +1095,13 @@
                         <!-- User Profile Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
-                                    class="flex items-center gap-1.5 sm:gap-2.5 p-1 sm:p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
-                                @if(auth()->user()?->foto_url)
-                                    <div class="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 flex-shrink-0 shadow-xs bg-slate-100 dark:bg-slate-800">
-                                        <img src="{{ auth()->user()->foto_url }}" alt="{{ auth()->user()->nama }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                        <div class="w-full h-full hidden items-center justify-center font-bold text-xs text-white bg-gradient-to-tr from-[#05404f] to-[#0891b2]">
-                                            {{ substr(auth()->user()->nama, 0, 1) }}
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
-                                        {{ substr(auth()->user()->nama, 0, 1) }}
-                                    </div>
-                                @endif
+                                    class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
+                                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
+                                    {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
+                                </div>
                                 <div class="text-left hidden md:block">
-                                    <span class="block text-xs font-bold text-slate-900 dark:text-white leading-tight">{{ auth()->user()->nama }}</span>
-                                    <span class="block text-[10px] text-[#0891b2] font-semibold">{{ auth()->user()->nama_level }}</span>
+                                    <span class="block text-xs font-bold text-slate-900 dark:text-white leading-tight">{{ auth()->user()?->nama }}</span>
+                                    <span class="block text-[10px] text-[#0891b2] font-semibold">{{ auth()->user()?->nama_level }}</span>
                                 </div>
                                 <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -1121,27 +1112,13 @@
                             <div x-show="open"
                                  x-cloak
                                  @click.away="open = false"
-                                 class="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/80 dark:shadow-black/60 py-1.5 z-50">
-                                <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-700/60 text-xs flex items-center gap-2.5">
-                                    @if(auth()->user()?->foto_url)
-                                        <div class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-slate-200 dark:ring-slate-700">
-                                            <img src="{{ auth()->user()->foto_url }}" class="w-full h-full object-cover">
-                                        </div>
-                                    @endif
-                                    <div class="min-w-0 flex-1">
-                                        <p class="font-bold text-slate-900 dark:text-white truncate">{{ auth()->user()->nama }}</p>
-                                        <p class="text-slate-500 dark:text-slate-400 truncate">{{ auth()->user()->username }}</p>
-                                    </div>
-                                <div class="p-1 space-y-0.5">
-                                    <button type="button"
-                                            @click="open = false; $dispatch('open-my-profile-modal')"
-                                            class="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 rounded-lg flex items-center gap-2 cursor-pointer transition">
-                                        <svg class="w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                                        </svg>
-                                        <span class="font-medium">Ubah Profil & Foto</span>
-                                    </button>
-                                    @if(auth()->user()?->isAdmin())
+                                 class="absolute right-0 mt-2 w-52 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/80 dark:shadow-black/60 py-1.5 z-50">
+                                <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-700/60 text-xs">
+                                    <p class="font-bold text-slate-900 dark:text-white truncate">{{ auth()->user()?->nama }}</p>
+                                    <p class="text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate">{{ auth()->user()?->username }}</p>
+                                </div>
+                                @if(auth()->user()?->isAdmin())
+                                    <div class="p-1 border-b border-slate-100 dark:border-slate-700/60">
                                         <a href="{{ route('admin.users') }}"
                                            class="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 rounded-lg flex items-center gap-2 cursor-pointer transition">
                                             <svg class="w-4 h-4 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
@@ -1149,9 +1126,9 @@
                                             </svg>
                                             <span class="font-medium">Kelola Pengguna</span>
                                         </a>
-                                    @endif
-                                </div>
-                                <div class="border-t border-slate-100 dark:border-slate-700/60 p-1">
+                                    </div>
+                                @endif
+                                <div class="p-1">
                                     <form action="{{ route('logout') }}" method="POST" onsubmit="localStorage.removeItem('theme');">
                                         @csrf
                                         <button type="submit" class="w-full text-left px-3 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg flex items-center gap-2 cursor-pointer transition">
@@ -1552,198 +1529,6 @@
             window.ImsVoice.init();
         });
     </script>
-
-    <!-- Universal User Profile Edit Modal -->
-    <div x-data="{
-            isOpen: false,
-            photoPreview: null,
-            removePhoto: false,
-            namaLengkap: '{{ addslashes(auth()->user()?->nama ?? '') }}',
-            username: '{{ addslashes(auth()->user()?->username ?? '') }}',
-            fotoUrl: '{{ auth()->user()?->foto_url ?? '' }}',
-            handlePhotoChange(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    this.photoPreview = URL.createObjectURL(file);
-                    this.removePhoto = false;
-                }
-            },
-            clearPhoto() {
-                this.photoPreview = null;
-                const input = document.getElementById('my_profile_foto');
-                if (input) input.value = '';
-                this.removePhoto = true;
-            },
-            cancelClearPhoto() {
-                this.removePhoto = false;
-            }
-         }"
-         @open-my-profile-modal.window="isOpen = true"
-         x-show="isOpen"
-         x-cloak
-         class="fixed inset-0 z-[99999] overflow-y-auto"
-         aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
-            <!-- Backdrop -->
-            <div x-show="isOpen"
-                 x-transition:enter="ease-out duration-300"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 @click="isOpen = false"
-                 class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-
-            <!-- Modal Panel -->
-            <div x-show="isOpen"
-                 x-transition:enter="ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full">
-                
-                <!-- Modal Header -->
-                <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">Pengaturan Profil Saya</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">{{ auth()->user()?->kode_pengguna }} &bull; {{ auth()->user()?->nama_level }}</p>
-                        </div>
-                    </div>
-                    <button @click="isOpen = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Modal Form -->
-                <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="p-6 space-y-4">
-                        <!-- Foto Profil -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Foto Profil</label>
-                            <input type="hidden" name="hapus_foto" :value="removePhoto ? '1' : '0'">
-                            <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-                                <!-- Avatar Preview -->
-                                <div class="w-14 h-14 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center border-2 border-blue-500/30 flex-shrink-0 shadow-inner">
-                                    <template x-if="photoPreview">
-                                        <img :src="photoPreview" class="w-full h-full object-cover">
-                                    </template>
-                                    <template x-if="!photoPreview && fotoUrl && !removePhoto">
-                                        <img :src="fotoUrl" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                    </template>
-                                    <template x-if="!photoPreview && (!fotoUrl || removePhoto)">
-                                        <div class="w-full h-full bg-blue-50 dark:bg-slate-900 flex items-center justify-center font-bold text-sm text-blue-700 dark:text-blue-400">
-                                            <span>{{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}</span>
-                                        </div>
-                                    </template>
-                                </div>
-                                <!-- Input & Actions -->
-                                <div class="flex-1 min-w-0">
-                                    <input type="file"
-                                           id="my_profile_foto"
-                                           name="foto"
-                                           accept="image/png,image/jpeg,image/jpg,image/webp"
-                                           @change="handlePhotoChange($event)"
-                                           class="hidden">
-                                    <div class="flex items-center gap-2">
-                                        <label for="my_profile_foto"
-                                               class="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 text-xs font-semibold cursor-pointer transition">
-                                            Pilih Foto
-                                        </label>
-                                        <button type="button"
-                                                x-show="photoPreview || (fotoUrl && !removePhoto)"
-                                                @click="clearPhoto()"
-                                                class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-semibold cursor-pointer transition">
-                                            Hapus Foto
-                                        </button>
-                                        <button type="button"
-                                                x-show="removePhoto"
-                                                @click="cancelClearPhoto()"
-                                                class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-semibold cursor-pointer transition">
-                                            Batal
-                                        </button>
-                                    </div>
-                                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Format: JPG, PNG, WEBP (Maksimal 5MB)</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Nama Lengkap -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nama Lengkap <span class="text-rose-500">*</span></label>
-                            <input type="text"
-                                   name="nama_lengkap"
-                                   x-model="namaLengkap"
-                                   required
-                                   class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
-                        </div>
-
-                        <!-- Username -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Username / Login ID <span class="text-rose-500">*</span></label>
-                            <input type="text"
-                                   name="username"
-                                   x-model="username"
-                                   required
-                                   class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
-                        </div>
-
-                        <!-- Ganti Password -->
-                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
-                            <div class="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
-                                </svg>
-                                <span>Ubah Password (Kosongkan jika tidak diganti)</span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Password Baru</label>
-                                    <input type="password"
-                                           name="password"
-                                           minlength="6"
-                                           placeholder="Minimal 6 karakter"
-                                           class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">Ulangi Password</label>
-                                    <input type="password"
-                                           name="password_confirmation"
-                                           minlength="6"
-                                           placeholder="Ulangi password baru"
-                                           class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Modal Footer -->
-                    <div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 flex items-center justify-end gap-3">
-                        <button type="button" @click="isOpen = false" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold transition cursor-pointer">
-                            Batal
-                        </button>
-                        <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-semibold shadow-md shadow-blue-600/25 transition cursor-pointer">
-                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                            </svg>
-                            <span>Simpan Profil</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     @stack('scripts')
 </body>

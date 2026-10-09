@@ -228,14 +228,14 @@
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                        <th class="py-2.5 px-3 w-10 text-center">#</th>
-                        <th class="py-2.5 px-3">Waktu Eksekusi</th>
-                        <th class="py-2.5 px-3">Aksi / Event</th>
-                        <th class="py-2.5 px-3">Pelanggan / Target</th>
+                        <th class="py-2.5 px-2 w-8 text-center">#</th>
+                        <th class="py-2.5 px-2.5 w-28">Waktu</th>
+                        <th class="py-2.5 px-2.5 w-32">Aksi / Event</th>
+                        <th class="py-2.5 px-2.5 w-36">Pelanggan / Target</th>
                         <th class="py-2.5 px-3">Deskripsi & Respons Router</th>
-                        <th class="py-2.5 px-3 text-center">Status</th>
-                        <th class="py-2.5 px-3">Operator</th>
-                        <th class="py-2.5 px-3 text-center">Detail</th>
+                        <th class="py-2.5 px-2.5 w-20 text-center">Status</th>
+                        <th class="py-2.5 px-2.5 w-24">Operator</th>
+                        <th class="py-2.5 px-2 w-10 text-center">Detail</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
@@ -256,13 +256,13 @@
                             };
 
                             $actionLabel = match($actionName) {
-                                'activate', 'aktivasi' => 'Aktivasi Layanan',
+                                'activate', 'aktivasi' => 'Aktivasi',
                                 'pppoe_activate' => 'PPPoE Provisioning',
                                 'suspend', 'isolir' => 'Suspend / Isolir',
                                 'kick', 'kick_session' => 'Kick Session',
                                 'reboot_onu' => 'Reboot ONU',
                                 'test_connection' => 'Tes Koneksi',
-                                'sync_router' => 'Sinkronisasi Router',
+                                'sync_router' => 'Sinkron Router',
                                 'create_router' => 'Tambah Router',
                                 'update_router' => 'Update Router',
                                 'delete_router' => 'Hapus Router',
@@ -271,72 +271,71 @@
                         @endphp
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
                             <!-- Index -->
-                            <td class="py-2.5 px-3 text-center text-slate-400 text-[10px]">
+                            <td class="py-2.5 px-2 text-center text-slate-400 text-[10px]">
                                 {{ $logs->firstItem() + $index }}
                             </td>
 
                             <!-- Timestamp -->
-                            <td class="py-2.5 px-3 whitespace-nowrap">
-                                <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                            <td class="py-2.5 px-2.5">
+                                <div class="font-bold text-slate-800 dark:text-slate-200 text-xs whitespace-nowrap">
                                     {{ \Carbon\Carbon::parse($log->created_at)->format('d M Y') }}
                                 </div>
-                                <div class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-                                    <svg class="w-3 h-3 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <div class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 whitespace-nowrap font-mono">
+                                    <svg class="w-3 h-3 text-slate-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                     </svg>
                                     <span>{{ \Carbon\Carbon::parse($log->created_at)->format('H:i:s') }}</span>
-                                    <span class="text-slate-500">({{ \Carbon\Carbon::parse($log->created_at)->diffForHumans() }})</span>
                                 </div>
                             </td>
 
                             <!-- Action Badge -->
-                            <td class="py-2.5 px-3 whitespace-nowrap">
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border {{ $badgeClass }}">
+                            <td class="py-2.5 px-2.5">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border {{ $badgeClass }} whitespace-nowrap">
                                     @if(in_array($actionName, ['activate', 'aktivasi', 'pppoe_activate']))
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0"></span>
                                     @elseif(in_array($actionName, ['suspend', 'isolir']))
-                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400 flex-shrink-0"></span>
                                     @elseif(in_array($actionName, ['kick', 'kick_session']))
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0"></span>
                                     @else
-                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0"></span>
                                     @endif
-                                    <span>{{ $actionLabel }}</span>
+                                    <span class="truncate max-w-[100px]">{{ $actionLabel }}</span>
                                 </span>
                             </td>
 
                             <!-- Customer / Target -->
-                            <td class="py-2.5 px-3">
+                            <td class="py-2.5 px-2.5">
                                 @if($log->customer_id && $log->customer_id !== '-')
                                     <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1 text-xs">
-                                        <span class="font-mono text-cyan-500 dark:text-cyan-400">{{ $log->display_customer_id ?? $log->customer_id }}</span>
+                                        <span class="font-mono text-cyan-500 dark:text-cyan-400 whitespace-nowrap">{{ $log->display_customer_id ?? $log->customer_id }}</span>
                                     </div>
                                     @if(!empty($log->nama_pelanggan))
-                                        <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-xs font-semibold">
+                                        <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[130px] font-semibold" title="{{ $log->nama_pelanggan }}">
                                             {{ $log->nama_pelanggan }}
                                         </div>
                                     @endif
                                 @else
-                                    <span class="text-slate-400 italic text-[10px]">System / Master Router</span>
+                                    <span class="text-slate-400 italic text-[10px]">System / Master</span>
                                 @endif
                             </td>
 
                             <!-- Description & Router Response -->
                             <td class="py-2.5 px-3">
                                 @if($log->description)
-                                    <div class="text-slate-700 dark:text-slate-300 font-medium line-clamp-2 text-xs">
+                                    <div class="text-slate-700 dark:text-slate-300 font-medium line-clamp-1 text-xs" title="{{ $log->description }}">
                                         {{ $log->description }}
                                     </div>
                                 @endif
                                 @if($log->router_response)
-                                    <div class="mt-0.5 text-[10px] font-mono {{ $log->router_success ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-400' }} bg-slate-100 dark:bg-slate-950/70 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 truncate max-w-md">
+                                    <div class="mt-0.5 text-[10px] font-mono {{ $log->router_success ? 'text-emerald-500 dark:text-emerald-400' : 'text-rose-400' }} bg-slate-100 dark:bg-slate-950/70 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 truncate max-w-sm" title="{{ $log->router_response }}">
                                         {{ $log->router_response }}
                                     </div>
                                 @endif
                             </td>
 
                             <!-- Status -->
-                            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                            <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
                                 @if($log->router_success)
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                                         <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -355,17 +354,17 @@
                             </td>
 
                             <!-- Operator / User -->
-                            <td class="py-2.5 px-3 whitespace-nowrap">
+                            <td class="py-2.5 px-2.5 whitespace-nowrap">
                                 <div class="flex items-center gap-1 text-slate-700 dark:text-slate-300">
-                                    <div class="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[9px] font-bold text-slate-400">
+                                    <div class="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[9px] font-bold text-slate-400 flex-shrink-0">
                                         {{ substr($log->user_id ?: 'S', 0, 1) }}
                                     </div>
-                                    <span class="font-semibold text-[11px]">{{ $log->user_id ?: 'System' }}</span>
+                                    <span class="font-semibold text-[11px] truncate max-w-[70px]" title="{{ $log->user_id ?: 'System' }}">{{ $log->user_id ?: 'System' }}</span>
                                 </div>
                             </td>
 
                             <!-- Detail Modal Button -->
-                            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                            <td class="py-2.5 px-2 text-center whitespace-nowrap">
                                 <button type="button" 
                                         @click="openDetailModal({{ json_encode($log) }})"
                                         class="p-1 rounded-md bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-500 dark:text-slate-300 transition shadow-xs cursor-pointer"
@@ -479,7 +478,7 @@
             <!-- Router Response Payload Box -->
             <div class="space-y-1.5 text-xs">
                 <span class="text-slate-400 font-semibold block text-[11px]">Respons / Output MikroTik</span>
-                <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto max-h-48 whitespace-pre-wrap"
+                <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-y-auto max-h-48 whitespace-pre-wrap break-all"
                      x-text="selectedLog?.router_response || 'Tidak ada respons balikan.'">
                 </div>
             </div>

@@ -1480,9 +1480,13 @@
                 document.addEventListener('click', unlock, { once: true });
                 document.addEventListener('keydown', unlock, { once: true });
 
-                // Initial poll on load, then poll every 10 seconds
-                setTimeout(() => this.pollNotifications(), 1500);
-                setInterval(() => this.pollNotifications(), 10000);
+                // Initial poll on load, then poll every 25 seconds when page is active
+                setTimeout(() => this.pollNotifications(), 2000);
+                setInterval(() => {
+                    if (!document.hidden) {
+                        this.pollNotifications();
+                    }
+                }, 25000);
             },
 
             testSound() {
@@ -1657,6 +1661,43 @@
                 });
             @endif
         });
+    </script>
+
+    <!-- Ultra-Fast Intelligent Link Prefetching Engine (Instant Page Transitions) -->
+    <script>
+        (function() {
+            const prefetched = new Set();
+            function prefetch(url) {
+                if (!url || prefetched.has(url)) return;
+                try {
+                    const u = new URL(url, window.location.href);
+                    // Only prefetch internal links on the same origin and GET navigation
+                    if (u.origin !== window.location.origin) return;
+                    if (u.pathname.includes('/logout') || u.pathname.includes('/delete') || u.pathname.includes('/export')) return;
+                    
+                    prefetched.add(url);
+                    const link = document.createElement('link');
+                    link.rel = 'prefetch';
+                    link.href = url;
+                    link.as = 'document';
+                    document.head.appendChild(link);
+                } catch(e) {}
+            }
+
+            document.addEventListener('mouseover', function(e) {
+                const a = e.target.closest('a');
+                if (a && a.href && !a.hasAttribute('download') && a.target !== '_blank') {
+                    prefetch(a.href);
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchstart', function(e) {
+                const a = e.target.closest('a');
+                if (a && a.href && !a.hasAttribute('download') && a.target !== '_blank') {
+                    prefetch(a.href);
+                }
+            }, { passive: true });
+        })();
     </script>
 
     @stack('scripts')

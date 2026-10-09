@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -313,30 +314,38 @@ class FinanceController extends Controller
         $currentYear = (int) date('Y');
         $tahunList = [(string) ($currentYear + 1), (string) $currentYear, (string) ($currentYear - 1), (string) ($currentYear - 2), (string) ($currentYear - 3)];
 
-        $bandwithKategoriList = Schema::hasTable('m_bandwith_kategori')
-            ? DB::table('m_bandwith_kategori')->where('disable', 0)->orderBy('nama_kategori_bandwith', 'asc')->get()
-            : collect();
+        $bandwithKategoriList = Cache::remember('finance_master_bandwith_kategori', 300, function () {
+            return Schema::hasTable('m_bandwith_kategori')
+                ? DB::table('m_bandwith_kategori')->where('disable', 0)->orderBy('nama_kategori_bandwith', 'asc')->get()
+                : collect();
+        });
 
-        $layananList = Schema::hasTable('m_bandwith_kategori')
-            ? DB::table('m_bandwith_kategori')->where('disable', 0)->pluck('nama_kategori_bandwith')->filter()->unique()->values()->toArray()
-            : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
+        $layananList = Cache::remember('finance_master_layanan_list', 300, function () {
+            return Schema::hasTable('m_bandwith_kategori')
+                ? DB::table('m_bandwith_kategori')->where('disable', 0)->pluck('nama_kategori_bandwith')->filter()->unique()->values()->toArray()
+                : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
+        });
 
-        $wilayahList = Schema::hasTable('m_wilayah_perangkat')
-            ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->toArray()
-            : [];
+        $wilayahList = Cache::remember('finance_master_wilayah_list', 300, function () {
+            $w = Schema::hasTable('m_wilayah_perangkat')
+                ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->toArray()
+                : [];
+            if (empty($w) && Schema::hasTable('m_wilayah')) {
+                $w = DB::table('m_wilayah')->limit(50)->pluck('nama_kota')->filter()->unique()->toArray();
+            }
+            return $w;
+        });
 
-        if (empty($wilayahList) && Schema::hasTable('m_wilayah')) {
-            $wilayahList = DB::table('m_wilayah')->limit(50)->pluck('nama_kota')->filter()->unique()->toArray();
-        }
-
-        $statusBillList = Schema::hasTable('m_status_bill_lay')
-            ? DB::table('m_status_bill_lay')
-                ->where('hide', '0')
-                ->whereNotIn('status_bill_lay', ['17', '18'])
-                ->where('desc_bill_lay', 'NOT LIKE', '%cancel midtrans%')
-                ->where('desc_bill_lay', 'NOT LIKE', '%expire midtrans%')
-                ->get()
-            : collect();
+        $statusBillList = Cache::remember('finance_master_status_bill_lay', 300, function () {
+            return Schema::hasTable('m_status_bill_lay')
+                ? DB::table('m_status_bill_lay')
+                    ->where('hide', '0')
+                    ->whereNotIn('status_bill_lay', ['17', '18'])
+                    ->where('desc_bill_lay', 'NOT LIKE', '%cancel midtrans%')
+                    ->where('desc_bill_lay', 'NOT LIKE', '%expire midtrans%')
+                    ->get()
+                : collect();
+        });
 
         $statusUserList = [
             '20' => 'User Aktif',

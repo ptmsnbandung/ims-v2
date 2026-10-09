@@ -51,7 +51,7 @@ class BroadcastController extends Controller
                         'meta_params_map'    => json_encode(['periode', 'bulan_jatuh_tempo', 'bulan_suspend']),
                         'subjek'             => 'Tagihan Bulanan Internet MEDIANET',
                         'kategori'           => 'utility',
-                        'pesan'              => "Halo, Bapak/Ibu 👋\nTerima kasih telah menjadi pelanggan setia MEDIANET! ✨\n\nTagihan internet Anda SUDAH BISA DIBAYARKAN untuk periode {periode}.\nJatuh Tempo Pembayaran: 20 {bulan_jatuh_tempo}\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik link berikut untuk melakukan pembayaran:\n\n🔗 https://ptmsn.co.id/portal/login\n\n🔍 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.",
+                        'pesan'              => "📢* Tagihan Internet Anda Sudah Terbit!*\nHalo, Bapak/Ibu 👋\n\nTagihan internet Anda* SUDAH BISA DIBAYARKAN* untuk periode {periode}.\nJatuh Tempo Pembayaran:* 20 {bulan_jatuh_tempo}*\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik tombol dibawah untuk melakukan pembayaran\n\n🔑 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.\n\nHiraukan pesan ini apabila sudah melakukan pembayaran",
                         'is_default'         => 1,
                         'created_at'         => now(),
                         'updated_at'         => now(),
@@ -96,6 +96,8 @@ class BroadcastController extends Controller
                     ->where('meta_template_name', 'tagihan_bulanan')
                     ->exists();
 
+                $tagihanPesan = "📢* Tagihan Internet Anda Sudah Terbit!*\nHalo, Bapak/Ibu 👋\n\nTagihan internet Anda* SUDAH BISA DIBAYARKAN* untuk periode {periode}.\nJatuh Tempo Pembayaran:* 20 {bulan_jatuh_tempo}*\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik tombol dibawah untuk melakukan pembayaran\n\n🔑 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.\n\nHiraukan pesan ini apabila sudah melakukan pembayaran";
+
                 $tagihanData = [
                     'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
                     'meta_template_name' => 'tagihan_bulanan',
@@ -103,7 +105,7 @@ class BroadcastController extends Controller
                     'meta_params_map'    => json_encode(['periode', 'bulan_jatuh_tempo', 'bulan_suspend']),
                     'subjek'             => 'Tagihan Bulanan Internet MEDIANET',
                     'kategori'           => 'utility',
-                    'pesan'              => "Halo, Bapak/Ibu 👋\nTerima kasih telah menjadi pelanggan setia MEDIANET! ✨\n\nTagihan internet Anda SUDAH BISA DIBAYARKAN untuk periode {periode}.\nJatuh Tempo Pembayaran: 20 {bulan_jatuh_tempo}\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik link berikut untuk melakukan pembayaran:\n\n🔗 https://ptmsn.co.id/portal/login\n\n🔍 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.",
+                    'pesan'              => $tagihanPesan,
                     'is_default'         => 1,
                     'updated_at'         => now(),
                 ];

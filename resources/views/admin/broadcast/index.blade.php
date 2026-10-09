@@ -250,9 +250,26 @@
                     </div>
 
                     <!-- WA Chat Bubble Body -->
-                    <div class="p-4 min-h-[160px] max-h-[340px] overflow-y-auto" style="background-color:#efeae2; background-image:radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size:16px 16px;">
-                        <div class="bg-[#d9fdd3] text-slate-900 dark:bg-[#005c4b] dark:text-slate-100 p-3.5 rounded-xl rounded-tl-none max-w-[90%] text-xs shadow-xs leading-relaxed whitespace-pre-wrap font-sans"
-                            x-html="formatWaPreview(customPesan)">
+                    <div class="p-4 min-h-[160px] max-h-[380px] overflow-y-auto" style="background-color:#efeae2; background-image:radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size:16px 16px;">
+                        <div class="bg-white dark:bg-[#1f2c34] text-slate-900 dark:text-slate-100 p-3.5 rounded-xl rounded-tl-none max-w-[95%] text-xs shadow-sm leading-relaxed font-sans space-y-2.5 border border-slate-200/60 dark:border-slate-700/60">
+                            <!-- Main Text -->
+                            <div class="whitespace-pre-wrap leading-relaxed" x-html="formatWaPreview(customPesan)"></div>
+                            
+                            <!-- WhatsApp Template Footer -->
+                            <div class="text-[10px] text-slate-400 dark:text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                                <span>By PT. Media Solusi Network</span>
+                                <span class="text-[9px] text-slate-400">06:01</span>
+                            </div>
+
+                            <!-- WhatsApp Action Button (CTA) -->
+                            <div class="pt-1">
+                                <div class="w-full bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-center transition flex items-center justify-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
+                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                    </svg>
+                                    <span>Bayar Sekarang</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

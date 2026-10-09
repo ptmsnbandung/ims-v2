@@ -391,18 +391,18 @@
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                         @if(request('kategori') === 'ubah_password')
-                            <th class="py-3.5 px-4 min-w-[150px]">Tiket</th>
-                            <th class="py-3.5 px-4 min-w-[280px]">Pelanggan</th>
-                            <th class="py-3.5 px-4 min-w-[260px]">Info</th>
-                            <th class="py-3.5 px-4 min-w-[240px]">Password</th>
-                            <th class="py-3.5 px-4 min-w-[180px]">Status</th>
+                            <th class="py-3 px-3 w-[15%]">Tiket</th>
+                            <th class="py-3 px-3 w-[26%]">Pelanggan</th>
+                            <th class="py-3 px-3 w-[20%]">Info</th>
+                            <th class="py-3 px-3 w-[24%]">Password</th>
+                            <th class="py-3 px-3 w-[15%]">Status</th>
                         @else
-                            <th class="py-3.5 px-4 min-w-[180px]">Customer</th>
-                            <th class="py-3.5 px-4 min-w-[260px]">Address</th>
-                            <th class="py-3.5 px-4 min-w-[140px]">Kategori</th>
-                            <th class="py-3.5 px-4 min-w-[200px]">Keluhan / Solusi</th>
-                            <th class="py-3.5 px-4 min-w-[130px]">State</th>
-                            <th class="py-3.5 px-4 text-center min-w-[130px]">Action</th>
+                            <th class="py-3 px-3 w-[22%]">Customer</th>
+                            <th class="py-3 px-3 w-[25%]">Address</th>
+                            <th class="py-3 px-3 w-[14%]">Kategori</th>
+                            <th class="py-3 px-3 w-[21%]">Keluhan / Solusi</th>
+                            <th class="py-3 px-3 w-[10%]">State</th>
+                            <th class="py-3 px-3 text-center w-[8%]">Action</th>
                         @endif
                     </tr>
                 </thead>
@@ -443,7 +443,7 @@
                             
                             @if(request('kategori') === 'ubah_password')
                                 <!-- 1. Tiket -->
-                                <td class="py-4 px-4 align-top">
+                                <td class="py-3 px-3 align-top">
                                     <div class="font-mono font-bold text-slate-900 dark:text-white text-xs">
                                         #{{ $kodeTiket }}
                                     </div>
@@ -453,12 +453,12 @@
                                 </td>
 
                                 <!-- 2. Pelanggan -->
-                                <td class="py-4 px-4 align-top">
+                                <td class="py-3 px-3 align-top break-words">
                                     <div class="font-bold text-slate-900 dark:text-white uppercase text-xs">
                                         @if($nomorInternet && $nomorInternet !== '-')
                                             <a href="{{ route('teknik.pelanggan.profile', $nomorInternet) }}" 
-                                               class="font-mono text-cyan-700 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 hover:underline mr-1 font-bold"
-                                               title="Buka Profile Pelanggan">
+                                                class="font-mono text-cyan-700 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 hover:underline mr-1 font-bold"
+                                                title="Buka Profile Pelanggan">
                                                 {{ $nomorInternet }}
                                             </a>
                                         @else
@@ -466,13 +466,13 @@
                                         @endif
                                         <span>{{ $namaPel }}</span>
                                     </div>
-                                    <div class="text-[11px] text-slate-600 dark:text-slate-400 mt-1 uppercase leading-relaxed font-sans">
+                                    <div class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 uppercase leading-relaxed font-sans break-words">
                                         {{ $alamat }}
                                     </div>
                                 </td>
 
                                 <!-- 3. Info -->
-                                <td class="py-4 px-4 align-top text-[11px] space-y-1">
+                                <td class="py-3 px-3 align-top text-[11px] space-y-1">
                                     <div class="text-slate-800 dark:text-slate-200">
                                         <span class="text-slate-500 dark:text-slate-400 font-semibold">User :</span> <strong class="font-mono text-cyan-700 dark:text-cyan-400">{{ $userPppoe }}</strong> 
                                         <span class="text-slate-500 dark:text-slate-400 font-semibold ml-1.5">Pass :</span> <strong class="font-mono text-amber-700 dark:text-amber-400">{{ $passPppoe }}</strong>
@@ -486,19 +486,19 @@
                                 </td>
 
                                 <!-- 4. Password -->
-                                <td class="py-4 px-4 align-top text-[11px] space-y-1">
+                                <td class="py-3 px-3 align-top text-[11px] space-y-1 break-words">
                                     <div>
                                         <span class="text-slate-500 dark:text-slate-400 font-semibold">Password Lama :</span>
-                                        <div class="font-mono text-slate-900 dark:text-white font-semibold mt-0.5">{{ $passLama }}</div>
+                                        <div class="font-mono text-slate-900 dark:text-white font-semibold mt-0.5 break-all">{{ $passLama }}</div>
                                     </div>
                                     <div class="pt-1">
                                         <span class="text-slate-500 dark:text-slate-400 font-semibold">password Baru :</span>
-                                        <div class="font-semibold text-slate-900 dark:text-white mt-0.5 leading-relaxed">{{ $passBaru }}</div>
+                                        <div class="font-semibold text-slate-900 dark:text-white mt-0.5 leading-snug break-words">{{ $passBaru }}</div>
                                     </div>
                                 </td>
 
                                 <!-- 5. Status -->
-                                <td class="py-4 px-4 align-top">
+                                <td class="py-3 px-3 align-top">
                                     <div class="flex flex-col gap-1">
                                         <div class="font-extrabold text-xs uppercase {{ $statusVal === '11' ? 'text-amber-600 dark:text-amber-400' : ($statusVal === '12' ? 'text-blue-600 dark:text-blue-400' : ($statusVal === '13' || $statusVal === 'Selesai' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400')) }}">
                                             {{ $statusVal === '11' ? 'ANTRIAN' : ($statusVal === '12' ? 'KONFIRMASI PENANGANAN' : ($statusVal === '13' || $statusVal === 'Selesai' ? 'KONFIRMASI PENANGANAN' : 'DIBATALKAN')) }}
@@ -568,15 +568,15 @@
 
                             @else
                                 <!-- Standard Layout: Customer & No Layanan -->
-                                <td class="py-3.5 px-4">
+                                <td class="py-3 px-3 break-words">
                                     <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                                         <span>{{ $namaPel }}</span>
                                     </div>
                                     <div class="text-[11px] font-mono mt-0.5">
                                         @if($nomorInternet && $nomorInternet !== '-')
                                             <a href="{{ route('teknik.pelanggan.profile', $nomorInternet) }}" 
-                                               class="text-cyan-700 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 hover:underline font-bold"
-                                               title="Buka Profile Pelanggan">
+                                                class="text-cyan-700 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 hover:underline font-bold"
+                                                title="Buka Profile Pelanggan">
                                                 {{ $nomorInternet }}
                                             </a>
                                         @else
@@ -591,7 +591,7 @@
                                 </td>
 
                                 <!-- Address & Wilayah -->
-                                <td class="py-3.5 px-4 text-slate-700 dark:text-slate-300 font-medium">
+                                <td class="py-3 px-3 text-slate-700 dark:text-slate-300 font-medium break-words">
                                     <div class="line-clamp-2 text-xs">
                                         {{ $alamat }}
                                     </div>
@@ -603,7 +603,7 @@
                                 </td>
 
                                 <!-- Kategori Tiket -->
-                                <td class="py-3.5 px-4">
+                                <td class="py-3 px-3">
                                     @if(($item->kat_tiket ?? null) == '12')
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
                                             <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -637,7 +637,7 @@
                                 </td>
 
                                 <!-- Keluhan / Catatan -->
-                                <td class="py-3.5 px-4">
+                                <td class="py-3 px-3 break-words">
                                     <div class="text-xs text-slate-800 dark:text-slate-200 font-medium line-clamp-2">
                                         {{ $item->keluhan ?? '-' }}
                                     </div>
@@ -659,7 +659,7 @@
                                 </td>
 
                                 <!-- State / Status -->
-                                <td class="py-3.5 px-4">
+                                <td class="py-3 px-3">
                                     @if($statusVal === '11')
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
                                             <span class="w-1.5 h-1.5 rounded-full bg-rose-600 dark:bg-rose-400 animate-ping"></span>
@@ -691,7 +691,7 @@
                                 </td>
 
                                 <!-- Actions -->
-                                <td class="py-3.5 px-4 text-center">
+                                <td class="py-3 px-3 text-center">
                                     <div class="flex items-center justify-center gap-1.5">
                                         <!-- View Detail Button -->
                                         <button type="button"

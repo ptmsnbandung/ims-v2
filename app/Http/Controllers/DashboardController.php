@@ -378,7 +378,13 @@ class DashboardController extends Controller
                             $chartCityAktifSeries[] = (int) $cityItem->total_aktif;
                         }
                     }
-                    $cityBreakdown = $cityDistQuery;
+                    $cityBreakdown = $cityDistQuery->map(function($item) {
+                        return [
+                            'kota_name' => is_array($item) ? ($item['kota_name'] ?? '') : ($item->kota_name ?? ''),
+                            'total' => (int) (is_array($item) ? ($item['total'] ?? 0) : ($item->total ?? 0)),
+                            'total_aktif' => (int) (is_array($item) ? ($item['total_aktif'] ?? 0) : ($item->total_aktif ?? 0)),
+                        ];
+                    });
                 } catch (\Throwable $e) {
                     Log::warning('City dist query fallback: ' . $e->getMessage());
                 }
@@ -387,6 +393,11 @@ class DashboardController extends Controller
                     $chartCityLabels = ['KOTA BANDUNG', 'KABUPATEN BANDUNG', 'LAINNYA'];
                     $chartCitySeries = [0, 0, 0];
                     $chartCityAktifSeries = [0, 0, 0];
+                    $cityBreakdown = collect([
+                        ['kota_name' => 'KOTA BANDUNG', 'total' => 0, 'total_aktif' => 0],
+                        ['kota_name' => 'KABUPATEN BANDUNG', 'total' => 0, 'total_aktif' => 0],
+                        ['kota_name' => 'LAINNYA', 'total' => 0, 'total_aktif' => 0],
+                    ]);
                 }
 
                 $localChartData = [

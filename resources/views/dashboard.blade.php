@@ -264,19 +264,30 @@
                             $maxCityTotal = $chartData['totalCityUsers'] > 0 ? $chartData['totalCityUsers'] : 1;
                             $cityColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'];
                         @endphp
-                        @forelse($chartData['cityBreakdown'] as $cIdx => $cItem)
+                        @forelse($chartData['cityBreakdown'] ?? [] as $cIdx => $cItem)
                             @php
-                                $cName = trim((string)$cItem->kota_name);
-                                $cTot = (int) $cItem->total;
-                                $cAktif = (int) ($cItem->total_aktif ?? 0);
+                                if (is_string($cItem)) {
+                                    $cName = $cItem;
+                                    $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
+                                    $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
+                                } elseif (is_array($cItem)) {
+                                    $cName = (string) ($cItem['kota_name'] ?? '');
+                                    $cTot = (int) ($cItem['total'] ?? 0);
+                                    $cAktif = (int) ($cItem['total_aktif'] ?? 0);
+                                } else {
+                                    $cName = (string) ($cItem->kota_name ?? '');
+                                    $cTot = (int) ($cItem->total ?? 0);
+                                    $cAktif = (int) ($cItem->total_aktif ?? 0);
+                                }
+                                $cName = trim($cName);
                                 $cPct = round(($cTot / $maxCityTotal) * 100, 1);
-                                $cBarColor = $cityColors[$cIdx % count($cityColors)];
+                                $cBarColor = $cityColors[$loop->index % count($cityColors)];
                             @endphp
                             <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 space-y-1">
                                 <div class="flex items-center justify-between text-[11px]">
                                     <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="w-4 h-4 rounded-md flex items-center justify-center text-[9px] font-black {{ $cIdx == 0 ? 'bg-amber-500 text-white' : ($cIdx == 1 ? 'bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400') }}">
-                                            {{ $cIdx + 1 }}
+                                        <span class="w-4 h-4 rounded-md flex items-center justify-center text-[9px] font-black {{ $loop->first ? 'bg-amber-500 text-white' : ($loop->iteration == 2 ? 'bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400') }}">
+                                            {{ $loop->iteration }}
                                         </span>
                                         <span class="font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $cName }}">{{ $cName }}</span>
                                     </div>
@@ -470,59 +481,76 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
                                 @forelse($newUserStats['recentNewUsers'] as $nu)
+                                    @php
+                                        $nuNoInternet = (string) (is_array($nu) ? ($nu['nomor_internet'] ?? '') : ($nu->nomor_internet ?? ''));
+                                        $nuNama = (string) (is_array($nu) ? ($nu['nama_pelanggan'] ?? 'Pelanggan') : ($nu->nama_pelanggan ?? 'Pelanggan'));
+                                        $nuBw = (string) (is_array($nu) ? ($nu['nama_kategori_bandwith'] ?? ($nu['alias_nama_kategori'] ?? ($nu['nama_paket'] ?? 'INTERNET'))) : ($nu->nama_kategori_bandwith ?? ($nu->alias_nama_kategori ?? ($nu->nama_paket ?? 'INTERNET'))));
+                                        $nuNominalBw = (string) (is_array($nu) ? ($nu['nominal_bandwith'] ?? '10') : ($nu->nominal_bandwith ?? '10'));
+                                        $nuDate = is_array($nu) ? ($nu['date_create'] ?? null) : ($nu->date_create ?? null);
+                                        $nuStatus = (string) (is_array($nu) ? ($nu['status_reg'] ?? '') : ($nu->status_reg ?? ''));
+                                        $profileUrl = !empty($nuNoInternet) ? route('teknik.pelanggan.profile', $nuNoInternet) : '#';
+                                    @endphp
                                     <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
                                         <td class="py-2 px-3">
-                                            <a href="{{ route('teknik.pelanggan.profile', $nu->nomor_internet ?? '') }}" 
-                                               class="text-xs font-bold text-blue-600 dark:text-cyan-400 font-mono hover:underline">
-                                                {{ $nu->nomor_internet ?? '-' }}
-                                            </a>
-                                            <div class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5">{{ $nu->nama_pelanggan ?? 'Pelanggan' }}</div>
+                                            @if(!empty($nuNoInternet))
+                                                <a href="{{ $profileUrl }}" 
+                                                   class="text-xs font-bold text-blue-600 dark:text-cyan-400 font-mono hover:underline">
+                                                    {{ $nuNoInternet }}
+                                                </a>
+                                            @else
+                                                <span class="text-xs font-bold text-slate-500 font-mono">-</span>
+                                            @endif
+                                            <div class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 uppercase mt-0.5">{{ $nuNama }}</div>
                                         </td>
                                         <td class="py-2 px-3">
                                             <div class="text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                                                {{ $nu->nama_kategori_bandwith ?? ($nu->alias_nama_kategori ?? ($nu->nama_paket ?? 'INTERNET')) }}
+                                                {{ $nuBw }}
                                             </div>
                                             <div class="text-[10px] font-bold font-mono text-blue-600 dark:text-cyan-400">
-                                                {{ $nu->nominal_bandwith ?? '10' }} Mbps
+                                                {{ $nuNominalBw }} Mbps
                                             </div>
                                         </td>
                                         <td class="py-2 px-3 text-[11px] text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                                            {{ !empty($nu->date_create) ? \Carbon\Carbon::parse($nu->date_create)->format('d M Y, H:i') : '-' }}
+                                            {{ !empty($nuDate) ? \Carbon\Carbon::parse($nuDate)->format('d M Y, H:i') : '-' }}
                                         </td>
                                         <td class="py-2 px-3">
-                                            @if(($nu->status_reg ?? null) == '20')
+                                            @if($nuStatus == '20')
                                                 <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
                                                     AKTIF (#20)
                                                 </span>
-                                            @elseif(in_array(($nu->status_reg ?? null), ['18', '18.1', '19', '19.1']))
+                                            @elseif(in_array($nuStatus, ['18', '18.1', '19', '19.1']))
                                                 <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30">
-                                                    AKTIVASI (#{{ $nu->status_reg ?? '' }})
+                                                    AKTIVASI (#{{ $nuStatus }})
                                                 </span>
-                                            @elseif(in_array(($nu->status_reg ?? null), ['16', '17', '17.1']))
+                                            @elseif(in_array($nuStatus, ['16', '17', '17.1']))
                                                 <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 dark:border-indigo-500/30">
-                                                    INSTALASI (#{{ $nu->status_reg ?? '' }})
+                                                    INSTALASI (#{{ $nuStatus }})
                                                 </span>
-                                            @elseif(in_array(($nu->status_reg ?? null), ['12', '13', '13.1']))
+                                            @elseif(in_array($nuStatus, ['12', '13', '13.1']))
                                                 <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
-                                                    SURVEY (#{{ $nu->status_reg ?? '' }})
+                                                    SURVEY (#{{ $nuStatus }})
                                                 </span>
-                                            @elseif(in_array(($nu->status_reg ?? null), ['14', '15']))
+                                            @elseif(in_array($nuStatus, ['14', '15']))
                                                 <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30">
-                                                    BATAL (#{{ $nu->status_reg ?? '' }})
+                                                    BATAL (#{{ $nuStatus }})
                                                 </span>
                                             @else
                                                 <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                                                    DRAFT (#{{ $nu->status_reg ?? '11' }})
+                                                    DRAFT (#{{ $nuStatus ?: '11' }})
                                                 </span>
                                             @endif
                                         </td>
                                         <td class="py-2 px-3 text-center">
-                                            <a href="{{ route('teknik.pelanggan.profile', $nu->nomor_internet ?? '') }}" 
-                                               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-semibold transition"
-                                               title="Lihat Profil Pelanggan">
-                                                <span>Profil</span>
-                                                <span class="text-xs">&rarr;</span>
-                                            </a>
+                                            @if(!empty($nuNoInternet))
+                                                <a href="{{ $profileUrl }}" 
+                                                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-semibold transition"
+                                                   title="Lihat Profil Pelanggan">
+                                                    <span>Profil</span>
+                                                    <span class="text-xs">&rarr;</span>
+                                                </a>
+                                            @else
+                                                <span class="text-slate-400 text-[10px]">-</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
@@ -553,15 +581,18 @@
                     <div class="space-y-2">
                         @forelse($newUserStats['paketBreakdown'] as $pkg)
                             @php
-                                $percent = $newUserStats['totalBaru'] > 0 ? round(($pkg->total / $newUserStats['totalBaru']) * 100) : 0;
+                                $pkgNama = (string) (is_array($pkg) ? ($pkg['nama_paket'] ?? 'INTERNET') : ($pkg->nama_paket ?? 'INTERNET'));
+                                $pkgNominal = (string) (is_array($pkg) ? ($pkg['nominal_bandwith'] ?? '10') : ($pkg->nominal_bandwith ?? '10'));
+                                $pkgTotal = (int) (is_array($pkg) ? ($pkg['total'] ?? 0) : ($pkg->total ?? 0));
+                                $percent = $newUserStats['totalBaru'] > 0 ? round(($pkgTotal / $newUserStats['totalBaru']) * 100) : 0;
                             @endphp
                             <div>
                                 <div class="flex items-center justify-between text-[11px] font-semibold text-slate-800 dark:text-slate-200 mb-1">
                                     <span class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                        <span>{{ $pkg->nama_paket }} ({{ $pkg->nominal_bandwith }} Mbps)</span>
+                                        <span>{{ $pkgNama }} ({{ $pkgNominal }} Mbps)</span>
                                     </span>
-                                    <span class="font-mono font-bold text-blue-600 dark:text-cyan-400">{{ $pkg->total }} User <span class="text-[9px] text-slate-400 font-normal">({{ $percent }}%)</span></span>
+                                    <span class="font-mono font-bold text-blue-600 dark:text-cyan-400">{{ $pkgTotal }} User <span class="text-[9px] text-slate-400 font-normal">({{ $percent }}%)</span></span>
                                 </div>
                                 <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                                     <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500"

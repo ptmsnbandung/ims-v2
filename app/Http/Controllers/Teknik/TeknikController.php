@@ -4011,16 +4011,21 @@ class TeknikController extends Controller
         }
 
         // Done: Status 13 (Collect Perangkat Done)
-        DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
+        $updateData = [
             'status_terminasi' => '13', // (KD13) Collect Perangkat Done
-            'collect_perangkat' => $collectPerangkat ?: '1',
-            'collect_payment' => $collectPayment,
-            'date_collect_end' => $dateCollect,
-            'time_collect_end' => $timeCollect,
-            'note_collect_end' => $note ?: 'Perangkat berhasil ditarik oleh teknisi',
+            'date_collect_finish' => $dateCollect,
+            'note_collect_finish' => $note ?: 'Perangkat berhasil ditarik oleh teknisi',
             'date_update' => $now,
             'user_update' => $currentUser,
-        ]);
+        ];
+        if (Schema::hasColumn('trx_terminasi', 'collect_perangkat')) {
+            $updateData['collect_perangkat'] = $collectPerangkat ?: '1';
+        }
+        if (Schema::hasColumn('trx_terminasi', 'collect_payment')) {
+            $updateData['collect_payment'] = $collectPayment;
+        }
+
+        DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update($updateData);
 
         return redirect()->back()->with('success', "Laporan penarikan perangkat (Report Collecting) {$kodeTrx} berhasil disimpan! Status kini siap untuk Closing Terminasi.");
     }

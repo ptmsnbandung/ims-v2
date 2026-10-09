@@ -745,6 +745,10 @@ class NocController extends Controller
      */
     public function oltCreate(Request $request): View
     {
+        if (!auth()->user()?->hasRole(['admin', 'direktur'])) {
+            abort(403, 'Role NOC tidak memiliki izin untuk menambah OLT.');
+        }
+
         $this->ensureOltTableColumns();
 
         $pops = DB::table('m_pop')->where('hide', '!=', '1')->orderBy('nama_pop')->get();
@@ -760,6 +764,10 @@ class NocController extends Controller
      */
     public function oltEdit(Request $request, string $kode_olt): View
     {
+        if (!auth()->user()?->hasRole(['admin', 'direktur'])) {
+            abort(403, 'Role NOC tidak memiliki izin untuk mengedit OLT.');
+        }
+
         $this->ensureOltTableColumns();
 
         $olt = DB::table('m_olt')->where('kode_olt', $kode_olt)->first();
@@ -795,6 +803,10 @@ class NocController extends Controller
      */
     public function storeOlt(Request $request): RedirectResponse
     {
+        if (!auth()->user()?->hasRole(['admin', 'direktur'])) {
+            abort(403, 'Role NOC tidak memiliki izin untuk menambah atau mengedit OLT.');
+        }
+
         $this->ensureOltTableColumns();
 
         $request->validate([
@@ -887,6 +899,10 @@ class NocController extends Controller
      */
     public function deleteOlt(Request $request, string $kode_olt): RedirectResponse
     {
+        if (!auth()->user()?->hasRole(['admin', 'direktur'])) {
+            abort(403, 'Role NOC tidak memiliki izin untuk menghapus OLT.');
+        }
+
         // Cek jika ada pelanggan yang terhubung
         $attachedCount = DB::table('trx_batchjob_register')
             ->where('olt', $kode_olt)
@@ -2004,6 +2020,10 @@ class NocController extends Controller
      */
     public function storeRouter(Request $request): RedirectResponse
     {
+        if (!auth()->user()?->hasRole(['admin', 'direktur'])) {
+            abort(403, 'Role NOC tidak memiliki izin untuk menambah router MikroTik.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'host' => 'required|string|max:255',
@@ -2051,6 +2071,10 @@ class NocController extends Controller
      */
     public function updateRouter(Request $request, int $id): RedirectResponse
     {
+        if (!auth()->user()?->hasRole(['admin', 'direktur'])) {
+            abort(403, 'Role NOC tidak memiliki izin untuk mengedit router MikroTik.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'host' => 'required|string|max:255',
@@ -2104,6 +2128,10 @@ class NocController extends Controller
      */
     public function deleteRouter(Request $request, int $id): RedirectResponse
     {
+        if (!auth()->user()?->hasRole(['admin', 'direktur'])) {
+            abort(403, 'Role NOC tidak memiliki izin untuk menghapus router MikroTik.');
+        }
+
         $router = DB::table('routers')->where('id', $id)->first();
         if (!$router) {
             return redirect()->route('noc.router')->with('error', 'Router tidak ditemukan.');

@@ -112,6 +112,7 @@
             </div>
 
             <!-- Header Action Button -->
+            @if(auth()->user()?->hasRole(['admin', 'direktur']))
             <div class="flex items-center gap-2">
                 <a href="{{ route('noc.olt.create') }}" 
                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition transform hover:-translate-y-0.5">
@@ -121,6 +122,7 @@
                     <span>Tambah OLT Baru</span>
                 </a>
             </div>
+            @endif
         </div>
     </div>
 
@@ -301,6 +303,7 @@
                                         <span>Buka OLT</span>
                                     </a>
 
+                                    @if(auth()->user()?->hasRole(['admin', 'direktur']))
                                     <!-- Edit OLT -->
                                     <a href="{{ route('noc.olt.edit', $olt->kode_olt) }}" 
                                        class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-semibold shadow-2xs shadow-amber-500/20 transition">
@@ -319,6 +322,7 @@
                                         </svg>
                                         <span>Delete</span>
                                     </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

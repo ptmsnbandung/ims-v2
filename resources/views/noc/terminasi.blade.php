@@ -798,33 +798,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. Checklist Status Perangkat & Tagihan (Saat Done) -->
-                    <div x-show="modalReportStatus === 'done'" class="space-y-2.5 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" 
-                                   name="collect_perangkat" 
-                                   value="1" 
-                                   checked
-                                   class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 cursor-pointer">
-                            <div>
-                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Perangkat ONT / Router Berhasil Ditarik</span>
-                                <span class="block text-[10px] text-slate-500">Tandai status Collect Perangkat = Done</span>
-                            </div>
-                        </label>
-
-                        <label class="flex items-center gap-3 cursor-pointer pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
-                            <input type="checkbox" 
-                                   name="collect_payment" 
-                                   value="1" 
-                                   class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 cursor-pointer">
-                            <div>
-                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Pelunasan Tagihan / Tunggakan Selesai</span>
-                                <span class="block text-[10px] text-slate-500">Tandai status Pending Tagihan = Done</span>
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- 4. Keterangan -->
+                    <!-- 3. Keterangan -->
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                             Keterangan <span class="text-rose-500 font-bold">*</span>

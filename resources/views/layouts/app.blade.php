@@ -687,7 +687,11 @@
                          @mouseenter="openFlyout($el, 'Menu OLT', [
                              @if(isset($sidebarOlts))
                                   @foreach($sidebarOlts as $sOlt)
-                                  { label: 'OLT {{ $sOlt->olt_id }} - {{ strtoupper($sOlt->nama_olt) }}', url: '{{ route('noc.network-olt', ['olt_id' => $sOlt->olt_id]) }}', active: {{ request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOlt->olt_id) ? 'true' : 'false' }} },
+                                  @php
+                                      $sOltId = is_array($sOlt) ? ($sOlt['olt_id'] ?? '') : ($sOlt->olt_id ?? '');
+                                      $sOltNama = is_array($sOlt) ? ($sOlt['nama_olt'] ?? '') : ($sOlt->nama_olt ?? '');
+                                  @endphp
+                                  { label: 'OLT {{ $sOltId }} - {{ strtoupper($sOltNama) }}', url: '{{ route('noc.network-olt', ['olt_id' => $sOltId]) }}', active: {{ request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOltId) ? 'true' : 'false' }} },
                                   @endforeach
                              @endif
                          ])"
@@ -715,15 +719,17 @@
                              x-cloak
                              x-collapse
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
-                            @if(isset($sidebarOlts) && $sidebarOlts->isNotEmpty())
+                            @if(isset($sidebarOlts) && (is_countable($sidebarOlts) ? count($sidebarOlts) > 0 : !empty($sidebarOlts)))
                                 @foreach($sidebarOlts as $sOlt)
                                     @php
-                                        $isCurrentOlt = request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOlt->olt_id);
+                                        $sOltId = is_array($sOlt) ? ($sOlt['olt_id'] ?? '') : ($sOlt->olt_id ?? '');
+                                        $sOltNama = is_array($sOlt) ? ($sOlt['nama_olt'] ?? '') : ($sOlt->nama_olt ?? '');
+                                        $isCurrentOlt = request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOltId);
                                     @endphp
-                                    <a href="{{ route('noc.network-olt', ['olt_id' => $sOlt->olt_id]) }}" 
+                                    <a href="{{ route('noc.network-olt', ['olt_id' => $sOltId]) }}" 
                                        class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ $isCurrentOlt ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                         <span class="w-1.5 h-1.5 rounded-full border {{ $isCurrentOlt ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-                                        <span class="uppercase">OLT {{ $sOlt->olt_id }} - {{ $sOlt->nama_olt }}</span>
+                                        <span class="uppercase">OLT {{ $sOltId }} - {{ $sOltNama }}</span>
                                     </a>
                                 @endforeach
                             @else

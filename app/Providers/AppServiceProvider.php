@@ -28,9 +28,19 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('layouts.app', function ($view) {
             try {
-                $olts = Cache::remember('global_sidebar_olts_list', 600, function () {
+                $olts = Cache::remember('global_sidebar_olts_array_v1', 600, function () {
                     if (Schema::hasTable('gomsn.olt')) {
-                        return DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get()->toArray();
+                        return DB::table('gomsn.olt')
+                            ->select('olt_id', 'nama_olt')
+                            ->orderBy('olt_id', 'asc')
+                            ->get()
+                            ->map(function ($item) {
+                                return [
+                                    'olt_id' => $item->olt_id ?? null,
+                                    'nama_olt' => $item->nama_olt ?? ('OLT ' . ($item->olt_id ?? ''))
+                                ];
+                            })
+                            ->toArray();
                     }
                     return [];
                 });

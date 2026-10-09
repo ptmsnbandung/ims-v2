@@ -176,13 +176,13 @@ class BroadcastController extends Controller
 
         // Name column
         if (in_array('nama_pelanggan', $cols)) {
-            $nameCol   = 'c.nama_pelanggan';
+            $nameCol   = "COALESCE(NULLIF(c.nama_pelanggan, ''), NULLIF(c.nama_pelanggan, 'Tanpa Nama'), c.nomor_internet)";
             $sortField = 'c.nama_pelanggan';
         } elseif (in_array('nama_p', $cols)) {
-            $nameCol   = 'c.nama_p';
+            $nameCol   = "COALESCE(NULLIF(c.nama_p, ''), c.nomor_internet)";
             $sortField = 'c.nama_p';
         } elseif (in_array('nama', $cols)) {
-            $nameCol   = 'c.nama';
+            $nameCol   = "COALESCE(NULLIF(c.nama, ''), c.nomor_internet)";
             $sortField = 'c.nama';
         } elseif (in_array('nama_pelanggan', $mpCols)) {
             $parts = ['mp.nama_pelanggan'];
@@ -192,7 +192,7 @@ class BroadcastController extends Controller
             $sortField = $fallbackSort;
         } elseif (in_array('nama_pelanggan', $regCols)) {
             $nameCol   = in_array('nomor_internet', $cols)
-                ? 'COALESCE(reg.nama_pelanggan, c.nomor_internet)'
+                ? "COALESCE(NULLIF(reg.nama_pelanggan, ''), c.nomor_internet)"
                 : 'reg.nama_pelanggan';
             $sortField = $fallbackSort;
         } else {
@@ -626,6 +626,18 @@ class BroadcastController extends Controller
         $cols = [];
         $query = $this->buildCustomerQuery($baseTable, $cols);
         $sortField = $this->selectCustomerFields($query, $baseTable);
+
+        // Filter out dummy/unregistered records
+        if (in_array('status_reg', $cols) || in_array('nik_penduduk', $cols)) {
+            $query->where(function ($q) use ($cols) {
+                if (in_array('status_reg', $cols)) {
+                    $q->whereNotNull('c.status_reg');
+                }
+                if (in_array('nik_penduduk', $cols)) {
+                    $q->whereNotNull('c.nik_penduduk');
+                }
+            });
+        }
 
         // Apply filters
         if ($selectedBulan !== 'all' && !empty($selectedBulan)) {

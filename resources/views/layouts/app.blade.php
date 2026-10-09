@@ -1079,7 +1079,7 @@
                             <!-- 1. Status Gateway -->
                             <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px]">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span class="text-slate-600 dark:text-slate-300">Status Gateway: <strong class="text-emerald-700 dark:text-emerald-400 font-semibold">Online</strong></span>
+                                <span class="text-emerald-700 dark:text-emerald-400 font-semibold">Online</span>
                             </div>
 
                             <!-- 2. Jam Realtime WIB -->

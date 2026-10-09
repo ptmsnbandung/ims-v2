@@ -4042,10 +4042,11 @@ class TeknikController extends Controller
         }
 
         $currentUser = auth()->user()->nama ?? 'Teknik';
-        $note = $request->note ?: 'Proses closing terminasi selesai & user dihapus dari router MikroTik';
+        $dateDone = $request->date_termin_done ?: ($request->date ?: now()->format('Y-m-d H:i:s'));
+        $note = 'Proses closing terminasi selesai & user dihapus dari router MikroTik';
 
         $nomorInternet = $trx->nomor_internet;
-        $res = $provisioning->terminateCustomer($nomorInternet, $currentUser, $note, $kodeTrx);
+        $res = $provisioning->terminateCustomer($nomorInternet, $currentUser, $note, $kodeTrx, $dateDone);
 
         if ($res['success']) {
             return redirect()->back()->with('success', "Closing terminasi {$kodeTrx} berhasil! {$res['summary']}");

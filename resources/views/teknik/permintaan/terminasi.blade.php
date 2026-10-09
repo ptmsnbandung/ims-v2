@@ -883,15 +883,16 @@
                         </p>
                     </div>
 
-                    <!-- Catatan Closing -->
+                    <!-- Tanggal Closing Terminasi -->
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Catatan Closing Terminasi (Opsional)
+                            Tanggal Closing Terminasi <span class="text-rose-500 font-bold">*</span>
                         </label>
-                        <textarea name="note" 
-                                  rows="3" 
-                                  placeholder="Catatan penutupan layanan..." 
-                                  class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+                        <input type="date" 
+                               name="date_termin_done" 
+                               required
+                               value="{{ date('Y-m-d') }}"
+                               class="w-full text-xs px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
                     </div>
 
                 </div>

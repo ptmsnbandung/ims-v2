@@ -482,11 +482,12 @@ class CustomerProvisioningService
      * 4. Update trx_terminasi -> status_terminasi = 14 (KD14 Terminasi Selesai)
      * 5. Log ke Activity Audit Trail
      */
-    public function terminateCustomer(string $nomorInternet, ?string $operator = null, ?string $note = null, ?string $kodeTrx = null): array
+    public function terminateCustomer(string $nomorInternet, ?string $operator = null, ?string $note = null, ?string $kodeTrx = null, ?string $dateDone = null): array
     {
         $now = now()->format('Y-m-d H:i:s');
         $operator = $operator ?: (auth()->user()->nama ?? 'System NOC');
         $reason = $note ?: 'Terminasi Layanan Pelanggan (Hapus User Router)';
+        $finalDateDone = $dateDone ? (strlen($dateDone) <= 10 ? $dateDone . ' ' . date('H:i:s') : $dateDone) : $now;
 
         // 1. Ambil data pelanggan dari trx_batchjob_register atau tb_pelanggan / view_pelanggan
         $customer = DB::table('trx_batchjob_register')
@@ -575,7 +576,7 @@ class CustomerProvisioningService
             if ($kodeTrx) {
                 DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
                     'status_terminasi' => '14', // (KD14) Terminasi Selesai
-                    'date_termin_done' => $now,
+                    'date_termin_done' => $finalDateDone,
                     'note_termin_done' => $reason,
                     'date_update' => $now,
                     'user_update' => $operator,
@@ -583,7 +584,7 @@ class CustomerProvisioningService
             } else {
                 DB::table('trx_terminasi')->where('nomor_internet', $nomorInternet)->whereIn('status_terminasi', ['11', '12', '12.1', '13'])->update([
                     'status_terminasi' => '14',
-                    'date_termin_done' => $now,
+                    'date_termin_done' => $finalDateDone,
                     'note_termin_done' => $reason,
                     'date_update' => $now,
                     'user_update' => $operator,

@@ -582,6 +582,7 @@ class CustomerProvisioningService
         }
 
         $this->mikrotik->setRouter([
+            'name'     => $router->name ?? null,
             'host'     => $router->host,
             'port'     => (int)($router->port ?: 18735),
             'username' => $router->username,

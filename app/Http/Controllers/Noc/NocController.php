@@ -1491,12 +1491,16 @@ class NocController extends Controller
                     $pass = Crypt::decryptString($pass);
                 } catch (\Exception $e) {}
                 $mikrotikService->setRouter([
+                    'name' => $rObj->name,
                     'host' => $rObj->host,
                     'port' => (int)($rObj->port ?: 18735),
                     'username' => $rObj->username,
                     'password' => $pass,
                 ]);
             }
+        }
+        if (empty($routerName)) {
+            $routerName = $mikrotikService->getRouterDisplayName();
         }
 
         if (!empty($ontUs)) {
@@ -1587,7 +1591,7 @@ class NocController extends Controller
         if ($mikrotikResult['success']) {
             return redirect()->back()->with('success', "Report Aktivasi untuk pelanggan {$nomorInternet} berhasil disimpan! PPPoE Secret '{$ontUs}' sukses dibuat/diperbarui di MikroTik ({$routerName}) & layanan online (#20).");
         } else {
-            return redirect()->back()->with('warning', "Report Aktivasi untuk pelanggan {$nomorInternet} tersimpan (Status #20), namun ada kendala di MikroTik: " . $mikrotikResult['message']);
+            return redirect()->back()->with('warning', "Report Aktivasi untuk pelanggan {$nomorInternet} tersimpan (Status #20), namun ada kendala di MikroTik ({$routerName}): " . $mikrotikResult['message']);
         }
     }
 
@@ -1621,12 +1625,16 @@ class NocController extends Controller
                     $pass = Crypt::decryptString($pass);
                 } catch (\Exception $e) {}
                 $mikrotikService->setRouter([
+                    'name' => $rObj->name,
                     'host' => $rObj->host,
                     'port' => (int)($rObj->port ?: 18735),
                     'username' => $rObj->username,
                     'password' => $pass,
                 ]);
             }
+        }
+        if (empty($routerName)) {
+            $routerName = $mikrotikService->getRouterDisplayName();
         }
 
         $secretResult = $mikrotikService->createOrUpdateSecret([

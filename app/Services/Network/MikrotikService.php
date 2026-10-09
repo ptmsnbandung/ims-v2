@@ -11,6 +11,7 @@ use Throwable;
 
 class MikrotikService
 {
+    private ?string $name = null;
     private string $host;
     private int $port;
     private string $user;
@@ -22,6 +23,7 @@ class MikrotikService
     {
         // 1. Jika ada override config langsung
         if ($overrideConfig) {
+            $this->name = $overrideConfig['name'] ?? null;
             $this->host = $overrideConfig['host'] ?? $overrideConfig['ip_address'] ?? config('mikrotik.host', '103.161.206.19');
             $this->port = (int)($overrideConfig['port'] ?? config('mikrotik.port', 18735));
             $this->user = $overrideConfig['user'] ?? $overrideConfig['username'] ?? config('mikrotik.user', 'aplikasi');
@@ -40,6 +42,7 @@ class MikrotikService
         }
 
         if ($router && !empty($router->host)) {
+            $this->name = $router->name ?? null;
             $this->host = $router->host;
             $this->port = (int)($router->port ?: 18735);
             $this->user = $router->username ?: 'aplikasi';
@@ -58,6 +61,7 @@ class MikrotikService
             $this->ssl = false;
         } else {
             // 3. Fallback
+            $this->name = 'Router Utama';
             $this->host = config('mikrotik.host', '103.161.206.19');
             $this->port = (int)config('mikrotik.port', 18735);
             $this->user = config('mikrotik.user', 'aplikasi');
@@ -72,6 +76,9 @@ class MikrotikService
      */
     public function setRouter(array $config): self
     {
+        if (!empty($config['name'])) {
+            $this->name = $config['name'];
+        }
         if (!empty($config['host']) || !empty($config['ip_address'])) {
             $this->host = $config['host'] ?? $config['ip_address'];
         }
@@ -85,6 +92,16 @@ class MikrotikService
             $this->pass = $config['password'] ?? $config['pass'];
         }
         return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function getRouterDisplayName(): string
+    {
+        return $this->name ?: $this->host;
     }
 
     public function getHost(): string
@@ -283,7 +300,7 @@ class MikrotikService
                     'success' => true,
                     'action' => 'updated',
                     'matched_user' => $name,
-                    'message' => "PPPoE Secret '{$name}' berhasil diperbarui di MikroTik ({$this->host}).",
+                    'message' => "PPPoE Secret '{$name}' berhasil diperbarui di MikroTik ({$this->getRouterDisplayName()}).",
                 ];
             } else {
                 // Tambah secret baru
@@ -294,14 +311,14 @@ class MikrotikService
                     'success' => true,
                     'action' => 'created',
                     'matched_user' => $name,
-                    'message' => "PPPoE Secret '{$name}' berhasil dibuat di MikroTik ({$this->host}).",
+                    'message' => "PPPoE Secret '{$name}' berhasil dibuat di MikroTik ({$this->getRouterDisplayName()}).",
                 ];
             }
         } catch (Throwable $e) {
-            Log::error("Gagal create/update PPPoE Secret di MikroTik ({$this->host}): " . $e->getMessage());
+            Log::error("Gagal create/update PPPoE Secret di MikroTik ({$this->getRouterDisplayName()}): " . $e->getMessage());
             return [
                 'success' => false,
-                'message' => "MikroTik ({$this->host}): " . $e->getMessage(),
+                'message' => "MikroTik ({$this->getRouterDisplayName()}): " . $e->getMessage(),
             ];
         }
     }
@@ -337,7 +354,7 @@ class MikrotikService
                 $tested = implode(' / ', $usernames);
                 return [
                     'success' => false,
-                    'message' => "User PPPoE '{$tested}' tidak ditemukan di MikroTik ({$this->host}).",
+                    'message' => "User PPPoE '{$tested}' tidak ditemukan di MikroTik ({$this->getRouterDisplayName()}).",
                 ];
             }
 
@@ -352,7 +369,7 @@ class MikrotikService
             return [
                 'success' => true,
                 'matched_user' => $matchedUser,
-                'message' => "User PPPoE '{$matchedUser}' berhasil diaktifkan (disabled=no).",
+                'message' => "User PPPoE '{$matchedUser}' berhasil diaktifkan di MikroTik ({$this->getRouterDisplayName()}).",
             ];
         } catch (Throwable $e) {
             return [
@@ -393,7 +410,7 @@ class MikrotikService
                 $tested = implode(' / ', $usernames);
                 return [
                     'success' => false,
-                    'message' => "User PPPoE '{$tested}' tidak ditemukan di MikroTik ({$this->host}).",
+                    'message' => "User PPPoE '{$tested}' tidak ditemukan di MikroTik ({$this->getRouterDisplayName()}).",
                 ];
             }
 
@@ -408,7 +425,7 @@ class MikrotikService
             return [
                 'success' => true,
                 'matched_user' => $matchedUser,
-                'message' => "User PPPoE '{$matchedUser}' berhasil dinonaktifkan / diisolir (disabled=yes).",
+                'message' => "User PPPoE '{$matchedUser}' berhasil dinonaktifkan / diisolir di MikroTik ({$this->getRouterDisplayName()}).",
             ];
         } catch (Throwable $e) {
             return [

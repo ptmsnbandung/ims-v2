@@ -55,7 +55,7 @@
                 
                 <!-- 1. Dropdown Semua Layanan -->
                 <div class="lg:col-span-3">
-                    <select name="layanan" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <select name="layanan" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                         <option value="">SEMUA LAYANAN</option>
                         @if(isset($layananList))
                             @foreach($layananList as $lay)
@@ -70,22 +70,22 @@
                     <input type="text" 
                            name="search" 
                            value="{{ $search }}"
-                           placeholder="NAMA / NOMOR LAYANAN" 
+                           placeholder="NAMA / NOMOR LAYANAN (Enter)" 
                            class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
 
                 <!-- 3. Dropdown / Input Semua Wilayah -->
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-3">
                     <input type="text" 
-                           name="wilayah" 
-                           value="{{ request('wilayah') }}"
-                           placeholder="SEMUA WILAYAH" 
-                           class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
+                       name="wilayah" 
+                       value="{{ request('wilayah') }}"
+                       placeholder="SEMUA WILAYAH (Enter)" 
+                       class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
 
                 <!-- 4. Dropdown Semua Status -->
                 <div class="lg:col-span-2">
-                    <select name="status" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <select name="status" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                         <option value="">SEMUA STATUS</option>
                         <option value="11" {{ request('status') === '11' ? 'selected' : '' }}>(KD11) Req. Terminasi</option>
                         <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>(KD12) Collecting</option>
@@ -98,25 +98,16 @@
                     </select>
                 </div>
 
-                <!-- 5. Action Buttons (Reset & Cari) -->
-                <div class="lg:col-span-2 flex items-center gap-1.5">
+                <!-- 5. Action Buttons (Reset) -->
+                <div class="lg:col-span-1 flex items-center gap-1.5">
                     <a href="{{ route('teknik.permintaan.terminasi') }}" 
-                       class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                       class="w-full inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition cursor-pointer"
                        title="Reset Filter">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                         </svg>
                         <span>Reset</span>
                     </a>
-
-                    <button type="submit" 
-                            class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold shadow-xs transition cursor-pointer"
-                            title="Filter / Cari">
-                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                        </svg>
-                        <span>Cari</span>
-                    </button>
                 </div>
 
             </div>
@@ -124,7 +115,7 @@
             <!-- Row 2: Bulan & Tahun Filter -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-2.5 items-center pt-1 border-t border-slate-100 dark:border-slate-800/60">
                 <div class="lg:col-span-3">
-                    <select name="bulan" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <select name="bulan" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                         <option value="">SEMUA BULAN TERMINASI</option>
                         @for($m = 1; $m <= 12; $m++)
                             <option value="{{ $m }}" {{ request('bulan') == $m ? 'selected' : '' }}>
@@ -135,7 +126,7 @@
                 </div>
 
                 <div class="lg:col-span-3">
-                    <select name="tahun" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <select name="tahun" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                         <option value="">SEMUA TAHUN</option>
                         @for($y = date('Y'); $y >= 2020; $y--)
                             <option value="{{ $y }}" {{ request('tahun') == $y ? 'selected' : '' }}>{{ $y }}</option>

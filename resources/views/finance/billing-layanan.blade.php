@@ -293,7 +293,7 @@
                 <!-- Bulan -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Bulan</label>
-                    <select name="bulan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="bulan" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Bulan</option>
                         @foreach($bulanList as $key => $name)
                         <option value="{{ $key }}" {{ ($selectedBulan ?? '') === (string)$key ? 'selected' : '' }}>{{ $key }} - {{ $name }}</option>
@@ -304,7 +304,7 @@
                 <!-- Tahun -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Tahun</label>
-                    <select name="tahun" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="tahun" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Tahun</option>
                         @foreach($tahunList as $thn)
                         <option value="{{ $thn }}" {{ ($selectedTahun ?? '') === (string)$thn ? 'selected' : '' }}>{{ $thn }}</option>
@@ -315,7 +315,7 @@
                 <!-- Layanan / Kategori -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Kategori Layanan</label>
-                    <select name="layanan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="layanan" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Layanan</option>
                         @foreach($layananList as $lay)
                         <option value="{{ $lay }}" {{ request('layanan') === $lay ? 'selected' : '' }}>{{ $lay }}</option>
@@ -326,7 +326,7 @@
                 <!-- Status Bayar -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Status Bayar</label>
-                    <select name="status_bayar" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="status_bayar" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Status Bayar</option>
                         <option value="menunggu_verifikasi" {{ request('status_bayar') === 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
                         @foreach($statusBillList as $sb)
@@ -364,7 +364,7 @@
                     <!-- Wilayah / Kota -->
                     <div>
                         <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Wilayah</label>
-                        <select name="wilayah" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="wilayah" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Wilayah</option>
                             @foreach($wilayahList as $wil)
                             <option value="{{ $wil }}" {{ request('wilayah') === $wil ? 'selected' : '' }}>{{ $wil }}</option>
@@ -375,7 +375,7 @@
                     <!-- Status User -->
                     <div>
                         <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Status User</label>
-                        <select name="status_user" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="status_user" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Status User</option>
                             @foreach($statusUserList as $code => $label)
                             <option value="{{ $code }}" {{ request('status_user') === (string)$code ? 'selected' : '' }}>{{ $label }}</option>
@@ -386,7 +386,7 @@
                     <!-- Metode Bayar -->
                     <div>
                         <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Metode Bayar</label>
-                        <select name="metode_bayar" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="metode_bayar" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Metode Bayar</option>
                             <option value="1" {{ request('metode_bayar') === '1' ? 'selected' : '' }}>Midtrans Payment Gateway</option>
                             <option value="2" {{ request('metode_bayar') === '2' ? 'selected' : '' }}>Manual Bank Transfer</option>
@@ -410,12 +410,8 @@
                 <div class="flex items-center gap-1.5">
                     <a href="{{ route('finance.billing-layanan') }}"
                        class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition">
-                        Reset
+                        Reset Filter
                     </a>
-                    <button type="submit"
-                            class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm shadow-blue-500/25 transition cursor-pointer">
-                        Terapkan Filter
-                    </button>
                 </div>
             </div>
         </form>

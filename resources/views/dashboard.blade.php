@@ -91,7 +91,7 @@
             <!-- Filter Tahun Saja -->
             <form action="{{ route('dashboard') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
                 <div class="relative flex-1 sm:flex-initial">
-                    <select name="tahun" class="w-full sm:w-auto appearance-none pl-2.5 pr-7 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer">
+                    <select name="tahun" onchange="this.form.submit()" class="w-full sm:w-auto appearance-none pl-2.5 pr-7 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer">
                         @foreach($availableYears as $year)
                             <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
                                 Tahun {{ $year }}
@@ -102,10 +102,6 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </div>
-
-                <button type="submit" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer flex-shrink-0">
-                    Terapkan
-                </button>
             </form>
         </div>
 

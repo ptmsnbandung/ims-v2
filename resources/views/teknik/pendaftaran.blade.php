@@ -89,7 +89,8 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Layanan</label>
                     <select name="layanan" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
+                            onchange="this.form.submit()"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs cursor-pointer">
                         <option value="">SEMUA LAYANAN</option>
                         @foreach($layananList as $layanan)
                             <option value="{{ $layanan->kode_kategori_bandwith }}" {{ ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith ? 'selected' : '' }}>
@@ -138,7 +139,8 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
                     <select name="status" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
+                            onchange="this.form.submit()"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs cursor-pointer">
                         <option value="">SEMUA STATUS (PENDAFTARAN)</option>
                         @foreach($statusList as $status)
                             <option value="{{ $status->status_reg }}" {{ ($filters['status'] ?? '') == $status->status_reg ? 'selected' : '' }}>
@@ -152,7 +154,8 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Wilayah</label>
                     <select name="wilayah" 
-                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs">
+                            onchange="this.form.submit()"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 font-medium outline-none transition shadow-xs cursor-pointer">
                         <option value="">SEMUA WILAYAH</option>
                         @foreach($wilayahList as $wilayah)
                             <option value="{{ $wilayah->name_w }}" {{ ($filters['wilayah'] ?? '') == $wilayah->name_w ? 'selected' : '' }}>
@@ -179,7 +182,7 @@
                     <span>entries</span>
                 </div>
 
-                <!-- Kanan: Group Tombol Aksi (Reset, Export Excel, Terapkan Filter) -->
+                <!-- Kanan: Group Tombol Aksi (Reset & Export Excel) -->
                 <div class="flex flex-wrap items-center gap-2">
                     <a href="{{ route('teknik.pendaftaran') }}" 
                        class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition duration-150"
@@ -187,7 +190,7 @@
                         <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                         </svg>
-                        <span>Reset</span>
+                        <span>Reset Filter</span>
                     </a>
                     
                     <a href="{{ route('teknik.pendaftaran.export', request()->query()) }}" 
@@ -198,14 +201,6 @@
                         </svg>
                         <span>Export Excel</span>
                     </a>
-
-                    <button type="submit" 
-                            class="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition duration-150 cursor-pointer">
-                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
-                        </svg>
-                        <span>Terapkan Filter</span>
-                    </button>
                 </div>
             </div>
         </form>

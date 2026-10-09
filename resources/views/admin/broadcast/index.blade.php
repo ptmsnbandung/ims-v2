@@ -314,7 +314,7 @@
                 <!-- Filter Status Tagihan -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Status Pelanggan:</label>
-                    <select name="status_tagihan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <select name="status_tagihan" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                         <option value="all" {{ $selectedStatusTagihan == 'all' ? 'selected' : '' }}>🌐 Semua Pelanggan</option>
                         <option value="unpaid" {{ $selectedStatusTagihan == 'unpaid' ? 'selected' : '' }}>⚠️ Belum Lunas / Jatuh Tempo</option>
                         <option value="paid" {{ $selectedStatusTagihan == 'paid' ? 'selected' : '' }}>✅ Lunas (PAID)</option>
@@ -325,7 +325,7 @@
                 <!-- Filter Status Pengiriman WA -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Status Kirim WA:</label>
-                    <select name="status_kirim" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <select name="status_kirim" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                         <option value="all" {{ ($selectedStatusKirim ?? 'all') == 'all' ? 'selected' : '' }}>Semua Status Kirim</option>
                         <option value="sent" {{ ($selectedStatusKirim ?? '') == 'sent' ? 'selected' : '' }}>✅ Sudah Terkirim</option>
                         <option value="unsent" {{ ($selectedStatusKirim ?? '') == 'unsent' ? 'selected' : '' }}>⏳ Belum Terkirim</option>
@@ -335,7 +335,7 @@
                 <!-- Filter Periode Bulan -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Bulan Tagihan:</label>
-                    <select name="bulan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <select name="bulan" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                         @for($m = 1; $m <= 12; $m++)
                             @php $monthVal = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
                             <option value="{{ $monthVal }}" {{ $selectedBulan == $monthVal ? 'selected' : '' }}>
@@ -348,7 +348,7 @@
                 <!-- Filter Periode Tahun -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Tahun Tagihan:</label>
-                    <select name="tahun" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <select name="tahun" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                         <option value="all" {{ $selectedTahun == 'all' ? 'selected' : '' }}>Semua Tahun</option>
                         @for($y = date('Y'); $y >= date('Y') - 3; $y--)
                             <option value="{{ $y }}" {{ $selectedTahun == $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -359,7 +359,7 @@
                 <!-- Search Input -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Pencarian Pelanggan:</label>
-                    <input type="text" name="search" value="{{ $search }}" placeholder="Nama, ID, No HP..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Nama, ID, No HP... (Enter)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
             </div>
@@ -371,9 +371,6 @@
                 </label>
 
                 <div class="flex items-center gap-1.5">
-                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer">
-                        Terapkan Filter
-                    </button>
                     <a href="{{ route('admin.broadcast') }}" class="px-2.5 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition">
                         Reset Filter
                     </a>

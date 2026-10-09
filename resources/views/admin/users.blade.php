@@ -120,7 +120,7 @@
 
                 <!-- Role Filter -->
                 <div class="w-full sm:w-44">
-                    <select name="role" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500">
+                    <select name="role" onchange="this.form.submit()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
                         <option value="all" {{ $selectedRole === 'all' ? 'selected' : '' }}>Semua Role</option>
                         @foreach($levelList as $lvl)
                             <option value="{{ $lvl->kode_level }}" {{ $selectedRole === $lvl->kode_level ? 'selected' : '' }}>
@@ -132,17 +132,12 @@
 
                 <!-- Status Filter -->
                 <div class="w-full sm:w-40">
-                    <select name="status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500">
+                    <select name="status" onchange="this.form.submit()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
                         <option value="all" {{ $selectedStatus === 'all' ? 'selected' : '' }}>Semua Status</option>
                         <option value="1" {{ $selectedStatus === '1' ? 'selected' : '' }}>Aktif</option>
                         <option value="2" {{ $selectedStatus === '2' ? 'selected' : '' }}>Nonaktif</option>
                     </select>
                 </div>
-
-                <!-- Filter Submit Button -->
-                <button type="submit" class="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
-                    <span>Filter</span>
-                </button>
             </div>
 
             <!-- Items per Page -->

@@ -141,7 +141,7 @@
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/5">
         <form method="GET" action="{{ route('finance.permintaan.suspend') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
             <div class="lg:col-span-3">
-                <select name="layanan" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="layanan" onchange="this.form.submit()" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="">SEMUA LAYANAN</option>
                     @foreach($layananList as $lay)
                         <option value="{{ $lay }}" {{ request('layanan') === $lay ? 'selected' : '' }}>{{ strtoupper($lay) }}</option>
@@ -149,16 +149,16 @@
                 </select>
             </div>
 
-            <div class="lg:col-span-4">
+            <div class="lg:col-span-5">
                 <input type="text"
                        name="search"
                        value="{{ $search }}"
-                       placeholder="Cari Kode Suspend / No. Internet / Nama / Alasan..."
+                       placeholder="Cari Kode Suspend / No. Internet / Nama / Alasan... (Enter)"
                        class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div class="lg:col-span-3">
-                <select name="status" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="status" onchange="this.form.submit()" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="">SEMUA STATUS</option>
                     <option value="11" {{ request('status') === '11' ? 'selected' : '' }}>(1011) Request Suspend</option>
                     <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>(1012) Suspend</option>
@@ -168,15 +168,11 @@
                 </select>
             </div>
 
-            <div class="lg:col-span-2 flex items-center gap-2">
+            <div class="lg:col-span-1 flex items-center">
                 <a href="{{ route('finance.permintaan.suspend') }}"
-                   class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-300 dark:border-slate-700 transition">
+                   class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-300 dark:border-slate-700 transition">
                     <span>Reset</span>
                 </a>
-                <button type="submit"
-                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition cursor-pointer">
-                    <span>Filter</span>
-                </button>
             </div>
         </form>
     </div>

@@ -172,7 +172,7 @@
             <!-- Layanan -->
             <div>
                 <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Kategori Layanan</label>
-                <select name="layanan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                <select name="layanan" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
                     <option value="">Semua Layanan</option>
                     @foreach($layananList as $lay)
                     <option value="{{ $lay }}" {{ request('layanan') === $lay ? 'selected' : '' }}>{{ $lay }}</option>
@@ -183,7 +183,7 @@
             <!-- Status Tagihan -->
             <div>
                 <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Status Tagihan</label>
-                <select name="status_bayar" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                <select name="status_bayar" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
                     <option value="">Semua Status Bayar</option>
                     <option value="menunggu_verifikasi" {{ request('status_bayar') === 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
                     @foreach($statusBillRegList as $sb)
@@ -200,7 +200,7 @@
             <!-- Wilayah -->
             <div>
                 <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Wilayah</label>
-                <select name="wilayah" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                <select name="wilayah" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
                     <option value="">Semua Wilayah</option>
                     @foreach($wilayahList as $wil)
                     <option value="{{ $wil }}" {{ request('wilayah') === $wil ? 'selected' : '' }}>{{ $wil }}</option>
@@ -220,11 +220,8 @@
 
             <!-- Action Buttons -->
             <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-500/25 transition cursor-pointer">
-                    Filter
-                </button>
-                <a href="{{ route('finance.billing-registrasi') }}" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition">
-                    Reset
+                <a href="{{ route('finance.billing-registrasi') }}" class="w-full px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition text-center">
+                    Reset Filter
                 </a>
             </div>
         </form>

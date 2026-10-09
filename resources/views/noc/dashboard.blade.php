@@ -236,6 +236,7 @@
         <form action="{{ route('noc.dashboard') }}" method="GET" class="flex flex-wrap items-center gap-2">
             <div class="relative">
                 <select name="bulan" 
+                        onchange="this.form.submit()"
                         class="appearance-none pl-3 pr-7 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
                     @foreach($monthsList as $num => $namaBulan)
                         <option value="{{ $num }}" {{ $selectedBulan == $num ? 'selected' : '' }}>
@@ -250,6 +251,7 @@
 
             <div class="relative">
                 <select name="tahun" 
+                        onchange="this.form.submit()"
                         class="appearance-none pl-3 pr-7 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer">
                     @foreach($availableYears as $year)
                         <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
@@ -262,14 +264,9 @@
                 </div>
             </div>
 
-            <button type="submit" 
-                    class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-xs transition cursor-pointer">
-                Filter
-            </button>
-
             @if($selectedBulan != date('m') || $selectedTahun != date('Y'))
                 <a href="{{ route('noc.dashboard') }}" 
-                   class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition"
+                   class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer"
                    title="Reset ke Bulan Saat Ini">
                     Reset
                 </a>

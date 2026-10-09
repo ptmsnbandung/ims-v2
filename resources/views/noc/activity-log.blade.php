@@ -163,10 +163,11 @@
                 </svg>
             </div>
 
-            <!-- Filter Action (Col 2) -->
-            <div class="md:col-span-2">
+            <!-- Filter Action (Col 3) -->
+            <div class="md:col-span-3">
                 <select name="action" 
-                        class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        onchange="this.form.submit()"
+                        class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
                     <option value="">-- Semua Aksi --</option>
                     <option value="activate" {{ $action === 'activate' ? 'selected' : '' }}>Aktivasi Layanan</option>
                     <option value="suspend" {{ $action === 'suspend' ? 'selected' : '' }}>Suspend / Isolir</option>
@@ -182,7 +183,8 @@
             <!-- Filter Status (Col 2) -->
             <div class="md:col-span-2">
                 <select name="status" 
-                        class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        onchange="this.form.submit()"
+                        class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
                     <option value="">-- Status Router --</option>
                     <option value="1" {{ $status === '1' ? 'selected' : '' }}>✓ Berhasil (Sukses)</option>
                     <option value="0" {{ $status === '0' ? 'selected' : '' }}>✕ Gagal (Error)</option>
@@ -194,26 +196,21 @@
                 <input type="date" 
                        name="start_date" 
                        value="{{ $startDate }}"
+                       onchange="this.form.submit()"
                        title="Tanggal Mulai"
-                       class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                       class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
             </div>
 
-            <!-- Actions Submit & Reset (Col 2) -->
-            <div class="md:col-span-2 flex items-center gap-1.5">
-                <button type="submit" 
-                        class="flex-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-1">
-                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                    </svg>
-                    <span>Filter</span>
-                </button>
-                @if($search || $action || $status !== null && $status !== '' || $startDate || $endDate)
+            <!-- Actions Reset (Col 1) -->
+            <div class="md:col-span-1 flex items-center justify-end">
+                @if($search || $action || ($status !== null && $status !== '') || $startDate || $endDate)
                     <a href="{{ route('noc.activity-log') }}" 
                        title="Reset Filter"
-                       class="px-2 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-500 hover:text-white text-xs font-bold transition">
+                       class="w-full inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-xs">
                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                         </svg>
+                        <span>Reset</span>
                     </a>
                 @endif
             </div>

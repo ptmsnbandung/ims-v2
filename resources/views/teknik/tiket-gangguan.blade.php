@@ -257,7 +257,7 @@
             @else
                 <!-- 1. Dropdown Kategori / Layanan -->
                 <div class="lg:col-span-3">
-                    <select name="kategori" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm">
+                    <select name="kategori" onchange="this.form.submit()" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm cursor-pointer">
                         <option value="">SEMUA KATEGORI TIKET</option>
                         <option value="gangguan" {{ request('kategori') === 'gangguan' ? 'selected' : '' }}>GANGGUAN LAYANAN</option>
                         <option value="ubah_password" {{ request('kategori') === 'ubah_password' ? 'selected' : '' }}>UBAH PASSWORD</option>
@@ -272,7 +272,7 @@
                 <input type="text" 
                        name="search" 
                        value="{{ $search }}"
-                       placeholder="Cari nama / nomor internet..." 
+                       placeholder="Cari nama / nomor internet... (Enter)" 
                        class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm">
             </div>
 
@@ -281,13 +281,13 @@
                 <input type="text" 
                        name="wilayah" 
                        value="{{ request('wilayah') }}"
-                       placeholder="SEMUA WILAYAH" 
+                       placeholder="SEMUA WILAYAH (Enter)" 
                        class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 uppercase font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm">
             </div>
 
             <!-- 4. Dropdown Semua Status -->
             <div class="{{ request('kategori') ? 'lg:col-span-2' : 'lg:col-span-2' }}">
-                <select name="status" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm">
+                <select name="status" onchange="this.form.submit()" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-sm cursor-pointer">
                     <option value="">SEMUA STATUS</option>
                     <option value="11" {{ request('status') === '11' ? 'selected' : '' }}>ANTRIAN / Request</option>
                     <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>KONFIRMASI / On Schedule</option>
@@ -296,17 +296,8 @@
                 </select>
             </div>
 
-            <!-- 5. Action Buttons (Find, Reset & Export) -->
-            <div class="lg:col-span-3 flex items-center gap-2">
-                <button type="submit" 
-                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold shadow-md shadow-cyan-600/20 transition cursor-pointer"
-                        title="Cari Tiket">
-                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                    </svg>
-                    <span>Find</span>
-                </button>
-
+            <!-- 5. Action Buttons (Reset & Export) -->
+            <div class="lg:col-span-2 flex items-center gap-2">
                 <a href="{{ route('teknik.tiket.gangguan', request('kategori') ? ['kategori' => request('kategori')] : []) }}" 
                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 transition cursor-pointer"
                    title="Reset Filter">

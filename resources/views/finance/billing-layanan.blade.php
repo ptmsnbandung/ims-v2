@@ -665,9 +665,33 @@
                                     $isMidtrans = !$isTransfer && !$isCash;
 
                                     if (!empty($merchantRaw)) {
-                                        $methodLabel = $merchantRaw;
-                                        if (in_array(strtoupper($merchantRaw), ['BCA', 'MANDIRI', 'BRI', 'BNI', 'BSI', 'PERMATA', 'CIMB'])) {
-                                            $methodLabel = 'Transfer ' . strtoupper($merchantRaw);
+                                        if (str_contains($merchantLower, 'mandiri')) {
+                                            $methodLabel = 'Bank Mandiri';
+                                        } elseif (str_contains($merchantLower, 'bca')) {
+                                            $methodLabel = 'Bank BCA';
+                                        } elseif (str_contains($merchantLower, 'bri')) {
+                                            $methodLabel = 'Bank BRI';
+                                        } elseif (str_contains($merchantLower, 'bni')) {
+                                            $methodLabel = 'Bank BNI';
+                                        } elseif (str_contains($merchantLower, 'bsi')) {
+                                            $methodLabel = 'Bank BSI';
+                                        } elseif (str_contains($merchantLower, 'permata')) {
+                                            $methodLabel = 'Bank Permata';
+                                        } elseif (str_contains($merchantLower, 'cimb')) {
+                                            $methodLabel = 'Bank CIMB';
+                                        } elseif (str_contains($merchantLower, 'bjb')) {
+                                            $methodLabel = 'Bank BJB';
+                                        } elseif (str_contains($merchantLower, 'danamon')) {
+                                            $methodLabel = 'Bank Danamon';
+                                        } elseif ($isCash) {
+                                            $methodLabel = 'Cash To Collector';
+                                        } elseif (str_contains($merchantLower, 'midtrans')) {
+                                            $methodLabel = 'Midtrans';
+                                        } else {
+                                            $clean = preg_replace('/\s*[-–].*$/', '', $merchantRaw);
+                                            $clean = preg_replace('/\(.*$/', '', $clean);
+                                            $clean = trim($clean);
+                                            $methodLabel = !empty($clean) ? $clean : ($isTransfer ? 'Manual Transfer' : 'Midtrans');
                                         }
                                     } elseif ($isTransfer) {
                                         $methodLabel = 'Manual Transfer';
@@ -977,9 +1001,33 @@
                     $isMidtrans = !$isTransfer && !$isCash;
 
                     if (!empty($merchantRaw)) {
-                        $methodLabel = $merchantRaw;
-                        if (in_array(strtoupper($merchantRaw), ['BCA', 'MANDIRI', 'BRI', 'BNI', 'BSI', 'PERMATA', 'CIMB'])) {
-                            $methodLabel = 'Transfer ' . strtoupper($merchantRaw);
+                        if (str_contains($merchantLower, 'mandiri')) {
+                            $methodLabel = 'Bank Mandiri';
+                        } elseif (str_contains($merchantLower, 'bca')) {
+                            $methodLabel = 'Bank BCA';
+                        } elseif (str_contains($merchantLower, 'bri')) {
+                            $methodLabel = 'Bank BRI';
+                        } elseif (str_contains($merchantLower, 'bni')) {
+                            $methodLabel = 'Bank BNI';
+                        } elseif (str_contains($merchantLower, 'bsi')) {
+                            $methodLabel = 'Bank BSI';
+                        } elseif (str_contains($merchantLower, 'permata')) {
+                            $methodLabel = 'Bank Permata';
+                        } elseif (str_contains($merchantLower, 'cimb')) {
+                            $methodLabel = 'Bank CIMB';
+                        } elseif (str_contains($merchantLower, 'bjb')) {
+                            $methodLabel = 'Bank BJB';
+                        } elseif (str_contains($merchantLower, 'danamon')) {
+                            $methodLabel = 'Bank Danamon';
+                        } elseif ($isCash) {
+                            $methodLabel = 'Cash To Collector';
+                        } elseif (str_contains($merchantLower, 'midtrans')) {
+                            $methodLabel = 'Midtrans';
+                        } else {
+                            $clean = preg_replace('/\s*[-–].*$/', '', $merchantRaw);
+                            $clean = preg_replace('/\(.*$/', '', $clean);
+                            $clean = trim($clean);
+                            $methodLabel = !empty($clean) ? $clean : ($isTransfer ? 'Manual Transfer' : 'Midtrans');
                         }
                     } elseif ($isTransfer) {
                         $methodLabel = 'Manual Transfer';

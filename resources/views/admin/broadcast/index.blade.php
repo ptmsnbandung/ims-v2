@@ -352,63 +352,127 @@
         </form>
 
         <!-- Customer Table -->
-        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs">
+        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs bg-white dark:bg-slate-900">
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                    <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800 font-bold">
+                <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300 border-collapse">
+                    <thead class="bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800 font-bold">
                         <tr>
-                            <th class="p-3.5 w-10 text-center">Pilih</th>
-                            <th class="p-3.5">Nama Pelanggan</th>
-                            <th class="p-3.5">Nomor Internet &amp; HP</th>
-                            <th class="p-3.5">Wilayah &amp; Alamat</th>
-                            <th class="p-3.5">Status Tagihan</th>
-                            <th class="p-3.5 text-right">Nominal</th>
-                            <th class="p-3.5 text-center">Aksi Kirim</th>
+                            <th class="py-3 px-3.5 w-10 text-center">Pilih</th>
+                            <th class="py-3 px-3.5">Nama Pelanggan</th>
+                            <th class="py-3 px-3.5">Nomor Internet &amp; HP</th>
+                            <th class="py-3 px-3.5">Billing Terakhir</th>
+                            <th class="py-3 px-3.5">Status Tagihan</th>
+                            <th class="py-3 px-3.5 text-right">Nominal</th>
+                            <th class="py-3 px-3.5 text-center">Aksi Kirim</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        @php
+                            $monthNamesIndo = [
+                                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                            ];
+                        @endphp
                         @forelse($pelangganList as $item)
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                <td class="p-3.5 text-center">
-                                    <input type="checkbox" value="{{ $item->nomor_internet }}" x-model="selectedTargets" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                            @php
+                                $lastMInt = (int) ($item->last_month_billing ?? 0);
+                                $lastYVal = trim((string)($item->last_year_billing ?? ''));
+                                $hasLastBilling = ($lastMInt > 0 || !empty($lastYVal));
+                                $lastMonthName = $monthNamesIndo[$lastMInt] ?? ($lastMInt > 0 ? 'Bulan ' . $lastMInt : '');
+                            @endphp
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
+                                :class="selectedTargets.includes('{{ $item->nomor_internet }}') ? 'bg-emerald-50/60 dark:bg-emerald-950/30' : ''">
+                                
+                                <!-- 1. Checkbox Pilih -->
+                                <td class="py-3.5 px-3.5 text-center align-middle">
+                                    <input type="checkbox" 
+                                           value="{{ $item->nomor_internet }}" 
+                                           x-model="selectedTargets" 
+                                           class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
                                 </td>
 
-                                <td class="p-3.5 font-bold text-slate-900 dark:text-white text-xs">
-                                    {{ $item->nama_pelanggan }}
+                                <!-- 2. Nama Pelanggan & Paket -->
+                                <td class="py-3.5 px-3.5 align-middle">
+                                    <div class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-tight">
+                                        {{ $item->nama_pelanggan }}
+                                    </div>
+                                    @if($item->nama_kategori_bandwith || $item->nominal_bandwith)
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 uppercase">
+                                                {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }}
+                                                @if($item->nominal_bandwith)
+                                                    • {{ $item->nominal_bandwith }} Mbps
+                                                @endif
+                                            </span>
+                                        </div>
+                                    @endif
                                 </td>
 
-                                <td class="p-3.5">
-                                    <div class="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{{ $item->nomor_internet }}</div>
-                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">📱 {{ $item->nomor_hp ?? '-' }}</div>
+                                <!-- 3. Nomor Internet & HP -->
+                                <td class="py-3.5 px-3.5 align-middle">
+                                    <div class="font-mono text-emerald-600 dark:text-emerald-400 font-bold text-xs tracking-wide">
+                                        {{ $item->nomor_internet }}
+                                    </div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1 mt-1">
+                                        <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M10.5 18.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" />
+                                            <path fill-rule="evenodd" d="M8.625.75A3.375 3.375 0 0 0 5.25 4.125v15.75a3.375 3.375 0 0 0 3.375 3.375h6.75a3.375 3.375 0 0 0 3.375-3.375V4.125A3.375 3.375 0 0 0 15.375.75h-6.75ZM6.75 4.125C6.75 3.09 7.59 2.25 8.625 2.25h6.75c1.035 0 1.875.84 1.875 1.875v15.75c0 1.035-.84 1.875-1.875 1.875h-6.75a1.875 1.875 0 0 1-1.875-1.875V4.125Z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span>{{ $item->nomor_hp ?: '-' }}</span>
+                                    </div>
                                 </td>
 
-                                <td class="p-3.5 text-[11px] text-slate-600 dark:text-slate-400">
-                                    <div class="font-semibold text-slate-800 dark:text-slate-200">{{ $item->nama_kota_pasang ?? 'Area IMS' }}</div>
-                                    <div class="truncate max-w-[200px]">{{ $item->alamat_pasang ?? ($item->alamat_p ?? '-') }}</div>
+                                <!-- 4. Last Month & Last Year Billing -->
+                                <td class="py-3.5 px-3.5 align-middle">
+                                    @if($hasLastBilling)
+                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold font-mono shadow-2xs">
+                                            <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
+                                            </svg>
+                                            <span>{{ $lastMonthName }} {{ $lastYVal }}</span>
+                                        </div>
+                                    @else
+                                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                                            -
+                                        </span>
+                                    @endif
                                 </td>
 
-                                <td class="p-3.5">
+                                <!-- 5. Status Tagihan -->
+                                <td class="py-3.5 px-3.5 align-middle">
                                     @if($item->status_bill_lay == '15')
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
-                                            <span>✅ LUNAS</span>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
+                                            <svg class="w-3 h-3 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                            <span>LUNAS</span>
                                         </span>
                                     @elseif(in_array($item->status_bill_lay, ['13', '14']))
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
-                                            <span>⚠️ JATUH TEMPO</span>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
+                                            <svg class="w-3 h-3 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                            </svg>
+                                            <span>JATUH TEMPO</span>
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                                             <span>{{ $item->status_bill_lay ?: 'Aktif' }}</span>
                                         </span>
                                     @endif
                                 </td>
 
-                                <td class="p-3.5 text-right font-bold text-slate-900 dark:text-slate-100 font-mono">
+                                <!-- 6. Nominal -->
+                                <td class="py-3.5 px-3.5 text-right font-bold text-slate-900 dark:text-slate-100 font-mono text-xs align-middle">
                                     Rp {{ number_format((float) ($item->total_layanan ?? ($item->harga_bandwith ?? 0)), 0, ',', '.') }}
                                 </td>
 
-                                <td class="p-3.5 text-center">
-                                    <button @click="openSingleSendModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->nomor_hp }}')" type="button" title="Kirim WA ke Pelanggan Ini" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-semibold transition cursor-pointer">
+                                <!-- 7. Aksi Kirim -->
+                                <td class="py-3.5 px-3.5 text-center align-middle">
+                                    <button @click="openSingleSendModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->nomor_hp }}')" 
+                                            type="button" 
+                                            title="Kirim WA ke Pelanggan Ini" 
+                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-bold transition shadow-2xs cursor-pointer">
                                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                                         </svg>

@@ -320,6 +320,31 @@ class BroadcastController extends Controller
             $snapCol = 'NULL';
         }
 
+        // Last Billing Month & Year
+        if (in_array('last_month_billing', $cols)) {
+            $lastMonthCol = 'c.last_month_billing';
+        } elseif (in_array('last_month_billing', $regCols)) {
+            $lastMonthCol = "COALESCE(reg.last_month_billing, '')";
+        } else {
+            $lastMonthCol = "''";
+        }
+
+        if (in_array('last_year_billing', $cols)) {
+            $lastYearCol = 'c.last_year_billing';
+        } elseif (in_array('last_year_billing', $regCols)) {
+            $lastYearCol = "COALESCE(reg.last_year_billing, '')";
+        } else {
+            $lastYearCol = "''";
+        }
+
+        if (in_array('nominal_bandwith', $cols)) {
+            $speedCol = 'c.nominal_bandwith';
+        } elseif (in_array('nominal_bandwith', $regCols)) {
+            $speedCol = "COALESCE(reg.nominal_bandwith, '')";
+        } else {
+            $speedCol = "''";
+        }
+
         $selects = [
             in_array('nomor_internet', $cols) ? 'c.nomor_internet' : "'' as nomor_internet",
             "{$nameCol} as nama_pelanggan",
@@ -327,6 +352,7 @@ class BroadcastController extends Controller
             "{$alamatCol} as alamat_pasang",
             "{$kotaCol} as nama_kota_pasang",
             "{$paketCol} as nama_kategori_bandwith",
+            "{$speedCol} as nominal_bandwith",
             "{$statusRegCol} as status_reg",
             "{$kodeBillCol} as kode_billing_layanan",
             "{$periodeCol} as periode_tagihan",
@@ -336,6 +362,8 @@ class BroadcastController extends Controller
             "{$nominalCol} as total_layanan",
             "{$expiryCol} as expiry",
             "{$snapCol} as payment_respond_post",
+            "{$lastMonthCol} as last_month_billing",
+            "{$lastYearCol} as last_year_billing",
         ];
 
         if (in_array('id', $cols)) {

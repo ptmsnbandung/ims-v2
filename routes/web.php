@@ -60,6 +60,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/webhook/whatsapp', [BroadcastController::class, 'webhookVerify']);
     Route::post('/webhook/whatsapp', [BroadcastController::class, 'webhookReceive']);
 
+    // Midtrans Payment Gateway Webhook (Auto Unsuspend Callback)
+    Route::post('/webhook/midtrans', [FinanceController::class, 'handleMidtransWebhook'])->name('webhook.midtrans');
+
     // Routes Shared Ticket Hub & Tiket Gangguan (Teknik, NOC, Direktur, Admin, Finance)
     Route::middleware('role:teknik,noc,direktur,admin,finance')->prefix('teknik')->name('teknik.')->group(function () {
         Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');
@@ -187,6 +190,9 @@ Route::middleware('auth')->group(function () {
 
         // 6. Isolir / Suspend Layanan
         Route::get('/suspend', [NocController::class, 'suspend'])->name('suspend');
+        Route::post('/suspend/bulk-approve', [NocController::class, 'bulkApproveSuspend'])->name('suspend.bulk-approve');
+        Route::get('/suspend/queue-status', [NocController::class, 'getQueueStatus'])->name('suspend.queue-status');
+        Route::post('/suspend/process-queue', [NocController::class, 'processNextQueueItem'])->name('suspend.process-queue');
         Route::post('/suspend/{kode_suspend}/approve', [NocController::class, 'approveSuspend'])->name('suspend.approve');
         Route::post('/suspend/{kode_suspend}/cancel', [NocController::class, 'cancelSuspend'])->name('suspend.cancel');
 

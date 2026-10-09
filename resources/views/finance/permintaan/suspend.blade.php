@@ -271,15 +271,16 @@
                             <!-- Aksi -->
                             <td class="py-3.5 px-4 text-center">
                                 @if($s->status_suspend == '12')
-                                    <!-- Pelanggan bayar: Ajukan Unsuspend -->
-                                    <form action="{{ route('finance.permintaan.suspend.unsuspend', $s->kode_suspend) }}" method="POST" onsubmit="return confirm('Pelanggan telah melunasi tagihan? Ajukan unsuspend ke tim NOC?')">
+                                    <!-- Pelanggan bayar: Proses Langsung Unsuspend -->
+                                    <form action="{{ route('finance.permintaan.suspend.unsuspend', $s->kode_suspend) }}" method="POST" onsubmit="return confirm('Pelanggan telah melunasi tagihan? Proses langsung Buka Isolir (Unsuspend) di router MikroTik?')">
                                         @csrf
                                         <button type="submit"
-                                                class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-[11px] font-bold transition flex items-center gap-1.5 mx-auto cursor-pointer">
+                                                class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-[11px] font-bold transition flex items-center gap-1.5 mx-auto cursor-pointer"
+                                                title="Langsung Buka Isolir & Aktifkan Kembali Layanan Pelanggan">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                             </svg>
-                                            <span>Ajukan Unsuspend</span>
+                                            <span>Proses Unsuspend</span>
                                         </button>
                                     </form>
                                 @elseif($s->status_suspend == '11')

@@ -234,7 +234,7 @@ class CustomerProvisioningService
      * 4. OLT -> Remote Reboot ONU (mode pon-onu-mng)
      * 5. Log ke Activity Audit Trail
      */
-    public function suspendCustomer(string $nomorInternet, ?string $operator = null, ?string $reason = null): array
+    public function suspendCustomer(string $nomorInternet, ?string $operator = null, ?string $reason = null, bool $skipOltReboot = false): array
     {
         $now = now()->format('Y-m-d H:i:s');
         $operator = $operator ?: (auth()->user()->nama ?? 'System NOC');
@@ -395,8 +395,11 @@ class CustomerProvisioningService
             }
         }
 
-        // 5. OLT: Remote Reboot ONU
-        if ($indexOlt) {
+        // 5. OLT: Remote Reboot ONU (dilewati jika mode background queue massal)
+        if ($skipOltReboot) {
+            $results['olt_reboot'] = false;
+            $results['messages'][] = 'OLT Reboot: Ditugaskan ke antrean background queue.';
+        } elseif ($indexOlt) {
             try {
                 $oltReboot = $this->olt->rebootOnu($indexOlt, $kodeOlt);
                 $results['olt_reboot'] = (bool)($oltReboot['success'] ?? false);

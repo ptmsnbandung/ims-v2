@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Noc;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessRebootOnuJob;
 use App\Models\ActivityLog;
 use App\Services\Network\CustomerProvisioningService;
 use App\Services\Network\MikrotikService;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
@@ -1817,6 +1819,252 @@ class NocController extends Controller
                 return redirect()->back()->with('error', "Gagal suspend {$nomorInternet}: " . ($res['summary'] ?? 'Gagal pada router MikroTik'));
             }
             return redirect()->back()->with('success', "Suspend {$nomorInternet} berhasil! PPPoE di-disable, sesi aktif seketika diputus (kicked), dan ONU OLT berhasil direboot.");
+        }
+    }
+
+    /**
+     * Bulk Approve Suspend (Eksekusi Cepat MikroTik + Antrean Background OLT Reboot)
+     */
+    public function bulkApproveSuspend(Request $request, CustomerProvisioningService $provisioning): JsonResponse|RedirectResponse
+    {
+        $kodes = $request->input('selected_kodes', []);
+        if (empty($kodes) && $request->filled('kode_suspend')) {
+            $kodes = [$request->input('kode_suspend')];
+        }
+
+        if (empty($kodes)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada data suspend yang dipilih.'], 400);
+            }
+            return redirect()->back()->with('error', 'Tidak ada data suspend yang dipilih.');
+        }
+
+        $now = now()->format('Y-m-d H:i:s');
+        $currentUser = auth()->user()->nama ?? 'NOC';
+        $batchId = 'BATCH-' . date('YmdHis') . '-' . rand(100, 999);
+
+        $suspendList = DB::table('trx_suspend')
+            ->whereIn('kode_suspend', $kodes)
+            ->get();
+
+        $successCount = 0;
+        $failedCount = 0;
+        $queuedRebootCount = 0;
+        $messages = [];
+
+        foreach ($suspendList as $suspend) {
+            $nomorInternet = $suspend->nomor_internet;
+
+            if ($suspend->status_suspend == '18') {
+                // UNsuspend / Buka Isolir
+                $res = $provisioning->activateCustomer($nomorInternet, $currentUser, 'Bulk Approve Unsuspend dari NOC');
+                if ($res['success'] ?? false) {
+                    $successCount++;
+                } else {
+                    $failedCount++;
+                    $messages[] = "Gagal buka isolir {$nomorInternet}: " . ($res['summary'] ?? '');
+                }
+            } else {
+                // Suspend -> fast MikroTik disable + DB update (skip synchronous OLT reboot)
+                $res = $provisioning->suspendCustomer($nomorInternet, $currentUser, $suspend->desc_suspend ?: 'Bulk Suspend Massal NOC', true);
+
+                if ($res['success'] ?? false) {
+                    $successCount++;
+
+                    // Ambil detail pelanggan untuk antrean OLT reboot
+                    $cust = DB::table('trx_batchjob_register')->where('nomor_internet', $nomorInternet)->first();
+                    $indexOlt = trim($cust->index_olt ?? '');
+                    $kodeOlt = trim($cust->olt ?? '');
+                    $namaPelanggan = $cust->nama_pelanggan ?? 'Pelanggan';
+
+                    if (!empty($indexOlt) && Schema::hasTable('reboot_onu_queues')) {
+                        $queueId = DB::table('reboot_onu_queues')->insertGetId([
+                            'batch_id' => $batchId,
+                            'nomor_internet' => $nomorInternet,
+                            'nama_pelanggan' => $namaPelanggan,
+                            'index_olt' => $indexOlt,
+                            'kode_olt' => $kodeOlt,
+                            'action_type' => 'suspend_reboot',
+                            'status' => 'pending',
+                            'operator' => $currentUser,
+                            'attempts' => 0,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                        $queuedRebootCount++;
+
+                        // Dispatch background job
+                        try {
+                            ProcessRebootOnuJob::dispatch($queueId);
+                        } catch (\Throwable $e) {
+                            Log::warning("Dispatch queue job notice: " . $e->getMessage());
+                        }
+                    }
+                } else {
+                    $failedCount++;
+                    $messages[] = "Gagal suspend {$nomorInternet}: " . ($res['summary'] ?? '');
+                }
+            }
+        }
+
+        $summaryText = "Berhasil memproses {$successCount} pelanggan.";
+        if ($queuedRebootCount > 0) {
+            $summaryText .= " {$queuedRebootCount} ONT/ONU masuk antrean background reboot (Batch: {$batchId}).";
+        }
+        if ($failedCount > 0) {
+            $summaryText .= " ({$failedCount} gagal).";
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => $successCount > 0,
+                'batch_id' => $batchId,
+                'success_count' => $successCount,
+                'failed_count' => $failedCount,
+                'queued_reboot_count' => $queuedRebootCount,
+                'message' => $summaryText,
+                'errors' => $messages,
+            ]);
+        }
+
+        return redirect()->back()->with($successCount > 0 ? 'success' : 'error', $summaryText);
+    }
+
+    /**
+     * Get Status of Reboot ONU Queues (for live progress drawer / monitor)
+     */
+    public function getQueueStatus(Request $request): JsonResponse
+    {
+        if (!Schema::hasTable('reboot_onu_queues')) {
+            return response()->json(['success' => false, 'items' => [], 'summary' => []]);
+        }
+
+        $batchId = $request->query('batch_id');
+
+        $query = DB::table('reboot_onu_queues')->orderBy('id', 'desc');
+        if ($batchId) {
+            $query->where('batch_id', $batchId);
+        } else {
+            // Ambil antrean 24 jam terakhir
+            $query->where('created_at', '>=', now()->subHours(24))->limit(50);
+        }
+
+        $items = $query->get();
+
+        $total = $items->count();
+        $pending = $items->where('status', 'pending')->count();
+        $processing = $items->where('status', 'processing')->count();
+        $success = $items->where('status', 'success')->count();
+        $failed = $items->where('status', 'failed')->count();
+        $progress = $total > 0 ? round((($success + $failed) / $total) * 100) : 100;
+
+        return response()->json([
+            'success' => true,
+            'batch_id' => $batchId,
+            'summary' => [
+                'total' => $total,
+                'pending' => $pending,
+                'processing' => $processing,
+                'success' => $success,
+                'failed' => $failed,
+                'progress_percentage' => $progress,
+                'is_completed' => ($pending === 0 && $processing === 0),
+            ],
+            'items' => $items,
+        ]);
+    }
+
+    /**
+     * Process Next Pending Queue Item (AJAX fallback executor for background queue)
+     */
+    public function processNextQueueItem(Request $request, OltConnectionService $oltService): JsonResponse
+    {
+        if (!Schema::hasTable('reboot_onu_queues')) {
+            return response()->json(['processed' => false, 'message' => 'Tabel queue tidak ditemukan']);
+        }
+
+        $batchId = $request->input('batch_id');
+
+        $query = DB::table('reboot_onu_queues')
+            ->where('status', 'pending')
+            ->orderBy('id', 'asc');
+
+        if ($batchId) {
+            $query->where('batch_id', $batchId);
+        }
+
+        $item = $query->first();
+
+        if (!$item) {
+            return response()->json([
+                'processed' => false,
+                'message' => 'Tidak ada antrean pending.',
+                'is_empty' => true,
+            ]);
+        }
+
+        // Tandai processing
+        DB::table('reboot_onu_queues')->where('id', $item->id)->update([
+            'status' => 'processing',
+            'started_at' => now(),
+            'attempts' => $item->attempts + 1,
+            'updated_at' => now(),
+        ]);
+
+        $indexOlt = trim($item->index_olt ?? '');
+        $kodeOlt = trim($item->kode_olt ?? '');
+
+        if (empty($indexOlt)) {
+            DB::table('reboot_onu_queues')->where('id', $item->id)->update([
+                'status' => 'failed',
+                'response_message' => 'Index OLT kosong',
+                'completed_at' => now(),
+                'updated_at' => now(),
+            ]);
+            return response()->json([
+                'processed' => true,
+                'id' => $item->id,
+                'nomor_internet' => $item->nomor_internet,
+                'status' => 'failed',
+                'message' => 'Index OLT kosong',
+            ]);
+        }
+
+        try {
+            $rebootResult = $oltService->rebootOnu($indexOlt, $kodeOlt);
+            $isSuccess = (bool)($rebootResult['success'] ?? false);
+            $msg = $rebootResult['message'] ?? ($isSuccess ? 'Reboot ONU berhasil' : 'Gagal reboot ONU');
+
+            DB::table('reboot_onu_queues')->where('id', $item->id)->update([
+                'status' => $isSuccess ? 'success' : 'failed',
+                'response_message' => $msg,
+                'completed_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return response()->json([
+                'processed' => true,
+                'id' => $item->id,
+                'nomor_internet' => $item->nomor_internet,
+                'status' => $isSuccess ? 'success' : 'failed',
+                'message' => $msg,
+            ]);
+        } catch (\Throwable $e) {
+            DB::table('reboot_onu_queues')->where('id', $item->id)->update([
+                'status' => 'failed',
+                'response_message' => 'Error: ' . $e->getMessage(),
+                'completed_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return response()->json([
+                'processed' => true,
+                'id' => $item->id,
+                'nomor_internet' => $item->nomor_internet,
+                'status' => 'failed',
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 

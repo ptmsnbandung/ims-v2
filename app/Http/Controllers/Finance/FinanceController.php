@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Services\Network\CustomerProvisioningService;
 use App\Services\MidtransService;
 use App\Services\BillingService;
 use Carbon\Carbon;
@@ -777,12 +778,14 @@ class FinanceController extends Controller
                 // Ignore jika ptmsn bukan database lokal
             }
 
-            // Auto Req Unsuspend ke NOC jika pelanggan sedang dalam status Suspend/Terisolir
+            // Auto Unsuspend Langsung HANYA JIKA seluruh tagihan sudah lunas bersih (termasuk tagihan terbaru, tidak ada tunggakan tersisa)
             $unsuspendInfo = '';
             if ($nomorInternet && Schema::hasTable('trx_suspend')) {
+                $isFullyPaid = $this->isCustomerFullyPaid($nomorInternet);
+
                 $activeSuspend = DB::table('trx_suspend')
                     ->where('nomor_internet', $nomorInternet)
-                    ->whereIn('status_suspend', ['11', '12'])
+                    ->whereIn('status_suspend', ['11', '12', '18'])
                     ->orderBy('date_create', 'desc')
                     ->first();
 
@@ -790,29 +793,38 @@ class FinanceController extends Controller
                     ->where('nomor_internet', $nomorInternet)
                     ->first();
 
-                if ($activeSuspend) {
-                    DB::table('trx_suspend')
-                        ->where('kode_suspend', $activeSuspend->kode_suspend)
-                        ->update([
-                            'status_suspend' => '18', // 18: Request Unsuspend ke NOC
-                            'desc_suspend_cancel' => "Otomatis diajukan unsuspend: Pelanggan telah membayar lunas tagihan {$decodedKode} ({$bank})",
-                            'date_update' => Carbon::now()->toDateTimeString(),
-                            'user_update' => $userUpdate,
-                        ]);
-                    $unsuspendInfo = " serta Permintaan Unsuspend otomatis dikirimkan ke tim NOC.";
-                } elseif ($customerReg && $customerReg->is_suspend == '1') {
-                    $kodeSuspend = $nomorInternet . '-' . rand(1000000, 9999999);
-                    DB::table('trx_suspend')->insert([
-                        'kode_suspend' => $kodeSuspend,
-                        'nomor_internet' => $nomorInternet,
-                        'suspend_start' => now()->format('Y-m-d'),
-                        'status_suspend' => '18', // 18: Request Unsuspend ke NOC
-                        'desc_suspend' => "Otomatis Req Unsuspend: Pelanggan telah melunasi tagihan {$decodedKode} ({$bank})",
-                        'date_create' => Carbon::now()->toDateTimeString(),
-                        'user_create' => $userUpdate,
-                        'hide' => '0',
-                    ]);
-                    $unsuspendInfo = " serta Permintaan Unsuspend otomatis dikirimkan ke tim NOC.";
+                if ($isFullyPaid) {
+                    if ($activeSuspend || ($customerReg && $customerReg->status_reg == '21')) {
+                        try {
+                            $provisioning = app(CustomerProvisioningService::class);
+                            $unsuspendRes = $provisioning->activateCustomer(
+                                $nomorInternet,
+                                $userUpdate,
+                                "Auto Unsuspend Otomatis: Seluruh tagihan telah lunas sampai periode terbaru ({$decodedKode} - {$bank})"
+                            );
+
+                            if ($unsuspendRes['success'] ?? false) {
+                                if ($activeSuspend) {
+                                    DB::table('trx_suspend')
+                                        ->where('kode_suspend', $activeSuspend->kode_suspend)
+                                        ->update([
+                                            'status_suspend' => '13', // 13: Un Suspend (Selesai Buka Isolir)
+                                            'suspend_end' => now()->format('Y-m-d'),
+                                            'desc_suspend_cancel' => "Otomatis dibuka isolir: Seluruh tagihan telah lunas sampai periode terbaru ({$decodedKode})",
+                                            'date_update' => Carbon::now()->toDateTimeString(),
+                                            'user_update' => $userUpdate,
+                                        ]);
+                                }
+                                $unsuspendInfo = " serta Layanan Internet otomatis dibuka isolirnya (Unsuspend) karena seluruh tagihan telah lunas.";
+                            } else {
+                                $unsuspendInfo = " namun gagal aktivasi otomatis di router: " . ($unsuspendRes['summary'] ?? '');
+                            }
+                        } catch (\Throwable $exAct) {
+                            Log::warning("Gagal auto unsuspend payment {$nomorInternet}: " . $exAct->getMessage());
+                        }
+                    }
+                } else {
+                    $unsuspendInfo = " (Catatan: Layanan tetap terisolir karena masih terdapat tagihan/tunggakan lain yang belum lunas).";
                 }
             }
 
@@ -1537,25 +1549,43 @@ class FinanceController extends Controller
                 'hide' => '0',
             ]);
 
-            // Auto Req Unsuspend ke NOC jika pelanggan sedang dalam status Suspend/Terisolir
+            // Auto Unsuspend Langsung HANYA JIKA seluruh tagihan sudah lunas bersih
             $unsuspendInfo = '';
             if ($nomorInternet && Schema::hasTable('trx_suspend')) {
+                $isFullyPaid = $this->isCustomerFullyPaid($nomorInternet);
+
                 $activeSuspend = DB::table('trx_suspend')
                     ->where('nomor_internet', $nomorInternet)
-                    ->whereIn('status_suspend', ['11', '12'])
+                    ->whereIn('status_suspend', ['11', '12', '18'])
                     ->orderBy('date_create', 'desc')
                     ->first();
 
-                if ($activeSuspend) {
-                    DB::table('trx_suspend')
-                        ->where('kode_suspend', $activeSuspend->kode_suspend)
-                        ->update([
-                            'status_suspend' => '18', // 18: Request Unsuspend ke NOC
-                            'desc_suspend_cancel' => "Otomatis diajukan unsuspend: Pelanggan telah membayar lunas registrasi {$decodedKode} ({$bank})",
-                            'date_update' => Carbon::now()->toDateTimeString(),
-                            'user_update' => $userUpdate,
-                        ]);
-                    $unsuspendInfo = " serta Permintaan Unsuspend otomatis dikirimkan ke tim NOC.";
+                if ($isFullyPaid && $activeSuspend) {
+                    try {
+                        $provisioning = app(CustomerProvisioningService::class);
+                        $unsuspendRes = $provisioning->activateCustomer(
+                            $nomorInternet,
+                            $userUpdate,
+                            "Auto Unsuspend Otomatis: Pembayaran registrasi & seluruh tagihan lunas ({$decodedKode} - {$bank})"
+                        );
+
+                        if ($unsuspendRes['success'] ?? false) {
+                            DB::table('trx_suspend')
+                                ->where('kode_suspend', $activeSuspend->kode_suspend)
+                                ->update([
+                                    'status_suspend' => '13', // 13: Un Suspend (Selesai Buka Isolir)
+                                    'suspend_end' => now()->format('Y-m-d'),
+                                    'desc_suspend_cancel' => "Otomatis dibuka isolir: Seluruh tagihan termasuk registrasi telah lunas ({$decodedKode})",
+                                    'date_update' => Carbon::now()->toDateTimeString(),
+                                    'user_update' => $userUpdate,
+                                ]);
+                            $unsuspendInfo = " serta Layanan Internet otomatis dibuka isolirnya (Unsuspend) karena seluruh tagihan telah lunas.";
+                        }
+                    } catch (\Throwable $exAct) {
+                        Log::warning("Gagal auto unsuspend regis payment {$nomorInternet}: " . $exAct->getMessage());
+                    }
+                } elseif (!$isFullyPaid && $activeSuspend) {
+                    $unsuspendInfo = " (Catatan: Layanan tetap terisolir karena masih terdapat tagihan/tunggakan lain yang belum lunas).";
                 }
             }
 
@@ -1937,20 +1967,40 @@ class FinanceController extends Controller
     }
 
     /**
-     * Request Unsuspend (Pelanggan Telah Melunasi Tagihan)
+     * Unsuspend Langsung (Pelanggan Telah Melunasi Tagihan - Langsung Aktifkan & Catat Log)
      */
-    public function requestUnsuspend(Request $request, string $kodeSuspend): RedirectResponse
+    public function requestUnsuspend(Request $request, string $kodeSuspend, CustomerProvisioningService $provisioning): RedirectResponse
     {
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'Finance';
 
-        DB::table('trx_suspend')->where('kode_suspend', $kodeSuspend)->update([
-            'status_suspend' => '18', // 18: Request Unsuspend ke NOC
-            'date_update' => $now,
-            'user_update' => $currentUser,
-        ]);
+        $suspend = DB::table('trx_suspend')->where('kode_suspend', $kodeSuspend)->first();
+        if (!$suspend) {
+            return redirect()->back()->with('error', 'Data suspend tidak ditemukan.');
+        }
 
-        return redirect()->back()->with('success', "Pengajuan Unsuspend untuk {$kodeSuspend} berhasil dikirim ke tim NOC!");
+        $nomorInternet = $suspend->nomor_internet;
+
+        // Langsung eksekusi aktivasi / buka isolir ke MikroTik, Database (#20), OLT reboot, dan catat activity_logs
+        $result = $provisioning->activateCustomer(
+            $nomorInternet,
+            $currentUser,
+            "Unsuspend langsung diproses oleh Finance ({$kodeSuspend})"
+        );
+
+        if ($result['success'] ?? false) {
+            DB::table('trx_suspend')->where('kode_suspend', $kodeSuspend)->update([
+                'status_suspend' => '13', // 13: Un Suspend (Selesai Buka Isolir)
+                'suspend_end' => now()->format('Y-m-d'),
+                'desc_suspend_cancel' => "Buka isolir langsung diproses oleh Finance ({$currentUser}).",
+                'date_update' => $now,
+                'user_update' => $currentUser,
+            ]);
+
+            return redirect()->back()->with('success', "Unsuspend untuk {$nomorInternet} berhasil diproses langsung! PPPoE telah diaktifkan kembali di router MikroTik dan log aktivitas telah dicatat.");
+        } else {
+            return redirect()->back()->with('error', "Gagal memproses unsuspend {$nomorInternet}: " . ($result['summary'] ?? 'Gagal pada router MikroTik'));
+        }
     }
 
     /**
@@ -3564,6 +3614,210 @@ class FinanceController extends Controller
             'success' => true,
             'message' => "Permintaan invoice untuk {$reqItem->nama_pelanggan} telah ditolak.",
         ]);
+    }
+
+    /**
+     * Webhook Handler untuk Notifikasi Pembayaran Online Midtrans
+     * Otomatis memverifikasi invoice, mengupdate status lunas, dan LANGSUNG mengeksekusi Unsuspend di MikroTik + OLT
+     */
+    public function handleMidtransWebhook(Request $request, CustomerProvisioningService $provisioning): JsonResponse
+    {
+        $payload = $request->all();
+        Log::info('Midtrans Webhook Received: ' . json_encode($payload));
+
+        $orderId = $payload['order_id'] ?? null;
+        $statusCode = $payload['status_code'] ?? null;
+        $grossAmount = $payload['gross_amount'] ?? null;
+        $signatureKey = $payload['signature_key'] ?? null;
+        $transactionStatus = $payload['transaction_status'] ?? null;
+        $paymentType = $payload['payment_type'] ?? 'midtrans';
+        $fraudStatus = $payload['fraud_status'] ?? 'accept';
+
+        if (!$orderId || !$transactionStatus) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid payload'], 400);
+        }
+
+        // Verifikasi Signature jika Server Key tersedia
+        $serverKey = config('services.midtrans.server_key', env('MIDTRANS_SERVER_KEY', ''));
+        if (!empty($serverKey) && !empty($signatureKey)) {
+            $expectedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+            if ($signatureKey !== $expectedSignature) {
+                Log::warning("Midtrans Webhook Signature Mismatch for Order {$orderId}");
+                return response()->json(['status' => 'error', 'message' => 'Signature mismatch'], 403);
+            }
+        }
+
+        // Filter status sukses: settlement atau capture (accept)
+        $isSuccessPayment = ($transactionStatus === 'settlement') || ($transactionStatus === 'capture' && $fraudStatus === 'accept');
+
+        // Extract base kode billing jika order_id memiliki suffix renew (e.g. INV-123-R123456)
+        $baseKode = explode('-R', $orderId)[0];
+        $settlementTime = $payload['settlement_time'] ?? now()->toDateTimeString();
+        $merchantName = 'Midtrans (' . strtoupper($paymentType) . ')';
+
+        if ($isSuccessPayment) {
+            $nomorInternet = null;
+
+            // 1. Cek pada trx_billing_layanan
+            $billingLayanan = DB::table('trx_billing_layanan')
+                ->where('kode_billing_layanan', $orderId)
+                ->orWhere('kode_billing_layanan', $baseKode)
+                ->first();
+
+            if ($billingLayanan) {
+                $nomorInternet = $billingLayanan->nomor_internet;
+
+                DB::table('trx_billing_layanan')
+                    ->where('kode_billing_layanan', $billingLayanan->kode_billing_layanan)
+                    ->update([
+                        'status_bill_lay' => '15', // Paid
+                        'payment_paid' => $settlementTime,
+                        'amount_paid' => (string)$grossAmount,
+                        'merchant_type' => $merchantName,
+                        'payment_type' => '1',
+                        'date_update' => now()->toDateTimeString(),
+                        'user_update' => 'MIDTRANS_WEBHOOK',
+                    ]);
+
+                DB::table('trx_billing_layanan_log')->insert([
+                    'kode_billing_lay_log' => 'LOG-' . uniqid(),
+                    'kode_billing_layanan' => $billingLayanan->kode_billing_layanan,
+                    'status_bill_lay' => '15',
+                    'note_billing_lay' => "Pembayaran otomatis diverifikasi via Midtrans ({$merchantName} - Rp " . number_format((float)$grossAmount, 0, ',', '.') . ")",
+                    'date_create' => now()->toDateTimeString(),
+                    'user_create' => 'MIDTRANS_WEBHOOK',
+                    'hide' => '0',
+                ]);
+            }
+
+            // 2. Cek pada trx_billing_registrasi jika belum ditemukan
+            if (!$billingLayanan) {
+                $billingRegis = DB::table('trx_billing_registrasi')
+                    ->where('kode_billing_registrasi', $orderId)
+                    ->orWhere('kode_billing_registrasi', $baseKode)
+                    ->first();
+
+                if ($billingRegis) {
+                    $nomorInternet = $billingRegis->nomor_internet;
+
+                    DB::table('trx_billing_registrasi')
+                        ->where('kode_billing_registrasi', $billingRegis->kode_billing_registrasi)
+                        ->update([
+                            'status_bill_reg' => '14', // Paid
+                            'payment_paid' => $settlementTime,
+                            'amount_paid' => (string)$grossAmount,
+                            'merchant_type' => $merchantName,
+                            'payment_type' => '1',
+                            'date_update' => now()->toDateTimeString(),
+                            'user_update' => 'MIDTRANS_WEBHOOK',
+                        ]);
+
+                    DB::table('trx_billing_registrasi_log')->insert([
+                        'kode_billing_regis_log' => 'LOG-' . uniqid(),
+                        'kode_billing_registrasi' => $billingRegis->kode_billing_registrasi,
+                        'status_bill_reg' => '14',
+                        'note_billing_reg' => "Pembayaran Registrasi otomatis diverifikasi via Midtrans ({$merchantName} - Rp " . number_format((float)$grossAmount, 0, ',', '.') . ")",
+                        'date_create' => now()->toDateTimeString(),
+                        'user_create' => 'MIDTRANS_WEBHOOK',
+                        'hide' => '0',
+                    ]);
+                }
+            }
+
+            // 3. EKSEKUSI UNSUSPEND LANGSUNG HANYA JIKA SELURUH TAGIHAN SUDAH LUNAS BERSIH (TIDAK ADA TUNGGAKAN TERSISA)
+            if ($nomorInternet) {
+                $isFullyPaid = $this->isCustomerFullyPaid($nomorInternet);
+
+                $activeSuspend = DB::table('trx_suspend')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->whereIn('status_suspend', ['11', '12', '18'])
+                    ->first();
+
+                $customerReg = DB::table('trx_batchjob_register')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->first();
+
+                if ($isFullyPaid && ($activeSuspend || ($customerReg && $customerReg->status_reg == '21'))) {
+                    try {
+                        $unsuspendRes = $provisioning->activateCustomer(
+                            $nomorInternet,
+                            'MIDTRANS_WEBHOOK',
+                            "Auto Unsuspend: Seluruh tagihan telah lunas via Midtrans ({$orderId} - {$merchantName})"
+                        );
+
+                        if ($unsuspendRes['success'] ?? false) {
+                            if ($activeSuspend) {
+                                DB::table('trx_suspend')
+                                    ->where('kode_suspend', $activeSuspend->kode_suspend)
+                                    ->update([
+                                        'status_suspend' => '13', // 13: Un Suspend (Selesai Buka Isolir)
+                                        'suspend_end' => now()->format('Y-m-d'),
+                                        'desc_suspend_cancel' => "Otomatis dibuka isolir via Webhook Midtrans: Seluruh tagihan lunas ({$orderId})",
+                                        'date_update' => now()->toDateTimeString(),
+                                        'user_update' => 'MIDTRANS_WEBHOOK',
+                                    ]);
+                            }
+                            Log::info("Auto Unsuspend Midtrans berhasil: Pelanggan {$nomorInternet} telah lunas seluruh tagihan.");
+                        } else {
+                            Log::warning("Auto Unsuspend Midtrans gagal untuk {$nomorInternet}: " . ($unsuspendRes['summary'] ?? ''));
+                        }
+                    } catch (\Throwable $e) {
+                        Log::error("Error auto unsuspend Midtrans webhook for {$nomorInternet}: " . $e->getMessage());
+                    }
+                } elseif (!$isFullyPaid) {
+                    Log::info("Pembayaran Midtrans untuk {$nomorInternet} berhasil, namun UNSUSPEND DILEWATI karena masih ada tagihan/tunggakan lain yang belum lunas.");
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Payment confirmed and fully-paid check evaluated.',
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'ignored',
+            'message' => 'Transaction status not settlement/capture.',
+        ]);
+    }
+
+    /**
+     * Helper: Cek apakah seluruh tagihan pelanggan sudah lunas bersih (tidak ada tunggakan / tagihan tersisa)
+     * Hanya jika tagihan terbaru sudah lunas dan tidak ada lagi tagihan tertunggak, maka auto-unsuspend diizinkan.
+     */
+    private function isCustomerFullyPaid(string $nomorInternet): bool
+    {
+        if (empty($nomorInternet)) {
+            return false;
+        }
+
+        // 1. Cek apakah masih ada tagihan bulanan (trx_billing_layanan) yang belum lunas (status_bill_lay != '15')
+        if (Schema::hasTable('trx_billing_layanan')) {
+            $unpaidMonthly = DB::table('trx_billing_layanan')
+                ->where('nomor_internet', $nomorInternet)
+                ->where('hide', '!=', '1')
+                ->whereNotIn('status_bill_lay', ['15', '2'])
+                ->exists();
+
+            if ($unpaidMonthly) {
+                return false; // Masih ada tagihan bulanan lain yang belum lunas
+            }
+        }
+
+        // 2. Cek apakah masih ada tagihan registrasi (trx_billing_registrasi) yang belum lunas (status_bill_reg != '14')
+        if (Schema::hasTable('trx_billing_registrasi')) {
+            $unpaidRegis = DB::table('trx_billing_registrasi')
+                ->where('nomor_internet', $nomorInternet)
+                ->where('hide', '!=', '1')
+                ->whereNotIn('status_bill_reg', ['14', '2'])
+                ->exists();
+
+            if ($unpaidRegis) {
+                return false; // Masih ada tagihan registrasi yang belum lunas
+            }
+        }
+
+        return true; // Bersih, seluruh tagihan sampai yang terbaru telah lunas
     }
 }
 

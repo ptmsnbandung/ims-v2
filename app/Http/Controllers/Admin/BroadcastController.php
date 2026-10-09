@@ -347,6 +347,21 @@ class BroadcastController extends Controller
             $speedCol = "''";
         }
 
+        $hasLogTable = Schema::hasTable('tb_broadcast_wa_log');
+        $hasInvNotif = $hasInv && in_array('notif_wa', $invCols);
+
+        if ($hasLogTable && $hasInvNotif) {
+            $waSentCountCol = "GREATEST(COALESCE(log_sent.total_sent_count, 0), COALESCE(inv.notif_wa, 0))";
+        } elseif ($hasLogTable) {
+            $waSentCountCol = "COALESCE(log_sent.total_sent_count, 0)";
+        } elseif ($hasInvNotif) {
+            $waSentCountCol = "COALESCE(inv.notif_wa, 0)";
+        } else {
+            $waSentCountCol = "0";
+        }
+
+        $lastSentAtCol = $hasLogTable ? "log_sent.last_sent_at" : "NULL";
+
         $selects = [
             in_array('nomor_internet', $cols) ? 'c.nomor_internet' : "'' as nomor_internet",
             "{$nameCol} as nama_pelanggan",
@@ -366,6 +381,8 @@ class BroadcastController extends Controller
             "{$snapCol} as payment_respond_post",
             "{$lastMonthCol} as last_month_billing",
             "{$lastYearCol} as last_year_billing",
+            "{$waSentCountCol} as wa_sent_count",
+            "{$lastSentAtCol} as last_sent_at",
         ];
 
         if (in_array('id', $cols)) {
@@ -437,6 +454,20 @@ class BroadcastController extends Controller
             })->leftJoin('trx_billing_layanan as inv', function ($join) {
                 $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
                      ->on(DB::raw("CONCAT(inv.tahun_tagihan, LPAD(inv.bulan_tagihan, 2, '0'))"), '=', 'sub_inv.target_period');
+            });
+        }
+
+        // Join WA Broadcast sent log count
+        if (Schema::hasTable('tb_broadcast_wa_log')) {
+            $subLog = DB::table('tb_broadcast_wa_log as tbl_log')
+                ->selectRaw("tbl_log.nomor_internet, COUNT(*) as total_sent_count, MAX(tbl_log.created_at) as last_sent_at")
+                ->where('tbl_log.status_kirim', 'sent')
+                ->whereNotNull('tbl_log.nomor_internet')
+                ->where('tbl_log.nomor_internet', '!=', '')
+                ->groupBy('tbl_log.nomor_internet');
+
+            $query->leftJoinSub($subLog, 'log_sent', function ($join) {
+                $join->on('c.nomor_internet', '=', 'log_sent.nomor_internet');
             });
         }
 
@@ -604,8 +635,14 @@ class BroadcastController extends Controller
 
         $search = trim($request->input('search', ''));
         $selectedStatusTagihan = $request->input('status_tagihan', 'all');
-        $selectedBulan = $request->input('bulan', 'all');
-        $selectedTahun = $request->input('tahun', 'all');
+        $selectedStatusKirim = $request->input('status_kirim', 'all');
+
+        $currentMonth = date('m');
+        $selectedBulan = $request->filled('bulan') ? str_pad((string)(int)$request->input('bulan'), 2, '0', STR_PAD_LEFT) : $currentMonth;
+
+        $currentYear = (string)date('Y');
+        $selectedTahun = $request->filled('tahun') ? (string)$request->input('tahun') : $currentYear;
+
         $selectedWilayah = $request->input('wilayah', 'all');
         $perPage = (int) $request->input('per_page', 15);
 
@@ -627,7 +664,7 @@ class BroadcastController extends Controller
         }
 
         // Apply filters
-        if ($selectedBulan !== 'all' && !empty($selectedBulan)) {
+        if (!empty($selectedBulan) && $selectedBulan !== 'all') {
             $query->where(function($q) use ($selectedBulan, $baseTable, $cols) {
                 $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('bulan_tagihan', $cols)) ? 'c.bulan_tagihan' : 'inv.bulan_tagihan';
                 $q->where($col, str_pad($selectedBulan, 2, '0', STR_PAD_LEFT))
@@ -652,6 +689,35 @@ class BroadcastController extends Controller
             if (in_array('status_reg', $cols)) {
                 $query->whereIn('c.status_reg', ['23', '23.1']);
             }
+        }
+
+        // Filter Status Pengiriman WA (Sudah / Belum)
+        if ($selectedStatusKirim === 'sent') {
+            $query->where(function ($q) {
+                if (Schema::hasTable('tb_broadcast_wa_log')) {
+                    $q->where('log_sent.total_sent_count', '>', 0)
+                      ->orWhere('inv.notif_wa', '>', 0);
+                } else {
+                    $q->where('inv.notif_wa', '>', 0);
+                }
+            });
+        } elseif ($selectedStatusKirim === 'unsent') {
+            $query->where(function ($q) {
+                if (Schema::hasTable('tb_broadcast_wa_log')) {
+                    $q->where(function ($sq) {
+                        $sq->whereNull('log_sent.total_sent_count')
+                           ->orWhere('log_sent.total_sent_count', '<=', 0);
+                    })->where(function ($sq) {
+                        $sq->whereNull('inv.notif_wa')
+                           ->orWhere('inv.notif_wa', '<=', 0);
+                    });
+                } else {
+                    $q->where(function ($sq) {
+                        $sq->whereNull('inv.notif_wa')
+                           ->orWhere('inv.notif_wa', '<=', 0);
+                    });
+                }
+            });
         }
 
         if ($selectedWilayah !== 'all' && !empty($selectedWilayah)) {
@@ -729,6 +795,9 @@ class BroadcastController extends Controller
         } elseif (in_array('status_reg', $unpaidCols)) {
             $unpaidQuery->whereIn('status_reg', ['23', '23.1']);
         }
+        if (in_array('status_reg', $unpaidCols)) {
+            $unpaidQuery->whereNotNull('status_reg');
+        }
         if ($selectedBulan !== 'all' && in_array('bulan_tagihan', $unpaidCols)) {
             $unpaidQuery->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
         }
@@ -770,6 +839,7 @@ class BroadcastController extends Controller
             'totalSentLog',
             'sentTodayCount',
             'selectedStatusTagihan',
+            'selectedStatusKirim',
             'selectedBulan',
             'selectedTahun',
             'selectedWilayah',

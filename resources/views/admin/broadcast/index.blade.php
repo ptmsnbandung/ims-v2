@@ -305,24 +305,33 @@
 
         <!-- Filter Toolbar -->
         <form method="GET" action="{{ route('admin.broadcast') }}" class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                 
                 <!-- Filter Status Tagihan -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Filter Status Pelanggan:</label>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Status Pelanggan:</label>
                     <select name="status_tagihan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="all" {{ $selectedStatusTagihan == 'all' ? 'selected' : '' }}>🌐 Semua Pelanggan (Default)</option>
-                        <option value="unpaid" {{ $selectedStatusTagihan == 'unpaid' ? 'selected' : '' }}>⚠️ Belum Lunas / Mendekati Jatuh Tempo</option>
+                        <option value="all" {{ $selectedStatusTagihan == 'all' ? 'selected' : '' }}>🌐 Semua Pelanggan</option>
+                        <option value="unpaid" {{ $selectedStatusTagihan == 'unpaid' ? 'selected' : '' }}>⚠️ Belum Lunas / Jatuh Tempo</option>
                         <option value="paid" {{ $selectedStatusTagihan == 'paid' ? 'selected' : '' }}>✅ Lunas (PAID)</option>
                         <option value="isolir" {{ $selectedStatusTagihan == 'isolir' ? 'selected' : '' }}>⛔ Isolir / Suspend</option>
                     </select>
                 </div>
 
-                <!-- Filter Periode Bulan -->
+                <!-- Filter Status Pengiriman WA -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Filter Bulan Tagihan:</label>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Status Kirim WA:</label>
+                    <select name="status_kirim" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="all" {{ ($selectedStatusKirim ?? 'all') == 'all' ? 'selected' : '' }}>Semua Status Kirim</option>
+                        <option value="sent" {{ ($selectedStatusKirim ?? '') == 'sent' ? 'selected' : '' }}>✅ Sudah Terkirim</option>
+                        <option value="unsent" {{ ($selectedStatusKirim ?? '') == 'unsent' ? 'selected' : '' }}>⏳ Belum Terkirim</option>
+                    </select>
+                </div>
+
+                <!-- Filter Periode Bulan (Default bulan sekarang, tanpa semua bulan) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Bulan Tagihan:</label>
                     <select name="bulan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="all" {{ $selectedBulan == 'all' ? 'selected' : '' }}>Semua Bulan</option>
                         @for($m = 1; $m <= 12; $m++)
                             @php $monthVal = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
                             <option value="{{ $monthVal }}" {{ $selectedBulan == $monthVal ? 'selected' : '' }}>
@@ -334,7 +343,7 @@
 
                 <!-- Filter Periode Tahun -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Filter Tahun Tagihan:</label>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tahun Tagihan:</label>
                     <select name="tahun" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <option value="all" {{ $selectedTahun == 'all' ? 'selected' : '' }}>Semua Tahun</option>
                         @for($y = date('Y'); $y >= date('Y') - 3; $y--)
@@ -346,7 +355,7 @@
                 <!-- Search Input -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pencarian Pelanggan:</label>
-                    <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama, ID internet, HP..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Nama, ID, No HP..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
             </div>
@@ -504,15 +513,26 @@
 
                                 <!-- 7. Aksi Kirim -->
                                 <td class="py-3.5 px-3.5 text-center align-middle">
-                                    <button @click="openSingleSendModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->nomor_hp }}')" 
-                                            type="button" 
-                                            title="Kirim WA ke Pelanggan Ini" 
-                                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-bold transition shadow-2xs cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                                        </svg>
-                                        <span>Kirim WA</span>
-                                    </button>
+                                    <div class="inline-flex flex-col items-center justify-center gap-1">
+                                        @if(($item->wa_sent_count ?? 0) > 0)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30 shadow-2xs"
+                                                  title="Pernah dikirim WhatsApp sebanyak {{ $item->wa_sent_count }} kali{{ $item->last_sent_at ? ' (Terakhir: ' . \Carbon\Carbon::parse($item->last_sent_at)->translatedFormat('d M Y H:i') . ')' : '' }}">
+                                                <svg class="w-3 h-3 text-blue-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                                                </svg>
+                                                <span>{{ $item->wa_sent_count }}x Terkirim</span>
+                                            </span>
+                                        @endif
+                                        <button @click="openSingleSendModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->nomor_hp }}')" 
+                                                type="button" 
+                                                title="Kirim WA ke Pelanggan Ini" 
+                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-bold transition shadow-2xs cursor-pointer">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                            </svg>
+                                            <span>Kirim WA</span>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

@@ -641,7 +641,7 @@ class DashboardController extends Controller
                     $karyawanPayload = [
                         'nama_karyawan' => trim($request->nama_lengkap),
                         'date_update' => $now,
-                        'user_update' => $currentUser,
+                        'user_update' => $now,
                     ];
                     if ($fotoUpdated) {
                         $karyawanPayload['foto'] = $fotoFilename ?? '';
@@ -691,7 +691,7 @@ class DashboardController extends Controller
                         'date_create' => $now,
                         'user_create' => $currentUser,
                         'date_update' => $now,
-                        'user_update' => $currentUser,
+                        'user_update' => $now,
                         'tinggi' => '0',
                         'berat' => '0',
                         'status_kontrak' => 1,

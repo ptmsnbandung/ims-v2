@@ -374,7 +374,7 @@ class AdminController extends Controller
                         'nama_karyawan' => trim($request->nama_lengkap),
                         'status_aktif' => (string) $request->status_aktif,
                         'date_update' => $now,
-                        'user_update' => $currentUser,
+                        'user_update' => $now,
                     ];
                     if ($request->filled('jabatan')) {
                         $karyawanPayload['kode_jabatan'] = $kodeJabatan;
@@ -428,7 +428,7 @@ class AdminController extends Controller
                         'date_create' => $now,
                         'user_create' => $currentUser,
                         'date_update' => $now,
-                        'user_update' => $currentUser,
+                        'user_update' => $now,
                         'tinggi' => '0',
                         'berat' => '0',
                         'status_kontrak' => 1,

@@ -1394,11 +1394,16 @@ class NocController extends Controller
             'note_request' => $request->sn_modem ?: ($request->catatan_aktivasi ?: $request->catatan),
             'ont_us' => $ontUs,
             'ont_ps' => $ontPs,
-            'pppoe_username' => $ontUs,
-            'pppoe_password' => $ontPs,
             'date_update' => $now,
             'user_update' => $currentUser,
         ];
+
+        if (Schema::hasColumn('trx_batchjob_register', 'pppoe_username')) {
+            $updateData['pppoe_username'] = $ontUs;
+        }
+        if (Schema::hasColumn('trx_batchjob_register', 'pppoe_password')) {
+            $updateData['pppoe_password'] = $ontPs;
+        }
 
         if ($request->filled('router_id')) {
             $updateData['router_id'] = $request->router_id;

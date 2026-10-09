@@ -1,53 +1,57 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-6" x-data="broadcastApp()">
+<div class="space-y-4" x-data="broadcastApp()">
     
-    <!-- Header Banner -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs relative overflow-hidden">
-        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <!-- Header Banner WhatsApp Green -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-[#075E54] via-[#128C7E] to-[#25D366] p-4 sm:p-5 rounded-2xl shadow-sm relative overflow-hidden text-white">
+        <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute left-1/3 -top-10 w-36 h-36 bg-black/10 rounded-full blur-2xl pointer-events-none"></div>
         
         <div class="relative z-10">
             <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
-                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/15 text-white border border-white/20 backdrop-blur-xs">
+                    <svg class="w-3 h-3 text-emerald-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                     </svg>
                     <span>Modul Direktur &amp; Master Admin</span>
                 </span>
                 
                 @if($isMetaConfigured)
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-900/40 text-emerald-100 border border-emerald-300/30 backdrop-blur-xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
                         <span>Meta WhatsApp Cloud API Aktif</span>
                     </span>
                 @else
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/30" title="Isi META_WA_TOKEN & META_WA_PHONE_NUMBER_ID di .env untuk mengaktifkan Cloud API">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span>Mode WhatsApp Web (Kredensial Meta Belum Diatur di .env)</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-900/40 text-amber-100 border border-amber-300/30 backdrop-blur-xs" title="Isi META_WA_TOKEN & META_WA_PHONE_NUMBER_ID di .env untuk mengaktifkan Cloud API">
+                        <span class="w-2 h-2 rounded-full bg-amber-300"></span>
+                        <span>Mode WhatsApp Web (Kredensial Belum Diatur)</span>
                     </span>
                 @endif
             </div>
             
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white shrink-0 drop-shadow-xs" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                </svg>
                 <span>Broadcast WhatsApp Meta Business</span>
             </h1>
             
-            <p class="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1">
+            <p class="text-emerald-50 text-[11px] sm:text-xs mt-1 max-w-2xl leading-relaxed">
                 Kirim pengingat tagihan jatuh tempo atau pengumuman resmi ke WhatsApp pelanggan menggunakan <b>Meta WhatsApp Cloud API</b> resmi.
             </p>
         </div>
 
-        <div class="relative z-10 flex items-center gap-2.5 flex-wrap">
-            <button @click="testMetaApi()" type="button" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-200 dark:border-emerald-500/30 transition">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <div class="relative z-10 flex items-center gap-2 flex-wrap shrink-0">
+            <button @click="testMetaApi()" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/25 transition backdrop-blur-xs shadow-2xs cursor-pointer">
+                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.122a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.98 0 13.789" />
                 </svg>
                 <span>Test Koneksi Meta API</span>
             </button>
 
-            <a href="{{ route('admin.broadcast.history') }}" class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition">
-                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <a href="{{ route('admin.broadcast.history') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-emerald-50 text-[#075E54] text-xs font-bold shadow-xs transition">
+                <svg class="w-3.5 h-3.5 text-[#128C7E]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
                 <span>Riwayat Broadcast Log</span>
@@ -55,59 +59,59 @@
         </div>
     </div>
 
-    <!-- Stat KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Stat KPI Cards (Compact) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Card 1: Mendekati Jatuh Tempo / Belum Lunas -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
+        <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">Belum Bayar / Jatuh Tempo</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalUnpaidCount) }}</h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Pelanggan perlu penagihan</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Belum Bayar / Jatuh Tempo</p>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ number_format($totalUnpaidCount) }}</h3>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">Pelanggan perlu penagihan</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                <svg class="w-4.5 h-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
             </div>
         </div>
 
         <!-- Card 2: Total Target Pelanggan -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
+        <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Total Pelanggan Terfilter</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalTargetCount) }}</h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Sesuai kriteria di bawah</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Total Pelanggan Terfilter</p>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ number_format($totalTargetCount) }}</h3>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">Sesuai kriteria filter</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <svg class="w-4.5 h-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
                 </svg>
             </div>
         </div>
 
         <!-- Card 3: Broadcast Terkirim Hari Ini -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
+        <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Terkirim Hari Ini</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($sentTodayCount) }}</h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Status dikirim ke WA</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Terkirim Hari Ini</p>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ number_format($sentTodayCount) }}</h3>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">Status dikirim ke WA</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <svg class="w-4.5 h-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                 </svg>
             </div>
         </div>
 
         <!-- Card 4: Total Log Broadcast -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
+        <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">Total Akumulasi Log</p>
-                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">{{ number_format($totalSentLog) }}</h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Total riwayat broadcast</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Total Akumulasi Log</p>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">{{ number_format($totalSentLog) }}</h3>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">Total riwayat broadcast</p>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <div class="w-9 h-9 rounded-lg bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                <svg class="w-4.5 h-4.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
             </div>
@@ -115,41 +119,41 @@
     </div>
 
     <!-- LANGKAH 1: PENGATURAN TEMPLATE META WHATSAPP -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
-        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-            <div class="flex items-center gap-3">
-                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">1</span>
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs p-4 sm:p-5 space-y-3.5">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2.5">
+                <span class="w-6 h-6 rounded-full bg-[#128C7E] text-white font-bold text-xs flex items-center justify-center shrink-0">1</span>
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Pilih Template Meta WhatsApp &amp; Konfigurasi Pengiriman</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Template pesan dikelola sesuai standar Meta Cloud API untuk pengiriman terverifikasi.</p>
+                    <h2 class="text-sm font-bold text-slate-900 dark:text-white">Pilih Template Meta WhatsApp &amp; Konfigurasi Pengiriman</h2>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Template pesan dikelola sesuai standar Meta Cloud API untuk pengiriman terverifikasi.</p>
                 </div>
             </div>
-            <button @click="showPreview = !showPreview" type="button" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0">
+            <button @click="showPreview = !showPreview" type="button" class="text-[11px] font-semibold text-[#128C7E] dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0 cursor-pointer">
                 <span x-text="showPreview ? '🙈 Sembunyikan Pratinjau' : '👁️ Tampilkan Pratinjau WA'"></span>
             </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
             <!-- Left Column: Template Selection & Meta Info (7 Cols) -->
-            <div class="lg:col-span-7 space-y-4">
+            <div class="lg:col-span-7 space-y-3">
                 <!-- Template Selector -->
                 <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-[11px] font-bold text-slate-800 dark:text-slate-200">
                             Pilih Template Resmi Meta yang Digunakan:
                         </label>
                         <button type="button" 
                                 @click="syncMetaTemplates()" 
                                 :disabled="isSyncingTemplates"
-                                class="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800 transition cursor-pointer"
-                                title="Ambil template yang sudah didaftarkan dan disetujui di Meta Dashboard (tagihan_bulanan, work_report, dll)">
-                            <svg class="w-3.5 h-3.5" :class="isSyncingTemplates ? 'animate-spin text-blue-500' : 'text-blue-600 dark:text-blue-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                class="inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800 transition cursor-pointer"
+                                title="Ambil template yang sudah didaftarkan dan disetujui di Meta Dashboard">
+                            <svg class="w-3 h-3" :class="isSyncingTemplates ? 'animate-spin text-blue-500' : 'text-blue-600 dark:text-blue-400'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                             </svg>
                             <span x-text="isSyncingTemplates ? 'Menarik...' : 'Tarik Template dari Meta'"></span>
                         </button>
                     </div>
-                    <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold">
+                    <select x-model="selectedTemplateId" @change="loadSelectedTemplate()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
                         @foreach($templates as $tpl)
                             <option value="{{ $tpl->id }}" 
                                     data-pesan="{{ addslashes($tpl->pesan) }}" 
@@ -164,19 +168,19 @@
                 </div>
 
                 <!-- Meta Template Details Badge -->
-                <div class="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-2">
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-500 dark:text-slate-400">Nama Template di Meta:</span>
-                        <span class="font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded" x-text="currentMetaName"></span>
+                <div class="bg-slate-50 dark:bg-slate-800/80 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-1.5 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500 dark:text-slate-400 text-[11px]">Nama Template di Meta:</span>
+                        <span class="font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.2 rounded text-[10.5px]" x-text="currentMetaName"></span>
                     </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-500 dark:text-slate-400">Bahasa Template (Language Code):</span>
-                        <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold" x-text="currentMetaLang + ' (Indonesian)'"></span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500 dark:text-slate-400 text-[11px]">Bahasa Template:</span>
+                        <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold text-[11px]" x-text="currentMetaLang + ' (Indonesian)'"></span>
                     </div>
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-slate-500 dark:text-slate-400">Status Registrasi:</span>
-                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500 dark:text-slate-400 text-[11px]">Status Registrasi:</span>
+                        <span class="inline-flex items-center gap-1 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">
+                            <svg class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
                             <span>Meta Cloud API Approved</span>
                         </span>
                     </div>
@@ -184,44 +188,44 @@
 
                 <!-- Parameter Mapping Information -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                    <label class="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
                         Mapping Parameter Otomatis ke Template Meta:
                     </label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 text-[10.5px]">
                         <template x-for="card in currentParamCards" :key="card.num">
-                            <div class="p-2.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                            <div class="p-2 rounded-md bg-emerald-50/70 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
                                 <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400">
                                     <span x-text="card.num"></span> &rarr; <span x-text="card.label"></span>
                                 </div>
-                                <div class="text-[10px] text-slate-500 dark:text-slate-400" x-text="card.desc"></div>
+                                <div class="text-[9.5px] text-slate-500 dark:text-slate-400" x-text="card.desc"></div>
                             </div>
                         </template>
                     </div>
                 </div>
 
                 <!-- Pengaturan Mode Pengiriman -->
-                <div class="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">Metode Pengiriman WhatsApp:</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <label class="flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition" :class="metodeKirim === 'meta_api' ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-500/10 dark:border-emerald-500' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'">
+                <div class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <label class="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1.5">Metode Pengiriman WhatsApp:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="flex items-start gap-2 p-2 rounded-lg border cursor-pointer transition" :class="metodeKirim === 'meta_api' ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-500/10 dark:border-emerald-500' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'">
                             <input type="radio" value="meta_api" x-model="metodeKirim" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
                             <div>
-                                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                <div class="text-[11px] font-bold text-slate-900 dark:text-white flex items-center gap-1">
                                     <span>🚀 Meta Cloud API</span>
-                                    <span class="text-[9px] bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 font-bold px-1.5 py-0.2 rounded">Otomatis</span>
+                                    <span class="text-[8.5px] bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 font-bold px-1 rounded">Otomatis</span>
                                 </div>
-                                <div class="text-[10px] text-slate-500 dark:text-slate-400">Kirim otomatis via server Meta tanpa membuka WhatsApp Web satu per satu.</div>
+                                <div class="text-[9.5px] text-slate-500 dark:text-slate-400">Kirim massal otomatis langsung via server Meta resmi.</div>
                             </div>
                         </label>
 
-                        <label class="flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition" :class="metodeKirim === 'wa_web' ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-500/10 dark:border-emerald-500' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'">
+                        <label class="flex items-start gap-2 p-2 rounded-lg border cursor-pointer transition" :class="metodeKirim === 'wa_web' ? 'bg-emerald-50 border-emerald-500 dark:bg-emerald-500/10 dark:border-emerald-500' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'">
                             <input type="radio" value="wa_web" x-model="metodeKirim" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
                             <div>
-                                <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                <div class="text-[11px] font-bold text-slate-900 dark:text-white flex items-center gap-1">
                                     <span>🌐 WhatsApp Web</span>
-                                    <span class="text-[9px] bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 font-bold px-1.5 py-0.2 rounded">Manual</span>
+                                    <span class="text-[8.5px] bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 font-bold px-1 rounded">Manual</span>
                                 </div>
-                                <div class="text-[10px] text-slate-500 dark:text-slate-400">Membuka tautan wa.me langsung ke browser untuk konfirmasi manual.</div>
+                                <div class="text-[9.5px] text-slate-500 dark:text-slate-400">Buka tautan wa.me ke browser untuk konfirmasi manual.</div>
                             </div>
                         </label>
                     </div>
@@ -230,19 +234,19 @@
 
             <!-- Right Column: WhatsApp Live Message Preview (5 Cols) -->
             <div class="lg:col-span-5" x-show="showPreview" x-transition>
-                <label class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                <label class="block text-[11px] font-bold text-slate-800 dark:text-slate-200 mb-1">
                     📱 Pratinjau Tampilan Pesan WhatsApp di Ponsel Pelanggan:
                 </label>
                 
-                <div class="border border-slate-300 dark:border-slate-800 rounded-2xl overflow-hidden bg-[#efeae2] dark:bg-[#0b141a] shadow-md">
+                <div class="border border-slate-300 dark:border-slate-800 rounded-xl overflow-hidden bg-[#efeae2] dark:bg-[#0b141a] shadow-xs">
                     <!-- WA Header Bar -->
-                    <div class="bg-[#075e54] dark:bg-[#202c33] px-4 py-2.5 flex items-center gap-3 border-b border-emerald-800 dark:border-slate-800 text-white">
-                        <div class="w-8 h-8 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                    <div class="bg-[#075e54] dark:bg-[#202c33] px-3.5 py-2 flex items-center gap-2.5 border-b border-emerald-800 dark:border-slate-800 text-white">
+                        <div class="w-7 h-7 rounded-full bg-emerald-700 dark:bg-emerald-600 flex items-center justify-center text-white font-bold text-[11px] flex-shrink-0">
                             IMS
                         </div>
                         <div class="min-w-0">
                             <div class="text-xs font-bold text-white truncate">IMS WhatsApp Business Official</div>
-                            <div class="text-[10px] text-emerald-200 dark:text-emerald-400 flex items-center gap-1">
+                            <div class="text-[9.5px] text-emerald-200 dark:text-emerald-400 flex items-center gap-1">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                                 <span>Centang Hijau &bull; Meta Verified</span>
                             </div>
@@ -250,21 +254,21 @@
                     </div>
 
                     <!-- WA Chat Bubble Body -->
-                    <div class="p-4 min-h-[160px] max-h-[380px] overflow-y-auto" style="background-color:#efeae2; background-image:radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size:16px 16px;">
-                        <div class="bg-white dark:bg-[#1f2c34] text-slate-900 dark:text-slate-100 p-3.5 rounded-xl rounded-tl-none max-w-[95%] text-xs shadow-sm leading-relaxed font-sans space-y-2.5 border border-slate-200/60 dark:border-slate-700/60">
+                    <div class="p-3 min-h-[140px] max-h-[300px] overflow-y-auto" style="background-color:#efeae2; background-image:radial-gradient(rgba(0,0,0,0.06) 1px, transparent 0); background-size:16px 16px;">
+                        <div class="bg-white dark:bg-[#1f2c34] text-slate-900 dark:text-slate-100 p-3 rounded-xl rounded-tl-none max-w-[96%] text-[11.5px] shadow-xs leading-relaxed font-sans space-y-2 border border-slate-200/60 dark:border-slate-700/60">
                             <!-- Main Text -->
                             <div class="whitespace-pre-wrap leading-relaxed" x-html="formatWaPreview(customPesan)"></div>
                             
                             <!-- WhatsApp Template Footer -->
-                            <div class="text-[10px] text-slate-400 dark:text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
+                            <div class="text-[9.5px] text-slate-400 dark:text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
                                 <span>By PT. Media Solusi Network</span>
-                                <span class="text-[9px] text-slate-400">06:01</span>
+                                <span class="text-[8.5px] text-slate-400">06:01</span>
                             </div>
 
                             <!-- WhatsApp Action Button (CTA) -->
-                            <div class="pt-1">
-                                <div class="w-full bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-center transition flex items-center justify-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-xs">
-                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <div class="pt-0.5">
+                                <div class="w-full bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 px-2.5 text-center transition flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                                    <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                     </svg>
                                     <span>Bayar Sekarang</span>
@@ -274,7 +278,7 @@
                     </div>
 
                     <!-- WA Preview Footer Notice -->
-                    <div class="px-3 py-2 bg-slate-200/80 dark:bg-slate-800/80 border-t border-slate-300 dark:border-slate-700 text-[10px] text-slate-600 dark:text-slate-400 text-center">
+                    <div class="px-2.5 py-1.5 bg-slate-200/80 dark:bg-slate-800/80 border-t border-slate-300 dark:border-slate-700 text-[9.5px] text-slate-600 dark:text-slate-400 text-center">
                         🔒 Pesan template resmi terenkripsi end-to-end melalui Meta Cloud API
                     </div>
                 </div>
@@ -284,33 +288,33 @@
 
 
     <!-- LANGKAH 2 & 3: DAFTAR PELANGGAN & PENGIRIMAN -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
-            <div class="flex items-center gap-3">
-                <span class="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center">2</span>
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs p-4 sm:p-5 space-y-3.5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2.5">
+                <span class="w-6 h-6 rounded-full bg-[#128C7E] text-white font-bold text-xs flex items-center justify-center shrink-0">2</span>
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Pilih Target Pelanggan &amp; Eksekusi Kirim</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Centang pelanggan pada tabel, lalu klik tombol Broadcast Massal.</p>
+                    <h2 class="text-sm font-bold text-slate-900 dark:text-white">Pilih Target Pelanggan &amp; Eksekusi Kirim</h2>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Centang pelanggan pada tabel, lalu klik tombol Kirim Broadcast.</p>
                 </div>
             </div>
 
             <!-- LANGKAH 3 ACTION BUTTON -->
-            <button @click="triggerBulkBroadcast()" type="button" :disabled="selectedTargets.length === 0" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/20 transition cursor-pointer">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+            <button @click="triggerBulkBroadcast()" type="button" :disabled="selectedTargets.length === 0" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                 </svg>
-                <span>3. KIRIM BROADCAST (<span x-text="selectedTargets.length">0</span> PELANGGAN DIPILIH)</span>
+                <span>3. KIRIM BROADCAST (<span x-text="selectedTargets.length">0</span> DIPILIH)</span>
             </button>
         </div>
 
         <!-- Filter Toolbar -->
-        <form method="GET" action="{{ route('admin.broadcast') }}" class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <form method="GET" action="{{ route('admin.broadcast') }}" class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
                 
                 <!-- Filter Status Tagihan -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Status Pelanggan:</label>
-                    <select name="status_tagihan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Status Pelanggan:</label>
+                    <select name="status_tagihan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <option value="all" {{ $selectedStatusTagihan == 'all' ? 'selected' : '' }}>🌐 Semua Pelanggan</option>
                         <option value="unpaid" {{ $selectedStatusTagihan == 'unpaid' ? 'selected' : '' }}>⚠️ Belum Lunas / Jatuh Tempo</option>
                         <option value="paid" {{ $selectedStatusTagihan == 'paid' ? 'selected' : '' }}>✅ Lunas (PAID)</option>
@@ -320,18 +324,18 @@
 
                 <!-- Filter Status Pengiriman WA -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Status Kirim WA:</label>
-                    <select name="status_kirim" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Status Kirim WA:</label>
+                    <select name="status_kirim" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <option value="all" {{ ($selectedStatusKirim ?? 'all') == 'all' ? 'selected' : '' }}>Semua Status Kirim</option>
                         <option value="sent" {{ ($selectedStatusKirim ?? '') == 'sent' ? 'selected' : '' }}>✅ Sudah Terkirim</option>
                         <option value="unsent" {{ ($selectedStatusKirim ?? '') == 'unsent' ? 'selected' : '' }}>⏳ Belum Terkirim</option>
                     </select>
                 </div>
 
-                <!-- Filter Periode Bulan (Default bulan sekarang, tanpa semua bulan) -->
+                <!-- Filter Periode Bulan -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Bulan Tagihan:</label>
-                    <select name="bulan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Bulan Tagihan:</label>
+                    <select name="bulan" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         @for($m = 1; $m <= 12; $m++)
                             @php $monthVal = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
                             <option value="{{ $monthVal }}" {{ $selectedBulan == $monthVal ? 'selected' : '' }}>
@@ -343,8 +347,8 @@
 
                 <!-- Filter Periode Tahun -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tahun Tagihan:</label>
-                    <select name="tahun" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Tahun Tagihan:</label>
+                    <select name="tahun" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         <option value="all" {{ $selectedTahun == 'all' ? 'selected' : '' }}>Semua Tahun</option>
                         @for($y = date('Y'); $y >= date('Y') - 3; $y--)
                             <option value="{{ $y }}" {{ $selectedTahun == $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -354,42 +358,42 @@
 
                 <!-- Search Input -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Pencarian Pelanggan:</label>
-                    <input type="text" name="search" value="{{ $search }}" placeholder="Nama, ID, No HP..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Pencarian Pelanggan:</label>
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Nama, ID, No HP..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
             </div>
 
-            <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
-                <label class="inline-flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
-                    <input type="checkbox" @change="toggleSelectAll($event)" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+            <div class="flex items-center justify-between pt-0.5 flex-wrap gap-2">
+                <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 cursor-pointer">
+                    <input type="checkbox" @change="toggleSelectAll($event)" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5">
                     <span>Centang / Pilih Semua Pelanggan di Halaman Ini</span>
                 </label>
 
-                <div class="flex items-center gap-2">
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-xs">
+                <div class="flex items-center gap-1.5">
+                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-2xs cursor-pointer">
                         Terapkan Filter
                     </button>
-                    <a href="{{ route('admin.broadcast') }}" class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition">
+                    <a href="{{ route('admin.broadcast') }}" class="px-2.5 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition">
                         Reset Filter
                     </a>
                 </div>
             </div>
         </form>
 
-        <!-- Customer Table -->
-        <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs bg-white dark:bg-slate-900">
+        <!-- Customer Table (Compact) -->
+        <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs bg-white dark:bg-slate-900">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300 border-collapse">
-                    <thead class="bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800 font-bold">
+                    <thead class="bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 uppercase text-[9.5px] tracking-wider border-b border-slate-200 dark:border-slate-800 font-bold">
                         <tr>
-                            <th class="py-3 px-3.5 w-10 text-center">Pilih</th>
-                            <th class="py-3 px-3.5">Nama Pelanggan</th>
-                            <th class="py-3 px-3.5">Nomor Internet &amp; HP</th>
-                            <th class="py-3 px-3.5">Billing Terakhir</th>
-                            <th class="py-3 px-3.5">Status Tagihan</th>
-                            <th class="py-3 px-3.5 text-right">Nominal</th>
-                            <th class="py-3 px-3.5 text-center">Aksi Kirim</th>
+                            <th class="py-2.5 px-2.5 w-9 text-center">Pilih</th>
+                            <th class="py-2.5 px-2.5">Nama Pelanggan</th>
+                            <th class="py-2.5 px-2.5">Nomor Internet &amp; HP</th>
+                            <th class="py-2.5 px-2.5">Billing Terakhir</th>
+                            <th class="py-2.5 px-2.5">Status Tagihan</th>
+                            <th class="py-2.5 px-2.5 text-right">Nominal</th>
+                            <th class="py-2.5 px-2.5 text-center">Aksi Kirim</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -411,21 +415,21 @@
                                 :class="selectedTargets.includes('{{ $item->nomor_internet }}') ? 'bg-emerald-50/60 dark:bg-emerald-950/30' : ''">
                                 
                                 <!-- 1. Checkbox Pilih -->
-                                <td class="py-3.5 px-3.5 text-center align-middle">
+                                <td class="py-2 px-2.5 text-center align-middle">
                                     <input type="checkbox" 
                                            value="{{ $item->nomor_internet }}" 
                                            x-model="selectedTargets" 
-                                           class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
+                                           class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5 cursor-pointer">
                                 </td>
 
                                 <!-- 2. Nama Pelanggan & Paket -->
-                                <td class="py-3.5 px-3.5 align-middle">
+                                <td class="py-2 px-2.5 align-middle">
                                     <div class="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-tight">
                                         {{ $item->nama_pelanggan }}
                                     </div>
                                     @if($item->nama_kategori_bandwith || $item->nominal_bandwith)
-                                        <div class="mt-1">
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 uppercase">
+                                        <div class="mt-0.5">
+                                            <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 uppercase">
                                                 {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }}
                                                 @if($item->nominal_bandwith)
                                                     • {{ $item->nominal_bandwith }} Mbps
@@ -436,12 +440,12 @@
                                 </td>
 
                                 <!-- 3. Nomor Internet & HP -->
-                                <td class="py-3.5 px-3.5 align-middle">
-                                    <div class="font-mono text-emerald-600 dark:text-emerald-400 font-bold text-xs tracking-wide">
+                                <td class="py-2 px-2.5 align-middle">
+                                    <div class="font-mono text-[#128C7E] dark:text-emerald-400 font-bold text-xs tracking-wide">
                                         {{ $item->nomor_internet }}
                                     </div>
-                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1 mt-1">
-                                        <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                    <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                                        <svg class="w-3 h-3 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M10.5 18.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" />
                                             <path fill-rule="evenodd" d="M8.625.75A3.375 3.375 0 0 0 5.25 4.125v15.75a3.375 3.375 0 0 0 3.375 3.375h6.75a3.375 3.375 0 0 0 3.375-3.375V4.125A3.375 3.375 0 0 0 15.375.75h-6.75ZM6.75 4.125C6.75 3.09 7.59 2.25 8.625 2.25h6.75c1.035 0 1.875.84 1.875 1.875v15.75c0 1.035-.84 1.875-1.875 1.875h-6.75a1.875 1.875 0 0 1-1.875-1.875V4.125Z" clip-rule="evenodd" />
                                         </svg>
@@ -450,55 +454,55 @@
                                 </td>
 
                                 <!-- 4. Last Month & Last Year Billing -->
-                                <td class="py-3.5 px-3.5 align-middle">
+                                <td class="py-2 px-2.5 align-middle">
                                     @if($hasLastBilling)
-                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold font-mono shadow-2xs">
-                                            <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[10px] font-bold font-mono shadow-2xs">
+                                            <svg class="w-3 h-3 text-indigo-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
                                             </svg>
                                             <span>{{ $lastMonthName }} {{ $lastYVal }}</span>
                                         </div>
                                     @else
-                                        <span class="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                                        <span class="inline-block px-1.5 py-0.2 rounded text-[9.5px] font-medium bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
                                             -
                                         </span>
                                     @endif
                                 </td>
 
                                 <!-- 5. Status Tagihan -->
-                                <td class="py-3.5 px-3.5 align-middle">
+                                <td class="py-2 px-2.5 align-middle">
                                     @if($item->status_bill_lay == '15')
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
-                                            <svg class="w-3 h-3 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
+                                            <svg class="w-2.5 h-2.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                             </svg>
                                             <span>LUNAS</span>
                                         </span>
                                     @elseif(in_array($item->status_bill_lay, ['13', '14']))
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
-                                            <svg class="w-3 h-3 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
+                                            <svg class="w-2.5 h-2.5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                                             </svg>
                                             <span>JATUH TEMPO</span>
                                         </span>
                                     @elseif(in_array($item->status_bill_lay, ['11', '12']))
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30">
                                             <span>DRAFT</span>
                                         </span>
                                     @elseif(in_array($item->status_reg, ['23', '23.1']))
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30">
-                                            <svg class="w-3 h-3 text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30">
+                                            <svg class="w-2.5 h-2.5 text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
                                             </svg>
                                             <span>SUSPEND</span>
                                         </span>
                                     @elseif(in_array($item->status_reg, ['14', '15', '17', '18', '19', '19.1']))
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 dark:border-indigo-500/30">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 dark:border-indigo-500/30">
                                             <span>PROSES PASANG</span>
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
-                                            <svg class="w-3 h-3 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
+                                            <svg class="w-2.5 h-2.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                             </svg>
                                             <span>LUNAS</span>
@@ -507,27 +511,27 @@
                                 </td>
 
                                 <!-- 6. Nominal -->
-                                <td class="py-3.5 px-3.5 text-right font-bold text-slate-900 dark:text-slate-100 font-mono text-xs align-middle">
+                                <td class="py-2 px-2.5 text-right font-bold text-slate-900 dark:text-slate-100 font-mono text-xs align-middle">
                                     Rp {{ number_format((float) ($item->total_layanan ?? ($item->harga_bandwith ?? 0)), 0, ',', '.') }}
                                 </td>
 
                                 <!-- 7. Aksi Kirim -->
-                                <td class="py-3.5 px-3.5 text-center align-middle">
+                                <td class="py-2 px-2.5 text-center align-middle">
                                     <div class="inline-flex flex-col items-center justify-center gap-1">
                                         @if(($item->wa_sent_count ?? 0) > 0)
-                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30 shadow-2xs"
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30 shadow-2xs"
                                                   title="Pernah dikirim WhatsApp sebanyak {{ $item->wa_sent_count }} kali{{ $item->last_sent_at ? ' (Terakhir: ' . \Carbon\Carbon::parse($item->last_sent_at)->translatedFormat('d M Y H:i') . ')' : '' }}">
-                                                <svg class="w-3 h-3 text-blue-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <svg class="w-2.5 h-2.5 text-blue-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
                                                 </svg>
-                                                <span>{{ $item->wa_sent_count }}x Terkirim</span>
+                                                <span>{{ $item->wa_sent_count }}x Kirim</span>
                                             </span>
                                         @endif
                                         <button @click="openSingleSendModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->nomor_hp }}')" 
                                                 type="button" 
                                                 title="Kirim WA ke Pelanggan Ini" 
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-bold transition shadow-2xs cursor-pointer">
-                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-[#128C7E] text-[#075E54] hover:text-white border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30 text-[11px] font-bold transition shadow-2xs cursor-pointer">
+                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                                             </svg>
                                             <span>Kirim WA</span>
@@ -537,7 +541,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="p-8 text-center text-slate-400 dark:text-slate-500">
+                                <td colspan="7" class="p-6 text-center text-slate-400 dark:text-slate-500 text-xs">
                                     Tidak ada data pelanggan yang sesuai dengan filter pencarian.
                                 </td>
                             </tr>
@@ -546,8 +550,8 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+            <!-- Pagination (Compact) -->
+            <div class="p-2.5 sm:p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs">
                 {{ $pelangganList->links() }}
             </div>
         </div>

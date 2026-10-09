@@ -377,7 +377,7 @@
             
             @if(($counts['pemasangan_baru'] ?? 0) > 0)
                 <!-- Red Alert Dot (Top Right) -->
-                <div class="ims-alert-badge" title="{{ $counts['pemasangan_baru'] }} pendaftaran perlu diproses">
+                <div class="ims-alert-badge" title="{{ $counts['pemasangan_baru'] }} {{ (isset($user) && $user?->isNoc()) ? 'antrean aktivasi perlu diproses' : 'pendaftaran perlu diproses' }}">
                     <span class="ims-alert-ping"></span>
                     <span class="ims-alert-core"></span>
                 </div>
@@ -386,7 +386,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-sm font-bold tracking-tight text-white m-0">
-                        Pemasangan Baru
+                        {{ (isset($user) && $user?->isNoc()) ? 'Aktivasi Pasang Baru' : 'Pemasangan Baru' }}
                     </h3>
                     <p class="mt-0.5 text-xs font-semibold text-white/95">
                         {{ $counts['pemasangan_baru'] ?? 0 }} Tiket

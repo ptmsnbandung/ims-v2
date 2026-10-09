@@ -74,12 +74,24 @@ class TeknikController extends Controller
                     ->count()
                 : 0,
 
-            // 7. Pemasangan Baru (status_reg proses pendaftaran baru)
-            'pemasangan_baru' => Schema::hasTable('trx_batchjob_register')
-                ? DB::table('trx_batchjob_register')
-                    ->whereIn('status_reg', ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'])
-                    ->count()
-                : 0,
+            // 7. Pemasangan Baru / Aktivasi Jaringan (disesuaikan dengan tujuan dashboard role)
+            'pemasangan_baru' => ($user?->isNoc())
+                ? (Schema::hasTable('trx_batchjob_register')
+                    ? DB::table('trx_batchjob_register')
+                        ->whereIn('status_reg', ['18', '18.1', '19', '19.1'])
+                        ->count()
+                    : 0)
+                : (($user?->isFinance())
+                    ? (Schema::hasTable('trx_batchjob_register')
+                        ? DB::table('trx_batchjob_register')
+                            ->whereIn('status_reg', ['11', '11.1'])
+                            ->count()
+                        : 0)
+                    : (Schema::hasTable('trx_batchjob_register')
+                        ? DB::table('trx_batchjob_register')
+                            ->whereIn('status_reg', ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'])
+                            ->count()
+                        : 0)),
 
             // 8. Ubah Layanan (status_ubah_layanan = 11 [Request] atau 12 [On Schedule])
             'ubah_layanan' => Schema::hasTable('trx_ubah_layanan')

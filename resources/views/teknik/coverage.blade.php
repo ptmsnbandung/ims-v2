@@ -273,6 +273,29 @@
                         </button>
                     </div>
 
+                    <!-- Geolocation Accuracy & Detected Address Status Banner -->
+                    <template x-if="detectedAddressName">
+                        <div class="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-[10.5px] text-sky-800 dark:text-sky-300 flex items-start gap-1.5">
+                            <span class="text-sky-500 font-bold">📍</span>
+                            <div class="flex-1 min-w-0">
+                                <span class="font-bold text-slate-900 dark:text-white block text-[10px] uppercase tracking-wide">Lokasi Titik Terpilih:</span>
+                                <span class="truncate block text-[10px] text-slate-700 dark:text-slate-300" x-text="detectedAddressName"></span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="gpsAccuracyMeters && gpsAccuracyMeters > 30">
+                        <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-[10.5px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
+                            <span class="text-amber-500">⚠️</span>
+                            <div>
+                                <strong>Akurasi Browser/Wi-Fi: ±<span x-text="gpsAccuracyMeters"></span>m</strong>
+                                <span class="block text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">
+                                    Browser mendeteksi perkiraan jaringan. <b>Geser pin merah 📍 di peta</b> langsung ke atas atap rumah Anda untuk titik 100% presisi.
+                                </span>
+                            </div>
+                        </div>
+                    </template>
+
                     <!-- Preset Selector from Master Database -->
                     <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1">
                         <label class="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
@@ -294,7 +317,7 @@
                                 <optgroup label="🏢 {{ $oltName }} ({{ count($group) }} Titik ODP)">
                                     @foreach($group as $o)
                                         <option value="{{ $o['lat'] }},{{ $o['lng'] }}|{{ $o['kode_odp'] }}">
-                                            {{ $o['name_odp'] }} ({{ $o['kode_odp'] }}) - {{ $o['kode_pon'] }}
+                                             {{ $o['name_odp'] }} ({{ $o['kode_odp'] }}) - {{ $o['kode_pon'] }}
                                         </option>
                                     @endforeach
                                 </optgroup>
@@ -303,9 +326,9 @@
                     </div>
                 </form>
 
-                <div class="p-2 rounded-lg flex items-center gap-1.5 text-[10px] bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-800 dark:text-sky-300">
+                <div class="p-2 rounded-lg flex items-center gap-1.5 text-[10px] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                     <span>💡</span>
-                    <span>Format: <b>Latitude, Longitude</b>, atau klik langsung pada peta untuk titik target yang presisi.</span>
+                    <span>Format: <b>Latitude, Longitude</b>, atau klik/geser pin langsung pada peta untuk titik presisi.</span>
                 </div>
             </div>
 
@@ -616,6 +639,9 @@
             filterOnlyAvailable: false,
             showRadiusCircles: true,
             routingMode: 'street', // 'street' (mengikuti jalur jalan raya/gang akurat) atau 'direct' (garis lurus tiang)
+            gpsAccuracyMeters: null,
+            detectedAddressName: null,
+            gpsAccuracyLayer: null,
             nearestCandidates: [],
             selectedOdpResult: null,
             streetRouteGeometry: null,
@@ -718,6 +744,7 @@
                 this.mapMode = 'roadmap';
 
                 this.odpMarkersLayer = L.layerGroup().addTo(this.mapInstance);
+                this.gpsAccuracyLayer = L.layerGroup().addTo(this.mapInstance);
                 this.radiusCirclesLayer = L.layerGroup().addTo(this.mapInstance);
                 this.connectionLineLayer = L.layerGroup().addTo(this.mapInstance);
 
@@ -733,7 +760,10 @@
                 this.mapInstance.on('click', (e) => {
                     const lat = e.latlng.lat;
                     const lng = e.latlng.lng;
+                    this.gpsAccuracyMeters = null;
+                    if (this.gpsAccuracyLayer) this.gpsAccuracyLayer.clearLayers();
                     this.inputCoordinates = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    this.reverseGeocode(lat, lng);
                     this.executeCoverageCheck();
                 });
             },
@@ -1024,7 +1054,10 @@
 
                 this.userMarkerLayer.on('dragend', (e) => {
                     const newPos = e.target.getLatLng();
+                    this.gpsAccuracyMeters = null;
+                    if (this.gpsAccuracyLayer) this.gpsAccuracyLayer.clearLayers();
                     this.inputCoordinates = `${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}`;
+                    this.reverseGeocode(newPos.lat, newPos.lng);
                     this.executeCoverageCheck();
                 });
 
@@ -1154,20 +1187,66 @@
                     return;
                 }
                 this.isDetectingGps = true;
+
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                };
+
                 navigator.geolocation.getCurrentPosition(
-                    (pos) => {
+                    async (pos) => {
                         this.isDetectingGps = false;
                         const lat = pos.coords.latitude;
                         const lng = pos.coords.longitude;
+                        const accuracy = Math.round(pos.coords.accuracy || 0);
+                        this.gpsAccuracyMeters = accuracy;
                         this.inputCoordinates = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                        this.executeCoverageCheck();
+
+                        // Gambar lingkaran margin error akurasi GPS jika akurasi > 15m
+                        if (this.gpsAccuracyLayer && this.mapInstance) {
+                            this.gpsAccuracyLayer.clearLayers();
+                            if (accuracy > 15) {
+                                L.circle([lat, lng], {
+                                    radius: accuracy,
+                                    color: '#f59e0b',
+                                    weight: 1.5,
+                                    dashArray: '4, 4',
+                                    fillColor: '#f59e0b',
+                                    fillOpacity: 0.12
+                                }).addTo(this.gpsAccuracyLayer);
+                            }
+                        }
+
+                        this.reverseGeocode(lat, lng);
+                        await this.executeCoverageCheck();
                     },
                     (err) => {
                         this.isDetectingGps = false;
-                        alert('Gagal mendeteksi lokasi GPS. Silakan masukkan koordinat atau klik langsung pada peta.');
+                        let msg = 'Gagal mendeteksi lokasi GPS.';
+                        if (err.code === 1) {
+                            msg = 'Izin lokasi tidak diberikan. Silakan aktifkan izin lokasi di browser.';
+                        } else if (err.code === 2) {
+                            msg = 'Lokasi tidak tersedia dari sensor perangkat.';
+                        } else if (err.code === 3) {
+                            msg = 'Waktu pencarian GPS habis.';
+                        }
+                        alert(msg + ' Anda dapat mengklik langsung titik lokasi rumah Anda pada peta.');
                     },
-                    { timeout: 8000, enableHighAccuracy: true }
+                    options
                 );
+            },
+
+            async reverseGeocode(lat, lng) {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.display_name) {
+                            this.detectedAddressName = data.display_name;
+                        }
+                    }
+                } catch (e) {}
             },
 
             resetMapView() {

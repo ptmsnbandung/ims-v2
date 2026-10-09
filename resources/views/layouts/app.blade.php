@@ -603,7 +603,20 @@
                         <div class="ims-tooltip">Data Pelanggan</div>
                     </div>
 
-                    <!-- 2. Permintaan NOC Dropdown -->
+                    <!-- 2. Tiket -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('teknik.tiket') }}"
+                           class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
+                           title="Tiket & Permintaan">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                            </svg>
+                            <span class="ims-nav-text">Tiket</span>
+                        </a>
+                        <div class="ims-tooltip">Tiket & Permintaan</div>
+                    </div>
+
+                    <!-- 3. Permintaan NOC Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Permintaan NOC', [
@@ -655,7 +668,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. NOC Dashboard -->
+                    <!-- 4. NOC Dashboard -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('noc.dashboard') }}"
                            class="ims-nav-item {{ request()->routeIs('noc.dashboard*') ? 'active' : '' }}"
@@ -668,14 +681,14 @@
                         <div class="ims-tooltip">NOC Command Dashboard</div>
                     </div>
 
-                    <!-- 3.1 Menu OLT (Dropdown Pilihan OLT dari Master OLT) -->
+                    <!-- 5. Menu OLT (Dropdown Pilihan OLT dari Master OLT) -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ oltMenuOpen: {{ request()->routeIs('noc.network-olt*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Menu OLT', [
                              @if(isset($sidebarOlts))
-                                 @foreach($sidebarOlts as $sOlt)
-                                 { label: 'OLT {{ $sOlt->olt_id }} - {{ strtoupper($sOlt->nama_olt) }}', url: '{{ route('noc.network-olt', ['olt_id' => $sOlt->olt_id]) }}', active: {{ request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOlt->olt_id) ? 'true' : 'false' }} },
-                                 @endforeach
+                                  @foreach($sidebarOlts as $sOlt)
+                                  { label: 'OLT {{ $sOlt->olt_id }} - {{ strtoupper($sOlt->nama_olt) }}', url: '{{ route('noc.network-olt', ['olt_id' => $sOlt->olt_id]) }}', active: {{ request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOlt->olt_id) ? 'true' : 'false' }} },
+                                  @endforeach
                              @endif
                          ])"
                          @mouseleave="closeFlyoutWithDelay()">
@@ -719,7 +732,7 @@
                         </div>
                     </div>
 
-                    <!-- 4. Infrastruktur Dropdown -->
+                    <!-- 6. Infrastruktur Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ infraOpen: {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit', 'noc.gpon*', 'noc.pop*', 'noc.wilayah*', 'noc.router*', 'noc.activity-log*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Infrastruktur Jaringan', [
@@ -781,7 +794,7 @@
                         </div>
                     </div>
 
-                    <!-- 5. Inventaris Perangkat -->
+                    <!-- 7. Inventaris Perangkat -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('noc.perangkat') }}"
                            class="ims-nav-item {{ request()->routeIs('noc.perangkat*') ? 'active' : '' }}"
@@ -792,19 +805,6 @@
                             <span class="ims-nav-text">Inventaris Perangkat</span>
                         </a>
                         <div class="ims-tooltip">Inventaris Perangkat</div>
-                    </div>
-
-                    <!-- 6. Tiket -->
-                    <div class="ims-nav-wrapper">
-                        <a href="{{ route('teknik.tiket') }}"
-                           class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
-                           title="Tiket & Permintaan">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-                            </svg>
-                            <span class="ims-nav-text">Tiket</span>
-                        </a>
-                        <div class="ims-tooltip">Tiket & Permintaan</div>
                     </div>
                     @endif
 

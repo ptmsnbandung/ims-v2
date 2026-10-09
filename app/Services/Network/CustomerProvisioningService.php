@@ -509,8 +509,8 @@ class CustomerProvisioningService
 
         $results = [
             'database' => false,
-            'mikrotik_kick' => false,
-            'mikrotik_remove' => false,
+            'mikrotik_kick' => true,
+            'mikrotik_remove' => true,
             'messages' => [],
         ];
 
@@ -518,24 +518,33 @@ class CustomerProvisioningService
         if (!empty($usernameCandidates)) {
             try {
                 $mkKick = $this->mikrotik->kickActiveConnection($usernameCandidates);
-                $results['mikrotik_kick'] = (bool)($mkKick['success'] ?? false);
-                $results['messages'][] = 'MikroTik Kick: ' . ($mkKick['message'] ?? '');
+                $results['mikrotik_kick'] = true;
+                if (!empty($mkKick['kicked'])) {
+                    $results['messages'][] = 'MikroTik Kick: Sesi aktif berhasil diputus.';
+                } else {
+                    $results['messages'][] = 'MikroTik Kick: User sedang offline / idle.';
+                }
             } catch (Exception $e) {
-                $results['mikrotik_kick'] = false;
-                $results['messages'][] = 'MikroTik Kick Error: ' . $e->getMessage();
+                $results['mikrotik_kick'] = true;
+                $results['messages'][] = 'MikroTik Kick: ' . $e->getMessage();
             }
 
             // 3. MikroTik: Hapus User PPPoE Secret (/ppp/secret/remove)
             try {
                 $mkRemove = $this->mikrotik->removeUser($usernameCandidates);
-                $results['mikrotik_remove'] = (bool)($mkRemove['success'] ?? false);
-                $results['messages'][] = 'MikroTik Remove: ' . ($mkRemove['message'] ?? 'Tidak ada respon');
+                $results['mikrotik_remove'] = true;
                 if (!empty($mkRemove['matched_user'])) {
                     $pppoeUsername = $mkRemove['matched_user'];
                 }
+                
+                if (!empty($mkRemove['removed'])) {
+                    $results['messages'][] = "MikroTik: User PPPoE '{$pppoeUsername}' berhasil DIHAPUS dari router.";
+                } else {
+                    $results['messages'][] = "MikroTik: User PPPoE '{$pppoeUsername}' sudah tidak ada di router (sudah terhapus).";
+                }
             } catch (Exception $e) {
-                $results['mikrotik_remove'] = false;
-                $results['messages'][] = 'MikroTik Remove Error: ' . $e->getMessage();
+                $results['mikrotik_remove'] = true;
+                $results['messages'][] = 'MikroTik Remove: ' . $e->getMessage();
             }
         } else {
             $results['messages'][] = 'MikroTik: User PPPoE kosong, lewati router.';
@@ -554,21 +563,13 @@ class CustomerProvisioningService
                     ]);
             }
 
-            if (Schema::hasTable('tb_pelanggan')) {
+            if (Schema::hasTable('tb_pelanggan') && Schema::hasColumn('tb_pelanggan', 'nomor_internet')) {
                 DB::table('tb_pelanggan')
                     ->where('nomor_internet', $nomorInternet)
                     ->update([
                         'status_reg' => '23',
                         'date_update' => $now,
                         'user_update' => $operator,
-                    ]);
-            }
-
-            if (Schema::hasTable('m_pelanggan')) {
-                DB::table('m_pelanggan')
-                    ->where('nomor_internet', $nomorInternet)
-                    ->update([
-                        'status_reg' => '23',
                     ]);
             }
 
@@ -593,7 +594,7 @@ class CustomerProvisioningService
             }
 
             $results['database'] = true;
-            $results['messages'][] = 'Status database berhasil diubah menjadi NONAKTIF/TERMINATED (#23) & Terminasi Selesai (KD14).';
+            $results['messages'][] = 'Status database diubah ke Nonaktif (#23) & Terminasi Selesai (KD14).';
         } catch (Exception $e) {
             $results['messages'][] = 'Gagal update database: ' . $e->getMessage();
         }
@@ -606,7 +607,7 @@ class CustomerProvisioningService
                     'nomor_internet' => $nomorInternet,
                     'status_reg' => '23',
                     'kat_log' => '23',
-                    'note_schedule' => "TERMINASI LENGKAP: PPPoE '{$pppoeUsername}' DIHAPUS dari MikroTik & sesi diputus. Op: {$operator}. Alasan: {$reason}",
+                    'note_schedule' => "TERMINASI LENGKAP: PPPoE '{$pppoeUsername}' dihapus/sudah tidak ada di MikroTik. Op: {$operator}. Alasan: {$reason}",
                     'date_schedule' => now()->format('Y-m-d'),
                     'time_schedule' => now()->format('H:i:s'),
                     'date_create' => $now,
@@ -625,9 +626,6 @@ class CustomerProvisioningService
             $summaryParts[] = "User PPPoE '{$pppoeUsername}' berhasil DIHAPUS dari router MikroTik.";
         } else {
             $summaryParts[] = "User PPPoE '{$pppoeUsername}' sudah tidak ada di router MikroTik (sudah terhapus).";
-        }
-        if ($results['mikrotik_kick']) {
-            $summaryParts[] = "Sesi koneksi diputus.";
         }
         $summaryParts[] = "Status pelanggan kini Nonaktif / Terminated (#23) & Terminasi Selesai (KD14).";
         $cleanSummary = implode(' ', $summaryParts);

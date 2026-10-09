@@ -336,16 +336,14 @@ class FinanceController extends Controller
             return $w;
         });
 
-        $statusBillList = Cache::remember('finance_master_status_bill_lay', 300, function () {
-            return Schema::hasTable('m_status_bill_lay')
-                ? DB::table('m_status_bill_lay')
-                    ->where('hide', '0')
-                    ->whereNotIn('status_bill_lay', ['17', '18'])
-                    ->where('desc_bill_lay', 'NOT LIKE', '%cancel midtrans%')
-                    ->where('desc_bill_lay', 'NOT LIKE', '%expire midtrans%')
-                    ->get()
-                : collect();
-        });
+        $statusBillList = Schema::hasTable('m_status_bill_lay')
+            ? DB::table('m_status_bill_lay')
+                ->where('hide', '0')
+                ->whereNotIn('status_bill_lay', ['17', '18'])
+                ->where('desc_bill_lay', 'NOT LIKE', '%cancel midtrans%')
+                ->where('desc_bill_lay', 'NOT LIKE', '%expire midtrans%')
+                ->get()
+            : collect();
 
         $statusUserList = [
             '20' => 'User Aktif',

@@ -331,10 +331,12 @@
                         <option value="menunggu_verifikasi" {{ request('status_bayar') === 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
                         @foreach($statusBillList as $sb)
                             @php
-                                $descLower = strtolower($sb->desc_bill_lay ?? '');
+                                $sbCode = is_object($sb) ? ($sb->status_bill_lay ?? '') : (is_array($sb) ? ($sb['status_bill_lay'] ?? '') : (string)$sb);
+                                $sbDesc = is_object($sb) ? ($sb->desc_bill_lay ?? $sbCode) : (is_array($sb) ? ($sb['desc_bill_lay'] ?? $sbCode) : (string)$sb);
+                                $descLower = strtolower($sbDesc);
                             @endphp
-                            @if(!str_contains($descLower, 'cancel midtrans') && !str_contains($descLower, 'expire midtrans') && !in_array((string)$sb->status_bill_lay, ['17', '18']))
-                            <option value="{{ $sb->status_bill_lay }}" {{ request('status_bayar') === (string)$sb->status_bill_lay ? 'selected' : '' }}>{{ $sb->desc_bill_lay }}</option>
+                            @if(!str_contains($descLower, 'cancel midtrans') && !str_contains($descLower, 'expire midtrans') && !in_array((string)$sbCode, ['17', '18']))
+                            <option value="{{ $sbCode }}" {{ request('status_bayar') === (string)$sbCode ? 'selected' : '' }}>{{ $sbDesc }}</option>
                             @endif
                         @endforeach
                     </select>

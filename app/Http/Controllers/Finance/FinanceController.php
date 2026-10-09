@@ -3819,5 +3819,79 @@ class FinanceController extends Controller
 
         return true; // Bersih, seluruh tagihan sampai yang terbaru telah lunas
     }
+
+    /**
+     * Upload / Ganti Bukti Transfer untuk Invoice
+     */
+    public function uploadProofFile(Request $request)
+    {
+        $request->validate([
+            'kode_billing' => 'required',
+            'foto_bukti' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+        ]);
+
+        $rawKode = (string) $request->input('kode_billing');
+        $decodedKode = urldecode($rawKode);
+        $userUpdate = Auth::user()->name ?? 'Finance Admin';
+        $nomorInternet = (string) $request->input('nomor_internet', '');
+
+        try {
+            $file = $request->file('foto_bukti');
+            if ($file && $file->isValid()) {
+                $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                $filename = 'proof_' . preg_replace('/[^a-zA-Z0-9]/', '_', $decodedKode) . '_' . time() . '.' . $ext;
+                $uploadPath = public_path('uploads/bukti_transfer');
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                $file->move($uploadPath, $filename);
+                $proofUrl = '/uploads/bukti_transfer/' . $filename;
+
+                if (Schema::hasTable('payment_confirmations')) {
+                    $existPc = DB::table('payment_confirmations')
+                        ->where('kode_billing_layanan', $decodedKode)
+                        ->orWhere('kode_billing_layanan', str_replace('/', '-', $decodedKode))
+                        ->orWhere('kode_billing_layanan', str_replace('-', '/', $decodedKode))
+                        ->first();
+
+                    if ($existPc) {
+                        DB::table('payment_confirmations')
+                            ->where('id', $existPc->id)
+                            ->update([
+                                'proof_file' => $proofUrl,
+                                'status' => 'approved',
+                                'verified_at' => Carbon::now()->toDateTimeString(),
+                                'admin_notes' => "Bukti transfer diupload/diperbarui oleh {$userUpdate}",
+                                'updated_at' => Carbon::now()->toDateTimeString(),
+                            ]);
+                    } else {
+                        DB::table('payment_confirmations')->insert([
+                            'kode_billing_layanan' => $decodedKode,
+                            'customer_id' => $nomorInternet ?: $decodedKode,
+                            'customer_name' => (string) $request->input('nama_pelanggan', ''),
+                            'proof_file' => $proofUrl,
+                            'status' => 'approved',
+                            'verified_at' => Carbon::now()->toDateTimeString(),
+                            'notes' => (string) $request->input('notes', 'Upload bukti transfer manual oleh admin'),
+                            'admin_notes' => "Diupload oleh {$userUpdate}",
+                            'created_at' => Carbon::now()->toDateTimeString(),
+                            'updated_at' => Carbon::now()->toDateTimeString(),
+                        ]);
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Bukti transfer berhasil diupload.',
+                    'proof_url' => asset('uploads/bukti_transfer/' . $filename),
+                ]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'File tidak valid.'], 400);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengupload bukti: ' . $e->getMessage()], 500);
+        }
+    }
 }
+
 

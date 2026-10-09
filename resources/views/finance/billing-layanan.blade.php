@@ -688,13 +688,21 @@
                                     </span>
 
                                     @if($confirmation && !empty($confirmation->proof_file))
+                                        @php
+                                            $rawProof = (string) $confirmation->proof_file;
+                                            if (str_starts_with($rawProof, 'http://') || str_starts_with($rawProof, 'https://') || str_starts_with($rawProof, 'data:')) {
+                                                $resolvedProofUrl = $rawProof;
+                                            } else {
+                                                $resolvedProofUrl = asset(ltrim($rawProof, '/'));
+                                            }
+                                        @endphp
                                         <button type="button"
                                                 @click="openProofModalFromEl($el)"
                                                 data-kode="{{ $inv->kode_billing_layanan }}"
                                                 data-nama="{{ $inv->nama_pelanggan }}"
                                                 data-internet="{{ $inv->nomor_internet }}"
                                                 data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
-                                                data-proof-url="{{ $confirmation->proof_file }}"
+                                                data-proof-url="{{ $resolvedProofUrl }}"
                                                 data-notes="{{ $confirmation->notes ?? '-' }}"
                                                 data-proof-date="{{ !empty($confirmation->created_at) ? \Carbon\Carbon::parse($confirmation->created_at)->translatedFormat('d M Y H:i') : '-' }}"
                                                 data-status="{{ $confirmation->status ?? 'pending' }}"
@@ -1113,13 +1121,21 @@
                                 {{ $methodLabel }}
                             </span>
                             @if($isTransfer && $confirmation && !empty($confirmation->proof_file))
+                                @php
+                                    $rawProofMob = (string) $confirmation->proof_file;
+                                    if (str_starts_with($rawProofMob, 'http://') || str_starts_with($rawProofMob, 'https://') || str_starts_with($rawProofMob, 'data:')) {
+                                        $resolvedProofMobUrl = $rawProofMob;
+                                    } else {
+                                        $resolvedProofMobUrl = asset(ltrim($rawProofMob, '/'));
+                                    }
+                                @endphp
                                 <button type="button"
                                         @click="openProofModalFromEl($el)"
                                         data-kode="{{ $inv->kode_billing_layanan }}"
                                         data-nama="{{ $inv->nama_pelanggan }}"
                                         data-internet="{{ $inv->nomor_internet }}"
                                         data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
-                                        data-proof-url="{{ $confirmation->proof_file }}"
+                                        data-proof-url="{{ $resolvedProofMobUrl }}"
                                         data-notes="{{ $confirmation->notes ?? '-' }}"
                                         data-proof-date="{{ !empty($confirmation->created_at) ? \Carbon\Carbon::parse($confirmation->created_at)->translatedFormat('d M Y H:i') : '-' }}"
                                         data-status="{{ $confirmation->status ?? 'pending' }}"
@@ -2239,17 +2255,17 @@
                     </div>
                 </div>
 
-                <!-- Preview Gambar Bukti Transfer -->
-                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-900/5 dark:bg-slate-950 flex flex-col items-center justify-center min-h-[220px] p-2 relative group">
-                    <template x-if="proofUrl && (proofUrl.endsWith('.pdf') || proofUrl.includes('/pdf'))">
-                        <div class="py-12 px-4 text-center space-y-3">
+                <!-- Preview Gambar / Dokumen Bukti Transfer -->
+                <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-900/5 dark:bg-slate-950 flex flex-col items-center justify-center min-h-[220px] p-3 relative group">
+                    <template x-if="proofUrl && (proofUrl.toLowerCase().endsWith('.pdf') || proofUrl.toLowerCase().includes('/pdf'))">
+                        <div class="py-10 px-4 text-center space-y-3">
                             <div class="w-16 h-16 mx-auto rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400">
                                 <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                 </svg>
                             </div>
                             <p class="text-xs text-slate-600 dark:text-slate-400 font-medium">Dokumen Bukti Transfer berformat PDF</p>
-                            <a :href="proofUrl" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/20 transition">
+                            <a :href="proofUrl" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-md shadow-rose-500/20 transition">
                                 <span>Buka File PDF</span>
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -2258,10 +2274,19 @@
                         </div>
                     </template>
 
-                    <template x-if="proofUrl && !(proofUrl.endsWith('.pdf') || proofUrl.includes('/pdf'))">
+                    <template x-if="proofUrl && !(proofUrl.toLowerCase().endsWith('.pdf') || proofUrl.toLowerCase().includes('/pdf'))">
                         <div class="w-full flex flex-col items-center">
-                            <img :src="proofUrl" alt="Bukti Transfer" class="max-h-[380px] w-auto rounded-lg object-contain shadow-sm hover:scale-[1.01] transition duration-200 cursor-pointer" @click="window.open(proofUrl, '_blank')">
-                            <div class="mt-2 text-center">
+                            <!-- Gambar Bukti -->
+                            <img :src="proofUrl"
+                                 x-show="!proofImgError"
+                                 @load="proofImgError = false"
+                                 @error="proofImgError = true"
+                                 alt="Bukti Transfer"
+                                 class="max-h-[380px] w-auto rounded-lg object-contain shadow-sm hover:scale-[1.01] transition duration-200 cursor-pointer"
+                                 @click="window.open(proofUrl, '_blank')">
+                            
+                            <!-- Buka Gambar Full -->
+                            <div class="mt-2 text-center" x-show="!proofImgError">
                                 <a :href="proofUrl" target="_blank" class="text-[11px] text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 inline-flex items-center gap-1 font-medium">
                                     <span>Buka Gambar Ukuran Penuh</span>
                                     <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -2269,8 +2294,50 @@
                                     </svg>
                                 </a>
                             </div>
+
+                            <!-- Error Fallback Box saat gambar tidak ditemukan -->
+                            <div x-show="proofImgError" class="w-full p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl space-y-2.5 text-center">
+                                <div class="w-10 h-10 mx-auto rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-amber-900 dark:text-amber-200">File Bukti Transfer Tidak Ditemukan</p>
+                                    <p class="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">
+                                        File bukti transfer belum tersimpan pada direktori server lokal ini atau file fisik dipindahkan.
+                                    </p>
+                                    <p class="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate max-w-md mx-auto mt-1" x-text="'File: ' + proofUrl"></p>
+                                </div>
+                            </div>
                         </div>
                     </template>
+
+                    <!-- Section Form Upload / Ganti Bukti Transfer Baru -->
+                    <div class="w-full mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                        <div x-show="!showUploadForm" class="text-center">
+                            <button type="button" @click="showUploadForm = true" class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 inline-flex items-center gap-1.5 font-semibold cursor-pointer">
+                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                </svg>
+                                <span>Upload / Ganti Bukti Transfer Baru</span>
+                            </button>
+                        </div>
+
+                        <form x-show="showUploadForm" @submit.prevent="submitProofUpload($event)" class="space-y-2 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[11px] font-bold text-slate-700 dark:text-slate-200">Pilih File Bukti Transfer (JPG, PNG, PDF max 10MB):</label>
+                                <button type="button" @click="showUploadForm = false" class="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">&times; Batal</button>
+                            </div>
+                            <div class="flex gap-2 items-center">
+                                <input type="file" name="foto_bukti" accept="image/*,application/pdf" required class="text-xs text-slate-600 dark:text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-500/20 dark:file:text-blue-300 hover:file:bg-blue-100 cursor-pointer flex-1">
+                                <button type="submit" :disabled="uploadLoading" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-xs transition flex items-center gap-1 cursor-pointer shrink-0">
+                                    <span x-show="!uploadLoading">Upload</span>
+                                    <span x-show="uploadLoading">Mengupload...</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -3415,6 +3482,9 @@ function billingLayananPage() {
         proofDate: '',
         proofStatus: '',
         proofDestinationBank: '',
+        proofImgError: false,
+        showUploadForm: false,
+        uploadLoading: false,
         openProofModalFromEl(el) {
             this.proofKodeBilling = el.dataset.kode || '';
             this.proofNamaPelanggan = el.dataset.nama || '';
@@ -3425,7 +3495,41 @@ function billingLayananPage() {
             this.proofDate = el.dataset.proofDate || '';
             this.proofStatus = el.dataset.status || '';
             this.proofDestinationBank = el.dataset.destinationBank || '';
+            this.proofImgError = false;
+            this.showUploadForm = false;
+            this.uploadLoading = false;
             this.proofModalOpen = true;
+        },
+        async submitProofUpload(e) {
+            const formEl = e.target;
+            const formData = new FormData(formEl);
+            formData.append('kode_billing', this.proofKodeBilling);
+            formData.append('nomor_internet', this.proofInternet);
+            formData.append('nama_pelanggan', this.proofNamaPelanggan);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            this.uploadLoading = true;
+            try {
+                const res = await fetch('{{ route('finance.billing-layanan.upload-proof') }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.proofUrl = data.proof_url;
+                    this.proofImgError = false;
+                    this.showUploadForm = false;
+                    formEl.reset();
+                    alert('Bukti transfer berhasil diupload dan diperbarui.');
+                } else {
+                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan saat upload'));
+                }
+            } catch (err) {
+                alert('Gagal mengupload bukti: ' + err.message);
+            } finally {
+                this.uploadLoading = false;
+            }
         },
 
         // Format Currency Helper

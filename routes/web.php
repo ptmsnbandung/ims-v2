@@ -229,7 +229,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/billing-layanan/change-payment-method', [FinanceController::class, 'changePaymentMethodLayanan'])->name('billing-layanan.change-payment-method.post');
         Route::post('/billing-layanan/{kode_billing}/change-payment-method', [FinanceController::class, 'changePaymentMethodLayanan'])->name('billing-layanan.change-payment-method')->where('kode_billing', '.*');
         Route::post('/billing-layanan/delete', [FinanceController::class, 'deleteBillingLayanan'])->name('billing-layanan.delete.post');
-        Route::post('/billing-layanan/{kode_billing}/delete', [FinanceController::class, 'deleteBillingLayanan'])->name('billing-layanan.delete')->where('kode_billing', '.*');
+        Route::post('/billing-layanan/upload-proof', [FinanceController::class, 'uploadProofFile'])->name('billing-layanan.upload-proof');
         Route::get('/billing-layanan/export', [FinanceController::class, 'exportBillingLayanan'])->name('billing-layanan.export');
         Route::get('/dokumen/invoice/{kode_billing}', [FinanceController::class, 'dokumenInvoice'])->name('dokumen.invoice')->where('kode_billing', '.*');
         Route::get('/dokumen/batch-invoice/search', [FinanceController::class, 'searchBatchInvoiceJson'])->name('dokumen.batch-invoice.search');

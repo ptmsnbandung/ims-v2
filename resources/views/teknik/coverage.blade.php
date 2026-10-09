@@ -382,7 +382,7 @@
                                     class="py-1.5 px-2 rounded-md transition text-center flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                     <span>⚡ Span Lurus</span>
-                                    <span class="font-mono text-[10px] font-bold" x-text="'(' + selectedOdpResult.dropcoreDistance + 'm)'"></span>
+                                    <span class="font-mono text-[10px] font-bold" x-text="'(' + selectedOdpResult.distance + 'm)'"></span>
                                 </button>
                             </div>
 
@@ -409,8 +409,12 @@
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
+                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Jarak Rute Jalan:</span>
+                                    <strong class="text-slate-900 dark:text-white font-mono text-[11.5px]" x-text="selectedOdpResult.roadDistance + ' Meter'"></strong>
+                                </div>
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Jarak Lurus (Span Udara):</span>
-                                    <strong class="text-slate-900 dark:text-white font-mono text-[11.5px]" x-text="selectedOdpResult.distance + ' Meter'"></strong>
+                                    <span class="text-slate-700 dark:text-slate-300 font-mono text-[11px]" x-text="selectedOdpResult.distance + ' Meter'"></span>
                                 </div>
                                 <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]" x-text="routingMode === 'street' ? 'Estimasi Kabel (Rute Jalan):' : 'Estimasi Kabel (Span + Slack):'"></span>
@@ -468,7 +472,7 @@
                                         Di Luar Radius Coverage (&gt; 300m)
                                     </strong>
                                     <span class="text-[10.5px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                                        Jarak ODP terdekat adalah <b class="text-rose-600 dark:text-rose-400 font-mono" x-text="selectedOdpResult.distance + ' meter'"></b> (estimasi kabel ~<span x-text="selectedOdpResult.dropcoreDistance"></span>m).
+                                        Jarak rute jalan ke ODP terdekat adalah <b class="text-rose-600 dark:text-rose-400 font-mono" x-text="selectedOdpResult.roadDistance + ' meter'"></b> (jarak lurus: <span x-text="selectedOdpResult.distance"></span>m, kabel ~<span x-text="selectedOdpResult.dropcoreDistance"></span>m).
                                     </span>
                                 </div>
                             </div>
@@ -907,6 +911,44 @@
                 return null;
             },
 
+            updateCoverageAssessment(result) {
+                if (!result) return;
+                const roadDist = result.roadDistance !== undefined ? result.roadDistance : Math.round(result.distance * 1.25);
+                
+                // Evaluasi status coverage BERDASARKAN JARAK RUTE JALAN
+                result.isCovered = roadDist <= 300;
+
+                // Hitung estimasi kabel dropcore sesuai mode routing yang dipilih
+                if (this.routingMode === 'street') {
+                    result.dropcoreDistance = Math.round(roadDist * 1.08 + 10);
+                } else {
+                    result.dropcoreDistance = Math.round(result.distance * 1.15 + 10);
+                }
+
+                // Estimasi redaman optik berdasarkan panjang kabel yang dibutuhkan
+                const approxLoss = (0.35 * (result.dropcoreDistance / 1000) + 0.3).toFixed(2);
+                result.opticalPowerEstimate = `-${(16.5 + parseFloat(approxLoss)).toFixed(1)} dBm (Loss ~${approxLoss} dB)`;
+
+                // Penentuan level & label kualitas coverage berbasis jarak rute jalan
+                if (roadDist > 300) {
+                    result.coverageLevel = 'out';
+                    result.coverageLabel = 'Di Luar Radius';
+                    result.coverageNote = `Jarak rute jalan (${roadDist}m) melebihi batas aman maksimal FTTH (> 300m).`;
+                } else if (roadDist > 250) {
+                    result.coverageLevel = 'border';
+                    result.coverageLabel = 'Batas Maksimal';
+                    result.coverageNote = `Jarak rute jalan (${roadDist}m) mendekati batas 300m, disarankan tiang antara.`;
+                } else if (roadDist > 150) {
+                    result.coverageLevel = 'good';
+                    result.coverageLabel = 'Ideal / Aman';
+                    result.coverageNote = `Jarak rute jalan (${roadDist}m) dalam radius aman standar tarikan dropcore.`;
+                } else {
+                    result.coverageLevel = 'excellent';
+                    result.coverageLabel = 'Sangat Ideal';
+                    result.coverageNote = `Jarak rute jalan (${roadDist}m) sangat dekat, redaman optik sangat prima.`;
+                }
+            },
+
             async executeCoverageCheck() {
                 let coords = this.parseCoordinates(this.inputCoordinates);
                 
@@ -931,44 +973,23 @@
                 // Hitung jarak ke seluruh ODP dengan akurasi presisi
                 const odpList = this.allOdps.map(odp => {
                     const straightDist = this.calculateHighPrecisionMeters(userLat, userLng, odp.lat, odp.lng);
+                    const roadDist = Math.round(straightDist * 1.25);
                     
-                    // Estimasi kabel dropcore FTTH: Jarak span tiang + 15% slack sag + 10m drop ke roset rumah
-                    const dropcoreDist = Math.round(straightDist * 1.15 + 10);
-                    
-                    // Estimasi redaman optik dBm (Kabel FO loss 0.35dB/km + Splice/Connector 0.3dB)
-                    const approxLoss = (0.35 * (dropcoreDist / 1000) + 0.3).toFixed(2);
-                    const optPower = `-${(16.5 + parseFloat(approxLoss)).toFixed(1)} dBm (Loss ~${approxLoss} dB)`;
-
-                    let level = 'excellent';
-                    let label = 'Sangat Ideal';
-                    let note = 'Jarak span tiang sangat dekat, redaman optik sangat prima.';
-
-                    if (straightDist > 300) {
-                        level = 'out';
-                        label = 'Di Luar Radius';
-                        note = 'Melebihi batas aman radius ODP (> 300m).';
-                    } else if (straightDist > 250) {
-                        level = 'border';
-                        label = 'Batas Maksimal';
-                        note = 'Jarak mendekati batas maksimal, disarankan menggunakan tiang antara.';
-                    } else if (straightDist > 150) {
-                        level = 'good';
-                        label = 'Ideal / Aman';
-                        note = 'Jaringan dalam radius aman standar tarikan dropcore FTTH.';
-                    }
-
-                    return {
+                    const item = {
                         odp: odp,
                         distance: straightDist,
-                        dropcoreDistance: dropcoreDist,
-                        roadDistance: Math.round(straightDist * 1.25),
-                        isCovered: straightDist <= 300,
-                        coverageLevel: level,
-                        coverageLabel: label,
-                        coverageNote: note,
-                        opticalPowerEstimate: optPower
+                        roadDistance: roadDist,
+                        dropcoreDistance: Math.round(roadDist * 1.08 + 10),
+                        isCovered: roadDist <= 300,
+                        coverageLevel: 'excellent',
+                        coverageLabel: 'Sangat Ideal',
+                        coverageNote: '',
+                        opticalPowerEstimate: ''
                     };
-                }).sort((a, b) => a.distance - b.distance);
+
+                    this.updateCoverageAssessment(item);
+                    return item;
+                }).sort((a, b) => a.roadDistance - b.roadDistance);
 
                 if (odpList.length > 0) {
                     this.nearestCandidates = odpList.slice(0, 5);
@@ -980,6 +1001,7 @@
 
             selectCandidateOdp(candidate) {
                 this.selectedOdpResult = candidate;
+                this.updateCoverageAssessment(this.selectedOdpResult);
                 const coords = this.parseCoordinates(this.inputCoordinates);
                 if (coords) {
                     this.drawConnectionToOdp(coords.lat, coords.lng, candidate);
@@ -988,6 +1010,9 @@
 
             setRoutingMode(mode) {
                 this.routingMode = mode;
+                if (this.selectedOdpResult) {
+                    this.updateCoverageAssessment(this.selectedOdpResult);
+                }
                 const coords = this.parseCoordinates(this.inputCoordinates);
                 if (coords && this.selectedOdpResult) {
                     this.renderActiveRoute(coords.lat, coords.lng, this.selectedOdpResult);
@@ -1068,22 +1093,6 @@
                     this.executeCoverageCheck();
                 });
 
-                this.userMarkerLayer.bindPopup(`
-                    <div style="font-family: inherit; padding: 4px; min-width: 190px;">
-                        <div style="font-size: 10px; font-weight: 800; color: #ea4335; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between;">
-                            <span>📍 LOKASI TARGET</span>
-                            <span style="font-size: 9px; color: #64748b; font-weight: normal;">(Bisa digeser)</span>
-                        </div>
-                        <div class="ims-popup-title" style="font-size: 12px; font-weight: 800; margin: 2px 0; font-family: monospace;">${userLat.toFixed(6)}, ${userLng.toFixed(6)}</div>
-                        <div style="font-size: 11px; color: ${result.isCovered ? '#0284c7' : '#ea4335'}; font-weight: 700; margin-top: 4px;">
-                            ${result.isCovered ? '⚡ Tercover (' + result.coverageLabel + ')' : '✕ Di Luar Radius (> 300m)'}
-                        </div>
-                        <div class="ims-popup-muted" style="font-size: 10.5px; margin-top: 2px;">
-                            Ke <b class="ims-popup-title">${odpName}</b> ~${result.dropcoreDistance}m dropcore (span: ${result.distance}m)
-                        </div>
-                    </div>
-                `, { offset: [0, -42] }).openPopup();
-
                 const odp = result.odp;
 
                 // Visual Radius Circles
@@ -1117,10 +1126,8 @@
                                 this.streetRouteGeometry = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
                                 if (data.routes[0].distance) {
                                     result.roadDistance = Math.round(data.routes[0].distance);
-                                    // Update estimasi kabel dropcore mengikuti rute jalan nyata (+8% slack drop ke tiang)
-                                    result.dropcoreDistance = Math.round(result.roadDistance * 1.08 + 10);
-                                    const approxLoss = (0.35 * (result.dropcoreDistance / 1000) + 0.3).toFixed(2);
-                                    result.opticalPowerEstimate = `-${(16.5 + parseFloat(approxLoss)).toFixed(1)} dBm (Loss ~${approxLoss} dB)`;
+                                    // Evaluasi ulang status coverage berdasarkan jarak rute jalan nyata OSRM
+                                    this.updateCoverageAssessment(result);
                                 }
                                 break;
                             }
@@ -1129,6 +1136,22 @@
                         // Fallback to next endpoint
                     }
                 }
+
+                this.userMarkerLayer.bindPopup(`
+                    <div style="font-family: inherit; padding: 4px; min-width: 190px;">
+                        <div style="font-size: 10px; font-weight: 800; color: #ea4335; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between;">
+                            <span>📍 LOKASI TARGET</span>
+                            <span style="font-size: 9px; color: #64748b; font-weight: normal;">(Bisa digeser)</span>
+                        </div>
+                        <div class="ims-popup-title" style="font-size: 12px; font-weight: 800; margin: 2px 0; font-family: monospace;">${userLat.toFixed(6)}, ${userLng.toFixed(6)}</div>
+                        <div style="font-size: 11px; color: ${result.isCovered ? '#0284c7' : '#ea4335'}; font-weight: 700; margin-top: 4px;">
+                            ${result.isCovered ? '⚡ Tercover (' + result.coverageLabel + ')' : '✕ Di Luar Radius (> 300m)'}
+                        </div>
+                        <div class="ims-popup-muted" style="font-size: 10.5px; margin-top: 2px;">
+                            Ke <b class="ims-popup-title">${odpName}</b>: Rute Jalan ${result.roadDistance}m (Span: ${result.distance}m)
+                        </div>
+                    </div>
+                `, { offset: [0, -42] }).openPopup();
 
                 // Render Route
                 this.renderActiveRoute(userLat, userLng, result);

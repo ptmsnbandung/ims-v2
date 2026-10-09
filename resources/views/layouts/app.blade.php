@@ -1480,13 +1480,11 @@
                 document.addEventListener('click', unlock, { once: true });
                 document.addEventListener('keydown', unlock, { once: true });
 
-                // Initial poll on load, then poll every 25 seconds when page is active
-                setTimeout(() => this.pollNotifications(), 2000);
+                // Initial poll on load, then poll continuously every 15 seconds (including when tab is in background)
+                setTimeout(() => this.pollNotifications(), 1500);
                 setInterval(() => {
-                    if (!document.hidden) {
-                        this.pollNotifications();
-                    }
-                }, 25000);
+                    this.pollNotifications();
+                }, 15000);
             },
 
             testSound() {
@@ -1579,7 +1577,6 @@
             },
 
             async pollNotifications() {
-                if (document.hidden) return; // Skip if tab is hidden
                 try {
                     const res = await fetch(`{{ route('api.notifications.poll') }}?since=${this.lastCheck}`, {
                         headers: {

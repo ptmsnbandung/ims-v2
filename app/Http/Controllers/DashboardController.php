@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengguna;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -124,9 +125,34 @@ class DashboardController extends Controller
         ];
 
         try {
-            $sourceTable = 'view_batchjob';
+            $statsCacheKey = "dashboard_stats_v2_{$selectedBulan}_{$selectedTahun}";
+            $cachedDashboardData = Cache::remember($statsCacheKey, 60, function () use ($applyYearFilter, $prevApplyYearFilter, $selectedBulan, $selectedTahun, $monthsList, $selectedTahunInt, $startOfYear, $endOfYear) {
+                $sourceTable = 'view_batchjob';
+                $localNewUserStats = [
+                    'selectedBulan' => $selectedBulan,
+                    'selectedTahun' => $selectedTahun,
+                    'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
+                    'totalBaru' => 0,
+                    'aktifBaru' => 0,
+                    'prosesBaru' => 0,
+                    'batalBaru' => 0,
+                    'prevTotalBaru' => 0,
+                    'growthPercent' => 0,
+                    'growthCount' => 0,
+                    'totalPenggunaSistemBaru' => 0,
+                    'totalSemuaPelangganAktif' => 0,
+                    'paketBreakdown' => collect([]),
+                    'recentNewUsers' => collect([]),
+                    'statusBreakdown' => [
+                        '11' => 0,
+                        '12' => 0,
+                        '16' => 0,
+                        '18_19' => 0,
+                        '20' => 0,
+                        'batal' => 0,
+                    ],
+                ];
 
-            if ($sourceTable) {
                 // Aggregated counts for the selected year
                 $statsQuery = DB::table($sourceTable);
                 $applyYearFilter($statsQuery, 'date_create');
@@ -163,115 +189,35 @@ class DashboardController extends Controller
                     ->count();
 
                 // Detailed Recent New Users and Package Breakdown for the Year
-                if ($sourceTable === 'view_batchjob') {
-                    $recentQuery = DB::table('view_batchjob');
-                    $applyYearFilter($recentQuery, 'date_create');
+                $recentQuery = DB::table('view_batchjob');
+                $applyYearFilter($recentQuery, 'date_create');
 
-                    $recentNewUsers = $recentQuery
-                        ->select(
-                            'nomor_internet',
-                            'nama_pelanggan',
-                            DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_kategori_bandwith"),
-                            DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
-                            'status_reg',
-                            'date_create'
-                        )
-                        ->orderBy('date_create', 'desc')
-                        ->limit(10)
-                        ->get();
-
-                    $paketQuery = DB::table('view_batchjob');
-                    $applyYearFilter($paketQuery, 'date_create');
-
-                    $paketBreakdown = $paketQuery
-                        ->select(
-                            DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_paket"),
-                            DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
-                            DB::raw('count(*) as total')
-                        )
-                        ->groupBy('nama_paket', 'nominal_bandwith')
-                        ->orderByDesc('total')
-                        ->limit(6)
-                        ->get();
-                } else {
-                    $baseQuery = DB::table('trx_batchjob_register as r');
-                    $applyYearFilter($baseQuery, 'r.date_create');
-
-                    $hasPelanggan = Schema::hasTable('m_pelanggan');
-                    $hasBandwith = Schema::hasTable('m_bandwith');
-                    $hasBandwithKat = Schema::hasTable('m_bandwith_kategori');
-
-                    $hasTrxNamaPelanggan = Schema::hasColumn('trx_batchjob_register', 'nama_pelanggan');
-                    $hasTrxNamaKat = Schema::hasColumn('trx_batchjob_register', 'nama_kategori_bandwith');
-                    $hasTrxNominalBw = Schema::hasColumn('trx_batchjob_register', 'nominal_bandwith');
-
-                    if ($hasPelanggan) {
-                        $baseQuery->leftJoin('m_pelanggan as p', 'r.nik_penduduk', '=', 'p.nik_penduduk');
-                    }
-                    if ($hasBandwith) {
-                        $baseQuery->leftJoin('m_bandwith as bw', 'r.kode_bandwith', '=', 'bw.kode_bandwith');
-                    }
-                    if ($hasBandwith && $hasBandwithKat) {
-                        $baseQuery->leftJoin('m_bandwith_kategori as bwk', 'bw.kode_kategori_bandwith', '=', 'bwk.kode_kategori_bandwith');
-                    }
-
-                    $namaPelParts = [];
-                    if ($hasPelanggan) {
-                        $namaPelParts[] = 'p.nama_penduduk';
-                    }
-                    if ($hasTrxNamaPelanggan) {
-                        $namaPelParts[] = 'r.nama_pelanggan';
-                    }
-                    $namaPelParts[] = 'r.nomor_internet';
-                    $namaPelangganCol = 'COALESCE(' . implode(', ', $namaPelParts) . ')';
-
-                    $namaPaketParts = [];
-                    if ($hasBandwith && $hasBandwithKat) {
-                        $namaPaketParts[] = 'bwk.nama_kategori_bandwith';
-                        $namaPaketParts[] = 'bwk.alias_nama_kategori';
-                    }
-                    if ($hasBandwith) {
-                        $namaPaketParts[] = 'bw.nama_bandwith';
-                    }
-                    if ($hasTrxNamaKat) {
-                        $namaPaketParts[] = 'r.nama_kategori_bandwith';
-                    }
-                    $namaPaketParts[] = 'r.kode_bandwith';
-                    $namaPaketParts[] = "'INTERNET'";
-                    $namaPaketCol = 'COALESCE(' . implode(', ', $namaPaketParts) . ')';
-
-                    $nominalBwParts = [];
-                    if ($hasBandwith) {
-                        $nominalBwParts[] = 'bw.nominal_bandwith';
-                    }
-                    if ($hasTrxNominalBw) {
-                        $nominalBwParts[] = 'r.nominal_bandwith';
-                    }
-                    $nominalBwParts[] = "'0'";
-                    $nominalBwCol = 'COALESCE(' . implode(', ', $nominalBwParts) . ')';
-
-                    $recentNewUsers = (clone $baseQuery)->select(
-                        'r.nomor_internet',
-                        DB::raw("{$namaPelangganCol} as nama_pelanggan"),
-                        DB::raw("{$namaPaketCol} as nama_kategori_bandwith"),
-                        DB::raw("{$nominalBwCol} as nominal_bandwith"),
-                        'r.status_reg',
-                        'r.date_create'
+                $recentNewUsers = $recentQuery
+                    ->select(
+                        'nomor_internet',
+                        'nama_pelanggan',
+                        DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_kategori_bandwith"),
+                        DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
+                        'status_reg',
+                        'date_create'
                     )
-                    ->orderBy('r.date_create', 'desc')
+                    ->orderBy('date_create', 'desc')
                     ->limit(10)
                     ->get();
 
-                    $paketBreakdown = (clone $baseQuery)->select(
-                        DB::raw("{$namaPaketCol} as nama_paket"),
-                        DB::raw("{$nominalBwCol} as nominal_bandwith"),
+                $paketQuery = DB::table('view_batchjob');
+                $applyYearFilter($paketQuery, 'date_create');
+
+                $paketBreakdown = $paketQuery
+                    ->select(
+                        DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'INTERNET') as nama_paket"),
+                        DB::raw("COALESCE(nominal_bandwith, '0') as nominal_bandwith"),
                         DB::raw('count(*) as total')
                     )
                     ->groupBy('nama_paket', 'nominal_bandwith')
                     ->orderByDesc('total')
                     ->limit(6)
                     ->get();
-                }
 
                 // New system users (tb_pengguna) in the year
                 $totalPenggunaSistemBaru = 0;
@@ -287,7 +233,7 @@ class DashboardController extends Controller
                     }
                 }
 
-                $newUserStats = [
+                $localNewUserStats = [
                     'selectedBulan' => $selectedBulan,
                     'selectedTahun' => $selectedTahun,
                     'selectedBulanNama' => $monthsList[$selectedBulan] ?? 'Bulan Terpilih',
@@ -312,7 +258,7 @@ class DashboardController extends Controller
                     ],
                 ];
 
-                // 1.B DATA GRAFIK: TREN PERTUMBUHAN USER DARI BULAN KE BULAN (1 SINGLE HIGH-SPEED AGGREGATED QUERY)
+                // 1.B DATA GRAFIK: TREN PERTUMBUHAN USER DARI BULAN KE BULAN
                 $chartMonthlyLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                 $chartMonthlyRegistrasi = array_fill(0, 12, 0);
                 $chartMonthlyAktif = array_fill(0, 12, 0);
@@ -346,43 +292,29 @@ class DashboardController extends Controller
                 $chartBandwidthLabels = [];
                 $chartBandwidthSeries = [];
 
-                if ($sourceTable === 'view_batchjob') {
+                $bwDistQuery = DB::table('view_batchjob')
+                    ->where(function($q) use ($selectedTahunInt) {
+                        $q->where('date_create', 'like', "{$selectedTahunInt}%")
+                          ->orWhereYear('date_create', $selectedTahunInt);
+                    })
+                    ->select(
+                        DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'BROADBAND') as kategori_name"),
+                        DB::raw('COUNT(*) as total')
+                    )
+                    ->groupBy('kategori_name')
+                    ->orderByDesc('total')
+                    ->get();
+
+                if ($bwDistQuery->isEmpty()) {
                     $bwDistQuery = DB::table('view_batchjob')
-                        ->where(function($q) use ($selectedTahunInt) {
-                            $q->where('date_create', 'like', "{$selectedTahunInt}%")
-                              ->orWhereYear('date_create', $selectedTahunInt);
-                        })
                         ->select(
                             DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'BROADBAND') as kategori_name"),
                             DB::raw('COUNT(*) as total')
                         )
                         ->groupBy('kategori_name')
                         ->orderByDesc('total')
+                        ->limit(6)
                         ->get();
-                } else {
-                    $bwDistQuery = (clone $baseQuery)
-                        ->select(
-                            DB::raw("COALESCE(NULLIF(bwk.nama_kategori_bandwith, ''), NULLIF(bwk.alias_nama_kategori, ''), 'BROADBAND') as kategori_name"),
-                            DB::raw('COUNT(*) as total')
-                        )
-                        ->groupBy('kategori_name')
-                        ->orderByDesc('total')
-                        ->get();
-                }
-
-                if ($bwDistQuery->isEmpty()) {
-                    // Fallback all-time distribution jika tahun terpilih belum ada data
-                    if ($sourceTable === 'view_batchjob') {
-                        $bwDistQuery = DB::table('view_batchjob')
-                            ->select(
-                                DB::raw("COALESCE(NULLIF(nama_kategori_bandwith, ''), NULLIF(alias_nama_kategori, ''), 'BROADBAND') as kategori_name"),
-                                DB::raw('COUNT(*) as total')
-                            )
-                            ->groupBy('kategori_name')
-                            ->orderByDesc('total')
-                            ->limit(6)
-                            ->get();
-                    }
                 }
 
                 foreach ($bwDistQuery as $bwItem) {
@@ -409,8 +341,7 @@ class DashboardController extends Controller
                     $batalBaru,
                 ];
 
-                // 1.E DATA GRAFIK: DISTRIBUSI USER BERDASARKAN NAMA_KOTA_PASANG (DARI VIEW_BATCHJOB)
-                // Dikelompokkan khusus: KOTA BANDUNG, KABUPATEN BANDUNG, dan LAINNYA
+                // 1.E DATA GRAFIK: DISTRIBUSI USER BERDASARKAN NAMA_KOTA_PASANG
                 $chartCityLabels = [];
                 $chartCitySeries = [];
                 $chartCityAktifSeries = [];
@@ -458,7 +389,7 @@ class DashboardController extends Controller
                     $chartCityAktifSeries = [0, 0, 0];
                 }
 
-                $chartData = [
+                $localChartData = [
                     'monthlyLabels' => $chartMonthlyLabels,
                     'monthlyRegistrasi' => $chartMonthlyRegistrasi,
                     'monthlyAktif' => $chartMonthlyAktif,
@@ -474,6 +405,18 @@ class DashboardController extends Controller
                     'cityBreakdown' => $cityBreakdown,
                     'totalCityUsers' => array_sum($chartCitySeries),
                 ];
+
+                return [
+                    'newUserStats' => $localNewUserStats,
+                    'chartData' => $localChartData,
+                ];
+            });
+
+            if (!empty($cachedDashboardData['newUserStats'])) {
+                $newUserStats = $cachedDashboardData['newUserStats'];
+            }
+            if (!empty($cachedDashboardData['chartData'])) {
+                $chartData = $cachedDashboardData['chartData'];
             }
         } catch (\Throwable $e) {
             Log::error('Dashboard New User Stats Error: ' . $e->getMessage());

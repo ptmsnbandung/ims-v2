@@ -312,33 +312,34 @@ class DashboardController extends Controller
                     ],
                 ];
 
-                // 1.B DATA GRAFIK: TREN PERTUMBUHAN USER DARI BULAN KE BULAN (12 BULAN PADA TAHUN TERPILIH)
+                // 1.B DATA GRAFIK: TREN PERTUMBUHAN USER DARI BULAN KE BULAN (1 SINGLE HIGH-SPEED AGGREGATED QUERY)
                 $chartMonthlyLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
                 $chartMonthlyRegistrasi = array_fill(0, 12, 0);
                 $chartMonthlyAktif = array_fill(0, 12, 0);
 
-                for ($m = 1; $m <= 12; $m++) {
-                    $mPad = str_pad((string)$m, 2, '0', STR_PAD_LEFT);
-                    $mStart = Carbon::createFromDate($selectedTahunInt, $m, 1)->startOfMonth()->format('Y-m-d 00:00:00');
-                    $mEnd = Carbon::createFromDate($selectedTahunInt, $m, 1)->endOfMonth()->format('Y-m-d 23:59:59');
-                    $mPrefix = "{$selectedTahunInt}-{$mPad}";
-
-                    $mRow = DB::table($sourceTable)
-                        ->where(function($q) use ($mStart, $mEnd, $mPrefix, $m, $selectedTahunInt) {
-                            $q->whereBetween('date_create', [$mStart, $mEnd])
-                              ->orWhere('date_create', 'like', "{$mPrefix}%")
-                              ->orWhere(function($sub) use ($m, $selectedTahunInt) {
-                                  $sub->whereMonth('date_create', $m)->whereYear('date_create', $selectedTahunInt);
-                              });
+                try {
+                    $monthlyRows = DB::table($sourceTable)
+                        ->where(function($q) use ($startOfYear, $endOfYear, $selectedTahunInt) {
+                            $q->whereBetween('date_create', [$startOfYear, $endOfYear])
+                              ->orWhere('date_create', 'like', "{$selectedTahunInt}%");
                         })
                         ->selectRaw("
+                            MONTH(date_create) as month_num,
                             COUNT(*) as total,
                             COUNT(CASE WHEN status_reg IN ('20', '20.0', '20.1') THEN 1 END) as aktif
                         ")
-                        ->first();
+                        ->groupBy(DB::raw('MONTH(date_create)'))
+                        ->get();
 
-                    $chartMonthlyRegistrasi[$m - 1] = (int) ($mRow->total ?? 0);
-                    $chartMonthlyAktif[$m - 1] = (int) ($mRow->aktif ?? 0);
+                    foreach ($monthlyRows as $mRow) {
+                        $mNum = (int) ($mRow->month_num ?? 0);
+                        if ($mNum >= 1 && $mNum <= 12) {
+                            $chartMonthlyRegistrasi[$mNum - 1] = (int) ($mRow->total ?? 0);
+                            $chartMonthlyAktif[$mNum - 1] = (int) ($mRow->aktif ?? 0);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Dashboard monthly stats query fallback: ' . $e->getMessage());
                 }
 
                 // 1.C DATA GRAFIK: DISTRIBUSI KATEGORI BANDWIDTH

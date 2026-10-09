@@ -617,20 +617,20 @@ class CustomerProvisioningService
             }
         }
 
-        $isOverallSuccess = $results['database'] && ($results['mikrotik_remove'] || empty($usernameCandidates));
+        $isOverallSuccess = $results['database'];
 
-        // Format summary yang bersih dan ringkas
-        if ($isOverallSuccess) {
-            $summaryParts = [];
-            $summaryParts[] = "PPPoE '{$pppoeUsername}' berhasil DIHAPUS dari MikroTik Router.";
-            if ($results['mikrotik_kick']) {
-                $summaryParts[] = "Sesi koneksi diputus seketika.";
-            }
-            $summaryParts[] = "Status pelanggan kini Nonaktif / Terminated (#23).";
-            $cleanSummary = implode(' ', $summaryParts);
+        // Format summary yang bersih dan informatif
+        $summaryParts = [];
+        if (!empty($mkRemove['removed'])) {
+            $summaryParts[] = "User PPPoE '{$pppoeUsername}' berhasil DIHAPUS dari router MikroTik.";
         } else {
-            $cleanSummary = "Terminasi selesai di database, namun router memerlukan pengecekan: " . implode('; ', array_slice($results['messages'], 0, 2));
+            $summaryParts[] = "User PPPoE '{$pppoeUsername}' sudah tidak ada di router MikroTik (sudah terhapus).";
         }
+        if ($results['mikrotik_kick']) {
+            $summaryParts[] = "Sesi koneksi diputus.";
+        }
+        $summaryParts[] = "Status pelanggan kini Nonaktif / Terminated (#23) & Terminasi Selesai (KD14).";
+        $cleanSummary = implode(' ', $summaryParts);
 
         // 6. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {

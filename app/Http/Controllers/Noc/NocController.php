@@ -1477,6 +1477,61 @@ class NocController extends Controller
         }
 
         // 4. Log: Report Aktivasi & Otomatis Reboot/Aktivasi Background
+        // 4. Eksekusi Live Sinkronisasi ke MikroTik Router (Buat / Update PPPoE Secret)
+        $mikrotikResult = ['success' => false, 'message' => 'Router MikroTik tidak dipilih'];
+        $routerName = '';
+        $mikrotikService = new MikrotikService();
+
+        if ($request->filled('router_id')) {
+            $rObj = DB::table('routers')->where('id', $request->router_id)->first();
+            if ($rObj) {
+                $routerName = $rObj->name;
+                $pass = $rObj->password ?? '';
+                try {
+                    $pass = Crypt::decryptString($pass);
+                } catch (\Exception $e) {}
+                $mikrotikService->setRouter([
+                    'host' => $rObj->host,
+                    'port' => (int)($rObj->port ?: 18735),
+                    'username' => $rObj->username,
+                    'password' => $pass,
+                ]);
+            }
+        }
+
+        if (!empty($ontUs)) {
+            $customerName = $currentCust->nama_pelanggan ?? $nomorInternet;
+            $secretComment = $request->filled('pppoe_comment') 
+                ? $request->pppoe_comment 
+                : "Aktivasi - {$customerName} ({$nomorInternet})";
+
+            $mikrotikResult = $mikrotikService->createOrUpdateSecret([
+                'name' => $ontUs,
+                'password' => $ontPs,
+                'profile' => $request->ppp_profile ?: 'default',
+                'service' => 'pppoe',
+                'local_address' => $request->local_address ?: '',
+                'remote_address' => $request->remote_address ?: '',
+                'comment' => $secretComment,
+                'disabled' => 'no',
+            ]);
+
+            if ($mikrotikResult['success']) {
+                $mikrotikService->kickActiveConnection($ontUs);
+            }
+        }
+
+        // 4a. Eksekusi Remote Reboot OLT ONU jika port dan OLT diisi
+        if (!empty($request->index_olt) && in_array($request->media_akses, ['FTTH', 'FTTH MSN', 'GPON'])) {
+            try {
+                $oltService = app(OltConnectionService::class);
+                $oltService->rebootOnu($request->index_olt, $request->olt);
+            } catch (\Throwable $oltErr) {
+                \Illuminate\Support\Facades\Log::warning("OLT Reboot on aktivasi failed for {$nomorInternet}: " . $oltErr->getMessage());
+            }
+        }
+
+        // 5. Log: Report Aktivasi & Otomatis Reboot/Aktivasi Background
         if (Schema::hasTable('trx_batchjob_register_log')) {
             // Log Report
             DB::table('trx_batchjob_register_log')->insert([
@@ -1492,21 +1547,18 @@ class NocController extends Controller
             ]);
 
             // Log Otomatis Reboot & Aktivasi PPPoE (#20)
-            $routerInfo = '';
-            if ($request->filled('router_id')) {
-                $rObj = DB::table('routers')->where('id', $request->router_id)->first();
-                if ($rObj) $routerInfo = ", Router: {$rObj->name}";
-            }
+            $routerInfo = $routerName ? ", Router: {$routerName}" : '';
             $profileInfo = $request->filled('ppp_profile') ? ", Profile: {$request->ppp_profile}" : '';
             $remoteInfo = $request->filled('remote_address') ? ", IP: {$request->remote_address}" : '';
             $commentInfo = $request->filled('pppoe_comment') ? " ({$request->pppoe_comment})" : '';
+            $statusMikrotik = $mikrotikResult['success'] ? 'PPPoE Terkonfigurasi' : 'MikroTik Gagal: ' . $mikrotikResult['message'];
 
             DB::table('trx_batchjob_register_log')->insert([
                 'kode_batchjob_register_log' => 'L-' . $nomorInternet . rand(1000, 9999),
                 'nomor_internet' => $nomorInternet,
                 'status_reg' => '20',
                 'kat_log' => '20',
-                'note_schedule' => "REBOOT & AKTIVASI OTOMATIS (BACKGROUND): OLT: {$request->olt}, Index: {$request->index_olt}, SN Modem: {$request->sn_modem}, User PPPoE: {$ontUs}{$routerInfo}{$profileInfo}{$remoteInfo}{$commentInfo} - Layanan AKTIF (#20)",
+                'note_schedule' => "REBOOT & AKTIVASI OTOMATIS: OLT: {$request->olt}, Index: {$request->index_olt}, SN Modem: {$request->sn_modem}, User PPPoE: {$ontUs}{$routerInfo}{$profileInfo}{$remoteInfo}{$commentInfo} - [{$statusMikrotik}] Layanan AKTIF (#20)",
                 'date_schedule' => now()->format('Y-m-d'),
                 'time_schedule' => now()->format('H:i:s'),
                 'date_create' => $now,
@@ -1514,14 +1566,9 @@ class NocController extends Controller
             ]);
         }
 
-        // 4b. Activity Log Router (tabel activity_logs)
+        // 5b. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {
             try {
-                $routerName = '';
-                if ($request->filled('router_id')) {
-                    $rObj = DB::table('routers')->where('id', $request->router_id)->first();
-                    if ($rObj) $routerName = $rObj->name;
-                }
                 \App\Models\ActivityLog::record([
                     'user_id' => $currentUser,
                     'customer_id' => $nomorInternet,
@@ -1529,15 +1576,19 @@ class NocController extends Controller
                     'old_status' => $currentCust->status_reg ?? '19',
                     'new_status' => '20',
                     'description' => "Aktivasi Layanan: PPPoE '{$ontUs}', Router: " . ($routerName ?: ($request->router_id ?: '-')) . ", Profile: " . ($request->ppp_profile ?: '-') . ($request->remote_address ? ", Remote IP: {$request->remote_address}" : '') . ($request->pppoe_comment ? ", Comment: {$request->pppoe_comment}" : '') . ", OLT: {$request->olt}, Index: {$request->index_olt}",
-                    'router_response' => 'PPPoE Secret & Queue berhasil dikonfigurasi & layanan online (#20)',
-                    'router_success' => true,
+                    'router_response' => $mikrotikResult['message'] ?? 'PPPoE Secret dikonfigurasi',
+                    'router_success' => (bool)($mikrotikResult['success'] ?? false),
                 ]);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::warning('Gagal log activity_logs aktivasi: ' . $e->getMessage());
             }
         }
 
-        return redirect()->back()->with('success', "Report Aktivasi untuk pelanggan {$nomorInternet} berhasil disimpan! Sistem otomatis melakukan reboot & aktivasi di background (Status: Online / Aktif #20).");
+        if ($mikrotikResult['success']) {
+            return redirect()->back()->with('success', "Report Aktivasi untuk pelanggan {$nomorInternet} berhasil disimpan! PPPoE Secret '{$ontUs}' sukses dibuat/diperbarui di MikroTik ({$routerName}) & layanan online (#20).");
+        } else {
+            return redirect()->back()->with('warning', "Report Aktivasi untuk pelanggan {$nomorInternet} tersimpan (Status #20), namun ada kendala di MikroTik: " . $mikrotikResult['message']);
+        }
     }
 
     /**
@@ -1549,8 +1600,8 @@ class NocController extends Controller
         $request->validate([
             'pppoe_username' => 'required|string',
             'pppoe_password' => 'required|string',
-            'router_mikrotik' => 'required|string',
-            'local_address' => 'required|string',
+            'router_mikrotik' => 'nullable|string',
+            'local_address' => 'nullable|string',
             'ppp_profile' => 'required|string',
             'remote_address' => 'nullable|string',
         ]);
@@ -1558,18 +1609,58 @@ class NocController extends Controller
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'NOC';
 
-        // 1. Update trx_batchjob_register to status 20 (Aktif)
+        // 1. Eksekusi Live ke MikroTik Router
+        $mikrotikService = new MikrotikService();
+        $routerName = $request->router_mikrotik ?: '';
+        if ($request->filled('router_id')) {
+            $rObj = DB::table('routers')->where('id', $request->router_id)->first();
+            if ($rObj) {
+                $routerName = $rObj->name;
+                $pass = $rObj->password ?? '';
+                try {
+                    $pass = Crypt::decryptString($pass);
+                } catch (\Exception $e) {}
+                $mikrotikService->setRouter([
+                    'host' => $rObj->host,
+                    'port' => (int)($rObj->port ?: 18735),
+                    'username' => $rObj->username,
+                    'password' => $pass,
+                ]);
+            }
+        }
+
+        $secretResult = $mikrotikService->createOrUpdateSecret([
+            'name' => $request->pppoe_username,
+            'password' => $request->pppoe_password,
+            'profile' => $request->ppp_profile,
+            'service' => 'pppoe',
+            'local_address' => $request->local_address ?: '',
+            'remote_address' => $request->remote_address ?: '',
+            'comment' => $request->pppoe_comment ?: "Aktivasi - {$nomorInternet}",
+            'disabled' => 'no',
+        ]);
+
+        if ($secretResult['success']) {
+            $mikrotikService->kickActiveConnection($request->pppoe_username);
+        }
+
+        // 2. Update trx_batchjob_register to status 20 (Aktif)
+        $updateData = [
+            'status_reg' => '20', // Pelanggan Aktif
+            'ont_us' => substr($request->pppoe_username, 0, 10),
+            'ont_ps' => substr($request->pppoe_password, 0, 10),
+            'date_update' => $now,
+            'user_update' => $currentUser,
+        ];
+        if ($request->filled('router_id')) {
+            $updateData['router_id'] = $request->router_id;
+        }
+
         DB::table('trx_batchjob_register')
             ->where('nomor_internet', $nomorInternet)
-            ->update([
-                'status_reg' => '20', // Pelanggan Aktif
-                'ont_us' => substr($request->pppoe_username, 0, 10),
-                'ont_ps' => substr($request->pppoe_password, 0, 10),
-                'date_update' => $now,
-                'user_update' => $currentUser,
-            ]);
+            ->update($updateData);
 
-        // 2. Update trx_instalasi
+        // 3. Update trx_instalasi
         DB::table('trx_instalasi')
             ->updateOrInsert(
                 ['nomor_internet' => $nomorInternet],
@@ -1584,14 +1675,14 @@ class NocController extends Controller
                 ]
             );
 
-        // 3. Log PPPoE Secret Creation & OLT Online
+        // 4. Log PPPoE Secret Creation & OLT Online
         if (Schema::hasTable('trx_batchjob_register_log')) {
             DB::table('trx_batchjob_register_log')->insert([
                 'kode_batchjob_register_log' => 'L-' . $nomorInternet . rand(1000, 9999),
                 'nomor_internet' => $nomorInternet,
                 'status_reg' => '20',
                 'kat_log' => '20',
-                'note_schedule' => "AKTIVASI PPPoE BERHASIL: User: {$request->pppoe_username}, Router: {$request->router_mikrotik}, Profile: {$request->ppp_profile}, Remote IP: " . ($request->remote_address ?: 'Dynamic/Pool') . " (Gateway: {$request->local_address})",
+                'note_schedule' => "AKTIVASI PPPoE: User: {$request->pppoe_username}, Router: {$routerName}, Profile: {$request->ppp_profile}, Remote IP: " . ($request->remote_address ?: 'Dynamic/Pool') . " (Gateway: {$request->local_address}) - [{$secretResult['message']}]",
                 'date_schedule' => now()->format('Y-m-d'),
                 'time_schedule' => now()->format('H:i:s'),
                 'date_create' => $now,
@@ -1599,7 +1690,7 @@ class NocController extends Controller
             ]);
         }
 
-        // 3b. Activity Log Router (tabel activity_logs)
+        // 4b. Activity Log Router (tabel activity_logs)
         if (Schema::hasTable('activity_logs')) {
             try {
                 ActivityLog::record([
@@ -1608,16 +1699,20 @@ class NocController extends Controller
                     'action' => 'pppoe_activate',
                     'old_status' => null,
                     'new_status' => '20',
-                    'description' => "Aktivasi PPPoE Secret: User '{$request->pppoe_username}', Router: '{$request->router_mikrotik}', Profile: '{$request->ppp_profile}', Remote IP: " . ($request->remote_address ?: 'Dynamic/Pool'),
-                    'router_response' => 'PPPoE Secret & Queue berhasil dibuat di MikroTik',
-                    'router_success' => true,
+                    'description' => "Aktivasi PPPoE Secret: User '{$request->pppoe_username}', Router: '{$routerName}', Profile: '{$request->ppp_profile}', Remote IP: " . ($request->remote_address ?: 'Dynamic/Pool'),
+                    'router_response' => $secretResult['message'],
+                    'router_success' => (bool)$secretResult['success'],
                 ]);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::warning('Gagal log activity_logs pppoe: ' . $e->getMessage());
             }
         }
 
-        return redirect()->back()->with('success', "PPPoE Secret berhasil dibuat di {$request->router_mikrotik} dan layanan pelanggan {$nomorInternet} resmi AKTIF!");
+        if ($secretResult['success']) {
+            return redirect()->back()->with('success', "PPPoE Secret '{$request->pppoe_username}' berhasil dibuat di {$routerName} dan layanan pelanggan {$nomorInternet} resmi AKTIF!");
+        } else {
+            return redirect()->back()->with('warning', "Status pelanggan {$nomorInternet} diubah ke AKTIF (#20), namun sinkronisasi MikroTik gagal: " . $secretResult['message']);
+        }
     }
 
     /**

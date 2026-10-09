@@ -234,6 +234,79 @@ class MikrotikService
     }
 
     /**
+     * Buat baru atau perbarui PPPoE Secret di MikroTik (/ppp/secret)
+     */
+    public function createOrUpdateSecret(array $params): array
+    {
+        $name = trim($params['name'] ?? ($params['pppoe_username'] ?? ''));
+        if (empty($name)) {
+            return ['success' => false, 'message' => 'Username PPPoE wajib diisi.'];
+        }
+
+        try {
+            $client = $this->getClient();
+
+            // Cek apakah secret sudah ada
+            $existing = $client->comm('/ppp/secret/print', [
+                '?name' => $name,
+            ]);
+
+            $commandData = [
+                '=name' => $name,
+                '=service' => $params['service'] ?? 'pppoe',
+                '=disabled' => $params['disabled'] ?? 'no',
+            ];
+
+            if (!empty($params['password']) || !empty($params['pppoe_password'])) {
+                $commandData['=password'] = (string)($params['password'] ?? $params['pppoe_password']);
+            }
+            if (!empty($params['profile']) || !empty($params['ppp_profile'])) {
+                $commandData['=profile'] = (string)($params['profile'] ?? $params['ppp_profile']);
+            }
+            if (!empty($params['local-address']) || !empty($params['local_address'])) {
+                $commandData['=local-address'] = (string)($params['local-address'] ?? $params['local_address']);
+            }
+            if (!empty($params['remote-address']) || !empty($params['remote_address'])) {
+                $commandData['=remote-address'] = (string)($params['remote-address'] ?? $params['remote_address']);
+            }
+            if (isset($params['comment']) || isset($params['pppoe_comment'])) {
+                $commandData['=comment'] = (string)($params['comment'] ?? $params['pppoe_comment']);
+            }
+
+            if (!empty($existing) && isset($existing[0]['.id'])) {
+                // Update secret yang sudah ada
+                $commandData['=.id'] = $existing[0]['.id'];
+                $client->comm('/ppp/secret/set', $commandData);
+                $client->disconnect();
+
+                return [
+                    'success' => true,
+                    'action' => 'updated',
+                    'matched_user' => $name,
+                    'message' => "PPPoE Secret '{$name}' berhasil diperbarui di MikroTik ({$this->host}).",
+                ];
+            } else {
+                // Tambah secret baru
+                $client->comm('/ppp/secret/add', $commandData);
+                $client->disconnect();
+
+                return [
+                    'success' => true,
+                    'action' => 'created',
+                    'matched_user' => $name,
+                    'message' => "PPPoE Secret '{$name}' berhasil dibuat di MikroTik ({$this->host}).",
+                ];
+            }
+        } catch (Throwable $e) {
+            Log::error("Gagal create/update PPPoE Secret di MikroTik ({$this->host}): " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => "MikroTik ({$this->host}): " . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Enable PPPoE Secret (Aktifkan Layanan)
      */
     public function enableUser(string|array $username): array

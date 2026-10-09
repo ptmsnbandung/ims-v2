@@ -82,6 +82,16 @@ class MikrotikTelnetClient
             return $items;
         }
 
+        if ($action === 'add') {
+            $cmd = "{$base} add" . ($sets ? ' ' . implode(' ', $sets) : '');
+            $output = $this->telnet->exec($cmd);
+            $lower = strtolower($output);
+            if (str_contains($lower, 'failure') || str_contains($lower, 'already exists') || str_contains($lower, 'invalid') || str_contains($lower, 'bad command')) {
+                throw new Exception('Telnet: ' . trim($output));
+            }
+            return [];
+        }
+
         // set / remove / enable / disable
         if ($target === null) {
             throw new Exception('Target (.id) tidak ditentukan untuk perintah Telnet.');

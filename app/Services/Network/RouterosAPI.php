@@ -209,10 +209,20 @@ class RouterosAPI
             $i++;
             $isLast = ($i === $count);
             if (is_numeric($key)) {
-                $this->write($val, $isLast);
+                $this->write((string)$val, $isLast);
             } else {
-                if (str_starts_with($key, '?') || str_starts_with($key, '=')) {
-                    $this->write("{$key}{$val}", $isLast);
+                if (str_starts_with($key, '?')) {
+                    if (str_contains($key, '=')) {
+                        $this->write("{$key}{$val}", $isLast);
+                    } else {
+                        $this->write("{$key}={$val}", $isLast);
+                    }
+                } elseif (str_starts_with($key, '=')) {
+                    if (strpos($key, '=', 1) !== false) {
+                        $this->write("{$key}{$val}", $isLast);
+                    } else {
+                        $this->write("{$key}={$val}", $isLast);
+                    }
                 } else {
                     $this->write("={$key}={$val}", $isLast);
                 }
@@ -251,8 +261,8 @@ class RouterosAPI
                         break;
                     }
                 }
-                $results['!error'] = $msg;
-                break;
+                $this->error_str = $msg;
+                throw new \Exception($msg);
             }
         }
 

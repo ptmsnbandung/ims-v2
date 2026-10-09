@@ -416,7 +416,9 @@ class BroadcastController extends Controller
             $baseTable = 'trx_batchjob_register';
             $query = DB::table('trx_batchjob_register as c');
             if ($hasMPelanggan && Schema::hasColumn('trx_batchjob_register', 'nik_penduduk')) {
-                $query->leftJoin('m_pelanggan as mp', 'c.nik_penduduk', '=', 'mp.nik_penduduk');
+                $query->leftJoin('m_pelanggan as mp', function ($join) {
+                    $join->on(DB::raw('CONVERT(c.nik_penduduk USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(mp.nik_penduduk USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
+                });
             }
         } elseif ($hasTbPendaftaran) {
             $baseTable = 'tb_pendaftaran';
@@ -425,10 +427,14 @@ class BroadcastController extends Controller
             $baseTable = 'trx_billing_layanan';
             $query = DB::table('trx_billing_layanan as c');
             if ($hasTrxBatchReg) {
-                $query->leftJoin('trx_batchjob_register as reg', 'c.nomor_internet', '=', 'reg.nomor_internet');
+                $query->leftJoin('trx_batchjob_register as reg', function ($join) {
+                    $join->on(DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(reg.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
+                });
             }
             if ($hasMPelanggan && $hasTrxBatchReg && Schema::hasColumn('trx_batchjob_register', 'nik_penduduk')) {
-                $query->leftJoin('m_pelanggan as mp', 'reg.nik_penduduk', '=', 'mp.nik_penduduk');
+                $query->leftJoin('m_pelanggan as mp', function ($join) {
+                    $join->on(DB::raw('CONVERT(reg.nik_penduduk USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(mp.nik_penduduk USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
+                });
             }
         } else {
             $baseTable = 'tb_pengguna';
@@ -450,10 +456,10 @@ class BroadcastController extends Controller
                 ->groupBy('tbl_sub.nomor_internet');
 
             $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
-                $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+                $join->on(DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(sub_inv.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
             })->leftJoin('trx_billing_layanan as inv', function ($join) {
-                $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
-                     ->on(DB::raw("CONCAT(inv.tahun_tagihan, LPAD(inv.bulan_tagihan, 2, '0'))"), '=', 'sub_inv.target_period');
+                $join->on(DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(inv.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'))
+                     ->on(DB::raw("CONVERT(CONCAT(inv.tahun_tagihan, LPAD(inv.bulan_tagihan, 2, '0')) USING utf8mb4) COLLATE utf8mb4_unicode_ci"), '=', DB::raw("CONVERT(sub_inv.target_period USING utf8mb4) COLLATE utf8mb4_unicode_ci"));
             });
         }
 
@@ -467,7 +473,7 @@ class BroadcastController extends Controller
                 ->groupBy('tbl_log.nomor_internet');
 
             $query->leftJoinSub($subLog, 'log_sent', function ($join) {
-                $join->on('c.nomor_internet', '=', 'log_sent.nomor_internet');
+                $join->on(DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(log_sent.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
             });
         }
 

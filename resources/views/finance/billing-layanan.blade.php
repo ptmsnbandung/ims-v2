@@ -25,46 +25,46 @@
 @endphp
 
 @section('content')
-<div class="space-y-6" x-data="billingLayananPage()">
+<div class="space-y-4" x-data="billingLayananPage()">
 
     <!-- Page Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Dashboard) -->
-    <div class="ims-banner relative rounded-2xl p-4 sm:p-6 shadow-md border border-teal-500/20 z-30"
+    <div class="ims-banner relative rounded-xl p-3.5 sm:p-4 shadow-sm border border-teal-500/20 z-30"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
         <!-- Subtle Glow Effect (isolated overflow-hidden so child dropdowns are not clipped) -->
-        <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-            <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+            <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
         </div>
 
-        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             <div>
-                <div class="flex flex-wrap items-center gap-2 mb-2">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold bg-white text-slate-800 shadow-xs">
-                        <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#00a8b5]"></span>
+                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-white text-slate-800 shadow-2xs">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#00a8b5]"></span>
                         <span>Finance &amp; Billing</span>
                     </div>
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         <span>Recurring Invoicing</span>
                     </div>
                 </div>
-                <h1 class="text-lg sm:text-2xl font-black text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
+                <h1 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
                     Billing Layanan Bulanan
                 </h1>
-                <p class="text-xs sm:text-sm text-[#c6edf3] mt-1 max-w-2xl leading-relaxed" style="color: #C6EDF3 !important;">
+                <p class="text-xs text-[#c6edf3] mt-0.5 max-w-2xl leading-normal" style="color: #C6EDF3 !important;">
                     Penerbitan tagihan berkala, pemantauan pembayaran pelanggan, integrasi payment gateway, dan konfirmasi kas masuk.
                 </p>
             </div>
 
             <!-- Top Right Actions -->
-            <div class="flex items-center gap-2 sm:gap-2.5 relative z-10 w-full lg:w-auto pt-2 lg:pt-0">
+            <div class="flex items-center gap-2 relative z-10 w-full lg:w-auto pt-1 lg:pt-0">
                 <!-- Dropdown Menu Aksi -->
                 <div class="relative z-50 flex-1 sm:flex-initial" @click.outside="actionDropdownOpen = false">
                     <button @click="actionDropdownOpen = !actionDropdownOpen"
                             type="button"
-                            class="w-full sm:w-auto justify-center px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold flex items-center gap-2 shadow-xs backdrop-blur-xs transition cursor-pointer relative"
+                            class="w-full sm:w-auto justify-center px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold flex items-center gap-1.5 shadow-2xs backdrop-blur-xs transition cursor-pointer relative"
                             :class="{ 'ring-2 ring-teal-400/50 border-teal-300': actionDropdownOpen }">
-                        <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
                         <span>Menu Aksi</span>
@@ -83,38 +83,38 @@
                      x-transition:leave="transition ease-in duration-75"
                      x-transition:leave-start="transform opacity-100 scale-100"
                      x-transition:leave-end="transform opacity-0 scale-95"
-                     class="absolute left-0 lg:left-auto lg:right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl shadow-black/40 py-1.5 z-50 divide-y divide-slate-100 dark:divide-slate-800/60 focus:outline-none">
+                     class="absolute left-0 lg:left-auto lg:right-0 mt-2 w-52 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/40 py-1 z-50 divide-y divide-slate-100 dark:divide-slate-800/60 focus:outline-none">
                     
                     <div class="py-1">
                         <!-- Generate Invoice Item -->
                         <button type="button"
                                 @click="openGenerateModal(); actionDropdownOpen = false"
-                                class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer text-left group">
-                            <div class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                class="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer text-left group">
+                            <div class="w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
                             </div>
                             <div class="flex flex-col min-w-0">
-                                <span class="font-bold whitespace-nowrap">Generate Invoice</span>
-                                <span class="text-[10px] text-slate-400 whitespace-nowrap">Terbitkan tagihan baru</span>
+                                <span class="font-bold whitespace-nowrap text-xs">Generate Invoice</span>
+                                <span class="text-[9px] text-slate-400 whitespace-nowrap">Terbitkan tagihan baru</span>
                             </div>
                         </button>
 
                         <!-- Cetak Massal (Print Invoices) -->
                         <button type="button"
                                 @click="openBatchPrintModal(); actionDropdownOpen = false"
-                                class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-600 dark:hover:text-cyan-400 transition cursor-pointer text-left group">
-                            <div class="w-7 h-7 rounded-lg bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-                                <svg class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                class="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 hover:text-cyan-600 dark:hover:text-cyan-400 transition cursor-pointer text-left group">
+                            <div class="w-6 h-6 rounded-md bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                                <svg class="w-3 h-3 text-cyan-600 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <polyline points="6 9 6 2 18 2 18 9"></polyline>
                                     <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                                     <rect x="6" y="14" width="12" height="8"></rect>
                                 </svg>
                             </div>
                             <div class="flex flex-col min-w-0">
-                                <span class="font-bold whitespace-nowrap">Print Invoices</span>
-                                <span class="text-[10px] text-slate-400 whitespace-nowrap">Cetak massal invoice</span>
+                                <span class="font-bold whitespace-nowrap text-xs">Print Invoices</span>
+                                <span class="text-[9px] text-slate-400 whitespace-nowrap">Cetak massal invoice</span>
                             </div>
                         </button>
                     </div>
@@ -123,26 +123,26 @@
                         <!-- Export CSV -->
                         <a href="{{ route('finance.billing-layanan.export', request()->query()) }}"
                            @click="actionDropdownOpen = false"
-                           class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 transition group">
-                            <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                           class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 transition group">
+                            <div class="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                 </svg>
                             </div>
-                            <span class="font-bold whitespace-nowrap">Export CSV</span>
+                            <span class="font-bold whitespace-nowrap text-xs">Export CSV</span>
                         </a>
 
                         @if(auth()->user()?->isAdmin() || auth()->user()?->isDirektur())
                         <!-- Broadcast WA -->
                         <a href="{{ route('admin.broadcast') }}"
                            @click="actionDropdownOpen = false"
-                           class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 transition group">
-                            <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
-                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                           class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-600 dark:hover:text-emerald-400 transition group">
+                            <div class="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                                 </svg>
                             </div>
-                            <span class="font-bold whitespace-nowrap">Broadcast WA</span>
+                            <span class="font-bold whitespace-nowrap text-xs">Broadcast WA</span>
                         </a>
                         @endif
                     </div>
@@ -152,15 +152,15 @@
             <!-- Primary Action: Request Pelanggan (Di Luar) -->
             <button @click="openRequestModal()"
                     type="button"
-                    class="flex-1 sm:flex-initial justify-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/25 border border-blue-400/20 transition duration-150 cursor-pointer shrink-0">
-                <svg class="w-4 h-4 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    class="flex-1 sm:flex-initial justify-center px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-500/25 border border-blue-400/20 transition duration-150 cursor-pointer shrink-0">
+                <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                 </svg>
                 <span class="truncate">Request Pelanggan</span>
 
                 <!-- Counter Badge -->
                 <template x-if="requestCount > 0">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-white text-blue-700 font-extrabold text-[10px] shadow-xs" x-text="requestCount"></span>
+                    <span class="inline-flex items-center px-1.5 py-0.2 rounded-full bg-white text-blue-700 font-extrabold text-[10px] shadow-xs" x-text="requestCount"></span>
                 </template>
             </button>
         </div>
@@ -195,23 +195,23 @@
     </template>
 
     <!-- 4 KPI Financial Metric Cards (2x2 on Mobile, 4 Cols on Desktop) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         <!-- 1. Generating / Draft (Yellow / Amber) -->
-        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50/70 dark:bg-slate-900/90 border border-amber-200 dark:border-amber-500/20 shadow-md relative overflow-hidden group hover:border-amber-400 dark:hover:border-amber-500/40 transition flex flex-col justify-between">
-            <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
+        <div class="p-3 rounded-xl bg-amber-50/70 dark:bg-slate-900/90 border border-amber-200 dark:border-amber-500/20 shadow-xs relative overflow-hidden group hover:border-amber-400 dark:hover:border-amber-500/40 transition flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
             <div class="flex items-center justify-between gap-1 relative z-10">
-                <span class="text-[10px] sm:text-xs font-bold text-amber-700 dark:text-amber-400 tracking-wide uppercase truncate">Draft / Auto Publish</span>
-                <span class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20 flex-shrink-0">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <span class="text-[10px] sm:text-[11px] font-bold text-amber-700 dark:text-amber-400 tracking-wide uppercase truncate">Draft / Auto Publish</span>
+                <span class="p-1 rounded-lg bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-2.5 sm:mt-3 relative z-10">
-                <div class="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+            <div class="mt-2 relative z-10">
+                <div class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                     Rp {{ number_format($kpis['generating']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-[10px] sm:text-xs text-amber-700/90 dark:text-amber-300/80 font-medium mt-1 flex items-center gap-1.5 truncate">
+                <div class="text-[10px] sm:text-[11px] text-amber-700/90 dark:text-amber-300/80 font-medium mt-0.5 flex items-center gap-1.5 truncate">
                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping flex-shrink-0"></span>
                     <span class="truncate">{{ number_format($kpis['generating']['count']) }} Invoice Menunggu</span>
                 </div>
@@ -219,21 +219,21 @@
         </div>
 
         <!-- 2. Publish Billing (Blue) -->
-        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-blue-50/70 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-500/20 shadow-md relative overflow-hidden group hover:border-blue-400 dark:hover:border-blue-500/40 transition flex flex-col justify-between">
-            <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
+        <div class="p-3 rounded-xl bg-blue-50/70 dark:bg-slate-900/90 border border-blue-200 dark:border-blue-500/20 shadow-xs relative overflow-hidden group hover:border-blue-400 dark:hover:border-blue-500/40 transition flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-20 h-20 bg-blue-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
             <div class="flex items-center justify-between gap-1 relative z-10">
-                <span class="text-[10px] sm:text-xs font-bold text-blue-700 dark:text-blue-400 tracking-wide uppercase truncate">Publish Billing</span>
-                <span class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-300 dark:border-blue-500/20 flex-shrink-0">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <span class="text-[10px] sm:text-[11px] font-bold text-blue-700 dark:text-blue-400 tracking-wide uppercase truncate">Publish Billing</span>
+                <span class="p-1 rounded-lg bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-300 dark:border-blue-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-2.5 sm:mt-3 relative z-10">
-                <div class="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+            <div class="mt-2 relative z-10">
+                <div class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                     Rp {{ number_format($kpis['publish']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-[10px] sm:text-xs text-blue-700/90 dark:text-blue-300/80 font-medium mt-1 flex items-center gap-1.5 truncate">
+                <div class="text-[10px] sm:text-[11px] text-blue-700/90 dark:text-blue-300/80 font-medium mt-0.5 flex items-center gap-1.5 truncate">
                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
                     <span class="truncate">{{ number_format($kpis['publish']['count']) }} Invoice Terbit</span>
                 </div>
@@ -241,21 +241,21 @@
         </div>
 
         <!-- 3. Waiting Payment (Teal / Cyan) -->
-        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-cyan-50/70 dark:bg-slate-900/90 border border-cyan-200 dark:border-cyan-500/20 shadow-md relative overflow-hidden group hover:border-cyan-400 dark:hover:border-cyan-500/40 transition flex flex-col justify-between">
-            <div class="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
+        <div class="p-3 rounded-xl bg-cyan-50/70 dark:bg-slate-900/90 border border-cyan-200 dark:border-cyan-500/20 shadow-xs relative overflow-hidden group hover:border-cyan-400 dark:hover:border-cyan-500/40 transition flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
             <div class="flex items-center justify-between gap-1 relative z-10">
-                <span class="text-[10px] sm:text-xs font-bold text-cyan-700 dark:text-cyan-400 tracking-wide uppercase truncate">Waiting Payment</span>
-                <span class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-500/20 flex-shrink-0">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <span class="text-[10px] sm:text-[11px] font-bold text-cyan-700 dark:text-cyan-400 tracking-wide uppercase truncate">Waiting Payment</span>
+                <span class="p-1 rounded-lg bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-2.5 sm:mt-3 relative z-10">
-                <div class="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+            <div class="mt-2 relative z-10">
+                <div class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                     Rp {{ number_format($kpis['waiting']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-[10px] sm:text-xs text-cyan-700/90 dark:text-cyan-300/80 font-medium mt-1 flex items-center gap-1.5 truncate">
+                <div class="text-[10px] sm:text-[11px] text-cyan-700/90 dark:text-cyan-300/80 font-medium mt-0.5 flex items-center gap-1.5 truncate">
                     <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 flex-shrink-0"></span>
                     <span class="truncate">{{ number_format($kpis['waiting']['count']) }} Invoice Menunggu</span>
                 </div>
@@ -263,21 +263,21 @@
         </div>
 
         <!-- 4. Paid (Kas Masuk) -->
-        <div class="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-50/70 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/20 shadow-md relative overflow-hidden group hover:border-emerald-400 dark:hover:border-emerald-500/40 transition flex flex-col justify-between">
-            <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
+        <div class="p-3 rounded-xl bg-emerald-50/70 dark:bg-slate-900/90 border border-emerald-200 dark:border-emerald-500/20 shadow-xs relative overflow-hidden group hover:border-emerald-400 dark:hover:border-emerald-500/40 transition flex flex-col justify-between">
+            <div class="absolute -right-6 -top-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
             <div class="flex items-center justify-between gap-1 relative z-10">
-                <span class="text-[10px] sm:text-xs font-bold text-emerald-700 dark:text-emerald-400 tracking-wide uppercase truncate">Paid (Kas Masuk)</span>
-                <span class="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20 flex-shrink-0">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <span class="text-[10px] sm:text-[11px] font-bold text-emerald-700 dark:text-emerald-400 tracking-wide uppercase truncate">Paid (Kas Masuk)</span>
+                <span class="p-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20 flex-shrink-0">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043A3.746 3.746 0 0 1 21 12Z" />
                     </svg>
                 </span>
             </div>
-            <div class="mt-2.5 sm:mt-3 relative z-10">
-                <div class="text-sm sm:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+            <div class="mt-2 relative z-10">
+                <div class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                     Rp {{ number_format($kpis['paid']['amount'], 0, ',', '.') }}
                 </div>
-                <div class="text-[10px] sm:text-xs text-emerald-700/90 dark:text-emerald-300/80 font-medium mt-1 flex items-center gap-1.5 truncate">
+                <div class="text-[10px] sm:text-[11px] text-emerald-700/90 dark:text-emerald-300/80 font-medium mt-0.5 flex items-center gap-1.5 truncate">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
                     <span class="truncate">{{ number_format($kpis['paid']['count']) }} Invoice Terbayar</span>
                 </div>
@@ -286,14 +286,14 @@
     </div>
 
     <!-- Filter Bar Card -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 space-y-4">
-        <form method="GET" action="{{ route('finance.billing-layanan') }}" class="space-y-4">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <form method="GET" action="{{ route('finance.billing-layanan') }}" class="space-y-3">
             <!-- Row 1: Primary Quick Filters -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                 <!-- Bulan -->
                 <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Semua Bulan</label>
-                    <select name="bulan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Bulan</label>
+                    <select name="bulan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Bulan</option>
                         @foreach($bulanList as $key => $name)
                         <option value="{{ $key }}" {{ ($selectedBulan ?? '') === (string)$key ? 'selected' : '' }}>{{ $key }} - {{ $name }}</option>
@@ -303,8 +303,8 @@
 
                 <!-- Tahun -->
                 <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Semua Tahun</label>
-                    <select name="tahun" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Tahun</label>
+                    <select name="tahun" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Tahun</option>
                         @foreach($tahunList as $thn)
                         <option value="{{ $thn }}" {{ ($selectedTahun ?? '') === (string)$thn ? 'selected' : '' }}>{{ $thn }}</option>
@@ -314,8 +314,8 @@
 
                 <!-- Layanan / Kategori -->
                 <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Kategori Layanan</label>
-                    <select name="layanan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Kategori Layanan</label>
+                    <select name="layanan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Layanan</option>
                         @foreach($layananList as $lay)
                         <option value="{{ $lay }}" {{ request('layanan') === $lay ? 'selected' : '' }}>{{ $lay }}</option>
@@ -325,8 +325,8 @@
 
                 <!-- Status Bayar -->
                 <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Status Bayar</label>
-                    <select name="status_bayar" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Status Bayar</label>
+                    <select name="status_bayar" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Status Bayar</option>
                         <option value="menunggu_verifikasi" {{ request('status_bayar') === 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
                         @foreach($statusBillList as $sb)
@@ -342,14 +342,14 @@
 
                 <!-- Real-time Search Box -->
                 <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Pencarian</label>
+                    <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Pencarian</label>
                     <div class="relative">
                         <input type="text"
                                name="search"
                                value="{{ request('search') }}"
                                placeholder="Nama / No Layanan / Inv..."
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-slate-400 dark:placeholder-slate-500">
-                        <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg pl-8 pr-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-slate-400 dark:placeholder-slate-500">
+                        <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                         </svg>
                     </div>
@@ -357,12 +357,12 @@
             </div>
 
             <!-- Row 2: Secondary / Advanced Filters (Collapsible) -->
-            <div x-show="showAdvancedFilters" x-cloak x-collapse class="pt-3 border-t border-slate-200 dark:border-slate-800/80">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div x-show="showAdvancedFilters" x-cloak x-collapse class="pt-2.5 border-t border-slate-200 dark:border-slate-800/80">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <!-- Wilayah / Kota -->
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Semua Wilayah</label>
-                        <select name="wilayah" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Wilayah</label>
+                        <select name="wilayah" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Wilayah</option>
                             @foreach($wilayahList as $wil)
                             <option value="{{ $wil }}" {{ request('wilayah') === $wil ? 'selected' : '' }}>{{ $wil }}</option>
@@ -372,8 +372,8 @@
 
                     <!-- Status User -->
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Status User</label>
-                        <select name="status_user" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Status User</label>
+                        <select name="status_user" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Status User</option>
                             @foreach($statusUserList as $code => $label)
                             <option value="{{ $code }}" {{ request('status_user') === (string)$code ? 'selected' : '' }}>{{ $label }}</option>
@@ -383,8 +383,8 @@
 
                     <!-- Metode Bayar -->
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">Metode Bayar</label>
-                        <select name="metode_bayar" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Metode Bayar</label>
+                        <select name="metode_bayar" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Metode Bayar</option>
                             <option value="1" {{ request('metode_bayar') === '1' ? 'selected' : '' }}>Midtrans Payment Gateway</option>
                             <option value="2" {{ request('metode_bayar') === '2' ? 'selected' : '' }}>Manual Bank Transfer</option>
@@ -395,23 +395,23 @@
             </div>
 
             <!-- Filter Buttons Actions -->
-            <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center justify-between pt-1">
                 <button type="button"
                         @click="showAdvancedFilters = !showAdvancedFilters"
-                        class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 flex items-center gap-1.5 transition">
-                    <svg class="w-4 h-4 transition-transform" :class="showAdvancedFilters ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 flex items-center gap-1.5 transition">
+                    <svg class="w-3.5 h-3.5 transition-transform" :class="showAdvancedFilters ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                     </svg>
                     <span x-text="showAdvancedFilters ? 'Sembunyikan Filter Lanjutan' : 'Tampilkan Filter Lanjutan (Wilayah, Status User, Metode)'"></span>
                 </button>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
                     <a href="{{ route('finance.billing-layanan') }}"
-                       class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition">
+                       class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition">
                         Reset
                     </a>
                     <button type="submit"
-                            class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-500/25 transition cursor-pointer">
+                            class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm shadow-blue-500/25 transition cursor-pointer">
                         Terapkan Filter
                     </button>
                 </div>
@@ -420,9 +420,9 @@
     </div>
 
     <!-- Invoices Data Table -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/5 overflow-hidden">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <!-- Table Header Info & Per Page -->
-        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50 dark:bg-slate-950/40">
+        <div class="py-2.5 px-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 bg-slate-50 dark:bg-slate-950/40">
             <div class="text-xs text-slate-600 dark:text-slate-400 font-medium">
                 Menampilkan <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->firstItem() ?? 0 }}</span> sampai <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->lastItem() ?? 0 }}</span> dari <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->total() }}</span> total invoice
             </div>
@@ -447,56 +447,56 @@
         <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">Billing Info</th>
-                        <th class="py-3.5 px-4">Tanggal & Jatuh Tempo</th>
-                        <th class="py-3.5 px-4">Periode</th>
-                        <th class="py-3.5 px-4">Nominal Tagihan</th>
-                        <th class="py-3.5 px-4">Status & Wilayah</th>
-                        <th class="py-3.5 px-4">Metode Bayar</th>
-                        <th class="py-3.5 px-4 text-center">Aksi</th>
+                    <tr class="border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/60 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <th class="py-2.5 px-3">Billing Info</th>
+                        <th class="py-2.5 px-3">Tanggal &amp; Jatuh Tempo</th>
+                        <th class="py-2.5 px-3">Periode</th>
+                        <th class="py-2.5 px-3">Nominal Tagihan</th>
+                        <th class="py-2.5 px-3">Status &amp; Wilayah</th>
+                        <th class="py-2.5 px-3">Metode Bayar</th>
+                        <th class="py-2.5 px-3 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
                     @forelse($invoices as $inv)
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition duration-150 group">
                         <!-- 1. Billing Info -->
-                        <td class="py-3.5 px-4 align-top">
-                            <div class="font-bold text-slate-900 dark:text-white tracking-wide text-xs">
+                        <td class="py-2.5 px-3 align-top">
+                            <div class="font-bold text-slate-900 dark:text-white tracking-wide text-xs font-mono">
                                 {{ $inv->kode_billing_layanan }}
                             </div>
-                            <div class="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mt-0.5 flex items-center gap-1.5">
+                            <div class="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mt-0.5 flex items-center gap-1.5 text-xs">
                                 <span>{{ $inv->nama_pelanggan }}</span>
-                                <span class="text-[10px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                <span class="text-[9px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                     {{ $inv->jenis_kelamin == 2 ? 'P' : 'L' }}
                                 </span>
                             </div>
-                            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20 text-[10px] font-semibold">
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1">
+                                <span class="px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20 text-[9px] font-semibold">
                                     {{ $inv->nama_kategori_bandwith ?? 'BROADBAND' }} {{ $inv->nominal_bandwith }} Mbps
                                 </span>
-                                <span class="text-slate-500 font-mono text-[10px]">#{{ $inv->nomor_internet }}</span>
+                                <span class="text-slate-500 font-mono text-[9px]">#{{ $inv->nomor_internet }}</span>
                             </div>
                         </td>
 
                         <!-- 2. Tanggal & Jatuh Tempo -->
-                        <td class="py-3.5 px-4 align-top">
+                        <td class="py-2.5 px-3 align-top">
                             @if($inv->payment_publish)
-                            <div class="text-slate-700 dark:text-slate-300 font-medium">
-                                Terbit: <span class="text-slate-900 dark:text-white">{{ date('d M Y H:i', strtotime($inv->payment_publish)) }}</span>
+                            <div class="text-slate-700 dark:text-slate-300 font-medium text-[11px]">
+                                Terbit: <span class="text-slate-900 dark:text-white font-semibold">{{ date('d M Y H:i', strtotime($inv->payment_publish)) }}</span>
                             </div>
-                            <div class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
-                                Jth Tempo: <span class="text-amber-600 dark:text-amber-400 font-medium">{{ $inv->expiry ? date('d M Y', strtotime($inv->expiry)) : '-' }}</span>
+                            <div class="text-slate-500 dark:text-slate-400 text-[10px] mt-0.5">
+                                Jth Tempo: <span class="text-amber-600 dark:text-amber-400 font-bold">{{ $inv->expiry ? date('d M Y', strtotime($inv->expiry)) : '-' }}</span>
                             </div>
                             @else
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                            <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                                 Billing Belum di-Publish
                             </span>
                             @endif
 
-                            <div class="mt-1.5">
-                                <a href="{{ route('finance.dokumen.invoice', urlencode($inv->kode_billing_layanan)) }}" target="_blank" class="group inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 dark:hover:bg-rose-600 dark:hover:text-white text-[10px] font-semibold transition shadow-xs" title="Buka & Cetak PDF Invoice ({{ $inv->kode_billing_layanan }})">
-                                    <svg class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 group-hover:text-white shrink-0 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <div class="mt-1">
+                                <a href="{{ route('finance.dokumen.invoice', urlencode($inv->kode_billing_layanan)) }}" target="_blank" class="group inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 dark:hover:bg-rose-600 dark:hover:text-white text-[9px] font-semibold transition shadow-2xs" title="Buka &amp; Cetak PDF Invoice ({{ $inv->kode_billing_layanan }})">
+                                    <svg class="w-3 h-3 text-rose-600 dark:text-rose-400 group-hover:text-white shrink-0 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                     </svg>
                                     <span>PDF Invoice</span>
@@ -505,38 +505,38 @@
                         </td>
 
                         <!-- 3. Periode -->
-                        <td class="py-3.5 px-4 align-top">
-                            <span class="inline-block px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold">
+                        <td class="py-2.5 px-3 align-top">
+                            <span class="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold font-mono">
                                 {{ $inv->periode_tagihan ?? ($inv->bulan_tagihan . '/' . $inv->tahun_tagihan) }}
                             </span>
                         </td>
 
                         <!-- 4. Nominal Tagihan -->
-                        <td class="py-3.5 px-4 align-top">
+                        <td class="py-2.5 px-3 align-top">
                             <div class="space-y-0.5">
-                                <div class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                <div class="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                                     Tagihan: <span class="text-slate-900 dark:text-white font-bold">Rp {{ number_format((float) ($inv->total_layanan ?? ($inv->harga_bandwith ?? 0)), 0, ',', '.') }}</span>
                                 </div>
                                 
                                 @if((float)($inv->potongan ?? 0) > 0)
-                                <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                <div class="text-[9px] text-emerald-600 dark:text-emerald-400 font-medium">
                                     Diskon: -Rp {{ number_format((float) ($inv->potongan ?? 0), 0, ',', '.') }}
                                 </div>
                                 @endif
 
                                 @if((float)($inv->denda ?? 0) > 0)
-                                <div class="text-[10px] text-rose-600 dark:text-rose-400 font-medium">
+                                <div class="text-[9px] text-rose-600 dark:text-rose-400 font-medium">
                                     Denda: +Rp {{ number_format((float) ($inv->denda ?? 0), 0, ',', '.') }}
                                 </div>
                                 @endif
 
-                                <div class="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 pt-0.5">
+                                <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 pt-0.5">
                                     <span>Dibayar:</span>
                                     <span class="{{ $inv->status_bill_lay == '15' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-600 dark:text-slate-400' }}">
                                         Rp {{ number_format((float) ($inv->amount_paid ?? 0), 0, ',', '.') }}
                                     </span>
                                     @if($inv->status_bill_lay == '15')
-                                     <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                     <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                     </svg>
                                     @endif
@@ -575,10 +575,10 @@
                         @endphp
 
                         <!-- 5. Status & Wilayah -->
-                        <td class="py-3.5 px-4 align-top">
+                        <td class="py-2.5 px-3 align-top">
                             <div class="space-y-1">
                                 <!-- User state + City -->
-                                <div class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate max-w-[170px]">
+                                <div class="text-[10px] text-slate-600 dark:text-slate-300 font-medium truncate max-w-[160px]">
                                     <span class="text-blue-600 dark:text-blue-400 font-semibold">{{ $inv->desc_registrasi ?? 'User Aktif' }}</span>
                                     <span class="text-slate-400 dark:text-slate-500">&middot;</span>
                                     <span class="text-slate-500 dark:text-slate-400">{{ $inv->nama_kota_pasang ?? '-' }}</span>
@@ -587,37 +587,37 @@
                                 <!-- Status Tagihan Badge -->
                                 <div>
                                     @if($inv->status_bill_lay == '15')
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
                                         <span>PAID (Lunas)</span>
                                     </span>
                                     @elseif($confirmation && $confirmation->status === 'rejected')
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400"></span>
                                         <span>Transfer Ditolak</span>
                                     </span>
                                     @elseif($hasUploadedProof || ($confirmation && !empty($confirmation->proof_file)))
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse"></span>
                                         <span>Menunggu Verifikasi</span>
                                     </span>
                                     @elseif($inv->status_bill_lay == '13')
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
                                         <span>PUBLISH BILLING</span>
                                     </span>
                                     @elseif($inv->status_bill_lay == '14')
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400"></span>
                                         <span>WAITING PAYMENT</span>
                                     </span>
                                     @elseif(in_array($inv->status_bill_lay, ['11', '12']))
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
                                         <span>{{ $inv->desc_bill_lay ?? 'DRAFT' }}</span>
                                     </span>
                                     @else
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                                         <span>{{ $inv->desc_bill_lay ?? 'Status ' . $inv->status_bill_lay }}</span>
                                     </span>
                                     @endif
@@ -626,7 +626,7 @@
                         </td>
 
                         <!-- 6. Metode Bayar & Notifikasi -->
-                        <td class="py-3.5 px-4 align-top">
+                        <td class="py-2.5 px-3 align-top">
                             <div class="space-y-1.5">
                                 <!-- Payment Method Badge & Quick Actions -->
                                 @php
@@ -682,9 +682,9 @@
                                 @endphp
 
                                 @if($isTransfer)
-                                <div class="flex flex-col gap-1.5 items-start">
+                                <div class="flex flex-col gap-1 items-start">
                                     <!-- Badge Metode Transfer dengan Nama Bank dari merchant_type -->
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Manual Transfer' }}">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Manual Transfer' }}">
                                         <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5" />
                                         </svg>
@@ -705,7 +705,7 @@
                                                 data-status="{{ $confirmation->status ?? 'pending' }}"
                                                 data-destination-bank="{{ $inv->destination_bank ?? $confirmation->destination_bank ?? $confirmation->bank_name ?? $inv->merchant_type ?? '' }}"
                                                 title="Klik untuk melihat bukti transfer pelanggan"
-                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 dark:hover:bg-indigo-500/20 text-[9px] font-semibold transition cursor-pointer shadow-xs">
+                                                class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 dark:hover:bg-indigo-500/20 text-[9px] font-semibold transition cursor-pointer shadow-2xs">
                                             <svg class="w-3 h-3 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                             </svg>
@@ -715,7 +715,7 @@
                                 </div>
                                 @elseif($isCash)
                                 <div class="flex flex-col gap-1 items-start">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Cash To Collector' }}">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[9px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Cash To Collector' }}">
                                         <svg class="w-3 h-3 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                         </svg>
@@ -724,7 +724,7 @@
                                 </div>
                                 @else
                                 <div class="flex flex-col gap-1 items-start">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[10px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Midtrans' }}">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 text-[9px] font-semibold" title="Metode: {{ $merchantRaw ?: 'Midtrans' }}">
                                         <svg class="w-3 h-3 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                                         </svg>
@@ -742,7 +742,7 @@
                                             data-is-expired="0"
                                             data-wa-url="{{ $waUrl }}"
                                             title="Klik untuk Lihat & Salin Link Pembayaran"
-                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-medium hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition cursor-pointer">
+                                            class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-[9px] font-medium hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition cursor-pointer">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
                                         <span>Link Aktif</span>
                                         <svg class="w-2.5 h-2.5 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -760,7 +760,7 @@
                                             data-is-expired="1"
                                             data-wa-url="{{ $waUrl }}"
                                             title="Link Kadaluarsa! Klik untuk melihat & renew link"
-                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 text-[9px] font-medium hover:bg-rose-100 dark:hover:bg-rose-500/20 transition cursor-pointer">
+                                            class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 text-[9px] font-medium hover:bg-rose-100 dark:hover:bg-rose-500/20 transition cursor-pointer">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400"></span>
                                         <span>Link Expired</span>
                                     </button>
@@ -770,7 +770,7 @@
                                         <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
                                         <button type="submit"
                                                 title="Generate Link Pembayaran Midtrans"
-                                                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[9px] font-medium hover:bg-amber-100 dark:hover:bg-amber-500/20 transition cursor-pointer">
+                                                class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[9px] font-medium hover:bg-amber-100 dark:hover:bg-amber-500/20 transition cursor-pointer">
                                             <span>+ Buat Link</span>
                                         </button>
                                     </form>
@@ -779,7 +779,7 @@
                                 @endif
 
                                 <!-- Notification Badges -->
-                                <div class="flex items-center gap-1 text-[10px]">
+                                <div class="flex items-center gap-1 text-[9px]">
                                     <span class="px-1.5 py-0.2 rounded {{ ($inv->notif_wa ?? 0) > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700' }}">
                                         WA: {{ ($inv->notif_wa ?? 0) > 0 ? 'Sent' : 'UnSend' }}
                                     </span>
@@ -791,32 +791,32 @@
                         </td>
 
                         <!-- 7. Action Buttons (2x2 Stacked Grid: Approve, Change Pay, Detail, Hapus) -->
-                        <td class="py-3 px-3 align-middle text-center">
-                            <div class="grid grid-cols-2 gap-1.5 w-[210px] mx-auto">
+                        <td class="py-2.5 px-2 align-middle text-center">
+                            <div class="grid grid-cols-2 gap-1 w-[168px] mx-auto">
                                 <!-- 1. Status Bayar untuk Midtrans, atau Approve untuk Transfer/Cash (Top Left) -->
                                 @if($isMidtrans)
                                     {{-- METODE MIDTRANS: Tidak ada tombol Approve, langsung tampilkan status bayar --}}
                                     @if($inv->status_bill_lay == '15')
-                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[11px] font-bold select-none" title="Tagihan Midtrans Lunas">
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] font-bold select-none" title="Tagihan Midtrans Lunas">
                                         <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                         </svg>
                                         <span>Lunas</span>
                                     </span>
                                     @elseif($isSnapExpired)
-                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 text-[11px] font-bold select-none" title="Link Pembayaran Midtrans Expired">
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 text-[10px] font-bold select-none" title="Link Pembayaran Midtrans Expired">
                                         <svg class="w-3 h-3 flex-shrink-0 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                                         </svg>
                                         <span>Expired</span>
                                     </span>
                                     @elseif($inv->status_bill_lay == '14')
-                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30 text-[11px] font-bold select-none" title="Menunggu Pembayaran Pelanggan">
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30 text-[10px] font-bold select-none" title="Menunggu Pembayaran Pelanggan">
                                         <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
                                         <span>Pending</span>
                                     </span>
                                     @else
-                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 text-[11px] font-bold select-none" title="Tagihan Belum Dibayar (Menunggu Pembayaran Midtrans)">
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 text-[10px] font-bold select-none" title="Tagihan Belum Dibayar (Menunggu Pembayaran Midtrans)">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                         <span>Belum Bayar</span>
                                     </span>
@@ -833,14 +833,14 @@
                                             data-payment-type="{{ $inv->payment_type ?? 2 }}"
                                             data-destination-bank="{{ $inv->destination_bank ?? $inv->merchant_type ?? '' }}"
                                             title="Approve Pembayaran Lunas"
-                                            class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/15 dark:hover:bg-emerald-600 dark:text-emerald-400 dark:hover:text-white dark:border-emerald-500/30 text-[11px] font-bold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                            class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/15 dark:hover:bg-emerald-600 dark:text-emerald-400 dark:hover:text-white dark:border-emerald-500/30 text-[10px] font-bold transition shadow-2xs cursor-pointer whitespace-nowrap">
                                         <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                         </svg>
                                         <span>Approve</span>
                                     </button>
                                     @else
-                                    <span class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 text-emerald-600/70 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400/70 dark:border-emerald-500/20 text-[11px] font-semibold opacity-75 select-none">
+                                    <span class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-emerald-50 text-emerald-600/70 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400/70 dark:border-emerald-500/20 text-[10px] font-semibold opacity-75 select-none">
                                         <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                         </svg>
@@ -856,7 +856,7 @@
                                         data-nama="{{ $inv->nama_pelanggan }}"
                                         data-payment-type="{{ $inv->payment_type ?? 1 }}"
                                         title="Ubah Metode Pembayaran"
-                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 dark:bg-blue-500/15 dark:hover:bg-blue-600 dark:text-blue-400 dark:hover:text-white dark:border-blue-500/30 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                        class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 dark:bg-blue-500/15 dark:hover:bg-blue-600 dark:text-blue-400 dark:hover:text-white dark:border-blue-500/30 text-[10px] font-bold transition shadow-2xs cursor-pointer whitespace-nowrap">
                                     <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                                     </svg>
@@ -868,7 +868,7 @@
                                         @click="openDetailModalFromEl($el)"
                                         data-kode="{{ $inv->kode_billing_layanan }}"
                                         title="Lihat Detail Tagihan"
-                                        class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                        class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700 text-[10px] font-bold transition shadow-2xs cursor-pointer whitespace-nowrap">
                                     <svg class="w-3 h-3 flex-shrink-0 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -882,7 +882,7 @@
                                     <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
                                     <button type="submit"
                                             title="Hapus Tagihan Ini"
-                                            class="w-full inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 text-[11px] font-semibold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                            class="w-full inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 text-[10px] font-bold transition shadow-2xs cursor-pointer whitespace-nowrap">
                                         <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                         </svg>

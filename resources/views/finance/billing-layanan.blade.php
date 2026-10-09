@@ -1347,11 +1347,11 @@
                                     <select name="layanan" x-model="generateLayanan" @change="fetchGenerateCandidates()" class="w-full bg-slate-50/60 dark:bg-slate-800/60 hover:bg-white focus:bg-white dark:hover:bg-slate-800 dark:focus:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-2xs appearance-none transition pr-9 cursor-pointer">
                                         <option value="">PILIH LAYANAN</option>
                                         <option value="Semua Layanan">Semua Layanan</option>
-                                        @if(isset($bandwithKategoriList) && count($bandwithKategoriList) > 0)
+                                        @if(!empty($bandwithKategoriList) && is_iterable($bandwithKategoriList) && count($bandwithKategoriList) > 0)
                                             @foreach($bandwithKategoriList as $bk)
                                                 <option value="{{ $bk->nama_kategori_bandwith }}">{{ $bk->nama_kategori_bandwith }}{{ !empty($bk->alias_nama_kategori) && $bk->alias_nama_kategori !== $bk->nama_kategori_bandwith ? ' (' . $bk->alias_nama_kategori . ')' : '' }}</option>
                                             @endforeach
-                                        @elseif(isset($layananList) && count($layananList) > 0)
+                                        @elseif(!empty($layananList) && is_iterable($layananList) && count($layananList) > 0)
                                             @foreach($layananList as $lay)
                                                 @if(is_object($lay))
                                                     <option value="{{ $lay->nama_kategori_bandwith }}">{{ $lay->nama_kategori_bandwith }}</option>

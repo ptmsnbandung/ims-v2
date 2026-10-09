@@ -314,27 +314,21 @@ class FinanceController extends Controller
         $currentYear = (int) date('Y');
         $tahunList = [(string) ($currentYear + 1), (string) $currentYear, (string) ($currentYear - 1), (string) ($currentYear - 2), (string) ($currentYear - 3)];
 
-        $bandwithKategoriList = Cache::remember('finance_master_bandwith_kategori', 300, function () {
-            return Schema::hasTable('m_bandwith_kategori')
-                ? DB::table('m_bandwith_kategori')->where('disable', 0)->orderBy('nama_kategori_bandwith', 'asc')->get()
-                : collect();
-        });
+        $bandwithKategoriList = Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith_kategori')->where('disable', 0)->orderBy('nama_kategori_bandwith', 'asc')->get()
+            : collect();
 
-        $layananList = Cache::remember('finance_master_layanan_list', 300, function () {
-            return Schema::hasTable('m_bandwith_kategori')
-                ? DB::table('m_bandwith_kategori')->where('disable', 0)->pluck('nama_kategori_bandwith')->filter()->unique()->values()->toArray()
-                : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
-        });
+        $layananList = Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith_kategori')->where('disable', 0)->pluck('nama_kategori_bandwith')->filter()->unique()->values()->toArray()
+            : ['BROADBAND', 'DEDICATED', 'SOHO', 'CORPORATE'];
 
-        $wilayahList = Cache::remember('finance_master_wilayah_list', 300, function () {
-            $w = Schema::hasTable('m_wilayah_perangkat')
-                ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->toArray()
-                : [];
-            if (empty($w) && Schema::hasTable('m_wilayah')) {
-                $w = DB::table('m_wilayah')->limit(50)->pluck('nama_kota')->filter()->unique()->toArray();
-            }
-            return $w;
-        });
+        $wilayahList = Schema::hasTable('m_wilayah_perangkat')
+            ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->toArray()
+            : [];
+
+        if (empty($wilayahList) && Schema::hasTable('m_wilayah')) {
+            $wilayahList = DB::table('m_wilayah')->limit(50)->pluck('nama_kota')->filter()->unique()->toArray();
+        }
 
         $statusBillList = Schema::hasTable('m_status_bill_lay')
             ? DB::table('m_status_bill_lay')

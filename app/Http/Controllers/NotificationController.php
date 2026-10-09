@@ -5,12 +5,28 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class NotificationController extends Controller
 {
+    protected static array $tablesCache = [];
+
+    /**
+     * Fast Schema Table Check with In-Memory Cache to eliminate network DB queries
+     */
+    protected function hasTableFast(string $table): bool
+    {
+        if (isset(self::$tablesCache[$table])) {
+            return self::$tablesCache[$table];
+        }
+        return self::$tablesCache[$table] = Cache::remember('schema_tbl_' . $table, 3600, function () use ($table) {
+            return Schema::hasTable($table);
+        });
+    }
+
     /**
      * Polling endpoint untuk notifikasi baru saat aplikasi sedang dibuka.
      * Mengembalikan event sesuai hak akses Role pengguna:
@@ -47,7 +63,7 @@ class NotificationController extends Controller
         // -------------------------------------------------------------
         // 1. TIKET GANGGUAN BARU -> DITUJUKAN UNTUK NOC, TEKNIK, ADMIN
         // -------------------------------------------------------------
-        if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_tiket_gangguan')) {
+        if (($isAdminOrDirektur || $isNoc || $isTeknik) && $this->hasTableFast('trx_tiket_gangguan')) {
             try {
                 $newTickets = DB::table('trx_tiket_gangguan')
                     ->leftJoin('view_batchjob', 'trx_tiket_gangguan.nomor_internet', '=', 'view_batchjob.nomor_internet')
@@ -88,7 +104,7 @@ class NotificationController extends Controller
         // -------------------------------------------------------------
         // 2. PENDAFTARAN BARU -> NOC/TEKNIK (SURVEY/INSTALASI) & FINANCE (BILLING REGISTRASI)
         // -------------------------------------------------------------
-        if (($isAdminOrDirektur || $isTeknik || $isNoc || $isFinance) && Schema::hasTable('trx_pendaftaran')) {
+        if (($isAdminOrDirektur || $isTeknik || $isNoc || $isFinance) && $this->hasTableFast('trx_pendaftaran')) {
             try {
                 $newRegistrations = DB::table('trx_pendaftaran')
                     ->where('hide', 0)
@@ -134,7 +150,7 @@ class NotificationController extends Controller
         if ($isAdminOrDirektur || $isFinance) {
             
             // 3.1 Tagihan Bulanan Baru yang Dibayar / Lunas (trx_billing_layanan)
-            if (Schema::hasTable('trx_billing_layanan')) {
+            if ($this->hasTableFast('trx_billing_layanan')) {
                 try {
                     $paidInvoices = DB::table('trx_billing_layanan')
                         ->leftJoin('view_batchjob', 'trx_billing_layanan.nomor_internet', '=', 'view_batchjob.nomor_internet')
@@ -180,7 +196,7 @@ class NotificationController extends Controller
             }
 
             // 3.2 Tagihan Registrasi Pasang Baru yang Lunas (trx_billing_registrasi)
-            if (Schema::hasTable('trx_billing_registrasi')) {
+            if ($this->hasTableFast('trx_billing_registrasi')) {
                 try {
                     $paidRegs = DB::table('trx_billing_registrasi')
                         ->leftJoin('view_batchjob', 'trx_billing_registrasi.nomor_internet', '=', 'view_batchjob.nomor_internet')
@@ -225,7 +241,7 @@ class NotificationController extends Controller
             }
 
             // 3.3 Tagihan Layanan Menunggu Verifikasi (trx_billing_layanan status_bill_lay = '14')
-            if (Schema::hasTable('trx_billing_layanan')) {
+            if ($this->hasTableFast('trx_billing_layanan')) {
                 try {
                     $waitingInvoices = DB::table('trx_billing_layanan')
                         ->leftJoin('view_batchjob', 'trx_billing_layanan.nomor_internet', '=', 'view_batchjob.nomor_internet')
@@ -265,7 +281,7 @@ class NotificationController extends Controller
             }
 
             // 3.4 Konfirmasi Transfer Manual / Bukti Upload Pelanggan (payment_confirmations & ptmsn.payment_confirmations)
-            if (Schema::hasTable('payment_confirmations')) {
+            if ($this->hasTableFast('payment_confirmations')) {
                 try {
                     $newPayments = DB::table('payment_confirmations')
                         ->where(function ($q) use ($sinceFormatted) {
@@ -327,7 +343,7 @@ class NotificationController extends Controller
             }
 
             // 3.5 Request Invoice Tagihan Mandiri dari Pelanggan (trx_billing_request)
-            if (Schema::hasTable('trx_billing_request')) {
+            if ($this->hasTableFast('trx_billing_request')) {
                 try {
                     $newBillingRequests = DB::table('trx_billing_request')
                         ->where('status_request', 'pending')
@@ -361,7 +377,7 @@ class NotificationController extends Controller
         // -------------------------------------------------------------
         // 4. PERMINTAAN UP/DOWNGRADE -> DARI FINANCE UNTUK EKSEKUSI NOC/TEKNIK
         // -------------------------------------------------------------
-        if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_ubah_layanan')) {
+        if (($isAdminOrDirektur || $isNoc || $isTeknik) && $this->hasTableFast('trx_ubah_layanan')) {
             try {
                 $newUpdowns = DB::table('trx_ubah_layanan')
                     ->where('status_ubah_layanan', '11') // 11: Request Baru dari Finance
@@ -393,7 +409,7 @@ class NotificationController extends Controller
         // -------------------------------------------------------------
         // 5. PERMINTAAN SUSPEND (ISOLIR) -> DARI FINANCE UNTUK EKSEKUSI NOC
         // -------------------------------------------------------------
-        if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_suspend')) {
+        if (($isAdminOrDirektur || $isNoc || $isTeknik) && $this->hasTableFast('trx_suspend')) {
             try {
                 $newSuspends = DB::table('trx_suspend')
                     ->where('status_suspend', '11') // 11: Request Suspend
@@ -425,7 +441,7 @@ class NotificationController extends Controller
         // -------------------------------------------------------------
         // 6. PERMINTAAN TERMINASI -> DARI FINANCE UNTUK LAPANGAN/NOC
         // -------------------------------------------------------------
-        if (($isAdminOrDirektur || $isNoc || $isTeknik) && Schema::hasTable('trx_terminasi')) {
+        if (($isAdminOrDirektur || $isNoc || $isTeknik) && $this->hasTableFast('trx_terminasi')) {
             try {
                 $newTerminasis = DB::table('trx_terminasi')
                     ->where('status_terminasi', '11') // 11: Request Terminasi
@@ -457,7 +473,7 @@ class NotificationController extends Controller
         // -------------------------------------------------------------
         // 7. REPORT INSTALASI DARI TEKNISI (STATUS #18 SELESAI INSTALASI / SIAP AKTIVASI) -> DITUJUKAN UNTUK NOC & ADMIN
         // -------------------------------------------------------------
-        if (($isAdminOrDirektur || $isNoc) && Schema::hasTable('trx_batchjob_register')) {
+        if (($isAdminOrDirektur || $isNoc) && $this->hasTableFast('trx_batchjob_register')) {
             try {
                 $reportedInstalasi = DB::table('trx_batchjob_register')
                     ->leftJoin('trx_instalasi', 'trx_batchjob_register.nomor_internet', '=', 'trx_instalasi.nomor_internet')

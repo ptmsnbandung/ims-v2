@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -27,9 +28,13 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('layouts.app', function ($view) {
             try {
-                $sidebarOlts = Schema::hasTable('gomsn.olt')
-                    ? DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get()
-                    : collect();
+                $olts = Cache::remember('global_sidebar_olts_list', 600, function () {
+                    if (Schema::hasTable('gomsn.olt')) {
+                        return DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get()->toArray();
+                    }
+                    return [];
+                });
+                $sidebarOlts = collect($olts);
             } catch (\Throwable $e) {
                 $sidebarOlts = collect();
             }

@@ -1095,7 +1095,8 @@
                         <!-- User Profile Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
-                                    class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
+                                    type="button"
+                                    class="flex items-center gap-2.5 p-1 sm:p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
                                 @if(auth()->user()?->foto_url)
                                     <div class="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 flex-shrink-0 shadow-xs bg-slate-100 dark:bg-slate-800">
                                         <img src="{{ auth()->user()->foto_url }}" alt="{{ auth()->user()->nama }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -1109,10 +1110,10 @@
                                     </div>
                                 @endif
                                 <div class="text-left hidden md:block">
-                                    <span class="block text-xs font-bold text-slate-900 dark:text-white leading-tight">{{ auth()->user()?->nama }}</span>
-                                    <span class="block text-[10px] text-[#0891b2] font-semibold">{{ auth()->user()?->nama_level }}</span>
+                                    <span class="block text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[140px]">{{ auth()->user()?->nama }}</span>
+                                    <span class="block text-[10px] text-[#0891b2] dark:text-cyan-400 font-semibold">{{ auth()->user()?->nama_level }}</span>
                                 </div>
-                                <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200" :class="open ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </button>
@@ -1121,42 +1122,72 @@
                             <div x-show="open"
                                  x-cloak
                                  @click.away="open = false"
-                                 class="absolute right-0 mt-2 w-52 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/80 dark:shadow-black/60 py-1.5 z-50">
-                                <div class="px-4 py-2.5 border-b border-slate-100 dark:border-slate-700/60 text-xs flex items-center gap-2.5">
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                                 class="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 p-2 z-50">
+                                
+                                <!-- User Header Card -->
+                                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-3 mb-1.5">
                                     @if(auth()->user()?->foto_url)
-                                        <div class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-slate-200 dark:ring-slate-700 bg-slate-100 dark:bg-slate-800">
+                                        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white dark:ring-slate-700 shadow-xs bg-slate-100 dark:bg-slate-800">
                                             <img src="{{ auth()->user()->foto_url }}" alt="{{ auth()->user()->nama }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            <div class="w-full h-full hidden items-center justify-center font-bold text-xs text-white bg-gradient-to-tr from-[#05404f] to-[#0891b2]">
+                                            <div class="w-full h-full hidden items-center justify-center font-bold text-sm text-white bg-gradient-to-tr from-[#05404f] to-[#0891b2]">
                                                 {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
                                             </div>
                                         </div>
                                     @else
-                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
+                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-sm text-white flex-shrink-0 shadow-xs">
                                             {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
                                         </div>
                                     @endif
                                     <div class="min-w-0 flex-1">
-                                        <p class="font-bold text-slate-900 dark:text-white truncate">{{ auth()->user()?->nama }}</p>
-                                        <p class="text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate">{{ auth()->user()?->username }}</p>
+                                        <p class="font-bold text-xs text-slate-900 dark:text-white truncate" title="{{ auth()->user()?->nama }}">{{ auth()->user()?->nama }}</p>
+                                        <p class="text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate" title="{{ auth()->user()?->username }}">{{ auth()->user()?->username }}</p>
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-blue-100/70 dark:bg-blue-900/40 text-blue-700 dark:text-cyan-300">
+                                                {{ auth()->user()?->nama_level }}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="p-1 border-b border-slate-100 dark:border-slate-700/60">
+
+                                <!-- Action Buttons List -->
+                                <div class="space-y-1">
+                                    <!-- 1. Profil Saya -->
                                     <a href="{{ route('profile') }}"
-                                       class="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 rounded-lg flex items-center gap-2.5 cursor-pointer transition {{ request()->routeIs('profile*') ? 'bg-slate-100 dark:bg-slate-700/60 font-bold text-blue-600 dark:text-cyan-400' : '' }}">
-                                        <svg class="w-4 h-4 text-blue-600 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                        </svg>
-                                        <span class="font-medium">Profil Saya</span>
+                                       @click="open = false"
+                                       class="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-cyan-400 flex items-center justify-between group transition cursor-pointer {{ request()->routeIs('profile*') ? 'bg-blue-50 dark:bg-blue-950/40 font-bold text-blue-600 dark:text-cyan-400' : '' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-cyan-400 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+                                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                </svg>
+                                            </div>
+                                            <span>Profil Saya</span>
+                                        </div>
+                                        <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                                     </a>
-                                </div>
-                                <div class="p-1">
+
+                                    <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+
+                                    <!-- 2. Keluar -->
                                     <form action="{{ route('logout') }}" method="POST" onsubmit="localStorage.removeItem('theme');">
                                         @csrf
-                                        <button type="submit" class="w-full text-left px-3 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg flex items-center gap-2.5 cursor-pointer transition">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                                            </svg>
-                                            <span class="font-medium">Keluar</span>
+                                        <button type="submit"
+                                                class="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-between group transition cursor-pointer">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                                                    </svg>
+                                                </div>
+                                                <span>Keluar</span>
+                                            </div>
+                                            <svg class="w-3.5 h-3.5 text-rose-300 dark:text-rose-500/70 group-hover:text-rose-500 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                                         </button>
                                     </form>
                                 </div>

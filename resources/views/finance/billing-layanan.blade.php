@@ -454,7 +454,7 @@
                         <th class="py-2.5 px-3">Nominal Tagihan</th>
                         <th class="py-2.5 px-3">Status &amp; Wilayah</th>
                         <th class="py-2.5 px-3">Metode Bayar</th>
-                        <th class="py-2.5 px-3 text-center">Aksi</th>
+                        <th class="py-2.5 px-3 text-center min-w-[200px] w-[200px]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
@@ -787,35 +787,35 @@
                             </div>
                         </td>
 
-                        <!-- 7. Action Buttons (Clean 2x2 Grid) -->
-                        <td class="py-3 px-3 align-middle text-center">
-                            <div class="grid grid-cols-2 gap-1.5 w-[172px] mx-auto">
-                                <!-- 1. Status Bayar / Approve (Top Left) -->
+                        <!-- 7. Action Buttons (Clean 2-Tier Stacked Layout) -->
+                        <td class="py-3 px-2.5 align-middle text-center min-w-[200px] w-[200px]">
+                            <div class="flex flex-col gap-1.5 w-[185px] mx-auto">
+                                <!-- Top Tier: Main Status / Action -->
                                 @if($isMidtrans)
                                     @if($inv->status_bill_lay == '15')
-                                    <span class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] font-bold select-none" title="Tagihan Midtrans Lunas">
-                                        <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <div class="h-7 w-full inline-flex items-center justify-center gap-1.5 px-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[11px] font-bold select-none" title="Tagihan Midtrans Lunas">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                         </svg>
                                         <span>Lunas</span>
-                                    </span>
+                                    </div>
                                     @elseif($isSnapExpired)
-                                    <span class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 text-[10px] font-bold select-none" title="Link Pembayaran Midtrans Expired">
-                                        <svg class="w-3 h-3 flex-shrink-0 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <div class="h-7 w-full inline-flex items-center justify-center gap-1.5 px-2 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 text-[11px] font-bold select-none" title="Link Pembayaran Midtrans Expired">
+                                        <svg class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                                         </svg>
                                         <span>Expired</span>
-                                    </span>
+                                    </div>
                                     @elseif($inv->status_bill_lay == '14')
-                                    <span class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30 text-[10px] font-bold select-none" title="Menunggu Pembayaran Pelanggan">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                                    <div class="h-7 w-full inline-flex items-center justify-center gap-1.5 px-2 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30 text-[11px] font-bold select-none" title="Menunggu Pembayaran Pelanggan">
+                                        <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
                                         <span>Pending</span>
-                                    </span>
+                                    </div>
                                     @else
-                                    <span class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 text-[10px] font-bold select-none" title="Tagihan Belum Dibayar">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                    <div class="h-7 w-full inline-flex items-center justify-center gap-1.5 px-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 text-[11px] font-bold select-none" title="Tagihan Belum Dibayar">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                                         <span>Belum Bayar</span>
-                                    </span>
+                                    </div>
                                     @endif
                                 @else
                                     @if($inv->status_bill_lay != '15')
@@ -828,62 +828,65 @@
                                             data-payment-type="{{ $inv->payment_type ?? 2 }}"
                                             data-destination-bank="{{ $inv->destination_bank ?? $inv->merchant_type ?? '' }}"
                                             title="Approve Pembayaran Lunas"
-                                            class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 dark:bg-emerald-500/15 dark:hover:bg-emerald-600 dark:text-emerald-400 dark:hover:text-white dark:border-emerald-500/30 text-[10px] font-bold transition shadow-2xs cursor-pointer whitespace-nowrap">
-                                        <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            class="h-7 w-full inline-flex items-center justify-center gap-1.5 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap">
+                                        <svg class="w-3.5 h-3.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                         </svg>
-                                        <span>Approve</span>
+                                        <span>Approve Bayar</span>
                                     </button>
                                     @else
-                                    <span class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-emerald-50 text-emerald-600/70 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400/70 dark:border-emerald-500/20 text-[10px] font-semibold opacity-75 select-none">
-                                        <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <div class="h-7 w-full inline-flex items-center justify-center gap-1.5 px-2 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[11px] font-bold select-none">
+                                        <svg class="w-3.5 h-3.5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                         </svg>
                                         <span>Lunas</span>
-                                    </span>
+                                    </div>
                                     @endif
                                 @endif
 
-                                <!-- 2. Change Payment Method (Top Right) -->
-                                <button type="button"
-                                        @click="openChangePayModalFromEl($el)"
-                                        data-kode="{{ $inv->kode_billing_layanan }}"
-                                        data-nama="{{ $inv->nama_pelanggan }}"
-                                        data-payment-type="{{ $inv->payment_type ?? 1 }}"
-                                        title="Ubah Metode Pembayaran"
-                                        class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 dark:bg-blue-500/15 dark:hover:bg-blue-600 dark:text-blue-400 dark:hover:text-white dark:border-blue-500/30 text-[10px] font-bold transition shadow-2xs cursor-pointer whitespace-nowrap">
-                                    <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                                    </svg>
-                                    <span>Change Pay</span>
-                                </button>
-
-                                <!-- 3. Lihat Detail (Bottom Left) -->
-                                <button type="button"
-                                        @click="openDetailModalFromEl($el)"
-                                        data-kode="{{ $inv->kode_billing_layanan }}"
-                                        title="Lihat Detail Tagihan"
-                                        class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700 text-[10px] font-bold transition shadow-2xs cursor-pointer whitespace-nowrap">
-                                    <svg class="w-3 h-3 flex-shrink-0 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                    </svg>
-                                    <span>Detail</span>
-                                </button>
-
-                                <!-- 4. Hapus Tagihan (Bottom Right) -->
-                                <form action="{{ route('finance.billing-layanan.delete.post') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tagihan {{ $inv->kode_billing_layanan }} ({{ $inv->nama_pelanggan }})?')" class="w-full m-0 p-0">
-                                    @csrf
-                                    <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
-                                    <button type="submit"
-                                            title="Hapus Tagihan Ini"
-                                            class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 text-[10px] font-bold transition shadow-2xs cursor-pointer whitespace-nowrap">
+                                <!-- Bottom Tier: 3 Quick Action Buttons (Metode, Detail, Hapus) -->
+                                <div class="grid grid-cols-3 gap-1">
+                                    <!-- Change Payment Method -->
+                                    <button type="button"
+                                            @click="openChangePayModalFromEl($el)"
+                                            data-kode="{{ $inv->kode_billing_layanan }}"
+                                            data-nama="{{ $inv->nama_pelanggan }}"
+                                            data-payment-type="{{ $inv->payment_type ?? 1 }}"
+                                            title="Ubah Metode Pembayaran"
+                                            class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1 rounded-md bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 dark:bg-blue-500/15 dark:hover:bg-blue-600 dark:text-blue-400 dark:hover:text-white dark:border-blue-500/30 text-[10px] font-semibold transition shadow-2xs cursor-pointer whitespace-nowrap">
                                         <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                                         </svg>
-                                        <span>Hapus</span>
+                                        <span>Metode</span>
                                     </button>
-                                </form>
+
+                                    <!-- Detail -->
+                                    <button type="button"
+                                            @click="openDetailModalFromEl($el)"
+                                            data-kode="{{ $inv->kode_billing_layanan }}"
+                                            title="Lihat Detail Tagihan"
+                                            class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700 text-[10px] font-semibold transition shadow-2xs cursor-pointer whitespace-nowrap">
+                                        <svg class="w-3 h-3 flex-shrink-0 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        </svg>
+                                        <span>Detail</span>
+                                    </button>
+
+                                    <!-- Hapus -->
+                                    <form action="{{ route('finance.billing-layanan.delete.post') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tagihan {{ $inv->kode_billing_layanan }} ({{ $inv->nama_pelanggan }})?')" class="w-full m-0 p-0">
+                                        @csrf
+                                        <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
+                                        <button type="submit"
+                                                title="Hapus Tagihan Ini"
+                                                class="h-[26px] w-full inline-flex items-center justify-center gap-1 px-1 rounded-md bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 text-[10px] font-semibold transition shadow-2xs cursor-pointer whitespace-nowrap">
+                                            <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                            </svg>
+                                            <span>Hapus</span>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </td>
                     </tr>

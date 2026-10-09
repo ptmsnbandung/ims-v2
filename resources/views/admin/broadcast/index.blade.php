@@ -314,7 +314,7 @@
                         <option value="all" {{ $selectedStatusTagihan == 'all' ? 'selected' : '' }}>🌐 Semua Pelanggan</option>
                         <option value="unpaid" {{ $selectedStatusTagihan == 'unpaid' ? 'selected' : '' }}>⚠️ Belum Lunas / Jatuh Tempo</option>
                         <option value="paid" {{ $selectedStatusTagihan == 'paid' ? 'selected' : '' }}>✅ Lunas (PAID)</option>
-                        <option value="isolir" {{ $selectedStatusTagihan == 'isolir' ? 'selected' : '' }}>⛔ Isolir / Suspend</option>
+                        <option value="isolir" {{ $selectedStatusTagihan == 'isolir' ? 'selected' : '' }}>⛔ Suspend</option>
                     </select>
                 </div>
 
@@ -490,7 +490,7 @@
                                             <svg class="w-3 h-3 text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
                                             </svg>
-                                            <span>ISOLIR</span>
+                                            <span>SUSPEND</span>
                                         </span>
                                     @elseif(in_array($item->status_reg, ['14', '15', '17', '18', '19', '19.1']))
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 dark:border-indigo-500/30">
@@ -730,7 +730,7 @@ function broadcastApp() {
                 const dictLabels = {
                     'periode': { label: 'Periode Tagihan', desc: 'Bulan & tahun tagihan (contoh: Oktober 2026)' },
                     'bulan_jatuh_tempo': { label: 'Bulan Jatuh Tempo', desc: 'Menjadi: 20 Oktober 2026' },
-                    'bulan_suspend': { label: 'Bulan Suspend/Isolir', desc: 'Menjadi: 24 Oktober 2026' },
+                    'bulan_suspend': { label: 'Bulan Suspend', desc: 'Menjadi: 24 Oktober 2026' },
                     'nama': { label: 'Nama Pelanggan', desc: 'Diambil dari data pelanggan' },
                     'nomor_internet': { label: 'Nomor Internet / ID', desc: 'Nomor internet pelanggan' },
                     'alamat': { label: 'Alamat Pasang', desc: 'Alamat domisili/pemasangan' },

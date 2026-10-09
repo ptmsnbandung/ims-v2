@@ -949,6 +949,39 @@
                 }
             },
 
+            async fetchStreetRoute(userLat, userLng, destLat, destLng) {
+                const routingUrls = [
+                    `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${userLng},${userLat};${destLng},${destLat}?overview=full&geometries=geojson&continue_straight=true`,
+                    `https://routing.openstreetmap.de/routed-bike/route/v1/bicycle/${userLng},${userLat};${destLng},${destLat}?overview=full&geometries=geojson&continue_straight=true`,
+                    `https://router.project-osrm.org/route/v1/foot/${userLng},${userLat};${destLng},${destLat}?overview=full&geometries=geojson&continue_straight=true`,
+                    `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${destLng},${destLat}?overview=full&geometries=geojson&continue_straight=true`
+                ];
+
+                for (const url of routingUrls) {
+                    try {
+                        const ctrl = new AbortController();
+                        const timeoutId = setTimeout(() => ctrl.abort(), 3000);
+                        const res = await fetch(url, { signal: ctrl.signal });
+                        clearTimeout(timeoutId);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.routes && data.routes[0] && data.routes[0].distance) {
+                                const coords = (data.routes[0].geometry && data.routes[0].geometry.coordinates) 
+                                    ? data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]) 
+                                    : null;
+                                return {
+                                    distance: Math.round(data.routes[0].distance),
+                                    geometry: coords
+                                };
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback ke endpoint berikutnya
+                    }
+                }
+                return null;
+            },
+
             async executeCoverageCheck() {
                 let coords = this.parseCoordinates(this.inputCoordinates);
                 
@@ -970,17 +1003,18 @@
                 const userLat = coords.lat;
                 const userLng = coords.lng;
 
-                // Hitung jarak ke seluruh ODP dengan akurasi presisi
+                // 1. Hitung jarak garis lurus awal ke seluruh ODP master
                 const odpList = this.allOdps.map(odp => {
                     const straightDist = this.calculateHighPrecisionMeters(userLat, userLng, odp.lat, odp.lng);
-                    const roadDist = Math.round(straightDist * 1.25);
+                    const estimatedRoadDist = Math.round(straightDist * 1.25);
                     
                     const item = {
                         odp: odp,
                         distance: straightDist,
-                        roadDistance: roadDist,
-                        dropcoreDistance: Math.round(roadDist * 1.08 + 10),
-                        isCovered: roadDist <= 300,
+                        roadDistance: estimatedRoadDist,
+                        cachedGeometry: null,
+                        dropcoreDistance: Math.round(estimatedRoadDist * 1.08 + 10),
+                        isCovered: estimatedRoadDist <= 300,
                         coverageLevel: 'excellent',
                         coverageLabel: 'Sangat Ideal',
                         coverageNote: '',
@@ -989,10 +1023,26 @@
 
                     this.updateCoverageAssessment(item);
                     return item;
-                }).sort((a, b) => a.roadDistance - b.roadDistance);
+                }).sort((a, b) => a.distance - b.distance);
 
                 if (odpList.length > 0) {
-                    this.nearestCandidates = odpList.slice(0, 5);
+                    // 2. Ambil top 6 ODP terdekat secara radius spasial
+                    const candidatePool = odpList.slice(0, 6);
+
+                    // 3. Hitung jarak rute jalan nyata (OSRM) secara paralel untuk seluruh kandidat
+                    await Promise.all(candidatePool.map(async (cand) => {
+                        const routeData = await this.fetchStreetRoute(userLat, userLng, cand.odp.lat, cand.odp.lng);
+                        if (routeData) {
+                            cand.roadDistance = routeData.distance;
+                            cand.cachedGeometry = routeData.geometry;
+                        }
+                        this.updateCoverageAssessment(cand);
+                    }));
+
+                    // 4. Urutkan ULANG ranking kandidat berdasarkan JARAK RUTE JALAN NYATA terpendek
+                    candidatePool.sort((a, b) => a.roadDistance - b.roadDistance);
+
+                    this.nearestCandidates = candidatePool.slice(0, 5);
                     this.selectedOdpResult = this.nearestCandidates[0];
                     this.hasChecked = true;
                     await this.drawConnectionToOdp(userLat, userLng, this.selectedOdpResult);
@@ -1104,36 +1154,16 @@
                     [odp.lat, odp.lng]
                 ];
 
-                // High-Precision Real Street Route via OSRM (Foot/Alleyway/Road Network)
-                this.streetRouteGeometry = null;
-                const routingUrls = [
-                    `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`,
-                    `https://routing.openstreetmap.de/routed-bike/route/v1/bicycle/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`,
-                    `https://router.project-osrm.org/route/v1/foot/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`,
-                    `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`,
-                    `https://routing.openstreetmap.de/routed-car/route/v1/driving/${userLng},${userLat};${odp.lng},${odp.lat}?overview=full&geometries=geojson&continue_straight=true`
-                ];
-
-                for (const url of routingUrls) {
-                    try {
-                        const ctrl = new AbortController();
-                        const timeoutId = setTimeout(() => ctrl.abort(), 3500);
-                        const res = await fetch(url, { signal: ctrl.signal });
-                        clearTimeout(timeoutId);
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.routes && data.routes[0] && data.routes[0].geometry && data.routes[0].geometry.coordinates && data.routes[0].geometry.coordinates.length >= 2) {
-                                this.streetRouteGeometry = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                                if (data.routes[0].distance) {
-                                    result.roadDistance = Math.round(data.routes[0].distance);
-                                    // Evaluasi ulang status coverage berdasarkan jarak rute jalan nyata OSRM
-                                    this.updateCoverageAssessment(result);
-                                }
-                                break;
-                            }
-                        }
-                    } catch (e) {
-                        // Fallback to next endpoint
+                // Jika sudah ada geometry tersimpan di cache kandidat, langsung gunakan
+                if (result.cachedGeometry && result.cachedGeometry.length >= 2) {
+                    this.streetRouteGeometry = result.cachedGeometry;
+                } else {
+                    const routeData = await this.fetchStreetRoute(userLat, userLng, odp.lat, odp.lng);
+                    if (routeData) {
+                        result.roadDistance = routeData.distance;
+                        result.cachedGeometry = routeData.geometry;
+                        this.streetRouteGeometry = routeData.geometry;
+                        this.updateCoverageAssessment(result);
                     }
                 }
 

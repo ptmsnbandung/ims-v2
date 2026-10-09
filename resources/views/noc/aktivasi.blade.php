@@ -394,143 +394,192 @@
     </div>
 
     <!-- Aktivasi Table Card -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
-        <div class="px-3.5 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <div>
-                <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                    {{ $statusTab === 'siap_aktivasi' ? 'Daftar Antrean Permintaan Aktivasi Jaringan' : 'Daftar Riwayat Pelanggan Aktif' }}
-                </h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {{ $statusTab === 'siap_aktivasi' ? 'Order pelanggan baru yang telah selesai instalasi kabel dan siap diaktivasi / provisioning oleh NOC.' : 'Daftar pelanggan yang sudah berhasil diaktivasi dan berstatus aktif di jaringan.' }}
-                </p>
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden transition">
+        <div class="px-5 py-4 border-b border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gradient-to-r from-slate-50/60 to-transparent dark:from-slate-950/40">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shadow-xs flex-shrink-0">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                        {{ $statusTab === 'siap_aktivasi' ? 'Daftar Antrean Permintaan Aktivasi Jaringan' : 'Daftar Riwayat Pelanggan Aktif' }}
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {{ $statusTab === 'siap_aktivasi' ? 'Order pelanggan baru yang telah selesai instalasi kabel dan siap diaktivasi / provisioning oleh NOC.' : 'Daftar pelanggan yang sudah berhasil diaktivasi dan berstatus aktif di jaringan.' }}
+                    </p>
+                </div>
             </div>
-            <span class="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-bold">Total: {{ $pelanggans->total() }} Data</span>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-50 text-cyan-700 border border-cyan-200/60 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/20 font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                    <span>Total: <strong>{{ $pelanggans->total() }}</strong> Data</span>
+                </span>
+            </div>
         </div>
 
         <!-- Desktop Table View -->
         <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
                 <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[10px] font-bold text-slate-700 dark:text-slate-300">
-                        <th class="py-2.5 px-3">No Internet / Pelanggan</th>
-                        <th class="py-2.5 px-3">Paket & Bandwidth</th>
-                        <th class="py-2.5 px-3">Alamat & Lokasi</th>
-                        <th class="py-2.5 px-3">Node POP / OLT</th>
-                        <th class="py-2.5 px-3">Status</th>
-                        <th class="py-2.5 px-3 text-center min-w-[130px]">Aksi NOC</th>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/70 text-[11px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
+                        <th class="py-3.5 px-4 font-bold">No Internet &amp; Pelanggan</th>
+                        <th class="py-3.5 px-4 font-bold">Paket &amp; Speed</th>
+                        <th class="py-3.5 px-4 font-bold">Alamat &amp; Lokasi Pasang</th>
+                        <th class="py-3.5 px-4 font-bold">Node POP / OLT</th>
+                        <th class="py-3.5 px-4 font-bold">Status &amp; Jadwal</th>
+                        <th class="py-3.5 px-4 text-center font-bold min-w-[140px]">Aksi NOC</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
                     @forelse($pelanggans as $p)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        @php
+                            $cleanHp = preg_replace('/[^0-9]/', '', $p->nomor_hp ?? '');
+                            if (str_starts_with($cleanHp, '0')) $cleanHp = '62' . substr($cleanHp, 1);
+                        @endphp
+                        <tr class="hover:bg-cyan-50/30 dark:hover:bg-cyan-950/20 transition-all duration-150">
                             
                             <!-- 1. Pelanggan -->
-                            <td class="py-2.5 px-3 align-top">
-                                <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
-                                   class="font-mono font-bold text-cyan-600 dark:text-cyan-400 hover:underline text-xs">
-                                    {{ $p->nomor_internet }}
-                                </a>
-                                <div class="font-bold text-slate-900 dark:text-white uppercase text-xs mt-0.5 leading-snug">
-                                    {{ $p->nama_pelanggan }}
-                                </div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium mt-0.5">
-                                    📱 {{ $p->nomor_hp ?: '-' }}
+                            <td class="py-3.5 px-4 align-top">
+                                <div class="flex items-start gap-2.5">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] text-white font-bold text-xs flex items-center justify-center shadow-xs flex-shrink-0 mt-0.5">
+                                        {{ strtoupper(substr($p->nama_pelanggan, 0, 1)) }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
+                                               class="font-mono font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 hover:underline text-xs bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200/60 dark:border-cyan-500/20 px-1.5 py-0.5 rounded">
+                                                {{ $p->nomor_internet }}
+                                            </a>
+                                        </div>
+                                        <div class="font-bold text-slate-900 dark:text-white uppercase text-xs mt-1 leading-snug tracking-wide">
+                                            {{ $p->nama_pelanggan }}
+                                        </div>
+                                        @if($p->nomor_hp)
+                                            <a href="https://wa.me/{{ $cleanHp }}" target="_blank"
+                                               class="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 font-mono mt-1 transition group">
+                                                <span class="text-xs text-emerald-500">📱</span>
+                                                <span class="group-hover:underline">{{ $p->nomor_hp }}</span>
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
 
                             <!-- 2. Paket Bandwidth -->
-                            <td class="py-2.5 px-3 align-top">
-                                <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">
-                                    {{ $p->nama_kategori_bandwith ?: ($p->alias_nama_kategori ?: 'INTERNET') }}
-                                </div>
-                                <div class="text-[11px] text-cyan-600 dark:text-cyan-400 font-extrabold font-mono mt-0.5">
-                                    {{ $p->nominal_bandwith ?: '10' }} Mbps
+                            <td class="py-3.5 px-4 align-top">
+                                <div class="space-y-1">
+                                    <div class="font-bold text-slate-800 dark:text-slate-200 text-xs">
+                                        {{ $p->nama_kategori_bandwith ?: ($p->alias_nama_kategori ?: 'INTERNET') }}
+                                    </div>
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-extrabold font-mono text-xs shadow-xs">
+                                        <svg class="w-3 h-3 text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
+                                        </svg>
+                                        <span>{{ $p->nominal_bandwith ?: '10' }} Mbps</span>
+                                    </div>
                                 </div>
                             </td>
 
                             <!-- 3. Alamat & Lokasi -->
-                            <td class="py-2.5 px-3 align-top text-slate-600 dark:text-slate-400 font-medium max-w-[220px]">
-                                <div class="text-[11px] leading-relaxed">{{ $p->alamat_p ?: ($p->alamat_pasang ?: '-') }}</div>
+                            <td class="py-3.5 px-4 align-top text-slate-600 dark:text-slate-400 font-medium max-w-[260px]">
+                                <div class="text-[11px] leading-relaxed text-slate-700 dark:text-slate-300">
+                                    {{ $p->alamat_p ?: ($p->alamat_pasang ?: '-') }}
+                                </div>
                                 @if($p->loc_maps)
-                                    <a href="{{ $p->loc_maps }}" target="_blank" class="text-[11px] text-cyan-600 dark:text-cyan-400 hover:underline font-semibold block mt-0.5">
-                                        📍 Lihat Maps
+                                    <a href="{{ $p->loc_maps }}" target="_blank" 
+                                       class="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200/60 dark:border-blue-500/20 px-2 py-0.5 rounded-md mt-1.5 transition">
+                                        <svg class="w-3 h-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                        </svg>
+                                        <span>Buka Google Maps</span>
                                     </a>
                                 @endif
                             </td>
 
                             <!-- 4. Node POP / OLT -->
-                            <td class="py-2.5 px-3 align-top space-y-0.5">
-                                <div>
-                                    <span class="text-[10px] text-slate-400 font-medium">POP:</span>
-                                    <span class="font-bold text-slate-800 dark:text-slate-200 text-[11px]">{{ $p->nama_pop ?: ($p->kode_pop ?: '-') }}</span>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] text-slate-400 font-medium">OLT:</span>
-                                    <span class="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px]">{{ $p->index_olt ?: '-' }}</span>
+                            <td class="py-3.5 px-4 align-top">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">POP</span>
+                                        <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs truncate max-w-[120px]">{{ $p->nama_pop ?: ($p->kode_pop ?: '-') }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">OLT</span>
+                                        <span class="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px] truncate max-w-[130px]">{{ $p->index_olt ?: '-' }}</span>
+                                    </div>
                                 </div>
                             </td>
 
-                            <!-- 5. Status -->
-                            <td class="py-2.5 px-3 align-top">
+                            <!-- 5. Status & Jadwal -->
+                            <td class="py-3.5 px-4 align-top">
                                 @if(in_array($p->status_reg, ['20']))
-                                    <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold font-mono tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
-                                        ONLINE / AKTIF (#20)
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span>ONLINE (#20)</span>
                                     </span>
                                 @elseif(in_array($p->status_reg, ['19', '19.1']))
-                                    <div class="space-y-0.5">
-                                        <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold font-mono tracking-wide {{ $p->status_reg == '19.1' ? 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/15 dark:text-sky-400 dark:border-sky-500/30' : 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30' }}">
-                                            {{ $p->status_reg == '19.1' ? 'RESCHEDULE (#19.1)' : 'TERJADWAL (#19)' }}
+                                    <div class="space-y-1.5">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ $p->status_reg == '19.1' ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/30' : 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/30' }}">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $p->status_reg == '19.1' ? 'bg-sky-500' : 'bg-cyan-500' }}"></span>
+                                            <span>{{ $p->status_reg == '19.1' ? 'RESCHEDULE (#19.1)' : 'TERJADWAL (#19)' }}</span>
                                         </span>
                                         @if($p->aktivasi_date_start)
-                                            <div class="text-[10px] text-slate-600 dark:text-slate-400 font-mono font-semibold">
-                                                📅 {{ \Carbon\Carbon::parse($p->aktivasi_date_start)->translatedFormat('d M Y') }}
+                                            <div class="flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-400 font-mono font-medium">
+                                                <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                                </svg>
+                                                <span>{{ \Carbon\Carbon::parse($p->aktivasi_date_start)->translatedFormat('d M Y') }}</span>
                                                 @if($p->aktivasi_time)
-                                                    • {{ substr($p->aktivasi_time, 0, 5) }}
+                                                    <span class="text-cyan-600 dark:text-cyan-400 font-bold">&bull; {{ substr($p->aktivasi_time, 0, 5) }}</span>
                                                 @endif
                                             </div>
                                         @endif
                                     </div>
                                 @elseif(in_array($p->status_reg, ['18', '18.1']))
-                                    <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold font-mono tracking-wide bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
-                                        SIAP JADWAL (#18)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        <span>SIAP JADWAL (#18)</span>
                                     </span>
                                 @else
-                                    <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold font-mono tracking-wide bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/30">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                                         {{ $p->desc_registrasi ?: 'Status #' . $p->status_reg }}
                                     </span>
                                 @endif
                             </td>
 
                             <!-- 6. Aksi NOC -->
-                            <td class="py-2.5 px-3 align-top text-center">
+                            <td class="py-3.5 px-4 align-top text-center">
                                 @if(in_array($p->status_reg, ['18', '18.1']))
                                     <div class="flex items-center justify-center">
                                         <button type="button"
                                                 @click="openScheduleModal({{ json_encode($p) }})"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold shadow-md shadow-cyan-600/20 active:scale-95 transition cursor-pointer"
                                                 title="Jadwalkan Aktivasi Layanan (NOC)">
-                                            <svg class="w-3 h-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                             </svg>
                                             <span>Schedule Aktivasi</span>
                                         </button>
                                     </div>
                                 @elseif(in_array($p->status_reg, ['19', '19.1']))
-                                    <div class="flex flex-col items-center justify-center gap-1">
+                                    <div class="flex flex-col items-stretch justify-center gap-1.5 min-w-[125px]">
                                         <button type="button"
                                                 @click="openReportModal({{ json_encode($p) }})"
-                                                class="w-full inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold shadow-xs transition cursor-pointer"
-                                                title="Lanjut ke Form Eksekusi Aktivasi Layanan (Otomatis Reboot OLT/MikroTik di Background)">
-                                            <svg class="w-3 h-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 active:scale-95 transition cursor-pointer"
+                                                title="Lanjut ke Form Eksekusi Aktivasi Layanan">
+                                            <svg class="w-3.5 h-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                                             </svg>
                                             <span>Aktivasi</span>
                                         </button>
                                         <button type="button"
                                                 @click="openScheduleModal({{ json_encode($p) }})"
-                                                class="w-full inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-700"
-                                                title="Reschedule / Jadwalkan Ulang jika aktivasi tertunda atau berhalangan">
-                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-700"
+                                                title="Reschedule / Jadwalkan Ulang">
+                                            <svg class="w-3 h-3 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                             <span>Reschedule</span>
@@ -538,7 +587,7 @@
                                     </div>
                                 @else
                                     <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
-                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold border border-slate-200 dark:border-slate-700 transition cursor-pointer">
+                                       class="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition cursor-pointer">
                                         <span>Lihat Profil</span>
                                     </a>
                                 @endif
@@ -547,8 +596,14 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-6 text-center text-slate-500 font-medium text-xs">
-                                {{ $statusTab === 'siap_aktivasi' ? 'Tidak ada antrean aktivasi yang pending. Semua pelanggan baru telah diaktivasi.' : 'Tidak ada data pelanggan yang cocok.' }}
+                            <td colspan="6" class="py-12 text-center text-slate-500 dark:text-slate-400 font-medium text-xs">
+                                <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center text-slate-400">
+                                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </div>
+                                <p class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $statusTab === 'siap_aktivasi' ? 'Tidak Ada Antrean Aktivasi' : 'Tidak Ada Data Pelanggan' }}</p>
+                                <p class="text-xs text-slate-400 mt-0.5">{{ $statusTab === 'siap_aktivasi' ? 'Semua pelanggan baru telah selesai diaktivasi / provisioning.' : 'Tidak ada riwayat pelanggan yang sesuai dengan kriteria.' }}</p>
                             </td>
                         </tr>
                     @endforelse
@@ -557,52 +612,60 @@
         </div>
 
         <!-- Mobile Card View (block md:hidden) -->
-        <div class="ims-mobile-only block md:hidden p-2.5 sm:p-3 space-y-2.5">
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3">
             @forelse($pelanggans as $p)
-                <div class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-2.5">
+                @php
+                    $cleanHp = preg_replace('/[^0-9]/', '', $p->nomor_hp ?? '');
+                    if (str_starts_with($cleanHp, '0')) $cleanHp = '62' . substr($cleanHp, 1);
+                @endphp
+                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
                     
                     <!-- Top: Customer + Status -->
-                    <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2">
-                        <div class="min-w-0">
-                            <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
-                               class="font-mono font-bold text-cyan-600 dark:text-cyan-400 hover:underline text-xs inline-block">
-                                {{ $p->nomor_internet }}
-                            </a>
-                            <h4 class="font-bold text-slate-900 dark:text-white text-xs uppercase mt-0.5 truncate">
-                                {{ $p->nama_pelanggan }}
-                            </h4>
-                            @if($p->nomor_hp)
-                                @php
-                                    $cleanHp = preg_replace('/[^0-9]/', '', $p->nomor_hp);
-                                    if (str_starts_with($cleanHp, '0')) $cleanHp = '62' . substr($cleanHp, 1);
-                                @endphp
-                                <a href="https://wa.me/{{ $cleanHp }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline mt-0.5">
-                                    <span>📱 {{ $p->nomor_hp }}</span>
+                    <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                        <div class="flex items-start gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] text-white font-bold text-xs flex items-center justify-center shadow-xs flex-shrink-0 mt-0.5">
+                                {{ strtoupper(substr($p->nama_pelanggan, 0, 1)) }}
+                            </div>
+                            <div class="min-w-0">
+                                <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
+                                   class="font-mono font-bold text-cyan-600 dark:text-cyan-400 hover:underline text-xs inline-block bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200/60 dark:border-cyan-500/20 px-1.5 py-0.5 rounded">
+                                    {{ $p->nomor_internet }}
                                 </a>
-                            @endif
+                                <h4 class="font-bold text-slate-900 dark:text-white text-xs uppercase mt-1 truncate">
+                                    {{ $p->nama_pelanggan }}
+                                </h4>
+                                @if($p->nomor_hp)
+                                    <a href="https://wa.me/{{ $cleanHp }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 hover:underline mt-0.5">
+                                        <span>📱 {{ $p->nomor_hp }}</span>
+                                    </a>
+                                @endif
+                            </div>
                         </div>
 
                         <!-- Status badge -->
                         <div class="shrink-0 text-right">
                             @if(in_array($p->status_reg, ['20']))
-                                <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30">
                                     ONLINE (#20)
                                 </span>
                             @elseif(in_array($p->status_reg, ['19', '19.1']))
-                                <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold {{ $p->status_reg == '19.1' ? 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/15 dark:text-sky-400' : 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400' }}">
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $p->status_reg == '19.1' ? 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-500/10 dark:text-sky-400' : 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400' }}">
                                     {{ $p->status_reg == '19.1' ? 'RESCHEDULE (#19.1)' : 'TERJADWAL (#19)' }}
                                 </span>
                                 @if($p->aktivasi_date_start)
-                                    <div class="text-[9px] text-slate-500 font-mono mt-0.5">
+                                    <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-1">
                                         📅 {{ \Carbon\Carbon::parse($p->aktivasi_date_start)->translatedFormat('d M Y') }}
+                                        @if($p->aktivasi_time)
+                                            <span>• {{ substr($p->aktivasi_time, 0, 5) }}</span>
+                                        @endif
                                     </div>
                                 @endif
                             @elseif(in_array($p->status_reg, ['18', '18.1']))
-                                <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30">
                                     SIAP JADWAL (#18)
                                 </span>
                             @else
-                                <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300">
                                     #{{ $p->status_reg }}
                                 </span>
                             @endif
@@ -610,55 +673,55 @@
                     </div>
 
                     <!-- Middle: Package & Node -->
-                    <div class="grid grid-cols-2 gap-2 text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800">
+                    <div class="grid grid-cols-2 gap-2 text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800">
                         <div>
-                            <span class="text-[9px] text-slate-400 font-medium block">Paket Bandwidth</span>
-                            <span class="font-bold text-slate-800 dark:text-slate-200 truncate block text-[11px]">{{ $p->nama_kategori_bandwith ?: ($p->alias_nama_kategori ?: 'INTERNET') }}</span>
-                            <span class="font-mono text-cyan-600 dark:text-cyan-400 font-extrabold text-[10px]">{{ $p->nominal_bandwith ?: '10' }} Mbps</span>
+                            <span class="text-[10px] text-slate-400 font-medium block">Paket Bandwidth</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200 truncate block text-xs mt-0.5">{{ $p->nama_kategori_bandwith ?: ($p->alias_nama_kategori ?: 'INTERNET') }}</span>
+                            <span class="font-mono text-cyan-600 dark:text-cyan-400 font-extrabold text-[11px] mt-0.5 inline-block">{{ $p->nominal_bandwith ?: '10' }} Mbps</span>
                         </div>
                         <div>
-                            <span class="text-[9px] text-slate-400 font-medium block">Node POP / OLT</span>
-                            <span class="font-semibold text-slate-800 dark:text-slate-200 truncate block text-[11px]">{{ $p->nama_pop ?: ($p->kode_pop ?: '-') }}</span>
-                            <span class="font-mono text-[10px] text-slate-500 dark:text-slate-400 block truncate">{{ $p->index_olt ?: '-' }}</span>
+                            <span class="text-[10px] text-slate-400 font-medium block">Node POP / OLT</span>
+                            <span class="font-semibold text-slate-800 dark:text-slate-200 truncate block text-xs mt-0.5">{{ $p->nama_pop ?: ($p->kode_pop ?: '-') }}</span>
+                            <span class="font-mono text-[10px] text-slate-500 dark:text-slate-400 block truncate mt-0.5">{{ $p->index_olt ?: '-' }}</span>
                         </div>
                     </div>
 
                     <!-- Alamat -->
-                    <div class="text-[10px] text-slate-500 dark:text-slate-400">
+                    <div class="text-xs text-slate-600 dark:text-slate-400">
                         <span class="line-clamp-2 leading-relaxed">📍 {{ $p->alamat_p ?: ($p->alamat_pasang ?: '-') }}</span>
                         @if($p->loc_maps)
-                            <a href="{{ $p->loc_maps }}" target="_blank" class="text-cyan-600 dark:text-cyan-400 hover:underline font-semibold block mt-0.5">
-                                🗺️ Buka di Google Maps &rarr;
+                            <a href="{{ $p->loc_maps }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 font-semibold hover:underline mt-1">
+                                <span>🗺️ Buka di Google Maps &rarr;</span>
                             </a>
                         @endif
                     </div>
 
                     <!-- Actions -->
-                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80">
                         @if(in_array($p->status_reg, ['18', '18.1']))
                             <button type="button"
                                     @click="openScheduleModal({{ json_encode($p) }})"
-                                    class="w-full py-1.5 px-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/></svg>
+                                    class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-cyan-600/20 active:scale-95">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5"/></svg>
                                 <span>Schedule Aktivasi</span>
                             </button>
                         @elseif(in_array($p->status_reg, ['19', '19.1']))
                             <div class="grid grid-cols-2 gap-2">
                                 <button type="button"
                                         @click="openReportModal({{ json_encode($p) }})"
-                                        class="py-1.5 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+                                        class="py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-95">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
                                     <span>Aktivasi</span>
                                 </button>
                                 <button type="button"
                                         @click="openScheduleModal({{ json_encode($p) }})"
-                                        class="py-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+                                        class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition flex items-center justify-center gap-1 border border-slate-200 dark:border-slate-700">
                                     <span>Reschedule</span>
                                 </button>
                             </div>
                         @else
                             <a href="{{ route('teknik.pelanggan.profile', $p->nomor_internet) }}" 
-                               class="w-full py-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center justify-center gap-1">
+                               class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center justify-center gap-1">
                                 <span>Lihat Profil Pelanggan</span>
                             </a>
                         @endif
@@ -666,7 +729,7 @@
 
                 </div>
             @empty
-                <div class="py-6 text-center text-slate-400 text-xs">
+                <div class="py-8 text-center text-slate-400 text-xs">
                     {{ $statusTab === 'siap_aktivasi' ? 'Tidak ada antrean aktivasi yang pending.' : 'Tidak ada data pelanggan yang cocok.' }}
                 </div>
             @endforelse

@@ -31,12 +31,43 @@ class FinanceController extends Controller
             $perPage = 10;
         }
 
-        // Default or Filtered Month & Year (Default to current month and year to avoid massive full-history scan timeouts)
-        $selectedBulan = $request->has('bulan') ? (string)$request->input('bulan') : date('m');
+        // Default or Filtered Month & Year (Default to all months '' and current year)
+        $selectedBulan = (string)$request->input('bulan', '');
         $selectedTahun = $request->has('tahun') ? (string)$request->input('tahun') : (string) date('Y');
 
         // Query view_billing_layanan
         $query = DB::table('view_billing_layanan');
+
+        // Ambil daftar kode billing yang sedang menunggu verifikasi bukti transfer
+        $pendingKodes = collect();
+        if (Schema::hasTable('payment_confirmations')) {
+            $pendingKodes = DB::table('payment_confirmations')
+                ->where('status', '!=', 'approved')
+                ->where('status', '!=', 'rejected')
+                ->pluck('kode_billing_layanan')
+                ->filter()
+                ->toArray();
+        }
+
+        $allPendingKodeBillings = [];
+        foreach ($pendingKodes as $k) {
+            $allPendingKodeBillings[] = $k;
+            $allPendingKodeBillings[] = str_replace('/', '-', $k);
+            $allPendingKodeBillings[] = str_replace('-', '/', $k);
+        }
+
+        try {
+            $ptmsnPending = DB::select("SELECT kode_billing_layanan FROM ptmsn.payment_confirmations WHERE status != 'approved' AND status != 'rejected'");
+            foreach ($ptmsnPending as $p) {
+                if (!empty($p->kode_billing_layanan)) {
+                    $allPendingKodeBillings[] = $p->kode_billing_layanan;
+                    $allPendingKodeBillings[] = str_replace('/', '-', $p->kode_billing_layanan);
+                    $allPendingKodeBillings[] = str_replace('-', '/', $p->kode_billing_layanan);
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $allPendingKodeBillings = array_values(array_unique(array_filter($allPendingKodeBillings)));
 
         // Apply Filters
         if ($selectedBulan !== '' && $selectedBulan !== null) {
@@ -54,40 +85,10 @@ class FinanceController extends Controller
         if ($request->filled('status_bayar')) {
             $statusBayar = trim((string)$request->input('status_bayar'));
             if ($statusBayar === 'menunggu_verifikasi' || $statusBayar === 'waiting_verification') {
-                $pendingKodes = collect();
-                if (Schema::hasTable('payment_confirmations')) {
-                    $pendingKodes = DB::table('payment_confirmations')
-                        ->where('status', '!=', 'approved')
-                        ->where('status', '!=', 'rejected')
-                        ->pluck('kode_billing_layanan')
-                        ->filter()
-                        ->toArray();
-                }
-
-                $expandedKodes = [];
-                foreach ($pendingKodes as $k) {
-                    $expandedKodes[] = $k;
-                    $expandedKodes[] = str_replace('/', '-', $k);
-                    $expandedKodes[] = str_replace('-', '/', $k);
-                }
-
-                try {
-                    $ptmsnPending = DB::select("SELECT kode_billing_layanan FROM ptmsn.payment_confirmations WHERE status != 'approved' AND status != 'rejected'");
-                    foreach ($ptmsnPending as $p) {
-                        if (!empty($p->kode_billing_layanan)) {
-                            $expandedKodes[] = $p->kode_billing_layanan;
-                            $expandedKodes[] = str_replace('/', '-', $p->kode_billing_layanan);
-                            $expandedKodes[] = str_replace('-', '/', $p->kode_billing_layanan);
-                        }
-                    }
-                } catch (\Throwable $e) {}
-
-                $expandedKodes = array_unique(array_filter($expandedKodes));
-
-                $query->where(function ($q) use ($expandedKodes) {
+                $query->where(function ($q) use ($allPendingKodeBillings) {
                     $q->where('status_bill_lay', '!=', '15');
-                    if (!empty($expandedKodes)) {
-                        $q->whereIn('kode_billing_layanan', $expandedKodes);
+                    if (!empty($allPendingKodeBillings)) {
+                        $q->whereIn('kode_billing_layanan', $allPendingKodeBillings);
                     } else {
                         $q->where('status_bill_lay', '14')
                           ->where(function ($sub) {
@@ -152,6 +153,12 @@ class FinanceController extends Controller
         $waitingAmount = (float) ($kpi->waiting_amount ?? 0);
         $paidCount = (int) ($kpi->paid_count ?? 0);
         $paidAmount = (float) ($kpi->paid_amount ?? 0);
+
+        // Prioritaskan Status Menunggu Verifikasi di paling atas, apapun bulannya
+        if (!empty($allPendingKodeBillings)) {
+            $escapedPendingList = "'" . implode("','", array_map('addslashes', $allPendingKodeBillings)) . "'";
+            $query->orderByRaw("CASE WHEN status_bill_lay != '15' AND kode_billing_layanan IN ({$escapedPendingList}) THEN 0 ELSE 1 END ASC");
+        }
 
         // Fetch Paginated Invoices (Efficient Indexed Pagination)
         $invoices = $query->orderBy('date_create', 'desc')

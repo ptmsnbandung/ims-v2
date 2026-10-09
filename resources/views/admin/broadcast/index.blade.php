@@ -359,7 +359,7 @@
                 <!-- Search Input -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Pencarian Pelanggan:</label>
-                    <input type="text" name="search" value="{{ $search }}" placeholder="Nama, ID, No HP... (Enter)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Nama, ID, No HP..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
             </div>

@@ -1694,12 +1694,69 @@
                 }
             }, { passive: true });
 
-            document.addEventListener('touchstart', function(e) {
-                const a = e.target.closest('a');
-                if (a && a.href && !a.hasAttribute('download') && a.target !== '_blank') {
-                    prefetch(a.href);
+    <!-- Global Debounced Auto-Search & Focus Restoration Engine -->
+    <script>
+        (function() {
+            // 1. Restore input focus and cursor position after debounced auto-reload
+            document.addEventListener('DOMContentLoaded', function() {
+                const savedFocus = sessionStorage.getItem('ims_auto_search_focus');
+                if (savedFocus) {
+                    sessionStorage.removeItem('ims_auto_search_focus');
+                    try {
+                        const data = JSON.parse(savedFocus);
+                        const input = document.querySelector(data.selector);
+                        if (input) {
+                            input.focus();
+                            const pos = (typeof data.cursor === 'number' && data.cursor <= input.value.length) ? data.cursor : input.value.length;
+                            input.setSelectionRange(pos, pos);
+                        }
+                    } catch (e) {}
                 }
-            }, { passive: true });
+            });
+
+            // 2. Global Debounced Auto-Submit for filter search inputs
+            let autoSearchTimer = null;
+            document.addEventListener('input', function(e) {
+                const target = e.target;
+                if (!target || target.tagName !== 'INPUT') return;
+
+                const inputType = (target.getAttribute('type') || 'text').toLowerCase();
+                if (inputType !== 'text' && inputType !== 'search') return;
+
+                const form = target.form;
+                if (!form || (form.method || '').toUpperCase() !== 'GET') return;
+
+                // Ignore modals, date pickers, or explicitly excluded inputs
+                if (target.hasAttribute('data-no-auto-search') || target.closest('[role="dialog"]') || target.closest('.modal')) return;
+
+                clearTimeout(autoSearchTimer);
+                autoSearchTimer = setTimeout(function() {
+                    const selector = target.id ? '#' + target.id : (target.name ? `input[name="${target.name}"]` : null);
+                    if (selector) {
+                        sessionStorage.setItem('ims_auto_search_focus', JSON.stringify({
+                            selector: selector,
+                            cursor: target.selectionStart ?? target.value.length
+                        }));
+                    }
+                    form.submit();
+                }, 450);
+            });
+
+            // 3. Keep focus position if user submits via Enter
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const target = e.target;
+                    if (target && target.tagName === 'INPUT' && target.form && (target.form.method || '').toUpperCase() === 'GET') {
+                        const selector = target.id ? '#' + target.id : (target.name ? `input[name="${target.name}"]` : null);
+                        if (selector) {
+                            sessionStorage.setItem('ims_auto_search_focus', JSON.stringify({
+                                selector: selector,
+                                cursor: target.selectionStart ?? target.value.length
+                            }));
+                        }
+                    }
+                }
+            });
         })();
     </script>
 

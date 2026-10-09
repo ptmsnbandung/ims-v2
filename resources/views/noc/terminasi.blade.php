@@ -68,7 +68,7 @@
                     <input type="text" 
                            name="search" 
                            value="{{ $search }}"
-                           placeholder="NAMA / NOMOR LAYANAN (Enter)" 
+                           placeholder="NAMA / NOMOR LAYANAN" 
                            class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
@@ -77,7 +77,7 @@
                     <input type="text" 
                            name="wilayah" 
                            value="{{ $wilayah }}"
-                           placeholder="SEMUA WILAYAH (Enter)" 
+                           placeholder="SEMUA WILAYAH" 
                            class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 

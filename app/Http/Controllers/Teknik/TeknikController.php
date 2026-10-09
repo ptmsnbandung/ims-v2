@@ -4048,6 +4048,13 @@ class TeknikController extends Controller
         $nomorInternet = $trx->nomor_internet;
         $res = $provisioning->terminateCustomer($nomorInternet, $currentUser, $note, $kodeTrx, $dateDone);
 
+        // Explicit fallback update to ensure status_terminasi is 14
+        DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
+            'status_terminasi' => '14',
+            'date_update' => now()->format('Y-m-d H:i:s'),
+            'user_update' => $currentUser,
+        ]);
+
         if ($res['success']) {
             return redirect()->back()->with('success', "Closing terminasi {$kodeTrx} berhasil! {$res['summary']}");
         } else {

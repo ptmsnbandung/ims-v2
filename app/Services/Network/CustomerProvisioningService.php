@@ -573,22 +573,23 @@ class CustomerProvisioningService
             }
 
             // Update transaksi terminasi jika ada
+            $trxTerminasiUpdate = [
+                'status_terminasi' => '14', // (KD14) Terminasi Selesai
+                'date_update' => $now,
+                'user_update' => $operator,
+            ];
+
+            if (Schema::hasColumn('trx_terminasi', 'date_termin_done')) {
+                $trxTerminasiUpdate['date_termin_done'] = $finalDateDone;
+            }
+            if (Schema::hasColumn('trx_terminasi', 'note_termin_done')) {
+                $trxTerminasiUpdate['note_termin_done'] = $reason;
+            }
+
             if ($kodeTrx) {
-                DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
-                    'status_terminasi' => '14', // (KD14) Terminasi Selesai
-                    'date_termin_done' => $finalDateDone,
-                    'note_termin_done' => $reason,
-                    'date_update' => $now,
-                    'user_update' => $operator,
-                ]);
+                DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update($trxTerminasiUpdate);
             } else {
-                DB::table('trx_terminasi')->where('nomor_internet', $nomorInternet)->whereIn('status_terminasi', ['11', '12', '12.1', '13'])->update([
-                    'status_terminasi' => '14',
-                    'date_termin_done' => $finalDateDone,
-                    'note_termin_done' => $reason,
-                    'date_update' => $now,
-                    'user_update' => $operator,
-                ]);
+                DB::table('trx_terminasi')->where('nomor_internet', $nomorInternet)->whereIn('status_terminasi', ['11', '12', '12.1', '13'])->update($trxTerminasiUpdate);
             }
 
             $results['database'] = true;

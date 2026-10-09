@@ -865,13 +865,13 @@
                 @csrf
                 <div class="p-5 space-y-4 overflow-y-auto flex-1">
                     
-                    <div class="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+                    <div class="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300 space-y-1.5">
                         <p class="font-bold flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                            Konfirmasi Closing Terminasi
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                            Konfirmasi Closing Terminasi & Hapus Router
                         </p>
                         <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Proses ini akan menyelesaikan permohonan terminasi layanan, mengubah status menjadi <strong>(KD14) Terminasi Selesai</strong>, serta menonaktifkan akun pelanggan terkait di sistem.
+                            Proses ini akan <strong>menghapus user PPPoE secara permanen dari router MikroTik</strong>, memutus sesi koneksi aktif seketika, mengubah status pelanggan menjadi <strong>Nonaktif (#23)</strong>, serta menyelesaikan tiket terminasi <strong>(KD14 Terminasi Selesai)</strong>.
                         </p>
                     </div>
 

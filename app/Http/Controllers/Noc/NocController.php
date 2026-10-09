@@ -2271,39 +2271,26 @@ class NocController extends Controller
 
     /**
      * Closing / Selesaikan Terminasi (KD13 -> KD14 Terminasi Selesai)
+     * Langsung terhubung ke MikroTik Router untuk KICK koneksi dan HAPUS user PPPoE
      */
-    public function closeTerminasi(Request $request, string $kodeTrx): RedirectResponse
+    public function closeTerminasi(Request $request, string $kodeTrx, CustomerProvisioningService $provisioning): RedirectResponse
     {
-        $now = now()->format('Y-m-d H:i:s');
-        $currentUser = auth()->user()->nama ?? 'NOC';
-        $note = $request->note ?: 'Proses terminasi layanan selesai';
-
         $trx = DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->first();
-        if ($trx && $trx->nomor_internet) {
-            // Update customer status_reg to 23 (Terminated / Nonaktif) if table exists
-            if (Schema::hasTable('tb_pelanggan')) {
-                DB::table('tb_pelanggan')->where('nomor_internet', $trx->nomor_internet)->update([
-                    'status_reg' => '23',
-                    'date_update' => $now,
-                    'user_update' => $currentUser,
-                ]);
-            }
-            if (Schema::hasTable('m_pelanggan')) {
-                DB::table('m_pelanggan')->where('nomor_internet', $trx->nomor_internet)->update([
-                    'status_reg' => '23',
-                ]);
-            }
+        if (!$trx) {
+            return redirect()->back()->with('error', "Data transaksi terminasi {$kodeTrx} tidak ditemukan.");
         }
 
-        DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
-            'status_terminasi' => '14', // (KD14) Terminasi Selesai
-            'date_termin_done' => $now,
-            'note_termin_done' => $note,
-            'date_update' => $now,
-            'user_update' => $currentUser,
-        ]);
+        $currentUser = auth()->user()->nama ?? 'NOC';
+        $note = $request->note ?: 'Proses closing terminasi selesai & user dihapus dari router MikroTik';
 
-        return redirect()->back()->with('success', "Closing terminasi {$kodeTrx} berhasil! Status layanan pelanggan telah ditutup secara permanen (KD14).");
+        $nomorInternet = $trx->nomor_internet;
+        $res = $provisioning->terminateCustomer($nomorInternet, $currentUser, $note, $kodeTrx);
+
+        if ($res['success']) {
+            return redirect()->back()->with('success', "Closing terminasi {$kodeTrx} berhasil! {$res['summary']}");
+        } else {
+            return redirect()->back()->with('warning', "Closing terminasi {$kodeTrx} diproses. Info router: {$res['summary']}");
+        }
     }
 
     /**

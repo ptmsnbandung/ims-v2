@@ -436,6 +436,65 @@ class MikrotikService
     }
 
     /**
+     * Remove PPPoE Secret (/ppp/secret/remove) - Terminasi Permanen
+     */
+    public function removeUser(string|array $username): array
+    {
+        $usernames = is_array($username) ? array_values(array_unique(array_filter($username))) : [$username];
+        if (empty($usernames)) {
+            return ['success' => false, 'message' => 'Username PPPoE kosong.'];
+        }
+
+        try {
+            $client = $this->getClient();
+            $removedCount = 0;
+            $matchedUsers = [];
+
+            foreach ($usernames as $u) {
+                $secrets = $client->comm('/ppp/secret/print', [
+                    '?name' => $u,
+                ]);
+                if (!empty($secrets)) {
+                    foreach ($secrets as $s) {
+                        if (isset($s['.id'])) {
+                            $client->comm('/ppp/secret/remove', [
+                                '=.id' => $s['.id'],
+                            ]);
+                            $removedCount++;
+                            $matchedUsers[] = $u;
+                        }
+                    }
+                }
+            }
+
+            $client->disconnect();
+
+            if ($removedCount === 0) {
+                $tested = implode(' / ', $usernames);
+                return [
+                    'success' => true,
+                    'removed' => false,
+                    'message' => "User PPPoE '{$tested}' tidak ditemukan di MikroTik ({$this->getRouterDisplayName()}) (mungkin sudah terhapus sebelumnya).",
+                ];
+            }
+
+            $primaryMatched = implode(', ', array_unique($matchedUsers));
+            return [
+                'success' => true,
+                'removed' => true,
+                'matched_user' => $primaryMatched,
+                'message' => "User PPPoE '{$primaryMatched}' berhasil DIHAPUS permanen dari MikroTik ({$this->getRouterDisplayName()}).",
+            ];
+        } catch (Throwable $e) {
+            return [
+                'success' => false,
+                'removed' => false,
+                'message' => "Gagal hapus user di MikroTik ({$this->getRouterDisplayName()}): " . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Kick Active Connection (/ppp/active/remove)
      * Memutus sesi aktif PPPoE sehingga pelanggan langsung reconnect dengan konfigurasi baru atau seketika terputus
      */

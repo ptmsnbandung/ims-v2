@@ -475,6 +475,188 @@ class CustomerProvisioningService
     }
 
     /**
+     * UNIFIED ACTION: TERMINASI LAYANAN (HAPUS USER DI MIKROTIK & NONAKTIFKAN DI DATABASE)
+     * 1. MikroTik -> Kick Active Session (putus sesi koneksi seketika)
+     * 2. MikroTik -> Remove PPPoE Secret (/ppp/secret/remove) HAPUS USER PERMANEN
+     * 3. Update Database Status -> 23 (Terminated / Nonaktif)
+     * 4. Update trx_terminasi -> status_terminasi = 14 (KD14 Terminasi Selesai)
+     * 5. Log ke Activity Audit Trail
+     */
+    public function terminateCustomer(string $nomorInternet, ?string $operator = null, ?string $note = null, ?string $kodeTrx = null): array
+    {
+        $now = now()->format('Y-m-d H:i:s');
+        $operator = $operator ?: (auth()->user()->nama ?? 'System NOC');
+        $reason = $note ?: 'Terminasi Layanan Pelanggan (Hapus User Router)';
+
+        // 1. Ambil data pelanggan dari trx_batchjob_register atau tb_pelanggan / view_pelanggan
+        $customer = DB::table('trx_batchjob_register')
+            ->where('nomor_internet', $nomorInternet)
+            ->first();
+
+        if (!$customer && Schema::hasTable('tb_pelanggan')) {
+            $customer = DB::table('tb_pelanggan')
+                ->where('nomor_internet', $nomorInternet)
+                ->first();
+        }
+
+        $usernameCandidates = $customer ? $this->getUsernameCandidates($customer, $nomorInternet) : [$nomorInternet];
+        $pppoeUsername = $usernameCandidates[0] ?? $nomorInternet;
+        $routerId = $customer->router_id ?? null;
+
+        // 1b. Resolve router spesifik pelanggan
+        $this->resolveCustomerRouter($routerId, $nomorInternet, $usernameCandidates);
+
+        $results = [
+            'database' => false,
+            'mikrotik_kick' => false,
+            'mikrotik_remove' => false,
+            'messages' => [],
+        ];
+
+        // 2. MikroTik: Kick sesi aktif terlebih dahulu agar langsung terputus
+        if (!empty($usernameCandidates)) {
+            try {
+                $mkKick = $this->mikrotik->kickActiveConnection($usernameCandidates);
+                $results['mikrotik_kick'] = (bool)($mkKick['success'] ?? false);
+                $results['messages'][] = 'MikroTik Kick: ' . ($mkKick['message'] ?? '');
+            } catch (Exception $e) {
+                $results['mikrotik_kick'] = false;
+                $results['messages'][] = 'MikroTik Kick Error: ' . $e->getMessage();
+            }
+
+            // 3. MikroTik: Hapus User PPPoE Secret (/ppp/secret/remove)
+            try {
+                $mkRemove = $this->mikrotik->removeUser($usernameCandidates);
+                $results['mikrotik_remove'] = (bool)($mkRemove['success'] ?? false);
+                $results['messages'][] = 'MikroTik Remove: ' . ($mkRemove['message'] ?? 'Tidak ada respon');
+                if (!empty($mkRemove['matched_user'])) {
+                    $pppoeUsername = $mkRemove['matched_user'];
+                }
+            } catch (Exception $e) {
+                $results['mikrotik_remove'] = false;
+                $results['messages'][] = 'MikroTik Remove Error: ' . $e->getMessage();
+            }
+        } else {
+            $results['messages'][] = 'MikroTik: User PPPoE kosong, lewati router.';
+            $results['mikrotik_remove'] = true;
+        }
+
+        // 4. Update Database: Ubah status pelanggan menjadi 23 (Terminated / Nonaktif)
+        try {
+            if (Schema::hasTable('trx_batchjob_register')) {
+                DB::table('trx_batchjob_register')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->update([
+                        'status_reg' => '23',
+                        'date_update' => $now,
+                        'user_update' => $operator,
+                    ]);
+            }
+
+            if (Schema::hasTable('tb_pelanggan')) {
+                DB::table('tb_pelanggan')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->update([
+                        'status_reg' => '23',
+                        'date_update' => $now,
+                        'user_update' => $operator,
+                    ]);
+            }
+
+            if (Schema::hasTable('m_pelanggan')) {
+                DB::table('m_pelanggan')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->update([
+                        'status_reg' => '23',
+                    ]);
+            }
+
+            // Update transaksi terminasi jika ada
+            if ($kodeTrx) {
+                DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
+                    'status_terminasi' => '14', // (KD14) Terminasi Selesai
+                    'date_termin_done' => $now,
+                    'note_termin_done' => $reason,
+                    'date_update' => $now,
+                    'user_update' => $operator,
+                ]);
+            } else {
+                DB::table('trx_terminasi')->where('nomor_internet', $nomorInternet)->whereIn('status_terminasi', ['11', '12', '12.1', '13'])->update([
+                    'status_terminasi' => '14',
+                    'date_termin_done' => $now,
+                    'note_termin_done' => $reason,
+                    'date_update' => $now,
+                    'user_update' => $operator,
+                ]);
+            }
+
+            $results['database'] = true;
+            $results['messages'][] = 'Status database berhasil diubah menjadi NONAKTIF/TERMINATED (#23) & Terminasi Selesai (KD14).';
+        } catch (Exception $e) {
+            $results['messages'][] = 'Gagal update database: ' . $e->getMessage();
+        }
+
+        // 5. Audit Trail Logging (trx_batchjob_register_log)
+        if (Schema::hasTable('trx_batchjob_register_log')) {
+            try {
+                DB::table('trx_batchjob_register_log')->insert([
+                    'kode_batchjob_register_log' => 'L-' . $nomorInternet . '-' . rand(1000, 9999),
+                    'nomor_internet' => $nomorInternet,
+                    'status_reg' => '23',
+                    'kat_log' => '23',
+                    'note_schedule' => "TERMINASI LENGKAP: PPPoE '{$pppoeUsername}' DIHAPUS dari MikroTik & sesi diputus. Op: {$operator}. Alasan: {$reason}",
+                    'date_schedule' => now()->format('Y-m-d'),
+                    'time_schedule' => now()->format('H:i:s'),
+                    'date_create' => $now,
+                    'user_create' => $operator,
+                ]);
+            } catch (Exception $e) {
+                Log::warning('Gagal log terminasi: ' . $e->getMessage());
+            }
+        }
+
+        $isOverallSuccess = $results['database'] && ($results['mikrotik_remove'] || empty($usernameCandidates));
+
+        // Format summary yang bersih dan ringkas
+        if ($isOverallSuccess) {
+            $summaryParts = [];
+            $summaryParts[] = "PPPoE '{$pppoeUsername}' berhasil DIHAPUS dari MikroTik Router.";
+            if ($results['mikrotik_kick']) {
+                $summaryParts[] = "Sesi koneksi diputus seketika.";
+            }
+            $summaryParts[] = "Status pelanggan kini Nonaktif / Terminated (#23).";
+            $cleanSummary = implode(' ', $summaryParts);
+        } else {
+            $cleanSummary = "Terminasi selesai di database, namun router memerlukan pengecekan: " . implode('; ', array_slice($results['messages'], 0, 2));
+        }
+
+        // 6. Activity Log Router (tabel activity_logs)
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                \App\Models\ActivityLog::record([
+                    'user_id' => $operator,
+                    'customer_id' => $nomorInternet,
+                    'action' => 'terminate',
+                    'old_status' => $customer->status_reg ?? null,
+                    'new_status' => '23',
+                    'description' => "Terminasi Layanan: User PPPoE '{$pppoeUsername}' DIHAPUS dari MikroTik & sesi diputus. Alasan: {$reason}",
+                    'router_response' => implode(' | ', $results['messages']),
+                    'router_success' => $isOverallSuccess,
+                ]);
+            } catch (Exception $e) {
+                Log::warning('Gagal log activity_logs terminasi: ' . $e->getMessage());
+            }
+        }
+
+        return [
+            'success' => $isOverallSuccess,
+            'title' => $isOverallSuccess ? 'Layanan Pelanggan Berhasil Diterminasi & Dihapus dari Router' : 'Gagal Menyelesaikan Terminasi',
+            'summary' => $cleanSummary,
+            'details' => $results,
+        ];
+    }
+
+    /**
      * Helper untuk mengambil seluruh kandidat username PPPoE (ont_us, nomor_internet, pppoe_username, non-MS)
      */
     private function getUsernameCandidates(object $customer, string $nomorInternet): array

@@ -114,6 +114,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/up-downgrade/{kode_trx}/execute', [TeknikController::class, 'executeUpDowngrade'])->name('up-downgrade.execute');
             Route::post('/up-downgrade/{kode_trx}/cancel', [TeknikController::class, 'cancelUpDowngrade'])->name('up-downgrade.cancel');
             Route::get('/terminasi', [TeknikController::class, 'terminasi'])->name('terminasi');
+            Route::post('/terminasi/{kode_trx}/schedule', [TeknikController::class, 'scheduleCollect'])->name('terminasi.schedule');
+            Route::post('/terminasi/{kode_trx}/report', [TeknikController::class, 'reportCollect'])->name('terminasi.report');
+            Route::post('/terminasi/{kode_trx}/close', [TeknikController::class, 'closeTerminasi'])->name('terminasi.close');
+            Route::post('/terminasi/{kode_trx}/cancel', [TeknikController::class, 'cancelTerminasi'])->name('terminasi.cancel');
             Route::get('/suspend', [TeknikController::class, 'suspend'])->name('suspend');
         });
 

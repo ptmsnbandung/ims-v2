@@ -8,6 +8,7 @@ use App\Http\Controllers\Finance\FinanceController;
 use App\Http\Controllers\Noc\NocController;
 use App\Http\Controllers\Noc\OltExplorerController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Teknik\TeknikController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::get('/api/notifications/poll', [NotificationController::class, 'poll'])->name('api.notifications.poll');
 
     // Routes Role Master Admin & Direktur

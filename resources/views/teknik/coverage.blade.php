@@ -334,115 +334,118 @@
 
             <!-- Coverage Evaluation Result Card -->
             <template x-if="hasChecked && selectedOdpResult">
-                <div class="space-y-2.5">
-                    
-                    <!-- 1. CASE: COVERED (<= 300m) -->
+                                  <!-- 1. CASE: COVERED (<= 300m) -->
                     <template x-if="selectedOdpResult.isCovered">
-                        <div class="p-3 sm:p-3.5 rounded-xl space-y-2.5 transition-all shadow-xs bg-white dark:bg-slate-900 border-2"
-                             :class="selectedOdpResult.coverageLevel === 'excellent' ? 'border-emerald-500 dark:border-emerald-500' : (selectedOdpResult.coverageLevel === 'good' ? 'border-sky-500 dark:border-sky-500' : 'border-amber-500 dark:border-amber-500')">
+                        <div class="p-3.5 rounded-xl space-y-3 transition-all shadow-sm bg-white dark:bg-slate-900 border-2"
+                             :class="selectedOdpResult.coverageLevel === 'excellent' ? 'border-emerald-500/80 dark:border-emerald-500/80' : (selectedOdpResult.coverageLevel === 'good' ? 'border-sky-500/80 dark:border-sky-500/80' : 'border-amber-500/80 dark:border-amber-500/80')">
                             
-                            <!-- Status Headline & Quality Badge -->
+                            <!-- Header Status & Quality Badge -->
                             <div class="flex items-center justify-between gap-2">
                                 <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full inline-block shadow-xs animate-pulse"
-                                          :class="selectedOdpResult.coverageLevel === 'excellent' ? 'bg-emerald-500' : (selectedOdpResult.coverageLevel === 'good' ? 'bg-sky-500' : 'bg-amber-500')"></span>
+                                    <span class="relative flex h-2.5 w-2.5">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                                              :class="selectedOdpResult.coverageLevel === 'excellent' ? 'bg-emerald-400' : (selectedOdpResult.coverageLevel === 'good' ? 'bg-sky-400' : 'bg-amber-400')"></span>
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                                              :class="selectedOdpResult.coverageLevel === 'excellent' ? 'bg-emerald-500' : (selectedOdpResult.coverageLevel === 'good' ? 'bg-sky-500' : 'bg-amber-500')"></span>
+                                    </span>
                                     <div>
-                                        <strong class="text-xs font-bold block"
-                                                :class="selectedOdpResult.coverageLevel === 'excellent' ? 'text-emerald-600 dark:text-emerald-400' : (selectedOdpResult.coverageLevel === 'good' ? 'text-sky-600 dark:text-sky-400' : 'text-amber-600 dark:text-amber-400')">
-                                            ● Area Tercover Fiber Optic
+                                        <strong class="text-xs font-extrabold tracking-tight block leading-none"
+                                                :class="selectedOdpResult.coverageLevel === 'excellent' ? 'text-emerald-700 dark:text-emerald-400' : (selectedOdpResult.coverageLevel === 'good' ? 'text-sky-700 dark:text-sky-400' : 'text-amber-700 dark:text-amber-400')">
+                                            Area Tercover Fiber Optic
                                         </strong>
-                                        <span class="text-[10px] text-slate-600 dark:text-slate-300 block mt-0.5" x-text="selectedOdpResult.coverageNote"></span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-none" x-text="selectedOdpResult.coverageNote"></span>
                                     </div>
                                 </div>
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full font-mono uppercase"
-                                      :class="selectedOdpResult.coverageLevel === 'excellent' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : (selectedOdpResult.coverageLevel === 'good' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300')">
+                                <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-md font-mono uppercase tracking-wider shadow-2xs"
+                                      :class="selectedOdpResult.coverageLevel === 'excellent' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : (selectedOdpResult.coverageLevel === 'good' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-200 dark:border-sky-800' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800')">
                                     <span x-text="selectedOdpResult.coverageLabel"></span>
                                 </span>
                             </div>
 
-                            <!-- Route Mode Selector (Mengikuti Jalan vs Garis Lurus Tiang) -->
-                            <div class="flex items-center justify-between p-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px]">
-                                <span class="font-bold text-slate-600 dark:text-slate-300 px-1.5">Jalur Kabel:</span>
-                                <div class="flex items-center gap-1">
-                                    <button 
-                                        type="button" 
-                                        @click="setRoutingMode('street')"
-                                        :class="routingMode === 'street' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
-                                        class="px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1"
-                                    >
-                                        <span>🛣️ Mengikuti Jalan</span> (<span x-text="selectedOdpResult.roadDistance"></span>m)
-                                    </button>
-                                    <button 
-                                        type="button" 
-                                        @click="setRoutingMode('direct')"
-                                        :class="routingMode === 'direct' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
-                                        class="px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1"
-                                    >
-                                        <span>⚡ Garis Lurus Span</span> (<span x-text="selectedOdpResult.dropcoreDistance"></span>m)
-                                    </button>
-                                </div>
+                            <!-- Route Mode Segmented Switcher -->
+                            <div class="bg-slate-100 dark:bg-slate-950 p-1 rounded-lg grid grid-cols-2 gap-1 text-[11px] border border-slate-200/70 dark:border-slate-800/70">
+                                <button 
+                                    type="button" 
+                                    @click="setRoutingMode('street')"
+                                    :class="routingMode === 'street' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'"
+                                    class="py-1.5 px-2 rounded-md transition text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                    <span>🛣️ Rute Jalan</span>
+                                    <span class="font-mono text-[10px] font-bold" x-text="'(' + selectedOdpResult.roadDistance + 'm)'"></span>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    @click="setRoutingMode('direct')"
+                                    :class="routingMode === 'direct' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'"
+                                    class="py-1.5 px-2 rounded-md transition text-center flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                    <span>⚡ Span Lurus</span>
+                                    <span class="font-mono text-[10px] font-bold" x-text="'(' + selectedOdpResult.dropcoreDistance + 'm)'"></span>
+                                </button>
                             </div>
 
-                            <!-- ODP Technical Specifications & Optical Power Estimation -->
-                            <div class="ims-inner-box p-2 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-                                <div class="flex justify-between items-center pb-1 border-b border-slate-200 dark:border-slate-800">
+                            <!-- Technical Specs Table -->
+                            <div class="bg-slate-50/70 dark:bg-slate-950/60 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-800 space-y-2 text-xs">
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Nama ODP:</span>
                                     <strong class="text-slate-900 dark:text-white font-bold text-xs" x-text="selectedOdpResult.odp.name_odp || selectedOdpResult.odp.name"></strong>
                                 </div>
-                                <div class="flex justify-between items-center pb-1 border-b border-slate-200 dark:border-slate-800">
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Kode ODP:</span>
-                                    <span class="text-sky-700 dark:text-sky-300 font-mono font-bold px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/60 text-[10px]" x-text="selectedOdpResult.odp.kode_odp || selectedOdpResult.odp.code"></span>
+                                    <span class="text-sky-700 dark:text-sky-300 font-mono font-extrabold px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950/80 border border-sky-200 dark:border-sky-800 text-[10.5px]" x-text="selectedOdpResult.odp.kode_odp || selectedOdpResult.odp.code"></span>
                                 </div>
-                                <div class="flex justify-between items-center">
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Port PON Induk:</span>
-                                    <strong class="text-slate-800 dark:text-slate-200 font-mono text-xs" x-text="selectedOdpResult.odp.kode_pon || selectedOdpResult.odp.pon_name"></strong>
+                                    <strong class="text-slate-800 dark:text-slate-200 font-mono text-[11.5px]" x-text="selectedOdpResult.odp.kode_pon || selectedOdpResult.odp.pon_name"></strong>
                                 </div>
-                                <div class="flex justify-between items-center">
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Kapasitas Core / Port:</span>
-                                    <span class="font-bold font-mono text-xs" :class="selectedOdpResult.odp.has_slot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
+                                    <span class="font-bold font-mono text-[11.5px] flex items-center gap-1.5" :class="selectedOdpResult.odp.has_slot ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'">
                                         <span x-text="(selectedOdpResult.odp.used_ports ?? 0) + ' / ' + (selectedOdpResult.odp.capacity_odp || selectedOdpResult.odp.total_ports) + ' Port'"></span>
-                                        <span x-show="selectedOdpResult.odp.has_slot" class="text-[9px] ml-1 text-emerald-600 dark:text-emerald-400 font-bold">(Ada Slot)</span>
-                                        <span x-show="!selectedOdpResult.odp.has_slot" class="text-[9px] ml-1 text-rose-600 dark:text-rose-400 font-bold">(Penuh)</span>
+                                        <span x-show="selectedOdpResult.odp.has_slot" class="text-[9.5px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800">Ada Slot</span>
+                                        <span x-show="!selectedOdpResult.odp.has_slot" class="text-[9.5px] px-1.5 py-0.2 rounded bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold border border-rose-200 dark:border-rose-800">Penuh</span>
                                     </span>
                                 </div>
-                                <div class="flex justify-between items-center">
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Jarak Lurus (Span Udara):</span>
-                                    <strong class="text-slate-900 dark:text-white font-mono text-xs" x-text="selectedOdpResult.distance + ' Meter'"></strong>
+                                    <strong class="text-slate-900 dark:text-white font-mono text-[11.5px]" x-text="selectedOdpResult.distance + ' Meter'"></strong>
+                                </div>
+                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
+                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Estimasi Dropcore (+15% Slack):</span>
+                                    <strong class="text-sky-600 dark:text-sky-400 font-mono font-extrabold text-[11.5px]" x-text="'~' + selectedOdpResult.dropcoreDistance + ' Meter'"></strong>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Estimasi Kabel Dropcore (+15% Slack):</span>
-                                    <strong class="text-sky-600 dark:text-sky-400 font-mono font-bold text-xs" x-text="'~' + selectedOdpResult.dropcoreDistance + ' Meter'"></strong>
+                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Estimasi Redaman Optik:</span>
+                                    <span class="font-mono font-bold text-[11.5px] text-emerald-600 dark:text-emerald-400" x-text="selectedOdpResult.opticalPowerEstimate"></span>
                                 </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Estimasi Redaman Optik (Loss):</span>
-                                    <span class="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400" x-text="selectedOdpResult.opticalPowerEstimate"></span>
-                                </div>
-                                <div class="flex justify-between items-center" x-show="selectedOdpResult.odp.note_odp && selectedOdpResult.odp.note_odp !== '-'">
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Keterangan:</span>
-                                    <span class="text-slate-600 dark:text-slate-300 italic text-[10px]" x-text="selectedOdpResult.odp.note_odp"></span>
+
+                                <!-- Dedicated Clean Note Box -->
+                                <div class="pt-2 mt-1 border-t border-slate-200/80 dark:border-slate-800/80" x-show="selectedOdpResult.odp.note_odp && selectedOdpResult.odp.note_odp !== '-'">
+                                    <span class="text-slate-400 dark:text-slate-500 block text-[9.5px] uppercase font-bold tracking-wider mb-1">Catatan ODP:</span>
+                                    <div class="text-[10.5px] text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800/80 leading-relaxed break-words font-medium" x-text="selectedOdpResult.odp.note_odp"></div>
                                 </div>
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="flex items-center gap-1.5 pt-0.5">
+                            <div class="grid grid-cols-12 gap-1.5 pt-0.5">
                                 <a 
                                     :href="'https://www.google.com/maps/dir/?api=1&destination=' + selectedOdpResult.odp.lat + ',' + selectedOdpResult.odp.lng"
                                     target="_blank" 
-                                    class="flex-1 h-8 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                                    class="col-span-5 h-8.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 shadow-xs cursor-pointer"
                                 >
                                     <span>🧭 Buka Maps</span>
                                 </a>
                                 <button 
                                     type="button" 
                                     @click="copyCoordinates(selectedOdpResult.odp.lat + ', ' + selectedOdpResult.odp.lng)" 
-                                    class="h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
+                                    class="col-span-3 h-8.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
                                     title="Salin Koordinat ODP"
                                 >
                                     <span>📋 Salin</span>
                                 </button>
                                 <a 
                                     href="{{ route('teknik.pendaftaran') }}" 
-                                    class="h-8 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                                    class="col-span-4 h-8.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow-xs"
                                     title="Lanjut Form Registrasi Pasang Baru"
                                 >
                                     <span>⚡ Pasang Baru</span>

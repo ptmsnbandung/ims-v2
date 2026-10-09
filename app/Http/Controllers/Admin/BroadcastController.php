@@ -421,36 +421,23 @@ class BroadcastController extends Controller
         $cols = Schema::getColumnListing($baseTable);
 
         if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
-            $trxBillingCols = Schema::getColumnListing('trx_billing_layanan');
+            // Reliably select latest unpaid invoice (13/14) or latest invoice by period
+            $subLatest = DB::table('trx_billing_layanan as tbl_sub')
+                ->selectRaw("
+                    tbl_sub.nomor_internet,
+                    COALESCE(
+                        MAX(CASE WHEN tbl_sub.status_bill_lay IN ('13', '14') THEN CONCAT(tbl_sub.tahun_tagihan, LPAD(tbl_sub.bulan_tagihan, 2, '0')) END),
+                        MAX(CONCAT(tbl_sub.tahun_tagihan, LPAD(tbl_sub.bulan_tagihan, 2, '0')))
+                    ) as target_period
+                ")
+                ->groupBy('tbl_sub.nomor_internet');
 
-            if (in_array('kode_billing_layanan', $trxBillingCols)) {
-                $orderClause = "CONCAT(COALESCE(tbl_sub.tahun_tagihan, '0000'), LPAD(COALESCE(tbl_sub.bulan_tagihan, '00'), 2, '0')) DESC";
-                if (in_array('status_bill_lay', $trxBillingCols)) {
-                    $orderClause = "(tbl_sub.status_bill_lay IN ('13', '14')) DESC, " . $orderClause;
-                }
-                if (in_array('date_create', $trxBillingCols)) {
-                    $orderClause .= ", tbl_sub.date_create DESC";
-                }
-
-                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
-                    ->selectRaw("tbl_sub.nomor_internet, SUBSTRING_INDEX(GROUP_CONCAT(tbl_sub.kode_billing_layanan ORDER BY {$orderClause}), ',', 1) as max_kode")
-                    ->groupBy('tbl_sub.nomor_internet');
-
-                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
-                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
-                })->leftJoin('trx_billing_layanan as inv', 'sub_inv.max_kode', '=', 'inv.kode_billing_layanan');
-
-            } elseif (in_array('id', $trxBillingCols)) {
-                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
-                    ->selectRaw('tbl_sub.nomor_internet, MAX(tbl_sub.id) as max_id')
-                    ->groupBy('tbl_sub.nomor_internet');
-
-                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
-                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
-                })->leftJoin('trx_billing_layanan as inv', 'sub_inv.max_id', '=', 'inv.id');
-            } else {
-                $query->leftJoin('trx_billing_layanan as inv', 'c.nomor_internet', '=', 'inv.nomor_internet');
-            }
+            $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
+                $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+            })->leftJoin('trx_billing_layanan as inv', function ($join) {
+                $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
+                     ->on(DB::raw("CONCAT(inv.tahun_tagihan, LPAD(inv.bulan_tagihan, 2, '0'))"), '=', 'sub_inv.target_period');
+            });
         }
 
         return $query;

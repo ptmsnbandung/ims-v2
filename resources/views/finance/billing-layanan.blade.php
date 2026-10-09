@@ -2327,8 +2327,8 @@
                             <!-- Gambar Bukti -->
                             <img :src="proofUrl"
                                  x-show="!proofImgError"
-                                 @load="proofImgError = false"
-                                 @error="proofImgError = true"
+                                 x-on:load="proofImgError = false"
+                                 x-on:error="proofImgError = true"
                                  alt="Bukti Transfer"
                                  class="max-h-[380px] w-auto rounded-lg object-contain shadow-sm hover:scale-[1.01] transition duration-200 cursor-pointer"
                                  @click="window.open(proofUrl, '_blank')">

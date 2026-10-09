@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -17,6 +18,7 @@ use Illuminate\View\View;
 class BroadcastController extends Controller
 {
     protected MetaWhatsAppService $metaWaService;
+    protected static ?array $schemaCache = null;
 
     public function __construct(MetaWhatsAppService $metaWaService)
     {
@@ -24,10 +26,60 @@ class BroadcastController extends Controller
     }
 
     /**
-     * Ensure Broadcast WA Tables exist (Auto-migration fallback for maximum reliability)
+     * Cache schema metadata in memory and Laravel cache for fast remote DB responses
+     */
+    protected function getSchemaMeta(): array
+    {
+        if (static::$schemaCache !== null) {
+            return static::$schemaCache;
+        }
+
+        static::$schemaCache = Cache::remember('ims_broadcast_schema_meta_v4', 3600, function () {
+            $tables = [
+                'view_batchjob',
+                'view_billing_layanan',
+                'trx_batchjob_register',
+                'm_pelanggan',
+                'tb_pendaftaran',
+                'trx_billing_layanan',
+                'tb_broadcast_wa_template',
+                'tb_broadcast_wa_log'
+            ];
+            $meta = [];
+            foreach ($tables as $t) {
+                $has = Schema::hasTable($t);
+                $meta[$t] = [
+                    'exists' => $has,
+                    'cols'   => $has ? Schema::getColumnListing($t) : []
+                ];
+            }
+            return $meta;
+        });
+
+        return static::$schemaCache;
+    }
+
+    protected function hasTableCached(string $table): bool
+    {
+        $meta = $this->getSchemaMeta();
+        return !empty($meta[$table]['exists']);
+    }
+
+    protected function getColumnsCached(string $table): array
+    {
+        $meta = $this->getSchemaMeta();
+        return $meta[$table]['cols'] ?? [];
+    }
+
+    /**
+     * Ensure Broadcast WA Tables exist (Cached to prevent slow DDL on every request)
      */
     protected function ensureSchema(): void
     {
+        if (Cache::has('ims_broadcast_schema_ensured_v4')) {
+            return;
+        }
+
         try {
             if (!Schema::hasTable('tb_broadcast_wa_template')) {
                 Schema::create('tb_broadcast_wa_template', function ($table) {
@@ -42,83 +94,6 @@ class BroadcastController extends Controller
                     $table->tinyInteger('is_default')->default(0);
                     $table->timestamps();
                 });
-
-                DB::table('tb_broadcast_wa_template')->insert([
-                    [
-                        'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
-                        'meta_template_name' => 'tagihan_bulanan',
-                        'meta_language'      => 'id',
-                        'meta_params_map'    => json_encode(['periode', 'bulan_jatuh_tempo', 'bulan_suspend']),
-                        'subjek'             => 'Tagihan Bulanan Internet MEDIANET',
-                        'kategori'           => 'utility',
-                        'pesan'              => "📢* Tagihan Internet Anda Sudah Terbit!*\nHalo, Bapak/Ibu 👋\n\nTagihan internet Anda* SUDAH BISA DIBAYARKAN* untuk periode {periode}.\nJatuh Tempo Pembayaran:* 20 {bulan_jatuh_tempo}*\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik tombol dibawah untuk melakukan pembayaran\n\n🔑 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.\n\nHiraukan pesan ini apabila sudah melakukan pembayaran",
-                        'is_default'         => 1,
-                        'created_at'         => now(),
-                        'updated_at'         => now(),
-                    ],
-                    [
-                        'nama_template'      => 'Work Report / Assignment (Meta)',
-                        'meta_template_name' => 'work_report',
-                        'meta_language'      => 'en',
-                        'meta_params_map'    => json_encode(['nama', 'nomor_internet', 'alamat', 'paket']),
-                        'subjek'             => 'Work Report Assignment',
-                        'kategori'           => 'utility',
-                        'pesan'              => "🛠 ASSIGNMENT WORK REPORT\n\nCustomer: *{nama}*\nID: *{nomor_internet}*\nAddress: *{alamat}*\nPackage: *{paket}*\n\nPlease process immediately.",
-                        'is_default'         => 0,
-                        'created_at'         => now(),
-                        'updated_at'         => now(),
-                    ],
-                ]);
-            } else {
-                // Ensure columns exist on existing table
-                if (!Schema::hasColumn('tb_broadcast_wa_template', 'meta_template_name')) {
-                    Schema::table('tb_broadcast_wa_template', function ($table) {
-                        $table->string('meta_template_name', 150)->nullable()->after('nama_template');
-                        $table->string('meta_language', 20)->default('id')->after('meta_template_name');
-                        $table->text('meta_params_map')->nullable()->after('meta_language');
-                    });
-                }
-
-                // Hapus template dummy lama yang tidak ada di Meta
-                DB::table('tb_broadcast_wa_template')
-                    ->whereIn('meta_template_name', [
-                        'pengingat_jatuh_tempo_v1', 
-                        'pengumuman_maintenance', 
-                        'peringatan_isolir_layanan', 
-                        'pengumuman_umum'
-                    ])
-                    ->orWhereNull('meta_template_name')
-                    ->orWhere('meta_template_name', '')
-                    ->delete();
-
-                // Selaraskan template tagihan_bulanan dengan parameter resmi Meta
-                $hasTagihanBulanan = DB::table('tb_broadcast_wa_template')
-                    ->where('meta_template_name', 'tagihan_bulanan')
-                    ->exists();
-
-                $tagihanPesan = "📢* Tagihan Internet Anda Sudah Terbit!*\nHalo, Bapak/Ibu 👋\n\nTagihan internet Anda* SUDAH BISA DIBAYARKAN* untuk periode {periode}.\nJatuh Tempo Pembayaran:* 20 {bulan_jatuh_tempo}*\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik tombol dibawah untuk melakukan pembayaran\n\n🔑 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.\n\nHiraukan pesan ini apabila sudah melakukan pembayaran";
-
-                $tagihanData = [
-                    'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
-                    'meta_template_name' => 'tagihan_bulanan',
-                    'meta_language'      => 'id',
-                    'meta_params_map'    => json_encode(['periode', 'bulan_jatuh_tempo', 'bulan_suspend']),
-                    'subjek'             => 'Tagihan Bulanan Internet MEDIANET',
-                    'kategori'           => 'utility',
-                    'pesan'              => $tagihanPesan,
-                    'is_default'         => 1,
-                    'updated_at'         => now(),
-                ];
-
-                if (!$hasTagihanBulanan) {
-                    DB::table('tb_broadcast_wa_template')->where('is_default', 1)->update(['is_default' => 0]);
-                    $tagihanData['created_at'] = now();
-                    DB::table('tb_broadcast_wa_template')->insert($tagihanData);
-                } else {
-                    DB::table('tb_broadcast_wa_template')
-                        ->where('meta_template_name', 'tagihan_bulanan')
-                        ->update($tagihanData);
-                }
             }
 
             if (!Schema::hasTable('tb_broadcast_wa_log')) {
@@ -139,14 +114,28 @@ class BroadcastController extends Controller
                     $table->text('meta_error_message')->nullable();
                     $table->timestamps();
                 });
-            } else {
-                if (!Schema::hasColumn('tb_broadcast_wa_log', 'meta_message_id')) {
-                    Schema::table('tb_broadcast_wa_log', function ($table) {
-                        $table->string('meta_message_id', 150)->nullable()->after('metode_kirim');
-                        $table->text('meta_error_message')->nullable()->after('meta_message_id');
-                    });
-                }
             }
+
+            $hasTagihanBulanan = DB::table('tb_broadcast_wa_template')
+                ->where('meta_template_name', 'tagihan_bulanan')
+                ->exists();
+
+            if (!$hasTagihanBulanan) {
+                DB::table('tb_broadcast_wa_template')->insert([
+                    'nama_template'      => 'Tagihan Bulanan Resmi (Meta)',
+                    'meta_template_name' => 'tagihan_bulanan',
+                    'meta_language'      => 'id',
+                    'meta_params_map'    => json_encode(['periode', 'bulan_jatuh_tempo', 'bulan_suspend']),
+                    'subjek'             => 'Tagihan Bulanan Internet MEDIANET',
+                    'kategori'           => 'utility',
+                    'pesan'              => "📢* Tagihan Internet Anda Sudah Terbit!*\nHalo, Bapak/Ibu 👋\n\nTagihan internet Anda* SUDAH BISA DIBAYARKAN* untuk periode {periode}.\nJatuh Tempo Pembayaran:* 20 {bulan_jatuh_tempo}*\n⚠️ Apabila sampai dengan 24 {bulan_suspend} belum ada pembayaran, layanan akan kami nonaktifkan sementara (suspend).\n\nPembayaran dapat dilakukan melalui Portal Pelanggan kami. Silakan klik tombol dibawah untuk melakukan pembayaran\n\n🔑 Cara Login:\nSilakan login menggunakan Nomor Telepon atau Nomor Internet yang terdaftar pada layanan MEDIANET Anda.\n\nHiraukan pesan ini apabila sudah melakukan pembayaran",
+                    'is_default'         => 1,
+                    'created_at'         => now(),
+                    'updated_at'         => now(),
+                ]);
+            }
+
+            Cache::put('ims_broadcast_schema_ensured_v4', true, 86400);
         } catch (\Exception $e) {
             Log::error('Broadcast WA Schema initialization error: ' . $e->getMessage());
         }
@@ -165,14 +154,14 @@ class BroadcastController extends Controller
      */
     protected function selectCustomerFields($query, string $baseTable): string
     {
-        $cols     = Schema::getColumnListing($baseTable);
+        $cols     = $this->getColumnsCached($baseTable);
         $firstCol = !empty($cols) ? $cols[0] : 'nomor_internet';
         $fallbackSort = in_array('nomor_internet', $cols) ? 'c.nomor_internet'
             : (in_array('id', $cols) ? 'c.id' : "c.{$firstCol}");
 
-        $mpCols  = Schema::hasTable('m_pelanggan')           ? Schema::getColumnListing('m_pelanggan')           : [];
-        $regCols = Schema::hasTable('trx_batchjob_register') ? Schema::getColumnListing('trx_batchjob_register') : [];
-        $invCols = Schema::hasTable('trx_billing_layanan')   ? Schema::getColumnListing('trx_billing_layanan')   : [];
+        $mpCols  = $this->hasTableCached('m_pelanggan')           ? $this->getColumnsCached('m_pelanggan')           : [];
+        $regCols = $this->hasTableCached('trx_batchjob_register') ? $this->getColumnsCached('trx_batchjob_register') : [];
+        $invCols = $this->hasTableCached('trx_billing_layanan')   ? $this->getColumnsCached('trx_billing_layanan')   : [];
 
         // Name column
         if (in_array('nama_pelanggan', $cols)) {
@@ -395,16 +384,16 @@ class BroadcastController extends Controller
     }
 
     /**
-     * Build customer base query safely.
+     * Build customer base query safely and with high performance.
      */
-    protected function buildCustomerQuery(string &$baseTable, array &$cols)
+    protected function buildCustomerQuery(string &$baseTable, array &$cols, ?string $selectedBulan = null, ?string $selectedTahun = null)
     {
-        $hasViewBatchjob  = Schema::hasTable('view_batchjob');
-        $hasViewBilling   = Schema::hasTable('view_billing_layanan');
-        $hasTrxBatchReg   = Schema::hasTable('trx_batchjob_register');
-        $hasMPelanggan    = Schema::hasTable('m_pelanggan');
-        $hasTbPendaftaran = Schema::hasTable('tb_pendaftaran');
-        $hasTrxBilling    = Schema::hasTable('trx_billing_layanan');
+        $hasViewBatchjob  = $this->hasTableCached('view_batchjob');
+        $hasViewBilling   = $this->hasTableCached('view_billing_layanan');
+        $hasTrxBatchReg   = $this->hasTableCached('trx_batchjob_register');
+        $hasMPelanggan    = $this->hasTableCached('m_pelanggan');
+        $hasTbPendaftaran = $this->hasTableCached('tb_pendaftaran');
+        $hasTrxBilling    = $this->hasTableCached('trx_billing_layanan');
 
         if ($hasViewBatchjob) {
             $baseTable = 'view_batchjob';
@@ -415,10 +404,8 @@ class BroadcastController extends Controller
         } elseif ($hasTrxBatchReg) {
             $baseTable = 'trx_batchjob_register';
             $query = DB::table('trx_batchjob_register as c');
-            if ($hasMPelanggan && Schema::hasColumn('trx_batchjob_register', 'nik_penduduk')) {
-                $query->leftJoin('m_pelanggan as mp', function ($join) {
-                    $join->on(DB::raw('CONVERT(c.nik_penduduk USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(mp.nik_penduduk USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
-                });
+            if ($hasMPelanggan && in_array('nik_penduduk', $this->getColumnsCached('trx_batchjob_register'))) {
+                $query->leftJoin('m_pelanggan as mp', 'c.nik_penduduk', '=', 'mp.nik_penduduk');
             }
         } elseif ($hasTbPendaftaran) {
             $baseTable = 'tb_pendaftaran';
@@ -427,44 +414,50 @@ class BroadcastController extends Controller
             $baseTable = 'trx_billing_layanan';
             $query = DB::table('trx_billing_layanan as c');
             if ($hasTrxBatchReg) {
-                $query->leftJoin('trx_batchjob_register as reg', function ($join) {
-                    $join->on(DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(reg.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
-                });
+                $query->leftJoin('trx_batchjob_register as reg', 'c.nomor_internet', '=', 'reg.nomor_internet');
             }
-            if ($hasMPelanggan && $hasTrxBatchReg && Schema::hasColumn('trx_batchjob_register', 'nik_penduduk')) {
-                $query->leftJoin('m_pelanggan as mp', function ($join) {
-                    $join->on(DB::raw('CONVERT(reg.nik_penduduk USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(mp.nik_penduduk USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
-                });
+            if ($hasMPelanggan && $hasTrxBatchReg && in_array('nik_penduduk', $this->getColumnsCached('trx_batchjob_register'))) {
+                $query->leftJoin('m_pelanggan as mp', 'reg.nik_penduduk', '=', 'mp.nik_penduduk');
             }
         } else {
             $baseTable = 'tb_pengguna';
             $query = DB::table('tb_pengguna as c');
         }
 
-        $cols = Schema::getColumnListing($baseTable);
+        $cols = $this->getColumnsCached($baseTable);
 
+        // Join Invoice billing
         if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
-            // Reliably select latest unpaid invoice (13/14) or latest invoice by period
-            $subLatest = DB::table('trx_billing_layanan as tbl_sub')
-                ->selectRaw("
-                    tbl_sub.nomor_internet,
-                    COALESCE(
-                        MAX(CASE WHEN tbl_sub.status_bill_lay IN ('13', '14') THEN CONCAT(tbl_sub.tahun_tagihan, LPAD(tbl_sub.bulan_tagihan, 2, '0')) END),
-                        MAX(CONCAT(tbl_sub.tahun_tagihan, LPAD(tbl_sub.bulan_tagihan, 2, '0')))
-                    ) as target_period
-                ")
-                ->groupBy('tbl_sub.nomor_internet');
+            if (!empty($selectedBulan) && $selectedBulan !== 'all' && !empty($selectedTahun) && $selectedTahun !== 'all') {
+                // High-performance direct indexed join when month and year are specified
+                $query->leftJoin('trx_billing_layanan as inv', function ($join) use ($selectedBulan, $selectedTahun) {
+                    $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
+                         ->where('inv.bulan_tagihan', '=', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT))
+                         ->where('inv.tahun_tagihan', '=', (string)$selectedTahun);
+                });
+            } else {
+                // High performance subquery for latest invoice
+                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
+                    ->selectRaw("
+                        tbl_sub.nomor_internet,
+                        COALESCE(
+                            MAX(CASE WHEN tbl_sub.status_bill_lay IN ('13', '14') THEN CONCAT(tbl_sub.tahun_tagihan, LPAD(tbl_sub.bulan_tagihan, 2, '0')) END),
+                            MAX(CONCAT(tbl_sub.tahun_tagihan, LPAD(tbl_sub.bulan_tagihan, 2, '0')))
+                        ) as target_period
+                    ")
+                    ->groupBy('tbl_sub.nomor_internet');
 
-            $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
-                $join->on(DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(sub_inv.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
-            })->leftJoin('trx_billing_layanan as inv', function ($join) {
-                $join->on(DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(inv.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'))
-                     ->on(DB::raw("CONVERT(CONCAT(inv.tahun_tagihan, LPAD(inv.bulan_tagihan, 2, '0')) USING utf8mb4) COLLATE utf8mb4_unicode_ci"), '=', DB::raw("CONVERT(sub_inv.target_period USING utf8mb4) COLLATE utf8mb4_unicode_ci"));
-            });
+                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
+                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+                })->leftJoin('trx_billing_layanan as inv', function ($join) {
+                    $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
+                         ->on(DB::raw("CONCAT(inv.tahun_tagihan, LPAD(inv.bulan_tagihan, 2, '0'))"), '=', 'sub_inv.target_period');
+                });
+            }
         }
 
         // Join WA Broadcast sent log count
-        if (Schema::hasTable('tb_broadcast_wa_log')) {
+        if ($this->hasTableCached('tb_broadcast_wa_log')) {
             $subLog = DB::table('tb_broadcast_wa_log as tbl_log')
                 ->selectRaw("tbl_log.nomor_internet, COUNT(*) as total_sent_count, MAX(tbl_log.created_at) as last_sent_at")
                 ->where('tbl_log.status_kirim', 'sent')
@@ -473,7 +466,7 @@ class BroadcastController extends Controller
                 ->groupBy('tbl_log.nomor_internet');
 
             $query->leftJoinSub($subLog, 'log_sent', function ($join) {
-                $join->on(DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'), '=', DB::raw('CONVERT(log_sent.nomor_internet USING utf8mb4) COLLATE utf8mb4_unicode_ci'));
+                $join->on('c.nomor_internet', '=', 'log_sent.nomor_internet');
             });
         }
 
@@ -654,7 +647,7 @@ class BroadcastController extends Controller
 
         $baseTable = '';
         $cols = [];
-        $query = $this->buildCustomerQuery($baseTable, $cols);
+        $query = $this->buildCustomerQuery($baseTable, $cols, $selectedBulan, $selectedTahun);
         $sortField = $this->selectCustomerFields($query, $baseTable);
 
         // Filter out dummy/unregistered records
@@ -671,18 +664,14 @@ class BroadcastController extends Controller
 
         // Apply filters
         if (!empty($selectedBulan) && $selectedBulan !== 'all') {
-            $query->where(function($q) use ($selectedBulan, $baseTable, $cols) {
-                $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('bulan_tagihan', $cols)) ? 'c.bulan_tagihan' : 'inv.bulan_tagihan';
-                $q->where($col, str_pad($selectedBulan, 2, '0', STR_PAD_LEFT))
-                  ->orWhereNull($col);
-            });
+            if ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('bulan_tagihan', $cols)) {
+                $query->where('c.bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
+            }
         }
         if ($selectedTahun !== 'all' && !empty($selectedTahun)) {
-            $query->where(function($q) use ($selectedTahun, $baseTable, $cols) {
-                $col = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('tahun_tagihan', $cols)) ? 'c.tahun_tagihan' : 'inv.tahun_tagihan';
-                $q->where($col, $selectedTahun)
-                  ->orWhereNull($col);
-            });
+            if ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('tahun_tagihan', $cols)) {
+                $query->where('c.tahun_tagihan', $selectedTahun);
+            }
         }
 
         if ($selectedStatusTagihan === 'unpaid' || $selectedStatusTagihan === 'near_due') {
@@ -700,7 +689,7 @@ class BroadcastController extends Controller
         // Filter Status Pengiriman WA (Sudah / Belum)
         if ($selectedStatusKirim === 'sent') {
             $query->where(function ($q) {
-                if (Schema::hasTable('tb_broadcast_wa_log')) {
+                if ($this->hasTableCached('tb_broadcast_wa_log')) {
                     $q->where('log_sent.total_sent_count', '>', 0)
                       ->orWhere('inv.notif_wa', '>', 0);
                 } else {
@@ -709,7 +698,7 @@ class BroadcastController extends Controller
             });
         } elseif ($selectedStatusKirim === 'unsent') {
             $query->where(function ($q) {
-                if (Schema::hasTable('tb_broadcast_wa_log')) {
+                if ($this->hasTableCached('tb_broadcast_wa_log')) {
                     $q->where(function ($sq) {
                         $sq->whereNull('log_sent.total_sent_count')
                            ->orWhere('log_sent.total_sent_count', '<=', 0);
@@ -789,50 +778,57 @@ class BroadcastController extends Controller
 
         $totalTargetCount = $pelangganList->total();
         
-        $hasViewBilling   = Schema::hasTable('view_billing_layanan');
-        $hasViewBatchjob  = Schema::hasTable('view_batchjob');
-        $hasTrxBilling    = Schema::hasTable('trx_billing_layanan');
+        $hasViewBilling   = $this->hasTableCached('view_billing_layanan');
+        $hasViewBatchjob  = $this->hasTableCached('view_batchjob');
+        $hasTrxBilling    = $this->hasTableCached('trx_billing_layanan');
         $unpaidTable = $hasViewBilling ? 'view_billing_layanan' : ($hasTrxBilling ? 'trx_billing_layanan' : ($hasViewBatchjob ? 'view_batchjob' : 'trx_batchjob_register'));
-        $unpaidCols = Schema::getColumnListing($unpaidTable);
+        $unpaidCols = $this->getColumnsCached($unpaidTable);
         
-        $unpaidQuery = DB::table($unpaidTable);
-        if (in_array('status_bill_lay', $unpaidCols)) {
-            $unpaidQuery->whereIn('status_bill_lay', ['13', '14']);
-        } elseif (in_array('status_reg', $unpaidCols)) {
-            $unpaidQuery->whereIn('status_reg', ['23', '23.1']);
-        }
-        if (in_array('status_reg', $unpaidCols)) {
-            $unpaidQuery->whereNotNull('status_reg');
-        }
-        if ($selectedBulan !== 'all' && in_array('bulan_tagihan', $unpaidCols)) {
-            $unpaidQuery->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
-        }
-        if ($selectedTahun !== 'all' && in_array('tahun_tagihan', $unpaidCols)) {
-            $unpaidQuery->where('tahun_tagihan', $selectedTahun);
-        }
-        $totalUnpaidCount = $unpaidQuery->count();
+        $totalUnpaidCount = Cache::remember("broadcast_unpaid_cnt_{$selectedBulan}_{$selectedTahun}", 60, function () use ($unpaidTable, $unpaidCols, $selectedBulan, $selectedTahun) {
+            $unpaidQuery = DB::table($unpaidTable);
+            if (in_array('status_bill_lay', $unpaidCols)) {
+                $unpaidQuery->whereIn('status_bill_lay', ['13', '14']);
+            } elseif (in_array('status_reg', $unpaidCols)) {
+                $unpaidQuery->whereIn('status_reg', ['23', '23.1']);
+            }
+            if (in_array('status_reg', $unpaidCols)) {
+                $unpaidQuery->whereNotNull('status_reg');
+            }
+            if ($selectedBulan !== 'all' && in_array('bulan_tagihan', $unpaidCols)) {
+                $unpaidQuery->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
+            }
+            if ($selectedTahun !== 'all' && in_array('tahun_tagihan', $unpaidCols)) {
+                $unpaidQuery->where('tahun_tagihan', $selectedTahun);
+            }
+            return $unpaidQuery->count();
+        });
 
-        $totalSentLog = Schema::hasTable('tb_broadcast_wa_log') ? DB::table('tb_broadcast_wa_log')->count() : 0;
-        $sentTodayCount = Schema::hasTable('tb_broadcast_wa_log')
-            ? DB::table('tb_broadcast_wa_log')->whereDate('created_at', Carbon::today())->count()
+        $totalSentLog = $this->hasTableCached('tb_broadcast_wa_log') 
+            ? Cache::remember('broadcast_total_sent_log', 60, fn() => DB::table('tb_broadcast_wa_log')->count()) 
             : 0;
 
-        $wilayahList = [];
-        if ($hasViewBatchjob) {
-            $wilayahList = DB::table('view_batchjob')
-                ->whereNotNull('nama_kota_pasang')
-                ->where('nama_kota_pasang', '!=', '')
-                ->distinct()
-                ->pluck('nama_kota_pasang')
-                ->toArray();
-        } elseif ($hasViewBilling && Schema::hasColumn('view_billing_layanan', 'nama_kota_pasang')) {
-            $wilayahList = DB::table('view_billing_layanan')
-                ->whereNotNull('nama_kota_pasang')
-                ->where('nama_kota_pasang', '!=', '')
-                ->distinct()
-                ->pluck('nama_kota_pasang')
-                ->toArray();
-        }
+        $sentTodayCount = $this->hasTableCached('tb_broadcast_wa_log')
+            ? Cache::remember('broadcast_sent_today_count', 60, fn() => DB::table('tb_broadcast_wa_log')->whereDate('created_at', Carbon::today())->count())
+            : 0;
+
+        $wilayahList = Cache::remember('broadcast_wilayah_list', 3600, function () use ($hasViewBatchjob, $hasViewBilling) {
+            if ($hasViewBatchjob) {
+                return DB::table('view_batchjob')
+                    ->whereNotNull('nama_kota_pasang')
+                    ->where('nama_kota_pasang', '!=', '')
+                    ->distinct()
+                    ->pluck('nama_kota_pasang')
+                    ->toArray();
+            } elseif ($hasViewBilling && in_array('nama_kota_pasang', $this->getColumnsCached('view_billing_layanan'))) {
+                return DB::table('view_billing_layanan')
+                    ->whereNotNull('nama_kota_pasang')
+                    ->where('nama_kota_pasang', '!=', '')
+                    ->distinct()
+                    ->pluck('nama_kota_pasang')
+                    ->toArray();
+            }
+            return [];
+        });
 
         return view('admin.broadcast.index', compact(
             'pelangganList',

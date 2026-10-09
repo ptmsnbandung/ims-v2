@@ -364,37 +364,11 @@
                                 </span>
                             </div>
 
-                            <!-- Route Mode Segmented Switcher -->
-                            <div class="bg-slate-100 dark:bg-slate-950 p-1 rounded-lg grid grid-cols-2 gap-1 text-[11px] border border-slate-200/70 dark:border-slate-800/70">
-                                <button 
-                                    type="button" 
-                                    @click="setRoutingMode('street')"
-                                    :class="routingMode === 'street' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs border border-slate-200 dark:border-slate-800' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'"
-                                    class="py-1.5 px-2 rounded-md transition text-center flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                    <span>🛣️ Rute Jalan</span>
-                                    <span class="font-mono text-[10px] font-bold" x-text="'(' + selectedOdpResult.roadDistance + 'm)'"></span>
-                                </button>
-                                <button 
-                                    type="button" 
-                                    @click="setRoutingMode('direct')"
-                                    :class="routingMode === 'direct' ? 'bg-white dark:bg-slate-900 text-sky-600 dark:text-sky-400 font-bold shadow-xs border border-slate-200 dark:border-slate-800' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'"
-                                    class="py-1.5 px-2 rounded-md transition text-center flex items-center justify-center gap-1.5 cursor-pointer"
-                                >
-                                    <span>⚡ Span Lurus</span>
-                                    <span class="font-mono text-[10px] font-bold" x-text="'(' + selectedOdpResult.distance + 'm)'"></span>
-                                </button>
-                            </div>
-
-                            <!-- Technical Specs Table -->
+                            <!-- Technical Specs Table (Fokus Rute Jalan) -->
                             <div class="bg-slate-50/80 dark:bg-slate-950/70 rounded-xl p-3 border border-slate-200/80 dark:border-slate-800 space-y-2 text-xs">
                                 <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Nama ODP:</span>
                                     <strong class="text-slate-900 dark:text-white font-bold text-xs" x-text="selectedOdpResult.odp.name_odp || selectedOdpResult.odp.name"></strong>
-                                </div>
-                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Kode ODP:</span>
-                                    <span class="text-sky-700 dark:text-sky-300 font-mono font-extrabold px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950/80 border border-sky-200 dark:border-sky-800 text-[10.5px]" x-text="selectedOdpResult.odp.kode_odp || selectedOdpResult.odp.code"></span>
                                 </div>
                                 <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Port PON Induk:</span>
@@ -412,23 +386,9 @@
                                     <span class="text-slate-500 dark:text-slate-400 text-[11px]">Jarak Rute Jalan:</span>
                                     <strong class="text-slate-900 dark:text-white font-mono text-[11.5px]" x-text="selectedOdpResult.roadDistance + ' Meter'"></strong>
                                 </div>
-                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Jarak Lurus (Span Udara):</span>
-                                    <span class="text-slate-700 dark:text-slate-300 font-mono text-[11px]" x-text="selectedOdpResult.distance + ' Meter'"></span>
-                                </div>
-                                <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]" x-text="routingMode === 'street' ? 'Estimasi Kabel (Rute Jalan):' : 'Estimasi Kabel (Span + Slack):'"></span>
-                                    <strong class="text-sky-600 dark:text-sky-400 font-mono font-extrabold text-[11.5px]" x-text="'~' + selectedOdpResult.dropcoreDistance + ' Meter'"></strong>
-                                </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Estimasi Redaman Optik:</span>
-                                    <span class="font-mono font-bold text-[11.5px] text-emerald-600 dark:text-emerald-400" x-text="selectedOdpResult.opticalPowerEstimate"></span>
-                                </div>
-
-                                <!-- Dedicated Clean Note Box -->
-                                <div class="pt-2 mt-1 border-t border-slate-200/80 dark:border-slate-800/80" x-show="selectedOdpResult.odp.note_odp && selectedOdpResult.odp.note_odp !== '-'">
-                                    <span class="text-slate-400 dark:text-slate-500 block text-[9.5px] uppercase font-bold tracking-wider mb-1">Catatan ODP:</span>
-                                    <div class="text-[10.5px] text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/80 leading-relaxed break-words font-medium" x-text="selectedOdpResult.odp.note_odp"></div>
+                                    <span class="text-slate-500 dark:text-slate-400 text-[11px]">Estimasi Kabel (Rute Jalan):</span>
+                                    <strong class="text-sky-600 dark:text-sky-400 font-mono font-extrabold text-[11.5px]" x-text="'~' + selectedOdpResult.dropcoreDistance + ' Meter'"></strong>
                                 </div>
                             </div>
 

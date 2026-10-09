@@ -2230,6 +2230,83 @@ class NocController extends Controller
     }
 
     /**
+     * Report Collecting Perangkat Terminasi (KD12 / KD12.1 -> KD13 atau KD12.1)
+     */
+    public function reportCollect(Request $request, string $kodeTrx): RedirectResponse
+    {
+        $now = now()->format('Y-m-d H:i:s');
+        $currentUser = auth()->user()->nama ?? 'NOC';
+
+        $statusResult = $request->status_result ?? 'done'; // 'done' or 'reschedule'
+        $collectPerangkat = $request->collect_perangkat == '1' ? '1' : '0';
+        $collectPayment = $request->collect_payment == '1' ? '1' : '0';
+        $note = $request->note ?: ($request->note_collect_end ?? '');
+
+        if ($statusResult === 'reschedule') {
+            $newDate = $request->date_schedule ?: now()->format('Y-m-d');
+            DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
+                'status_terminasi' => '12.1', // (KD12.1) Reschedule Collecting
+                'date_collect_start' => $newDate,
+                'note_collect_start' => $note ?: 'Reschedule penarikan perangkat',
+                'date_update' => $now,
+                'user_update' => $currentUser,
+            ]);
+
+            return redirect()->back()->with('success', "Penarikan perangkat {$kodeTrx} dijadwalkan ulang (Reschedule Collecting)!");
+        }
+
+        // Done: Status 13 (Collect Perangkat Done)
+        DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
+            'status_terminasi' => '13', // (KD13) Collect Perangkat Done
+            'collect_perangkat' => $collectPerangkat ?: '1',
+            'collect_payment' => $collectPayment,
+            'date_collect_end' => now()->format('Y-m-d'),
+            'note_collect_end' => $note ?: 'Perangkat berhasil ditarik oleh teknisi',
+            'date_update' => $now,
+            'user_update' => $currentUser,
+        ]);
+
+        return redirect()->back()->with('success', "Laporan penarikan perangkat (Report Collecting) {$kodeTrx} berhasil disimpan! Status kini siap untuk Closing Terminasi.");
+    }
+
+    /**
+     * Closing / Selesaikan Terminasi (KD13 -> KD14 Terminasi Selesai)
+     */
+    public function closeTerminasi(Request $request, string $kodeTrx): RedirectResponse
+    {
+        $now = now()->format('Y-m-d H:i:s');
+        $currentUser = auth()->user()->nama ?? 'NOC';
+        $note = $request->note ?: 'Proses terminasi layanan selesai';
+
+        $trx = DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->first();
+        if ($trx && $trx->nomor_internet) {
+            // Update customer status_reg to 23 (Terminated / Nonaktif) if table exists
+            if (Schema::hasTable('tb_pelanggan')) {
+                DB::table('tb_pelanggan')->where('nomor_internet', $trx->nomor_internet)->update([
+                    'status_reg' => '23',
+                    'date_update' => $now,
+                    'user_update' => $currentUser,
+                ]);
+            }
+            if (Schema::hasTable('m_pelanggan')) {
+                DB::table('m_pelanggan')->where('nomor_internet', $trx->nomor_internet)->update([
+                    'status_reg' => '23',
+                ]);
+            }
+        }
+
+        DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update([
+            'status_terminasi' => '14', // (KD14) Terminasi Selesai
+            'date_termin_done' => $now,
+            'note_termin_done' => $note,
+            'date_update' => $now,
+            'user_update' => $currentUser,
+        ]);
+
+        return redirect()->back()->with('success', "Closing terminasi {$kodeTrx} berhasil! Status layanan pelanggan telah ditutup secara permanen (KD14).");
+    }
+
+    /**
      * Cancel Permintaan Terminasi
      */
     public function cancelTerminasi(Request $request, string $kodeTrx): RedirectResponse

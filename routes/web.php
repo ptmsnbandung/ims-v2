@@ -201,6 +201,8 @@ Route::middleware('auth')->group(function () {
         // 7. Terminasi Layanan
         Route::get('/terminasi', [NocController::class, 'terminasi'])->name('terminasi');
         Route::post('/terminasi/{kode_trx}/schedule', [NocController::class, 'scheduleCollect'])->name('terminasi.schedule');
+        Route::post('/terminasi/{kode_trx}/report', [NocController::class, 'reportCollect'])->name('terminasi.report');
+        Route::post('/terminasi/{kode_trx}/close', [NocController::class, 'closeTerminasi'])->name('terminasi.close');
         Route::post('/terminasi/{kode_trx}/cancel', [NocController::class, 'cancelTerminasi'])->name('terminasi.cancel');
 
         // 8. Inventaris Perangkat & Asset Jaringan

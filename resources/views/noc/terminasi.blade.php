@@ -6,14 +6,34 @@
 @section('content')
 <div x-data="{
     scheduleModalOpen: false,
+    reportModalOpen: false,
+    closeModalOpen: false,
     modalKodeTrx: '',
     modalNamaPelanggan: '',
     modalNomorInternet: '',
+    modalCollectPerangkat: 1,
+    modalCollectPayment: 0,
+    modalReportStatus: 'done',
     openScheduleModal(kode, nama, nomor) {
         this.modalKodeTrx = kode;
         this.modalNamaPelanggan = nama;
         this.modalNomorInternet = nomor;
         this.scheduleModalOpen = true;
+    },
+    openReportModal(kode, nama, nomor, collectP = 1, collectPay = 0) {
+        this.modalKodeTrx = kode;
+        this.modalNamaPelanggan = nama;
+        this.modalNomorInternet = nomor;
+        this.modalCollectPerangkat = collectP;
+        this.modalCollectPayment = collectPay;
+        this.modalReportStatus = 'done';
+        this.reportModalOpen = true;
+    },
+    openCloseModal(kode, nama, nomor) {
+        this.modalKodeTrx = kode;
+        this.modalNamaPelanggan = nama;
+        this.modalNomorInternet = nomor;
+        this.closeModalOpen = true;
     }
 }" class="space-y-5">
 
@@ -318,47 +338,98 @@
                                 </div>
                             </td>
 
-                            <!-- 5. Action Column (Schedule Collect & Cancel Buttons) -->
-                            <td class="py-4 px-4 align-top text-center">
-                                @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
-                                    <div class="flex flex-col items-center justify-center gap-1.5">
-                                        
-                                        <!-- Schedule Collect Button (Opens Schedule Collect Modal) -->
+                            <!-- 5. Action Column (Status-based Actions) -->
+                            <td class="py-3 px-3 align-top text-center min-w-[150px] w-[150px]">
+                                @if(in_array($item->status_terminasi, ['11']))
+                                    {{-- Status KD11: Req. Terminasi -> Schedule Collect --}}
+                                    <div class="flex flex-col items-center justify-center gap-1.5 w-full max-w-[140px] mx-auto">
                                         <button type="button" 
-                                                @click="modalKodeTrx = '{{ $item->kode_trx_terminasi }}'; modalNamaPelanggan = {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}; modalNomorInternet = '{{ $item->nomor_internet }}'; scheduleModalOpen = true;"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-blue-600 dark:text-blue-400 hover:text-white dark:hover:text-white text-[11px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
-                                                title="Jadwalkan Penarikan Perangkat">
-                                            <svg class="w-3.5 h-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                @click="openScheduleModal('{{ $item->kode_trx_terminasi }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, '{{ $item->nomor_internet }}')"
+                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-[11px] font-bold shadow-xs transition cursor-pointer"
+                                                title="Jadwalkan Penarikan Perangkat (KD12)">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                             </svg>
                                             <span>Schedule Collect</span>
                                         </button>
 
-                                        <!-- Cancel Button -->
-                                        <form action="{{ route('noc.terminasi.cancel', $item->kode_trx_terminasi) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan terminasi {{ $item->nomor_internet }}?');">
+                                        <form action="{{ route('noc.terminasi.cancel', $item->kode_trx_terminasi) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan terminasi {{ $item->nomor_internet }}?');" class="w-full">
                                             @csrf
                                             <button type="submit" 
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[11px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+                                                    class="w-full inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 dark:text-slate-400 dark:hover:text-rose-400 text-[10px] font-semibold border border-slate-200 dark:border-slate-700/80 transition cursor-pointer"
                                                     title="Batalkan Permintaan Terminasi">
-                                                <svg class="w-3.5 h-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <svg class="w-3 h-3 text-slate-400 hover:text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                                 </svg>
                                                 <span>Cancel</span>
                                             </button>
                                         </form>
+                                    </div>
 
+                                @elseif(in_array($item->status_terminasi, ['12', '12.1']))
+                                    {{-- Status KD12 / KD12.1: Collecting -> Report Collecting --}}
+                                    <div class="flex flex-col items-center justify-center gap-1.5 w-full max-w-[140px] mx-auto">
+                                        <button type="button" 
+                                                @click="openReportModal('{{ $item->kode_trx_terminasi }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, '{{ $item->nomor_internet }}', {{ $item->collect_perangkat ? 1 : 0 }}, {{ $item->collect_payment ? 1 : 0 }})"
+                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 active:scale-98 text-white text-[11px] font-bold shadow-xs transition cursor-pointer"
+                                                title="Laporkan Hasil Penarikan Perangkat (KD13)">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+                                            </svg>
+                                            <span>Report Collecting</span>
+                                        </button>
+
+                                        <form action="{{ route('noc.terminasi.cancel', $item->kode_trx_terminasi) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan terminasi {{ $item->nomor_internet }}?');" class="w-full">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="w-full inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 dark:text-slate-400 dark:hover:text-rose-400 text-[10px] font-semibold border border-slate-200 dark:border-slate-700/80 transition cursor-pointer"
+                                                    title="Batalkan Permintaan Terminasi">
+                                                <svg class="w-3 h-3 text-slate-400 hover:text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                                </svg>
+                                                <span>Cancel</span>
+                                            </button>
+                                        </form>
                                     </div>
+
+                                @elseif($item->status_terminasi == '13')
+                                    {{-- Status KD13: Collect Perangkat Done -> Closing Terminasi --}}
+                                    <div class="flex flex-col items-center justify-center gap-1.5 w-full max-w-[140px] mx-auto">
+                                        <button type="button" 
+                                                @click="openCloseModal('{{ $item->kode_trx_terminasi }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, '{{ $item->nomor_internet }}')"
+                                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-[11px] font-bold shadow-xs transition cursor-pointer"
+                                                title="Closing / Selesaikan Terminasi Layanan (KD14)">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                            </svg>
+                                            <span>Closing Terminasi</span>
+                                        </button>
+
+                                        <form action="{{ route('noc.terminasi.cancel', $item->kode_trx_terminasi) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan terminasi {{ $item->nomor_internet }}?');" class="w-full">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="w-full inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 dark:text-slate-400 dark:hover:text-rose-400 text-[10px] font-semibold border border-slate-200 dark:border-slate-700/80 transition cursor-pointer"
+                                                    title="Batalkan Permintaan Terminasi">
+                                                <svg class="w-3 h-3 text-slate-400 hover:text-rose-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                                </svg>
+                                                <span>Cancel</span>
+                                            </button>
+                                        </form>
+                                    </div>
+
                                 @elseif($item->status_terminasi == '14')
-                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 text-[11px] font-bold">
-                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                        </svg>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[11px] font-bold">
+                                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m4.5 12.75 6 6 9-13.5"/></svg>
                                         <span>Terminasi Selesai</span>
-                                    </div>
+                                    </span>
+
                                 @elseif($item->status_terminasi == '16')
-                                    <div class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-500/10 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-500/20 text-[11px] font-medium">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[11px] font-semibold">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18 18 6M6 6l12 12"/></svg>
                                         <span>Dibatalkan</span>
-                                    </div>
+                                    </span>
+
                                 @else
                                     <span class="text-slate-400 text-xs">-</span>
                                 @endif
@@ -444,11 +515,11 @@
                         </div>
                     </div>
 
-                    <!-- Actions -->
+                    <!-- Mobile Actions -->
                     <div class="flex items-center gap-2 pt-1">
-                        @if(in_array($item->status_terminasi, ['11', '12', '12.1']))
+                        @if($item->status_terminasi == '11')
                             <button type="button" 
-                                    @click="modalKodeTrx = '{{ $item->kode_trx_terminasi }}'; modalNamaPelanggan = {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}; modalNomorInternet = '{{ $item->nomor_internet }}'; scheduleModalOpen = true;"
+                                    @click="openScheduleModal('{{ $item->kode_trx_terminasi }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, '{{ $item->nomor_internet }}')"
                                     class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition active:scale-98">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
@@ -462,13 +533,38 @@
                                     Cancel
                                 </button>
                             </form>
+                        @elseif(in_array($item->status_terminasi, ['12', '12.1']))
+                            <button type="button" 
+                                    @click="openReportModal('{{ $item->kode_trx_terminasi }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, '{{ $item->nomor_internet }}', {{ $item->collect_perangkat ? 1 : 0 }}, {{ $item->collect_payment ? 1 : 0 }})"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-sm transition active:scale-98">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+                                </svg>
+                                <span>Report Collecting</span>
+                            </button>
+                            <form action="{{ route('noc.terminasi.cancel', $item->kode_trx_terminasi) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan terminasi {{ $item->nomor_internet }}?');">
+                                @csrf
+                                <button type="submit" 
+                                        class="py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-semibold transition active:scale-98">
+                                    Cancel
+                                </button>
+                            </form>
+                        @elseif($item->status_terminasi == '13')
+                            <button type="button" 
+                                    @click="openCloseModal('{{ $item->kode_trx_terminasi }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, '{{ $item->nomor_internet }}')"
+                                    class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition active:scale-98">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                </svg>
+                                <span>Closing Terminasi</span>
+                            </button>
                         @elseif($item->status_terminasi == '14')
                             <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
                                 Terminasi Selesai
                             </span>
                         @elseif($item->status_terminasi == '16')
-                            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+                            <span class="text-xs font-medium text-rose-500 dark:text-rose-400">
                                 Dibatalkan
                             </span>
                         @else
@@ -492,7 +588,7 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 4. MODAL FORM SCHEDULE COLLECT (COMPACT & TIDY DESIGN)              -->
+    <!-- 4. MODAL 1: SCHEDULE COLLECT (STATUS KD11 -> KD12)                  -->
     <!-- =================================================================== -->
     <div x-show="scheduleModalOpen"
          x-cloak
@@ -504,7 +600,8 @@
             <!-- Modal Header -->
             <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
                 <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                    <span>Form Schedule Collect An/</span>
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+                    <span>Schedule Collect An/</span>
                     <span class="text-blue-600 dark:text-blue-400 font-extrabold uppercase" x-text="modalNamaPelanggan"></span>
                 </h3>
                 <button type="button" @click="scheduleModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition">
@@ -530,21 +627,19 @@
                                            name="date_schedule" 
                                            required
                                            value="{{ date('Y-m-d') }}"
-                                           placeholder="Schedule Collect"
                                            class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
 
                                 <!-- Waktu -->
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                        waktu <span class="text-rose-500 font-bold">*</span>
+                                        Waktu <span class="text-rose-500 font-bold">*</span>
                                     </label>
                                     <select name="waktu" required class="w-full text-xs px-2.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="" disabled selected>Select a State</option>
                                         <option value="09:00 - 12:00 WIB">09:00 - 12:00 (Pagi)</option>
                                         <option value="13:00 - 15:00 WIB">13:00 - 15:00 (Siang)</option>
                                         <option value="15:00 - 18:00 WIB">15:00 - 18:00 (Sore)</option>
-                                        <option value="09:00 - 17:00 WIB">09:00 - 17:00 (Full Day)</option>
+                                        <option value="09:00 - 17:00 WIB" selected>09:00 - 17:00 (Full Day)</option>
                                         <option value="Bebas / Fleksibel">Bebas / Fleksibel</option>
                                     </select>
                                 </div>
@@ -553,20 +648,20 @@
                             <!-- Note -->
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                    note <span class="text-rose-500 font-bold">*</span>
+                                    Catatan / Instruksi <span class="text-rose-500 font-bold">*</span>
                                 </label>
                                 <textarea name="note" 
                                           rows="4" 
                                           required
-                                          placeholder="note collect...." 
+                                          placeholder="Catatan penugasan collect perangkat..." 
                                           class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
                             </div>
                         </div>
 
-                        <!-- Right Column: Team Checkboxes (Strictly contained in scrollable box) -->
+                        <!-- Right Column: Team Checkboxes -->
                         <div class="space-y-1.5">
                             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                Team <span class="text-rose-500 font-bold">*</span>
+                                Team Teknisi <span class="text-rose-500 font-bold">*</span>
                             </label>
                             <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-y-auto space-y-1"
                                  style="max-height: 180px;">
@@ -591,23 +686,220 @@
                     </div>
                 </div>
 
-                <!-- Footer Buttons (Cyan [✖ Tutup] & Blue [💾 Update]) -->
+                <!-- Footer Buttons -->
                 <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
                     <button type="button" 
                             @click="scheduleModalOpen = false" 
-                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#00bcd4] hover:bg-[#00acc1] text-white text-xs font-bold shadow-sm transition cursor-pointer">
-                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                        </svg>
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition cursor-pointer">
                         <span>Tutup</span>
                     </button>
 
                     <button type="submit" 
-                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0d6efd] hover:bg-[#0b5ed7] text-white text-xs font-bold shadow-sm transition cursor-pointer">
-                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                        </svg>
-                        <span>Update</span>
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        <span>Simpan Jadwal Collect</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 5. MODAL 2: REPORT COLLECTING (STATUS KD12 / KD12.1 -> KD13)       -->
+    <!-- =================================================================== -->
+    <div x-show="reportModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+        <div @click.away="reportModalOpen = false"
+             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
+             style="max-height: 90vh;">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"/></svg>
+                    <span>Report Collecting An/</span>
+                    <span class="text-purple-600 dark:text-purple-400 font-extrabold uppercase" x-text="modalNamaPelanggan"></span>
+                </h3>
+                <button type="button" @click="reportModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form :action="'{{ url('/noc/terminasi') }}/' + modalKodeTrx + '/report'" method="POST" class="flex flex-col flex-1 overflow-hidden">
+                @csrf
+                <div class="p-5 space-y-4 overflow-y-auto flex-1">
+                    
+                    <!-- 1. Pilihan Hasil Collecting -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                            Hasil Penarikan (Collecting Result) <span class="text-rose-500 font-bold">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative flex items-center p-3 rounded-xl border cursor-pointer transition"
+                                   :class="modalReportStatus === 'done' ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-500 ring-1 ring-purple-500' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700'">
+                                <input type="radio" name="status_result" value="done" x-model="modalReportStatus" class="sr-only">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-4 h-4 rounded-full border flex items-center justify-center"
+                                         :class="modalReportStatus === 'done' ? 'border-purple-600 bg-purple-600' : 'border-slate-400'">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-white" x-show="modalReportStatus === 'done'"></div>
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Selesai Ditarik (Done)</span>
+                                        <span class="block text-[10px] text-slate-500">Status lanjut ke KD13</span>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="relative flex items-center p-3 rounded-xl border cursor-pointer transition"
+                                   :class="modalReportStatus === 'reschedule' ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-1 ring-amber-500' : 'bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700'">
+                                <input type="radio" name="status_result" value="reschedule" x-model="modalReportStatus" class="sr-only">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-4 h-4 rounded-full border flex items-center justify-center"
+                                         :class="modalReportStatus === 'reschedule' ? 'border-amber-600 bg-amber-600' : 'border-slate-400'">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-white" x-show="modalReportStatus === 'reschedule'"></div>
+                                    </div>
+                                    <div>
+                                        <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Reschedule Ulang</span>
+                                        <span class="block text-[10px] text-slate-500">Status KD12.1</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 2. Checklist Status Perangkat & Tagihan (Saat Done) -->
+                    <div x-show="modalReportStatus === 'done'" class="space-y-2.5 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" 
+                                   name="collect_perangkat" 
+                                   value="1" 
+                                   checked
+                                   class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 cursor-pointer">
+                            <div>
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Perangkat ONT / Router Berhasil Ditarik</span>
+                                <span class="block text-[10px] text-slate-500">Tandai status Collect Perangkat = Done</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 cursor-pointer pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                            <input type="checkbox" 
+                                   name="collect_payment" 
+                                   value="1" 
+                                   class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 cursor-pointer">
+                            <div>
+                                <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Pelunasan Tagihan / Tunggakan Selesai</span>
+                                <span class="block text-[10px] text-slate-500">Tandai status Pending Tagihan = Done</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- 3. Tanggal Reschedule (Saat Reschedule) -->
+                    <div x-show="modalReportStatus === 'reschedule'" class="space-y-1">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Tanggal Jadwal Baru <span class="text-amber-500 font-bold">*</span>
+                        </label>
+                        <input type="date" 
+                               name="date_schedule" 
+                               value="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                               class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+
+                    <!-- 4. Catatan Hasil Collecting -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Catatan Hasil Penarikan <span class="text-rose-500 font-bold">*</span>
+                        </label>
+                        <textarea name="note" 
+                                  rows="3" 
+                                  required
+                                  placeholder="Contoh: Perangkat ONT ZTE & adaptor berhasil ditarik lengkap..." 
+                                  class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"></textarea>
+                    </div>
+
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+                    <button type="button" 
+                            @click="reportModalOpen = false" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition cursor-pointer">
+                        <span>Tutup</span>
+                    </button>
+
+                    <button type="submit" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        <span>Simpan Laporan Collecting</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 6. MODAL 3: CLOSING TERMINASI (STATUS KD13 -> KD14)                 -->
+    <!-- =================================================================== -->
+    <div x-show="closeModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+        <div @click.away="closeModalOpen = false"
+             class="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
+             style="max-height: 90vh;">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-emerald-50/80 dark:bg-emerald-950/40 shrink-0">
+                <h3 class="text-sm font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                    <span>Closing Terminasi An/</span>
+                    <span class="text-emerald-700 dark:text-emerald-400 font-extrabold uppercase" x-text="modalNamaPelanggan"></span>
+                </h3>
+                <button type="button" @click="closeModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form :action="'{{ url('/noc/terminasi') }}/' + modalKodeTrx + '/close'" method="POST" class="flex flex-col flex-1 overflow-hidden">
+                @csrf
+                <div class="p-5 space-y-4 overflow-y-auto flex-1">
+                    
+                    <div class="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+                        <p class="font-bold flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                            Konfirmasi Closing Terminasi
+                        </p>
+                        <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Proses ini akan menyelesaikan permohonan terminasi layanan, mengubah status menjadi <strong>(KD14) Terminasi Selesai</strong>, serta menonaktifkan akun pelanggan terkait di sistem.
+                        </p>
+                    </div>
+
+                    <!-- Catatan Closing -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Catatan Closing Terminasi (Opsional)
+                        </label>
+                        <textarea name="note" 
+                                  rows="3" 
+                                  placeholder="Catatan penutupan layanan..." 
+                                  class="w-full text-xs px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
+                    </div>
+
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+                    <button type="button" 
+                            @click="closeModalOpen = false" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition cursor-pointer">
+                        <span>Batal</span>
+                    </button>
+
+                    <button type="submit" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                        <span>Closing Terminasi Sekarang</span>
                     </button>
                 </div>
             </form>

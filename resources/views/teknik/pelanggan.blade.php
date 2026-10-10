@@ -970,12 +970,15 @@
                 <a href="{{ $pelanggan->url($pelanggan->lastPage()) }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
             </div>
         </div>
+    </div>
+
     <!-- ======================================================================= -->
     <!-- 1. MODAL: REQUEST UP / DOWNGRADE BANDWIDTH KE NOC                       -->
     <!-- ======================================================================= -->
     <div x-show="upDowngradeModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         @keydown.escape.window="upDowngradeModalOpen = false"
+         class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="upDowngradeModalOpen = false"
              class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
              style="max-height: 90vh;">
@@ -1073,7 +1076,8 @@
     <!-- ======================================================================= -->
     <div x-show="suspendModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         @keydown.escape.window="suspendModalOpen = false"
+         class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="suspendModalOpen = false"
              class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
              style="max-height: 90vh;">
@@ -1157,7 +1161,8 @@
     <!-- ======================================================================= -->
     <div x-show="terminasiModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         @keydown.escape.window="terminasiModalOpen = false"
+         class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="terminasiModalOpen = false"
              class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
              style="max-height: 90vh;">
@@ -1234,7 +1239,8 @@
     <!-- ======================================================================= -->
     <div x-show="adjustModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+         @keydown.escape.window="adjustModalOpen = false"
+         class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
         <div @click.away="adjustModalOpen = false"
              class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
              style="max-height: 90vh;">

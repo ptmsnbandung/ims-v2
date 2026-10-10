@@ -2166,7 +2166,15 @@ class NocController extends Controller
             $query->whereYear('date_create', $tahun);
         }
 
-        $terminasis = $query->orderBy('date_create', 'desc')->paginate(10)->withQueryString();
+        $terminasis = $query->orderByRaw("
+            CASE 
+                WHEN status_terminasi = '11' THEN 1
+                WHEN status_terminasi IN ('12', '12.1') THEN 2
+                WHEN status_terminasi = '13' THEN 3
+                WHEN status_terminasi = '14' THEN 4
+                ELSE 5
+            END ASC
+        ")->orderBy('date_create', 'desc')->paginate(10)->withQueryString();
 
         // 8 KPI Counters (matching screenshot)
         $count11 = DB::table('view_terminasi')->where('status_terminasi', '11')->count();

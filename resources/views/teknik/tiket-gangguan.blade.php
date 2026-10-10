@@ -448,14 +448,15 @@
                                     <div class="font-bold text-slate-900 dark:text-white uppercase text-xs">
                                         @if($nomorInternet && $nomorInternet !== '-')
                                             <a href="{{ route('teknik.pelanggan.profile', $nomorInternet) }}" 
-                                                class="font-mono text-cyan-700 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 hover:underline mr-1 font-bold"
-                                                title="Buka Profile Pelanggan">
-                                                {{ $nomorInternet }}
+                                                class="group inline-block font-bold text-slate-900 dark:text-white hover:text-cyan-700 dark:hover:text-cyan-400 uppercase text-xs transition-colors"
+                                                title="Buka Profile Pelanggan ({{ $nomorInternet }})">
+                                                <span class="font-mono text-cyan-700 dark:text-cyan-400 group-hover:underline mr-1 font-bold">{{ $nomorInternet }}</span>
+                                                <span class="group-hover:underline">{{ $namaPel }}</span>
                                             </a>
                                         @else
                                             <span class="font-mono text-slate-400 mr-1">{{ $nomorInternet }}</span>
+                                            <span>{{ $namaPel }}</span>
                                         @endif
-                                        <span>{{ $namaPel }}</span>
                                     </div>
                                     <div class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 uppercase leading-relaxed font-sans break-words">
                                         {{ $alamat }}
@@ -560,20 +561,25 @@
                             @else
                                 <!-- Standard Layout: Customer & No Layanan -->
                                 <td class="py-3 px-3 break-words">
-                                    <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                                        <span>{{ $namaPel }}</span>
-                                    </div>
-                                    <div class="text-[11px] font-mono mt-0.5">
-                                        @if($nomorInternet && $nomorInternet !== '-')
-                                            <a href="{{ route('teknik.pelanggan.profile', $nomorInternet) }}" 
-                                                class="text-cyan-700 dark:text-cyan-400 hover:text-cyan-800 dark:hover:text-cyan-300 hover:underline font-bold"
-                                                title="Buka Profile Pelanggan">
+                                    @if($nomorInternet && $nomorInternet !== '-')
+                                        <a href="{{ route('teknik.pelanggan.profile', $nomorInternet) }}" 
+                                            class="group block"
+                                            title="Buka Profile Pelanggan ({{ $nomorInternet }})">
+                                            <div class="font-bold text-slate-900 dark:text-white group-hover:text-cyan-700 dark:group-hover:text-cyan-400 group-hover:underline flex items-center gap-1.5 transition-colors">
+                                                <span>{{ $namaPel }}</span>
+                                            </div>
+                                            <div class="text-[11px] font-mono mt-0.5 text-cyan-700 dark:text-cyan-400 group-hover:underline font-bold">
                                                 {{ $nomorInternet }}
-                                            </a>
-                                        @else
-                                            <span class="text-slate-400 font-medium">{{ $nomorInternet }}</span>
-                                        @endif
-                                    </div>
+                                            </div>
+                                        </a>
+                                    @else
+                                        <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                            <span>{{ $namaPel }}</span>
+                                        </div>
+                                        <div class="text-[11px] font-mono mt-0.5 text-slate-400 font-medium">
+                                            {{ $nomorInternet }}
+                                        </div>
+                                    @endif
                                     @if(!empty($kodeTiket) && $kodeTiket !== '-')
                                         <div class="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-semibold">
                                             #{{ $kodeTiket }}

@@ -226,17 +226,31 @@
                             
                             <!-- 1. Pelanggan -->
                             <td class="py-2.5 px-3 align-top">
+                                @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                   class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline tracking-wide text-xs inline-block"
-                                   title="Buka Profile Pelanggan">
-                                    {{ $item->nomor_internet }}
+                                   class="group block"
+                                   title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                    <div class="font-bold font-mono text-blue-600 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 group-hover:underline tracking-wide text-xs">
+                                        {{ $item->nomor_internet }}
+                                    </div>
+                                    <div class="mt-0.5 font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs transition-colors">
+                                        <span>{{ $item->nama_pelanggan }}</span>
+                                        <span class="text-slate-500 dark:text-slate-400 font-normal no-underline">
+                                            ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
+                                        </span>
+                                    </div>
                                 </a>
+                                @else
+                                <div class="font-bold font-mono text-slate-400 text-xs tracking-wide">
+                                    -
+                                </div>
                                 <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs">
                                     <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 dark:text-slate-400 font-normal">
                                         ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
+                                @endif
                                 <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                                     {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }} 
                                     @if($item->nominal_bandwith)
@@ -506,14 +520,27 @@
                     <!-- Top Info: Pelanggan & Status -->
                     <div class="flex items-start justify-between gap-2">
                         <div>
+                            @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
                             <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                               class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-sm inline-block">
-                                {{ $item->nomor_internet }}
+                               class="group block"
+                               title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                <div class="font-mono font-bold text-blue-600 dark:text-blue-400 group-hover:underline text-sm">
+                                    {{ $item->nomor_internet }}
+                                </div>
+                                <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs mt-0.5 transition-colors">
+                                    {{ $item->nama_pelanggan }}
+                                    <span class="text-slate-500 font-normal no-underline">({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})</span>
+                                </div>
                             </a>
+                            @else
+                            <div class="font-mono font-bold text-slate-400 text-sm">
+                                -
+                            </div>
                             <div class="font-bold text-slate-900 dark:text-white uppercase text-xs mt-0.5">
                                 {{ $item->nama_pelanggan }}
                                 <span class="text-slate-500 font-normal">({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})</span>
                             </div>
+                            @endif
                             <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                                 {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }}
                                 @if($item->nominal_bandwith)

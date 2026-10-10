@@ -560,17 +560,31 @@
                             
                             <!-- 1. Pelanggan -->
                             <td class="py-2.5 px-3 align-top">
+                                @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
                                 <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
-                                   class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline tracking-wide text-xs inline-block"
-                                   title="Buka Profile Pelanggan">
-                                    {{ $item->nomor_internet }}
+                                   class="group block"
+                                   title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                    <div class="font-bold font-mono text-blue-600 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 group-hover:underline tracking-wide text-xs">
+                                        {{ $item->nomor_internet }}
+                                    </div>
+                                    <div class="mt-0.5 font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs transition-colors">
+                                        <span>{{ $item->nama_pelanggan }}</span>
+                                        <span class="text-slate-500 dark:text-slate-400 font-normal no-underline">
+                                            ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
+                                        </span>
+                                    </div>
                                 </a>
+                                @else
+                                <div class="font-bold font-mono text-slate-400 text-xs tracking-wide">
+                                    -
+                                </div>
                                 <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs">
                                     <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 dark:text-slate-400 font-normal">
                                         ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
+                                @endif
                                 <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                                     {{ $item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? 'LAYANAN') }} 
                                     @if($item->nominal_bandwith)
@@ -768,6 +782,24 @@
                                 {{ $custInitial }}
                             </div>
                             <div class="min-w-0">
+                                @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
+                                <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
+                                   class="group block"
+                                   title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline text-sm tracking-tight truncate uppercase leading-tight transition-colors">
+                                            {{ $item->nama_pelanggan }}
+                                        </h4>
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold no-underline {{ $item->jenis_kelamin == 2 ? 'bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/20' : 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' }}">
+                                            {{ $item->jenis_kelamin == 2 ? 'P' : ($item->jenis_kelamin == 1 ? 'L' : '-') }}
+                                        </span>
+                                    </div>
+                                    <div class="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 group-hover:underline inline-flex items-center gap-1 mt-0.5">
+                                        <span>#{{ $item->nomor_internet }}</span>
+                                        <svg class="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                                    </div>
+                                </a>
+                                @else
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-tight truncate uppercase leading-tight">
                                         {{ $item->nama_pelanggan }}
@@ -776,12 +808,10 @@
                                         {{ $item->jenis_kelamin == 2 ? 'P' : ($item->jenis_kelamin == 1 ? 'L' : '-') }}
                                     </span>
                                 </div>
-                                <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
-                                   class="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 mt-0.5"
-                                   title="Buka Profile Pelanggan">
-                                    <span>#{{ $item->nomor_internet }}</span>
-                                    <svg class="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
-                                </a>
+                                <div class="font-mono text-xs font-semibold text-slate-400 mt-0.5">
+                                    <span>-</span>
+                                </div>
+                                @endif
                             </div>
                         </div>
 

@@ -256,19 +256,26 @@
                             <div class="font-bold text-slate-900 dark:text-white tracking-wide">
                                 {{ $r->kode_billing_registrasi ?? ('REG-' . $r->nomor_internet) }}
                             </div>
-                            @if(!empty($r->nomor_internet))
-                                <div class="font-mono text-[11px] mt-0.5">
-                                    <a href="{{ route('teknik.pelanggan.profile', $r->nomor_internet) }}" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline font-bold" title="Buka Profile Pelanggan">
+                            @if(!empty($r->nomor_internet) && $r->nomor_internet !== '-')
+                                <a href="{{ route('teknik.pelanggan.profile', $r->nomor_internet) }}" class="group block" title="Buka Profile Pelanggan ({{ $r->nomor_internet }})">
+                                    <div class="font-mono text-[11px] mt-0.5 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 group-hover:underline font-bold">
                                         {{ $r->nomor_internet }}
-                                    </a>
+                                    </div>
+                                    <div class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline mt-0.5 transition-colors">
+                                        {{ $r->nama_pelanggan }}
+                                        <span class="text-[10px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 ml-1 no-underline">
+                                            {{ $r->jenis_kelamin == 2 ? 'P' : 'L' }}
+                                        </span>
+                                    </div>
+                                </a>
+                            @else
+                                <div class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
+                                    {{ $r->nama_pelanggan }}
+                                    <span class="text-[10px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 ml-1">
+                                        {{ $r->jenis_kelamin == 2 ? 'P' : 'L' }}
+                                    </span>
                                 </div>
                             @endif
-                            <div class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                                {{ $r->nama_pelanggan }}
-                                <span class="text-[10px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 ml-1">
-                                    {{ $r->jenis_kelamin == 2 ? 'P' : 'L' }}
-                                </span>
-                            </div>
                             <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                                 <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20 text-[10px] font-semibold">
                                     {{ $r->nama_kategori_bandwith ?? 'BROADBAND' }} {{ $r->nominal_bandwith }} Mbps

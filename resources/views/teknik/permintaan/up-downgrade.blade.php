@@ -281,18 +281,31 @@
                             
                             <!-- 1. Customer Column -->
                             <td class="py-4 px-4 align-top">
+                                @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                   class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline tracking-wide text-xs inline-block"
-                                   title="Buka Profile Pelanggan">
-                                    {{ $item->nomor_internet }}
+                                   class="group block"
+                                   title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                    <div class="font-mono font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 group-hover:underline tracking-wide text-xs">
+                                        {{ $item->nomor_internet }}
+                                    </div>
+                                    <div class="font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs mt-0.5 transition-colors">
+                                        <span>{{ $item->nama_pelanggan }}</span>
+                                        <span class="text-slate-500 font-normal no-underline">
+                                            ( {{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )
+                                        </span>
+                                    </div>
                                 </a>
-
+                                @else
+                                <div class="font-mono font-bold text-slate-400 text-xs tracking-wide">
+                                    -
+                                </div>
                                 <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-xs mt-0.5">
                                     <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 font-normal">
                                         ( {{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
+                                @endif
                             </td>
 
                             <!-- 2. Address Column -->
@@ -473,16 +486,31 @@
                     <!-- Header Card: No Internet + Status -->
                     <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
                         <div>
+                            @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
                             <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                               class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline text-xs inline-block">
-                                {{ $item->nomor_internet }}
+                               class="group block"
+                               title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                <div class="font-mono font-bold text-blue-600 dark:text-blue-400 group-hover:underline text-xs">
+                                    {{ $item->nomor_internet }}
+                                </div>
+                                <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline text-xs uppercase mt-0.5 transition-colors">
+                                    {{ $item->nama_pelanggan }}
+                                    <span class="text-slate-400 font-normal no-underline">
+                                        ({{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }})
+                                    </span>
+                                </h4>
                             </a>
+                            @else
+                            <div class="font-mono font-bold text-slate-400 text-xs">
+                                -
+                            </div>
                             <h4 class="font-bold text-slate-900 dark:text-white text-xs uppercase mt-0.5">
                                 {{ $item->nama_pelanggan }}
                                 <span class="text-slate-400 font-normal">
                                     ({{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }})
                                 </span>
                             </h4>
+                            @endif
                         </div>
                         <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide shrink-0
                             @if(in_array($item->status_ubah_layanan, ['11']))

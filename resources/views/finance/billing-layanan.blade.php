@@ -463,12 +463,23 @@
                             <div class="font-bold text-slate-900 dark:text-white font-mono text-xs tracking-tight">
                                 {{ $inv->kode_billing_layanan }}
                             </div>
+                            @if(!empty($inv->nomor_internet) && $inv->nomor_internet !== '-')
+                            <a href="{{ route('finance.pelanggan.profile', $inv->nomor_internet) }}" class="group block max-w-[220px]" title="Buka Profile Pelanggan ({{ $inv->nomor_internet }})">
+                                <div class="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 group-hover:underline mt-0.5 flex items-center gap-1.5 text-xs truncate transition-colors">
+                                    <span>{{ $inv->nama_pelanggan }}</span>
+                                    <span class="text-[9px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold no-underline">
+                                        {{ $inv->jenis_kelamin == 2 ? 'P' : 'L' }}
+                                    </span>
+                                </div>
+                            </a>
+                            @else
                             <div class="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mt-0.5 flex items-center gap-1.5 text-xs truncate max-w-[200px]">
                                 <span>{{ $inv->nama_pelanggan }}</span>
                                 <span class="text-[9px] px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold">
                                     {{ $inv->jenis_kelamin == 2 ? 'P' : 'L' }}
                                 </span>
                             </div>
+                            @endif
                             <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
                                 <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20 text-[9px] font-semibold">
                                     {{ $inv->nama_kategori_bandwith ?? 'BROADBAND' }} {{ $inv->nominal_bandwith }} Mbps
@@ -1044,6 +1055,23 @@
                                 {{ $custInitial }}
                             </div>
                             <div class="min-w-0">
+                                @if(!empty($inv->nomor_internet) && $inv->nomor_internet !== '-')
+                                <a href="{{ route('finance.pelanggan.profile', $inv->nomor_internet) }}" class="group block" title="Buka Profile Pelanggan ({{ $inv->nomor_internet }})">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline text-sm tracking-tight truncate uppercase leading-tight transition-colors">
+                                            {{ $inv->nama_pelanggan }}
+                                        </h4>
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold no-underline {{ $inv->jenis_kelamin == 2 ? 'bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/20' : 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' }}">
+                                            {{ $inv->jenis_kelamin == 2 ? 'P' : ($inv->jenis_kelamin == 1 ? 'L' : '-') }}
+                                        </span>
+                                    </div>
+                                    <div class="font-mono text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                                        <span class="text-blue-600 dark:text-blue-400 font-bold">{{ $inv->kode_billing_layanan }}</span>
+                                        <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+                                        <span class="group-hover:underline">#{{ $inv->nomor_internet }}</span>
+                                    </div>
+                                </a>
+                                @else
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-tight truncate uppercase leading-tight">
                                         {{ $inv->nama_pelanggan }}
@@ -1057,6 +1085,7 @@
                                     <span class="text-slate-300 dark:text-slate-600">&bull;</span>
                                     <span>#{{ $inv->nomor_internet }}</span>
                                 </div>
+                                @endif
                             </div>
                         </div>
 

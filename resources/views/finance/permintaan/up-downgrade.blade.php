@@ -192,10 +192,19 @@
 
                             <!-- Pelanggan -->
                             <td class="py-3.5 px-4">
+                                @if(!empty($u->nomor_internet) && $u->nomor_internet !== '-')
+                                <a href="{{ route('teknik.pelanggan.profile', $u->nomor_internet) }}" class="group block" title="Buka Profile Pelanggan ({{ $u->nomor_internet }})">
+                                    <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline transition-colors">{{ $u->nama_pelanggan ?? '-' }}</div>
+                                    <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                        No: <span class="text-blue-600 dark:text-blue-400 group-hover:underline font-semibold">{{ $u->nomor_internet }}</span>
+                                    </div>
+                                </a>
+                                @else
                                 <div class="font-bold text-slate-900 dark:text-white">{{ $u->nama_pelanggan ?? '-' }}</div>
-                                <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                                    No: <a href="{{ route('teknik.pelanggan.profile', $u->nomor_internet) }}" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold" title="Buka Profile Pelanggan">{{ $u->nomor_internet }}</a>
+                                <div class="text-[11px] font-mono text-slate-400">
+                                    No: -
                                 </div>
+                                @endif
                                 <div class="text-[10px] text-slate-500 dark:text-slate-400 max-w-[200px] truncate mt-0.5">{{ $u->alamat_p ?? '-' }}</div>
                             </td>
 

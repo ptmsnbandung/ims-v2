@@ -245,20 +245,32 @@
                                     {{ $item->kode_trx_terminasi }}
                                 </div>
 
-                                <!-- ID Pelanggan Link -->
+                                <!-- ID Pelanggan Link & Nama -->
+                                @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
                                 <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                   class="font-mono font-bold text-blue-600 dark:text-blue-400 hover:underline tracking-wide text-xs inline-block mt-0.5"
-                                   title="Buka Profile Pelanggan">
-                                    {{ $item->nomor_internet }}
+                                   class="group block mt-0.5"
+                                   title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                    <div class="font-mono font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 group-hover:underline tracking-wide text-xs">
+                                        {{ $item->nomor_internet }}
+                                    </div>
+                                    <div class="font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs mt-0.5 transition-colors">
+                                        <span>{{ $item->nama_pelanggan }}</span>
+                                        <span class="text-slate-500 font-normal no-underline">
+                                            ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
+                                        </span>
+                                    </div>
                                 </a>
-
-                                <!-- Nama & Gender -->
+                                @else
+                                <div class="font-mono font-bold text-slate-400 text-xs tracking-wide mt-0.5">
+                                    -
+                                </div>
                                 <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-xs mt-0.5">
                                     <span>{{ $item->nama_pelanggan }}</span>
                                     <span class="text-slate-500 font-normal">
                                         ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
                                     </span>
                                 </div>
+                                @endif
 
                                 <!-- Bandwidth -->
                                 <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium uppercase mt-0.5">

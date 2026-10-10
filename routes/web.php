@@ -209,8 +209,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/terminasi/{kode_trx}/close', [NocController::class, 'closeTerminasi'])->name('terminasi.close');
         Route::post('/terminasi/{kode_trx}/cancel', [NocController::class, 'cancelTerminasi'])->name('terminasi.cancel');
 
-        // 8. Inventaris Perangkat & Asset Jaringan
-        Route::get('/perangkat', [NocController::class, 'perangkat'])->name('perangkat');
+        // 8. Inventaris Perangkat (Dinonaktifkan dari modul NOC)
+        Route::get('/perangkat', function () {
+            return redirect()->route('noc.index');
+        })->name('perangkat');
 
         // 9. Tiket Gangguan (Pelaksana Utama NOC)
         Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');

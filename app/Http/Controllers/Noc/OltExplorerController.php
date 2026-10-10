@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Noc;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -19,16 +20,15 @@ class OltExplorerController extends Controller
         $search = trim((string) $request->input('search', ''));
         $selectedOltId = $olt_id ?: $request->input('olt_id');
 
-        // 1. Ambil List Master OLT dari database gomsn
-        $olts = collect();
-        try {
-            if (Schema::hasTable('gomsn.olt')) {
-                $olts = DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get();
-            }
-        } catch (\Throwable $e) {
-            // Fallback jika database gomsn tidak tersedia
-            $olts = collect();
-        }
+        // 1. Ambil List Master OLT dari database gomsn (di-cache 10 menit)
+        $olts = Cache::remember('olt_explorer_master_olts', 600, function () {
+            try {
+                if (Schema::hasTable('gomsn.olt')) {
+                    return DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get();
+                }
+            } catch (\Throwable $e) {}
+            return collect();
+        });
 
         // Default ke OLT pertama jika tidak dipilih
         if (!$selectedOltId && $olts->isNotEmpty()) {
@@ -53,79 +53,100 @@ class OltExplorerController extends Controller
             $userTable = "gomsn.users{$selectedOltId}";
 
             try {
-                if (Schema::hasTable($ponTable)) {
-                    $pons = DB::table($ponTable)->orderBy('id', 'asc')->get();
-                }
-            } catch (\Throwable $e) {}
+                $pons = DB::table($ponTable)->orderBy('id', 'asc')->get();
+            } catch (\Throwable $e) {
+                $pons = collect();
+            }
 
             try {
-                if (Schema::hasTable($odpTable)) {
-                    $odps = DB::table($odpTable)->orderBy('nama_odp', 'asc')->get();
-                }
-            } catch (\Throwable $e) {}
+                $odps = DB::table($odpTable)->orderBy('nama_odp', 'asc')->get();
+            } catch (\Throwable $e) {
+                $odps = collect();
+            }
 
             try {
-                if (Schema::hasTable($userTable)) {
-                    $usersQuery = DB::table($userTable);
-                    if ($search !== '') {
-                        $usersQuery->where(function ($q) use ($search) {
-                            $q->where('nama_user', 'like', "%{$search}%")
-                              ->orWhere('nomor_internet', 'like', "%{$search}%")
-                              ->orWhere('keterangan', 'like', "%{$search}%");
-                        });
-                    }
-                    $rawUsers = $usersQuery->orderBy('nama_user', 'asc')->get();
-
-                    // Enrich users with billing & customer data
-                    $nomorInternets = $rawUsers->pluck('nomor_internet')->filter()->unique()->toArray();
-                    $billings = collect();
-                    if (!empty($nomorInternets) && Schema::hasTable('trx_billing_layanan')) {
-                        try {
-                            $billings = DB::table('trx_billing_layanan')
-                                ->whereIn('nomor_internet', $nomorInternets)
-                                ->orderBy('date_create', 'desc')
-                                ->get()
-                                ->groupBy('nomor_internet')
-                                ->map(fn($group) => $group->first());
-                        } catch (\Throwable $e) {}
-                    }
-
-                    $userNames = $rawUsers->pluck('nama_user')->filter()->unique()->toArray();
-                    $pelanggans = collect();
-                    if (!empty($userNames) && Schema::hasTable('m_pelanggan')) {
-                        try {
-                            $pelanggans = DB::table('m_pelanggan')
-                                ->whereIn('nama_penduduk', $userNames)
-                                ->get()
-                                ->keyBy(fn($p) => strtoupper(trim($p->nama_penduduk)));
-                        } catch (\Throwable $e) {}
-                    }
-
-                    $users = $rawUsers->map(function ($u) use ($billings, $pelanggans, $currentOlt) {
-                        $bill = $billings->get($u->nomor_internet);
-                        $pel = $pelanggans->get(strtoupper(trim($u->nama_user)));
-
-                        $u->layanan = $bill ? 'UP TO NEW' : 'UP TO NEW';
-                        $u->alamat = $pel && !empty($pel->alamat_ktp) ? strtoupper(trim($pel->alamat_ktp)) : '-';
-                        $u->nomor_hp = $pel ? ($pel->nomor_hp ?: ($pel->nomor_hp_2 ?: '-')) : '-';
-                        $u->speed = $bill && !empty($bill->nominal_bandwith) ? "{$bill->nominal_bandwith} Mbps" : ($bill ? '35 Mbps' : '-');
-                        
-                        $oltLabel = !empty($u->olt) ? strtoupper($u->olt) : (isset($currentOlt->nama_olt) ? strtoupper($currentOlt->nama_olt) : 'OLT');
-                        $u->note = "RTEGC6B4B766 (OLT {$oltLabel})";
-                        $u->status = 'AKTIF';
-
-                        return $u;
+                $usersQuery = DB::table($userTable);
+                if ($search !== '') {
+                    $usersQuery->where(function ($q) use ($search) {
+                        $q->where('nama_user', 'like', "%{$search}%")
+                          ->orWhere('nomor_internet', 'like', "%{$search}%")
+                          ->orWhere('keterangan', 'like', "%{$search}%");
                     });
                 }
-            } catch (\Throwable $e) {}
+                $rawUsers = $usersQuery->orderBy('nama_user', 'asc')->get();
+
+                // Enrich users with billing & customer data (Optimized with lean columns & cache)
+                $nomorInternets = $rawUsers->pluck('nomor_internet')->filter()->unique()->toArray();
+                $billingsMap = [];
+                if (!empty($nomorInternets)) {
+                    $cacheKeyBill = "olt_speed_map_{$selectedOltId}_" . md5(implode(',', array_slice($nomorInternets, 0, 50)));
+                    $billingsMap = Cache::remember($cacheKeyBill, 300, function () use ($nomorInternets) {
+                        try {
+                            return DB::table('trx_billing_layanan')
+                                ->select('nomor_internet', 'nominal_bandwith')
+                                ->whereIn('nomor_internet', $nomorInternets)
+                                ->where('tahun_tagihan', '>=', date('Y') - 1)
+                                ->orderBy('tahun_tagihan', 'desc')
+                                ->orderBy('bulan_tagihan', 'desc')
+                                ->get()
+                                ->unique('nomor_internet')
+                                ->pluck('nominal_bandwith', 'nomor_internet')
+                                ->toArray();
+                        } catch (\Throwable $e) {
+                            return [];
+                        }
+                    });
+                }
+
+                $userNames = $rawUsers->pluck('nama_user')->filter()->unique()->toArray();
+                $pelanggansMap = [];
+                if (!empty($userNames)) {
+                    $cacheKeyPel = "olt_pelanggan_map_{$selectedOltId}_" . md5(implode(',', array_slice($userNames, 0, 50)));
+                    $pelanggansMap = Cache::remember($cacheKeyPel, 300, function () use ($userNames) {
+                        try {
+                            return DB::table('m_pelanggan')
+                                ->select('nama_penduduk', 'alamat_ktp', 'nomor_hp', 'nomor_hp_2')
+                                ->whereIn('nama_penduduk', $userNames)
+                                ->get()
+                                ->keyBy(fn($p) => strtoupper(trim($p->nama_penduduk)))
+                                ->map(fn($p) => [
+                                    'alamat' => !empty($p->alamat_ktp) ? strtoupper(trim($p->alamat_ktp)) : '-',
+                                    'hp' => $p->nomor_hp ?: ($p->nomor_hp_2 ?: '-')
+                                ])
+                                ->toArray();
+                        } catch (\Throwable $e) {
+                            return [];
+                        }
+                    });
+                }
+
+                $oltLabel = isset($currentOlt->nama_olt) ? strtoupper($currentOlt->nama_olt) : 'OLT';
+
+                $users = $rawUsers->map(function ($u) use ($billingsMap, $pelanggansMap, $oltLabel) {
+                    $speedVal = $billingsMap[$u->nomor_internet] ?? null;
+                    $pel = $pelanggansMap[strtoupper(trim($u->nama_user))] ?? null;
+
+                    $u->layanan = 'UP TO NEW';
+                    $u->alamat = $pel['alamat'] ?? '-';
+                    $u->nomor_hp = $pel['hp'] ?? '-';
+                    $u->speed = !empty($speedVal) ? "{$speedVal} Mbps" : ($speedVal ? '35 Mbps' : '-');
+                    
+                    $userOlt = !empty($u->olt) ? strtoupper($u->olt) : $oltLabel;
+                    $u->note = "RTEGC6B4B766 (OLT {$userOlt})";
+                    $u->status = 'AKTIF';
+
+                    return $u;
+                });
+            } catch (\Throwable $e) {
+                $users = collect();
+            }
 
             // Hitung kapasitas dan pengelompokan
             $usersByOdp = $users->groupBy('odp_id');
 
-            // Attach user count dan utilisasi ke masing-masing ODP
+            // Attach user count dan utilisasi ke masing-masing ODP (Tanpa menduplikasi seluruh objek users ke dalam ODP)
             $odps = $odps->map(function ($odp) use ($usersByOdp, &$totalCapacityPort, &$totalUsedPort) {
-                $odpUsers = $usersByOdp->get($odp->id, collect());
-                $userCount = $odpUsers->count();
+                $userCount = $usersByOdp->get($odp->id, collect())->count();
                 $portMax = (int) ($odp->port_max ?? 8);
                 if ($portMax <= 0) $portMax = 8;
 
@@ -133,7 +154,6 @@ class OltExplorerController extends Controller
                 $totalUsedPort += $userCount;
 
                 $odp->user_count = $userCount;
-                $odp->users = $odpUsers;
                 $odp->utilization_percent = min(100, round(($userCount / $portMax) * 100));
                 $odp->is_full = $userCount >= $portMax;
                 $odp->available_ports = max(0, $portMax - $userCount);
@@ -144,13 +164,12 @@ class OltExplorerController extends Controller
             // Group ODP berdasarkan PON
             $odpsByPon = $odps->groupBy('pon_id');
 
-            // Attach data ke masing-masing PON
+            // Attach data ringkasan ke masing-masing PON (Tanpa menduplikasi seluruh objek ODP ke dalam PON)
             $pons = $pons->map(function ($pon) use ($odpsByPon) {
                 $ponOdps = $odpsByPon->get($pon->id, collect());
                 $ponUsersCount = $ponOdps->sum('user_count');
                 $ponCapacity = $ponOdps->sum('port_max');
 
-                $pon->odps = $ponOdps;
                 $pon->odp_count = $ponOdps->count();
                 $pon->user_count = $ponUsersCount;
                 $pon->total_capacity = $ponCapacity;

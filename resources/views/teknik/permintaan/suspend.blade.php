@@ -156,77 +156,179 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
                     @forelse($suspends as $item)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        @php
+                            $rawReason = trim($item->desc_suspend ?: ($item->note_suspend ?? 'Melewati batas pembayaran yang telah ditentukan'));
+                            $isPengajuanSementara = str_contains($rawReason, 'PENGAJUAN SUSPEND') || str_contains($rawReason, 'Tanggal Mulai Suspend');
+                            $isDirectIsolir = str_contains($rawReason, 'Isolir langsung') || str_contains($rawReason, 'langsung dari NOC');
+                            $isTunggakan = str_contains($rawReason, 'batas pembayaran') || str_contains($rawReason, 'Tunggakan');
+
+                            $tglMulai = null;
+                            $tglSelesai = null;
+                            $alasan = null;
+                            $catatan = null;
+
+                            if ($isPengajuanSementara) {
+                                if (preg_match('/Tanggal Mulai Suspend\s*:\s*([^•\n\r]+)/i', $rawReason, $m)) {
+                                    $tglMulai = trim($m[1]);
+                                }
+                                if (preg_match('/Estimasi Aktif Kembali\s*:\s*([^•\n\r]+)/i', $rawReason, $m)) {
+                                    $tglSelesai = trim($m[1]);
+                                }
+                                if (preg_match('/Alasan Suspend\s*:\s*([^•\n\r]+)/i', $rawReason, $m)) {
+                                    $alasan = trim($m[1]);
+                                }
+                                if (preg_match('/Catatan Tambahan\s*:\s*([^•\n\r]+)/i', $rawReason, $m)) {
+                                    $catatan = trim($m[1]);
+                                }
+                            }
+                        @endphp
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                             
                             <!-- 1. Customer Column -->
-                            <td class="py-2.5 px-3 align-top">
-                                @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
-                                <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                                   class="group block"
-                                   title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
-                                    <div class="font-mono font-bold text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 group-hover:underline tracking-wide text-xs">
-                                        {{ $item->nomor_internet }}
-                                    </div>
-                                    <div class="font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs mt-0.5 transition-colors">
-                                        <span>{{ $item->nama_pelanggan }}</span>
-                                        <span class="text-slate-500 font-normal no-underline">
-                                            ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
-                                        </span>
-                                    </div>
-                                </a>
-                                @else
-                                <div class="font-mono font-bold text-slate-400 text-xs tracking-wide">
-                                    -
-                                </div>
-                                <div class="font-bold text-slate-800 dark:text-slate-200 uppercase text-xs mt-0.5">
-                                    <span>{{ $item->nama_pelanggan }}</span>
-                                    <span class="text-slate-500 font-normal">
-                                        ( {{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }} )
-                                    </span>
-                                </div>
-                                @endif
+                            <td class="py-3.5 px-3.5 align-middle">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-2">
+                                        @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
+                                            <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                                               class="inline-flex items-center gap-1 font-mono font-bold text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2 py-0.5 rounded-md border border-blue-200/80 dark:border-blue-800/60 transition group"
+                                               title="Lihat Profil Pelanggan ({{ $item->nomor_internet }})">
+                                                <span>{{ $item->nomor_internet }}</span>
+                                                <svg class="w-3 h-3 opacity-60 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+                                            </a>
+                                        @else
+                                            <span class="font-mono text-xs text-slate-400 px-2 py-0.5">-</span>
+                                        @endif
 
-                                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase mt-0.5">
-                                    {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }}
-                                    @if($item->nominal_bandwith)
-                                        <span>{{ $item->nominal_bandwith }} Mbps</span>
-                                    @endif
+                                        @if($item->jenis_kelamin == 1)
+                                            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" title="Laki-laki">L</span>
+                                        @elseif($item->jenis_kelamin == 2)
+                                            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300" title="Perempuan">P</span>
+                                        @endif
+                                    </div>
+
+                                    <div>
+                                        @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
+                                            <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                                               class="font-bold text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 text-xs uppercase tracking-tight transition-colors line-clamp-1">
+                                                {{ $item->nama_pelanggan }}
+                                            </a>
+                                        @else
+                                            <span class="font-bold text-slate-800 dark:text-slate-100 text-xs uppercase tracking-tight line-clamp-1">
+                                                {{ $item->nama_pelanggan }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <div class="inline-flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase">
+                                        <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[9.5px] font-semibold">
+                                            {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }}
+                                        </span>
+                                        @if($item->nominal_bandwith)
+                                            <span class="text-slate-600 dark:text-slate-400 font-bold tracking-tight">
+                                                {{ $item->nominal_bandwith }} Mbps
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
 
                             <!-- 2. Alasan Suspend Column -->
-                            <td class="py-2.5 px-3 align-top text-slate-700 dark:text-slate-300 text-xs">
-                                {{ $item->desc_suspend ?: ($item->note_suspend ?? 'Melewati batas pembayaran yang telah ditentukan') }}
+                            <td class="py-3.5 px-3.5 align-middle">
+                                @if($isPengajuanSementara)
+                                    <div class="p-2 rounded-lg bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 text-xs space-y-1.5 max-w-xl">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                                                <svg class="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                                <span>Pengajuan Suspend Sementara</span>
+                                            </span>
+                                            @if($alasan)
+                                                <span class="font-semibold text-slate-800 dark:text-slate-100 text-[11px]">
+                                                    {{ $alasan }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        @if($tglMulai || $tglSelesai)
+                                            <div class="flex items-center gap-1.5 text-[10.5px] text-slate-600 dark:text-slate-400">
+                                                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+                                                <span>
+                                                    Periode: <span class="font-mono font-medium text-slate-800 dark:text-slate-200">{{ $tglMulai ?: '-' }}</span> s/d <span class="font-mono font-medium text-slate-800 dark:text-slate-200">{{ $tglSelesai ?: '-' }}</span>
+                                                </span>
+                                            </div>
+                                        @endif
+
+                                        @if($catatan && $catatan !== '-')
+                                            <div class="text-[10.5px] text-slate-600 dark:text-slate-400 flex items-start gap-1 bg-white/70 dark:bg-slate-900/60 px-2 py-1 rounded border border-amber-100 dark:border-amber-900/30">
+                                                <span class="text-slate-400 font-semibold shrink-0">Catatan:</span>
+                                                <span class="italic text-slate-700 dark:text-slate-300">{{ $catatan }}</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @elseif($isDirectIsolir)
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10.5px] font-semibold bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                                            <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></svg>
+                                            <span>Suspend / Isolir Langsung dari NOC / Teknik</span>
+                                        </span>
+                                    </div>
+                                @elseif($isTunggakan)
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10.5px] font-semibold bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40">
+                                            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                                            <span>{{ $rawReason }}</span>
+                                        </span>
+                                    </div>
+                                @else
+                                    <div class="text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed max-w-md">
+                                        {{ $rawReason }}
+                                    </div>
+                                @endif
                             </td>
 
                             <!-- 3. State Column -->
-                            <td class="py-2.5 px-3 align-top">
-                                <span class="inline-block px-2 py-0.5 rounded-md text-[9px] font-bold font-mono tracking-wide
-                                    @if(in_array($item->status_suspend, ['11']))
-                                        bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30
-                                    @elseif(in_array($item->status_suspend, ['12']))
-                                        bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30
-                                    @elseif(in_array($item->status_suspend, ['18']))
-                                        bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
-                                    @elseif(in_array($item->status_suspend, ['13']))
-                                        bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30
-                                    @else
-                                        bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
-                                    @endif">
-                                    (10{{ $item->status_suspend }}) {{ $item->desc_status_suspend ?: 'Request' }}
-                                </span>
+                            <td class="py-3.5 px-3.5 align-middle whitespace-nowrap">
+                                @if(in_array($item->status_suspend, ['11']))
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono tracking-wide bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        (1011) Request
+                                    </span>
+                                @elseif(in_array($item->status_suspend, ['12']))
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono tracking-wide bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                        (1012) Suspend
+                                    </span>
+                                @elseif(in_array($item->status_suspend, ['18']))
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono tracking-wide bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                                        (1018) Req. Unsuspend
+                                    </span>
+                                @elseif(in_array($item->status_suspend, ['13']))
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono tracking-wide bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        (1013) Un Suspend
+                                    </span>
+                                @elseif(in_array($item->status_suspend, ['14']))
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono tracking-wide bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        (1014) Cancel Suspend
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono tracking-wide bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                        (10{{ $item->status_suspend }}) {{ $item->desc_status_suspend ?: 'Unknown' }}
+                                    </span>
+                                @endif
                             </td>
 
                             <!-- 4. Action Column (Contextual Indicators based on State) -->
-                            <td class="py-2.5 px-3 align-top text-center">
+                            <td class="py-3.5 px-3.5 align-middle text-center whitespace-nowrap">
                                 @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
                                     @if($item->status_suspend == '11')
-                                        <div class="flex flex-col sm:flex-row items-center justify-center gap-1">
+                                        <div class="inline-flex items-center justify-center gap-1.5">
                                             <button type="button" 
                                                     @click="openApproveModal('suspend', '{{ $item->kode_suspend }}', '{{ $item->nomor_internet }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, {{ json_encode(($item->nama_kategori_bandwith ?: 'BROADBAND') . ($item->nominal_bandwith ? ' ' . $item->nominal_bandwith . ' Mbps' : '')) }})"
-                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold shadow-xs transition hover:shadow cursor-pointer"
                                                     title="Setujui Permintaan Suspend (Eksekusi Isolir)">
-                                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                                 </svg>
                                                 <span>Approve</span>
@@ -235,9 +337,9 @@
                                             <form action="{{ route('noc.suspend.cancel', $item->kode_suspend) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan (Cancel) suspend pelanggan {{ $item->nomor_internet }}?');">
                                                 @csrf
                                                 <button type="submit" 
-                                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[10px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition cursor-pointer"
                                                         title="Batalkan Permintaan Suspend">
-                                                    <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                                     </svg>
                                                     <span>Canceled</span>
@@ -245,12 +347,12 @@
                                             </form>
                                         </div>
                                     @elseif($item->status_suspend == '18')
-                                        <div class="flex flex-col sm:flex-row items-center justify-center gap-1">
+                                        <div class="inline-flex items-center justify-center gap-1.5">
                                             <button type="button" 
                                                     @click="openApproveModal('unsuspend', '{{ $item->kode_suspend }}', '{{ $item->nomor_internet }}', {{ json_encode($item->nama_pelanggan ?? 'Pelanggan') }}, {{ json_encode(($item->nama_kategori_bandwith ?: 'BROADBAND') . ($item->nominal_bandwith ? ' ' . $item->nominal_bandwith . ' Mbps' : '')) }})"
-                                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold shadow-xs transition cursor-pointer"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs transition hover:shadow cursor-pointer"
                                                     title="Setujui Buka Isolir">
-                                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                                 </svg>
                                                 <span>Approve Buka</span>
@@ -259,9 +361,9 @@
                                             <form action="{{ route('noc.suspend.cancel', $item->kode_suspend) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan permohonan unsuspend pelanggan {{ $item->nomor_internet }}?');">
                                                 @csrf
                                                 <button type="submit" 
-                                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[10px] font-bold border border-slate-300 dark:border-slate-700 transition cursor-pointer"
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-600 dark:bg-slate-800 dark:hover:bg-rose-600 text-slate-600 dark:text-slate-400 hover:text-white dark:hover:text-white text-[11px] font-bold border border-slate-200 dark:border-slate-700 transition cursor-pointer"
                                                         title="Tolak Unsuspend">
-                                                    <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                                     </svg>
                                                     <span>Canceled</span>
@@ -269,17 +371,23 @@
                                             </form>
                                         </div>
                                     @elseif($item->status_suspend == '12')
-                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-[10px] font-bold">
-                                            <span>Suspend Aktif</span>
-                                        </div>
-                                    @elseif($item->status_suspend == '17')
-                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
-                                            <span>Unsuspend</span>
-                                        </div>
-                                    @elseif(in_array($item->status_suspend, ['13', '19']))
-                                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-500/10 text-slate-500 dark:text-slate-400 border border-slate-500/20 text-[10px] font-medium">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/50 text-[10.5px] font-bold">
+                                            <svg class="w-3.5 h-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                            </svg>
+                                            <span>Terisolir Aktif</span>
+                                        </span>
+                                    @elseif($item->status_suspend == '13')
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/50 text-[10.5px] font-bold">
+                                            <svg class="w-3.5 h-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                            </svg>
+                                            <span>Layanan Normal</span>
+                                        </span>
+                                    @elseif($item->status_suspend == '14')
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10.5px] font-medium">
                                             <span>Dibatalkan</span>
-                                        </div>
+                                        </span>
                                     @else
                                         <span class="text-slate-400 text-xs">-</span>
                                     @endif
@@ -292,7 +400,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="py-6 text-center text-slate-400 text-xs">
+                            <td colspan="4" class="py-8 text-center text-slate-400 text-xs">
                                 Tidak ada data suspend layanan yang cocok dengan kriteria filter.
                             </td>
                         </tr>
@@ -302,50 +410,74 @@
         </div>
 
         <!-- Mobile Card View (block md:hidden) -->
-        <div class="ims-mobile-only block md:hidden p-2.5 sm:p-3 space-y-2.5">
+        <div class="ims-mobile-only block md:hidden p-3 sm:p-4 space-y-3.5 divide-y divide-slate-100 dark:divide-slate-800/80">
             @forelse($suspends as $item)
-                <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-3">
-                    <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
+                @php
+                    $rawReason = trim($item->desc_suspend ?: ($item->note_suspend ?? 'Melewati batas pembayaran yang telah ditentukan'));
+                    $isPengajuanSementara = str_contains($rawReason, 'PENGAJUAN SUSPEND') || str_contains($rawReason, 'Tanggal Mulai Suspend');
+                    $isDirectIsolir = str_contains($rawReason, 'Isolir langsung') || str_contains($rawReason, 'langsung dari NOC');
+                    $isTunggakan = str_contains($rawReason, 'batas pembayaran') || str_contains($rawReason, 'Tunggakan');
+
+                    $tglMulai = null;
+                    $tglSelesai = null;
+                    $alasan = null;
+                    $catatan = null;
+
+                    if ($isPengajuanSementara) {
+                        if (preg_match('/Tanggal Mulai Suspend\s*:\s*([^•\n\r]+)/i', $rawReason, $m)) {
+                            $tglMulai = trim($m[1]);
+                        }
+                        if (preg_match('/Estimasi Aktif Kembali\s*:\s*([^•\n\r]+)/i', $rawReason, $m)) {
+                            $tglSelesai = trim($m[1]);
+                        }
+                        if (preg_match('/Alasan Suspend\s*:\s*([^•\n\r]+)/i', $rawReason, $m)) {
+                            $alasan = trim($m[1]);
+                        }
+                        if (preg_match('/Catatan Tambahan\s*:\s*([^•\n\r]+)/i', $rawReason, $m)) {
+                            $catatan = trim($m[1]);
+                        }
+                    }
+                @endphp
+                <div class="pt-3.5 first:pt-0 space-y-3">
+                    <div class="flex items-start justify-between gap-2">
                         <div>
-                            @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
-                            <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
-                               class="group block"
-                               title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
-                                <div class="font-mono font-bold text-blue-600 dark:text-blue-400 group-hover:underline text-xs">
-                                    {{ $item->nomor_internet }}
-                                </div>
-                                <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline text-xs uppercase mt-0.5 transition-colors">
-                                    {{ $item->nama_pelanggan }}
-                                    <span class="text-slate-400 font-normal no-underline">
-                                        ({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})
-                                    </span>
-                                </h4>
-                            </a>
-                            @else
-                            <div class="font-mono font-bold text-slate-400 text-xs">
-                                -
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
+                                    <a href="{{ route('teknik.pelanggan.profile', $item->nomor_internet) }}" 
+                                       class="font-mono font-bold text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200/80 dark:border-blue-800/60 inline-flex items-center gap-1">
+                                        <span>{{ $item->nomor_internet }}</span>
+                                    </a>
+                                @else
+                                    <span class="font-mono text-xs text-slate-400">-</span>
+                                @endif
+
+                                @if($item->jenis_kelamin == 1)
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" title="Laki-laki">L</span>
+                                @elseif($item->jenis_kelamin == 2)
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300" title="Perempuan">P</span>
+                                @endif
                             </div>
-                            <h4 class="font-bold text-slate-900 dark:text-white text-xs uppercase mt-0.5">
+                            <div class="font-bold text-slate-800 dark:text-slate-100 uppercase text-xs mt-1">
                                 {{ $item->nama_pelanggan }}
-                                <span class="text-slate-400 font-normal">
-                                    ({{ $item->jenis_kelamin == 1 ? 'L' : ($item->jenis_kelamin == 2 ? 'P' : '-') }})
-                                </span>
-                            </h4>
-                            @endif
-                            <div class="text-[11px] text-slate-500 font-mono mt-0.5">
-                                {{ $item->nama_kategori_bandwith ?: 'BROADBAND' }}
-                                @if($item->nominal_bandwith) &bull; {{ $item->nominal_bandwith }} Mbps @endif
+                            </div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase mt-0.5">
+                                <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold">{{ $item->nama_kategori_bandwith ?: 'BROADBAND' }}</span>
+                                @if($item->nominal_bandwith)
+                                    <span class="font-bold text-slate-600 dark:text-slate-400">• {{ $item->nominal_bandwith }} Mbps</span>
+                                @endif
                             </div>
                         </div>
-                        <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide shrink-0
+
+                        <!-- State Pill -->
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold font-mono tracking-wide shrink-0 whitespace-nowrap
                             @if(in_array($item->status_suspend, ['11']))
-                                bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30
+                                bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30
                             @elseif(in_array($item->status_suspend, ['12']))
-                                bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30
+                                bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30
                             @elseif(in_array($item->status_suspend, ['18']))
-                                bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
+                                bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30
                             @elseif(in_array($item->status_suspend, ['13']))
-                                bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30
+                                bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30
                             @else
                                 bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
                             @endif">
@@ -353,10 +485,45 @@
                         </span>
                     </div>
 
-                    <div class="text-[11px] text-slate-600 dark:text-slate-400 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800">
-                        <span class="text-[10px] text-slate-400 block font-semibold mb-0.5">Alasan:</span>
-                        {{ $item->desc_suspend ?: ($item->note_suspend ?? 'Melewati batas pembayaran') }}
-                    </div>
+                    <!-- Reason Block -->
+                    @if($isPengajuanSementara)
+                        <div class="p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 text-xs space-y-1.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                                    <svg class="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    <span>Pengajuan Suspend Sementara</span>
+                                </span>
+                                @if($alasan)
+                                    <span class="font-semibold text-slate-800 dark:text-slate-100 text-[11px]">
+                                        {{ $alasan }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            @if($tglMulai || $tglSelesai)
+                                <div class="text-[10.5px] text-slate-600 dark:text-slate-400">
+                                    Periode: <span class="font-mono font-medium text-slate-800 dark:text-slate-200">{{ $tglMulai ?: '-' }}</span> s/d <span class="font-mono font-medium text-slate-800 dark:text-slate-200">{{ $tglSelesai ?: '-' }}</span>
+                                </div>
+                            @endif
+
+                            @if($catatan && $catatan !== '-')
+                                <div class="text-[10.5px] text-slate-600 dark:text-slate-400 italic bg-white/70 dark:bg-slate-900/60 px-2 py-1 rounded border border-amber-100 dark:border-amber-900/30">
+                                    Catatan: {{ $catatan }}
+                                </div>
+                            @endif
+                        </div>
+                    @elseif($isDirectIsolir)
+                        <div class="p-2 rounded-xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-800/40 text-[11px] font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"/></svg>
+                            <span>Suspend / Isolir Langsung dari NOC / Teknik</span>
+                        </div>
+                    @else
+                        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/70 dark:border-slate-800/60 text-xs">
+                            <p class="text-slate-700 dark:text-slate-300 text-[11px] leading-relaxed">
+                                {{ $rawReason }}
+                            </p>
+                        </div>
+                    @endif
 
                     @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
                         <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
@@ -388,6 +555,18 @@
                                         </button>
                                     </form>
                                 </div>
+                            @elseif($item->status_suspend == '12')
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/50 text-xs font-bold">
+                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                                    Terisolir Aktif
+                                </span>
+                            @elseif($item->status_suspend == '13')
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 dark:border-emerald-800/50 text-xs font-bold">
+                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                    Layanan Normal
+                                </span>
+                            @else
+                                <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Status: {{ $item->desc_status_suspend ?: 'Dibatalkan' }}</span>
                             @endif
                         </div>
                     @endif

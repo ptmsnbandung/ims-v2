@@ -26,10 +26,11 @@ class NocController extends Controller
      */
     public function dashboard(Request $request): View
     {
-        $totalOlt = DB::table('m_olt')->count();
-        $totalOdp = DB::table('m_odp')->count();
-        $totalPop = DB::table('m_pop')->where('hide', '!=', '1')->count();
-        $totalPerangkat = DB::table('m_barang')->where('hide', '!=', '1')->count();
+        $totalOlt = Schema::hasTable('m_olt') ? DB::table('m_olt')->count() : 0;
+        $totalRouter = Schema::hasTable('routers') ? DB::table('routers')->count() : (Schema::hasTable('m_odp') ? DB::table('m_odp')->count() : 0);
+        $totalOdp = $totalRouter;
+        $totalPop = Schema::hasTable('m_pop') ? DB::table('m_pop')->where('hide', '!=', '1')->count() : 0;
+        $totalPerangkat = Schema::hasTable('m_barang') ? DB::table('m_barang')->where('hide', '!=', '1')->count() : 0;
 
         // Antrean Aktivasi (Status #18 = Siap Aktivasi, #18.1, #19 = Terjadwal Aktivasi, #19.1 = Reschedule)
         $antreanAktivasi = DB::table('trx_batchjob_register')->whereIn('status_reg', ['18', '18.1', '19', '19.1'])->count();
@@ -274,6 +275,7 @@ class NocController extends Controller
         return view('noc.dashboard', [
             'user' => $request->user(),
             'totalOlt' => $totalOlt,
+            'totalRouter' => $totalRouter,
             'totalOdp' => $totalOdp,
             'totalPop' => $totalPop,
             'totalPerangkat' => $totalPerangkat,

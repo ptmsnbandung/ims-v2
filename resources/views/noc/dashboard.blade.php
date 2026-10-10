@@ -334,19 +334,19 @@
             </div>
         </div>
 
-        <!-- 2. Total ODP -->
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl shadow-xl shadow-black/10 flex items-center justify-between">
+        <!-- 2. Total Router Terpasang -->
+        <a href="{{ route('noc.router') }}" class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl shadow-xl shadow-black/10 flex items-center justify-between hover:border-emerald-500/50 transition group cursor-pointer">
             <div>
-                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ODP Terpasang</span>
-                <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ $totalOdp }} <span class="text-xs font-normal text-slate-400">Titik</span></div>
-                <div class="text-[11px] text-emerald-500 font-medium mt-1">FTTH Distribution Box</div>
+                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Router Terpasang</span>
+                <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ $totalRouter ?? $totalOdp }} <span class="text-xs font-normal text-slate-400">Unit</span></div>
+                <div class="text-[11px] text-emerald-500 font-medium mt-1">Core & Edge MikroTik</div>
             </div>
-            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-.778.099-1.533.284-2.253" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.75 4.5h12.5l2.1 4.05a4.5 4.5 0 0 1 .9 2.7M6.75 17.25h.008v.008H6.75v-.008Zm3.75 0h.008v.008H10.5v-.008Zm3.75 0h.008v.008h-.008v-.008Zm3.75 0h.008v.008h-.008v-.008Z" />
                 </svg>
             </div>
-        </div>
+        </a>
 
         <!-- 3. Pelanggan Aktif Online -->
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl shadow-xl shadow-black/10 flex items-center justify-between">

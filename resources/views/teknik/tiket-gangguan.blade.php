@@ -57,6 +57,7 @@
              const noInt = (this.createNomorInternet || '').trim();
              if (!noInt) {
                  this.createError = 'Silakan masukkan nomor internet.';
+                 if (window.showToast) window.showToast('warning', this.createError);
                  return;
              }
              this.createLoading = true;
@@ -69,13 +70,16 @@
                      if (json.data.pass_pppoe) {
                          this.createPerubahan = 'Password Lama :\n' + json.data.pass_pppoe;
                      }
+                     if (window.showToast) window.showToast('success', 'Pelanggan ' + (json.data.nama_pelanggan || '') + ' ditemukan!');
                  } else {
                      this.createCustomerData = null;
                      this.createError = json.message || 'Nomor internet tidak ditemukan.';
+                     if (window.showToast) window.showToast('error', this.createError);
                  }
              } catch (e) {
                  this.createCustomerData = null;
                  this.createError = 'Gagal menghubungi server untuk cek data.';
+                 if (window.showToast) window.showToast('error', this.createError);
              } finally {
                  this.createLoading = false;
              }

@@ -1622,6 +1622,14 @@
                 }
             });
 
+            window.Toast = Toast;
+            window.showToast = function(icon, title) {
+                Toast.fire({
+                    icon: icon || 'info',
+                    title: title
+                });
+            };
+
             @if(session('success'))
                 Toast.fire({
                     icon: 'success',
@@ -1644,11 +1652,16 @@
             @endif
 
             @if(session('error'))
-                Swal.fire({
+                Toast.fire({
                     icon: 'error',
-                    title: 'Terjadi Kesalahan',
-                    text: {!! json_encode(session('error')) !!},
-                    confirmButtonColor: '#ef4444'
+                    title: {!! json_encode(session('error')) !!}
+                });
+            @endif
+
+            @if($errors->any())
+                Toast.fire({
+                    icon: 'error',
+                    title: {!! json_encode($errors->first()) !!}
                 });
             @endif
         });

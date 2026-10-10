@@ -622,7 +622,7 @@
                          @mouseenter="openFlyout($el, 'Permintaan NOC', [
                              { label: 'Aktivasi Jaringan', url: '{{ route('noc.aktivasi') }}', active: {{ request()->routeIs('noc.aktivasi*') ? 'true' : 'false' }} },
                              { label: 'UP / Downgrade', url: '{{ route('teknik.permintaan.up-downgrade') }}', active: {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'true' : 'false' }} },
-                             { label: 'Suspend (Isolir)', url: '{{ route('noc.suspend') }}', active: {{ request()->routeIs('noc.suspend*') ? 'true' : 'false' }} },
+                             { label: 'Suspend', url: '{{ route('noc.suspend') }}', active: {{ request()->routeIs('noc.suspend*') ? 'true' : 'false' }} },
                              { label: 'Terminasi', url: '{{ route('noc.terminasi') }}', active: {{ request()->routeIs('noc.terminasi*') ? 'true' : 'false' }} }
                          ])"
                          @mouseleave="closeFlyoutWithDelay()">
@@ -659,7 +659,7 @@
                             </a>
                             <a href="{{ route('noc.suspend') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.suspend*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.suspend*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-                                <span>Suspend (Isolir)</span>
+                                <span>Suspend</span>
                             </a>
                             <a href="{{ route('noc.terminasi') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.terminasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.terminasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
@@ -1773,3 +1773,4 @@
     @stack('scripts')
 </body>
 </html>
+

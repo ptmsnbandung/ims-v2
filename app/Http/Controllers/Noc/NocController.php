@@ -2995,19 +2995,21 @@ class NocController extends Controller
     }
 
     /**
-     * Clear / Prune Old Activity Logs
+     * Hapus Single Activity Log (Hanya untuk Admin)
      */
-    public function clearActivityLog(Request $request): RedirectResponse
+    public function deleteSingleActivityLog(Request $request, int|string $id): RedirectResponse
     {
-        $days = (int)$request->input('days', 30);
-        if ($days > 0) {
-            $deleted = DB::table('activity_logs')
-                ->where('created_at', '<', Carbon::now()->subDays($days))
-                ->delete();
-            return redirect()->route('noc.activity-log')->with('success', "Berhasil membersihkan {$deleted} log aktivitas router yang lebih lama dari {$days} hari.");
+        if (!auth()->user()?->isAdmin()) {
+            abort(403, 'Hanya Administrator yang memiliki hak akses untuk menghapus log aktivitas.');
         }
 
-        return redirect()->route('noc.activity-log')->with('error', 'Parameter hari tidak valid.');
+        $deleted = DB::table('activity_logs')->where('id', $id)->delete();
+
+        if ($deleted) {
+            return redirect()->back()->with('success', 'Log aktivitas router berhasil dihapus.');
+        }
+
+        return redirect()->back()->with('error', 'Log aktivitas tidak ditemukan.');
     }
 
     /**

@@ -63,15 +63,6 @@
                     </svg>
                     <span>Master Router</span>
                 </a>
-
-                <button type="button" 
-                        @click="clearModalOpen = true"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600/30 hover:bg-rose-600 text-rose-200 hover:text-white font-semibold text-xs border border-rose-500/40 transition">
-                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                    </svg>
-                    <span>Bersihkan Log</span>
-                </button>
             </div>
         </div>
     </div>
@@ -232,7 +223,7 @@
                         <th class="py-2.5 px-3">Deskripsi & Respons Router</th>
                         <th class="py-2.5 px-2.5 w-20 text-center">Status</th>
                         <th class="py-2.5 px-2.5 w-24">Operator</th>
-                        <th class="py-2.5 px-2 w-10 text-center">Detail</th>
+                        <th class="py-2.5 px-2 {{ auth()->user()?->isAdmin() ? 'w-16' : 'w-10' }} text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
@@ -360,17 +351,32 @@
                                 </div>
                             </td>
 
-                            <!-- Detail Modal Button -->
+                            <!-- Aksi (Detail & Hapus per-log untuk Admin) -->
                             <td class="py-2.5 px-2 text-center whitespace-nowrap">
-                                <button type="button" 
-                                        @click="openDetailModal({{ json_encode($log) }})"
-                                        class="p-1 rounded-md bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-500 dark:text-slate-300 transition shadow-xs cursor-pointer"
-                                        title="Lihat Detail Log">
-                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                    </svg>
-                                </button>
+                                <div class="inline-flex items-center justify-center gap-1">
+                                    <button type="button" 
+                                            @click="openDetailModal({{ json_encode($log) }})"
+                                            class="p-1 rounded-md bg-slate-100 hover:bg-indigo-600 hover:text-white dark:bg-slate-800 dark:hover:bg-indigo-600 text-slate-500 dark:text-slate-300 transition shadow-xs cursor-pointer"
+                                            title="Lihat Detail Log">
+                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        </svg>
+                                    </button>
+
+                                    @if(auth()->user()?->isAdmin())
+                                        <form action="{{ route('noc.activity-log.delete', $log->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus log ini?')" class="inline">
+                                            @csrf
+                                            <button type="submit" 
+                                                    class="p-1 rounded-md bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white transition shadow-xs cursor-pointer"
+                                                    title="Hapus Log Ini">
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -481,68 +487,27 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                @if(auth()->user()?->isAdmin())
+                    <form :action="'{{ url('noc/activity-log') }}/' + (selectedLog?.id || '') + '/delete'" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus log ini?')" class="inline">
+                        @csrf
+                        <button type="submit" 
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white border border-rose-200 dark:border-rose-500/30 font-bold text-xs transition cursor-pointer">
+                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            </svg>
+                            <span>Hapus Log</span>
+                        </button>
+                    </form>
+                @else
+                    <div></div>
+                @endif
                 <button type="button" 
                         @click="detailModalOpen = false"
-                        class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition">
+                        class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer">
                     Tutup
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- 6. MODAL BERSIHKAN LOG                                              -->
-    <!-- =================================================================== -->
-    <div x-show="clearModalOpen"
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
-         @click.self="clearModalOpen = false"
-         @keydown.escape.window="clearModalOpen = false">
-        
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 text-left space-y-4"
-             x-transition>
-            
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-sm font-black text-slate-800 dark:text-white">Bersihkan Log Lama</h3>
-                    <p class="text-xs text-slate-400">Hapus log aktivitas router untuk menghemat ruang database.</p>
-                </div>
-            </div>
-
-            <form method="POST" action="{{ route('noc.activity-log.clear') }}" class="space-y-4 text-xs">
-                @csrf
-                <div>
-                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Rentang Waktu Pembersihan</label>
-                    <select name="days" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-rose-500">
-                        <option value="90">Hapus log yang lebih lama dari 90 Hari (3 Bulan)</option>
-                        <option value="60">Hapus log yang lebih lama dari 60 Hari (2 Bulan)</option>
-                        <option value="30" selected>Hapus log yang lebih lama dari 30 Hari (1 Bulan)</option>
-                        <option value="7">Hapus log yang lebih lama dari 7 Hari (1 Minggu)</option>
-                    </select>
-                </div>
-
-                <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px]">
-                    ⚠️ Tindakan ini permanen. Log aktivitas yang terhapus tidak dapat dikembalikan.
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-2">
-                    <button type="button" 
-                            @click="clearModalOpen = false"
-                            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition">
-                        Batal
-                    </button>
-                    <button type="submit" 
-                            class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition">
-                        Hapus Log Sekarang
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -553,7 +518,6 @@
 function activityLogManager() {
     return {
         detailModalOpen: false,
-        clearModalOpen: false,
         selectedLog: null,
 
         openDetailModal(log) {

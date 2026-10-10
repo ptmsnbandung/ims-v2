@@ -975,32 +975,33 @@
     <!-- ======================================================================= -->
     <!-- 1. MODAL: REQUEST UP / DOWNGRADE BANDWIDTH KE NOC                       -->
     <!-- ======================================================================= -->
-    <div x-show="upDowngradeModalOpen"
-         x-cloak
-         @keydown.escape.window="upDowngradeModalOpen = false"
-         class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-        <div @click.away="upDowngradeModalOpen = false"
-             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
-             style="max-height: 90vh;">
-            
-            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-                        </svg>
+    <template x-teleport="body">
+        <div x-show="upDowngradeModalOpen"
+             x-cloak
+             @keydown.escape.window="upDowngradeModalOpen = false"
+             class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+             style="position: fixed; inset: 0; z-index: 99999;">
+            <div @click.away="upDowngradeModalOpen = false"
+                 class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]">
+                
+                <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                                Ajukan UP / Downgrade Bandwidth ke NOC
+                            </h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Permintaan akan otomatis diteruskan ke antrean kerja tim NOC.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                            Ajukan UP / Downgrade Bandwidth ke NOC
-                        </h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Permintaan akan otomatis diteruskan ke antrean kerja tim NOC.</p>
-                    </div>
+                    <button type="button" @click="upDowngradeModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
                 </div>
-                <button type="button" @click="upDowngradeModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
-            </div>
 
-            <form action="{{ route('finance.permintaan.up-downgrade.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
+                <form action="{{ route('finance.permintaan.up-downgrade.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden min-h-0">
                 @csrf
                 <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
 
@@ -1070,36 +1071,38 @@
             </form>
         </div>
     </div>
+    </template>
 
     <!-- ======================================================================= -->
     <!-- 2. MODAL: REQUEST SUSPEND (ISOLIR) KE NOC                               -->
     <!-- ======================================================================= -->
-    <div x-show="suspendModalOpen"
-         x-cloak
-         @keydown.escape.window="suspendModalOpen = false"
-         class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-        <div @click.away="suspendModalOpen = false"
-             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
-             style="max-height: 90vh;">
-            
-            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                        </svg>
+    <template x-teleport="body">
+        <div x-show="suspendModalOpen"
+             x-cloak
+             @keydown.escape.window="suspendModalOpen = false"
+             class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+             style="position: fixed; inset: 0; z-index: 99999;">
+            <div @click.away="suspendModalOpen = false"
+                 class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]">
+                
+                <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                                Ajukan Permintaan Suspend ke NOC
+                            </h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Digunakan untuk pelanggan yang menunggak atau belum membayar tagihan.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                            Ajukan Permintaan Suspend ke NOC
-                        </h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Digunakan untuk pelanggan yang menunggak atau belum membayar tagihan.</p>
-                    </div>
+                    <button type="button" @click="suspendModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
                 </div>
-                <button type="button" @click="suspendModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
-            </div>
 
-            <form action="{{ route('finance.permintaan.suspend.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
+                <form action="{{ route('finance.permintaan.suspend.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden min-h-0">
                 @csrf
                 <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
 
@@ -1155,36 +1158,38 @@
             </form>
         </div>
     </div>
+    </template>
 
     <!-- ======================================================================= -->
     <!-- 3. MODAL: REQUEST TERMINASI KE NOC                                      -->
     <!-- ======================================================================= -->
-    <div x-show="terminasiModalOpen"
-         x-cloak
-         @keydown.escape.window="terminasiModalOpen = false"
-         class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-        <div @click.away="terminasiModalOpen = false"
-             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
-             style="max-height: 90vh;">
-            
-            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
-                        </svg>
+    <template x-teleport="body">
+        <div x-show="terminasiModalOpen"
+             x-cloak
+             @keydown.escape.window="terminasiModalOpen = false"
+             class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+             style="position: fixed; inset: 0; z-index: 99999;">
+            <div @click.away="terminasiModalOpen = false"
+                 class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]">
+                
+                <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                                Ajukan Permintaan Terminasi ke NOC / Lapangan
+                            </h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Digunakan untuk pelanggan yang berhenti berlangganan (tutup akun & penarikan perangkat).</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                            Ajukan Permintaan Terminasi ke NOC / Lapangan
-                        </h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Digunakan untuk pelanggan yang berhenti berlangganan (tutup akun & penarikan perangkat).</p>
-                    </div>
+                    <button type="button" @click="terminasiModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
                 </div>
-                <button type="button" @click="terminasiModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
-            </div>
 
-            <form action="{{ route('finance.permintaan.terminasi.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
+                <form action="{{ route('finance.permintaan.terminasi.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden min-h-0">
                 @csrf
                 <input type="hidden" name="nomor_internet" :value="activeCustomer.nomor_internet" required>
 
@@ -1233,36 +1238,38 @@
             </form>
         </div>
     </div>
+    </template>
 
     <!-- ======================================================================= -->
     <!-- 4. MODAL: ADJUST POTONGAN / DISKON & PPN PELANGGAN                      -->
     <!-- ======================================================================= -->
-    <div x-show="adjustModalOpen"
-         x-cloak
-         @keydown.escape.window="adjustModalOpen = false"
-         class="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-        <div @click.away="adjustModalOpen = false"
-             class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col"
-             style="max-height: 90vh;">
-            
-            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
-                        </svg>
+    <template x-teleport="body">
+        <div x-show="adjustModalOpen"
+             x-cloak
+             @keydown.escape.window="adjustModalOpen = false"
+             class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+             style="position: fixed; inset: 0; z-index: 99999;">
+            <div @click.away="adjustModalOpen = false"
+                 class="relative w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]">
+                
+                <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                                Penyesuaian Potongan / Diskon & PPN
+                            </h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Atur skema diskon dan pajak PPN tagihan rutin pelanggan ini.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">
-                            Penyesuaian Potongan / Diskon & PPN
-                        </h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Atur skema diskon dan pajak PPN tagihan rutin pelanggan ini.</p>
-                    </div>
+                    <button type="button" @click="adjustModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
                 </div>
-                <button type="button" @click="adjustModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
-            </div>
 
-            <form action="{{ route('finance.pelanggan.adjust.post') }}" method="POST" class="flex flex-col flex-1 overflow-hidden">
+                <form action="{{ route('finance.pelanggan.adjust.post') }}" method="POST" class="flex flex-col flex-1 overflow-hidden min-h-0">
                 @csrf
                 <input type="hidden" name="nomor_internet" :value="adjustData.nomor_internet" required>
 
@@ -1401,6 +1408,7 @@
             </form>
         </div>
     </div>
+    </template>
 
 </div>
 

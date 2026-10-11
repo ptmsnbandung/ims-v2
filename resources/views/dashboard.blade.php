@@ -415,7 +415,6 @@
             </div>
         </div>
     </div>
-    </div>
 
     <!-- ========================================================================= -->
     <!-- SECTION: STATISTIK USER & PELANGGAN BARU (DENGAN FILTER BULAN & TAHUN)   -->

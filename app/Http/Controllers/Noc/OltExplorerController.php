@@ -20,15 +20,29 @@ class OltExplorerController extends Controller
         $search = trim((string) $request->input('search', ''));
         $selectedOltId = $olt_id ?: $request->input('olt_id');
 
-        // 1. Ambil List Master OLT dari database gomsn (di-cache 10 menit)
-        $olts = Cache::remember('olt_explorer_master_olts', 600, function () {
+        // 1. Ambil List Master OLT dari database gomsn (di-cache 10 menit sebagai array aman)
+        $rawOlts = Cache::remember('olt_explorer_master_olts', 600, function () {
             try {
                 if (Schema::hasTable('gomsn.olt')) {
-                    return DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get();
+                    return DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get()->toArray();
                 }
             } catch (\Throwable $e) {}
-            return collect();
+            return [];
         });
+
+        // Validasi jika cache lama tersimpan sebagai incomplete class object
+        if (!is_array($rawOlts)) {
+            Cache::forget('olt_explorer_master_olts');
+            try {
+                $rawOlts = Schema::hasTable('gomsn.olt') 
+                    ? DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get()->toArray() 
+                    : [];
+            } catch (\Throwable $e) {
+                $rawOlts = [];
+            }
+        }
+
+        $olts = collect($rawOlts)->map(fn($o) => is_array($o) ? (object) $o : $o);
 
         // Default ke OLT pertama jika tidak dipilih
         if (!$selectedOltId && $olts->isNotEmpty()) {

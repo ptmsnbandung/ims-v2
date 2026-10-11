@@ -354,8 +354,21 @@
                     </div>
 
                     <!-- List 5 User (Nomor Internet & Nama Saja - Rapi & Compact) -->
+                    @php
+                        $recent5Users = $newUserStats['recentNewUsers'] ?? [];
+                        if (is_object($recent5Users) && get_class($recent5Users) === '__PHP_Incomplete_Class') {
+                            $recent5Users = [];
+                        }
+                        if (is_object($recent5Users) && method_exists($recent5Users, 'take')) {
+                            $recent5Users = $recent5Users->take(5);
+                        } elseif (is_array($recent5Users)) {
+                            $recent5Users = array_slice($recent5Users, 0, 5);
+                        } elseif (!is_iterable($recent5Users)) {
+                            $recent5Users = [];
+                        }
+                    @endphp
                     <div class="pt-1 space-y-0.5">
-                        @forelse($newUserStats['recentNewUsers']->take(5) as $nu)
+                        @forelse($recent5Users as $nu)
                             @php
                                 $nuNoInternet = (string) (is_array($nu) ? ($nu['nomor_internet'] ?? '') : ($nu->nomor_internet ?? ''));
                                 $nuNama = (string) (is_array($nu) ? ($nu['nama_pelanggan'] ?? 'Pelanggan') : ($nu->nama_pelanggan ?? 'Pelanggan'));
@@ -562,7 +575,13 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
-                                @forelse($newUserStats['recentNewUsers'] as $nu)
+                                @php
+                                    $modalRecentList = $newUserStats['recentNewUsers'] ?? [];
+                                    if (!is_iterable($modalRecentList) || (is_object($modalRecentList) && get_class($modalRecentList) === '__PHP_Incomplete_Class')) {
+                                        $modalRecentList = [];
+                                    }
+                                @endphp
+                                @forelse($modalRecentList as $nu)
                                     @php
                                         $nuNoInternet = (string) (is_array($nu) ? ($nu['nomor_internet'] ?? '') : ($nu->nomor_internet ?? ''));
                                         $nuNama = (string) (is_array($nu) ? ($nu['nama_pelanggan'] ?? 'Pelanggan') : ($nu->nama_pelanggan ?? 'Pelanggan'));
@@ -661,7 +680,13 @@
                     </div>
 
                     <div class="space-y-2">
-                        @forelse($newUserStats['paketBreakdown'] as $pkg)
+                        @php
+                            $modalPaketList = $newUserStats['paketBreakdown'] ?? [];
+                            if (!is_iterable($modalPaketList) || (is_object($modalPaketList) && get_class($modalPaketList) === '__PHP_Incomplete_Class')) {
+                                $modalPaketList = [];
+                            }
+                        @endphp
+                        @forelse($modalPaketList as $pkg)
                             @php
                                 $pkgNama = (string) (is_array($pkg) ? ($pkg['nama_paket'] ?? 'INTERNET') : ($pkg->nama_paket ?? 'INTERNET'));
                                 $pkgNominal = (string) (is_array($pkg) ? ($pkg['nominal_bandwith'] ?? '10') : ($pkg->nominal_bandwith ?? '10'));

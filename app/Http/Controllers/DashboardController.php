@@ -125,7 +125,7 @@ class DashboardController extends Controller
         ];
 
         try {
-            $statsCacheKey = "dashboard_stats_v2_{$selectedBulan}_{$selectedTahun}";
+            $statsCacheKey = "dashboard_stats_v3_{$selectedBulan}_{$selectedTahun}";
             $cachedDashboardData = Cache::remember($statsCacheKey, 60, function () use ($applyYearFilter, $prevApplyYearFilter, $selectedBulan, $selectedTahun, $monthsList, $selectedTahunInt, $startOfYear, $endOfYear) {
                 $sourceTable = 'view_batchjob';
                 $localNewUserStats = [
@@ -141,8 +141,8 @@ class DashboardController extends Controller
                     'growthCount' => 0,
                     'totalPenggunaSistemBaru' => 0,
                     'totalSemuaPelangganAktif' => 0,
-                    'paketBreakdown' => collect([]),
-                    'recentNewUsers' => collect([]),
+                    'paketBreakdown' => [],
+                    'recentNewUsers' => [],
                     'statusBreakdown' => [
                         '11' => 0,
                         '12' => 0,
@@ -203,7 +203,12 @@ class DashboardController extends Controller
                     )
                     ->orderBy('date_create', 'desc')
                     ->limit(10)
-                    ->get();
+                    ->get()
+                    ->map(function ($item) {
+                        return (array) $item;
+                    })
+                    ->values()
+                    ->all();
 
                 $paketQuery = DB::table('view_batchjob');
                 $applyYearFilter($paketQuery, 'date_create');
@@ -217,7 +222,12 @@ class DashboardController extends Controller
                     ->groupBy('nama_paket', 'nominal_bandwith')
                     ->orderByDesc('total')
                     ->limit(6)
-                    ->get();
+                    ->get()
+                    ->map(function ($item) {
+                        return (array) $item;
+                    })
+                    ->values()
+                    ->all();
 
                 // New system users (tb_pengguna) in the year
                 $totalPenggunaSistemBaru = 0;
@@ -423,12 +433,36 @@ class DashboardController extends Controller
                 ];
             });
 
-            if (!empty($cachedDashboardData['newUserStats'])) {
+            if (!empty($cachedDashboardData['newUserStats']) && is_array($cachedDashboardData['newUserStats'])) {
                 $newUserStats = $cachedDashboardData['newUserStats'];
             }
-            if (!empty($cachedDashboardData['chartData'])) {
+            if (!empty($cachedDashboardData['chartData']) && is_array($cachedDashboardData['chartData'])) {
                 $chartData = $cachedDashboardData['chartData'];
             }
+
+            // Sanitasi recentNewUsers: cegah __PHP_Incomplete_Class akibat cache serialization
+            $rawRecent = $newUserStats['recentNewUsers'] ?? [];
+            if (is_object($rawRecent) && get_class($rawRecent) === '__PHP_Incomplete_Class') {
+                $rawRecent = [];
+            }
+            if ($rawRecent instanceof \Illuminate\Support\Collection) {
+                $rawRecent = $rawRecent->all();
+            } elseif (!is_array($rawRecent)) {
+                $rawRecent = is_iterable($rawRecent) ? iterator_to_array($rawRecent) : [];
+            }
+            $newUserStats['recentNewUsers'] = collect($rawRecent);
+
+            // Sanitasi paketBreakdown
+            $rawPaket = $newUserStats['paketBreakdown'] ?? [];
+            if (is_object($rawPaket) && get_class($rawPaket) === '__PHP_Incomplete_Class') {
+                $rawPaket = [];
+            }
+            if ($rawPaket instanceof \Illuminate\Support\Collection) {
+                $rawPaket = $rawPaket->all();
+            } elseif (!is_array($rawPaket)) {
+                $rawPaket = is_iterable($rawPaket) ? iterator_to_array($rawPaket) : [];
+            }
+            $newUserStats['paketBreakdown'] = collect($rawPaket);
         } catch (\Throwable $e) {
             Log::error('Dashboard New User Stats Error: ' . $e->getMessage());
         }

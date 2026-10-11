@@ -90,17 +90,22 @@
         </div>
     </div>
 
-    <!-- Section Charts Container (Gambar 1 & Gambar 2 - 1 Layar Penuh) -->
-    <div x-show="activeTab === 'charts' || activeTab === 'all'" class="space-y-2">
+    <!-- Section Charts Container (Gambar 1 & Gambar 2 - Glassmorphism Aesthetic) -->
+    <div x-show="activeTab === 'charts' || activeTab === 'all'" class="relative space-y-2">
+        <!-- Ambient Glassmorphism Glow Background -->
+        <div class="pointer-events-none absolute -top-8 left-1/4 w-96 h-96 bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-3xl -z-10"></div>
+        <div class="pointer-events-none absolute top-1/2 right-10 w-96 h-96 bg-cyan-400/10 dark:bg-cyan-600/15 rounded-full blur-3xl -z-10"></div>
+        <div class="pointer-events-none absolute -bottom-10 left-10 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-600/15 rounded-full blur-3xl -z-10"></div>
+
         <!-- Row 1: Tren Bulanan (7 Cols) & Donut Bandwidth (5 Cols) -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
-            <!-- 1. Grafik Tren User Baru per Bulan -->
-            <div class="md:col-span-7 lg:col-span-7 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 1. Grafik Tren User Baru per Bulan (Glassmorphism) -->
+            <div class="md:col-span-7 lg:col-span-7 p-2.5 sm:p-3 rounded-2xl bg-white/75 dark:bg-slate-900/75 backdrop-blur-xl backdrop-saturate-150 border border-white/80 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)] flex flex-col justify-between transition-all duration-200">
                 <div>
-                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/60 pb-1.5">
                         <div class="min-w-0">
                             <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                                <span class="w-2.5 h-2.5 rounded-full bg-blue-600 ring-2 ring-blue-100 dark:ring-blue-950"></span>
+                                <span class="w-2 h-2 rounded-full bg-blue-600 shrink-0 inline-block shadow-xs shadow-blue-500/50"></span>
                                 <span>Tren Pertumbuhan User Baru per Bulan</span>
                             </h4>
                             <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
@@ -108,17 +113,17 @@
                             </p>
                         </div>
 
-                        <!-- Mini KPI Badges Symmetrical -->
-                        <div class="flex items-center gap-1.5 flex-shrink-0">
-                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/60 shadow-2xs">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                        <!-- Mini KPI Badges Symmetrical (Borderless Glass) -->
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 shadow-2xs">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"></span>
                                 <div class="text-right">
                                     <span class="text-[8px] uppercase font-bold tracking-wider text-blue-600 dark:text-cyan-400 block leading-none">Registrasi</span>
                                     <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 shadow-2xs">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
                                 <div class="text-right">
                                     <span class="text-[8px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 block leading-none">Aktif Online</span>
                                     <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunAktif']) }}</span>
@@ -134,14 +139,14 @@
                 </div>
 
                 <!-- Footer Note -->
-                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400">
+                <div class="mt-0.5 pt-1 border-t border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400">
                     <div class="flex items-center gap-2">
                         <span class="flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
                             <span class="font-medium text-slate-700 dark:text-slate-300">Pendaftaran Baru</span>
                         </span>
                         <span class="flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                             <span class="font-medium text-slate-700 dark:text-slate-300">Aktivasi Selesai (Aktif)</span>
                         </span>
                     </div>
@@ -149,12 +154,12 @@
                 </div>
             </div>
 
-            <!-- 2. Donut Kategori Bandwidth & Itemized List Side-by-Side (Donut Lebih Besar & List Rapi) -->
-            <div class="md:col-span-5 lg:col-span-5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 2. Donut Kategori Bandwidth & Itemized List Side-by-Side (Glassmorphism) -->
+            <div class="md:col-span-5 lg:col-span-5 p-2.5 sm:p-3 rounded-2xl bg-white/75 dark:bg-slate-900/75 backdrop-blur-xl backdrop-saturate-150 border border-white/80 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)] flex flex-col justify-between transition-all duration-200">
                 <div>
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <div class="border-b border-slate-200/50 dark:border-slate-800/60 pb-1.5">
                         <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 ring-2 ring-indigo-100 dark:ring-indigo-950"></span>
+                            <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0 inline-block shadow-xs shadow-indigo-500/50"></span>
                             <span>Distribusi Kategori Bandwidth</span>
                         </h4>
                         <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
@@ -181,7 +186,7 @@
                                     $pct = $totalBwAll > 0 ? round(($val / $totalBwAll) * 100, 1) : 0;
                                     $dotColor = $paletteColors[$idx % count($paletteColors)];
                                 @endphp
-                                <div class="flex items-center justify-between text-[7.5px] py-0.5 leading-tight hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded px-1 transition">
+                                <div class="flex items-center justify-between text-[7.5px] py-0.5 leading-tight hover:bg-white/80 dark:hover:bg-slate-800/50 rounded px-1 transition">
                                     <div class="flex items-center gap-1.5 min-w-0 pr-1">
                                         <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $dotColor }};"></span>
                                         <span class="font-semibold text-slate-700 dark:text-slate-300 truncate" title="{{ $label }}">{{ $label }}</span>
@@ -196,7 +201,7 @@
                     </div>
                 </div>
 
-                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8px] text-slate-400">
+                <div class="mt-0.5 pt-1 border-t border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between text-[8px] text-slate-400">
                     <span>Total Porsi Layanan</span>
                     <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ number_format($totalBwAll) }} User</span>
                 </div>
@@ -205,13 +210,13 @@
 
         <!-- Row 2: 3 Kotak Data (Sebaran Wilayah, Peringkat Wilayah, & Data Pelanggan Baru 5 User) -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
-            <!-- 3. Grafik Sebaran User per Kota / Wilayah Pasang (Memenuhi Card Rapi) -->
-            <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 3. Grafik Sebaran User per Kota / Wilayah Pasang (Glassmorphism & Borderless Badge) -->
+            <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white/75 dark:bg-slate-900/75 backdrop-blur-xl backdrop-saturate-150 border border-white/80 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)] flex flex-col justify-between transition-all duration-200">
                 <div>
-                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/60 pb-1.5">
                         <div class="min-w-0">
                             <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                                <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 ring-2 ring-cyan-100 dark:ring-cyan-950"></span>
+                                <span class="w-2 h-2 rounded-full bg-cyan-500 shrink-0 inline-block shadow-xs shadow-cyan-500/50"></span>
                                 <span>Sebaran User per Wilayah</span>
                             </h4>
                             <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
@@ -219,9 +224,9 @@
                             </p>
                         </div>
 
-                        <!-- Total City User Badge -->
-                        <div class="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-sky-50/80 dark:bg-sky-950/50 border border-sky-200/60 dark:border-sky-800/60 shadow-2xs flex-shrink-0">
-                            <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                        <!-- Total City User Badge (Borderless Glass Badge) -->
+                        <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-sky-500/10 dark:bg-sky-500/20 text-sky-600 dark:text-cyan-400 shrink-0 shadow-2xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-500 shrink-0"></span>
                             <div class="text-right">
                                 <span class="text-[7.5px] uppercase font-bold tracking-wider text-sky-600 dark:text-cyan-400 block leading-none">Total</span>
                                 <span class="text-[11px] font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalCityUsers']) }}</span>
@@ -235,14 +240,14 @@
                     </div>
                 </div>
 
-                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400">
+                <div class="mt-0.5 pt-1 border-t border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400">
                     <div class="flex items-center gap-1.5">
                         <span class="flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"></span>
                             <span class="font-medium text-slate-700 dark:text-slate-300">Total</span>
                         </span>
                         <span class="flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
                             <span class="font-medium text-slate-700 dark:text-slate-300">Aktif</span>
                         </span>
                     </div>
@@ -253,12 +258,12 @@
                 </div>
             </div>
 
-            <!-- 4. Peringkat Wilayah / Kota (Rincian Kota) -->
-            <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 4. Peringkat Wilayah / Kota (Glassmorphism Cards) -->
+            <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white/75 dark:bg-slate-900/75 backdrop-blur-xl backdrop-saturate-150 border border-white/80 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)] flex flex-col justify-between transition-all duration-200">
                 <div>
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <div class="border-b border-slate-200/50 dark:border-slate-800/60 pb-1.5">
                         <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-100 dark:ring-amber-950"></span>
+                            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0 inline-block shadow-xs shadow-amber-500/50"></span>
                             <span>Peringkat Wilayah / Kota</span>
                         </h4>
                         <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
@@ -302,15 +307,15 @@
                                 $cPct = round(($cTot / $maxCityTotal) * 100, 1);
                                 $cBarColor = $cityColors[$loop->index % count($cityColors)];
                             @endphp
-                            <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 space-y-0.5 hover:bg-slate-100/60 transition">
+                            <div class="p-1.5 rounded-xl bg-white/60 dark:bg-slate-800/40 backdrop-blur-md border border-white/70 dark:border-white/5 space-y-0.5 hover:bg-white/95 dark:hover:bg-slate-800/70 transition">
                                 <div class="flex items-center justify-between text-[9px]">
                                     <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7.5px] font-black {{ $loop->first ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : ($loop->iteration == 2 ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500') }}">
+                                        <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7.5px] font-black {{ $loop->first ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : ($loop->iteration == 2 ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500') }}">
                                             {{ $loop->iteration }}
                                         </span>
                                         <span class="font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $cName }}">{{ $cName }}</span>
                                     </div>
-                                    <div class="flex items-center gap-1 font-mono flex-shrink-0">
+                                    <div class="flex items-center gap-1 font-mono shrink-0">
                                         <span class="font-black text-slate-900 dark:text-white text-[9.5px]">{{ number_format($cTot) }}</span>
                                         <span class="text-[7.5px] text-slate-400">({{ $cPct }}%)</span>
                                     </div>
@@ -327,19 +332,19 @@
                     </div>
                 </div>
 
-                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8.5px] text-slate-400">
+                <div class="mt-0.5 pt-1 border-t border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between text-[8.5px] text-slate-400">
                     <span>Total Wilayah</span>
                     <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ is_countable($chartData['cityLabels'] ?? null) ? count($chartData['cityLabels']) : 3 }} Kota</span>
                 </div>
             </div>
 
-            <!-- 5. Data Pelanggan Baru (Cukup 5 User Saja, Nomor Internet & Nama Saja - Sangat Rapi) -->
-            <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 5. Data Pelanggan Baru (Glassmorphism & Borderless 5 Terkini) -->
+            <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white/75 dark:bg-slate-900/75 backdrop-blur-xl backdrop-saturate-150 border border-white/80 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)] flex flex-col justify-between transition-all duration-200">
                 <div>
-                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800/60 pb-1.5">
                         <div class="min-w-0">
                             <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 ring-2 ring-indigo-100 dark:ring-indigo-950"></span>
+                                <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0 inline-block shadow-xs shadow-indigo-500/50"></span>
                                 <span>Data Pelanggan Baru</span>
                             </h4>
                             <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
@@ -347,13 +352,14 @@
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200/60 dark:border-indigo-800/60 shadow-2xs flex-shrink-0">
-                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                            <span class="text-[8.5px] font-bold font-mono text-indigo-700 dark:text-indigo-300">5 Terkini</span>
+                        <!-- 5 Terkini Badge (Borderless Glass Badge) -->
+                        <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shrink-0 shadow-2xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                            <span class="text-[8.5px] font-bold font-mono">5 Terkini</span>
                         </div>
                     </div>
 
-                    <!-- List 5 User (Nomor Internet & Nama Saja - Rapi & Compact) -->
+                    <!-- List 5 User (Glassmorphism Items) -->
                     <div class="pt-1 space-y-0.5">
                         @forelse($newUserStats['recentNewUsers']->take(5) as $nu)
                             @php
@@ -361,7 +367,7 @@
                                 $nuNama = (string) (is_array($nu) ? ($nu['nama_pelanggan'] ?? 'Pelanggan') : ($nu->nama_pelanggan ?? 'Pelanggan'));
                                 $profileUrl = !empty($nuNoInternet) ? route('teknik.pelanggan.profile', $nuNoInternet) : '#';
                             @endphp
-                            <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-slate-50/80 dark:bg-slate-950/50 border border-slate-200/60 dark:border-slate-800/60 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 hover:border-blue-200 dark:hover:border-blue-800 transition group">
+                            <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-white/60 dark:bg-slate-800/40 backdrop-blur-md border border-white/70 dark:border-white/5 hover:bg-white/95 dark:hover:bg-slate-800/70 transition group">
                                 <div class="flex items-center gap-1.5 min-w-0 pr-1.5">
                                     <span class="w-3.5 h-3.5 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-cyan-400 text-[8px] font-black flex items-center justify-center font-mono shrink-0">
                                         {{ $loop->iteration }}
@@ -372,7 +378,7 @@
                                 </div>
                                 <div class="shrink-0">
                                     @if(!empty($nuNoInternet))
-                                        <a href="{{ $profileUrl }}" class="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-blue-600 dark:text-cyan-400 font-mono text-[9px] font-bold hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white transition inline-block">
+                                        <a href="{{ $profileUrl }}" class="px-1.5 py-0.2 rounded bg-blue-50/90 dark:bg-slate-800 text-blue-600 dark:text-cyan-400 font-mono text-[9px] font-bold hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white transition inline-block">
                                             {{ $nuNoInternet }}
                                         </a>
                                     @else
@@ -388,7 +394,7 @@
                     </div>
                 </div>
 
-                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400">
+                <div class="mt-0.5 pt-1 border-t border-slate-200/50 dark:border-slate-800/60 flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400">
                     <span>Total <b>{{ number_format($newUserStats['totalBaru']) }}</b> User</span>
                     <a href="{{ route('teknik.pendaftaran') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
                         <span>Semua Data</span>

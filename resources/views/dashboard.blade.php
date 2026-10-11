@@ -4,60 +4,60 @@
 
 @section('content')
 <div x-data="{ activeTab: 'charts' }" class="space-y-2">
-    <!-- Role Welcome Banner (Rich Royal & Sapphire Blue Gradient - Rapi & Symmetrical) -->
-    <div class="ims-banner relative overflow-hidden rounded-2xl py-2 px-3 sm:py-2.5 sm:px-4 shadow-sm text-white"
-         style="background: linear-gradient(135deg, #0e3b64 0%, #154c86 32%, #1b5fa2 65%, #2563eb 100%);">
+    <!-- Role Welcome Banner (Executive Sapphire & Deep Royal Blue - Rapi, Proporsional & Presisi) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl py-2.5 px-3.5 sm:py-3 sm:px-5 shadow-sm text-white border border-white/10"
+         style="background: linear-gradient(135deg, #0b3358 0%, #114275 35%, #185694 70%, #206bc4 100%);">
         
         <!-- Subtle Ambient Lighting Effect -->
-        <div class="pointer-events-none absolute -right-8 -bottom-8 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
-        <div class="pointer-events-none absolute left-1/4 -top-10 w-36 h-36 bg-cyan-400/10 rounded-full blur-xl"></div>
+        <div class="pointer-events-none absolute -right-8 -bottom-8 w-56 h-56 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="pointer-events-none absolute left-1/4 -top-10 w-40 h-40 bg-cyan-400/10 rounded-full blur-xl"></div>
 
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <!-- Left: Profile & Welcome -->
-            <div class="flex items-center gap-2.5 min-w-0">
+            <div class="flex items-center gap-3 min-w-0">
                 <!-- Avatar Initial Pill -->
-                <div class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0">
+                <div class="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 text-white font-black text-xs flex items-center justify-center shadow-inner shrink-0 ring-2 ring-white/10">
                     {{ strtoupper(substr($user->nama, 0, 1)) }}
                 </div>
                 
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <h2 class="text-xs sm:text-sm font-extrabold text-white tracking-tight flex items-center gap-1" style="color: #FFFFFF !important;">
+                        <h2 class="text-xs sm:text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5" style="color: #FFFFFF !important;">
                             <span>Halo, {{ $user->nama }}!</span>
                             <span>👋</span>
                         </h2>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[8.5px] font-extrabold uppercase tracking-wider bg-white/20 text-white border border-white/30">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/15 text-white/95 border border-white/20 backdrop-blur-xs">
                             {{ $user->nama_level }}
                         </span>
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[8.5px] font-semibold bg-emerald-400/25 text-emerald-200 border border-emerald-400/40">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-400/20 text-emerald-200 border border-emerald-400/30 backdrop-blur-xs">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
                             Online
                         </span>
                     </div>
-                    <p class="text-[9.5px] text-blue-100/90 truncate mt-0.5" style="color: rgba(224, 242, 254, 0.95) !important;">
+                    <p class="text-[9.5px] text-blue-100/80 truncate mt-0.5" style="color: rgba(224, 242, 254, 0.9) !important;">
                         {{ $user->role_description }} &middot; Pantau pertumbuhan user baru, tren bandwidth, dan sebaran wilayah real-time.
                     </p>
                 </div>
             </div>
 
-            <!-- Right: View Tabs, Year Filter & Status Layanan (Unified Height h-7) -->
+            <!-- Right: View Tabs, Year Filter & Status Layanan (Unified Height h-7.5) -->
             <div class="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap">
-                <!-- View Tabs with explicit contrasting inline styles -->
-                <div class="inline-flex items-center h-7 p-0.5 rounded-xl bg-black/30 backdrop-blur-md border border-white/20 text-[9.5px]">
+                <!-- View Tabs Switcher -->
+                <div class="inline-flex items-center h-7.5 p-0.5 rounded-xl bg-black/25 backdrop-blur-md border border-white/15 text-[10px]">
                     <button type="button" 
                             @click="activeTab = 'charts'" 
-                            :class="activeTab === 'charts' ? 'shadow-xs' : 'text-white/85 hover:text-white'" 
-                            :style="activeTab === 'charts' ? 'background-color: #ffffff !important; color: #0e3b64 !important; font-weight: 800;' : 'color: rgba(255,255,255,0.85);'"
-                            class="h-full px-2.5 rounded-lg transition cursor-pointer flex items-center gap-1 leading-none">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                            :class="activeTab === 'charts' ? 'shadow-xs' : 'hover:bg-white/10'" 
+                            :style="activeTab === 'charts' ? 'background: #ffffff !important; color: #0b3358 !important; font-weight: 700;' : 'background: transparent; color: rgba(255,255,255,0.85); font-weight: 500;'"
+                            class="h-full px-3 rounded-lg transition cursor-pointer flex items-center gap-1.5 leading-none">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         <span>Grafik Utama</span>
                     </button>
                     <button type="button" 
                             @click="activeTab = 'tables'" 
-                            :class="activeTab === 'tables' ? 'shadow-xs' : 'text-white/85 hover:text-white'" 
-                            :style="activeTab === 'tables' ? 'background-color: #ffffff !important; color: #0e3b64 !important; font-weight: 800;' : 'color: rgba(255,255,255,0.85);'"
-                            class="h-full px-2.5 rounded-lg transition cursor-pointer flex items-center gap-1 leading-none">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            :class="activeTab === 'tables' ? 'shadow-xs' : 'hover:bg-white/10'" 
+                            :style="activeTab === 'tables' ? 'background: #ffffff !important; color: #0b3358 !important; font-weight: 700;' : 'background: transparent; color: rgba(255,255,255,0.85); font-weight: 500;'"
+                            class="h-full px-3 rounded-lg transition cursor-pointer flex items-center gap-1.5 leading-none">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         <span>Data Pendaftaran</span>
                     </button>
                 </div>
@@ -67,14 +67,14 @@
                     <div class="relative flex items-center">
                         <select name="tahun" onchange="this.form.submit()" 
                                 style="background-color: rgba(0, 0, 0, 0.25) !important; color: #ffffff !important; -webkit-appearance: none; -moz-appearance: none; appearance: none;"
-                                class="h-7 pl-2.5 pr-6 rounded-xl border border-white/20 text-white text-[9.5px] font-bold hover:bg-black/40 focus:outline-none cursor-pointer transition">
+                                class="h-7.5 pl-3 pr-7 rounded-xl border border-white/15 text-white text-[10px] font-bold hover:bg-black/35 focus:outline-none cursor-pointer transition">
                             @foreach($availableYears as $year)
                                 <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} class="text-slate-900 bg-white">
                                     Tahun {{ $year }}
                                 </option>
                             @endforeach
                         </select>
-                        <div class="pointer-events-none absolute right-2 text-white/80">
+                        <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/70">
                             <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
@@ -82,7 +82,7 @@
 
                 <!-- Status Layanan Button -->
                 <a href="{{ route('teknik.tiket') }}" 
-                   class="h-7 px-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[9.5px] font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer leading-none">
+                   class="h-7.5 px-3 rounded-xl bg-emerald-500/90 hover:bg-emerald-500 active:scale-[0.98] text-white text-[10px] font-bold flex items-center gap-1.5 shadow-xs border border-emerald-400/30 transition cursor-pointer leading-none">
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                     <span>Status Layanan</span>
                 </a>

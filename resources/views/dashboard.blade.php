@@ -103,11 +103,11 @@
                 <div>
                     <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                                <span class="w-2.5 h-2.5 rounded-full bg-blue-600 ring-2 ring-blue-100 dark:ring-blue-950"></span>
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate leading-none">
+                                <span class="w-2 h-2 rounded-full bg-blue-600 shrink-0" style="display: inline-block;"></span>
                                 <span>Tren Pertumbuhan User Baru per Bulan</span>
                             </h4>
-                            <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                            <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-1">
                                 Registrasi vs aktivasi selesai sepanjang {{ $selectedTahun }}.
                             </p>
                         </div>
@@ -157,11 +157,11 @@
             <div class="md:col-span-5 lg:col-span-5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
                     <div class="border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 ring-2 ring-indigo-100 dark:ring-indigo-950"></span>
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate leading-none">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" style="display: inline-block;"></span>
                             <span>Distribusi Kategori Bandwidth</span>
                         </h4>
-                        <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                        <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-1">
                             Pangsa paket layanan yang dipilih pelanggan.
                         </p>
                     </div>
@@ -214,11 +214,11 @@
                 <div>
                     <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                                <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 ring-2 ring-cyan-100 dark:ring-cyan-950"></span>
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate leading-none">
+                                <span class="w-2 h-2 rounded-full bg-cyan-500 shrink-0" style="display: inline-block;"></span>
                                 <span>Sebaran User per Wilayah</span>
                             </h4>
-                            <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                            <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-1">
                                 Distribusi per kota pasang.
                             </p>
                         </div>
@@ -261,11 +261,11 @@
             <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
                     <div class="border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-amber-100 dark:ring-amber-950"></span>
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate leading-none">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0" style="display: inline-block;"></span>
                             <span>Peringkat Wilayah / Kota</span>
                         </h4>
-                        <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                        <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-1">
                             Rincian user per wilayah pasang.
                         </p>
                     </div>
@@ -342,11 +342,11 @@
                 <div>
                     <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 ring-2 ring-indigo-100 dark:ring-indigo-950"></span>
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate leading-none">
+                                <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" style="display: inline-block;"></span>
                                 <span>Data Pelanggan Baru</span>
                             </h4>
-                            <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                            <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-1">
                                 5 pendaftaran user terkini ({{ $selectedTahun }}).
                             </p>
                         </div>

@@ -130,9 +130,9 @@
                         </div>
                     </div>
 
-                    <!-- ApexChart Container -->
+                    <!-- ApexChart Container (Tinggi: 200px) -->
                     <div class="pt-1">
-                        <div id="chart-user-monthly-trend" class="w-full" style="min-height: 115px;"></div>
+                        <div id="chart-user-monthly-trend" class="w-full" style="min-height: 200px;"></div>
                     </div>
                 </div>
 
@@ -168,12 +168,12 @@
                     <!-- Side-by-Side Donut & Compact List -->
                     <div class="pt-1 flex items-center gap-2">
                         <!-- Donut Chart -->
-                        <div class="w-28 shrink-0 flex items-center justify-center">
-                            <div id="chart-bandwidth-distribution" class="w-full" style="min-height: 105px;"></div>
+                        <div class="w-28 sm:w-32 shrink-0 flex items-center justify-center">
+                            <div id="chart-bandwidth-distribution" class="w-full" style="min-height: 135px;"></div>
                         </div>
 
                         <!-- 1-Column Detailed List -->
-                        <div class="flex-1 min-w-0 space-y-0.5">
+                        <div class="flex-1 min-w-0 space-y-0.5 max-h-[145px] overflow-y-auto pr-0.5">
                             @php
                                 $paletteColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'];
                                 $totalBwAll = array_sum($chartData['bandwidthSeries']);
@@ -206,143 +206,171 @@
             </div>
         </div>
 
-        <!-- Row 2: Sebaran Wilayah Pasang (8 Cols) & Peringkat Kota (4 Cols) [GAMBAR 2] -->
+        <!-- Row 2: Sebaran Wilayah Pasang (5 Cols) & Data Pelanggan Baru (7 Cols) -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5">
-            <!-- 5. Grafik Sebaran User per Kota / Wilayah Pasang -->
-            <div class="md:col-span-7 lg:col-span-8 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 3. Grafik Sebaran User per Kota / Wilayah Pasang (Lebih Pendek: 95px) -->
+            <div class="md:col-span-5 lg:col-span-5 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
                     <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                         <div class="min-w-0">
                             <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
                                 <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 ring-2 ring-cyan-100 dark:ring-cyan-950"></span>
-                                <span>Sebaran User per Wilayah / Kota Pasang</span>
+                                <span>Sebaran User per Wilayah</span>
                             </h4>
                             <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                                Distribusi sebaran pelanggan di seluruh wilayah operasional pasang.
+                                Distribusi pelanggan per kota pasang.
                             </p>
                         </div>
 
                         <!-- Symmetrical Total City User Badge -->
-                        <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-sky-50/80 dark:bg-sky-950/50 border border-sky-200/60 dark:border-sky-800/60 shadow-2xs flex-shrink-0">
+                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-sky-50/80 dark:bg-sky-950/50 border border-sky-200/60 dark:border-sky-800/60 shadow-2xs flex-shrink-0">
                             <span class="w-2 h-2 rounded-full bg-sky-500"></span>
                             <div class="text-right">
-                                <span class="text-[8.5px] uppercase font-bold tracking-wider text-sky-600 dark:text-cyan-400 block leading-none">Total Pelanggan</span>
-                                <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalCityUsers']) }} User</span>
+                                <span class="text-[8px] uppercase font-bold tracking-wider text-sky-600 dark:text-cyan-400 block leading-none">Total</span>
+                                <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalCityUsers']) }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ApexChart Container -->
+                    <!-- ApexChart Container (Lebih Pendek: 95px) -->
                     <div class="pt-1">
-                        <div id="chart-city-distribution" class="w-full" style="min-height: 120px;"></div>
+                        <div id="chart-city-distribution" class="w-full" style="min-height: 95px;"></div>
                     </div>
                 </div>
 
                 <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
-                    <div class="flex items-center gap-2.5">
+                    <div class="flex items-center gap-2">
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-300">Total Pelanggan</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">Total</span>
                         </span>
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-300">Pelanggan Aktif</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">Aktif</span>
                         </span>
                     </div>
                     <a href="{{ route('teknik.pelanggan') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
-                        <span>Lihat Data Pelanggan</span>
+                        <span>Data Pelanggan</span>
                         <span>&rarr;</span>
                     </a>
                 </div>
             </div>
 
-            <!-- Breakdown Tabel Sebaran Kota / Wilayah -->
-            <div class="md:col-span-5 lg:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 4. Data Pelanggan Baru (Terbaru) -->
+            <div class="md:col-span-7 lg:col-span-7 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
-                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                            <span>Peringkat Wilayah / Kota</span>
-                        </h4>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                            Rincian jumlah total user & pelanggan aktif.
-                        </p>
+                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <div class="min-w-0">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
+                                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 ring-2 ring-indigo-100 dark:ring-indigo-950"></span>
+                                <span>Data Pelanggan Baru</span>
+                            </h4>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                                Pendaftaran pelanggan terkini (Tahun {{ $selectedTahun }}).
+                            </p>
+                        </div>
+
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <span class="px-2 py-0.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/60 text-[9.5px] font-bold text-blue-700 dark:text-cyan-400 font-mono">
+                                {{ count($newUserStats['recentNewUsers']) }} Terbaru
+                            </span>
+                        </div>
                     </div>
 
-                    <div class="pt-1.5 space-y-1.5 max-h-[125px] overflow-y-auto pr-1">
-                        @php
-                            $maxCityTotal = $chartData['totalCityUsers'] > 0 ? $chartData['totalCityUsers'] : 1;
-                            $cityColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'];
-                            $rawBreakdown = $chartData['cityBreakdown'] ?? [];
-                            if (is_array($rawBreakdown)) {
-                                $breakdownItems = $rawBreakdown;
-                            } elseif (is_object($rawBreakdown) && $rawBreakdown instanceof \Traversable && !($rawBreakdown instanceof \__PHP_Incomplete_Class)) {
-                                $breakdownItems = iterator_to_array($rawBreakdown);
-                            } else {
-                                $breakdownItems = is_array($chartData['cityLabels'] ?? null) ? $chartData['cityLabels'] : [];
-                            }
-                        @endphp
-                        @forelse($breakdownItems as $cIdx => $cItem)
-                            @php
-                                if (is_string($cItem)) {
-                                    $cName = $cItem;
-                                    $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
-                                    $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
-                                } elseif (is_array($cItem)) {
-                                    $cName = (string) ($cItem['kota_name'] ?? '');
-                                    $cTot = (int) ($cItem['total'] ?? 0);
-                                    $cAktif = (int) ($cItem['total_aktif'] ?? 0);
-                                } elseif (is_object($cItem) && !($cItem instanceof \__PHP_Incomplete_Class)) {
-                                    $cName = (string) ($cItem->kota_name ?? '');
-                                    $cTot = (int) ($cItem->total ?? 0);
-                                    $cAktif = (int) ($cItem->total_aktif ?? 0);
-                                } else {
-                                    $cName = (string) ($chartData['cityLabels'][$cIdx] ?? 'Wilayah');
-                                    $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
-                                    $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
-                                }
-                                $cName = trim($cName);
-                                $cPct = round(($cTot / $maxCityTotal) * 100, 1);
-                                $cBarColor = $cityColors[$loop->index % count($cityColors)];
-                            @endphp
-                            <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 space-y-1 hover:bg-slate-100/60 transition">
-                                <div class="flex items-center justify-between text-[10px]">
-                                    <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[8.5px] font-black {{ $loop->first ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : ($loop->iteration == 2 ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500') }}">
-                                            {{ $loop->iteration }}
-                                        </span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $cName }}">{{ $cName }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 font-mono flex-shrink-0">
-                                        <span class="font-black text-slate-900 dark:text-white text-[11px]">{{ number_format($cTot) }}</span>
-                                        <span class="text-[8.5px] text-slate-400">({{ $cPct }}%)</span>
-                                    </div>
-                                </div>
-                                <div class="w-full h-1.5 bg-slate-200/80 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full transition-all duration-500" style="width: {{ $cPct }}%; background-color: {{ $cBarColor }};"></div>
-                                </div>
-                                <div class="flex items-center justify-between text-[8.5px] text-slate-500 pt-0.5">
-                                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        <span>Aktif: {{ number_format($cAktif) }} User</span>
-                                    </span>
-                                    <a href="{{ route('teknik.pelanggan', ['wilayah' => $cName]) }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-semibold flex items-center gap-0.5">
-                                        <span>Filter</span>
-                                        <span>&rarr;</span>
-                                    </a>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="p-2 text-center text-[10px] text-slate-400">
-                                Belum ada data wilayah pelanggan
-                            </div>
-                        @endforelse
+                    <!-- Compact Table / List Data Pelanggan Baru -->
+                    <div class="pt-1 overflow-x-auto max-h-[105px] overflow-y-auto pr-0.5">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="text-[8.5px] uppercase font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                                    <th class="py-1 px-1.5">No. Internet / Nama</th>
+                                    <th class="py-1 px-1.5">Paket</th>
+                                    <th class="py-1 px-1.5">Tgl Daftar</th>
+                                    <th class="py-1 px-1.5 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100/70 dark:divide-slate-800/60">
+                                @forelse($newUserStats['recentNewUsers'] as $nu)
+                                    @php
+                                        $nuNoInternet = (string) (is_array($nu) ? ($nu['nomor_internet'] ?? '') : ($nu->nomor_internet ?? ''));
+                                        $nuNama = (string) (is_array($nu) ? ($nu['nama_pelanggan'] ?? 'Pelanggan') : ($nu->nama_pelanggan ?? 'Pelanggan'));
+                                        $nuBw = (string) (is_array($nu) ? ($nu['nama_kategori_bandwith'] ?? ($nu['alias_nama_kategori'] ?? ($nu['nama_paket'] ?? 'INTERNET'))) : ($nu->nama_kategori_bandwith ?? ($nu->alias_nama_kategori ?? ($nu->nama_paket ?? 'INTERNET'))));
+                                        $nuNominalBw = (string) (is_array($nu) ? ($nu['nominal_bandwith'] ?? '10') : ($nu->nominal_bandwith ?? '10'));
+                                        $nuDate = is_array($nu) ? ($nu['date_create'] ?? null) : ($nu->date_create ?? null);
+                                        $nuStatus = (string) (is_array($nu) ? ($nu['status_reg'] ?? '') : ($nu->status_reg ?? ''));
+                                        $profileUrl = !empty($nuNoInternet) ? route('teknik.pelanggan.profile', $nuNoInternet) : '#';
+                                    @endphp
+                                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                                        <td class="py-1 px-1.5">
+                                            <div class="flex items-center gap-1">
+                                                @if(!empty($nuNoInternet))
+                                                    <a href="{{ $profileUrl }}" class="font-bold text-blue-600 dark:text-cyan-400 font-mono text-[10px] hover:underline" title="Lihat Profil">
+                                                        {{ $nuNoInternet }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-slate-400 text-[10px] font-mono">-</span>
+                                                @endif
+                                            </div>
+                                            <div class="text-[9.5px] font-semibold text-slate-800 dark:text-slate-200 uppercase truncate max-w-[140px]" title="{{ $nuNama }}">
+                                                {{ $nuNama }}
+                                            </div>
+                                        </td>
+                                        <td class="py-1 px-1.5">
+                                            <div class="text-[9.5px] font-medium text-slate-700 dark:text-slate-300 truncate max-w-[110px]" title="{{ $nuBw }}">
+                                                {{ $nuBw }}
+                                            </div>
+                                            <div class="text-[8.5px] font-bold font-mono text-blue-600 dark:text-cyan-400">
+                                                {{ $nuNominalBw }} Mbps
+                                            </div>
+                                        </td>
+                                        <td class="py-1 px-1.5 text-[9px] text-slate-500 dark:text-slate-400 whitespace-nowrap font-mono">
+                                            {{ !empty($nuDate) ? \Carbon\Carbon::parse($nuDate)->format('d/m/Y') : '-' }}
+                                        </td>
+                                        <td class="py-1 px-1.5 text-right whitespace-nowrap">
+                                            @if($nuStatus == '20')
+                                                <span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30">
+                                                    AKTIF
+                                                </span>
+                                            @elseif(in_array($nuStatus, ['18', '18.1', '19', '19.1']))
+                                                <span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30">
+                                                    AKTIVASI
+                                                </span>
+                                            @elseif(in_array($nuStatus, ['16', '17', '17.1']))
+                                                <span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 dark:border-indigo-500/30">
+                                                    INSTALASI
+                                                </span>
+                                            @elseif(in_array($nuStatus, ['12', '13', '13.1']))
+                                                <span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30">
+                                                    SURVEY
+                                                </span>
+                                            @elseif(in_array($nuStatus, ['14', '15']))
+                                                <span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30">
+                                                    BATAL
+                                                </span>
+                                            @else
+                                                <span class="inline-block px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                                                    DRAFT
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="py-3 text-center text-slate-400 text-[10px]">
+                                            Tidak ada data pendaftaran tahun {{ $selectedTahun }}.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
-                    <span>Total Cakupan Wilayah</span>
-                    <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ is_countable($chartData['cityLabels'] ?? null) ? count($chartData['cityLabels']) : 3 }} Kota</span>
+                <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
+                    <span>Total <b>{{ number_format($newUserStats['totalBaru']) }}</b> pendaftaran tercatat</span>
+                    <a href="{{ route('teknik.pendaftaran') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
+                        <span>Kelola Pendaftaran</span>
+                        <span>&rarr;</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -724,7 +752,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ],
             chart: {
                 type: 'area',
-                height: 115,
+                height: 200,
                 fontFamily: 'inherit',
                 toolbar: { show: false },
                 animations: {
@@ -746,13 +774,13 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             stroke: {
                 curve: 'smooth',
-                width: [2, 1.5],
+                width: [2.5, 2],
                 dashArray: [0, 0]
             },
             markers: {
-                size: 2.5,
-                strokeWidth: 1,
-                hover: { size: 4.5 }
+                size: 3,
+                strokeWidth: 1.5,
+                hover: { size: 5 }
             },
             dataLabels: { enabled: false },
             xaxis: {
@@ -782,7 +810,7 @@ document.addEventListener('DOMContentLoaded', function () {
             grid: {
                 borderColor: gridColor,
                 strokeDashArray: 4,
-                padding: { top: -6, right: 8, bottom: -8, left: 6 }
+                padding: { top: 4, right: 8, bottom: -4, left: 6 }
             },
             legend: {
                 show: false
@@ -814,7 +842,7 @@ document.addEventListener('DOMContentLoaded', function () {
             labels: bwSeries.length > 0 && bwSeries.some(v => v > 0) ? bwLabels : ['Belum Ada Data'],
             chart: {
                 type: 'donut',
-                height: 100,
+                height: 135,
                 fontFamily: 'inherit',
                 background: 'transparent'
             },
@@ -894,7 +922,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ],
             chart: {
                 type: 'bar',
-                height: 125,
+                height: 95,
                 fontFamily: 'inherit',
                 toolbar: { show: false },
                 background: 'transparent'
@@ -902,8 +930,8 @@ document.addEventListener('DOMContentLoaded', function () {
             plotOptions: {
                 bar: {
                     horizontal: false,
-                    columnWidth: '42%',
-                    borderRadius: 5,
+                    columnWidth: '38%',
+                    borderRadius: 4,
                     borderRadiusApplication: 'end',
                     dataLabels: {
                         position: 'top'
@@ -915,10 +943,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 enabled: true,
                 style: {
                     colors: isDark ? ['#e2e8f0'] : ['#1e293b'],
-                    fontSize: '9.5px',
+                    fontSize: '9px',
                     fontWeight: 700
                 },
-                offsetY: -16,
+                offsetY: -14,
                 formatter: (val) => val > 0 ? val : ""
             },
             stroke: {
@@ -954,7 +982,7 @@ document.addEventListener('DOMContentLoaded', function () {
             grid: {
                 borderColor: gridColor,
                 strokeDashArray: 4,
-                padding: { top: 6, right: 8, bottom: -6, left: 6 },
+                padding: { top: 4, right: 6, bottom: -8, left: 4 },
                 yaxis: { lines: { show: true } },
                 xaxis: { lines: { show: false } }
             },

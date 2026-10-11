@@ -4,33 +4,33 @@
 
 @section('content')
 <div x-data="{ activeTab: 'charts' }" class="space-y-2">
-    <!-- Role Welcome Banner (Rich Royal & Sapphire Blue Gradient - Compact) -->
-    <div class="ims-banner relative overflow-hidden rounded-2xl py-2 px-3 sm:py-2.5 sm:px-3.5 shadow-sm text-white"
+    <!-- Role Welcome Banner (Rich Royal & Sapphire Blue Gradient - Rapi & Symmetrical) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl py-2 px-3 sm:py-2.5 sm:px-4 shadow-sm text-white"
          style="background: linear-gradient(135deg, #0e3b64 0%, #154c86 32%, #1b5fa2 65%, #2563eb 100%);">
         
         <!-- Subtle Ambient Lighting Effect -->
         <div class="pointer-events-none absolute -right-8 -bottom-8 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
         <div class="pointer-events-none absolute left-1/4 -top-10 w-36 h-36 bg-cyan-400/10 rounded-full blur-xl"></div>
 
-        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
             <!-- Left: Profile & Welcome -->
-            <div class="flex items-center gap-2 min-w-0">
+            <div class="flex items-center gap-2.5 min-w-0">
                 <!-- Avatar Initial Pill -->
-                <div class="w-7 h-7 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30 text-white font-black text-xs flex items-center justify-center shadow-xs flex-shrink-0">
+                <div class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0">
                     {{ strtoupper(substr($user->nama, 0, 1)) }}
                 </div>
                 
                 <div class="min-w-0">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                        <h2 class="text-xs sm:text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5" style="color: #FFFFFF !important;">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h2 class="text-xs sm:text-sm font-extrabold text-white tracking-tight flex items-center gap-1" style="color: #FFFFFF !important;">
                             <span>Halo, {{ $user->nama }}!</span>
                             <span>👋</span>
                         </h2>
-                        <span class="inline-flex items-center px-2 py-0.2 rounded-full text-[8.5px] font-bold bg-white/15 backdrop-blur-xs text-white border border-white/25">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[8.5px] font-extrabold uppercase tracking-wider bg-white/20 text-white border border-white/30">
                             {{ $user->nama_level }}
                         </span>
-                        <span class="inline-flex items-center gap-1 px-2 py-0.2 rounded-full text-[8.5px] font-semibold bg-emerald-400/20 text-emerald-300 border border-emerald-400/35">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[8.5px] font-semibold bg-emerald-400/25 text-emerald-200 border border-emerald-400/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
                             Online
                         </span>
                     </div>
@@ -40,15 +40,15 @@
                 </div>
             </div>
 
-            <!-- Right: View Tabs, Year Filter & Status Layanan -->
-            <div class="flex items-center gap-1.5 self-end sm:self-auto flex-shrink-0 flex-wrap">
+            <!-- Right: View Tabs, Year Filter & Status Layanan (Unified Height h-7) -->
+            <div class="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap">
                 <!-- View Tabs with explicit contrasting inline styles -->
-                <div class="inline-flex items-center p-0.5 rounded-xl bg-black/30 backdrop-blur-md border border-white/20 text-[9.5px]">
+                <div class="inline-flex items-center h-7 p-0.5 rounded-xl bg-black/30 backdrop-blur-md border border-white/20 text-[9.5px]">
                     <button type="button" 
                             @click="activeTab = 'charts'" 
                             :class="activeTab === 'charts' ? 'shadow-xs' : 'text-white/85 hover:text-white'" 
                             :style="activeTab === 'charts' ? 'background-color: #ffffff !important; color: #0e3b64 !important; font-weight: 800;' : 'color: rgba(255,255,255,0.85);'"
-                            class="px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1">
+                            class="h-full px-2.5 rounded-lg transition cursor-pointer flex items-center gap-1 leading-none">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         <span>Grafik Utama</span>
                     </button>
@@ -56,40 +56,34 @@
                             @click="activeTab = 'tables'" 
                             :class="activeTab === 'tables' ? 'shadow-xs' : 'text-white/85 hover:text-white'" 
                             :style="activeTab === 'tables' ? 'background-color: #ffffff !important; color: #0e3b64 !important; font-weight: 800;' : 'color: rgba(255,255,255,0.85);'"
-                            class="px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1">
+                            class="h-full px-2.5 rounded-lg transition cursor-pointer flex items-center gap-1 leading-none">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         <span>Data Pendaftaran</span>
                     </button>
-                    <button type="button" 
-                            @click="activeTab = 'all'" 
-                            :class="activeTab === 'all' ? 'shadow-xs' : 'text-white/85 hover:text-white'" 
-                            :style="activeTab === 'all' ? 'background-color: #ffffff !important; color: #0e3b64 !important; font-weight: 800;' : 'color: rgba(255,255,255,0.85);'"
-                            class="px-2 py-1 rounded-lg transition cursor-pointer hidden md:flex items-center gap-0.5">
-                        <span>Semua</span>
-                    </button>
                 </div>
 
-                <!-- Year Selector Form in Translucent Glass Style -->
-                <form action="{{ route('dashboard') }}" method="GET" class="flex items-center">
-                    <div class="relative">
+                <!-- Year Selector Form in Matching Glass Style -->
+                <form action="{{ route('dashboard') }}" method="GET" class="flex items-center m-0">
+                    <div class="relative flex items-center">
                         <select name="tahun" onchange="this.form.submit()" 
-                                class="appearance-none pl-2.5 pr-5 py-1 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-bold hover:bg-white/25 focus:outline-none cursor-pointer transition">
+                                style="background-color: rgba(0, 0, 0, 0.25) !important; color: #ffffff !important; -webkit-appearance: none; -moz-appearance: none; appearance: none;"
+                                class="h-7 pl-2.5 pr-6 rounded-xl border border-white/20 text-white text-[9.5px] font-bold hover:bg-black/40 focus:outline-none cursor-pointer transition">
                             @foreach($availableYears as $year)
                                 <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} class="text-slate-900 bg-white">
                                     Tahun {{ $year }}
                                 </option>
                             @endforeach
                         </select>
-                        <div class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-white/90">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        <div class="pointer-events-none absolute right-2 text-white/80">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
                 </form>
 
                 <!-- Status Layanan Button -->
                 <a href="{{ route('teknik.tiket') }}" 
-                   class="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm transition cursor-pointer">
-                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                   class="h-7 px-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[9.5px] font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer leading-none">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                     <span>Status Layanan</span>
                 </a>
             </div>
@@ -98,10 +92,10 @@
 
     <!-- Section Charts Container (Gambar 1 & Gambar 2 - 1 Layar Penuh) -->
     <div x-show="activeTab === 'charts' || activeTab === 'all'" class="space-y-2">
-        <!-- Row 1: Tren Bulanan (8 Cols) & Donut Bandwidth (4 Cols) [GAMBAR 1] -->
+        <!-- Row 1: Tren Bulanan (7 Cols) & Donut Bandwidth (5 Cols) -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
             <!-- 1. Grafik Tren User Baru per Bulan -->
-            <div class="md:col-span-7 lg:col-span-8 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div class="md:col-span-7 lg:col-span-7 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
                     <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                         <div class="min-w-0">
@@ -133,9 +127,9 @@
                         </div>
                     </div>
 
-                    <!-- ApexChart Container (Tinggi: 145px) -->
+                    <!-- ApexChart Container (Tinggi: 155px) -->
                     <div class="pt-0.5">
-                        <div id="chart-user-monthly-trend" class="w-full" style="min-height: 145px;"></div>
+                        <div id="chart-user-monthly-trend" class="w-full" style="min-height: 155px;"></div>
                     </div>
                 </div>
 
@@ -155,8 +149,8 @@
                 </div>
             </div>
 
-            <!-- 2. Donut Kategori Bandwidth & Itemized List Side-by-Side -->
-            <div class="md:col-span-5 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 2. Donut Kategori Bandwidth & Itemized List Side-by-Side (Donut Lebih Besar & List Rapi) -->
+            <div class="md:col-span-5 lg:col-span-5 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
                     <div class="border-b border-slate-100 dark:border-slate-800 pb-1.5">
                         <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
@@ -169,14 +163,14 @@
                     </div>
 
                     <!-- Side-by-Side Donut & Compact List -->
-                    <div class="pt-0.5 flex items-center gap-2">
-                        <!-- Donut Chart -->
-                        <div class="w-28 sm:w-32 shrink-0 flex items-center justify-center">
-                            <div id="chart-bandwidth-distribution" class="w-full" style="min-height: 120px;"></div>
+                    <div class="pt-1 flex items-center gap-2.5">
+                        <!-- Donut Chart (Lebih Besar) -->
+                        <div class="w-40 sm:w-44 md:w-48 shrink-0 flex items-center justify-center">
+                            <div id="chart-bandwidth-distribution" class="w-full" style="min-height: 155px;"></div>
                         </div>
 
-                        <!-- 1-Column Detailed List -->
-                        <div class="flex-1 min-w-0 space-y-1 max-h-[125px] overflow-y-auto pr-0.5">
+                        <!-- 1-Column Detailed List (Teks Lebih Kecil & Rapi) -->
+                        <div class="flex-1 min-w-0 space-y-0.5 max-h-[155px] overflow-y-auto pr-0.5">
                             @php
                                 $paletteColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'];
                                 $totalBwAll = array_sum($chartData['bandwidthSeries']);
@@ -187,14 +181,14 @@
                                     $pct = $totalBwAll > 0 ? round(($val / $totalBwAll) * 100, 1) : 0;
                                     $dotColor = $paletteColors[$idx % count($paletteColors)];
                                 @endphp
-                                <div class="flex items-center justify-between text-[8.5px] py-0.5">
+                                <div class="flex items-center justify-between text-[7.5px] py-0.5 leading-tight hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded px-1 transition">
                                     <div class="flex items-center gap-1.5 min-w-0 pr-1">
-                                        <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background-color: {{ $dotColor }};"></span>
-                                        <span class="font-medium text-slate-700 dark:text-slate-300 truncate" title="{{ $label }}">{{ $label }}</span>
+                                        <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {{ $dotColor }};"></span>
+                                        <span class="font-semibold text-slate-700 dark:text-slate-300 truncate" title="{{ $label }}">{{ $label }}</span>
                                     </div>
-                                    <div class="flex items-center gap-1 font-mono flex-shrink-0">
+                                    <div class="flex items-center gap-1 font-mono shrink-0">
                                         <span class="font-bold text-slate-900 dark:text-white">{{ number_format($val) }}</span>
-                                        <span class="text-[8px] text-slate-400">({{ $pct }}%)</span>
+                                        <span class="text-[7px] text-slate-400">({{ $pct }}%)</span>
                                     </div>
                                 </div>
                             @endforeach
@@ -202,7 +196,7 @@
                     </div>
                 </div>
 
-                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8.5px] text-slate-400">
+                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8px] text-slate-400">
                     <span>Total Porsi Layanan</span>
                     <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ number_format($totalBwAll) }} User</span>
                 </div>
@@ -860,40 +854,40 @@ document.addEventListener('DOMContentLoaded', function () {
             labels: bwSeries.length > 0 && bwSeries.some(v => v > 0) ? bwLabels : ['Belum Ada Data'],
             chart: {
                 type: 'donut',
-                height: 120,
+                height: 155,
                 fontFamily: 'inherit',
                 background: 'transparent'
             },
             colors: ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'],
             stroke: {
-                width: 2,
+                width: 2.5,
                 colors: isDark ? ['#0f172a'] : ['#ffffff']
             },
             plotOptions: {
                 pie: {
                     donut: {
-                        size: '66%',
+                        size: '62%',
                         labels: {
                             show: true,
                             name: {
                                 show: true,
-                                fontSize: '8.5px',
+                                fontSize: '8px',
                                 fontWeight: 700,
                                 color: textColor,
-                                offsetY: -2
+                                offsetY: -3
                             },
                             value: {
                                 show: true,
-                                fontSize: '13px',
+                                fontSize: '15px',
                                 fontWeight: 900,
                                 color: isDark ? '#ffffff' : '#0f172a',
-                                offsetY: 2,
+                                offsetY: 3,
                                 formatter: (val) => val
                             },
                             total: {
                                 show: true,
                                 label: 'Total User',
-                                fontSize: '8.5px',
+                                fontSize: '8px',
                                 fontWeight: 700,
                                 color: textColor,
                                 formatter: function (w) {

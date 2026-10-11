@@ -108,16 +108,16 @@
                             </p>
                         </div>
 
-                        <!-- Mini KPI Badges Symmetrical -->
+                        <!-- Mini KPI Badges Symmetrical (Borderless) -->
                         <div class="flex items-center gap-1.5 flex-shrink-0">
-                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/60 shadow-2xs">
+                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 shadow-2xs">
                                 <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
                                 <div class="text-right">
                                     <span class="text-[8px] uppercase font-bold tracking-wider text-blue-600 dark:text-cyan-400 block leading-none">Registrasi</span>
                                     <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs">
+                            <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 shadow-2xs">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                 <div class="text-right">
                                     <span class="text-[8px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 block leading-none">Aktif Online</span>
@@ -219,8 +219,8 @@
                             </p>
                         </div>
 
-                        <!-- Total City User Badge -->
-                        <div class="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-sky-50/80 dark:bg-sky-950/50 border border-sky-200/60 dark:border-sky-800/60 shadow-2xs flex-shrink-0">
+                        <!-- Total City User Badge (Borderless) -->
+                        <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 shadow-2xs flex-shrink-0">
                             <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                             <div class="text-right">
                                 <span class="text-[7.5px] uppercase font-bold tracking-wider text-sky-600 dark:text-cyan-400 block leading-none">Total</span>
@@ -347,7 +347,7 @@
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-1 px-2 py-0.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200/60 dark:border-indigo-800/60 shadow-2xs flex-shrink-0">
+                        <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 shadow-2xs flex-shrink-0">
                             <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
                             <span class="text-[8.5px] font-bold font-mono text-indigo-700 dark:text-indigo-300">5 Terkini</span>
                         </div>

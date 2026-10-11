@@ -214,8 +214,16 @@
                     @php
                         $maxCityTotal = $chartData['totalCityUsers'] > 0 ? $chartData['totalCityUsers'] : 1;
                         $cityColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'];
+                        $rawBreakdown = $chartData['cityBreakdown'] ?? [];
+                        if (is_array($rawBreakdown)) {
+                            $breakdownItems = $rawBreakdown;
+                        } elseif (is_object($rawBreakdown) && $rawBreakdown instanceof \Traversable && !($rawBreakdown instanceof \__PHP_Incomplete_Class)) {
+                            $breakdownItems = iterator_to_array($rawBreakdown);
+                        } else {
+                            $breakdownItems = is_array($chartData['cityLabels'] ?? null) ? $chartData['cityLabels'] : [];
+                        }
                     @endphp
-                    @forelse($chartData['cityBreakdown'] ?? [] as $cIdx => $cItem)
+                    @forelse($breakdownItems as $cIdx => $cItem)
                         @php
                             if (is_string($cItem)) {
                                 $cName = $cItem;
@@ -225,10 +233,14 @@
                                 $cName = (string) ($cItem['kota_name'] ?? '');
                                 $cTot = (int) ($cItem['total'] ?? 0);
                                 $cAktif = (int) ($cItem['total_aktif'] ?? 0);
-                            } else {
+                            } elseif (is_object($cItem) && !($cItem instanceof \__PHP_Incomplete_Class)) {
                                 $cName = (string) ($cItem->kota_name ?? '');
                                 $cTot = (int) ($cItem->total ?? 0);
                                 $cAktif = (int) ($cItem->total_aktif ?? 0);
+                            } else {
+                                $cName = (string) ($chartData['cityLabels'][$cIdx] ?? 'Wilayah');
+                                $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
+                                $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
                             }
                             $cName = trim($cName);
                             $cPct = round(($cTot / $maxCityTotal) * 100, 1);
@@ -271,7 +283,7 @@
 
             <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
                 <span>Total Cakupan Wilayah</span>
-                <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ count($chartData['cityBreakdown'] ?? []) }} Kota</span>
+                <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ is_countable($chartData['cityLabels'] ?? null) ? count($chartData['cityLabels']) : 3 }} Kota</span>
             </div>
         </div>
     </div>

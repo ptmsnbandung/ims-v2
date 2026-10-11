@@ -95,7 +95,7 @@ class DashboardController extends Controller
             'cityLabels' => [],
             'citySeries' => [],
             'cityAktifSeries' => [],
-            'cityBreakdown' => collect([]),
+            'cityBreakdown' => [],
             'totalCityUsers' => 0,
         ];
 
@@ -384,7 +384,7 @@ class DashboardController extends Controller
                             'total' => (int) (is_array($item) ? ($item['total'] ?? 0) : ($item->total ?? 0)),
                             'total_aktif' => (int) (is_array($item) ? ($item['total_aktif'] ?? 0) : ($item->total_aktif ?? 0)),
                         ];
-                    });
+                    })->all();
                 } catch (\Throwable $e) {
                     Log::warning('City dist query fallback: ' . $e->getMessage());
                 }
@@ -393,11 +393,11 @@ class DashboardController extends Controller
                     $chartCityLabels = ['KOTA BANDUNG', 'KABUPATEN BANDUNG', 'LAINNYA'];
                     $chartCitySeries = [0, 0, 0];
                     $chartCityAktifSeries = [0, 0, 0];
-                    $cityBreakdown = collect([
+                    $cityBreakdown = [
                         ['kota_name' => 'KOTA BANDUNG', 'total' => 0, 'total_aktif' => 0],
                         ['kota_name' => 'KABUPATEN BANDUNG', 'total' => 0, 'total_aktif' => 0],
                         ['kota_name' => 'LAINNYA', 'total' => 0, 'total_aktif' => 0],
-                    ]);
+                    ];
                 }
 
                 $localChartData = [
@@ -413,7 +413,7 @@ class DashboardController extends Controller
                     'cityLabels' => $chartCityLabels,
                     'citySeries' => $chartCitySeries,
                     'cityAktifSeries' => $chartCityAktifSeries,
-                    'cityBreakdown' => $cityBreakdown,
+                    'cityBreakdown' => is_array($cityBreakdown) ? $cityBreakdown : (is_object($cityBreakdown) && method_exists($cityBreakdown, 'all') ? $cityBreakdown->all() : []),
                     'totalCityUsers' => array_sum($chartCitySeries),
                 ];
 

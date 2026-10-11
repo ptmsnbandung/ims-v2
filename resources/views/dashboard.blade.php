@@ -40,50 +40,54 @@
                 </div>
             </div>
 
-            <!-- Right: View Tabs, Year Filter & Status Layanan (Unified Height h-7.5) -->
-            <div class="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap">
-                <!-- View Tabs Switcher -->
-                <div class="inline-flex items-center h-7.5 p-0.5 rounded-xl bg-black/25 backdrop-blur-md border border-white/15 text-[10px]">
+            <!-- Right: View Tabs, Year Filter & Status Layanan (Unified Pill System) -->
+            <div class="flex items-center gap-2.5 self-start md:self-auto shrink-0 flex-wrap">
+                <!-- View Tabs Switcher Pill Container -->
+                <div style="display: inline-flex; align-items: center; height: 32px; padding: 3px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.2); box-sizing: border-box;">
                     <button type="button" 
                             @click="activeTab = 'charts'" 
-                            :class="activeTab === 'charts' ? 'shadow-xs' : 'hover:bg-white/10'" 
-                            :style="activeTab === 'charts' ? 'background: #ffffff !important; color: #0b3358 !important; font-weight: 700;' : 'background: transparent; color: rgba(255,255,255,0.85); font-weight: 500;'"
-                            class="h-full px-3 rounded-lg transition cursor-pointer flex items-center gap-1.5 leading-none">
+                            :style="activeTab === 'charts' 
+                                ? 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: #ffffff !important; color: #0b3358 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: transparent; color: rgba(255, 255, 255, 0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                            class="hover:text-white">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         <span>Grafik Utama</span>
                     </button>
                     <button type="button" 
                             @click="activeTab = 'tables'" 
-                            :class="activeTab === 'tables' ? 'shadow-xs' : 'hover:bg-white/10'" 
-                            :style="activeTab === 'tables' ? 'background: #ffffff !important; color: #0b3358 !important; font-weight: 700;' : 'background: transparent; color: rgba(255,255,255,0.85); font-weight: 500;'"
-                            class="h-full px-3 rounded-lg transition cursor-pointer flex items-center gap-1.5 leading-none">
+                            :style="activeTab === 'tables' 
+                                ? 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: #ffffff !important; color: #0b3358 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: transparent; color: rgba(255, 255, 255, 0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                            class="hover:text-white">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         <span>Data Pendaftaran</span>
                     </button>
                 </div>
 
-                <!-- Year Selector Form in Matching Glass Style -->
-                <form action="{{ route('dashboard') }}" method="GET" class="flex items-center m-0">
-                    <div class="relative flex items-center">
+                <!-- Year Selector Form in Matching Glass Pill -->
+                <form action="{{ route('dashboard') }}" method="GET" style="margin: 0; padding: 0; display: inline-flex; align-items: center;">
+                    <div style="position: relative; display: inline-flex; align-items: center; height: 32px;">
                         <select name="tahun" onchange="this.form.submit()" 
-                                style="background-color: rgba(0, 0, 0, 0.25) !important; color: #ffffff !important; -webkit-appearance: none; -moz-appearance: none; appearance: none;"
-                                class="h-7.5 pl-3 pr-7 rounded-xl border border-white/15 text-white text-[10px] font-bold hover:bg-black/35 focus:outline-none cursor-pointer transition">
+                                style="height: 32px; padding-left: 14px; padding-right: 30px; border-radius: 9999px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 11px; font-weight: 700; appearance: none; -webkit-appearance: none; -moz-appearance: none; cursor: pointer; outline: none; box-sizing: border-box; line-height: 30px;">
                             @foreach($availableYears as $year)
-                                <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} class="text-slate-900 bg-white">
+                                <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} style="color: #0f172a; background: #ffffff;">
                                     Tahun {{ $year }}
                                 </option>
                             @endforeach
                         </select>
-                        <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-white/70">
-                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
+                        <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </span>
                     </div>
                 </form>
 
-                <!-- Status Layanan Button -->
+                <!-- Status Layanan Button (Vibrant Emerald Pill) -->
                 <a href="{{ route('teknik.tiket') }}" 
-                   class="h-7.5 px-3 rounded-xl bg-emerald-500/90 hover:bg-emerald-500 active:scale-[0.98] text-white text-[10px] font-bold flex items-center gap-1.5 shadow-xs border border-emerald-400/30 transition cursor-pointer leading-none">
-                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                   style="height: 32px; padding: 0 14px; border-radius: 9999px; background: #10b981; border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.15); box-sizing: border-box; line-height: 30px;"
+                   class="hover:bg-emerald-600 transition">
+                    <span style="width: 6px; height: 6px; border-radius: 9999px; background: #ffffff; display: inline-block;" class="animate-pulse"></span>
                     <span>Status Layanan</span>
                 </a>
             </div>

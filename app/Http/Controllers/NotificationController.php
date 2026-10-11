@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class NotificationController extends Controller
 {
@@ -28,11 +29,7 @@ class NotificationController extends Controller
     }
 
     /**
-     * Polling endpoint untuk notifikasi baru saat aplikasi sedang dibuka.
-     * Mengembalikan event sesuai hak akses Role pengguna:
-     * - NOC & Teknik: Tiket Gangguan, Jadwal Survey/Aktivasi, Request Eksekusi UP/Down, Suspend, Terminasi, Report Instalasi.
-     * - Finance: Pembayaran Tagihan Masuk (Layanan & Registrasi), Konfirmasi Bukti Transfer, Request Invoice, Pendaftaran Baru.
-     * - Admin & Direktur: Mendapatkan semua notifikasi.
+     * Polling endpoint fallback untuk notifikasi baru saat browser tidak mendukung SSE.
      */
     public function poll(Request $request): JsonResponse
     {
@@ -45,13 +42,93 @@ class NotificationController extends Controller
         $sinceTimestamp = $request->input('since');
         $tz = 'Asia/Jakarta';
         
-        // Default to last 30 seconds if no since timestamp provided
         if (!empty($sinceTimestamp) && is_numeric($sinceTimestamp)) {
             $since = Carbon::createFromTimestamp((int) $sinceTimestamp, $tz);
         } else {
             $since = Carbon::now($tz)->subSeconds(30);
         }
 
+        $notifications = $this->getRecentNotifications($user, $since);
+
+        return response()->json([
+            'status' => 'success',
+            'timestamp' => Carbon::now($tz)->timestamp,
+            'notifications' => $notifications,
+        ]);
+    }
+
+    /**
+     * Server-Sent Events (SSE) Stream endpoint untuk notifikasi real-time instan.
+     * Menggunakan persistent HTTP stream dengan keep-alive heartbeat.
+     */
+    public function stream(Request $request): StreamedResponse
+    {
+        /** @var \App\Models\Pengguna|null $user */
+        $user = $request->user();
+        if (!$user) {
+            abort(401, 'Unauthenticated');
+        }
+
+        // Segera tutup session lock agar request navigasi halaman lain tidak tertahan
+        if (session()->isStarted()) {
+            session()->save();
+        }
+
+        $tz = 'Asia/Jakarta';
+
+        $response = new StreamedResponse(function () use ($user, $tz) {
+            // Matikan output buffer bawaan agar stream langsung terkirim seketika
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
+            // Batasi durasi satu sesi stream max 40 detik
+            // Browser EventSource otomatis reconnect dalam hitungan milidetik secara mulus
+            // Pola ini mencegah memory leak dan memastikan PHP-FPM worker bergantian dengan sehat
+            $startTime = time();
+            $lastCheck = Carbon::now($tz)->subSeconds(15);
+
+            while ((time() - $startTime) < 40) {
+                if (connection_aborted()) {
+                    break;
+                }
+
+                $now = Carbon::now($tz);
+                $notifications = $this->getRecentNotifications($user, $lastCheck);
+
+                if (!empty($notifications)) {
+                    foreach ($notifications as $notif) {
+                        echo "event: notification\n";
+                        echo "data: " . json_encode($notif) . "\n\n";
+                    }
+                    if (ob_get_level() > 0) ob_flush();
+                    flush();
+                    $lastCheck = $now;
+                } else {
+                    // Kirim heartbeat ping agar koneksi tetap hidup
+                    echo ": heartbeat\n\n";
+                    if (ob_get_level() > 0) ob_flush();
+                    flush();
+                }
+
+                // Cek data baru setiap 2 detik (real-time responsif)
+                sleep(2);
+            }
+        });
+
+        $response->headers->set('Content-Type', 'text/event-stream');
+        $response->headers->set('Cache-Control', 'no-cache, no-transform');
+        $response->headers->set('Connection', 'keep-alive');
+        $response->headers->set('X-Accel-Buffering', 'no'); // Instruksikan Nginx agar tidak mem-buffer stream
+
+        return $response;
+    }
+
+    /**
+     * Kumpulan query pengecekan notifikasi berdasarkan role dan waktu.
+     */
+    public function getRecentNotifications($user, Carbon $since): array
+    {
         $sinceFormatted = $since->format('Y-m-d H:i:s');
         $notifications = [];
 
@@ -518,11 +595,7 @@ class NotificationController extends Controller
             }
         }
 
-        return response()->json([
-            'status' => 'success',
-            'timestamp' => Carbon::now('Asia/Jakarta')->timestamp,
-            'notifications' => $notifications,
-        ]);
+        return $notifications;
     }
 }
 

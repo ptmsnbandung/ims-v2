@@ -1474,11 +1474,56 @@
                 document.addEventListener('click', unlock, { once: true });
                 document.addEventListener('keydown', unlock, { once: true });
 
-                // Initial poll on load, then poll continuously every 15 seconds (including when tab is in background)
-                setTimeout(() => this.pollNotifications(), 1500);
-                setInterval(() => {
+                // Initial check once on load, then establish Real-Time SSE stream
+                setTimeout(() => {
                     this.pollNotifications();
-                }, 15000);
+                    this.connectSse();
+                }, 1000);
+            },
+
+            connectSse() {
+                if (!('EventSource' in window)) {
+                    this.startPollingFallback();
+                    return;
+                }
+
+                if (this.eventSource) {
+                    try { this.eventSource.close(); } catch(e) {}
+                }
+
+                try {
+                    const sseUrl = `{{ route('api.notifications.stream') }}`;
+                    this.eventSource = new EventSource(sseUrl);
+
+                    this.eventSource.addEventListener('notification', (e) => {
+                        try {
+                            const notif = JSON.parse(e.data);
+                            const notifId = notif.id;
+                            if (notifId && !this.hasPlayed(notifId)) {
+                                this.markAsPlayed(notifId);
+                                this.enqueueNotification(notif);
+                            }
+                        } catch (err) {
+                            console.warn('SSE notification parse error:', err);
+                        }
+                    });
+
+                    this.eventSource.onerror = () => {
+                        // If closed unexpectedly, try reconnecting or start fallback
+                        if (this.eventSource && this.eventSource.readyState === EventSource.CLOSED) {
+                            setTimeout(() => this.connectSse(), 5000);
+                        }
+                    };
+                } catch (e) {
+                    console.warn('SSE connect error, falling back to polling:', e);
+                    this.startPollingFallback();
+                }
+            },
+
+            startPollingFallback() {
+                if (this.pollInterval) return;
+                this.pollNotifications();
+                this.pollInterval = setInterval(() => this.pollNotifications(), 15000);
             },
 
             testSound() {
@@ -1543,6 +1588,7 @@
                             utterance.lang = 'id-ID';
                             utterance.rate = 1.0;
                             utterance.pitch = 1.0;
+                            utterance.volume = 1.0;
 
                             const voices = window.speechSynthesis.getVoices();
                             const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang === 'id_ID' || (v.lang && v.lang.toLowerCase().startsWith('id')));

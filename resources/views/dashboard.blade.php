@@ -169,14 +169,14 @@
                     </div>
 
                     <!-- Side-by-Side Donut & Compact List -->
-                    <div class="pt-0.5 flex items-center gap-1.5">
+                    <div class="pt-0.5 flex items-center gap-2">
                         <!-- Donut Chart -->
-                        <div class="w-24 sm:w-28 shrink-0 flex items-center justify-center">
-                            <div id="chart-bandwidth-distribution" class="w-full" style="min-height: 105px;"></div>
+                        <div class="w-28 sm:w-32 shrink-0 flex items-center justify-center">
+                            <div id="chart-bandwidth-distribution" class="w-full" style="min-height: 120px;"></div>
                         </div>
 
                         <!-- 1-Column Detailed List -->
-                        <div class="flex-1 min-w-0 space-y-0.5 max-h-[110px] overflow-y-auto pr-0.5">
+                        <div class="flex-1 min-w-0 space-y-1 max-h-[125px] overflow-y-auto pr-0.5">
                             @php
                                 $paletteColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'];
                                 $totalBwAll = array_sum($chartData['bandwidthSeries']);
@@ -188,7 +188,7 @@
                                     $dotColor = $paletteColors[$idx % count($paletteColors)];
                                 @endphp
                                 <div class="flex items-center justify-between text-[8.5px] py-0.5">
-                                    <div class="flex items-center gap-1 min-w-0 pr-1">
+                                    <div class="flex items-center gap-1.5 min-w-0 pr-1">
                                         <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background-color: {{ $dotColor }};"></span>
                                         <span class="font-medium text-slate-700 dark:text-slate-300 truncate" title="{{ $label }}">{{ $label }}</span>
                                     </div>
@@ -211,7 +211,7 @@
 
         <!-- Row 2: 3 Kotak Data (Sebaran Wilayah, Peringkat Wilayah, & Data Pelanggan Baru 5 User) -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
-            <!-- 3. Grafik Sebaran User per Kota / Wilayah Pasang (Lebih Pendek: 75px) -->
+            <!-- 3. Grafik Sebaran User per Kota / Wilayah Pasang (Memenuhi Card Rapi) -->
             <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
                     <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
@@ -235,9 +235,9 @@
                         </div>
                     </div>
 
-                    <!-- ApexChart Container (Lebih Pendek: 75px) -->
+                    <!-- ApexChart Container (Memenuhi Card: 140px) -->
                     <div class="pt-0.5">
-                        <div id="chart-city-distribution" class="w-full" style="min-height: 75px;"></div>
+                        <div id="chart-city-distribution" class="w-full" style="min-height: 140px;"></div>
                     </div>
                 </div>
 
@@ -272,7 +272,7 @@
                         </p>
                     </div>
 
-                    <div class="pt-1 space-y-1">
+                    <div class="pt-1 space-y-1.5">
                         @php
                             $maxCityTotal = $chartData['totalCityUsers'] > 0 ? $chartData['totalCityUsers'] : 1;
                             $cityColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'];
@@ -308,7 +308,7 @@
                                 $cPct = round(($cTot / $maxCityTotal) * 100, 1);
                                 $cBarColor = $cityColors[$loop->index % count($cityColors)];
                             @endphp
-                            <div class="p-1 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 space-y-0.5 hover:bg-slate-100/60 transition">
+                            <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 space-y-0.5 hover:bg-slate-100/60 transition">
                                 <div class="flex items-center justify-between text-[9px]">
                                     <div class="flex items-center gap-1.5 min-w-0">
                                         <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7.5px] font-black {{ $loop->first ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : ($loop->iteration == 2 ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500') }}">
@@ -403,18 +403,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Clean Bottom Bar for Single Screen View (Ultra Compact) -->
-        <div x-show="activeTab === 'charts'" class="py-0.5 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center justify-between text-[9px] text-slate-500">
-            <div class="flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="font-medium text-slate-600 dark:text-slate-400">Dashboard Eksekutif 1 Layar &middot; Jan - Des {{ $selectedTahun }}</span>
-            </div>
-            <button type="button" @click="activeTab = 'tables'" class="text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 font-bold flex items-center gap-0.5 cursor-pointer transition">
-                <span>Lihat Data & Pendaftaran Lengkap</span>
-                <span>&rarr;</span>
-            </button>
-        </div>
+    </div>
     </div>
 
     <!-- ========================================================================= -->
@@ -781,7 +770,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ],
             chart: {
                 type: 'area',
-                height: 145,
+                height: 155,
                 fontFamily: 'inherit',
                 toolbar: { show: false },
                 animations: {
@@ -839,7 +828,7 @@ document.addEventListener('DOMContentLoaded', function () {
             grid: {
                 borderColor: gridColor,
                 strokeDashArray: 4,
-                padding: { top: 0, right: 6, bottom: -8, left: 4 }
+                padding: { top: 2, right: 8, bottom: -6, left: 6 }
             },
             legend: {
                 show: false
@@ -871,7 +860,7 @@ document.addEventListener('DOMContentLoaded', function () {
             labels: bwSeries.length > 0 && bwSeries.some(v => v > 0) ? bwLabels : ['Belum Ada Data'],
             chart: {
                 type: 'donut',
-                height: 105,
+                height: 120,
                 fontFamily: 'inherit',
                 background: 'transparent'
             },
@@ -883,7 +872,7 @@ document.addEventListener('DOMContentLoaded', function () {
             plotOptions: {
                 pie: {
                     donut: {
-                        size: '68%',
+                        size: '66%',
                         labels: {
                             show: true,
                             name: {
@@ -895,7 +884,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             },
                             value: {
                                 show: true,
-                                fontSize: '12px',
+                                fontSize: '13px',
                                 fontWeight: 900,
                                 color: isDark ? '#ffffff' : '#0f172a',
                                 offsetY: 2,
@@ -951,7 +940,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ],
             chart: {
                 type: 'bar',
-                height: 75,
+                height: 140,
                 fontFamily: 'inherit',
                 toolbar: { show: false },
                 background: 'transparent'
@@ -959,7 +948,7 @@ document.addEventListener('DOMContentLoaded', function () {
             plotOptions: {
                 bar: {
                     horizontal: false,
-                    columnWidth: '45%',
+                    columnWidth: '52%',
                     borderRadius: 4,
                     borderRadiusApplication: 'end',
                     dataLabels: {
@@ -975,7 +964,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     fontSize: '9px',
                     fontWeight: 700
                 },
-                offsetY: -13,
+                offsetY: -14,
                 formatter: (val) => val > 0 ? val : ""
             },
             stroke: {
@@ -1009,7 +998,7 @@ document.addEventListener('DOMContentLoaded', function () {
             grid: {
                 borderColor: gridColor,
                 strokeDashArray: 4,
-                padding: { top: 12, right: 4, bottom: -8, left: 4 },
+                padding: { top: 16, right: 6, bottom: -6, left: 6 },
                 yaxis: { lines: { show: false } },
                 xaxis: { lines: { show: false } }
             },

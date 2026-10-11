@@ -1178,7 +1178,7 @@
                 </header>
 
                 <!-- Page Content (Dual Light & Dark Mode Container) -->
-                <main class="flex-1 p-3.5 sm:p-6 lg:p-8 bg-[#F8FAFC] dark:bg-[#071520] transition-colors duration-200">
+                <main class="flex-1 {{ request()->routeIs('dashboard') ? 'px-3 pt-1.5 pb-2 sm:px-4 sm:pt-2 sm:pb-2.5 lg:px-5 lg:pt-2 lg:pb-2.5' : 'p-3.5 sm:p-6 lg:p-8' }} bg-[#F8FAFC] dark:bg-[#071520] transition-colors duration-200">
                     <!-- Flash Message -->
                     <!-- Flash Message -->
                     @if(session('success'))
@@ -1259,6 +1259,7 @@
                     @yield('content')
                 </main>
 
+                @unless(request()->routeIs('dashboard') || View::hasSection('no_footer'))
                 <!-- Bottom Footer (Dual Light & Dark Mode) -->
                 <footer class="mt-auto shrink-0 px-6 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2 transition-colors duration-200">
                     <div>
@@ -1268,6 +1269,7 @@
                         IMS-v2 &middot; v3.0.1
                     </div>
                 </footer>
+                @endunless
             </div>
         </div>
     </div>

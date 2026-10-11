@@ -3,94 +3,106 @@
 @section('page_title', 'Dashboard Utama')
 
 @section('content')
-<div x-data="{ activeTab: 'charts' }" class="space-y-2">
-    <!-- Unified Executive Header Bar -->
-    <div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs px-3.5 py-1.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <!-- Left: Profile & Welcome -->
-        <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs flex-shrink-0">
-                {{ strtoupper(substr($user->nama, 0, 1)) }}
-            </div>
-            <div class="min-w-0">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    <h2 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate">
-                        Halo, {{ $user->nama }}! 👋
-                    </h2>
-                    <span class="inline-flex items-center px-1.5 py-0.2 rounded-md text-[9.5px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {{ $user->nama_level }}
-                    </span>
-                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md text-[9.5px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Online
-                    </span>
+<div x-data="{ activeTab: 'charts' }" class="space-y-2.5">
+    <!-- Role Welcome Banner (Rich Royal & Sapphire Blue Gradient) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl p-3 sm:p-3.5 shadow-sm text-white"
+         style="background: linear-gradient(135deg, #0e3b64 0%, #154c86 32%, #1b5fa2 65%, #2563eb 100%);">
+        
+        <!-- Subtle Ambient Lighting Effect -->
+        <div class="pointer-events-none absolute -right-8 -bottom-8 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="pointer-events-none absolute left-1/4 -top-10 w-36 h-36 bg-cyan-400/10 rounded-full blur-xl"></div>
+
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <!-- Left: Profile & Welcome -->
+            <div class="flex items-center gap-2.5 min-w-0">
+                <!-- Avatar Initial Pill -->
+                <div class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs border border-white/30 text-white font-black text-sm flex items-center justify-center shadow-xs flex-shrink-0">
+                    {{ strtoupper(substr($user->nama, 0, 1)) }}
                 </div>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate hidden sm:block">
-                    {{ $user->role_description }} &middot; Pantau pertumbuhan user baru, tren bandwidth, dan sebaran wilayah.
-                </p>
-            </div>
-        </div>
-
-        <!-- Right: View Tabs, Filter & Quick Action -->
-        <div class="flex items-center gap-2 self-end sm:self-auto flex-shrink-0 flex-wrap">
-            <!-- View Tabs -->
-            <div class="inline-flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-[10.5px]">
-                <button type="button" 
-                        @click="activeTab = 'charts'" 
-                        :class="activeTab === 'charts' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-cyan-400 font-bold shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" 
-                        class="px-2 py-0.5 rounded-md transition cursor-pointer flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                    <span>Grafik Utama</span>
-                </button>
-                <button type="button" 
-                        @click="activeTab = 'tables'" 
-                        :class="activeTab === 'tables' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-cyan-400 font-bold shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" 
-                        class="px-2 py-0.5 rounded-md transition cursor-pointer flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    <span>Data Pendaftaran</span>
-                </button>
-                <button type="button" 
-                        @click="activeTab = 'all'" 
-                        :class="activeTab === 'all' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-cyan-400 font-bold shadow-xs' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'" 
-                        class="px-1.5 py-0.5 rounded-md transition cursor-pointer hidden md:flex items-center gap-0.5">
-                    <span>Semua</span>
-                </button>
-            </div>
-
-            <!-- Year Selector Form -->
-            <form action="{{ route('dashboard') }}" method="GET" class="flex items-center">
-                <div class="relative">
-                    <select name="tahun" onchange="this.form.submit()" class="appearance-none pl-2 pr-5 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[10.5px] font-bold text-slate-700 dark:text-slate-200 hover:border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500/20 cursor-pointer">
-                        @foreach($availableYears as $year)
-                            <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
-                                Tahun {{ $year }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-slate-400">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <h2 class="text-xs sm:text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5" style="color: #FFFFFF !important;">
+                            <span>Halo, {{ $user->nama }}!</span>
+                            <span>👋</span>
+                        </h2>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-white/15 backdrop-blur-xs text-white border border-white/25">
+                            {{ $user->nama_level }}
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-400/20 text-emerald-300 border border-emerald-400/35">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Online
+                        </span>
                     </div>
+                    <p class="text-[10px] text-blue-100/90 truncate mt-0.5" style="color: rgba(224, 242, 254, 0.95) !important;">
+                        {{ $user->role_description }} &middot; Pantau pertumbuhan user baru, tren bandwidth, dan sebaran wilayah real-time.
+                    </p>
                 </div>
-            </form>
+            </div>
 
-            <!-- Status Layanan Button -->
-            <a href="{{ route('teknik.tiket') }}" 
-               class="px-2.5 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-1 shadow-xs shadow-emerald-950/20 transition cursor-pointer">
-                <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>Status Layanan</span>
-            </a>
+            <!-- Right: View Tabs, Year Filter & Status Layanan -->
+            <div class="flex items-center gap-2 self-end sm:self-auto flex-shrink-0 flex-wrap">
+                <!-- View Tabs -->
+                <div class="inline-flex items-center p-0.5 rounded-xl bg-black/25 backdrop-blur-md border border-white/20 text-[10px]">
+                    <button type="button" 
+                            @click="activeTab = 'charts'" 
+                            :class="activeTab === 'charts' ? 'bg-white text-blue-900 font-extrabold shadow-sm' : 'text-white/80 hover:text-white'" 
+                            class="px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <span>Grafik Utama</span>
+                    </button>
+                    <button type="button" 
+                            @click="activeTab = 'tables'" 
+                            :class="activeTab === 'tables' ? 'bg-white text-blue-900 font-extrabold shadow-sm' : 'text-white/80 hover:text-white'" 
+                            class="px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <span>Data Pendaftaran</span>
+                    </button>
+                    <button type="button" 
+                            @click="activeTab = 'all'" 
+                            :class="activeTab === 'all' ? 'bg-white text-blue-900 font-extrabold shadow-sm' : 'text-white/80 hover:text-white'" 
+                            class="px-2 py-1 rounded-lg transition cursor-pointer hidden md:flex items-center gap-0.5">
+                        <span>Semua</span>
+                    </button>
+                </div>
+
+                <!-- Year Selector Form in Translucent Glass Style -->
+                <form action="{{ route('dashboard') }}" method="GET" class="flex items-center">
+                    <div class="relative">
+                        <select name="tahun" onchange="this.form.submit()" 
+                                class="appearance-none pl-2.5 pr-6 py-1 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10.5px] font-bold hover:bg-white/25 focus:outline-none cursor-pointer transition">
+                            @foreach($availableYears as $year)
+                                <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} class="text-slate-900 bg-white">
+                                    Tahun {{ $year }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-white/90">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Status Layanan Button -->
+                <a href="{{ route('teknik.tiket') }}" 
+                   class="px-3 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-[10.5px] font-bold flex items-center gap-1 shadow-sm transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Status Layanan</span>
+                </a>
+            </div>
         </div>
     </div>
 
     <!-- Section Charts Container (Gambar 1 & Gambar 2) -->
-    <div x-show="activeTab === 'charts' || activeTab === 'all'" class="space-y-2">
+    <div x-show="activeTab === 'charts' || activeTab === 'all'" class="space-y-2.5">
         <!-- Row 1: Tren Bulanan (8 Cols) & Donut Bandwidth (4 Cols) [GAMBAR 1] -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-2">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-2.5">
             <!-- 1. Grafik Tren User Baru per Bulan -->
-            <div class="lg:col-span-8 p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div class="lg:col-span-8 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                         <div class="min-w-0">
-                            <h4 class="text-xs font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
                                 <span class="w-2 h-2 rounded-full bg-blue-600"></span>
                                 <span>Tren Pertumbuhan User Baru per Bulan</span>
                             </h4>
@@ -100,26 +112,26 @@
                         </div>
 
                         <!-- Mini KPI Badges -->
-                        <div class="flex items-center gap-1.5 flex-shrink-0">
-                            <div class="px-2 py-0.5 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-800/40 text-right">
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <div class="px-2.5 py-0.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/60 text-right">
                                 <span class="text-[8px] uppercase font-bold text-blue-600 dark:text-cyan-400 block tracking-wider leading-none">Total Registrasi</span>
-                                <span class="text-[11px] font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
+                                <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
                             </div>
-                            <div class="px-2 py-0.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/50 dark:border-emerald-800/40 text-right">
+                            <div class="px-2.5 py-0.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-right">
                                 <span class="text-[8px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block tracking-wider leading-none">Total Aktif Online</span>
-                                <span class="text-[11px] font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunAktif']) }}</span>
+                                <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunAktif']) }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- ApexChart Container -->
-                    <div class="pt-0.5">
+                    <div class="pt-1">
                         <div id="chart-user-monthly-trend" class="w-full" style="min-height: 115px;"></div>
                     </div>
                 </div>
 
                 <!-- Footer Note -->
-                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
+                <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
                     <div class="flex items-center gap-2.5">
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
@@ -135,10 +147,10 @@
             </div>
 
             <!-- 2. Donut Kategori Bandwidth & Itemized List Side-by-Side -->
-            <div class="lg:col-span-4 p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div class="lg:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                        <h4 class="text-xs font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
                             <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
                             <span>Distribusi Kategori Bandwidth</span>
                         </h4>
@@ -189,146 +201,146 @@
         </div>
 
         <!-- Row 2: Sebaran Wilayah Pasang (8 Cols) & Peringkat Kota (4 Cols) [GAMBAR 2] -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-2">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-2.5">
             <!-- 5. Grafik Sebaran User per Kota / Wilayah Pasang -->
-            <div class="lg:col-span-8 p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
-            <div>
-                <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                    <div class="min-w-0">
-                        <h4 class="text-xs font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                            <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
-                            <span>Sebaran User per Wilayah / Kota Pasang</span>
+            <div class="lg:col-span-8 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <div class="min-w-0">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
+                                <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                                <span>Sebaran User per Wilayah / Kota Pasang</span>
+                            </h4>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                                Persebaran pelanggan berdasarkan <code class="px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-mono text-blue-600 dark:text-cyan-400 font-bold">nama_kota_pasang</code>.
+                            </p>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <span class="px-2.5 py-0.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/60 text-[10px] font-black text-blue-700 dark:text-cyan-300 font-mono">
+                                {{ number_format($chartData['totalCityUsers']) }} Total User
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ApexChart Container -->
+                    <div class="pt-1">
+                        <div id="chart-city-distribution" class="w-full" style="min-height: 120px;"></div>
+                    </div>
+                </div>
+
+                <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
+                    <span>Sumber Data: Master Data Registrasi Pelanggan (<code class="font-mono text-[8.5px]">view_batchjob</code>)</span>
+                    <a href="{{ route('teknik.pelanggan') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
+                        <span>Lihat Data Pelanggan</span>
+                        <span>&rarr;</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Breakdown Tabel Sebaran Kota / Wilayah -->
+            <div class="lg:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span>Peringkat Wilayah / Kota</span>
                         </h4>
                         <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                            Persebaran pelanggan berdasarkan <code class="px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-mono text-blue-600 dark:text-cyan-400 font-bold">nama_kota_pasang</code>.
+                            Rincian jumlah total user & pelanggan aktif.
                         </p>
                     </div>
 
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <span class="px-2 py-0.5 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-800/40 text-[10px] font-bold text-blue-700 dark:text-cyan-300 font-mono">
-                            {{ number_format($chartData['totalCityUsers']) }} Total User
-                        </span>
+                    <div class="pt-1.5 space-y-1.5 max-h-[125px] overflow-y-auto pr-1">
+                        @php
+                            $maxCityTotal = $chartData['totalCityUsers'] > 0 ? $chartData['totalCityUsers'] : 1;
+                            $cityColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'];
+                            $rawBreakdown = $chartData['cityBreakdown'] ?? [];
+                            if (is_array($rawBreakdown)) {
+                                $breakdownItems = $rawBreakdown;
+                            } elseif (is_object($rawBreakdown) && $rawBreakdown instanceof \Traversable && !($rawBreakdown instanceof \__PHP_Incomplete_Class)) {
+                                $breakdownItems = iterator_to_array($rawBreakdown);
+                            } else {
+                                $breakdownItems = is_array($chartData['cityLabels'] ?? null) ? $chartData['cityLabels'] : [];
+                            }
+                        @endphp
+                        @forelse($breakdownItems as $cIdx => $cItem)
+                            @php
+                                if (is_string($cItem)) {
+                                    $cName = $cItem;
+                                    $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
+                                    $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
+                                } elseif (is_array($cItem)) {
+                                    $cName = (string) ($cItem['kota_name'] ?? '');
+                                    $cTot = (int) ($cItem['total'] ?? 0);
+                                    $cAktif = (int) ($cItem['total_aktif'] ?? 0);
+                                } elseif (is_object($cItem) && !($cItem instanceof \__PHP_Incomplete_Class)) {
+                                    $cName = (string) ($cItem->kota_name ?? '');
+                                    $cTot = (int) ($cItem->total ?? 0);
+                                    $cAktif = (int) ($cItem->total_aktif ?? 0);
+                                } else {
+                                    $cName = (string) ($chartData['cityLabels'][$cIdx] ?? 'Wilayah');
+                                    $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
+                                    $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
+                                }
+                                $cName = trim($cName);
+                                $cPct = round(($cTot / $maxCityTotal) * 100, 1);
+                                $cBarColor = $cityColors[$loop->index % count($cityColors)];
+                            @endphp
+                            <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 space-y-1 hover:bg-slate-100/60 transition">
+                                <div class="flex items-center justify-between text-[10px]">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-[8.5px] font-black {{ $loop->first ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : ($loop->iteration == 2 ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500') }}">
+                                            {{ $loop->iteration }}
+                                        </span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $cName }}">{{ $cName }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 font-mono flex-shrink-0">
+                                        <span class="font-black text-slate-900 dark:text-white text-[11px]">{{ number_format($cTot) }}</span>
+                                        <span class="text-[8.5px] text-slate-400">({{ $cPct }}%)</span>
+                                    </div>
+                                </div>
+                                <div class="w-full h-1.5 bg-slate-200/80 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-500" style="width: {{ $cPct }}%; background-color: {{ $cBarColor }};"></div>
+                                </div>
+                                <div class="flex items-center justify-between text-[8.5px] text-slate-500 pt-0.5">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        <span>Aktif: {{ number_format($cAktif) }} User</span>
+                                    </span>
+                                    <a href="{{ route('teknik.pelanggan', ['wilayah' => $cName]) }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-semibold flex items-center gap-0.5">
+                                        <span>Filter</span>
+                                        <span>&rarr;</span>
+                                    </a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-2 text-center text-[10px] text-slate-400">
+                                Belum ada data wilayah pelanggan
+                            </div>
+                        @endforelse
                     </div>
                 </div>
 
-                <!-- ApexChart Container -->
-                <div class="pt-0.5">
-                    <div id="chart-city-distribution" class="w-full" style="min-height: 115px;"></div>
+                <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
+                    <span>Total Cakupan Wilayah</span>
+                    <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ is_countable($chartData['cityLabels'] ?? null) ? count($chartData['cityLabels']) : 3 }} Kota</span>
                 </div>
-            </div>
-
-            <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
-                <span>Sumber Data: Master Data Registrasi Pelanggan (<code class="font-mono text-[8.5px]">view_batchjob</code>)</span>
-                <a href="{{ route('teknik.pelanggan') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
-                    <span>Lihat Data Pelanggan</span>
-                    <span>&rarr;</span>
-                </a>
             </div>
         </div>
 
-        <!-- Breakdown Tabel Sebaran Kota / Wilayah -->
-        <div class="lg:col-span-4 p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col justify-between">
-            <div>
-                <div class="border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                    <h4 class="text-xs font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 truncate">
-                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <span>Peringkat Wilayah / Kota</span>
-                    </h4>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">
-                        Rincian jumlah total user & pelanggan aktif.
-                    </p>
-                </div>
-
-                <div class="pt-1.5 space-y-1 max-h-[110px] overflow-y-auto pr-1">
-                    @php
-                        $maxCityTotal = $chartData['totalCityUsers'] > 0 ? $chartData['totalCityUsers'] : 1;
-                        $cityColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'];
-                        $rawBreakdown = $chartData['cityBreakdown'] ?? [];
-                        if (is_array($rawBreakdown)) {
-                            $breakdownItems = $rawBreakdown;
-                        } elseif (is_object($rawBreakdown) && $rawBreakdown instanceof \Traversable && !($rawBreakdown instanceof \__PHP_Incomplete_Class)) {
-                            $breakdownItems = iterator_to_array($rawBreakdown);
-                        } else {
-                            $breakdownItems = is_array($chartData['cityLabels'] ?? null) ? $chartData['cityLabels'] : [];
-                        }
-                    @endphp
-                    @forelse($breakdownItems as $cIdx => $cItem)
-                        @php
-                            if (is_string($cItem)) {
-                                $cName = $cItem;
-                                $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
-                                $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
-                            } elseif (is_array($cItem)) {
-                                $cName = (string) ($cItem['kota_name'] ?? '');
-                                $cTot = (int) ($cItem['total'] ?? 0);
-                                $cAktif = (int) ($cItem['total_aktif'] ?? 0);
-                            } elseif (is_object($cItem) && !($cItem instanceof \__PHP_Incomplete_Class)) {
-                                $cName = (string) ($cItem->kota_name ?? '');
-                                $cTot = (int) ($cItem->total ?? 0);
-                                $cAktif = (int) ($cItem->total_aktif ?? 0);
-                            } else {
-                                $cName = (string) ($chartData['cityLabels'][$cIdx] ?? 'Wilayah');
-                                $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
-                                $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
-                            }
-                            $cName = trim($cName);
-                            $cPct = round(($cTot / $maxCityTotal) * 100, 1);
-                            $cBarColor = $cityColors[$loop->index % count($cityColors)];
-                        @endphp
-                        <div class="p-1.5 rounded-lg bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 space-y-0.5 hover:bg-slate-100/60 transition">
-                            <div class="flex items-center justify-between text-[10px]">
-                                <div class="flex items-center gap-1.5 min-w-0">
-                                    <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-black {{ $loop->first ? 'bg-amber-500/15 text-amber-600 border border-amber-500/30' : ($loop->iteration == 2 ? 'bg-slate-200 text-slate-700' : 'bg-slate-100 text-slate-500') }}">
-                                        {{ $loop->iteration }}
-                                    </span>
-                                    <span class="font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $cName }}">{{ $cName }}</span>
-                                </div>
-                                <div class="flex items-center gap-1 font-mono flex-shrink-0">
-                                    <span class="font-black text-slate-900 dark:text-white text-[11px]">{{ number_format($cTot) }}</span>
-                                    <span class="text-[8.5px] text-slate-400">({{ $cPct }}%)</span>
-                                </div>
-                            </div>
-                            <div class="w-full h-1.5 bg-slate-200/80 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full transition-all duration-500" style="width: {{ $cPct }}%; background-color: {{ $cBarColor }};"></div>
-                            </div>
-                            <div class="flex items-center justify-between text-[8.5px] text-slate-500 pt-0.5">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                    <span>Aktif: {{ number_format($cAktif) }} User</span>
-                                </span>
-                                <a href="{{ route('teknik.pelanggan', ['wilayah' => $cName]) }}" class="text-blue-600 dark:text-cyan-400 hover:underline font-semibold flex items-center gap-0.5">
-                                    <span>Filter</span>
-                                    <span>&rarr;</span>
-                                </a>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="p-2 text-center text-[10px] text-slate-400">
-                            Belum ada data wilayah pelanggan
-                        </div>
-                    @endforelse
-                </div>
+        <!-- Clean Bottom Bar for Single Screen View -->
+        <div x-show="activeTab === 'charts'" class="py-1 px-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between text-[10px] text-slate-500">
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-medium text-slate-600 dark:text-slate-400">Dashboard Eksekutif 1 Layar &middot; Jan - Des {{ $selectedTahun }}</span>
             </div>
-
-            <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-400">
-                <span>Total Cakupan Wilayah</span>
-                <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ is_countable($chartData['cityLabels'] ?? null) ? count($chartData['cityLabels']) : 3 }} Kota</span>
-            </div>
+            <button type="button" @click="activeTab = 'tables'" class="text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 font-bold flex items-center gap-1 cursor-pointer transition">
+                <span>Lihat Data & Pendaftaran Lengkap</span>
+                <span>&rarr;</span>
+            </button>
         </div>
     </div>
-
-    <!-- Clean Bottom Bar for Single Screen View -->
-    <div x-show="activeTab === 'charts'" class="mt-0.5 py-1 px-3 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between text-[10px] text-slate-500">
-        <div class="flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Dashboard Eksekutif 1 Layar &middot; Periode Jan - Des {{ $selectedTahun }}</span>
-        </div>
-        <button type="button" @click="activeTab = 'tables'" class="text-blue-600 dark:text-cyan-400 hover:underline font-bold flex items-center gap-1 cursor-pointer">
-            <span>Lihat Data & Pendaftaran Lengkap</span>
-            <span>&rarr;</span>
-        </button>
-    </div>
-</div>
 
     <!-- ========================================================================= -->
     <!-- SECTION: STATISTIK USER & PELANGGAN BARU (DENGAN FILTER BULAN & TAHUN)   -->

@@ -922,6 +922,19 @@
                         <div class="ims-tooltip">Data Pelanggan</div>
                     </div>
 
+                    <!-- Notifikasi & Approval (Finance) -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('finance.notifikasi') }}"
+                           class="ims-nav-item {{ request()->routeIs('finance.notifikasi*') ? 'active' : '' }}"
+                           title="Notifikasi & Approval">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                            </svg>
+                            <span class="ims-nav-text">Notifikasi & Approval</span>
+                        </a>
+                        <div class="ims-tooltip">Notifikasi & Approval</div>
+                    </div>
+
                     <!-- Billing Layanan -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('finance.billing-layanan') }}"
@@ -1209,8 +1222,8 @@
                                         </div>
                                     </template>
 
-                                    <!-- Payment Items -->
-                                    <template x-for="item in payments" :key="item.id">
+                                    <!-- Payment Items (Hanya 3 notifikasi terbaru) -->
+                                    <template x-for="item in payments.slice(0, 3)" :key="item.id">
                                         <a :href="item.url"
                                            @click="markRead(item.id)"
                                            class="p-3 sm:p-3.5 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group cursor-pointer block relative"
@@ -1262,17 +1275,38 @@
                                             </div>
                                         </a>
                                     </template>
+
+                                    <!-- Tombol Lihat Semua di bawah 3 notifikasi -->
+                                    <template x-if="payments.length > 0">
+                                        <div class="p-3 bg-slate-50/90 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                                            <div class="flex items-center gap-1.5 min-w-0">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-[#0891b2] flex-shrink-0"></span>
+                                                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate"
+                                                      x-text="payments.length > 3 ? ('Menampilkan 3 dari ' + payments.length + ' pembayaran') : (payments.length + ' pembayaran masuk')"></span>
+                                            </div>
+                                            <a href="{{ route('finance.notifikasi') }}"
+                                               @click="open = false"
+                                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#0891b2] to-[#0284c7] hover:from-[#0e7490] hover:to-[#0369a1] shadow-2xs hover:shadow-xs transition flex-shrink-0">
+                                                <span>Lihat Semua</span>
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </template>
                                 </div>
 
                                 <!-- Footer Dropdown -->
-                                <div class="p-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200/80 dark:border-slate-800 text-center">
+                                <div class="p-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs font-semibold">
                                     <a href="{{ route('finance.billing-layanan') }}"
                                        @click="open = false"
-                                       class="inline-flex items-center justify-center gap-1.5 w-full py-1.5 px-3 rounded-xl text-xs font-semibold text-[#0891b2] hover:text-[#05404f] dark:text-cyan-400 dark:hover:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-slate-700/50 transition">
-                                        <span>Buka Semua Billing & Pembayaran</span>
-                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                                        </svg>
+                                       class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition">
+                                        Billing Layanan
+                                    </a>
+                                    <a href="{{ route('finance.notifikasi') }}"
+                                       @click="open = false"
+                                       class="text-[#0891b2] hover:text-[#05404f] dark:text-cyan-400 dark:hover:text-cyan-300 font-bold inline-flex items-center gap-1 transition">
+                                        <span>Halaman Notifikasi & Approval &rarr;</span>
                                     </a>
                                 </div>
 

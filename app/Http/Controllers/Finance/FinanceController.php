@@ -4000,6 +4000,349 @@ class FinanceController extends Controller
             return response()->json(['success' => false, 'message' => 'Gagal mengupload bukti: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Halaman Notifikasi Pembayaran & Approval (Khusus Finance)
+     */
+    public function notifikasiIndex(Request $request): View
+    {
+        $tab = $request->input('tab', 'all'); // 'all', 'pending', 'approved'
+        $search = trim((string) $request->input('search', ''));
+        $perPage = (int) $request->input('per_page', 15);
+        if (!in_array($perPage, [10, 15, 25, 50, 100])) {
+            $perPage = 15;
+        }
+
+        // 1. KPI Counts
+        $kpiPendingCount = 0;
+        if (Schema::hasTable('payment_confirmations')) {
+            $kpiPendingCount += DB::table('payment_confirmations')
+                ->where('status', '!=', 'approved')
+                ->where('status', '!=', 'rejected')
+                ->count();
+        }
+        $kpiPendingCount += DB::table('trx_billing_layanan')
+            ->where('status_bill_lay', '14')
+            ->count();
+
+        $kpiTodayCount = DB::table('trx_billing_layanan')
+            ->where('status_bill_lay', '15')
+            ->whereDate(DB::raw('COALESCE(payment_paid, date_update)'), Carbon::today())
+            ->count();
+
+        $kpiMonthPaidAmount = (float) DB::table('trx_billing_layanan')
+            ->where('status_bill_lay', '15')
+            ->whereYear(DB::raw('COALESCE(payment_paid, date_update)'), Carbon::now()->year)
+            ->whereMonth(DB::raw('COALESCE(payment_paid, date_update)'), Carbon::now()->month)
+            ->sum(DB::raw('CAST(COALESCE(amount_paid, total_layanan, 0) AS DECIMAL(15,2))'));
+
+        // 2. Query Payment Confirmations (Manual Transfer Proofs)
+        $confirmations = collect();
+        if (Schema::hasTable('payment_confirmations')) {
+            $qConf = DB::table('payment_confirmations');
+            if ($tab === 'pending') {
+                $qConf->where('status', '!=', 'approved')->where('status', '!=', 'rejected');
+            } elseif ($tab === 'approved') {
+                $qConf->where('status', 'approved');
+            }
+            if ($search !== '') {
+                $qConf->where(function($q) use ($search) {
+                    $q->where('kode_billing_layanan', 'like', "%{$search}%")
+                      ->orWhere('customer_id', 'like', "%{$search}%")
+                      ->orWhere('customer_name', 'like', "%{$search}%");
+                });
+            }
+            $confirmations = $qConf->orderByDesc('created_at')->limit(100)->get();
+        }
+
+        // 3. Query Invoices from trx_billing_layanan
+        $qBill = DB::table('trx_billing_layanan')
+            ->leftJoin('trx_batchjob_register', 'trx_billing_layanan.nomor_internet', '=', 'trx_batchjob_register.nomor_internet');
+
+        if ($tab === 'pending') {
+            $qBill->where('trx_billing_layanan.status_bill_lay', '14');
+        } elseif ($tab === 'approved') {
+            $qBill->where('trx_billing_layanan.status_bill_lay', '15');
+        } else {
+            $qBill->whereIn('trx_billing_layanan.status_bill_lay', ['14', '15']);
+        }
+
+        if ($search !== '') {
+            $qBill->where(function($q) use ($search) {
+                $q->where('trx_billing_layanan.kode_billing_layanan', 'like', "%{$search}%")
+                  ->orWhere('trx_billing_layanan.nomor_internet', 'like', "%{$search}%")
+                  ->orWhere('trx_batchjob_register.nama_pelanggan', 'like', "%{$search}%");
+            });
+        }
+
+        $billingRows = $qBill->select([
+            'trx_billing_layanan.kode_billing_layanan',
+            'trx_billing_layanan.nomor_internet',
+            'trx_billing_layanan.total_layanan',
+            'trx_billing_layanan.amount_paid',
+            'trx_billing_layanan.status_bill_lay',
+            'trx_billing_layanan.payment_type',
+            'trx_billing_layanan.merchant_type',
+            'trx_billing_layanan.payment_paid',
+            'trx_billing_layanan.date_update',
+            'trx_billing_layanan.date_create',
+            'trx_batchjob_register.nama_pelanggan',
+        ])
+        ->orderByDesc(DB::raw('COALESCE(trx_billing_layanan.payment_paid, trx_billing_layanan.date_update, trx_billing_layanan.date_create)'))
+        ->limit(100)
+        ->get();
+
+        // 4. Transform & Gabungkan Data Notifikasi
+        $items = collect();
+        $seenKodes = [];
+
+        // Tambahkan dari Payment Confirmations terlebih dahulu
+        foreach ($confirmations as $c) {
+            $seenKodes[$c->kode_billing_layanan] = true;
+            $seenKodes[str_replace('/', '-', $c->kode_billing_layanan)] = true;
+            $seenKodes[str_replace('-', '/', $c->kode_billing_layanan)] = true;
+
+            $cDate = $c->created_at ?: ($c->updated_at ?: Carbon::now());
+            $carbonDate = Carbon::parse($cDate);
+            $isApproved = ($c->status === 'approved');
+
+            // Cek invoice terkait jika ada
+            $relatedBill = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $c->kode_billing_layanan)->first();
+            $nominal = (float) ($relatedBill?->total_layanan ?: $relatedBill?->amount_paid ?: 0);
+
+            $items->push((object)[
+                'type' => 'confirmation',
+                'id' => $c->id,
+                'kode_billing' => $c->kode_billing_layanan,
+                'nomor_internet' => $c->customer_id ?? ($relatedBill?->nomor_internet ?? '-'),
+                'nama_pelanggan' => $c->customer_name ?? 'Pelanggan',
+                'nominal' => $nominal,
+                'nominal_formatted' => $nominal > 0 ? ('Rp ' . number_format($nominal, 0, ',', '.')) : 'Menunggu Pengecekan',
+                'bank_tujuan' => $c->destination_bank ?: 'Transfer Manual',
+                'proof_file' => $c->proof_file,
+                'notes' => $c->notes,
+                'admin_notes' => $c->admin_notes,
+                'status' => $c->status,
+                'is_approved' => $isApproved,
+                'date' => $carbonDate->format('d M Y H:i'),
+                'time_ago' => $carbonDate->diffForHumans(),
+                'timestamp' => $carbonDate->timestamp,
+            ]);
+        }
+
+        // Tambahkan dari billingRows jika belum ada di confirmation
+        foreach ($billingRows as $b) {
+            if (isset($seenKodes[$b->kode_billing_layanan])) {
+                continue;
+            }
+
+            $isPaid = ((string)$b->status_bill_lay === '15');
+            $nominal = (float) ($b->amount_paid ?: $b->total_layanan ?: 0);
+            $dateStr = $b->payment_paid ?: ($b->date_update ?: $b->date_create);
+            $carbonDate = $dateStr ? Carbon::parse($dateStr) : Carbon::now();
+
+            $items->push((object)[
+                'type' => 'billing',
+                'id' => $b->kode_billing_layanan,
+                'kode_billing' => $b->kode_billing_layanan,
+                'nomor_internet' => $b->nomor_internet ?? '-',
+                'nama_pelanggan' => $b->nama_pelanggan ?? ($b->nomor_internet ?: 'Pelanggan'),
+                'nominal' => $nominal,
+                'nominal_formatted' => 'Rp ' . number_format($nominal, 0, ',', '.'),
+                'bank_tujuan' => $b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : 'Online / Snap'),
+                'proof_file' => null,
+                'notes' => null,
+                'admin_notes' => null,
+                'status' => $isPaid ? 'approved' : 'pending',
+                'is_approved' => $isPaid,
+                'date' => $carbonDate->format('d M Y H:i'),
+                'time_ago' => $carbonDate->diffForHumans(),
+                'timestamp' => $carbonDate->timestamp,
+            ]);
+        }
+
+        // Urutkan item dari yang terbaru
+        $items = $items->sortByDesc('timestamp')->values();
+
+        // Manual Pagination via LengthAwarePaginator
+        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $currentItems = $items->slice(($currentPage - 1) * $perPage, $perPage)->all();
+        $paginatedItems = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentItems,
+            $items->count(),
+            $perPage,
+            $currentPage,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        return view('finance.notifikasi', [
+            'notifications' => $paginatedItems,
+            'tab' => $tab,
+            'search' => $search,
+            'perPage' => $perPage,
+            'kpiPendingCount' => $kpiPendingCount,
+            'kpiTodayCount' => $kpiTodayCount,
+            'kpiMonthPaidAmount' => $kpiMonthPaidAmount,
+        ]);
+    }
+
+    /**
+     * Approve Notifikasi Pembayaran (Finance)
+     */
+    public function approvePaymentNotification(Request $request): JsonResponse|RedirectResponse
+    {
+        $request->validate([
+            'kode_billing' => 'required|string',
+            'nominal_bayar' => 'nullable|numeric|min:0',
+            'metode_bayar' => 'nullable|string',
+            'bank_tujuan' => 'nullable|string',
+            'catatan' => 'nullable|string',
+        ]);
+
+        $user = Auth::user()?->nama ?? Auth::user()?->username ?? 'FINANCE';
+        $userUpdate = mb_substr($user, 0, 50);
+        $kodeBilling = trim($request->input('kode_billing'));
+        $bankTujuan = $request->input('bank_tujuan') ?: 'Transfer Bank';
+        $metodeBayar = $request->input('metode_bayar', 'transfer');
+        $catatan = $request->input('catatan', 'Disetujui via Halaman Notifikasi Finance');
+
+        try {
+            $inv = DB::table('trx_billing_layanan')
+                ->where('kode_billing_layanan', $kodeBilling)
+                ->first();
+
+            $nominal = $request->input('nominal_bayar');
+            if (empty($nominal) || (float)$nominal <= 0) {
+                $nominal = (float) ($inv?->total_layanan ?: 0);
+            }
+
+            if ($inv) {
+                // Update trx_billing_layanan menjadi LUNAS (15)
+                DB::table('trx_billing_layanan')
+                    ->where('kode_billing_layanan', $kodeBilling)
+                    ->update([
+                        'status_bill_lay' => '15',
+                        'payment_paid' => Carbon::now()->toDateTimeString(),
+                        'amount_paid' => (string) $nominal,
+                        'merchant_type' => $bankTujuan,
+                        'payment_type' => ($metodeBayar === 'cash' ? '3' : '2'),
+                        'date_update' => Carbon::now()->toDateTimeString(),
+                        'user_update' => $userUpdate,
+                    ]);
+
+                // Insert log billing
+                DB::table('trx_billing_layanan_log')->insert([
+                    'kode_billing_lay_log' => 'LOG-' . uniqid(),
+                    'kode_billing_layanan' => $kodeBilling,
+                    'status_bill_lay' => '15',
+                    'note_billing_lay' => "Pembayaran disetujui ({$bankTujuan} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} oleh {$userUpdate}",
+                    'date_create' => Carbon::now()->toDateTimeString(),
+                    'user_create' => $userUpdate,
+                    'hide' => '0',
+                ]);
+            }
+
+            // Update status di payment_confirmations jika ada
+            if (Schema::hasTable('payment_confirmations')) {
+                DB::table('payment_confirmations')
+                    ->where('kode_billing_layanan', $kodeBilling)
+                    ->orWhere('kode_billing_layanan', str_replace('/', '-', $kodeBilling))
+                    ->orWhere('kode_billing_layanan', str_replace('-', '/', $kodeBilling))
+                    ->update([
+                        'status' => 'approved',
+                        'verified_at' => Carbon::now()->toDateTimeString(),
+                        'admin_notes' => "Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}",
+                        'updated_at' => Carbon::now()->toDateTimeString(),
+                    ]);
+            }
+
+            // Cross-db sync jika ptmsn.payment_confirmations ada
+            try {
+                $escapedKode = addslashes($kodeBilling);
+                $escapedAlt1 = addslashes(str_replace('/', '-', $kodeBilling));
+                $escapedAlt2 = addslashes(str_replace('-', '/', $kodeBilling));
+                $nowStr = Carbon::now()->toDateTimeString();
+                $adminNoteStr = addslashes("Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}");
+                DB::statement("
+                    UPDATE ptmsn.payment_confirmations 
+                    SET status = 'approved',
+                        verified_at = '{$nowStr}',
+                        admin_notes = '{$adminNoteStr}',
+                        updated_at = '{$nowStr}'
+                    WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                ");
+            } catch (\Throwable $e) {}
+
+            $msg = "Pembayaran untuk {$kodeBilling} berhasil disetujui! Invoice telah ditandai LUNAS.";
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $msg]);
+            }
+            return redirect()->back()->with('success', $msg);
+        } catch (\Throwable $e) {
+            Log::error("Approve notifikasi error: " . $e->getMessage());
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal menyetujui: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Gagal menyetujui pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tolak / Reject Notifikasi Pembayaran (Finance)
+     */
+    public function rejectPaymentNotification(Request $request): JsonResponse|RedirectResponse
+    {
+        $request->validate([
+            'kode_billing' => 'required|string',
+            'alasan_tolak' => 'nullable|string',
+        ]);
+
+        $user = Auth::user()?->nama ?? Auth::user()?->username ?? 'FINANCE';
+        $userUpdate = mb_substr($user, 0, 50);
+        $kodeBilling = trim($request->input('kode_billing'));
+        $alasan = $request->input('alasan_tolak', 'Bukti transfer tidak valid / tidak sesuai.');
+
+        try {
+            if (Schema::hasTable('payment_confirmations')) {
+                DB::table('payment_confirmations')
+                    ->where('kode_billing_layanan', $kodeBilling)
+                    ->orWhere('kode_billing_layanan', str_replace('/', '-', $kodeBilling))
+                    ->orWhere('kode_billing_layanan', str_replace('-', '/', $kodeBilling))
+                    ->update([
+                        'status' => 'rejected',
+                        'admin_notes' => "Ditolak oleh {$userUpdate}: {$alasan}",
+                        'updated_at' => Carbon::now()->toDateTimeString(),
+                    ]);
+            }
+
+            try {
+                $escapedKode = addslashes($kodeBilling);
+                $escapedAlt1 = addslashes(str_replace('/', '-', $kodeBilling));
+                $escapedAlt2 = addslashes(str_replace('-', '/', $kodeBilling));
+                $nowStr = Carbon::now()->toDateTimeString();
+                $adminNoteStr = addslashes("Ditolak oleh {$userUpdate}: {$alasan}");
+                DB::statement("
+                    UPDATE ptmsn.payment_confirmations 
+                    SET status = 'rejected',
+                        admin_notes = '{$adminNoteStr}',
+                        updated_at = '{$nowStr}'
+                    WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                ");
+            } catch (\Throwable $e) {}
+
+            $msg = "Konfirmasi pembayaran untuk {$kodeBilling} telah ditolak.";
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $msg]);
+            }
+            return redirect()->back()->with('warning', $msg);
+        } catch (\Throwable $e) {
+            Log::error("Reject notifikasi error: " . $e->getMessage());
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal menolak: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Gagal menolak pembayaran: ' . $e->getMessage());
+        }
+    }
 }
 
 

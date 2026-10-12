@@ -255,6 +255,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/billing-layanan/requests/{id}/reject', [FinanceController::class, 'rejectBillingRequest'])->name('billing-layanan.requests.reject');
         Route::post('/billing-layanan/request-invoice', [FinanceController::class, 'storeBillingRequest'])->name('billing-layanan.request-invoice.post');
 
+        // Notifikasi Pembayaran & Approval (Finance)
+        Route::get('/notifikasi', [FinanceController::class, 'notifikasiIndex'])->name('notifikasi');
+        Route::post('/notifikasi/approve', [FinanceController::class, 'approvePaymentNotification'])->name('notifikasi.approve');
+        Route::post('/notifikasi/reject', [FinanceController::class, 'rejectPaymentNotification'])->name('notifikasi.reject');
+
         // 2. Billing Registrasi (Tagihan Pasang Baru)
         Route::get('/billing-registrasi', [FinanceController::class, 'billingRegistrasi'])->name('billing-registrasi');
         Route::post('/billing-registrasi/publish', [FinanceController::class, 'publishBillingRegistrasi'])->name('billing-registrasi.publish.post');

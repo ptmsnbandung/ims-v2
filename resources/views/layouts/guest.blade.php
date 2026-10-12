@@ -7,19 +7,24 @@
 
     <title>{{ isset($title) && $title ? ($title . ' | IMSv2 | PT MEDIA SOLUSI NETWORK') : 'IMSv2 | PT MEDIA SOLUSI NETWORK' }}</title>
 
-    <!-- Base Scale for Guest Authentication Pages -->
+    <!-- Strict 1-Screen Viewport Scale (Guaranteed No Scroll) -->
     <style>
-        html {
-            font-size: 15px !important;
+        html, body {
+            height: 100% !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
         }
-        @media (min-width: 640px) {
+        html {
+            font-size: 13px !important;
+        }
+        @media (min-width: 1280px) {
             html {
-                font-size: 15.5px !important;
+                font-size: 13.5px !important;
             }
         }
         @media (max-width: 639.98px) {
             html {
-                font-size: 14px !important;
+                font-size: 13px !important;
             }
         }
     </style>
@@ -59,7 +64,7 @@
         }
     </style>
 </head>
-<body class="min-h-full font-sans text-slate-800 antialiased selection:bg-cyan-500 selection:text-white relative overflow-x-hidden flex flex-col justify-center bg-[#072d42]">
+<body class="h-full w-full font-sans text-slate-800 antialiased selection:bg-cyan-500 selection:text-white relative overflow-hidden flex flex-col justify-center items-center bg-[#072d42]">
     
     <!-- Vibrant Teal & Cyan Network Gradient Background -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -122,37 +127,33 @@
         <div class="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:28px_28px] opacity-40"></div>
     </div>
 
-    <!-- Main Container -->
-    <div class="min-h-full flex flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8 relative z-10">
-        <div class="sm:mx-auto sm:w-full sm:max-w-xl">
-            <!-- Brand Logo / Header -->
-            <div class="flex flex-col items-center text-center">
-                <div class="w-16 h-16 rounded-2xl bg-white/95 backdrop-blur-xl p-2.5 shadow-2xl shadow-cyan-950/40 border border-white/90 mb-3 flex items-center justify-center ring-4 ring-white/15 transition-transform duration-300 hover:scale-105">
-                    <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
-                </div>
-                <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
-                    IMS<span class="bg-gradient-to-r from-cyan-300 via-teal-200 to-sky-300 bg-clip-text text-transparent font-black">-V2</span>
-                </h1>
-                <p class="mt-1 text-xs sm:text-sm font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">
-                    Internet System Management Portal
-                </p>
+    <!-- Main Container (Fits Exactly In 1 Screen) -->
+    <div class="w-full max-w-[440px] px-4 sm:px-0 flex flex-col items-center justify-center relative z-10 my-auto">
+        <!-- Brand Logo / Header -->
+        <div class="flex flex-col items-center text-center mb-2.5">
+            <div class="w-12 h-12 rounded-2xl bg-white/95 backdrop-blur-xl p-2 shadow-xl shadow-cyan-950/40 border border-white/90 mb-1.5 flex items-center justify-center ring-4 ring-white/10 transition-transform duration-300 hover:scale-105">
+                <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
             </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] leading-tight">
+                IMS<span class="bg-gradient-to-r from-cyan-300 via-teal-200 to-sky-300 bg-clip-text text-transparent font-black">-V2</span>
+            </h1>
+            <p class="mt-0.5 text-[11px] font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">
+                Internet System Management Portal
+            </p>
         </div>
 
-        <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-[480px] md:max-w-[500px] px-4 sm:px-0">
-            <!-- Elevated Glassmorphism White Card -->
-            <div class="relative bg-white/95 backdrop-blur-2xl border border-white/90 shadow-[0_25px_60px_-15px_rgba(3,43,67,0.4),0_10px_25px_-5px_rgba(3,43,67,0.2)] rounded-3xl p-7 sm:p-9 text-slate-800 transition duration-200 overflow-hidden ring-1 ring-black/[0.04]">
-                <!-- Top Accent Gradient Line -->
-                <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 via-teal-400 to-sky-500"></div>
-                @yield('content')
-            </div>
+        <!-- Elevated Glassmorphism White Card -->
+        <div class="w-full relative bg-white/95 backdrop-blur-2xl border border-white/90 shadow-[0_20px_50px_rgba(3,43,67,0.35)] rounded-2xl p-5 sm:p-6 text-slate-800 transition duration-200 overflow-hidden ring-1 ring-black/[0.04]">
+            <!-- Top Accent Gradient Line -->
+            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 via-teal-400 to-sky-500"></div>
+            @yield('content')
+        </div>
 
-            <!-- Footer -->
-            <div class="mt-5 text-center text-xs font-semibold text-cyan-100/85 drop-shadow flex items-center justify-center gap-2">
-                <span>&copy; {{ date('Y') }} PT. Media Solusi Network</span>
-                <span class="inline-block w-1 h-1 rounded-full bg-cyan-300/70"></span>
-                <span class="text-white/95">IMS-V2</span>
-            </div>
+        <!-- Footer -->
+        <div class="mt-2.5 text-center text-[11px] font-semibold text-cyan-100/80 drop-shadow flex items-center justify-center gap-1.5">
+            <span>&copy; {{ date('Y') }} PT. Media Solusi Network</span>
+            <span class="inline-block w-1 h-1 rounded-full bg-cyan-300/70"></span>
+            <span class="text-white/95">IMS-V2</span>
         </div>
     </div>
 </body>

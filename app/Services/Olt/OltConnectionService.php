@@ -970,6 +970,7 @@ class OltConnectionService
                 'phone' => $cust->nomor_hp ?? '-',
                 'pop_name' => $cust->nama_pop ?? ($olt->nama_pop ?? 'POP MSN'),
                 'uptime' => $uptimeText,
+                'mrtg' => $this->generateMrtgSeries("onu_{$ponIndex}_{$onuSlot}_{$custNo}", $downRate, $upRate),
             ];
         }
 

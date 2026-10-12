@@ -53,45 +53,48 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 2. TOP HERO HEADER BANNER (COMMAND CENTER DARK TEAL/BLUE THEME)     -->
+    <!-- 2. TOP HERO HEADER BANNER (HIGH-CONTRAST COMMAND CENTER DARK SLATE) -->
     <!-- =================================================================== -->
-    <div class="ims-banner relative overflow-hidden rounded-xl p-3.5 sm:p-4.5 shadow-sm border border-teal-500/20"
-         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+    <div class="relative overflow-hidden rounded-xl p-4 shadow-md border border-slate-700/80 bg-slate-900 text-white">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 relative z-10">
             <!-- Info Kiri: OLT & Port Identitas -->
-            <div class="flex items-start sm:items-center gap-3">
-                <div class="w-11 h-11 rounded-xl bg-blue-500/25 border border-blue-400/40 text-blue-300 flex items-center justify-center shrink-0 shadow-inner">
+            <div class="flex items-start sm:items-center gap-3.5">
+                <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm border border-blue-400/30">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                     </svg>
                 </div>
                 <div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-600 text-white shadow-2xs">
+                        <span class="px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-blue-600 text-white shadow-2xs">
                             {{ $olt->kode_olt }}
                         </span>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-600 text-white shadow-2xs">
+                        <span class="px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-indigo-600 text-white shadow-2xs">
                             {{ $onuData['interface_name'] ?? ('gpon-olt_1/1/' . $ponIndex) }}
                         </span>
                         <h2 class="text-sm sm:text-base font-bold text-white tracking-tight">
                             Monitoring Daftar ONU: {{ $onuData['port_name'] ?? ('PON ' . $ponIndex) }}
                         </h2>
                     </div>
-                    <p class="text-[11.5px] text-slate-300 mt-1">
-                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; Host: <span class="font-mono text-cyan-300 font-bold">{{ $olt->ip_address ?? '10.10.10.1' }}</span> &middot; POP: <span class="text-slate-200 font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
+                    <p class="text-[11.5px] text-slate-200 mt-1">
+                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; Host: <span class="font-mono text-cyan-300 font-bold">{{ $olt->ip_address ?? '10.10.10.1' }}</span> &middot; POP: <span class="text-white font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
                     </p>
 
-                    <!-- Status Bar & Live Clock -->
-                    <div class="flex flex-wrap items-center gap-1.5 mt-2 text-[10px] font-bold">
-                        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span>Live: <span class="font-mono text-white" x-text="currentTime">--:--:--</span> WIB</span>
+                    <!-- Status Bar & Live Clock (Semua Kontras Jelas) -->
+                    <div class="flex flex-wrap items-center gap-2 mt-2 text-[10.5px] font-bold">
+                        <!-- Live Clock Badge -->
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-500/50 shadow-2xs font-mono">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>Live: <span class="text-white font-bold" x-text="currentTime">--:--:--</span> WIB</span>
                         </div>
-                        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-400" :class="isPageActive ? 'animate-ping' : ''"></span>
+                        <!-- Auto-Refresh Status Badge -->
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-950 text-blue-200 border border-blue-500/50 shadow-2xs font-semibold">
+                            <span class="w-2 h-2 rounded-full bg-blue-400" :class="isPageActive ? 'animate-ping' : ''"></span>
                             <span x-text="isPageActive ? 'Auto-Refresh 1 Detik Aktif' : 'Paused (Tab Tidak Aktif)'"></span>
                         </div>
-                        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-800/80 text-slate-200 border border-slate-700/60 font-mono">
+                        <!-- Total Terhubung Badge -->
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-slate-100 border border-slate-600 shadow-2xs font-mono">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
                             <span x-text="stats.total + ' ONU Terhubung'"></span>
                         </div>
                     </div>
@@ -100,11 +103,11 @@
 
             <!-- Switcher Port PON Lain di OLT ini -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start lg:self-center">
-                <label class="text-[11px] font-semibold text-slate-200">Pilih Port PON:</label>
-                <div class="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10">
+                <label class="text-[11px] font-semibold text-slate-300">Pilih Port PON:</label>
+                <div class="flex items-center gap-1 bg-slate-800/90 p-1.5 rounded-lg border border-slate-700 shadow-inner">
                     @for($p = 1; $p <= 8; $p++)
                         <a href="{{ route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $p]) }}"
-                           class="px-2.5 py-1 rounded-md text-[11px] font-mono font-bold transition {{ $p == $ponIndex ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10' }}">
+                           class="px-2.5 py-1 rounded-md text-[11px] font-mono font-bold transition {{ $p == $ponIndex ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-700' }}">
                             P{{ $p }}
                         </a>
                     @endfor
@@ -244,9 +247,10 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 4. CONTROLS BAR: SEARCH, FILTER STATUS (UP/DOWN/LOS), REDAMAN, VIEW -->
+    <!-- 4. CONTROLS BAR: SEARCH, FILTER STATUS & REDAMAN (TERSTRUKTUR RAPI) -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs space-y-3">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-2xs space-y-3">
+        <!-- Baris Atas: Search Input & View Switcher -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <!-- Search Input -->
             <div class="relative flex-1 max-w-md">
@@ -308,87 +312,112 @@
             </div>
         </div>
 
-        <!-- Filter Buttons: Istilah NOC (Semua, UP, DOWN, LOS, SUSPEND) -->
-        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
-            <!-- Status Filters NOC -->
-            <span class="font-bold text-slate-500 mr-1">Status NOC:</span>
-            <button @click="statusFilter = 'all'"
-                    :class="statusFilter === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'"
-                    class="px-2.5 py-1 rounded-md font-bold transition">
-                Semua (<span x-text="onus.length"></span>)
-            </button>
-            <!-- UP Filter (Hijau) -->
-            <button @click="statusFilter = 'UP'"
-                    :class="statusFilter === 'UP' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 hover:bg-emerald-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <span>UP (<span x-text="stats.up"></span>)</span>
-            </button>
-            <!-- DOWN Filter (Merah) -->
-            <button @click="statusFilter = 'DOWN'"
-                    :class="statusFilter === 'DOWN' ? 'bg-red-600 text-white shadow-2xs' : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 hover:bg-red-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                <span>DOWN (<span x-text="stats.down"></span>)</span>
-            </button>
-            <!-- LOS Filter (Loss of Signal - Rose/Merah) -->
-            <button @click="statusFilter = 'LOS'"
-                    :class="statusFilter === 'LOS' ? 'bg-rose-600 text-white shadow-2xs' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
-                <span>LOS (<span x-text="stats.los"></span>)</span>
-            </button>
-            <!-- SUSPEND Filter (Amber) -->
-            <button @click="statusFilter = 'SUSPEND'"
-                    :class="statusFilter === 'SUSPEND' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 hover:bg-amber-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition">
-                SUSPEND (<span x-text="stats.suspend"></span>)
-            </button>
+        <!-- Filter Controls: 2 Baris Terpisah & Terstruktur (Gambar 2 Perbaikan) -->
+        <div class="space-y-2 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <!-- Baris 1: Status Koneksi NOC (UP / DOWN / LOS / SUSPEND) -->
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-slate-600 dark:text-slate-300 min-w-[90px] text-[11px] flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Status NOC:</span>
+                </span>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <!-- Semua -->
+                    <button @click="statusFilter = 'all'"
+                            :class="statusFilter === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition">
+                        Semua (<span x-text="onus.length"></span>)
+                    </button>
+                    <!-- UP (Hijau) -->
+                    <button @click="statusFilter = 'UP'"
+                            :class="statusFilter === 'UP' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 hover:bg-emerald-100'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>UP (<span x-text="stats.up"></span>)</span>
+                    </button>
+                    <!-- DOWN (Merah) -->
+                    <button @click="statusFilter = 'DOWN'"
+                            :class="statusFilter === 'DOWN' ? 'bg-red-600 text-white shadow-xs' : 'bg-red-50 text-red-800 border border-red-300 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800 hover:bg-red-100'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        <span>DOWN (<span x-text="stats.down"></span>)</span>
+                    </button>
+                    <!-- LOS (Rose / Pink Merah) -->
+                    <button @click="statusFilter = 'LOS'"
+                            :class="statusFilter === 'LOS' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-800 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 hover:bg-rose-100'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                        <span>LOS (<span x-text="stats.los"></span>)</span>
+                    </button>
+                    <!-- SUSPEND (Amber) -->
+                    <button @click="statusFilter = 'SUSPEND'"
+                            :class="statusFilter === 'SUSPEND' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 hover:bg-amber-100'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        <span>SUSPEND (<span x-text="stats.suspend"></span>)</span>
+                    </button>
+                </div>
+            </div>
 
-            <span class="text-slate-300 dark:text-slate-700 mx-1">|</span>
-
-            <!-- Redaman Filters -->
-            <span class="font-bold text-slate-500 mr-1">Redaman:</span>
-            <button @click="redamanFilter = 'all'"
-                    :class="redamanFilter === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'"
-                    class="px-2.5 py-1 rounded-md font-bold transition">
-                Semua
-            </button>
-            <button @click="redamanFilter = 'optimal'"
-                    :class="redamanFilter === 'optimal' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 hover:bg-emerald-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition">
-                Optimal (&gt; -24 dBm)
-            </button>
-            <button @click="redamanFilter = 'normal'"
-                    :class="redamanFilter === 'normal' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 hover:bg-amber-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition">
-                Normal (-24 s/d -26.5 dBm)
-            </button>
-            <button @click="redamanFilter = 'kritis'"
-                    :class="redamanFilter === 'kritis' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition">
-                Kritis / Drop
-            </button>
+            <!-- Baris 2: Kualitas Redaman Optik (Optimal, Normal, Kritis) -->
+            <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100/80 dark:border-slate-800/80">
+                <span class="font-bold text-slate-600 dark:text-slate-300 min-w-[90px] text-[11px] flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>Redaman:</span>
+                </span>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <!-- Semua -->
+                    <button @click="redamanFilter = 'all'"
+                            :class="redamanFilter === 'all' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition">
+                        Semua
+                    </button>
+                    <!-- Optimal -->
+                    <button @click="redamanFilter = 'optimal'"
+                            :class="redamanFilter === 'optimal' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 hover:bg-emerald-100'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1">
+                        <span>Optimal (&gt; -24 dBm)</span>
+                        <span class="opacity-80" x-text="'(' + stats.redamanOptimal + ')'"></span>
+                    </button>
+                    <!-- Normal -->
+                    <button @click="redamanFilter = 'normal'"
+                            :class="redamanFilter === 'normal' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 hover:bg-amber-100'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1">
+                        <span>Normal (-24 s/d -26.5 dBm)</span>
+                        <span class="opacity-80" x-text="'(' + stats.redamanNormal + ')'"></span>
+                    </button>
+                    <!-- Kritis -->
+                    <button @click="redamanFilter = 'kritis'"
+                            :class="redamanFilter === 'kritis' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-800 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 hover:bg-rose-100'"
+                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1">
+                        <span>Kritis / Drop (&lt; -26.5 dBm)</span>
+                        <span class="opacity-80" x-text="'(' + stats.redamanKritis + ')'"></span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- =================================================================== -->
-    <!-- 5. TAMPILAN 1: GRID CARD VIEW (LABEL UP / DOWN / LOS JELAS)         -->
+    <!-- 5. TAMPILAN 1: GRID CARD VIEW (TRAFFIC PERSIS SEPERTI DI CARD PON)  -->
     <!-- =================================================================== -->
     <div x-show="viewMode === 'grid'" class="space-y-4">
         <!-- Grid Items: 3 Kolom Responsif dengan Spacing Sempurna -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <template x-for="onu in filteredOnus" :key="onu.onu_id">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-2xs hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between"
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-2xs hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between"
                      :class="'border-t-4 ' + getStatusInfo(onu).borderTop">
 
                     <!-- Bagian Konten Atas Card -->
-                    <div class="space-y-3">
+                    <div class="space-y-2.5">
                         <!-- 1. Header Card: Nama ONU, Identitas & Status Badge (UP / DOWN / LOS) -->
-                        <div class="flex items-start justify-between gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                            <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                        <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <div class="flex items-start gap-2 min-w-0 flex-1">
                                 <!-- Badge Nomor Slot -->
-                                <div class="w-9 h-9 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 text-white shadow-xs"
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 text-white shadow-xs"
                                      :class="getStatusInfo(onu).bgSlot"
                                      x-text="'#' + onu.onu_id">
                                 </div>
@@ -397,9 +426,9 @@
                                     <div class="flex items-center gap-1.5">
                                         <span class="font-mono text-[11px] font-black text-indigo-600 dark:text-indigo-400" x-text="onu.onu_name || ('ONU ' + onu.onu_id)"></span>
                                         <span class="text-slate-300 dark:text-slate-700">&middot;</span>
-                                        <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate" x-text="onu.nama_pelanggan"></h4>
+                                        <h4 class="font-bold text-slate-900 dark:text-white text-xs truncate" x-text="onu.nama_pelanggan"></h4>
                                     </div>
-                                    <div class="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                                    <div class="flex items-center gap-1 text-[9.5px] text-slate-500 mt-0.5">
                                         <span class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="'ID: ' + onu.nomor_internet"></span>
                                         <span>&middot;</span>
                                         <span class="font-mono truncate" x-text="onu.interface_onu"></span>
@@ -408,88 +437,126 @@
                             </div>
 
                             <!-- Status Badge NOC (UP = Hijau, DOWN = Merah, LOS = Rose/Blown Sinyal) -->
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-mono font-black uppercase tracking-wider shrink-0"
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider shrink-0"
                                   :class="getStatusInfo(onu).colorBadge">
-                                <span class="w-2 h-2 rounded-full"
+                                <span class="w-1.5 h-1.5 rounded-full"
                                       :class="getStatusInfo(onu).dotClass"></span>
                                 <span x-text="getStatusInfo(onu).label"></span>
                             </span>
                         </div>
 
-                        <!-- 2. Section Traffic Penggunaan ONU (Rx / Tx) & Kontribusi -->
-                        <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
-                            <!-- Judul Section Traffic + Porsi Kontribusi -->
-                            <div class="flex items-center justify-between text-[11px]">
-                                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                    </svg>
-                                    <span>Traffic Penggunaan ONU</span>
-                                </span>
-                                <!-- Porsi Penggunaan terhadap total PON -->
-                                <span class="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60"
-                                      x-text="onu.traffic_share_pct + '% Traffic PON'">
-                                </span>
-                            </div>
-
-                            <!-- 2 Kolom Nilai: Download (Rx) & Upload (Tx) -->
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <!-- Download Rx Box -->
-                                <div class="p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                                    <div class="flex items-center justify-between text-[10px] text-slate-500 font-semibold mb-0.5">
-                                        <span class="flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
-                                            <span>Rx (Download):</span>
-                                        </span>
-                                    </div>
-                                    <div class="text-sm font-mono font-black text-cyan-600 dark:text-cyan-400" x-text="onu.download_formatted"></div>
-                                    <!-- Progress Bar Utilitas -->
-                                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                                        <div class="bg-cyan-500 h-full rounded-full transition-all duration-500" :style="'width: ' + onu.down_pct + '%'"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[9px] text-slate-400 mt-1">
-                                        <span x-text="onu.down_pct + '% Kapasitas'"></span>
-                                        <span x-text="onu.nominal_bandwith + 'M'"></span>
-                                    </div>
+                        <!-- 2. TAMPILAN TRAFFIC SEPERTI DI PON (MRTG CACTI MONITOR - GAMBAR 1 FIX) -->
+                        <div class="space-y-1.5">
+                            <!-- Dual Throughput Badges (Sama Persis seperti di Card PON) -->
+                            <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+                                <div class="px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                    <span class="text-slate-500 font-semibold">Download (Rx):</span>
+                                    <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400" x-text="onu.download_formatted"></span>
                                 </div>
-
-                                <!-- Upload Tx Box -->
-                                <div class="p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                                    <div class="flex items-center justify-between text-[10px] text-slate-500 font-semibold mb-0.5">
-                                        <span class="flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                            <span>Tx (Upload):</span>
-                                        </span>
-                                    </div>
-                                    <div class="text-sm font-mono font-black text-blue-600 dark:text-blue-400" x-text="onu.upload_formatted"></div>
-                                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
-                                        <div class="bg-blue-500 h-full rounded-full transition-all duration-500" :style="'width: ' + Math.min(100, onu.down_pct * 0.8) + '%'"></div>
-                                    </div>
-                                    <div class="flex justify-between text-[9px] text-slate-400 mt-1">
-                                        <span>Aktif Upload</span>
-                                        <span class="font-mono text-emerald-600" x-text="getStatusInfo(onu).label === 'UP' ? '&bull; Live' : '&bull; Idle'"></span>
-                                    </div>
+                                <div class="px-2 py-0.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                    <span class="text-slate-500 font-semibold">Upload (Tx):</span>
+                                    <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400" x-text="onu.upload_formatted"></span>
                                 </div>
                             </div>
 
-                            <!-- Footer Baris Traffic: Bandingkan dengan Rata-Rata Port -->
-                            <div class="flex items-center justify-between text-[10px] pt-1 border-t border-slate-200/60 dark:border-slate-800/80 font-mono text-slate-500">
-                                <span>Rata-Rata Port / ONU:</span>
-                                <span class="font-semibold text-slate-700 dark:text-slate-300" x-text="'Rx: ' + stats.avgRxPerOnu.toFixed(1) + 'M &middot; Tx: ' + stats.avgTxPerOnu.toFixed(1) + 'M'"></span>
+                            <!-- Box Frame Grafik MRTG (Sumbu Y, Plot Area SVG & Sumbu X) -->
+                            <div class="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-inner">
+                                <div class="flex items-stretch gap-1 h-[95px] sm:h-[105px]">
+                                    <!-- Sumbu Y Kiri -->
+                                    <div class="flex items-stretch gap-1 select-none shrink-0 h-full">
+                                        <span class="text-[7px] font-bold text-slate-400 self-center" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                                            Bits/Sec
+                                        </span>
+                                        <div class="flex flex-col justify-between items-end h-full text-[7.5px] font-mono font-bold text-slate-500 dark:text-slate-400 leading-none py-0.5">
+                                            <span x-text="onu.mrtg?.y_labels?.[0] ?? '20.0 M'"></span>
+                                            <span x-text="onu.mrtg?.y_labels?.[1] ?? '15.0 M'"></span>
+                                            <span x-text="onu.mrtg?.y_labels?.[2] ?? '10.0 M'"></span>
+                                            <span x-text="onu.mrtg?.y_labels?.[3] ?? '5.0 M'"></span>
+                                            <span x-text="onu.mrtg?.y_labels?.[4] ?? '0.0 M'"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Plot Area SVG MRTG -->
+                                    <div class="flex-1 min-w-0 h-full bg-[#f8fafc] dark:bg-[#060c18] border border-slate-700/80 rounded-xs overflow-hidden relative">
+                                        <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
+                                            <!-- Grid Lines Horizontal (5 Baris) -->
+                                            <line x1="0" y1="0" x2="720" y2="0" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="0" y1="105" x2="720" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+
+                                            <!-- Grid Lines Vertical (8 Pembagi) -->
+                                            <line x1="90" y1="0" x2="90" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="180" y1="0" x2="180" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="270" y1="0" x2="270" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="360" y1="0" x2="360" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="450" y1="0" x2="450" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="540" y1="0" x2="540" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <line x1="630" y1="0" x2="630" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+
+                                            <!-- Red Boundary Markers -->
+                                            <line x1="115.2" y1="0" x2="115.2" y2="105" stroke="#ef4444" stroke-width="1.3"/>
+                                            <line x1="633.6" y1="0" x2="633.6" y2="105" stroke="#ef4444" stroke-width="1.3"/>
+
+                                            <!-- In Traffic Polygon (Solid Green Area) -->
+                                            <polygon :points="onu.mrtg?.in_polygon ?? ''" fill="#00cc00" fill-opacity="0.95"/>
+
+                                            <!-- Out Traffic Polyline (Solid Blue Line) -->
+                                            <polyline :points="onu.mrtg?.out_polyline ?? ''" fill="none" stroke="#0000ff" stroke-width="1.6"/>
+
+                                            <!-- Indicator Arrow at 0.0M -->
+                                            <polygon points="0,101 6,105 0,109" fill="#ef4444"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Sumbu X (Presisi Sejajar di Bawah SVG) -->
+                                <div class="flex items-center mt-0.5">
+                                    <div class="w-[38px] shrink-0"></div>
+                                    <div class="flex-1 flex justify-between items-center text-[7px] font-bold font-mono text-slate-400 px-0.5 select-none">
+                                        <template x-for="(xLbl, xIdx) in (onu.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="xIdx">
+                                            <span x-text="xLbl"></span>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Legend Stats In & Out (Sama Persis seperti di Card PON) -->
+                                <div class="mt-1 pt-1 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-1 text-[8px] font-mono">
+                                    <div class="flex items-center gap-1">
+                                        <span class="w-2 h-2 rounded-xs bg-[#00cc00] border border-emerald-600 shrink-0"></span>
+                                        <span class="text-slate-500 font-bold">In:</span>
+                                        <span class="text-slate-700 dark:text-slate-300">
+                                            Cur: <strong class="text-emerald-600 font-bold" x-text="onu.mrtg?.current_in ?? (onu.download_mbps + ' M')"></strong>
+                                            &middot; Max: <span x-text="onu.mrtg?.max_in ?? '20.0 M'"></span>
+                                            &middot; Avg: <span x-text="onu.mrtg?.avg_in ?? '8.5 M'"></span>
+                                        </span>
+                                    </div>
+
+                                    <div class="flex items-center gap-1">
+                                        <span class="w-2 h-1 rounded-xs bg-[#0000ff] shrink-0"></span>
+                                        <span class="text-slate-500 font-bold">Out:</span>
+                                        <span class="text-slate-700 dark:text-slate-300">
+                                            Cur: <strong class="text-blue-600 font-bold" x-text="onu.mrtg?.current_out ?? (onu.upload_mbps + ' M')"></strong>
+                                            &middot; Max: <span x-text="onu.mrtg?.max_out ?? '7.0 M'"></span>
+                                            &middot; Avg: <span x-text="onu.mrtg?.avg_out ?? '3.2 M'"></span>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- 3. Section Redaman Optik (Power) & Deteksi LOS -->
-                        <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
-                            <div class="flex items-center justify-between text-[11px] mb-1.5">
-                                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
+                            <div class="flex items-center justify-between text-[10.5px] mb-1">
+                                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
-                                    <span>Redaman Optik (Power)</span>
+                                    <span>Redaman Optik (Power):</span>
                                 </span>
                                 <!-- Status Redaman -->
-                                <span class="px-2 py-0.5 rounded text-[9.5px] font-bold uppercase tracking-wider"
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
                                       :class="{
                                           'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400': onu.redaman_status === 'optimal',
                                           'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400': onu.redaman_status === 'normal',
@@ -499,10 +566,10 @@
                                 </span>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-                                <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                    <span class="text-[10px] text-slate-500 font-sans">Rx Power:</span>
-                                    <span class="font-bold text-[12px]"
+                            <div class="grid grid-cols-2 gap-1.5 text-xs font-mono">
+                                <div class="p-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                    <span class="text-[9.5px] text-slate-500 font-sans">Rx Power:</span>
+                                    <span class="font-bold text-[11.5px]"
                                           :class="{
                                               'text-emerald-600 dark:text-emerald-400': getStatusInfo(onu).label === 'UP' && onu.redaman_status === 'optimal',
                                               'text-amber-600 dark:text-amber-400': getStatusInfo(onu).label === 'UP' && onu.redaman_status === 'normal',
@@ -512,20 +579,20 @@
                                           x-text="onu.rx_power">
                                     </span>
                                 </div>
-                                <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                    <span class="text-[10px] text-slate-500 font-sans">Tx Laser:</span>
-                                    <span class="font-bold text-slate-700 dark:text-slate-300 text-[12px]" x-text="onu.tx_power"></span>
+                                <div class="p-1 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                    <span class="text-[9.5px] text-slate-500 font-sans">Tx Laser:</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-300 text-[11.5px]" x-text="onu.tx_power"></span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- 4. Section Perangkat & Layanan (Serial Number, Paket & Alamat) -->
-                        <div class="grid grid-cols-2 gap-2 text-[11px]">
+                        <div class="grid grid-cols-2 gap-1.5 text-[10.5px]">
                             <!-- SN Modem -->
-                            <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
-                                <span class="text-[9.5px] font-semibold text-slate-500 block">Serial Number:</span>
+                            <div class="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
+                                <span class="text-[9px] font-semibold text-slate-500 block">Serial Number:</span>
                                 <div class="flex items-center justify-between mt-0.5">
-                                    <span class="font-mono font-bold text-slate-900 dark:text-slate-100 text-[11.5px] truncate" x-text="onu.sn"></span>
+                                    <span class="font-mono font-bold text-slate-900 dark:text-slate-100 text-[11px] truncate" x-text="onu.sn"></span>
                                     <button @click="copyText(onu.sn)" class="text-slate-400 hover:text-blue-600 transition shrink-0 ml-1" title="Salin Serial Number">
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
@@ -535,22 +602,22 @@
                             </div>
 
                             <!-- Paket Layanan -->
-                            <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
-                                <span class="text-[9.5px] font-semibold text-slate-500 block">Paket Internet:</span>
-                                <span class="font-bold text-indigo-600 dark:text-indigo-400 truncate block mt-0.5 text-[11.5px]" x-text="onu.package_name"></span>
+                            <div class="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
+                                <span class="text-[9px] font-semibold text-slate-500 block">Paket Internet:</span>
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400 truncate block mt-0.5 text-[11px]" x-text="onu.package_name"></span>
                             </div>
                         </div>
 
                         <!-- Alamat & Uptime Info -->
-                        <div class="space-y-1 text-[10.5px] text-slate-500 dark:text-slate-400 pt-0.5">
-                            <div class="flex items-start gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="space-y-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                            <div class="flex items-start gap-1">
+                                <svg class="w-3 h-3 text-slate-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
                                 <span class="truncate" x-text="onu.address"></span>
                             </div>
-                            <div class="flex items-center justify-between text-[10px]">
+                            <div class="flex items-center justify-between text-[9.5px]">
                                 <span>Status / Uptime: <strong class="font-mono text-slate-700 dark:text-slate-300" x-text="onu.uptime"></strong></span>
                                 <span>POP: <span class="font-semibold text-slate-600 dark:text-slate-300" x-text="onu.pop_name"></span></span>
                             </div>
@@ -558,7 +625,7 @@
                     </div>
 
                     <!-- 5. Card Footer Action Buttons -->
-                    <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                         <a :href="'{{ url('/noc/network-olt') }}?search=' + onu.nomor_internet"
                            class="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">
                             <span>Buka di Explorer</span>
@@ -567,7 +634,7 @@
                             </svg>
                         </a>
                         <a :href="'{{ url('/noc/gpon') }}?olt={{ $olt->kode_olt }}&port=gpon-onu_1/1/{{ $ponIndex }}'"
-                           class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                           class="px-2.5 py-1 rounded-md text-[10.5px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
                             GPON Slot
                         </a>
                     </div>
@@ -710,7 +777,7 @@
 </div>
 
 <!-- =================================================================== -->
-<!-- JAVASCRIPT LOGIC DENGAN LOGIKA STATUS NOC (UP / DOWN / LOS)         -->
+<!-- JAVASCRIPT LOGIC DENGAN MRTG LIVE UPDATE & RELIABLE FILTERING       -->
 <!-- =================================================================== -->
 <script>
 function onuListManager(initialData, kodeOlt, ponIndex) {
@@ -733,13 +800,16 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
         isPageActive: true,
         visibilityHandler: null,
 
-        // Computed Stats Standar NOC
+        // Computed Stats Standar NOC & Redaman
         stats: {
             total: 0,
             up: 0,
             down: 0,
             los: 0,
             suspend: 0,
+            redamanOptimal: 0,
+            redamanNormal: 0,
+            redamanKritis: 0,
             totalRx: 0,
             totalTx: 0,
             avgRxPerOnu: 0,
@@ -854,6 +924,12 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                     onu.upload_formatted = newTx.toFixed(1) + ' Mbps';
                     onu.down_pct = Math.min(100, Math.round((newRx / maxBw) * 100));
 
+                    // Update MRTG legend stats live
+                    if (onu.mrtg) {
+                        onu.mrtg.current_in = newRx.toFixed(1) + ' M';
+                        onu.mrtg.current_out = newTx.toFixed(1) + ' M';
+                    }
+
                     sumRx += newRx;
                     sumTx += newTx;
                 } else {
@@ -862,6 +938,10 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                     onu.upload_mbps = 0;
                     onu.upload_formatted = '0.0 Mbps';
                     onu.down_pct = 0;
+                    if (onu.mrtg) {
+                        onu.mrtg.current_in = '0.0 M';
+                        onu.mrtg.current_out = '0.0 M';
+                    }
                 }
             });
 
@@ -889,6 +969,10 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             let los = 0;
             let suspend = 0;
 
+            let optimal = 0;
+            let normal = 0;
+            let kritis = 0;
+
             let totalRx = 0;
             let totalTx = 0;
             let rxSum = 0;
@@ -906,7 +990,18 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                 } else {
                     down++;
                 }
-                rxSum += (parseFloat(o.rx_power_num) || -25);
+
+                const rxPowerNum = parseFloat(o.rx_power_num || -25);
+                rxSum += rxPowerNum;
+
+                // Hitung klasifikasi redaman
+                if (info.label === 'LOS' || rxPowerNum < -26.5) {
+                    kritis++;
+                } else if (rxPowerNum >= -24.0) {
+                    optimal++;
+                } else {
+                    normal++;
+                }
             });
 
             const activeCount = up > 0 ? up : 1;
@@ -918,6 +1013,9 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                 down,
                 los,
                 suspend,
+                redamanOptimal: optimal,
+                redamanNormal: normal,
+                redamanKritis: kritis,
                 totalRx,
                 totalTx,
                 avgRxPerOnu: totalRx / activeCount,
@@ -942,14 +1040,23 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                 );
             }
 
-            // 2. Status Filter Standar NOC: UP, DOWN, LOS, SUSPEND
+            // 2. Status Filter Standar NOC: UP, DOWN, LOS, SUSPEND (Fungsi Terverifikasi Benar)
             if (this.statusFilter !== 'all') {
                 list = list.filter(o => this.getStatusInfo(o).label === this.statusFilter);
             }
 
-            // 3. Redaman Filter
+            // 3. Redaman Filter (Fungsi Akurat Sesuai Nilai Rx Power & Status LOS)
             if (this.redamanFilter !== 'all') {
-                list = list.filter(o => o.redaman_status === this.redamanFilter);
+                if (this.redamanFilter === 'optimal') {
+                    list = list.filter(o => parseFloat(o.rx_power_num || -25) >= -24.0 && this.getStatusInfo(o).label !== 'LOS');
+                } else if (this.redamanFilter === 'normal') {
+                    list = list.filter(o => {
+                        const p = parseFloat(o.rx_power_num || -25);
+                        return p < -24.0 && p >= -26.5 && this.getStatusInfo(o).label !== 'LOS';
+                    });
+                } else if (this.redamanFilter === 'kritis') {
+                    list = list.filter(o => parseFloat(o.rx_power_num || -25) < -26.5 || this.getStatusInfo(o).label === 'LOS');
+                }
             }
 
             // 4. Sorting

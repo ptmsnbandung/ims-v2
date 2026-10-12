@@ -7,30 +7,42 @@
 <div class="space-y-3.5"
      x-data="pendaftaranWorkflowComponent()">
     
-    <!-- Top Header: Breadcrumbs & Registrasi Baru Button -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
-        <!-- Breadcrumb Navigation -->
-        <div>
-            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
-                <a href="{{ route('dashboard') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">IMS</a>
-                <svg class="w-3 h-3 text-slate-400 dark:text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                </svg>
-                <span class="text-slate-800 dark:text-slate-200 font-semibold">Pendaftaran Pelanggan</span>
-            </div>
-            <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">Antrean Pendaftaran Baru</h2>
-        </div>
+    <!-- Top Header: Breadcrumbs & Registrasi Baru Button (Deep Oceanic Teal & Cyan Gradient) -->
+    <div class="ims-banner relative overflow-hidden rounded-xl p-3.5 sm:p-4 shadow-sm border border-teal-500/20 text-white"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        
+        <!-- Subtle Glow Effect -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
 
-        <!-- Button + Registrasi Baru (Buka Modal Form) -->
-        <div>
-            <button type="button" 
-                    @click="openNewModal()"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition duration-150 transform hover:-translate-y-0.5 cursor-pointer">
-                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
-                </svg>
-                <span>Registrasi Baru</span>
-            </button>
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <!-- Breadcrumb Navigation -->
+            <div>
+                <div class="flex items-center gap-1.5 text-[11px] text-[#c6edf3] mb-1 font-medium">
+                    <a href="{{ route('dashboard') }}" class="hover:text-white transition">IMS</a>
+                    <svg class="w-3 h-3 text-teal-300/70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                    <span class="text-white font-semibold">Pendaftaran Pelanggan</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
+                    <span>Antrean Pendaftaran Baru</span>
+                </h2>
+                <p class="text-[11px] text-[#c6edf3] mt-0.5 leading-relaxed" style="color: #c6edf3 !important;">
+                    Kelola antrean pendaftaran baru, validasi identitas &amp; lokasi pasang, dan penerbitan nomor internet.
+                </p>
+            </div>
+
+            <!-- Button + Registrasi Baru (Buka Modal Form) -->
+            <div>
+                <button type="button" 
+                        @click="openNewModal()"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md hover:shadow-lg border border-blue-400/40 transition duration-150 transform hover:-translate-y-0.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
+                    </svg>
+                    <span>Registrasi Baru</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -905,12 +917,11 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          aria-labelledby="modal-title" role="dialog" aria-modal="true">
         
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
-             @click="modalOpen = false"></div>
+        <!-- Backdrop (Static - Hanya tertutup via tombol Batal atau X) -->
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"></div>
 
         <div class="flex min-h-full items-center justify-center p-2 sm:p-3 text-center">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-3 w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[1400px]">
+            <div class="relative transform rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-3 w-full max-w-6xl xl:max-w-7xl 2xl:max-w-[1400px]">
                 
                 <!-- Loading State Indicator -->
                 <div x-show="isLoadingEdit" class="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-3">
@@ -1128,59 +1139,193 @@
                                 <span>Alamat KTP & Lampiran Dokumen</span>
                             </div>
 
-                            <!-- Row 3: Wilayah KTP (4 equal columns) -->
+                            <!-- Row 3: Wilayah KTP (4 equal columns with Searchable Dropdowns) -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                                <div>
+                                <!-- 1. Provinsi KTP -->
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Provinsi KTP <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="provinsiKtp" 
-                                            @change="fetchKotaKtp()"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Provinsi</option>
-                                        @foreach($provinces as $prov)
-                                            <option value="{{ $prov->kode_wilayah_provinsi }}">{{ $prov->nama_provinsi }}</option>
-                                        @endforeach
-                                    </select>
+                                    <button type="button"
+                                            @click="open = !open; if(open) $nextTick(() => $refs.searchInput?.focus())"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left cursor-pointer">
+                                        <span class="truncate" :class="!provinsiKtp ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getProvinsiKtpLabel() || 'Pilih Provinsi'"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari provinsi..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="item in (provincesList || []).filter(p => !search || p.nama_provinsi.toLowerCase().includes(search.toLowerCase()))" :key="item.kode_wilayah_provinsi">
+                                                <button type="button"
+                                                        @click="provinsiKtp = item.kode_wilayah_provinsi; kotaKtp = ''; kecamatanKtp = ''; kelurahanKtp = ''; fetchKotaKtp(); open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(provinsiKtp) === String(item.kode_wilayah_provinsi) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="item.nama_provinsi"></span>
+                                                    <span x-show="String(provinsiKtp) === String(item.kode_wilayah_provinsi)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(provincesList || []).filter(p => !search || p.nama_provinsi.toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
+
+                                <!-- 2. Kota/Kabupaten KTP -->
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Kota/Kabupaten KTP <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="kotaKtp" 
-                                            @change="fetchKecamatanKtp()"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Kota/Kabupaten</option>
-                                        <template x-for="item in kotaKtpList" :key="item.kode_wilayah_kota">
-                                            <option :value="item.kode_wilayah_kota" x-text="item.nama_kota"></option>
-                                        </template>
-                                    </select>
+                                    <button type="button"
+                                            :disabled="!provinsiKtp"
+                                            @click="if(provinsiKtp) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            :class="!provinsiKtp ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
+                                        <span class="truncate" :class="!kotaKtp ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKotaKtpLabel() || (provinsiKtp ? 'Pilih Kota/Kabupaten' : 'Pilih Provinsi Dahulu')"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open && provinsiKtp" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari kota/kabupaten..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="item in (kotaKtpList || []).filter(k => !search || k.nama_kota.toLowerCase().includes(search.toLowerCase()))" :key="item.kode_wilayah_kota">
+                                                <button type="button"
+                                                        @click="kotaKtp = item.kode_wilayah_kota; kecamatanKtp = ''; kelurahanKtp = ''; fetchKecamatanKtp(); open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(kotaKtp) === String(item.kode_wilayah_kota) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="item.nama_kota"></span>
+                                                    <span x-show="String(kotaKtp) === String(item.kode_wilayah_kota)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(kotaKtpList || []).filter(k => !search || k.nama_kota.toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
+
+                                <!-- 3. Kecamatan KTP -->
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Kecamatan KTP <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="kecamatanKtp" 
-                                            @change="fetchKelurahanKtp()"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Kecamatan</option>
-                                        <template x-for="item in kecamatanKtpList" :key="item.kode_wilayah_kecamatan">
-                                            <option :value="item.kode_wilayah_kecamatan" x-text="item.nama_kecamatan"></option>
-                                        </template>
-                                    </select>
+                                    <button type="button"
+                                            :disabled="!kotaKtp"
+                                            @click="if(kotaKtp) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            :class="!kotaKtp ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
+                                        <span class="truncate" :class="!kecamatanKtp ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKecamatanKtpLabel() || (kotaKtp ? 'Pilih Kecamatan' : 'Pilih Kota Dahulu')"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open && kotaKtp" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari kecamatan..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="item in (kecamatanKtpList || []).filter(k => !search || k.nama_kecamatan.toLowerCase().includes(search.toLowerCase()))" :key="item.kode_wilayah_kecamatan">
+                                                <button type="button"
+                                                        @click="kecamatanKtp = item.kode_wilayah_kecamatan; kelurahanKtp = ''; fetchKelurahanKtp(); open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(kecamatanKtp) === String(item.kode_wilayah_kecamatan) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="item.nama_kecamatan"></span>
+                                                    <span x-show="String(kecamatanKtp) === String(item.kode_wilayah_kecamatan)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(kecamatanKtpList || []).filter(k => !search || k.nama_kecamatan.toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
+
+                                <!-- 4. Kelurahan KTP -->
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Kelurahan KTP <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="kelurahanKtp" 
-                                            name="kode_wilayah_kelurahan_ktp"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Kelurahan</option>
-                                        <template x-for="item in kelurahanKtpList" :key="item.kode_wilayah_kelurahan">
-                                            <option :value="item.kode_wilayah_kelurahan" x-text="item.nama_kelurahan"></option>
-                                        </template>
-                                    </select>
+                                    <input type="hidden" name="kode_wilayah_kelurahan_ktp" :value="kelurahanKtp">
+                                    <button type="button"
+                                            :disabled="!kecamatanKtp"
+                                            @click="if(kecamatanKtp) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            :class="!kecamatanKtp ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
+                                        <span class="truncate" :class="!kelurahanKtp ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKelurahanKtpLabel() || (kecamatanKtp ? 'Pilih Kelurahan' : 'Pilih Kecamatan Dahulu')"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open && kecamatanKtp" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari kelurahan..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="item in (kelurahanKtpList || []).filter(k => !search || k.nama_kelurahan.toLowerCase().includes(search.toLowerCase()))" :key="item.kode_wilayah_kelurahan">
+                                                <button type="button"
+                                                        @click="kelurahanKtp = item.kode_wilayah_kelurahan; open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(kelurahanKtp) === String(item.kode_wilayah_kelurahan) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="item.nama_kelurahan"></span>
+                                                    <span x-show="String(kelurahanKtp) === String(item.kode_wilayah_kelurahan)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(kelurahanKtpList || []).filter(k => !search || k.nama_kelurahan.toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1407,59 +1552,193 @@
                                 </div>
                             </div>
 
-                            <!-- Row 3: Wilayah Pemasangan (4 equal columns) -->
+                            <!-- Row 3: Wilayah Pemasangan (4 equal columns with Searchable Dropdowns) -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                                <div>
+                                <!-- 1. Provinsi Pasang -->
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Provinsi Pasang <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="provinsiPasang" 
-                                            @change="fetchKotaPasang()"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Provinsi</option>
-                                        @foreach($provinces as $prov)
-                                            <option value="{{ $prov->kode_wilayah_provinsi }}">{{ $prov->nama_provinsi }}</option>
-                                        @endforeach
-                                    </select>
+                                    <button type="button"
+                                            @click="open = !open; if(open) $nextTick(() => $refs.searchInput?.focus())"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left cursor-pointer">
+                                        <span class="truncate" :class="!provinsiPasang ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getProvinsiPasangLabel() || 'Pilih Provinsi'"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari provinsi..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="item in (provincesList || []).filter(p => !search || p.nama_provinsi.toLowerCase().includes(search.toLowerCase()))" :key="item.kode_wilayah_provinsi">
+                                                <button type="button"
+                                                        @click="provinsiPasang = item.kode_wilayah_provinsi; kotaPasang = ''; kecamatanPasang = ''; kelurahanPasang = ''; fetchKotaPasang(); open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(provinsiPasang) === String(item.kode_wilayah_provinsi) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="item.nama_provinsi"></span>
+                                                    <span x-show="String(provinsiPasang) === String(item.kode_wilayah_provinsi)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(provincesList || []).filter(p => !search || p.nama_provinsi.toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
+
+                                <!-- 2. Kota/Kabupaten Pasang -->
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Kota/Kabupaten Pasang <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="kotaPasang" 
-                                            @change="fetchKecamatanPasang()"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Kota/Kabupaten</option>
-                                        <template x-for="item in kotaPasangList" :key="item.kode_wilayah_kota">
-                                            <option :value="item.kode_wilayah_kota" x-text="item.nama_kota"></option>
-                                        </template>
-                                    </select>
+                                    <button type="button"
+                                            :disabled="!provinsiPasang"
+                                            @click="if(provinsiPasang) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            :class="!provinsiPasang ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
+                                        <span class="truncate" :class="!kotaPasang ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKotaPasangLabel() || (provinsiPasang ? 'Pilih Kota/Kabupaten' : 'Pilih Provinsi Dahulu')"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open && provinsiPasang" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari kota/kabupaten..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="item in (kotaPasangList || []).filter(k => !search || k.nama_kota.toLowerCase().includes(search.toLowerCase()))" :key="item.kode_wilayah_kota">
+                                                <button type="button"
+                                                        @click="kotaPasang = item.kode_wilayah_kota; kecamatanPasang = ''; kelurahanPasang = ''; fetchKecamatanPasang(); open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(kotaPasang) === String(item.kode_wilayah_kota) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="item.nama_kota"></span>
+                                                    <span x-show="String(kotaPasang) === String(item.kode_wilayah_kota)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(kotaPasangList || []).filter(k => !search || k.nama_kota.toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
+
+                                <!-- 3. Kecamatan Pasang -->
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Kecamatan Pasang <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="kecamatanPasang" 
-                                            @change="fetchKelurahanPasang()"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Kecamatan</option>
-                                        <template x-for="item in kecamatanPasangList" :key="item.kode_wilayah_kecamatan">
-                                            <option :value="item.kode_wilayah_kecamatan" x-text="item.nama_kecamatan"></option>
-                                        </template>
-                                    </select>
+                                    <button type="button"
+                                            :disabled="!kotaPasang"
+                                            @click="if(kotaPasang) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            :class="!kotaPasang ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
+                                        <span class="truncate" :class="!kecamatanPasang ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKecamatanPasangLabel() || (kotaPasang ? 'Pilih Kecamatan' : 'Pilih Kota Dahulu')"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open && kotaPasang" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari kecamatan..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="item in (kecamatanPasangList || []).filter(k => !search || k.nama_kecamatan.toLowerCase().includes(search.toLowerCase()))" :key="item.kode_wilayah_kecamatan">
+                                                <button type="button"
+                                                        @click="kecamatanPasang = item.kode_wilayah_kecamatan; kelurahanPasang = ''; fetchKelurahanPasang(); open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(kecamatanPasang) === String(item.kode_wilayah_kecamatan) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="item.nama_kecamatan"></span>
+                                                    <span x-show="String(kecamatanPasang) === String(item.kode_wilayah_kecamatan)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(kecamatanPasangList || []).filter(k => !search || k.nama_kecamatan.toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
+
+                                <!-- 4. Kelurahan Pasang -->
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Kelurahan Pasang <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="kelurahanPasang" 
-                                            name="kode_wilayah_kelurahan_pasang"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Kelurahan</option>
-                                        <template x-for="item in kelurahanPasangList" :key="item.kode_wilayah_kelurahan">
-                                            <option :value="item.kode_wilayah_kelurahan" x-text="item.nama_kelurahan"></option>
-                                        </template>
-                                    </select>
+                                    <input type="hidden" name="kode_wilayah_kelurahan_pasang" :value="kelurahanPasang">
+                                    <button type="button"
+                                            :disabled="!kecamatanPasang"
+                                            @click="if(kecamatanPasang) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            :class="!kecamatanPasang ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
+                                        <span class="truncate" :class="!kelurahanPasang ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKelurahanPasangLabel() || (kecamatanPasang ? 'Pilih Kelurahan' : 'Pilih Kecamatan Dahulu')"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open && kecamatanPasang" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari kelurahan..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="item in (kelurahanPasangList || []).filter(k => !search || k.nama_kelurahan.toLowerCase().includes(search.toLowerCase()))" :key="item.kode_wilayah_kelurahan">
+                                                <button type="button"
+                                                        @click="kelurahanPasang = item.kode_wilayah_kelurahan; open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(kelurahanPasang) === String(item.kode_wilayah_kelurahan) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="item.nama_kelurahan"></span>
+                                                    <span x-show="String(kelurahanPasang) === String(item.kode_wilayah_kelurahan)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(kelurahanPasangList || []).filter(k => !search || k.nama_kelurahan.toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2961,7 +3240,8 @@ function pendaftaranWorkflowComponent() {
         paketList: [],
         loadingPaket: false,
         
-        // Wilayah KTP
+        // Wilayah Master & KTP
+        provincesList: @json($provinces),
         provinsiKtp: '',
         kotaKtpList: [],
         kotaKtp: '',
@@ -3185,6 +3465,41 @@ function pendaftaranWorkflowComponent() {
                 this.rwPasang = this.rwKtp;
                 this.alamatPasang = this.alamatKtp;
             }
+        },
+
+        // Wilayah Label Helpers for Searchable Dropdowns
+        getProvinsiKtpLabel() {
+            const found = (this.provincesList || []).find(p => String(p.kode_wilayah_provinsi) === String(this.provinsiKtp));
+            return found ? found.nama_provinsi : '';
+        },
+        getKotaKtpLabel() {
+            const found = (this.kotaKtpList || []).find(k => String(k.kode_wilayah_kota) === String(this.kotaKtp));
+            return found ? found.nama_kota : '';
+        },
+        getKecamatanKtpLabel() {
+            const found = (this.kecamatanKtpList || []).find(k => String(k.kode_wilayah_kecamatan) === String(this.kecamatanKtp));
+            return found ? found.nama_kecamatan : '';
+        },
+        getKelurahanKtpLabel() {
+            const found = (this.kelurahanKtpList || []).find(k => String(k.kode_wilayah_kelurahan) === String(this.kelurahanKtp));
+            return found ? found.nama_kelurahan : '';
+        },
+
+        getProvinsiPasangLabel() {
+            const found = (this.provincesList || []).find(p => String(p.kode_wilayah_provinsi) === String(this.provinsiPasang));
+            return found ? found.nama_provinsi : '';
+        },
+        getKotaPasangLabel() {
+            const found = (this.kotaPasangList || []).find(k => String(k.kode_wilayah_kota) === String(this.kotaPasang));
+            return found ? found.nama_kota : '';
+        },
+        getKecamatanPasangLabel() {
+            const found = (this.kecamatanPasangList || []).find(k => String(k.kode_wilayah_kecamatan) === String(this.kecamatanPasang));
+            return found ? found.nama_kecamatan : '';
+        },
+        getKelurahanPasangLabel() {
+            const found = (this.kelurahanPasangList || []).find(k => String(k.kode_wilayah_kelurahan) === String(this.kelurahanPasang));
+            return found ? found.nama_kelurahan : '';
         },
 
         // Preview Image helper

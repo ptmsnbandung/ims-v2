@@ -4,13 +4,12 @@
 
 @section('content')
 <div x-data="{ activeTab: 'charts' }" class="space-y-2">
-    <!-- Role Welcome Banner (Executive Sapphire & Deep Royal Blue - Rapi, Proporsional & Presisi) -->
-    <div class="ims-banner relative overflow-hidden rounded-2xl py-2.5 px-3.5 sm:py-3 sm:px-5 shadow-sm text-white border border-white/10"
-         style="background: linear-gradient(135deg, #0b3358 0%, #114275 35%, #185694 70%, #206bc4 100%);">
+    <!-- Role Welcome Banner (Deep Oceanic Teal & Cyan Gradient - Serasi dengan Gambar 2) -->
+    <div class="ims-banner relative overflow-hidden rounded-2xl py-2.5 px-3.5 sm:py-3 sm:px-5 shadow-sm text-white border border-teal-500/20"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
         
         <!-- Subtle Ambient Lighting Effect -->
-        <div class="pointer-events-none absolute -right-8 -bottom-8 w-56 h-56 bg-white/10 rounded-full blur-2xl"></div>
-        <div class="pointer-events-none absolute left-1/4 -top-10 w-40 h-40 bg-cyan-400/10 rounded-full blur-xl"></div>
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-56 h-56 bg-white/10 rounded-full blur-2xl"></div>
 
         <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <!-- Left: Profile & Welcome -->
@@ -34,7 +33,7 @@
                             Online
                         </span>
                     </div>
-                    <p class="text-[9.5px] text-blue-100/80 truncate mt-0.5" style="color: rgba(224, 242, 254, 0.9) !important;">
+                    <p class="text-[9.5px] text-[#c6edf3] truncate mt-0.5" style="color: #c6edf3 !important;">
                         {{ $user->role_description }} &middot; Pantau pertumbuhan user baru, tren bandwidth, dan sebaran wilayah real-time.
                     </p>
                 </div>
@@ -47,7 +46,7 @@
                     <button type="button" 
                             @click="activeTab = 'charts'" 
                             :style="activeTab === 'charts' 
-                                ? 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: #ffffff !important; color: #0b3358 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.15s ease;' 
+                                ? 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: #ffffff !important; color: #032b35 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.15s ease;' 
                                 : 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: transparent; color: rgba(255, 255, 255, 0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
                             class="hover:text-white">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
@@ -56,7 +55,7 @@
                     <button type="button" 
                             @click="activeTab = 'tables'" 
                             :style="activeTab === 'tables' 
-                                ? 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: #ffffff !important; color: #0b3358 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.15s ease;' 
+                                ? 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: #ffffff !important; color: #032b35 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.15s ease;' 
                                 : 'display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px; background: transparent; color: rgba(255, 255, 255, 0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
                             class="hover:text-white">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>

@@ -4098,31 +4098,37 @@ class FinanceController extends Controller
 
         // Tambahkan dari Payment Confirmations terlebih dahulu
         foreach ($confirmations as $c) {
-            $seenKodes[$c->kode_billing_layanan] = true;
-            $seenKodes[str_replace('/', '-', $c->kode_billing_layanan)] = true;
-            $seenKodes[str_replace('-', '/', $c->kode_billing_layanan)] = true;
+            $kodeBillingConf = $c->kode_billing_layanan ?? '';
+            if (!empty($kodeBillingConf)) {
+                $seenKodes[$kodeBillingConf] = true;
+                $seenKodes[str_replace('/', '-', $kodeBillingConf)] = true;
+                $seenKodes[str_replace('-', '/', $kodeBillingConf)] = true;
+            }
 
-            $cDate = $c->created_at ?: ($c->updated_at ?: Carbon::now());
+            $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: Carbon::now());
             $carbonDate = Carbon::parse($cDate);
-            $isApproved = ($c->status === 'approved');
+            $isApproved = (($c->status ?? '') === 'approved');
 
             // Cek invoice terkait jika ada
-            $relatedBill = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $c->kode_billing_layanan)->first();
+            $relatedBill = !empty($kodeBillingConf) 
+                ? DB::table('trx_billing_layanan')->where('kode_billing_layanan', $kodeBillingConf)->first() 
+                : null;
             $nominal = (float) ($relatedBill?->total_layanan ?: $relatedBill?->amount_paid ?: 0);
+            $bankTujuan = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: ($relatedBill?->merchant_type ?: 'Transfer Manual')));
 
             $items->push((object)[
                 'type' => 'confirmation',
-                'id' => $c->id,
-                'kode_billing' => $c->kode_billing_layanan,
-                'nomor_internet' => $c->customer_id ?? ($relatedBill?->nomor_internet ?? '-'),
-                'nama_pelanggan' => $c->customer_name ?? 'Pelanggan',
+                'id' => $c->id ?? $kodeBillingConf,
+                'kode_billing' => $kodeBillingConf ?: '-',
+                'nomor_internet' => ($c->customer_id ?? null) ?: ($relatedBill?->nomor_internet ?? '-'),
+                'nama_pelanggan' => ($c->customer_name ?? null) ?: ($relatedBill?->nama_pelanggan ?? 'Pelanggan'),
                 'nominal' => $nominal,
                 'nominal_formatted' => $nominal > 0 ? ('Rp ' . number_format($nominal, 0, ',', '.')) : 'Menunggu Pengecekan',
-                'bank_tujuan' => $c->destination_bank ?: 'Transfer Manual',
-                'proof_file' => $c->proof_file,
-                'notes' => $c->notes,
-                'admin_notes' => $c->admin_notes,
-                'status' => $c->status,
+                'bank_tujuan' => $bankTujuan,
+                'proof_file' => ($c->proof_file ?? null) ?: (($c->bukti_transfer ?? null) ?: ($c->file ?? null)),
+                'notes' => $c->notes ?? ($c->keterangan ?? null),
+                'admin_notes' => $c->admin_notes ?? null,
+                'status' => $c->status ?? 'pending',
                 'is_approved' => $isApproved,
                 'date' => $carbonDate->format('d M Y H:i'),
                 'time_ago' => $carbonDate->diffForHumans(),

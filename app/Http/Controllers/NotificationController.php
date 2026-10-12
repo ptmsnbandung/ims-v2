@@ -686,22 +686,23 @@ class NotificationController extends Controller
                     ->get();
 
                 foreach ($confirmations as $c) {
-                    $cDate = $c->created_at ?: ($c->updated_at ?: Carbon::now());
+                    $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: Carbon::now());
                     $carbonDate = Carbon::parse($cDate);
+                    $merchant = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: 'Transfer Manual'));
                     $payments[] = [
-                        'id' => 'conf_' . md5($c->id . '_' . $c->kode_billing_layanan),
-                        'kode_billing' => $c->kode_billing_layanan,
+                        'id' => 'conf_' . md5(($c->id ?? '') . '_' . ($c->kode_billing_layanan ?? '')),
+                        'kode_billing' => $c->kode_billing_layanan ?? '-',
                         'nomor_internet' => $c->customer_id ?? '-',
                         'nama_pelanggan' => $c->customer_name ?? 'Pelanggan',
                         'nominal' => 0,
                         'nominal_formatted' => 'Bukti Transfer',
                         'status' => 'waiting',
                         'status_label' => 'MENUNGGU VERIFIKASI',
-                        'merchant' => $c->destination_bank ?: 'Transfer Manual',
+                        'merchant' => $merchant,
                         'date' => $carbonDate->format('d M Y H:i'),
                         'time_ago' => $carbonDate->diffForHumans(),
                         'timestamp' => $carbonDate->timestamp,
-                        'url' => route('finance.billing-layanan', ['search' => $c->kode_billing_layanan]),
+                        'url' => route('finance.billing-layanan', ['search' => $c->kode_billing_layanan ?? '']),
                     ];
                 }
             }

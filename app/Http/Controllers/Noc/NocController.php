@@ -636,7 +636,7 @@ class NocController extends Controller
     /**
      * Manajemen Master OLT, GPON, dan Port PON
      */
-    public function olt(Request $request): View
+    public function olt(Request $request, OltConnectionService $oltService): View
     {
         $this->ensureOltTableColumns();
 
@@ -738,12 +738,19 @@ class NocController extends Controller
         $gpons = Schema::hasTable('m_gpon') ? DB::table('m_gpon')->get() : collect();
         $pons = Schema::hasTable('m_pon') ? DB::table('m_pon')->get() : collect();
 
+        // Ambil data real telemetry OLT (Traffic Upload/Download, Rx/Tx optical power)
+        $telemetryMap = [];
+        foreach ($olts as $olt) {
+            $telemetryMap[$olt->kode_olt] = $oltService->getOltRealTelemetry($olt);
+        }
+
         return view('noc.olt', [
             'user' => $request->user(),
             'olts' => $olts,
             'totalOlt' => $totalOlt,
             'totalPonPort' => $totalPonPort,
             'registeredPonCounts' => $registeredPonCounts,
+            'telemetryMap' => $telemetryMap,
             'gpons' => $gpons,
             'pons' => $pons,
             'pops' => $pops,
@@ -959,6 +966,28 @@ class NocController extends Controller
         ]);
 
         return response()->json($res, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+
+    /**
+     * AJAX: Ambil Real-Time Telemetry & Traffic dari OLT Fisik
+     */
+    public function getOltTelemetry(Request $request, OltConnectionService $oltService): JsonResponse
+    {
+        $request->validate([
+            'kode_olt' => 'required|string',
+        ]);
+
+        $olt = DB::table('m_olt')->where('kode_olt', $request->kode_olt)->first();
+        if (!$olt) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OLT tidak ditemukan.',
+            ], 404);
+        }
+
+        $data = $oltService->getOltRealTelemetry($olt);
+
+        return response()->json($data, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     /**

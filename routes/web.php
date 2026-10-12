@@ -162,6 +162,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/olt/test-connection', [NocController::class, 'testOltConnection'])->name('olt.test-connection');
         Route::post('/olt/sync-live', [NocController::class, 'syncLiveGpon'])->name('olt.sync-live');
         Route::post('/olt/scan-uncfg', [NocController::class, 'scanUncfgOnu'])->name('olt.scan-uncfg');
+        Route::post('/olt/telemetry', [NocController::class, 'getOltTelemetry'])->name('olt.telemetry');
         Route::get('/gpon', [NocController::class, 'gponTopology'])->name('gpon');
         Route::post('/pon/store', [NocController::class, 'storePon'])->name('pon.store');
 

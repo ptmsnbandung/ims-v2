@@ -157,6 +157,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/olt', [NocController::class, 'olt'])->name('olt');
         Route::get('/olt/create', [NocController::class, 'oltCreate'])->name('olt.create');
         Route::get('/olt/{kode_olt}/edit', [NocController::class, 'oltEdit'])->name('olt.edit');
+        Route::get('/olt/{kode_olt}/traffic-pon', [NocController::class, 'oltPonTraffic'])->name('olt.pon-traffic');
         Route::post('/olt/store', [NocController::class, 'storeOlt'])->name('olt.store');
         Route::post('/olt/{kode_olt}/delete', [NocController::class, 'deleteOlt'])->name('olt.delete');
         Route::post('/olt/test-connection', [NocController::class, 'testOltConnection'])->name('olt.test-connection');

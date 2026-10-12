@@ -817,6 +817,41 @@ class NocController extends Controller
     }
 
     /**
+     * Detail Traffic per Port PON (Setiap port memiliki grafik traffic sendiri)
+     */
+    public function oltPonTraffic(Request $request, string $kode_olt, OltConnectionService $oltService): View
+    {
+        $this->ensureOltTableColumns();
+
+        $olt = DB::table('m_olt')->where('kode_olt', $kode_olt)->first();
+        if (!$olt) {
+            abort(404, "Data OLT {$kode_olt} tidak ditemukan.");
+        }
+
+        if (!empty($olt->kode_pop)) {
+            $pop = DB::table('m_pop')->where('kode_pop', $olt->kode_pop)->first();
+            $olt->nama_pop = $pop->nama_pop ?? $olt->kode_pop;
+        } else {
+            $olt->nama_pop = 'POP Utama MSN';
+        }
+
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $ponTelemetry = $oltService->getOltPonPortsTelemetry($olt, $startDate, $endDate);
+        $allOlts = DB::table('m_olt')->orderBy('kode_olt')->get();
+
+        return view('noc.olt-pon-traffic', [
+            'user' => $request->user(),
+            'olt' => $olt,
+            'allOlts' => $allOlts,
+            'ponTelemetry' => $ponTelemetry,
+            'startDate' => $startDate ?? now()->subDays(7)->format('Y-m-d'),
+            'endDate' => $endDate ?? now()->format('Y-m-d'),
+        ]);
+    }
+
+    /**
      * Store / Update OLT
      */
     public function storeOlt(Request $request): RedirectResponse

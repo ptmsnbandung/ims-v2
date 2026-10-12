@@ -467,14 +467,24 @@
                                     </div>
                                 </div>
 
-                                <!-- 4. Action Buttons (Kiri Bawah) - Tombol Solid Blue Tanpa Efek Awan Putih -->
+                                <!-- 4. Action Buttons (Kiri Bawah) - Tombol Solid Blue & Indigo Tanpa Efek Awan Putih -->
                                 <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                                     <a href="{{ route('noc.gpon', ['olt' => $olt->kode_olt]) }}" 
-                                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+                                       title="Buka GPON Topologi OLT">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                         </svg>
                                         <span>Buka OLT (GPON)</span>
+                                    </a>
+
+                                    <a href="{{ route('noc.olt.pon-traffic', ['kode_olt' => $olt->kode_olt]) }}" 
+                                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+                                       title="Lihat Grafik Traffic per Port PON">
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                        </svg>
+                                        <span>Lihat Traffic per PON</span>
                                     </a>
 
                                     @if(auth()->user()?->hasRole(['admin', 'direktur']))
@@ -796,11 +806,20 @@
                             <td class="py-2.5 px-3.5 text-right">
                                 <div class="inline-flex items-center gap-1">
                                     <a href="{{ route('noc.gpon', ['olt' => $olt->kode_olt]) }}" 
-                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-semibold shadow-2xs shadow-blue-500/20 transition">
+                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-semibold shadow-2xs transition">
                                         <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                         </svg>
                                         <span>Buka OLT</span>
+                                    </a>
+
+                                    <a href="{{ route('noc.olt.pon-traffic', ['kode_olt' => $olt->kode_olt]) }}" 
+                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-semibold shadow-2xs transition"
+                                       title="Lihat Detail Traffic per PON">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                        </svg>
+                                        <span>Traffic PON</span>
                                     </a>
 
                                     @if(auth()->user()?->hasRole(['admin', 'direktur']))

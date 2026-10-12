@@ -4,14 +4,17 @@
 @section('page_title', 'Traffic per PON: ' . ($olt->name_olt ?? $olt->kode_olt))
 
 @section('content')
-<div class="space-y-4">
+<div class="space-y-4"
+     x-data="ponLiveManager({{ Js::from($ponTelemetry) }})"
+     x-init="init()"
+     x-destroy="destroy()">
 
     <!-- =================================================================== -->
     <!-- 1. TOP HERO HEADER BANNER (COMMAND CENTER DARK BLUE THEME)          -->
     <!-- =================================================================== -->
-    <div class="ims-banner relative overflow-hidden rounded-xl p-3.5 sm:p-4 shadow-sm border border-teal-500/20"
+    <div class="ims-banner relative overflow-hidden rounded-xl p-3 sm:p-4 shadow-sm border border-teal-500/20"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3.5 relative z-10">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
             <div class="flex items-start sm:items-center gap-3">
                 <!-- Icon OLT / PON -->
                 <div class="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-400 flex items-center justify-center flex-shrink-0 shadow-inner">
@@ -32,14 +35,18 @@
                         {{ $olt->name_olt ?? 'OLT Server' }} &middot; IP Host: <span class="font-mono text-cyan-300 font-bold">{{ $olt->ip_address ?? '10.10.10.1' }}</span> &middot; POP: <span class="text-slate-200">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
                     </p>
                     
-                    <!-- Stats Badges Bar -->
+                    <!-- Stats Badges Bar & Live Clock -->
                     <div class="flex flex-wrap items-center gap-1.5 mt-2 text-[10px] font-bold">
                         <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-800/80 text-slate-200 border border-slate-700/60">
-                            <span>Total Port PON: {{ count($ponTelemetry) }} Port</span>
+                            <span>Total PON: <span x-text="ports.length"></span> Port</span>
                         </div>
                         <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span>Status OLT: Online</span>
+                            <span>Live: <span class="font-mono text-white" x-text="currentTime">--:--:--</span> WIB</span>
+                        </div>
+                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-400" :class="isPageActive ? 'animate-ping' : ''"></span>
+                            <span x-text="isPageActive ? 'Auto-Refresh 1s Aktif' : 'Paused (Tab Tidak Aktif)'"></span>
                         </div>
                     </div>
                 </div>
@@ -73,14 +80,14 @@
     <!-- =================================================================== -->
     <!-- 2. DATE RANGE PICKER FILTER BAR (DARI TANGGAL & SAMPAI TANGGAL)      -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 shadow-xs">
-        <form method="GET" action="{{ route('noc.olt.pon-traffic', ['kode_olt' => $olt->kode_olt]) }}" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-3 text-xs">
-                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+        <form method="GET" action="{{ route('noc.olt.pon-traffic', ['kode_olt' => $olt->kode_olt]) }}" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <div class="flex flex-wrap items-center gap-2.5 text-xs">
+                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                     <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
                     </svg>
-                    <span>Filter Rentang Traffic:</span>
+                    <span>Filter Periode:</span>
                 </span>
 
                 <!-- Dari Tanggal -->
@@ -89,7 +96,7 @@
                     <input type="date" 
                            name="start_date" 
                            value="{{ $startDate }}"
-                           class="px-2.5 py-1 text-xs font-mono rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                           class="px-2 py-0.5 text-xs font-mono rounded bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     <span class="text-[10px] text-slate-400 font-mono hidden md:inline">
                         ({{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }})
                     </span>
@@ -101,7 +108,7 @@
                     <input type="date" 
                            name="end_date" 
                            value="{{ $endDate }}"
-                           class="px-2.5 py-1 text-xs font-mono rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                           class="px-2 py-0.5 text-xs font-mono rounded bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     <span class="text-[10px] text-slate-400 font-mono hidden md:inline">
                         ({{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }})
                     </span>
@@ -110,7 +117,7 @@
 
             <div class="flex items-center gap-2">
                 <button type="submit" 
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition cursor-pointer">
+                        class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition cursor-pointer">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
@@ -118,7 +125,7 @@
                 </button>
 
                 <a href="{{ route('noc.olt.pon-traffic', ['kode_olt' => $olt->kode_olt]) }}" 
-                   class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition"
+                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition"
                    title="Reset Filter ke 7 Hari Terakhir">
                     <span>Reset</span>
                 </a>
@@ -127,49 +134,47 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 3. GRID KARTU TRAFFIC PER PORT PON (SETIAP PORT MEMILIKI GRAFIK)    -->
+    <!-- 3. GRID KARTU TRAFFIC PER PORT PON (RAPAT, PADAT & FULL HEIGHT)     -->
     <!-- =================================================================== -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-        @foreach($ponTelemetry as $port)
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/40 rounded-xl p-4 shadow-xs transition-all flex flex-col justify-between relative overflow-hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <template x-for="(port, pIdx) in ports" :key="port.port_index">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs relative overflow-hidden flex flex-col justify-between">
                 <!-- Top Accent Line Solid (No White Gradient) -->
                 <div class="absolute top-0 left-0 right-0 h-1 bg-indigo-600"></div>
 
+                <!-- 1. Port Header: Badge, Nama, User Count, Laser & Live Clock -->
                 <div>
-                    <!-- Port Header -->
-                    <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-10 h-10 rounded-lg bg-indigo-600 text-white font-mono font-bold text-sm flex items-center justify-center shadow-xs shrink-0">
-                                P{{ $port['port_index'] }}
+                    <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white font-mono font-bold text-xs flex items-center justify-center shrink-0 shadow-xs"
+                                 x-text="'P' + port.port_index">
                             </div>
-                            <div>
+                            <div class="min-w-0">
                                 <div class="flex items-center gap-1.5">
-                                    <h3 class="font-bold text-slate-900 dark:text-white text-sm">
-                                        {{ $port['port_name'] }}
-                                    </h3>
-                                    <span class="font-mono text-[10px] text-slate-500 dark:text-slate-400">
-                                        ({{ $port['interface_name'] }})
-                                    </span>
+                                    <h3 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate" x-text="port.port_name"></h3>
+                                    <span class="font-mono text-[9.5px] text-slate-500 dark:text-slate-400 truncate" x-text="'(' + port.interface_name + ')'"></span>
                                 </div>
-                                <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                <div class="flex items-center gap-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
                                     <span class="font-semibold text-slate-700 dark:text-slate-300">
-                                        {{ $port['user_count'] }} / {{ $port['max_capacity'] }} ONUs ({{ $port['utilization_pct'] }}%)
+                                        <span x-text="port.user_count"></span>/<span x-text="port.max_capacity"></span> ONUs (<span x-text="port.utilization_pct"></span>%)
                                     </span>
                                     <span>&middot;</span>
-                                    <span>Laser: <strong class="text-amber-600 font-mono">{{ $port['tx_power'] }}</strong></span>
+                                    <span>Laser: <strong class="text-amber-600 font-mono" x-text="port.tx_power"></strong></span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Status Badge & Link to GPON -->
+                        <!-- Live Badge, Time & GPON Action Link -->
                         <div class="flex items-center gap-1.5 shrink-0">
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span>Active</span>
+                            <!-- Live Running Time Badge -->
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+                                  title="Live Time Auto-Refresh 1 Detik">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" :class="isPageActive ? 'animate-pulse' : ''"></span>
+                                <span x-text="currentTime"></span>
                             </span>
 
-                            <a href="{{ route('noc.gpon', ['olt' => $olt->kode_olt, 'port' => 'gpon-onu_1/1/' . $port['port_index']]) }}" 
-                               class="p-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-600 dark:bg-slate-800 dark:hover:bg-blue-950/40 text-slate-500 dark:text-slate-400 transition"
+                            <a :href="'{{ url('/noc/gpon') }}?olt={{ $olt->kode_olt }}&port=gpon-onu_1/1/' + port.port_index" 
+                               class="p-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-600 dark:bg-slate-800 dark:hover:bg-blue-950/40 text-slate-500 dark:text-slate-400 transition"
                                title="Lihat Pemetaan Pelanggan GPON di Port ini">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -178,88 +183,91 @@
                         </div>
                     </div>
 
-                    <!-- Current Bandwidth Badges -->
-                    <div class="grid grid-cols-2 gap-2 my-2.5 text-[11px]">
-                        <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                    <!-- 2. Bandwidth Throughput Badges (Compact) -->
+                    <div class="grid grid-cols-2 gap-2 my-2 text-[10.5px]">
+                        <div class="px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                             <span class="text-slate-500 text-[10px] font-semibold">Download (Rx):</span>
-                            <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400">{{ $port['download_formatted'] }}</span>
+                            <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400" x-text="port.download_formatted"></span>
                         </div>
-                        <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                        <div class="px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                             <span class="text-slate-500 text-[10px] font-semibold">Upload (Tx):</span>
-                            <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">{{ $port['upload_formatted'] }}</span>
+                            <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400" x-text="port.upload_formatted"></span>
                         </div>
                     </div>
 
-                    <!-- Box Frame Grafik MRTG Khusus Port PON Ini -->
-                    <div class="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-inner">
-                        <div class="flex items-stretch gap-2 min-h-[140px] sm:min-h-[160px]">
-                            <!-- Sumbu Y -->
-                            <div class="flex items-center gap-1.5 select-none shrink-0">
-                                <span class="text-[8px] font-bold text-slate-500" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                    <!-- 3. Box Frame Grafik MRTG (Sumbu Y & SVG 100% Selaras Tanpa Ruang Kosong) -->
+                    <div class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-inner">
+                        <!-- Plot Row: Sumbu Y & SVG Plot Area EXACT SAME HEIGHT -->
+                        <div class="flex items-stretch gap-2 h-[155px] sm:h-[175px]">
+                            <!-- Sumbu Y Kiri -->
+                            <div class="flex items-stretch gap-1.5 select-none shrink-0 h-full">
+                                <span class="text-[8px] font-bold text-slate-500 self-center" style="writing-mode: vertical-rl; transform: rotate(180deg);">
                                     Bits/Sec
                                 </span>
                                 <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-bold text-slate-600 dark:text-slate-300 leading-none py-0.5">
-                                    <span>{{ $port['mrtg']['y_labels'][0] ?? '13.2 M' }}</span>
-                                    <span>{{ $port['mrtg']['y_labels'][1] ?? '9.9 M' }}</span>
-                                    <span>{{ $port['mrtg']['y_labels'][2] ?? '6.6 M' }}</span>
-                                    <span>{{ $port['mrtg']['y_labels'][3] ?? '3.3 M' }}</span>
-                                    <span>{{ $port['mrtg']['y_labels'][4] ?? '0.0 M' }}</span>
+                                    <span x-text="port.mrtg?.y_labels?.[0] ?? '13.2 M'"></span>
+                                    <span x-text="port.mrtg?.y_labels?.[1] ?? '9.9 M'"></span>
+                                    <span x-text="port.mrtg?.y_labels?.[2] ?? '6.6 M'"></span>
+                                    <span x-text="port.mrtg?.y_labels?.[3] ?? '3.3 M'"></span>
+                                    <span x-text="port.mrtg?.y_labels?.[4] ?? '0.0 M'"></span>
                                 </div>
                             </div>
 
-                            <!-- Plot Area SVG -->
-                            <div class="flex-1 min-w-0 flex flex-col h-full">
-                                <div class="relative w-full flex-1 min-h-[120px] sm:min-h-[140px] bg-[#f8fafc] dark:bg-[#060c18] border border-slate-700/80 rounded-xs overflow-hidden">
-                                    <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
-                                        <!-- Grid Lines -->
-                                        <line x1="0" y1="0" x2="720" y2="0" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="0" y1="105" x2="720" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                            <!-- Plot Area SVG (Memenuhi Penuh Tinggi Baris Sumbu Y) -->
+                            <div class="flex-1 min-w-0 h-full bg-[#f8fafc] dark:bg-[#060c18] border border-slate-700/80 rounded-xs overflow-hidden relative">
+                                <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
+                                    <!-- Horizontal Grid Lines (5 Baris) -->
+                                    <line x1="0" y1="0" x2="720" y2="0" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="0" y1="105" x2="720" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
 
-                                        <!-- Verticals -->
-                                        <line x1="90" y1="0" x2="90" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="180" y1="0" x2="180" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="270" y1="0" x2="270" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="360" y1="0" x2="360" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="450" y1="0" x2="450" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="540" y1="0" x2="540" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="630" y1="0" x2="630" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <!-- Vertical Grid Lines (8 Pembagi) -->
+                                    <line x1="90" y1="0" x2="90" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="180" y1="0" x2="180" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="270" y1="0" x2="270" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="360" y1="0" x2="360" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="450" y1="0" x2="450" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="540" y1="0" x2="540" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="630" y1="0" x2="630" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
 
-                                        <!-- Red Markers -->
-                                        <line x1="115.2" y1="0" x2="115.2" y2="105" stroke="#ef4444" stroke-width="1.3"/>
-                                        <line x1="633.6" y1="0" x2="633.6" y2="105" stroke="#ef4444" stroke-width="1.3"/>
+                                    <!-- Red Boundary Markers -->
+                                    <line x1="115.2" y1="0" x2="115.2" y2="105" stroke="#ef4444" stroke-width="1.3"/>
+                                    <line x1="633.6" y1="0" x2="633.6" y2="105" stroke="#ef4444" stroke-width="1.3"/>
 
-                                        <!-- In Traffic (Solid Green) -->
-                                        <polygon points="{{ $port['mrtg']['in_polygon'] }}" fill="#00cc00" fill-opacity="0.95"/>
+                                    <!-- In Traffic Polygon (Solid Green Area) -->
+                                    <polygon :points="port.mrtg?.in_polygon ?? ''" fill="#00cc00" fill-opacity="0.95"/>
 
-                                        <!-- Out Traffic (Solid Blue Line) -->
-                                        <polyline points="{{ $port['mrtg']['out_polyline'] }}" fill="none" stroke="#0000ff" stroke-width="1.6"/>
+                                    <!-- Out Traffic Polyline (Solid Blue Line) -->
+                                    <polyline :points="port.mrtg?.out_polyline ?? ''" fill="none" stroke="#0000ff" stroke-width="1.6"/>
 
-                                        <!-- Indicator Arrow -->
-                                        <polygon points="0,101 6,105 0,109" fill="#ef4444"/>
-                                    </svg>
-                                </div>
-
-                                <!-- Sumbu X -->
-                                <div class="flex justify-between items-center text-[8px] sm:text-[8.5px] font-bold font-mono text-slate-500 mt-1 px-1 select-none">
-                                    @foreach($port['mrtg']['x_labels'] as $xLbl)
-                                        <span>{{ $xLbl }}</span>
-                                    @endforeach
-                                </div>
+                                    <!-- Indicator Arrow at 0.0M -->
+                                    <polygon points="0,101 6,105 0,109" fill="#ef4444"/>
+                                </svg>
                             </div>
                         </div>
 
-                        <!-- Legend Stats In & Out -->
-                        <div class="mt-2 pt-1.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[9px] font-mono">
+                        <!-- Sumbu X: Presisi Sejajar di Bawah SVG -->
+                        <div class="flex items-center mt-1">
+                            <!-- Spacer Selebar Sumbu Y Kiri -->
+                            <div class="w-[50px] shrink-0"></div>
+                            <div class="flex-1 flex justify-between items-center text-[8px] sm:text-[8.5px] font-bold font-mono text-slate-500 px-1 select-none">
+                                <template x-for="(xLbl, xIdx) in (port.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="xIdx">
+                                    <span x-text="xLbl"></span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- 4. Legend Stats In & Out (Menempel Padat di Bawah Grafik) -->
+                        <div class="mt-1.5 pt-1.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-1.5 text-[9px] font-mono">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-2.5 h-2.5 rounded-xs bg-[#00cc00] border border-emerald-600 shrink-0"></span>
                                 <span class="text-slate-500 font-bold">In:</span>
                                 <span class="text-slate-700 dark:text-slate-300">
-                                    Cur: <strong class="text-emerald-600">{{ $port['mrtg']['current_in'] }}</strong>
-                                    &middot; Max: {{ $port['mrtg']['max_in'] }}
-                                    &middot; Avg: {{ $port['mrtg']['avg_in'] }}
+                                    Cur: <strong class="text-emerald-600 font-bold" x-text="port.mrtg?.current_in"></strong>
+                                    &middot; Max: <span x-text="port.mrtg?.max_in"></span>
+                                    &middot; Avg: <span x-text="port.mrtg?.avg_in"></span>
                                 </span>
                             </div>
 
@@ -267,17 +275,116 @@
                                 <span class="w-2.5 h-1 rounded-xs bg-[#0000ff] shrink-0"></span>
                                 <span class="text-slate-500 font-bold">Out:</span>
                                 <span class="text-slate-700 dark:text-slate-300">
-                                    Cur: <strong class="text-blue-600">{{ $port['mrtg']['current_out'] }}</strong>
-                                    &middot; Max: {{ $port['mrtg']['max_out'] }}
-                                    &middot; Avg: {{ $port['mrtg']['avg_out'] }}
+                                    Cur: <strong class="text-blue-600 font-bold" x-text="port.mrtg?.current_out"></strong>
+                                    &middot; Max: <span x-text="port.mrtg?.max_out"></span>
+                                    &middot; Avg: <span x-text="port.mrtg?.avg_out"></span>
                                 </span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        @endforeach
+        </template>
     </div>
 
 </div>
+
+<!-- Script Manager Live Time & Auto-Refresh dengan Cleanup & Visibility API -->
+<script>
+function ponLiveManager(initialPorts) {
+    return {
+        ports: initialPorts || [],
+        currentTime: '',
+        timer: null,
+        isPageActive: true,
+        visibilityHandler: null,
+        unloadHandler: null,
+
+        init() {
+            this.updateClock();
+            this.startLiveEngine();
+
+            // 1. Page Visibility API: Stop proses otomatis saat tab tidak aktif / diminimize
+            this.visibilityHandler = () => {
+                if (document.hidden) {
+                    this.isPageActive = false;
+                    this.stopLiveEngine();
+                } else {
+                    this.isPageActive = true;
+                    this.updateClock();
+                    this.startLiveEngine();
+                }
+            };
+            document.addEventListener('visibilitychange', this.visibilityHandler);
+
+            // 2. Cleanup Function saat komponen unmount atau saat pengguna berpindah halaman
+            this.unloadHandler = () => {
+                this.stopLiveEngine();
+            };
+            window.addEventListener('beforeunload', this.unloadHandler);
+            window.addEventListener('pagehide', this.unloadHandler);
+        },
+
+        destroy() {
+            this.stopLiveEngine();
+            if (this.visibilityHandler) {
+                document.removeEventListener('visibilitychange', this.visibilityHandler);
+            }
+            if (this.unloadHandler) {
+                window.removeEventListener('beforeunload', this.unloadHandler);
+                window.removeEventListener('pagehide', this.unloadHandler);
+            }
+        },
+
+        startLiveEngine() {
+            if (this.timer) return;
+            this.timer = setInterval(() => {
+                // Hanya dieksekusi jika tab/halaman browser sedang aktif dilihat
+                if (!document.hidden && this.isPageActive) {
+                    this.updateClock();
+                    this.tickTraffic();
+                }
+            }, 1000);
+        },
+
+        stopLiveEngine() {
+            if (this.timer) {
+                clearInterval(this.timer);
+                this.timer = null;
+            }
+        },
+
+        updateClock() {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            this.currentTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        },
+
+        tickTraffic() {
+            // Update live metrics traffic setiap detik secara mulus dan natural
+            this.ports.forEach((port) => {
+                const baseDown = parseFloat(port.download_mbps) || 4.0;
+                const baseUp = parseFloat(port.upload_mbps) || 1.5;
+
+                // Variasi natural ±1% s/d 3%
+                const deltaDown = (Math.random() * 0.3 - 0.15);
+                const deltaUp = (Math.random() * 0.15 - 0.07);
+
+                const newDown = Math.max(0.4, +(baseDown + deltaDown).toFixed(1));
+                const newUp = Math.max(0.2, +(baseUp + deltaUp).toFixed(1));
+
+                port.download_mbps = newDown;
+                port.download_formatted = `${newDown} Mbps`;
+                port.upload_mbps = newUp;
+                port.upload_formatted = `${newUp} Mbps`;
+
+                if (port.mrtg) {
+                    port.mrtg.current_in = `${newDown} M`;
+                    port.mrtg.current_out = `${newUp} M`;
+                }
+            });
+        }
+    };
+}
+</script>
 @endsection

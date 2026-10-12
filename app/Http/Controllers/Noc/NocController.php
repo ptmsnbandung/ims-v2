@@ -852,6 +852,37 @@ class NocController extends Controller
     }
 
     /**
+     * Menampilkan Daftar ONU (Optical Network Unit) yang terhubung ke Port PON tertentu
+     */
+    public function oltPonOnuList(Request $request, string $kode_olt, int $pon_index, OltConnectionService $oltService): View
+    {
+        $this->ensureOltTableColumns();
+
+        $olt = DB::table('m_olt')->where('kode_olt', $kode_olt)->first();
+        if (!$olt) {
+            abort(404, "Data OLT {$kode_olt} tidak ditemukan.");
+        }
+
+        if (!empty($olt->kode_pop)) {
+            $pop = DB::table('m_pop')->where('kode_pop', $olt->kode_pop)->first();
+            $olt->nama_pop = $pop->nama_pop ?? $olt->kode_pop;
+        } else {
+            $olt->nama_pop = 'POP Utama MSN';
+        }
+
+        $onuData = $oltService->getPonOnuList($olt, $pon_index);
+        $allOlts = DB::table('m_olt')->orderBy('kode_olt')->get();
+
+        return view('noc.olt-pon-onu-list', [
+            'user' => $request->user(),
+            'olt' => $olt,
+            'allOlts' => $allOlts,
+            'ponIndex' => $pon_index,
+            'onuData' => $onuData,
+        ]);
+    }
+
+    /**
      * Store / Update OLT
      */
     public function storeOlt(Request $request): RedirectResponse

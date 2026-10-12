@@ -283,6 +283,24 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 5. Tombol Aksi Bawah Card PON: Lihat Daftar ONU -->
+                <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span>Terhubung: <strong class="text-slate-700 dark:text-slate-200" x-text="port.user_count"></strong> Unit ONU</span>
+                    </div>
+
+                    <a :href="'{{ url('/noc/olt/' . $olt->kode_olt . '/pon') }}/' + port.port_index + '/onu'"
+                       class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-150 group">
+                        <span>Lihat Daftar ONU</span>
+                        <svg class="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                    </a>
+                </div>
             </div>
         </template>
     </div>

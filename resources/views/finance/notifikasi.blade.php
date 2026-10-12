@@ -209,16 +209,16 @@
     <div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
         @if($notifications->count() > 0)
             <div class="w-full overflow-x-auto">
-                <table class="w-full text-left border-collapse table-fixed">
+                <table class="w-full text-left border-collapse table-fixed min-w-[760px] lg:min-w-full">
                     <thead>
                         <tr class="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            <th class="py-2.5 px-3 w-[17%]">Status & Waktu</th>
-                            <th class="py-2.5 px-3 w-[18%]">Pelanggan</th>
-                            <th class="py-2.5 px-3 w-[17%]">Invoice / Tagihan</th>
-                            <th class="py-2.5 px-3 w-[11%]">Nominal</th>
-                            <th class="py-2.5 px-3 w-[13%]">Metode / Bank</th>
-                            <th class="py-2.5 px-3 w-[10%] text-center">Bukti</th>
-                            <th class="py-2.5 px-3 w-[14%] text-right pr-3.5">Aksi</th>
+                            <th class="py-2.5 px-2.5 sm:px-3 w-[16%]">Status & Waktu</th>
+                            <th class="py-2.5 px-2.5 sm:px-3 w-[18%]">Pelanggan</th>
+                            <th class="py-2.5 px-2.5 sm:px-3 w-[16%]">Invoice / Tagihan</th>
+                            <th class="py-2.5 px-2.5 sm:px-3 w-[11%]">Nominal</th>
+                            <th class="py-2.5 px-2.5 sm:px-3 w-[14%]">Metode / Bank</th>
+                            <th class="py-2.5 px-2.5 sm:px-3 w-[10%] text-center">Bukti</th>
+                            <th class="py-2.5 px-2.5 sm:px-3 w-[15%] text-right pr-3.5 sm:pr-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70 text-xs">
@@ -226,38 +226,38 @@
                         <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition {{ !$item->is_approved ? 'bg-amber-50/30 dark:bg-amber-950/20' : '' }}">
                             
                             <!-- 1. Status & Waktu -->
-                            <td class="py-2.5 px-3 align-middle">
-                                <div class="flex flex-col gap-0.5 min-w-0">
+                            <td class="py-2.5 px-2.5 sm:px-3 align-middle overflow-hidden">
+                                <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
                                     @if($item->is_approved)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 w-fit whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 w-fit truncate">
                                             <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                             </svg>
-                                            <span>Lunas / Disetujui</span>
+                                            <span class="truncate">Lunas / Disetujui</span>
                                         </span>
                                     @elseif($item->status === 'rejected')
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 w-fit whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 w-fit truncate">
                                             <svg class="w-2.5 h-2.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                             </svg>
-                                            <span>Ditolak</span>
+                                            <span class="truncate">Ditolak</span>
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 w-fit animate-pulse whitespace-nowrap">
-                                            <svg class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 w-fit animate-pulse truncate">
+                                            <svg class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
-                                            <span>Menunggu Approval</span>
+                                            <span class="truncate">Menunggu Approval</span>
                                         </span>
                                     @endif
-                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate block" title="{{ $item->time_ago }} &middot; {{ $item->date }}">
+                                    <span class="text-[9.5px] text-slate-500 dark:text-slate-400 font-medium truncate block" title="{{ $item->time_ago }} &middot; {{ $item->date }}">
                                         {{ $item->time_ago }} &middot; {{ $item->date }}
                                     </span>
                                 </div>
                             </td>
 
                             <!-- 2. Pelanggan -->
-                            <td class="py-2.5 px-3 align-middle">
+                            <td class="py-2.5 px-2.5 sm:px-3 align-middle overflow-hidden">
                                 <div class="font-semibold text-xs text-slate-900 dark:text-white truncate" title="{{ $item->nama_pelanggan }}">
                                     {{ $item->nama_pelanggan }}
                                 </div>
@@ -270,16 +270,18 @@
                             </td>
 
                             <!-- 3. Invoice / Tagihan -->
-                            <td class="py-2.5 px-3 align-middle">
-                                <a href="{{ route('finance.billing-layanan', ['search' => $item->kode_billing]) }}"
-                                   target="_blank"
-                                   class="font-mono text-xs font-semibold text-[#0891b2] dark:text-cyan-400 hover:underline inline-flex items-center gap-1 max-w-full"
-                                   title="{{ $item->kode_billing }}">
-                                    <span class="truncate">{{ $item->kode_billing }}</span>
-                                    <svg class="w-2.5 h-2.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                                    </svg>
-                                </a>
+                            <td class="py-2.5 px-2.5 sm:px-3 align-middle overflow-hidden">
+                                <div class="truncate max-w-full">
+                                    <a href="{{ route('finance.billing-layanan', ['search' => $item->kode_billing]) }}"
+                                       target="_blank"
+                                       class="font-mono text-xs font-semibold text-[#0891b2] dark:text-cyan-400 hover:underline inline-flex items-center gap-0.5 max-w-full truncate"
+                                       title="{{ $item->kode_billing }}">
+                                        <span class="truncate">{{ $item->kode_billing }}</span>
+                                        <svg class="w-2.5 h-2.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                        </svg>
+                                    </a>
+                                </div>
                                 @if($item->notes)
                                     <p class="text-[10px] text-slate-400 dark:text-slate-500 italic truncate mt-0.5" title="{{ $item->notes }}">
                                         "{{ $item->notes }}"
@@ -288,32 +290,44 @@
                             </td>
 
                             <!-- 4. Nominal -->
-                            <td class="py-2.5 px-3 align-middle">
-                                <div class="font-bold text-xs truncate {{ $item->is_approved ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white' }}" title="{{ $item->nominal_formatted }}">
+                            <td class="py-2.5 px-2.5 sm:px-3 align-middle overflow-hidden">
+                                <div class="font-bold text-xs truncate whitespace-nowrap {{ $item->is_approved ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white' }}" title="{{ $item->nominal_formatted }}">
                                     {{ $item->nominal_formatted }}
                                 </div>
                             </td>
 
                             <!-- 5. Metode / Bank -->
-                            <td class="py-2.5 px-3 align-middle">
-                                <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-[10px] max-w-full" title="{{ $item->bank_tujuan }}">
-                                    <svg class="w-2.5 h-2.5 text-[#0891b2] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-                                    </svg>
-                                    <span class="truncate">{{ $item->bank_tujuan }}</span>
+                            <td class="py-2.5 px-2.5 sm:px-3 align-middle overflow-hidden">
+                                <div class="min-w-0 max-w-full">
+                                    @php
+                                        $rawBank = $item->bank_tujuan ?? 'Transfer';
+                                        $bankShort = Str::before($rawBank, ' - ');
+                                        $bankDetail = Str::contains($rawBank, ' - ') ? Str::after($rawBank, ' - ') : null;
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[10px] max-w-full truncate" title="{{ $rawBank }}">
+                                        <svg class="w-2.5 h-2.5 text-[#0891b2] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                                        </svg>
+                                        <span class="truncate">{{ $bankShort }}</span>
+                                    </span>
+                                    @if($bankDetail)
+                                        <div class="text-[9px] text-slate-400 dark:text-slate-500 font-mono truncate mt-0.5" title="{{ $bankDetail }}">
+                                            {{ $bankDetail }}
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
 
                             <!-- 6. Bukti Transfer -->
-                            <td class="py-2.5 px-3 align-middle text-center">
+                            <td class="py-2.5 px-2.5 sm:px-3 align-middle text-center overflow-hidden">
                                 @if($item->proof_file)
                                     <button type="button"
                                             @click="openPreviewModal('{{ asset($item->proof_file) }}', 'Bukti Transfer: {{ $item->kode_billing }}')"
-                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold text-[#0891b2] dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200/60 dark:border-cyan-800/60 transition cursor-pointer">
+                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold text-[#0891b2] dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200/60 dark:border-cyan-800/60 transition cursor-pointer">
                                         <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                         </svg>
-                                        <span>Lihat Bukti</span>
+                                        <span>Lihat</span>
                                     </button>
                                 @else
                                     <span class="text-slate-400 dark:text-slate-500 text-[10px] italic">Tanpa bukti</span>
@@ -321,8 +335,8 @@
                             </td>
 
                             <!-- 7. Aksi Approval -->
-                            <td class="py-2.5 px-3 pr-3.5 align-middle text-right">
-                                <div class="flex items-center justify-end gap-1">
+                            <td class="py-2.5 px-2.5 sm:px-3 pr-3.5 sm:pr-4 align-middle text-right overflow-hidden">
+                                <div class="flex items-center justify-end gap-1 min-w-0">
                                     @if(!$item->is_approved)
                                         <!-- Tombol Approve -->
                                         <button type="button"
@@ -334,7 +348,7 @@
                                                     nominal_formatted: '{{ $item->nominal_formatted }}',
                                                     bank_tujuan: '{{ $item->bank_tujuan }}'
                                                 })"
-                                                class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-2xs transition flex items-center gap-1 cursor-pointer flex-shrink-0">
+                                                class="px-2 py-0.5 rounded-md text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-2xs transition flex items-center gap-0.5 cursor-pointer flex-shrink-0">
                                             <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                             </svg>
@@ -347,17 +361,20 @@
                                                     kode_billing: '{{ $item->kode_billing }}',
                                                     nama_pelanggan: '{{ addslashes($item->nama_pelanggan) }}'
                                                 })"
-                                                class="px-2 py-1 rounded-md text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 transition flex items-center gap-1 cursor-pointer flex-shrink-0"
+                                                class="px-1.5 py-0.5 rounded-md text-[11px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 transition flex items-center gap-0.5 cursor-pointer flex-shrink-0"
                                                 title="Tolak Pembayaran">
-                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <svg class="w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                             </svg>
                                             <span>Tolak</span>
                                         </button>
                                     @else
                                         <!-- Status Disetujui -->
-                                        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono italic truncate block text-right" title="{{ $item->admin_notes ? $item->admin_notes : 'Telah diverifikasi' }}">
-                                            {{ $item->admin_notes ? Str::limit($item->admin_notes, 20) : 'Telah diverifikasi' }}
+                                        <span class="inline-flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500 font-mono italic truncate max-w-full" title="{{ $item->admin_notes ? $item->admin_notes : 'Telah diverifikasi' }}">
+                                            <svg class="w-3 h-3 text-emerald-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                                            </svg>
+                                            <span class="truncate">{{ $item->admin_notes ? Str::limit($item->admin_notes, 16) : 'Terverifikasi' }}</span>
                                         </span>
                                     @endif
                                 </div>

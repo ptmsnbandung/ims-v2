@@ -426,6 +426,50 @@ class BroadcastController extends Controller
 
         $cols = $this->getColumnsCached($baseTable);
 
+        // Filter out BROADBAND FREE customers
+        if (in_array('kode_kategori_bandwith', $cols)) {
+            $query->where(function ($q) {
+                $q->whereNull('c.kode_kategori_bandwith')
+                  ->orWhere('c.kode_kategori_bandwith', '!=', 'KBFRE02');
+            });
+        }
+        if (in_array('kode_bandwith', $cols)) {
+            $query->where(function ($q) {
+                $q->whereNull('c.kode_bandwith')
+                  ->orWhere('c.kode_bandwith', 'not like', 'AGFREE%');
+            });
+        }
+        if (in_array('nama_kategori_bandwith', $cols)) {
+            $query->where(function ($q) {
+                $q->whereNull('c.nama_kategori_bandwith')
+                  ->orWhere(function ($sq) {
+                      $sq->where('c.nama_kategori_bandwith', 'not like', '%BROADBAND FREE%')
+                         ->where('c.nama_kategori_bandwith', 'not like', '%Free%');
+                  });
+            });
+        }
+        if (in_array('group_layanan', $cols)) {
+            $query->where(function ($q) {
+                $q->whereNull('c.group_layanan')
+                  ->orWhere('c.group_layanan', '!=', 'Free');
+            });
+        }
+        if ($baseTable === 'trx_billing_layanan' && $hasTrxBatchReg) {
+            $regCols = $this->getColumnsCached('trx_batchjob_register');
+            if (in_array('kode_bandwith', $regCols)) {
+                $query->where(function ($q) {
+                    $q->whereNull('reg.kode_bandwith')
+                      ->orWhere('reg.kode_bandwith', 'not like', 'AGFREE%');
+                });
+            }
+            if (in_array('group_layanan', $regCols)) {
+                $query->where(function ($q) {
+                    $q->whereNull('reg.group_layanan')
+                      ->orWhere('reg.group_layanan', '!=', 'Free');
+                });
+            }
+        }
+
         // Join Invoice billing
         if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
             if (!empty($selectedBulan) && $selectedBulan !== 'all' && !empty($selectedTahun) && $selectedTahun !== 'all') {
@@ -459,11 +503,11 @@ class BroadcastController extends Controller
         // Join WA Broadcast sent log count
         if ($this->hasTableCached('tb_broadcast_wa_log')) {
             $subLog = DB::table('tb_broadcast_wa_log as tbl_log')
-                ->selectRaw("tbl_log.nomor_internet COLLATE utf8mb4_general_ci as nomor_internet, COUNT(*) as total_sent_count, MAX(tbl_log.created_at) as last_sent_at")
+                ->selectRaw("tbl_log.nomor_internet, COUNT(*) as total_sent_count, MAX(tbl_log.created_at) as last_sent_at")
                 ->where('tbl_log.status_kirim', 'sent')
                 ->whereNotNull('tbl_log.nomor_internet')
                 ->where('tbl_log.nomor_internet', '!=', '')
-                ->groupBy(DB::raw("tbl_log.nomor_internet COLLATE utf8mb4_general_ci"));
+                ->groupBy('tbl_log.nomor_internet');
 
             $query->leftJoinSub($subLog, 'log_sent', function ($join) {
                 $join->on('c.nomor_internet', '=', 'log_sent.nomor_internet');
@@ -791,6 +835,36 @@ class BroadcastController extends Controller
         
         $totalUnpaidCount = Cache::remember("broadcast_unpaid_cnt_{$selectedBulan}_{$selectedTahun}", 60, function () use ($unpaidTable, $unpaidCols, $selectedBulan, $selectedTahun) {
             $unpaidQuery = DB::table($unpaidTable);
+
+            // Filter out BROADBAND FREE customers
+            if (in_array('kode_kategori_bandwith', $unpaidCols)) {
+                $unpaidQuery->where(function ($q) {
+                    $q->whereNull('kode_kategori_bandwith')
+                      ->orWhere('kode_kategori_bandwith', '!=', 'KBFRE02');
+                });
+            }
+            if (in_array('kode_bandwith', $unpaidCols)) {
+                $unpaidQuery->where(function ($q) {
+                    $q->whereNull('kode_bandwith')
+                      ->orWhere('kode_bandwith', 'not like', 'AGFREE%');
+                });
+            }
+            if (in_array('nama_kategori_bandwith', $unpaidCols)) {
+                $unpaidQuery->where(function ($q) {
+                    $q->whereNull('nama_kategori_bandwith')
+                      ->orWhere(function ($sq) {
+                          $sq->where('nama_kategori_bandwith', 'not like', '%BROADBAND FREE%')
+                             ->where('nama_kategori_bandwith', 'not like', '%Free%');
+                      });
+                });
+            }
+            if (in_array('group_layanan', $unpaidCols)) {
+                $unpaidQuery->where(function ($q) {
+                    $q->whereNull('group_layanan')
+                      ->orWhere('group_layanan', '!=', 'Free');
+                });
+            }
+
             if (in_array('status_bill_lay', $unpaidCols)) {
                 $unpaidQuery->whereIn('status_bill_lay', ['13', '14']);
             } elseif (in_array('status_reg', $unpaidCols)) {

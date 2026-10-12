@@ -960,31 +960,44 @@ class FinanceController extends Controller
 
             if ($shouldUpdateInvoices) {
                 // Update open/unpaid monthly invoices
-                $unpaidInvoices = DB::table('trx_billing_layanan')
-                    ->where('nomor_internet', $nomorInternet)
-                    ->where('status_bayar', '!=', '1')
-                    ->get();
+                $queryUnpaid = DB::table('trx_billing_layanan')
+                    ->where('nomor_internet', $nomorInternet);
+
+                if (Schema::hasColumn('trx_billing_layanan', 'status_bill_lay')) {
+                    $queryUnpaid->where('status_bill_lay', '!=', '15');
+                } elseif (Schema::hasColumn('trx_billing_layanan', 'status_bayar')) {
+                    $queryUnpaid->where('status_bayar', '!=', '1');
+                }
+
+                $unpaidInvoices = $queryUnpaid->get();
 
                 foreach ($unpaidInvoices as $inv) {
-                    $hargaBw = (float) ($inv->harga_bandwith ?? 0);
-                    if ($hargaBw <= 0) {
+                    $hargaBw = (float) ($inv->nominal_bandwith ?? $inv->harga_bandwith ?? 0);
+                    if ($hargaBw <= 0 && !empty($customer->kode_bandwith)) {
                         $paket = DB::table('m_bandwith')->where('kode_bandwith', $customer->kode_bandwith)->first();
-                        $hargaBw = (float) ($paket->harga_bandwith ?? 0);
+                        $hargaBw = (float) ($paket->harga_bandwith ?? $paket->nominal_bandwith ?? 0);
                     }
+                    if ($hargaBw <= 0) {
+                        $hargaBw = max(0, (float) ($inv->total_layanan ?? 0) + (float) ($inv->potongan ?? 0));
+                    }
+
                     $subtotal = max(0, $hargaBw - $potongan);
                     $ppnVal = ($ppnType === 'exclude') ? ($subtotal * $ppnNom) : 0;
                     $totalLayanan = $subtotal + $ppnVal;
 
+                    $updateInv = [
+                        'potongan' => (string) $potongan,
+                        'desc_potongan' => $potonganNote ?: ($inv->desc_potongan ?? '-'),
+                        'ppn' => (string) $ppnVal,
+                        'total_layanan' => (string) $totalLayanan,
+                        'date_update' => Carbon::now()->toDateTimeString(),
+                        'user_update' => $user,
+                    ];
+
                     DB::table('trx_billing_layanan')
                         ->where('kode_billing_layanan', $inv->kode_billing_layanan)
-                        ->update([
-                            'potongan' => (string) $potongan,
-                            'desc_potongan' => $potonganNote ?: ($inv->desc_potongan ?? '-'),
-                            'ppn' => (string) $ppnVal,
-                            'total_layanan' => (string) $totalLayanan,
-                            'date_update' => Carbon::now()->toDateTimeString(),
-                            'user_update' => $user,
-                        ]);
+                        ->update($updateInv);
+
                     $updatedInvoices++;
                 }
             }

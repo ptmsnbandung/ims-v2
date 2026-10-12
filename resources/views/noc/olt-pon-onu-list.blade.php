@@ -74,7 +74,7 @@
                             {{ $onuData['interface_name'] ?? ('gpon-olt_1/1/' . $ponIndex) }}
                         </span>
                         <h2 class="text-sm sm:text-base font-bold text-white tracking-tight">
-                            Monitoring ONU Terhubung: {{ $onuData['port_name'] ?? ('PON ' . $ponIndex) }}
+                            Monitoring Daftar ONU: {{ $onuData['port_name'] ?? ('PON ' . $ponIndex) }}
                         </h2>
                     </div>
                     <p class="text-[11.5px] text-slate-300 mt-1">
@@ -89,10 +89,10 @@
                         </div>
                         <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-400/30">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-400" :class="isPageActive ? 'animate-ping' : ''"></span>
-                            <span x-text="isPageActive ? 'Monitoring Aktif (1s)' : 'Paused (Tab Tidak Aktif)'"></span>
+                            <span x-text="isPageActive ? 'Auto-Refresh 1 Detik Aktif' : 'Paused (Tab Tidak Aktif)'"></span>
                         </div>
                         <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-slate-800/80 text-slate-200 border border-slate-700/60 font-mono">
-                            <span>Kapasitas Slot: 128 ONU</span>
+                            <span x-text="stats.total + ' ONU Terhubung'"></span>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
 
             <!-- Switcher Port PON Lain di OLT ini -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start lg:self-center">
-                <label class="text-[11px] font-semibold text-slate-200">Ganti Port PON:</label>
+                <label class="text-[11px] font-semibold text-slate-200">Pilih Port PON:</label>
                 <div class="flex items-center gap-1 bg-black/30 p-1 rounded-lg border border-white/10">
                     @for($p = 1; $p <= 8; $p++)
                         <a href="{{ route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $p]) }}"
@@ -114,18 +114,18 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 3. KPI STATS SUMMARY CARDS (KOMPAK, PADAT & INFORMATIF)            -->
+    <!-- 3. KPI STATS SUMMARY CARDS (7 KOLOM DENGAN RATA-RATA TRAFFIC / ONU) -->
     <!-- =================================================================== -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <!-- Card 1: Total ONU -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        <!-- Card 1: Total ONU Terhubung -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs">
-            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Terdaftar</div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total ONU Terhubung</div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-slate-900 dark:text-white" x-text="stats.total"></span>
-                <span class="text-[10.5px] font-semibold text-slate-500">Unit</span>
+                <span class="text-[10px] font-semibold text-slate-500">Unit</span>
             </div>
-            <div class="text-[10px] text-slate-500 mt-1 truncate">
-                Slot Maks: 128
+            <div class="text-[10px] text-slate-400 mt-1 truncate">
+                Slot Max: 128 ONU
             </div>
         </div>
 
@@ -133,14 +133,14 @@
         <div class="bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/50 rounded-xl p-3 shadow-2xs">
             <div class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Online</span>
+                <span>ONU Online</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400" x-text="stats.online"></span>
-                <span class="text-[10.5px] font-bold text-emerald-600" x-text="Math.round((stats.online / Math.max(1, stats.total)) * 100) + '%'"></span>
+                <span class="text-[10px] font-bold text-emerald-600" x-text="Math.round((stats.online / Math.max(1, stats.total)) * 100) + '%'"></span>
             </div>
             <div class="text-[10px] text-emerald-600/90 dark:text-emerald-400/90 mt-1 truncate">
-                Koneksi Normal
+                Beroperasi Normal
             </div>
         </div>
 
@@ -148,14 +148,14 @@
         <div class="bg-white dark:bg-slate-900 border border-rose-200/80 dark:border-rose-900/50 rounded-xl p-3 shadow-2xs">
             <div class="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span>Offline / LOS</span>
+                <span>ONU Offline</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-rose-600 dark:text-rose-400" x-text="stats.offline"></span>
-                <span class="text-[10.5px] font-bold text-rose-600" x-text="Math.round((stats.offline / Math.max(1, stats.total)) * 100) + '%'"></span>
+                <span class="text-[10px] font-bold text-rose-600" x-text="Math.round((stats.offline / Math.max(1, stats.total)) * 100) + '%'"></span>
             </div>
             <div class="text-[10px] text-rose-600/90 dark:text-rose-400/90 mt-1 truncate">
-                Mati Lampu / Putus
+                LOS / Power Off
             </div>
         </div>
 
@@ -165,14 +165,14 @@
                 <svg class="w-3 h-3 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
-                <span>Traffic Rx (Down)</span>
+                <span>Total Traffic Rx</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-cyan-600 dark:text-cyan-400" x-text="stats.totalRx.toFixed(1)"></span>
-                <span class="text-[10.5px] font-semibold text-slate-500">Mbps</span>
+                <span class="text-[10px] font-semibold text-slate-500">Mbps</span>
             </div>
-            <div class="text-[10px] text-slate-500 mt-1 truncate">
-                Agregat Port PON
+            <div class="text-[10px] text-slate-400 mt-1 truncate">
+                Download Port PON
             </div>
         </div>
 
@@ -182,30 +182,47 @@
                 <svg class="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
-                <span>Traffic Tx (Up)</span>
+                <span>Total Traffic Tx</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-blue-600 dark:text-blue-400" x-text="stats.totalTx.toFixed(1)"></span>
-                <span class="text-[10.5px] font-semibold text-slate-500">Mbps</span>
+                <span class="text-[10px] font-semibold text-slate-500">Mbps</span>
             </div>
-            <div class="text-[10px] text-slate-500 mt-1 truncate">
-                Agregat Upload
+            <div class="text-[10px] text-slate-400 mt-1 truncate">
+                Upload Port PON
             </div>
         </div>
 
-        <!-- Card 6: Avg Redaman Rx -->
+        <!-- Card 6: RATA-RATA TRAFFIC PER ONU (FITUR BARU SPESIFIKASI USER) -->
+        <div class="bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800/60 rounded-xl p-3 shadow-2xs">
+            <div class="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1">
+                <svg class="w-3 h-3 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>Rata-Rata / ONU</span>
+            </div>
+            <div class="flex items-baseline justify-between mt-1 font-mono">
+                <span class="text-base font-black text-indigo-700 dark:text-indigo-300" x-text="stats.avgRxPerOnu.toFixed(1)"></span>
+                <span class="text-[9.5px] font-bold text-slate-500 dark:text-slate-400" x-text="'Rx / ' + stats.avgTxPerOnu.toFixed(1) + ' Tx'"></span>
+            </div>
+            <div class="text-[9.5px] text-indigo-600/80 dark:text-indigo-400/80 mt-1 truncate font-medium">
+                Total &divide; <span x-text="stats.online"></span> ONU Online
+            </div>
+        </div>
+
+        <!-- Card 7: Avg Redaman Rx -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs">
             <div class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
                 <svg class="w-3 h-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span>Rata-Rata Redaman</span>
+                <span>Avg Redaman</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-amber-600 dark:text-amber-400" x-text="stats.avgRxPower"></span>
-                <span class="text-[10.5px] font-semibold text-slate-500">dBm</span>
+                <span class="text-[10px] font-semibold text-slate-500">dBm</span>
             </div>
-            <div class="text-[10px] text-slate-500 mt-1 truncate">
+            <div class="text-[10px] text-slate-400 mt-1 truncate">
                 Ideal: -15 s/d -24 dBm
             </div>
         </div>
@@ -225,7 +242,7 @@
                 </div>
                 <input type="text"
                        x-model="searchQuery"
-                       placeholder="Cari Pelanggan, No Internet, SN, atau Slot..."
+                       placeholder="Cari Nama Pelanggan, No Internet, SN, Slot..."
                        class="w-full pl-9 pr-8 py-2 rounded-lg text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <button x-show="searchQuery" 
                         @click="searchQuery = ''"
@@ -248,7 +265,7 @@
                         <option value="traffic_desc">Traffic Terbesar (Rx)</option>
                         <option value="name_asc">Nama Pelanggan (A - Z)</option>
                         <option value="power_asc">Redaman Paling Bagus</option>
-                        <option value="power_desc">Redaman Paling Rendah (Kritis)</option>
+                        <option value="power_desc">Redaman Paling Kritis</option>
                     </select>
                 </div>
 
@@ -261,7 +278,7 @@
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                         </svg>
-                        <span class="hidden sm:inline">Card</span>
+                        <span class="hidden sm:inline">Grid Card</span>
                     </button>
                     <button @click="viewMode = 'table'"
                             :class="viewMode === 'table' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-2xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
@@ -329,27 +346,26 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 5. TAMPILAN 1: GRID CARD VIEW                                      -->
+    <!-- 5. TAMPILAN 1: GRID CARD VIEW (RAPI, BERSIH, TERSTRUKTUR & NO OVERLAP)-->
     <!-- =================================================================== -->
     <div x-show="viewMode === 'grid'" class="space-y-4">
-        <!-- Grid Items -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <!-- Grid Items: 3 Kolom Responsif dengan Spacing Sempurna -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <template x-for="onu in filteredOnus" :key="onu.onu_id">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-2xs hover:shadow-sm transition-all relative overflow-hidden flex flex-col justify-between">
-                    <!-- Accent Line Indicator Berdasarkan Status -->
-                    <div class="absolute top-0 left-0 right-0 h-1"
-                         :class="{
-                             'bg-emerald-500': onu.status === 'online',
-                             'bg-rose-500': onu.status === 'offline',
-                             'bg-amber-500': onu.status === 'suspend'
-                         }">
-                    </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-2xs hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between"
+                     :class="{
+                         'border-t-4 border-t-emerald-500': onu.status === 'online',
+                         'border-t-4 border-t-rose-500': onu.status === 'offline',
+                         'border-t-4 border-t-amber-500': onu.status === 'suspend'
+                     }">
 
-                    <!-- Card Header: Slot Badge, Interface & Status -->
-                    <div>
-                        <div class="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 text-white"
+                    <!-- Bagian Konten Atas Card -->
+                    <div class="space-y-3">
+                        <!-- 1. Header Card: Nama ONU, Identitas & Status Badge -->
+                        <div class="flex items-start justify-between gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+                            <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                                <!-- Badge Nomor Slot -->
+                                <div class="w-9 h-9 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 text-white shadow-xs"
                                      :class="{
                                          'bg-emerald-600': onu.status === 'online',
                                          'bg-rose-600': onu.status === 'offline',
@@ -357,10 +373,15 @@
                                      }"
                                      x-text="'#' + onu.onu_id">
                                 </div>
-                                <div class="min-w-0">
-                                    <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate" x-text="onu.nama_pelanggan"></h4>
-                                    <div class="flex items-center gap-1.5 text-[10px] text-slate-500">
-                                        <span class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="onu.nomor_internet"></span>
+                                <div class="min-w-0 flex-1">
+                                    <!-- Nama ONU & Nama Pelanggan -->
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-mono text-[11px] font-black text-indigo-600 dark:text-indigo-400" x-text="onu.onu_name || ('ONU ' + onu.onu_id)"></span>
+                                        <span class="text-slate-300 dark:text-slate-700">&middot;</span>
+                                        <h4 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate" x-text="onu.nama_pelanggan"></h4>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
+                                        <span class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="'ID: ' + onu.nomor_internet"></span>
                                         <span>&middot;</span>
                                         <span class="font-mono truncate" x-text="onu.interface_onu"></span>
                                     </div>
@@ -368,11 +389,11 @@
                             </div>
 
                             <!-- Status Badge -->
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0"
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0"
                                   :class="{
-                                      'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400': onu.status === 'online',
-                                      'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400': onu.status === 'offline',
-                                      'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400': onu.status === 'suspend'
+                                      'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800': onu.status === 'online',
+                                      'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-400 border border-rose-200 dark:border-rose-800': onu.status === 'offline',
+                                      'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200 dark:border-amber-800': onu.status === 'suspend'
                                   }">
                                 <span class="w-1.5 h-1.5 rounded-full"
                                       :class="{
@@ -384,39 +405,79 @@
                             </span>
                         </div>
 
-                        <!-- 2. Serial Number & Paket Layanan -->
-                        <div class="grid grid-cols-2 gap-2 my-2.5 text-[11px]">
-                            <!-- SN Modem -->
-                            <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
-                                <span class="text-[9.5px] font-semibold text-slate-500 block">Serial Number (SN):</span>
-                                <div class="flex items-center justify-between mt-0.5">
-                                    <span class="font-mono font-bold text-slate-900 dark:text-slate-100 text-[11.5px]" x-text="onu.sn"></span>
-                                    <button @click="copyText(onu.sn)"
-                                            class="text-slate-400 hover:text-blue-600 transition"
-                                            title="Salin Serial Number">
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                        </svg>
-                                    </button>
+                        <!-- 2. Section Traffic Penggunaan ONU (Rx / Tx) & Kontribusi -->
+                        <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
+                            <!-- Judul Section Traffic + Porsi Kontribusi -->
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                    <span>Traffic Penggunaan ONU</span>
+                                </span>
+                                <!-- Porsi Penggunaan terhadap total PON -->
+                                <span class="px-2 py-0.5 rounded text-[9.5px] font-mono font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60"
+                                      x-text="onu.traffic_share_pct + '% Traffic PON'">
+                                </span>
+                            </div>
+
+                            <!-- 2 Kolom Nilai: Download (Rx) & Upload (Tx) -->
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <!-- Download Rx Box -->
+                                <div class="p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="flex items-center justify-between text-[10px] text-slate-500 font-semibold mb-0.5">
+                                        <span class="flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                                            <span>Rx (Download):</span>
+                                        </span>
+                                    </div>
+                                    <div class="text-sm font-mono font-black text-cyan-600 dark:text-cyan-400" x-text="onu.download_formatted"></div>
+                                    <!-- Progress Bar Utilitas -->
+                                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                                        <div class="bg-cyan-500 h-full rounded-full transition-all duration-500" :style="'width: ' + onu.down_pct + '%'"></div>
+                                    </div>
+                                    <div class="flex justify-between text-[9px] text-slate-400 mt-1">
+                                        <span x-text="onu.down_pct + '% Kapasitas'"></span>
+                                        <span x-text="onu.nominal_bandwith + 'M'"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Upload Tx Box -->
+                                <div class="p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                                    <div class="flex items-center justify-between text-[10px] text-slate-500 font-semibold mb-0.5">
+                                        <span class="flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                            <span>Tx (Upload):</span>
+                                        </span>
+                                    </div>
+                                    <div class="text-sm font-mono font-black text-blue-600 dark:text-blue-400" x-text="onu.upload_formatted"></div>
+                                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                                        <div class="bg-blue-500 h-full rounded-full transition-all duration-500" :style="'width: ' + Math.min(100, onu.down_pct * 0.8) + '%'"></div>
+                                    </div>
+                                    <div class="flex justify-between text-[9px] text-slate-400 mt-1">
+                                        <span>Aktif Upload</span>
+                                        <span class="font-mono text-emerald-600">&bull; Live</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Paket -->
-                            <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
-                                <span class="text-[9.5px] font-semibold text-slate-500 block">Paket Internet:</span>
-                                <span class="font-bold text-indigo-600 dark:text-indigo-400 truncate block mt-0.5 text-[11.5px]" x-text="onu.package_name"></span>
+                            <!-- Footer Baris Traffic: Bandingkan dengan Rata-Rata Port -->
+                            <div class="flex items-center justify-between text-[10px] pt-1 border-t border-slate-200/60 dark:border-slate-800/80 font-mono text-slate-500">
+                                <span>Rata-Rata Port / ONU:</span>
+                                <span class="font-semibold text-slate-700 dark:text-slate-300" x-text="'Rx: ' + stats.avgRxPerOnu.toFixed(1) + 'M &middot; Tx: ' + stats.avgTxPerOnu.toFixed(1) + 'M'"></span>
                             </div>
                         </div>
 
-                        <!-- 3. Redaman Optik (Rx Power & Tx Laser) -->
-                        <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 mb-2.5">
+                        <!-- 3. Section Redaman Optik (Optical Power) -->
+                        <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
                             <div class="flex items-center justify-between text-[11px] mb-1.5">
-                                <span class="font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                                <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                     <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                     </svg>
-                                    <span>Redaman Optik (Rx Power):</span>
+                                    <span>Redaman Optik (Power)</span>
                                 </span>
+                                <!-- Status Redaman -->
                                 <span class="px-2 py-0.5 rounded text-[9.5px] font-bold uppercase tracking-wider"
                                       :class="{
                                           'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400': onu.redaman_status === 'optimal',
@@ -426,9 +487,11 @@
                                       x-text="onu.redaman_status">
                                 </span>
                             </div>
-                            <div class="flex items-center justify-between font-mono">
-                                <div>
-                                    <span class="text-base font-bold"
+
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                                <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                    <span class="text-[10px] text-slate-500 font-sans">Rx Power:</span>
+                                    <span class="font-bold text-[12px]"
                                           :class="{
                                               'text-emerald-600 dark:text-emerald-400': onu.redaman_status === 'optimal',
                                               'text-amber-600 dark:text-amber-400': onu.redaman_status === 'normal',
@@ -436,46 +499,38 @@
                                           }"
                                           x-text="onu.rx_power">
                                     </span>
-                                    <span class="text-[10px] text-slate-500 ml-1">Rx</span>
                                 </div>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400">
-                                    <span>Tx Laser: </span>
-                                    <strong class="text-slate-700 dark:text-slate-300 font-bold" x-text="onu.tx_power"></strong>
+                                <div class="p-1.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                    <span class="text-[10px] text-slate-500 font-sans">Tx Laser:</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-300 text-[12px]" x-text="onu.tx_power"></span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 4. Bandwidth Live Traffic (Rx Download / Tx Upload) -->
-                        <div class="space-y-1.5 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 mb-2.5">
-                            <div class="flex items-center justify-between text-[11px]">
-                                <span class="text-slate-500 font-semibold flex items-center gap-1">
-                                    <svg class="w-3 h-3 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                    </svg>
-                                    <span>Download (Rx):</span>
-                                </span>
-                                <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400" x-text="onu.download_formatted"></span>
-                            </div>
-                            <!-- Utilization Progress Bar -->
-                            <div class="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                <div class="bg-cyan-500 h-full rounded-full transition-all duration-500"
-                                     :style="'width: ' + onu.down_pct + '%'">
+                        <!-- 4. Section Perangkat & Layanan (Serial Number, Paket & Alamat) -->
+                        <div class="grid grid-cols-2 gap-2 text-[11px]">
+                            <!-- SN Modem -->
+                            <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
+                                <span class="text-[9.5px] font-semibold text-slate-500 block">Serial Number:</span>
+                                <div class="flex items-center justify-between mt-0.5">
+                                    <span class="font-mono font-bold text-slate-900 dark:text-slate-100 text-[11.5px] truncate" x-text="onu.sn"></span>
+                                    <button @click="copyText(onu.sn)" class="text-slate-400 hover:text-blue-600 transition shrink-0 ml-1" title="Salin Serial Number">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200/60 dark:border-slate-800/80">
-                                <span class="text-slate-500 font-semibold flex items-center gap-1">
-                                    <svg class="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                    </svg>
-                                    <span>Upload (Tx):</span>
-                                </span>
-                                <span class="font-mono font-bold text-blue-600 dark:text-blue-400" x-text="onu.upload_formatted"></span>
+                            <!-- Paket Layanan -->
+                            <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
+                                <span class="text-[9.5px] font-semibold text-slate-500 block">Paket Internet:</span>
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400 truncate block mt-0.5 text-[11.5px]" x-text="onu.package_name"></span>
                             </div>
                         </div>
 
-                        <!-- 5. Alamat & Uptime -->
-                        <div class="space-y-1 text-[10.5px] text-slate-500 dark:text-slate-400">
+                        <!-- Alamat & Uptime Info -->
+                        <div class="space-y-1 text-[10.5px] text-slate-500 dark:text-slate-400 pt-0.5">
                             <div class="flex items-start gap-1.5">
                                 <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -485,22 +540,22 @@
                             </div>
                             <div class="flex items-center justify-between text-[10px]">
                                 <span>Uptime: <strong class="font-mono text-slate-700 dark:text-slate-300" x-text="onu.uptime"></strong></span>
-                                <span>HP: <span class="font-mono" x-text="onu.phone"></span></span>
+                                <span>POP: <span class="font-semibold text-slate-600 dark:text-slate-300" x-text="onu.pop_name"></span></span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Card Footer Action Buttons -->
-                    <div class="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <!-- 5. Card Footer Action Buttons -->
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                         <a :href="'{{ url('/noc/network-olt') }}?search=' + onu.nomor_internet"
-                           class="inline-flex items-center gap-1 text-[11px] text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+                           class="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">
                             <span>Buka di Explorer</span>
                             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                             </svg>
                         </a>
                         <a :href="'{{ url('/noc/gpon') }}?olt={{ $olt->kode_olt }}&port=gpon-onu_1/1/{{ $ponIndex }}'"
-                           class="px-2.5 py-1 rounded-md text-[10.5px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                           class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
                             GPON Slot
                         </a>
                     </div>
@@ -531,14 +586,14 @@
                 <thead>
                     <tr class="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                         <th class="py-3 px-3 w-16">Slot</th>
+                        <th class="py-3 px-3">Nama ONU & Pelanggan</th>
                         <th class="py-3 px-3">Status</th>
-                        <th class="py-3 px-3">Pelanggan & No Internet</th>
                         <th class="py-3 px-3">Serial Number (SN)</th>
                         <th class="py-3 px-3">Redaman (Rx/Tx)</th>
-                        <th class="py-3 px-3">Traffic (Down / Up)</th>
+                        <th class="py-3 px-3">Traffic ONU (Rx / Tx)</th>
+                        <th class="py-3 px-3">Porsi PON</th>
                         <th class="py-3 px-3">Paket Layanan</th>
-                        <th class="py-3 px-3">Alamat Pasang</th>
-                        <th class="py-3 px-3">Uptime</th>
+                        <th class="py-3 px-3">Alamat</th>
                         <th class="py-3 px-3 text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -548,6 +603,16 @@
                             <!-- Slot -->
                             <td class="py-2.5 px-3 font-mono font-bold text-slate-700 dark:text-slate-300">
                                 <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10.5px]" x-text="'#' + onu.onu_id"></span>
+                            </td>
+
+                            <!-- Nama ONU & Pelanggan -->
+                            <td class="py-2.5 px-3">
+                                <div class="font-bold text-slate-900 dark:text-white" x-text="onu.nama_pelanggan"></div>
+                                <div class="flex items-center gap-1.5 text-[10.5px]">
+                                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400" x-text="onu.onu_name"></span>
+                                    <span class="text-slate-400">&middot;</span>
+                                    <span class="font-mono text-blue-600 dark:text-blue-400" x-text="onu.nomor_internet"></span>
+                                </div>
                             </td>
 
                             <!-- Status -->
@@ -566,12 +631,6 @@
                                           }"></span>
                                     <span x-text="onu.status"></span>
                                 </span>
-                            </td>
-
-                            <!-- Pelanggan -->
-                            <td class="py-2.5 px-3">
-                                <div class="font-bold text-slate-900 dark:text-white" x-text="onu.nama_pelanggan"></div>
-                                <div class="font-mono text-[10.5px] text-blue-600 dark:text-blue-400" x-text="onu.nomor_internet"></div>
                             </td>
 
                             <!-- Serial Number -->
@@ -610,6 +669,13 @@
                                 <div class="text-blue-600 dark:text-blue-400 font-semibold text-[10.5px]" x-text="'Tx: ' + onu.upload_formatted"></div>
                             </td>
 
+                            <!-- Porsi PON -->
+                            <td class="py-2.5 px-3 font-mono">
+                                <span class="px-2 py-0.5 rounded text-[10.5px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300"
+                                      x-text="onu.traffic_share_pct + '%'">
+                                </span>
+                            </td>
+
                             <!-- Paket -->
                             <td class="py-2.5 px-3">
                                 <span class="font-semibold text-slate-800 dark:text-slate-200 block" x-text="onu.package_name"></span>
@@ -617,13 +683,10 @@
                             </td>
 
                             <!-- Alamat -->
-                            <td class="py-2.5 px-3 max-w-[200px]">
+                            <td class="py-2.5 px-3 max-w-[180px]">
                                 <span class="truncate block text-[11px] text-slate-600 dark:text-slate-300" x-text="onu.address"></span>
-                                <span class="text-[10px] text-slate-400" x-text="onu.pop_name"></span>
+                                <span class="text-[10px] text-slate-400 font-mono" x-text="onu.uptime"></span>
                             </td>
-
-                            <!-- Uptime -->
-                            <td class="py-2.5 px-3 font-mono text-[10.5px] text-slate-600 dark:text-slate-400" x-text="onu.uptime"></td>
 
                             <!-- Aksi -->
                             <td class="py-2.5 px-3 text-right">
@@ -673,6 +736,8 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             suspend: 0,
             totalRx: 0,
             totalTx: 0,
+            avgRxPerOnu: 0,
+            avgTxPerOnu: 0,
             avgRxPower: '-21.5'
         },
 
@@ -736,6 +801,17 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
 
             this.stats.totalRx = sumRx;
             this.stats.totalTx = sumTx;
+
+            const activeCount = this.stats.online > 0 ? this.stats.online : 1;
+            this.stats.avgRxPerOnu = sumRx / activeCount;
+            this.stats.avgTxPerOnu = sumTx / activeCount;
+
+            // Update traffic share pct per ONU
+            this.onus.forEach(onu => {
+                if (onu.is_online && sumRx > 0) {
+                    onu.traffic_share_pct = Math.round((onu.download_mbps / sumRx) * 1000) / 10;
+                }
+            });
         },
 
         calculateStats() {
@@ -750,6 +826,10 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             const rxSum = this.onus.reduce((acc, o) => acc + (parseFloat(o.rx_power_num) || -21), 0);
             const avgRx = total > 0 ? (rxSum / total).toFixed(2) : '-21.5';
 
+            const activeCount = online > 0 ? online : 1;
+            const avgRxPerOnu = totalRx / activeCount;
+            const avgTxPerOnu = totalTx / activeCount;
+
             this.stats = {
                 total,
                 online,
@@ -757,6 +837,8 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                 suspend,
                 totalRx,
                 totalTx,
+                avgRxPerOnu,
+                avgTxPerOnu,
                 avgRxPower: avgRx
             };
         },
@@ -772,6 +854,7 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                     (o.nomor_internet && o.nomor_internet.toLowerCase().includes(q)) ||
                     (o.sn && o.sn.toLowerCase().includes(q)) ||
                     (o.interface_onu && o.interface_onu.toLowerCase().includes(q)) ||
+                    (o.onu_name && o.onu_name.toLowerCase().includes(q)) ||
                     String(o.onu_id).includes(q)
                 );
             }

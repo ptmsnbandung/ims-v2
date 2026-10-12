@@ -154,9 +154,14 @@
                                     <h3 class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm truncate" x-text="port.port_name"></h3>
                                     <span class="font-mono text-[9.5px] text-slate-500 dark:text-slate-400 truncate" x-text="'(' + port.interface_name + ')'"></span>
                                 </div>
-                                <div class="flex items-center gap-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">
-                                    <span class="font-semibold text-slate-700 dark:text-slate-300">
-                                        <span x-text="port.user_count"></span>/<span x-text="port.max_capacity"></span> ONUs (<span x-text="port.utilization_pct"></span>%)
+                                <div class="flex items-center flex-wrap gap-1.5 text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                    <span class="inline-flex items-center gap-1 font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200/80 dark:border-blue-800/80 text-[10px]">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        <span x-text="port.user_count + ' ONU Terhubung'"></span>
+                                    </span>
+                                    <span>&middot;</span>
+                                    <span class="text-slate-600 dark:text-slate-300">
+                                        Slot: <span x-text="port.user_count"></span>/<span x-text="port.max_capacity"></span> (<span x-text="port.utilization_pct"></span>%)
                                     </span>
                                     <span>&middot;</span>
                                     <span>Laser: <strong class="text-amber-600 font-mono" x-text="port.tx_power"></strong></span>
@@ -286,11 +291,11 @@
 
                 <!-- 5. Tombol Aksi Bawah Card PON: Lihat Daftar ONU -->
                 <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        <span>Terhubung: <strong class="text-slate-700 dark:text-slate-200" x-text="port.user_count"></strong> Unit ONU</span>
+                    <div class="flex items-center gap-1.5 text-[11px]">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800/80">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span x-text="port.user_count + ' ONU Terhubung'"></span>
+                        </span>
                     </div>
 
                     <a :href="'{{ url('/noc/olt/' . $olt->kode_olt . '/pon') }}/' + port.port_index + '/onu'"

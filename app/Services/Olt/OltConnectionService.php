@@ -920,6 +920,8 @@ class OltConnectionService
                 'package_name' => $cust->nama_kategori_bandwith ?: 'Home Fiber ' . (int)$nominalBw . 'M',
                 'nominal_bandwith' => $nominalBw,
                 'down_pct' => min(100, round(($downRate / max(1, $nominalBw)) * 100)),
+                'onu_name' => "ONU {$onuSlot}",
+                'display_name' => "ONU-{$onuSlot} - " . ($cust->nama_pelanggan ?: 'Pelanggan'),
                 'address' => $address,
                 'phone' => $cust->nomor_hp ?? '-',
                 'pop_name' => $cust->nama_pop ?? ($olt->nama_pop ?? 'POP MSN'),
@@ -934,6 +936,18 @@ class OltConnectionService
         $offlineCount = $totalCount - $onlineCount;
         $avgRxPower = $totalCount > 0 ? round($sumRxPower / $totalCount, 2) : -20.5;
 
+        // Hitung rata-rata penggunaan traffic per ONU
+        $avgRxPerOnu = $onlineCount > 0 ? round($totalRx / $onlineCount, 2) : 0.0;
+        $avgTxPerOnu = $onlineCount > 0 ? round($totalTx / $onlineCount, 2) : 0.0;
+
+        // Tambahkan porsi penggunaan traffic per ONU terhadap total port
+        foreach ($onus as &$o) {
+            $o['traffic_share_pct'] = ($totalRx > 0 && $o['download_mbps'] > 0) 
+                ? round(($o['download_mbps'] / $totalRx) * 100, 1) 
+                : 0.0;
+        }
+        unset($o);
+
         return [
             'port_index' => $ponIndex,
             'port_name' => "PON {$ponIndex}",
@@ -944,6 +958,10 @@ class OltConnectionService
             'avg_rx_power' => $avgRxPower . ' dBm',
             'total_download_mbps' => round($totalRx, 1),
             'total_upload_mbps' => round($totalTx, 1),
+            'avg_rx_per_onu' => $avgRxPerOnu,
+            'avg_tx_per_onu' => $avgTxPerOnu,
+            'avg_rx_formatted' => $avgRxPerOnu . ' Mbps',
+            'avg_tx_formatted' => $avgTxPerOnu . ' Mbps',
             'onus' => $onus,
         ];
     }

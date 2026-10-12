@@ -621,52 +621,52 @@
     </div>
 
     <!-- Modal Bulk Queue Dispatcher (Meta Cloud API & WhatsApp Web) -->
-    <div x-show="showBulkModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5" @click.away="if(!isSendingBulk) showBulkModal = false">
-            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+    <div x-show="showBulkModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-4" @click.away="if(!isSendingBulk) showBulkModal = false">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 shrink-0">
                 <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <span class="text-emerald-600 dark:text-emerald-400">🚀</span>
                     <span>Dispatcher Broadcast Massal WhatsApp</span>
                 </h3>
-                <button @click="if(!isSendingBulk) showBulkModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
+                <button @click="if(!isSendingBulk) showBulkModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold p-1 leading-none transition cursor-pointer">&times;</button>
             </div>
 
             <!-- Progress Bar -->
-            <div class="space-y-2">
+            <div class="space-y-2 shrink-0">
                 <div class="flex items-center justify-between text-xs font-semibold">
                     <span class="text-slate-700 dark:text-slate-300">Kemajuan Pengiriman:</span>
-                    <span class="text-emerald-600 dark:text-emerald-400 font-mono" x-text="bulkProgressPercent + '% (' + bulkSentCount + '/' + bulkQueue.length + ' Selesai)'"></span>
+                    <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold" x-text="bulkProgressPercent + '% (' + bulkSentCount + '/' + bulkQueue.length + ' Selesai)'"></span>
                 </div>
                 <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
-                    <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-300" :style="'width: ' + bulkProgressPercent + '%'"></div>
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-300 rounded-full" :style="'width: ' + bulkProgressPercent + '%'"></div>
                 </div>
             </div>
 
             <!-- Active Queue Table -->
-            <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
-                <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] uppercase font-bold sticky top-0">
+            <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex-1 min-h-[260px] max-h-[55vh] overflow-y-auto bg-slate-50/50 dark:bg-slate-950/40">
+                <table class="w-full text-left text-xs text-slate-700 dark:text-slate-300 border-collapse">
+                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] uppercase font-bold sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700 shadow-2xs">
                         <tr>
-                            <th class="p-2.5">No</th>
-                            <th class="p-2.5">Pelanggan</th>
-                            <th class="p-2.5">No HP</th>
-                            <th class="p-2.5 text-center">Status</th>
-                            <th class="p-2.5 text-right">Keterangan</th>
+                            <th class="py-2.5 px-3 w-12 text-center">No</th>
+                            <th class="py-2.5 px-3">Pelanggan</th>
+                            <th class="py-2.5 px-3">No HP</th>
+                            <th class="py-2.5 px-3 text-center w-28">Status</th>
+                            <th class="py-2.5 px-3 text-right">Keterangan</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900">
                         <template x-for="(item, idx) in bulkQueue" :key="idx">
-                            <tr :class="idx === currentBulkIndex ? 'bg-emerald-50/60 dark:bg-emerald-500/10 font-semibold' : ''">
-                                <td class="p-2.5 text-slate-500 dark:text-slate-400 font-mono text-[11px]" x-text="idx + 1"></td>
-                                <td class="p-2.5 font-bold text-slate-900 dark:text-white" x-text="item.nama_penerima"></td>
-                                <td class="p-2.5 font-mono text-emerald-600 dark:text-emerald-400 text-[11px]" x-text="item.nomor_hp"></td>
-                                <td class="p-2.5 text-center">
-                                    <span x-show="item.status === 'sent'" class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">✅ Terkirim</span>
-                                    <span x-show="item.status === 'failed'" class="px-2 py-0.5 rounded text-[10px] bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-bold">❌ Gagal</span>
-                                    <span x-show="item.status === 'pending'" class="px-2 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Antrean</span>
-                                    <span x-show="item.status === 'sending'" class="px-2 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold animate-pulse">Mengirim...</span>
+                            <tr :class="idx === currentBulkIndex ? 'bg-emerald-50/80 dark:bg-emerald-500/15 font-semibold' : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/40'">
+                                <td class="py-2 px-3 text-slate-500 dark:text-slate-400 font-mono text-[11px] text-center" x-text="idx + 1"></td>
+                                <td class="py-2 px-3 font-bold text-slate-900 dark:text-white" x-text="item.nama_penerima"></td>
+                                <td class="py-2 px-3 font-mono text-emerald-600 dark:text-emerald-400 text-[11px]" x-text="item.nomor_hp"></td>
+                                <td class="py-2 px-3 text-center">
+                                    <span x-show="item.status === 'sent'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">✅ Terkirim</span>
+                                    <span x-show="item.status === 'failed'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 font-bold">❌ Gagal</span>
+                                    <span x-show="item.status === 'pending'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Antrean</span>
+                                    <span x-show="item.status === 'sending'" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold animate-pulse">Mengirim...</span>
                                 </td>
-                                <td class="p-2.5 text-right text-[11px] text-slate-500 dark:text-slate-400">
+                                <td class="py-2 px-3 text-right text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs" :title="item.meta_msg">
                                     <span x-text="item.meta_msg || (item.status === 'sent' ? 'Meta API OK' : '-')"></span>
                                 </td>
                             </tr>
@@ -676,11 +676,11 @@
             </div>
 
             <!-- Modal Action Footer -->
-            <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 flex-wrap gap-2">
+            <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 flex-wrap gap-2 shrink-0">
                 <span class="text-[11px] text-slate-500 dark:text-slate-400" x-text="metodeKirim === 'meta_api' ? 'Pengiriman otomatis via Meta WhatsApp Cloud API.' : 'Pengiriman manual via WhatsApp Web.'"></span>
                 
                 <div class="flex items-center gap-2">
-                    <button @click="showBulkModal = false" :disabled="isSendingBulk" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold disabled:opacity-50">
+                    <button @click="showBulkModal = false" :disabled="isSendingBulk" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold disabled:opacity-50 cursor-pointer">
                         Tutup
                     </button>
                     
@@ -694,7 +694,7 @@
 
                     <!-- Manual Step Button for WA Web -->
                     <template x-if="metodeKirim === 'wa_web'">
-                        <button @click="openNextBulkItem()" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow">
+                        <button @click="openNextBulkItem()" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow cursor-pointer">
                             <span>Buka WA Berikutnya &raquo;</span>
                         </button>
                     </template>

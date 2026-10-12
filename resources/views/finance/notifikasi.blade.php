@@ -9,6 +9,112 @@
     previewModalOpen: false,
     previewImageUrl: '',
     previewTitle: '',
+
+    // Read state synchronization
+    readIds: [],
+
+    init() {
+        this.loadReadIds();
+        window.addEventListener('ims-notifications-read-updated', () => {
+            this.loadReadIds();
+        });
+    },
+
+    loadReadIds() {
+        try {
+            this.readIds = JSON.parse(localStorage.getItem('ims_read_payment_ids') || '[]');
+        } catch (e) {
+            this.readIds = [];
+        }
+    },
+
+    isUnread(id, kodeBilling = null) {
+        if (!this.readIds || this.readIds.length === 0) return true;
+        const sId = String(id || '');
+        const sKode = String(kodeBilling || '');
+        if (sId && this.readIds.includes(sId)) return false;
+        if (sKode && this.readIds.includes(sKode)) return false;
+        return true;
+    },
+
+    toggleRead(id, kodeBilling = null) {
+        const sId = String(id || '');
+        const sKode = String(kodeBilling || '');
+        const isCurrentlyUnread = this.isUnread(sId, sKode);
+
+        if (isCurrentlyUnread) {
+            // Mark as read
+            if (sId && !this.readIds.includes(sId)) this.readIds.push(sId);
+            if (sKode && !this.readIds.includes(sKode)) this.readIds.push(sKode);
+        } else {
+            // Mark as unread
+            this.readIds = this.readIds.filter(x => x !== sId && x !== sKode);
+        }
+
+        if (this.readIds.length > 400) {
+            this.readIds = this.readIds.slice(-400);
+        }
+
+        localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
+        window.dispatchEvent(new CustomEvent('ims-notifications-read-updated'));
+    },
+
+    markRead(id, kodeBilling = null) {
+        const sId = String(id || '');
+        const sKode = String(kodeBilling || '');
+        let changed = false;
+        if (sId && !this.readIds.includes(sId)) {
+            this.readIds.push(sId);
+            changed = true;
+        }
+        if (sKode && !this.readIds.includes(sKode)) {
+            this.readIds.push(sKode);
+            changed = true;
+        }
+        if (changed) {
+            if (this.readIds.length > 400) {
+                this.readIds = this.readIds.slice(-400);
+            }
+            localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
+            window.dispatchEvent(new CustomEvent('ims-notifications-read-updated'));
+        }
+    },
+
+    markAllAsReadPage() {
+        const pageItems = [
+            @foreach($notifications as $item)
+                { id: '{{ $item->id }}', kode: '{{ $item->kode_billing }}' },
+            @endforeach
+        ];
+
+        let changed = false;
+        pageItems.forEach(item => {
+            const sId = String(item.id || '');
+            const sKode = String(item.kode || '');
+            if (sId && !this.readIds.includes(sId)) {
+                this.readIds.push(sId);
+                changed = true;
+            }
+            if (sKode && !this.readIds.includes(sKode)) {
+                this.readIds.push(sKode);
+                changed = true;
+            }
+        });
+
+        if (this.readIds.length > 400) {
+            this.readIds = this.readIds.slice(-400);
+        }
+
+        localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
+        window.dispatchEvent(new CustomEvent('ims-notifications-read-updated'));
+
+        if (window.Toast) {
+            window.Toast.fire({
+                icon: 'success',
+                title: 'Semua notifikasi di halaman ini berhasil ditandai telah dibaca'
+            });
+        }
+    },
     
     // Data form approval
     approveData: {
@@ -30,6 +136,7 @@
     },
 
     openApproveModal(item) {
+        this.markRead(item.id || item.kode_billing, item.kode_billing);
         this.approveData.kode_billing = item.kode_billing;
         this.approveData.nama_pelanggan = item.nama_pelanggan;
         this.approveData.nomor_internet = item.nomor_internet;
@@ -42,50 +149,83 @@
     },
 
     openRejectModal(item) {
+        this.markRead(item.id || item.kode_billing, item.kode_billing);
         this.rejectData.kode_billing = item.kode_billing;
         this.rejectData.nama_pelanggan = item.nama_pelanggan;
         this.rejectData.alasan_tolak = 'Bukti transfer tidak valid atau dana belum masuk ke rekening perusahaan.';
         this.rejectModalOpen = true;
     },
 
-    openPreviewModal(url, title) {
+    openPreviewModal(url, title, id = null, kode = null) {
+        if (id || kode) {
+            this.markRead(id, kode);
+        }
         this.previewImageUrl = url;
         this.previewTitle = title;
         this.previewModalOpen = true;
     }
 }">
 
-    <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
-                <span>Finance</span>
-                <span>&rsaquo;</span>
-                <span class="text-[#0891b2] dark:text-cyan-400 font-semibold">Notifikasi & Approval</span>
-            </div>
-            <h1 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                Notifikasi Pembayaran Masuk
-            </h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400">
-                Pusat verifikasi dan approval transaksi pembayaran serta bukti transfer pelanggan.
-            </p>
+    <!-- Page Header & Action Bar (Deep Oceanic Teal & Cyan Gradient Matching Billing Layanan & Dashboard) -->
+    <div class="ims-banner relative rounded-xl p-3.5 sm:p-4 shadow-sm border border-teal-500/20 z-30 overflow-hidden"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        
+        <!-- Subtle Glow Effect -->
+        <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+            <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
         </div>
 
-        <div class="flex items-center gap-2">
-            <a href="{{ route('finance.billing-layanan') }}"
-               class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-2xs transition flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-[#0891b2]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25" />
-                </svg>
-                <span>Billing Layanan</span>
-            </a>
-            <a href="{{ route('finance.notifikasi') }}"
-               class="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-2xs transition"
-               title="Refresh Data">
-                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                </svg>
-            </a>
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div>
+                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-white text-slate-800 shadow-2xs">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#00a8b5]"></span>
+                        <span>Finance &amp; Approval</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-[#04333e]/85 text-emerald-300 border border-teal-400/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Payment Verification</span>
+                    </div>
+                </div>
+                <h1 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2" style="color: #FFFFFF !important;">
+                    Notifikasi Pembayaran Masuk
+                </h1>
+                <p class="text-xs text-[#c6edf3] mt-0.5 max-w-2xl leading-normal" style="color: #C6EDF3 !important;">
+                    Pusat verifikasi dan approval transaksi pembayaran serta bukti transfer pelanggan.
+                </p>
+            </div>
+
+            <!-- Top Right Actions -->
+            <div class="flex flex-wrap items-center gap-2 relative z-10 w-full lg:w-auto pt-1 lg:pt-0">
+                <!-- Tombol Tandai Semua Dibaca -->
+                <button type="button"
+                        @click="markAllAsReadPage()"
+                        class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white border border-white/25 text-xs font-semibold flex items-center gap-1.5 shadow-2xs backdrop-blur-xs transition cursor-pointer"
+                        title="Tandai semua notifikasi di halaman ini sebagai sudah dibaca">
+                    <svg class="w-3.5 h-3.5 text-cyan-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5m-15 0 6 6 9-13.5" />
+                    </svg>
+                    <span>Tandai Semua Dibaca</span>
+                </button>
+
+                <!-- Tombol Link Billing Layanan -->
+                <a href="{{ route('finance.billing-layanan') }}"
+                   class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-semibold flex items-center gap-1.5 shadow-2xs backdrop-blur-xs transition cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-cyan-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25" />
+                    </svg>
+                    <span>Billing Layanan</span>
+                </a>
+
+                <!-- Tombol Refresh -->
+                <a href="{{ route('finance.notifikasi') }}"
+                   class="p-1.5 rounded-lg text-white/90 bg-white/10 hover:bg-white/20 border border-white/20 shadow-2xs backdrop-blur-xs transition cursor-pointer"
+                   title="Refresh Data">
+                    <svg class="w-3.5 h-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -223,33 +363,61 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70 text-xs">
                         @foreach($notifications as $item)
-                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition {{ !$item->is_approved ? 'bg-amber-50/30 dark:bg-amber-950/20' : '' }}">
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition {{ !$item->is_approved ? 'bg-amber-50/30 dark:bg-amber-950/20' : '' }}"
+                            :class="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}') ? 'bg-cyan-50/25 dark:bg-cyan-950/20' : ''">
                             
                             <!-- 1. Status & Waktu -->
                             <td class="py-2.5 px-2.5 sm:px-3 align-middle overflow-hidden">
-                                <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
-                                    @if($item->is_approved)
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 w-fit truncate">
-                                            <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                            </svg>
-                                            <span class="truncate">Lunas / Disetujui</span>
-                                        </span>
-                                    @elseif($item->status === 'rejected')
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 w-fit truncate">
-                                            <svg class="w-2.5 h-2.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                            </svg>
-                                            <span class="truncate">Ditolak</span>
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 w-fit animate-pulse truncate">
-                                            <svg class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                            <span class="truncate">Menunggu Approval</span>
-                                        </span>
-                                    @endif
+                                <div class="flex flex-col gap-1 min-w-0 max-w-full">
+                                    <div class="flex items-center gap-1 flex-wrap">
+                                        @if($item->is_approved)
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 w-fit truncate">
+                                                <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                                </svg>
+                                                <span class="truncate">Lunas / Disetujui</span>
+                                            </span>
+                                        @elseif($item->status === 'rejected')
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 w-fit truncate">
+                                                <svg class="w-2.5 h-2.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                                </svg>
+                                                <span class="truncate">Ditolak</span>
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 w-fit animate-pulse truncate">
+                                                <svg class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                                <span class="truncate">Menunggu Approval</span>
+                                            </span>
+                                        @endif
+
+                                        <!-- Badge Tanda Dibaca Interaktif Per Notif -->
+                                        <button type="button"
+                                                @click.stop="toggleRead('{{ $item->id }}', '{{ $item->kode_billing }}')"
+                                                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold transition cursor-pointer max-w-fit"
+                                                :class="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')
+                                                    ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300 ring-1 ring-cyan-400/40'
+                                                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800/80 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'"
+                                                :title="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}') ? 'Status: Belum dibaca. Klik untuk tandai sudah dibaca' : 'Status: Sudah dibaca. Klik untuk tandai belum dibaca'">
+                                            <template x-if="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')">
+                                                <span class="inline-flex items-center gap-1">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                                                    <span>Baru</span>
+                                                </span>
+                                            </template>
+                                            <template x-if="!isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')">
+                                                <span class="inline-flex items-center gap-1">
+                                                    <svg class="w-2.5 h-2.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5m-15 0 6 6 9-13.5" />
+                                                    </svg>
+                                                    <span>Dibaca</span>
+                                                </span>
+                                            </template>
+                                        </button>
+                                    </div>
+
                                     <span class="text-[9.5px] text-slate-500 dark:text-slate-400 font-medium truncate block" title="{{ $item->time_ago }} &middot; {{ $item->date }}">
                                         {{ $item->time_ago }} &middot; {{ $item->date }}
                                     </span>
@@ -276,7 +444,7 @@
                                        target="_blank"
                                        class="font-mono text-xs font-semibold text-[#0891b2] dark:text-cyan-400 hover:underline inline-flex items-center gap-0.5 max-w-full truncate"
                                        title="{{ $item->kode_billing }}">
-                                        <span class="truncate">{{ $item->kode_billing }}</span>
+                                       <span class="truncate">{{ $item->kode_billing }}</span>
                                         <svg class="w-2.5 h-2.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                         </svg>
@@ -322,7 +490,7 @@
                             <td class="py-2.5 px-2.5 sm:px-3 align-middle text-center overflow-hidden">
                                 @if($item->proof_file)
                                     <button type="button"
-                                            @click="openPreviewModal('{{ asset($item->proof_file) }}', 'Bukti Transfer: {{ $item->kode_billing }}')"
+                                            @click="openPreviewModal('{{ asset($item->proof_file) }}', 'Bukti Transfer: {{ $item->kode_billing }}', '{{ $item->id }}', '{{ $item->kode_billing }}')"
                                             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold text-[#0891b2] dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200/60 dark:border-cyan-800/60 transition cursor-pointer">
                                         <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
@@ -337,6 +505,27 @@
                             <!-- 7. Aksi Approval -->
                             <td class="py-2.5 px-2.5 sm:px-3 pr-3.5 sm:pr-4 align-middle text-right overflow-hidden">
                                 <div class="flex items-center justify-end gap-1 min-w-0">
+                                    <!-- Tombol Cepat Toggle Status Dibaca -->
+                                    <button type="button"
+                                            @click.stop="toggleRead('{{ $item->id }}', '{{ $item->kode_billing }}')"
+                                            class="p-1 rounded-md transition cursor-pointer flex-shrink-0"
+                                            :class="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')
+                                                ? 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200/60 dark:border-cyan-800/60'
+                                                : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700/60 border border-slate-200/60 dark:border-slate-700/60'"
+                                            :title="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}') ? 'Tandai sudah dibaca' : 'Tandai belum dibaca'">
+                                        <template x-if="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            </svg>
+                                        </template>
+                                        <template x-if="!isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')">
+                                            <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5m-15 0 6 6 9-13.5" />
+                                            </svg>
+                                        </template>
+                                    </button>
+
                                     @if(!$item->is_approved)
                                         <!-- Tombol Approve -->
                                         <button type="button"

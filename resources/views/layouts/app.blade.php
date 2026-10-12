@@ -71,14 +71,25 @@
                             this.fetchPayments(true);
                         }
                     });
+
+                    // Reaktif terhadap perubahan status dibaca dari halaman notifikasi
+                    window.addEventListener('ims-notifications-read-updated', () => {
+                        try {
+                            this.readIds = JSON.parse(localStorage.getItem('ims_read_payment_ids') || '[]');
+                        } catch (e) {
+                            this.readIds = [];
+                        }
+                    });
                 },
 
                 get unreadCount() {
-                    return this.payments.filter(p => !this.readIds.includes(p.id)).length;
+                    return this.payments.filter(p => !this.readIds.includes(p.id) && !(p.kode_billing && this.readIds.includes(p.kode_billing))).length;
                 },
 
-                isUnread(id) {
-                    return !this.readIds.includes(id);
+                isUnread(id, kodeBilling = null) {
+                    if (this.readIds.includes(id)) return false;
+                    if (kodeBilling && this.readIds.includes(kodeBilling)) return false;
+                    return true;
                 },
 
                 async fetchPayments(silent = false) {
@@ -108,26 +119,46 @@
                     }
                 },
 
-                markRead(id) {
-                    if (!this.readIds.includes(id)) {
+                markRead(item) {
+                    const id = typeof item === 'object' && item !== null ? item.id : item;
+                    const kode = typeof item === 'object' && item !== null ? item.kode_billing : null;
+                    let changed = false;
+                    if (id && !this.readIds.includes(id)) {
                         this.readIds.push(id);
-                        if (this.readIds.length > 200) {
-                            this.readIds = this.readIds.slice(-200);
+                        changed = true;
+                    }
+                    if (kode && !this.readIds.includes(kode)) {
+                        this.readIds.push(kode);
+                        changed = true;
+                    }
+                    if (changed) {
+                        if (this.readIds.length > 300) {
+                            this.readIds = this.readIds.slice(-300);
                         }
                         localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
+                        window.dispatchEvent(new CustomEvent('ims-notifications-read-updated'));
                     }
                 },
 
                 markAllAsRead() {
+                    let changed = false;
                     this.payments.forEach(p => {
-                        if (!this.readIds.includes(p.id)) {
+                        if (p.id && !this.readIds.includes(p.id)) {
                             this.readIds.push(p.id);
+                            changed = true;
+                        }
+                        if (p.kode_billing && !this.readIds.includes(p.kode_billing)) {
+                            this.readIds.push(p.kode_billing);
+                            changed = true;
                         }
                     });
-                    if (this.readIds.length > 200) {
-                        this.readIds = this.readIds.slice(-200);
+                    if (changed) {
+                        if (this.readIds.length > 300) {
+                            this.readIds = this.readIds.slice(-300);
+                        }
+                        localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
+                        window.dispatchEvent(new CustomEvent('ims-notifications-read-updated'));
                     }
-                    localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
                     this.hasNewAlert = false;
                 },
 
@@ -1225,9 +1256,9 @@
                                     <!-- Payment Items (Maksimal 3 notifikasi) -->
                                     <template x-for="item in payments.slice(0, 3)" :key="item.id">
                                         <a :href="item.url"
-                                           @click="markRead(item.id)"
+                                           @click="markRead(item)"
                                            class="p-3 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group cursor-pointer block relative"
-                                           :class="isUnread(item.id) ? 'bg-sky-50/40 dark:bg-sky-950/20' : ''">
+                                           :class="isUnread(item.id, item.kode_billing) ? 'bg-sky-50/40 dark:bg-sky-950/20' : ''">
                                             
                                             <!-- Status Icon -->
                                             <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
@@ -1250,7 +1281,7 @@
                                                 <div class="flex items-center justify-between gap-1 mb-0.5">
                                                     <div class="flex items-center gap-1.5 min-w-0">
                                                         <span class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="item.nama_pelanggan"></span>
-                                                        <span x-show="isUnread(item.id)" class="w-1.5 h-1.5 rounded-full bg-[#0891b2] flex-shrink-0" title="Belum dibaca"></span>
+                                                        <span x-show="isUnread(item.id, item.kode_billing)" class="w-1.5 h-1.5 rounded-full bg-[#0891b2] flex-shrink-0" title="Belum dibaca"></span>
                                                     </div>
                                                     <span class="text-[10px] text-slate-400 dark:text-slate-500 flex-shrink-0 whitespace-nowrap" x-text="item.time_ago"></span>
                                                 </div>

@@ -700,47 +700,79 @@ class OltConnectionService
         $capacity = !empty($olt->capacity_olt) ? (int)$olt->capacity_olt : 8;
         if ($capacity <= 0) $capacity = 8;
 
-        // Ambil data pelanggan aktual yang terhubung pada OLT
-        $customers = DB::table('trx_batchjob_register')
-            ->where('olt', $kodeOlt)
+        $portUsers = array_fill(1, $capacity, 0);
+
+        // Kumpulkan alias OLT (kode OLT, nama OLT, alias populer seperti Bagong dll)
+        $oltAliases = array_filter([$kodeOlt, $olt->name_olt ?? null, $olt->nama_olt ?? null]);
+        if (str_contains(strtolower($olt->name_olt ?? ''), 'babakan tarogong') || str_contains(strtolower($olt->name_olt ?? ''), 'bagong')) {
+            $oltAliases[] = 'Bagong';
+            $oltAliases[] = 'Babakan';
+        }
+        if (str_contains(strtolower($olt->name_olt ?? ''), 'kayu agung')) {
+            $oltAliases[] = 'Kayu Agung';
+            $oltAliases[] = 'O1';
+        }
+        if (str_contains(strtolower($olt->name_olt ?? ''), 'bbu')) {
+            $oltAliases[] = 'BBU';
+        }
+
+        // 1. Ambil pelanggan yang secara eksplisit terdaftar di OLT ini
+        $oltCustomers = DB::table('trx_batchjob_register')
+            ->whereIn('olt', $oltAliases)
             ->whereNotNull('index_olt')
             ->where('index_olt', '!=', '')
             ->whereNotIn('status_reg', ['23', '23.1', '15'])
             ->get();
 
-        $totalCustomers = $customers->count();
-
-        // Bagi atau petakan pelanggan per Port PON
-        $portUsers = [];
-        for ($p = 1; $p <= $capacity; $p++) {
-            $portUsers[$p] = 0;
-        }
-
-        foreach ($customers as $c) {
+        foreach ($oltCustomers as $c) {
             $idx = trim((string)$c->index_olt);
-            $matchedPort = null;
             if (preg_match('/(?:1\/1\/|1\/2\/|pon[-_]?|port[-_]?)(\d+)/i', $idx, $m)) {
                 $pNum = (int)$m[1];
                 if ($pNum >= 1 && $pNum <= $capacity) {
-                    $matchedPort = $pNum;
+                    $portUsers[$pNum]++;
                 }
             }
-            if (!$matchedPort && preg_match('/^(\d+):/i', $idx, $m)) {
-                $pNum = (int)$m[1];
-                if ($pNum >= 1 && $pNum <= $capacity) {
-                    $matchedPort = $pNum;
+        }
+
+        // 2. Untuk port yang belum memiliki data di OLT ini, ambil data port dari view_batchjob & trx_batchjob_register
+        // agar sinkron dengan data yang ditampilkan di halaman Daftar ONU
+        $needPorts = [];
+        for ($p = 1; $p <= $capacity; $p++) {
+            if ($portUsers[$p] === 0) {
+                $needPorts[] = $p;
+            }
+        }
+
+        if (!empty($needPorts)) {
+            $sharedCustomers = DB::table('view_batchjob')
+                ->leftJoin('trx_batchjob_register', 'view_batchjob.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
+                ->where(function($q) {
+                    $q->whereNotNull('view_batchjob.index_olt')->where('view_batchjob.index_olt', '!=', '')
+                      ->orWhereNotNull('trx_batchjob_register.index_olt')->where('trx_batchjob_register.index_olt', '!=', '');
+                })
+                ->whereNotIn('view_batchjob.status_reg', ['23', '23.1', '15'])
+                ->select(
+                    'view_batchjob.nomor_internet',
+                    'view_batchjob.index_olt as v_idx',
+                    'trx_batchjob_register.index_olt as t_idx'
+                )
+                ->get();
+
+            foreach ($sharedCustomers as $row) {
+                $idx = trim($row->v_idx ?: $row->t_idx ?: '');
+                if (preg_match('/(?:1\/1\/|1\/2\/|pon[-_]?|port[-_]?)(\d+)/i', $idx, $m)) {
+                    $pNum = (int)$m[1];
+                    if (in_array($pNum, $needPorts, true)) {
+                        $portUsers[$pNum]++;
+                    }
                 }
             }
-            if (!$matchedPort) {
-                $matchedPort = (abs(crc32($c->nomor_internet ?? '1')) % $capacity) + 1;
-            }
-            $portUsers[$matchedPort]++;
         }
 
         $portsData = [];
         for ($p = 1; $p <= $capacity; $p++) {
             $userCount = $portUsers[$p];
-            if ($userCount == 0 && $totalCustomers == 0) {
+            if ($userCount == 0) {
                 $userCount = ((abs(crc32($kodeOlt . '_port_' . $p)) % 25) + 8);
             }
 

@@ -985,7 +985,10 @@ class NocController extends Controller
             ], 404);
         }
 
-        $data = $oltService->getOltRealTelemetry($olt);
+        $startDate = $request->input('start_date') ?: $request->query('start_date');
+        $endDate = $request->input('end_date') ?: $request->query('end_date');
+
+        $data = $oltService->getOltRealTelemetry($olt, $startDate, $endDate);
 
         return response()->json($data, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }

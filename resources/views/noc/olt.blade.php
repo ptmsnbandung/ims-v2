@@ -13,6 +13,14 @@
         telemetryMap: {{ Js::from($telemetryMap ?? []) }},
         telemetryLoading: {},
         copiedIp: null,
+        dateFilters: {
+            @foreach($olts as $o)
+                '{{ $o->kode_olt }}': {
+                    start_date: '{{ $telemetryMap[$o->kode_olt]['mrtg']['start_date_input'] ?? now()->subDays(7)->format('Y-m-d') }}',
+                    end_date: '{{ $telemetryMap[$o->kode_olt]['mrtg']['end_date_input'] ?? now()->format('Y-m-d') }}',
+                },
+            @endforeach
+        },
         oltStatusMap: {
             @foreach($olts as $o)
                 '{{ $o->kode_olt }}': {
@@ -37,13 +45,10 @@
             setTimeout(() => { this.copiedIp = null; }, 2000);
         },
 
-        async refreshTelemetry(kodeOlt) {
+        async filterTrafficByDate(kodeOlt) {
             this.telemetryLoading[kodeOlt] = true;
-            if (!this.oltStatusMap[kodeOlt]) {
-                this.oltStatusMap[kodeOlt] = { status: 'untested', latency: null, loading: false, message: '' };
-            }
-            this.oltStatusMap[kodeOlt].loading = true;
             try {
+                const filter = this.dateFilters[kodeOlt] || {};
                 const res = await fetch('{{ route('noc.olt.telemetry') }}', {
                     method: 'POST',
                     headers: {
@@ -51,7 +56,48 @@
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({ kode_olt: kodeOlt })
+                    body: JSON.stringify({
+                        kode_olt: kodeOlt,
+                        start_date: filter.start_date,
+                        end_date: filter.end_date
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.telemetryMap[kodeOlt] = data;
+                    if (this.oltStatusMap[kodeOlt]) {
+                        this.oltStatusMap[kodeOlt].status = data.status;
+                        this.oltStatusMap[kodeOlt].latency = data.latency;
+                        this.oltStatusMap[kodeOlt].message = data.message;
+                    }
+                }
+            } catch(e) {
+                console.error('Filter traffic error:', e);
+            } finally {
+                this.telemetryLoading[kodeOlt] = false;
+            }
+        },
+
+        async refreshTelemetry(kodeOlt) {
+            this.telemetryLoading[kodeOlt] = true;
+            if (!this.oltStatusMap[kodeOlt]) {
+                this.oltStatusMap[kodeOlt] = { status: 'untested', latency: null, loading: false, message: '' };
+            }
+            this.oltStatusMap[kodeOlt].loading = true;
+            try {
+                const filter = this.dateFilters[kodeOlt] || {};
+                const res = await fetch('{{ route('noc.olt.telemetry') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        kode_olt: kodeOlt,
+                        start_date: filter.start_date,
+                        end_date: filter.end_date
+                    })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -243,7 +289,7 @@
                     <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 dark:hover:border-blue-500/50 rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-xl transition-all duration-300 relative group overflow-hidden">
                         
                         <!-- Top Accent Bar -->
-                        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-400 opacity-90 group-hover:h-2 transition-all"></div>
+                        <div class="absolute top-0 left-0 right-0 h-1.5 bg-blue-600 group-hover:h-2 transition-all"></div>
 
                         <!-- 2-Column Split: Kiri (Data OLT, Status, Aksi) & Kanan (MRTG Traffic Graph Luas) -->
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
@@ -254,7 +300,7 @@
                                     <!-- 1. Header OLT: Kode, Nama, Brand, POP, Status Online & Ping -->
                                     <div class="flex items-start justify-between gap-3 pt-1">
                                         <div class="flex items-center gap-2.5 min-w-0">
-                                            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 text-white flex items-center justify-center font-mono font-extrabold text-base shadow-md shadow-blue-500/20 shrink-0">
+                                            <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-mono font-extrabold text-base shadow-sm shrink-0 border border-blue-500">
                                                 {{ $kodeDisplay }}
                                             </div>
                                             <div class="min-w-0">
@@ -421,10 +467,10 @@
                                     </div>
                                 </div>
 
-                                <!-- 4. Action Buttons (Kiri Bawah) -->
+                                <!-- 4. Action Buttons (Kiri Bawah) - Tombol Solid Blue Tanpa Efek Awan Putih -->
                                 <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                                     <a href="{{ route('noc.gpon', ['olt' => $olt->kode_olt]) }}" 
-                                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 cursor-pointer">
+                                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer">
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                         </svg>
@@ -454,26 +500,74 @@
 
                             <!-- KOLOM KANAN (lg:col-span-7): PANEL GRAFIK MRTG LIVE TIME MEMBENTANG LUAS -->
                             <div class="lg:col-span-7 flex flex-col justify-between p-3.5 sm:p-4 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-2.5">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                                            Traffic Live Time (MRTG / Cacti Monitor)
-                                        </h4>
+                                <!-- Header & Date Filter Bar -->
+                                <div class="space-y-2 pb-1 border-b border-slate-200/80 dark:border-slate-800">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                                Traffic Live Time (MRTG / Cacti Monitor)
+                                            </h4>
+                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 text-[9px] font-mono">
+                                                Live Feed
+                                            </span>
+                                        </div>
+                                        <div class="text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                                            <span x-text="'Sync: ' + (telemetryMap['{{ $olt->kode_olt }}']?.updated_at ?? '{{ $tData['updated_at'] ?? 'Real-time' }}')">
+                                                Sync: {{ $tData['updated_at'] ?? 'Real-time' }}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2 text-[9px] font-mono text-slate-400 dark:text-slate-500">
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
-                                            Live Feed
-                                        </span>
-                                        <span x-text="'Sync: ' + (telemetryMap['{{ $olt->kode_olt }}']?.updated_at ?? '{{ $tData['updated_at'] ?? 'Real-time' }}')">
-                                            Sync: {{ $tData['updated_at'] ?? 'Real-time' }}
-                                        </span>
+
+                                    <!-- Date Range Picker: Dari Tanggal & Sampai Tanggal (DD-MM-YYYY) -->
+                                    <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
+                                        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                                            <!-- Dari Tanggal -->
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">Dari Tanggal:</span>
+                                                <div class="relative">
+                                                    <input type="date" 
+                                                           x-model="dateFilters['{{ $olt->kode_olt }}'].start_date" 
+                                                           class="px-2 py-0.5 text-[11px] font-mono rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                                           title="Format: DD-MM-YYYY" />
+                                                </div>
+                                                <span class="text-[9px] text-slate-400 font-mono hidden xl:inline" 
+                                                      x-text="dateFilters['{{ $olt->kode_olt }}'].start_date ? '(' + dateFilters['{{ $olt->kode_olt }}'].start_date.split('-').reverse().join('-') + ')' : ''">
+                                                </span>
+                                            </div>
+
+                                            <!-- Sampai Tanggal -->
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">Sampai Tanggal:</span>
+                                                <div class="relative">
+                                                    <input type="date" 
+                                                           x-model="dateFilters['{{ $olt->kode_olt }}'].end_date" 
+                                                           class="px-2 py-0.5 text-[11px] font-mono rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                                           title="Format: DD-MM-YYYY" />
+                                                </div>
+                                                <span class="text-[9px] text-slate-400 font-mono hidden xl:inline" 
+                                                      x-text="dateFilters['{{ $olt->kode_olt }}'].end_date ? '(' + dateFilters['{{ $olt->kode_olt }}'].end_date.split('-').reverse().join('-') + ')' : ''">
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tombol Terapkan Filter -->
+                                        <button type="button" 
+                                                @click="filterTrafficByDate('{{ $olt->kode_olt }}')"
+                                                :disabled="telemetryLoading['{{ $olt->kode_olt }}']"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[10px] shadow-xs transition cursor-pointer disabled:opacity-50">
+                                            <svg x-show="!telemetryLoading['{{ $olt->kode_olt }}']" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                            </svg>
+                                            <span x-show="telemetryLoading['{{ $olt->kode_olt }}']" class="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                            <span>Filter Rentang</span>
+                                        </button>
                                     </div>
                                 </div>
 
-                                <!-- Box Frame Grafik MRTG Full Width -->
-                                <div class="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-inner flex-1 flex flex-col justify-between">
-                                    <div class="flex items-stretch gap-2">
+                                <!-- Box Frame Grafik MRTG Full Vertical (Mengisi Seluruh Ruang Vertikal Kartu) -->
+                                <div class="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-inner flex-1 flex flex-col justify-between min-h-[220px]">
+                                    <div class="flex items-stretch gap-2 flex-1 min-h-[170px] sm:min-h-[190px]">
                                         <!-- Sumbu Y Kiri: Label "Bits per Second" + Angka Skala Y -->
                                         <div class="flex items-center gap-1.5 select-none shrink-0">
                                             <span class="text-[8.5px] font-bold tracking-tight text-slate-600 dark:text-slate-400" 
@@ -481,7 +575,7 @@
                                                 Bits per Second
                                             </span>
 
-                                            <div class="flex flex-col justify-between items-end h-[115px] sm:h-[125px] text-[9px] font-mono font-bold text-slate-700 dark:text-slate-300 leading-none py-0.5">
+                                            <div class="flex flex-col justify-between items-end h-full text-[9px] font-mono font-bold text-slate-700 dark:text-slate-300 leading-none py-1">
                                                 <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[0] ?? '{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}'">{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}</span>
                                                 <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[1] ?? '{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}'">{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}</span>
                                                 <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[2] ?? '{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}'">{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}</span>
@@ -490,10 +584,10 @@
                                             </div>
                                         </div>
 
-                                        <!-- Plot Area (SVG Grafik MRTG Membentang Lebar + Sumbu X Bawah) -->
-                                        <div class="flex-1 min-w-0 flex flex-col justify-between">
-                                            <div class="relative w-full h-[115px] sm:h-[125px] bg-[#f8fafc] dark:bg-[#060c18] border border-slate-700/80 dark:border-slate-600 rounded-xs overflow-hidden">
-                                                <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full">
+                                        <!-- Plot Area (SVG Grafik MRTG Memenuhi Seluruh Ruang Vertikal + Sumbu X Bawah) -->
+                                        <div class="flex-1 min-w-0 flex flex-col h-full">
+                                            <div class="relative w-full flex-1 min-h-[145px] sm:min-h-[165px] bg-[#f8fafc] dark:bg-[#060c18] border border-slate-700/80 dark:border-slate-600 rounded-xs overflow-hidden">
+                                                <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
                                                     <!-- Horizontal Dotted Grid Lines (5 Baris) -->
                                                     <line x1="0" y1="0" x2="720" y2="0" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
                                                     <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
@@ -514,7 +608,7 @@
                                                     <line x1="115.2" y1="0" x2="115.2" y2="105" stroke="#ef4444" stroke-width="1.3"/>
                                                     <line x1="633.6" y1="0" x2="633.6" y2="105" stroke="#ef4444" stroke-width="1.3"/>
 
-                                                    <!-- Inbound Traffic: Solid Green Area -->
+                                                    <!-- Inbound Traffic: Solid Green Area (Traffic Memenuhi Ruang Vertikal) -->
                                                     <polygon :points="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.in_polygon ?? '{{ $tData['mrtg']['in_polygon'] ?? '' }}'" 
                                                              fill="#00cc00" 
                                                              fill-opacity="0.95"/>
@@ -530,23 +624,17 @@
                                                 </svg>
                                             </div>
 
-                                            <!-- Sumbu X: Timeline Hari Terbentang Lebar -->
-                                            <div class="flex justify-between items-center text-[8px] sm:text-[9px] font-bold font-mono text-slate-600 dark:text-slate-400 mt-1.5 px-1 select-none">
-                                                <span>Mon</span>
-                                                <span>Sun</span>
-                                                <span>Sat</span>
-                                                <span>Fri</span>
-                                                <span>Thu</span>
-                                                <span>Wed</span>
-                                                <span>Tue</span>
-                                                <span>Mon</span>
-                                                <span>Sun</span>
+                                            <!-- Sumbu X: Timeline Hari / Tanggal Dinamis -->
+                                            <div class="flex justify-between items-center text-[8px] sm:text-[9px] font-bold font-mono text-slate-600 dark:text-slate-400 mt-1.5 px-1 select-none shrink-0">
+                                                <template x-for="(lbl, idx) in (telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="idx">
+                                                    <span x-text="lbl"></span>
+                                                </template>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- MRTG Summary Legend (In & Out Stats) -->
-                                    <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[9.5px] font-mono">
+                                    <!-- MRTG Summary Legend (In & Out Stats) Menempel Rapi di Bawah Grafik -->
+                                    <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[9.5px] font-mono shrink-0">
                                         <!-- Inbound Stats -->
                                         <div class="flex items-center gap-2">
                                             <span class="w-3 h-3 rounded-xs bg-[#00cc00] border border-emerald-600 shrink-0"></span>

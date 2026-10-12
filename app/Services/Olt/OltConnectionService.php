@@ -88,7 +88,7 @@ class OltConnectionService
     /**
      * Get Real-time Telemetry (Traffic Rx/Tx, Optical Power, Latency, Stats) from Physical OLT
      */
-    public function getOltRealTelemetry(object $olt): array
+    public function getOltRealTelemetry(object $olt, ?string $startDate = null, ?string $endDate = null): array
     {
         $kodeOlt = (string)($olt->kode_olt ?? 'OLT');
         $ip = trim($olt->ip_address ?? '');
@@ -181,7 +181,7 @@ class OltConnectionService
         $cpuUsage = (15 + (crc32($kodeOlt . 'cpu' . date('H')) % 18)) . '%';
 
         // MRTG Live Time Series Graph Data (In/Download, Out/Upload, Scales, Markers)
-        $mrtgData = $this->generateMrtgSeries($kodeOlt, $totalDownMbps, $totalUpMbps);
+        $mrtgData = $this->generateMrtgSeries($kodeOlt, $totalDownMbps, $totalUpMbps, $startDate, $endDate);
 
         return [
             'success' => true,
@@ -214,7 +214,7 @@ class OltConnectionService
     /**
      * Generate MRTG / Cacti / RRDTool style time-series traffic graph coordinates and legends
      */
-    protected function generateMrtgSeries(string $kodeOlt, float $currentDownMbps, float $currentUpMbps): array
+    protected function generateMrtgSeries(string $kodeOlt, float $currentDownMbps, float $currentUpMbps, ?string $startDate = null, ?string $endDate = null): array
     {
         $maxVal = max(13.2, ceil($currentDownMbps * 1.25 * 10) / 10);
         $step = $maxVal / 4;
@@ -226,7 +226,28 @@ class OltConnectionService
             '0.0 M',
         ];
 
-        $xLabels = ['Mon', 'Sun', 'Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon', 'Sun'];
+        // Hitung rentang tanggal (Default: 7 hari terakhir)
+        $startTs = !empty($startDate) ? strtotime($startDate) : strtotime('-7 days');
+        $endTs = !empty($endDate) ? strtotime($endDate) : time();
+        if ($endTs < $startTs) {
+            $tmp = $startTs;
+            $startTs = $endTs;
+            $endTs = $tmp;
+        }
+
+        // Generate 9 titik label sumbu X berdasarkan rentang tanggal
+        $xLabels = [];
+        $diffSeconds = max(86400, $endTs - $startTs);
+        $stepSeconds = $diffSeconds / 8;
+        for ($k = 0; $k <= 8; $k++) {
+            $currPointTs = $startTs + ($stepSeconds * $k);
+            if ($diffSeconds <= 86400 * 8) {
+                $xLabels[] = date('D', $currPointTs);
+            } else {
+                $xLabels[] = date('d/m', $currPointTs);
+            }
+        }
+
         $numPoints = 72;
         $width = 720;
         $height = 105;
@@ -238,7 +259,7 @@ class OltConnectionService
         $sumOut = 0;
         $maxOut = 0;
 
-        $seed = crc32($kodeOlt);
+        $seed = crc32($kodeOlt . date('Y-m-d', $startTs));
 
         for ($i = 0; $i < $numPoints; $i++) {
             $phase = ($i / 8) * 2 * M_PI;
@@ -289,6 +310,10 @@ class OltConnectionService
             'max_val' => $maxVal,
             'y_labels' => $yLabels,
             'x_labels' => $xLabels,
+            'start_date' => date('d-m-Y', $startTs),
+            'end_date' => date('d-m-Y', $endTs),
+            'start_date_input' => date('Y-m-d', $startTs),
+            'end_date_input' => date('Y-m-d', $endTs),
             'in_polygon' => $inPolygon,
             'out_polyline' => $outPolyline,
             'current_in' => number_format($currentDownMbps, 1) . ' M',

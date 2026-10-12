@@ -1476,56 +1476,24 @@
                 document.addEventListener('click', unlock, { once: true });
                 document.addEventListener('keydown', unlock, { once: true });
 
-                // Initial check once on load, then establish Real-Time SSE stream
+                // Initial check once on load, then periodic background polling
                 setTimeout(() => {
                     this.pollNotifications();
-                    this.connectSse();
                 }, 1000);
-            },
 
-            connectSse() {
-                if (!('EventSource' in window)) {
-                    this.startPollingFallback();
-                    return;
-                }
+                // Periodic check every 25 seconds when browser tab is active
+                setInterval(() => {
+                    if (!document.hidden) {
+                        this.pollNotifications();
+                    }
+                }, 25000);
 
-                if (this.eventSource) {
-                    try { this.eventSource.close(); } catch(e) {}
-                }
-
-                try {
-                    const sseUrl = `{{ route('api.notifications.stream') }}`;
-                    this.eventSource = new EventSource(sseUrl);
-
-                    this.eventSource.addEventListener('notification', (e) => {
-                        try {
-                            const notif = JSON.parse(e.data);
-                            const notifId = notif.id;
-                            if (notifId && !this.hasPlayed(notifId)) {
-                                this.markAsPlayed(notifId);
-                                this.enqueueNotification(notif);
-                            }
-                        } catch (err) {
-                            console.warn('SSE notification parse error:', err);
-                        }
-                    });
-
-                    this.eventSource.onerror = () => {
-                        // If closed unexpectedly, try reconnecting or start fallback
-                        if (this.eventSource && this.eventSource.readyState === EventSource.CLOSED) {
-                            setTimeout(() => this.connectSse(), 5000);
-                        }
-                    };
-                } catch (e) {
-                    console.warn('SSE connect error, falling back to polling:', e);
-                    this.startPollingFallback();
-                }
-            },
-
-            startPollingFallback() {
-                if (this.pollInterval) return;
-                this.pollNotifications();
-                this.pollInterval = setInterval(() => this.pollNotifications(), 15000);
+                // Check immediately when user switches back to this tab
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        this.pollNotifications();
+                    }
+                });
             },
 
             testSound() {
@@ -1715,42 +1683,6 @@
         });
     </script>
 
-    <!-- Ultra-Fast Intelligent Link Prefetching Engine (Instant Page Transitions) -->
-    <script>
-        (function() {
-            const prefetched = new Set();
-            function prefetch(url) {
-                if (!url || prefetched.has(url)) return;
-                try {
-                    const u = new URL(url, window.location.href);
-                    // Only prefetch internal links on the same origin and GET navigation
-                    if (u.origin !== window.location.origin) return;
-                    if (u.pathname.includes('/logout') || u.pathname.includes('/delete') || u.pathname.includes('/export')) return;
-                    
-                    prefetched.add(url);
-                    const link = document.createElement('link');
-                    link.rel = 'prefetch';
-                    link.href = url;
-                    link.as = 'document';
-                    document.head.appendChild(link);
-                } catch(e) {}
-            }
-
-            document.addEventListener('mouseover', function(e) {
-                const a = e.target.closest('a');
-                if (a && a.href && !a.hasAttribute('download') && a.target !== '_blank') {
-                    prefetch(a.href);
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchstart', function(e) {
-                const a = e.target.closest('a');
-                if (a && a.href && !a.hasAttribute('download') && a.target !== '_blank') {
-                    prefetch(a.href);
-                }
-            }, { passive: true });
-        })();
-    </script>
 
     <!-- Global Debounced Auto-Search & Focus Restoration Engine -->
     <script>

@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -569,6 +570,10 @@ class NocController extends Controller
      */
     protected function ensureOltTableColumns(): void
     {
+        if (Cache::has('schema_ensured_olt_tbl')) {
+            return;
+        }
+
         try {
             if (!Schema::hasTable('m_olt')) {
                 return;
@@ -621,6 +626,8 @@ class NocController extends Controller
                     }
                 });
             }
+
+            Cache::forever('schema_ensured_olt_tbl', true);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning("Auto-ensure m_olt columns notice: " . $e->getMessage());
         }
@@ -2404,41 +2411,43 @@ class NocController extends Controller
         $totalCustomersUnmapped = Schema::hasTable('trx_batchjob_register') ? DB::table('trx_batchjob_register')->whereNull('router_id')->count() : 0;
         $totalCustomers = Schema::hasTable('trx_batchjob_register') ? DB::table('trx_batchjob_register')->count() : 0;
 
-        // Auto-test live status setiap router (server-side)
+        // Auto-test live status setiap router (server-side, cached 60s per router agar tidak hanging)
         $liveStatus = [];
         foreach ($routers as $r) {
             $r->customer_count = $customerCounts[$r->id] ?? 0;
             
             if ($r->is_active) {
-                try {
-                    $pass = $r->password;
+                $liveStatus[$r->id] = Cache::remember('mikrotik_status_' . $r->id, 60, function () use ($r) {
                     try {
-                        $pass = Crypt::decryptString($pass);
-                    } catch (\Exception $e) {
-                        // Fallback to raw password
+                        $pass = $r->password;
+                        try {
+                            $pass = Crypt::decryptString($pass);
+                        } catch (\Exception $e) {
+                            // Fallback to raw password
+                        }
+
+                        $service = new \App\Services\Network\MikrotikService([
+                            'host' => $r->host,
+                            'port' => (int)($r->port ?: 18735),
+                            'username' => $r->username,
+                            'password' => $pass,
+                            'timeout' => 2,
+                        ]);
+
+                        $result = $service->testConnection();
+                        return [
+                            'status' => $result['success'] ? 'online' : 'offline',
+                            'identity' => $result['identity'] ?? null,
+                            'message' => $result['message'] ?? '',
+                        ];
+                    } catch (\Throwable $e) {
+                        return [
+                            'status' => 'offline',
+                            'identity' => null,
+                            'message' => $e->getMessage(),
+                        ];
                     }
-
-                    $service = new \App\Services\Network\MikrotikService([
-                        'host' => $r->host,
-                        'port' => (int)($r->port ?: 18735),
-                        'username' => $r->username,
-                        'password' => $pass,
-                        'timeout' => 3,
-                    ]);
-
-                    $result = $service->testConnection();
-                    $liveStatus[$r->id] = [
-                        'status' => $result['success'] ? 'online' : 'offline',
-                        'identity' => $result['identity'] ?? null,
-                        'message' => $result['message'] ?? '',
-                    ];
-                } catch (\Throwable $e) {
-                    $liveStatus[$r->id] = [
-                        'status' => 'offline',
-                        'identity' => null,
-                        'message' => $e->getMessage(),
-                    ];
-                }
+                });
             } else {
                 $liveStatus[$r->id] = [
                     'status' => 'inactive',

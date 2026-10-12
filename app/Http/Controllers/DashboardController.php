@@ -483,57 +483,76 @@ class DashboardController extends Controller
 
         if ($user->isFinance() || $user->isDirektur()) {
             try {
-                if (Schema::hasTable('trx_billing_layanan')) {
-                    $kpi = DB::table('trx_billing_layanan')
-                        ->where('bulan_tagihan', $selectedBulan)
-                        ->where('tahun_tagihan', $selectedTahun)
-                        ->selectRaw("
-                            COUNT(CASE WHEN status_bill_lay IN ('11', '12') THEN 1 END) as draft_count,
-                            COALESCE(SUM(CASE WHEN status_bill_lay IN ('11', '12') THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as draft_amount,
-                            COUNT(CASE WHEN status_bill_lay = '13' THEN 1 END) as publish_count,
-                            COALESCE(SUM(CASE WHEN status_bill_lay = '13' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as publish_amount,
-                            COUNT(CASE WHEN status_bill_lay = '15' THEN 1 END) as paid_count,
-                            COALESCE(SUM(CASE WHEN status_bill_lay = '15' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as paid_amount
-                        ")
-                        ->first();
+                $financeStats = Cache::remember("dashboard_finance_kpi_{$selectedBulan}_{$selectedTahun}", 60, function () use ($selectedBulan, $selectedTahun) {
+                    if (Schema::hasTable('trx_billing_layanan')) {
+                        $kpi = DB::table('trx_billing_layanan')
+                            ->where('bulan_tagihan', $selectedBulan)
+                            ->where('tahun_tagihan', $selectedTahun)
+                            ->selectRaw("
+                                COUNT(CASE WHEN status_bill_lay IN ('11', '12') THEN 1 END) as draft_count,
+                                COALESCE(SUM(CASE WHEN status_bill_lay IN ('11', '12') THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as draft_amount,
+                                COUNT(CASE WHEN status_bill_lay = '13' THEN 1 END) as publish_count,
+                                COALESCE(SUM(CASE WHEN status_bill_lay = '13' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as publish_amount,
+                                COUNT(CASE WHEN status_bill_lay = '15' THEN 1 END) as paid_count,
+                                COALESCE(SUM(CASE WHEN status_bill_lay = '15' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as paid_amount
+                            ")
+                            ->first();
 
-                    $draftCount = (int) ($kpi->draft_count ?? 0);
-                    $draftAmount = (float) ($kpi->draft_amount ?? 0);
-                    $publishCount = (int) ($kpi->publish_count ?? 0);
-                    $publishAmount = (float) ($kpi->publish_amount ?? 0);
-                    $paidCount = (int) ($kpi->paid_count ?? 0);
-                    $paidAmount = (float) ($kpi->paid_amount ?? 0);
+                        $draftCount = (int) ($kpi->draft_count ?? 0);
+                        $draftAmount = (float) ($kpi->draft_amount ?? 0);
+                        $publishCount = (int) ($kpi->publish_count ?? 0);
+                        $publishAmount = (float) ($kpi->publish_amount ?? 0);
+                        $paidCount = (int) ($kpi->paid_count ?? 0);
+                        $paidAmount = (float) ($kpi->paid_amount ?? 0);
 
-                    $viewTable = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
-                    $recentInvoices = DB::table($viewTable)
-                        ->where('bulan_tagihan', $selectedBulan)
-                        ->where('tahun_tagihan', $selectedTahun)
-                        ->orderBy('date_create', 'desc')
-                        ->limit(5)
-                        ->get();
-
-                    if ($recentInvoices->isEmpty()) {
+                        $viewTable = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
                         $recentInvoices = DB::table($viewTable)
+                            ->where('bulan_tagihan', $selectedBulan)
+                            ->where('tahun_tagihan', $selectedTahun)
                             ->orderBy('date_create', 'desc')
                             ->limit(5)
                             ->get();
+
+                        if ($recentInvoices->isEmpty()) {
+                            $recentInvoices = DB::table($viewTable)
+                                ->orderBy('date_create', 'desc')
+                                ->limit(5)
+                                ->get();
+                        }
+
+                        $regTable = Schema::hasTable('view_billing_reg') ? 'view_billing_reg' : (Schema::hasTable('trx_billing_reg') ? 'trx_billing_reg' : null);
+                        $totalRegPending = $regTable ? DB::table($regTable)->whereIn('status_bill_reg', ['11', '12', '13'])->count() : 0;
+
+                        return [
+                            'currentMonth' => $selectedBulan,
+                            'currentYear' => $selectedTahun,
+                            'draftCount' => $draftCount,
+                            'draftAmount' => $draftAmount,
+                            'publishCount' => $publishCount,
+                            'publishAmount' => $publishAmount,
+                            'paidCount' => $paidCount,
+                            'paidAmount' => $paidAmount,
+                            'totalRegPending' => $totalRegPending,
+                            'recentInvoices' => $recentInvoices->all(),
+                        ];
                     }
 
-                    $regTable = Schema::hasTable('view_billing_reg') ? 'view_billing_reg' : (Schema::hasTable('trx_billing_reg') ? 'trx_billing_reg' : null);
-                    $totalRegPending = $regTable ? DB::table($regTable)->whereIn('status_bill_reg', ['11', '12', '13'])->count() : 0;
-
-                    $financeStats = [
+                    return [
                         'currentMonth' => $selectedBulan,
                         'currentYear' => $selectedTahun,
-                        'draftCount' => $draftCount,
-                        'draftAmount' => $draftAmount,
-                        'publishCount' => $publishCount,
-                        'publishAmount' => $publishAmount,
-                        'paidCount' => $paidCount,
-                        'paidAmount' => $paidAmount,
-                        'totalRegPending' => $totalRegPending,
-                        'recentInvoices' => $recentInvoices,
+                        'draftCount' => 0,
+                        'draftAmount' => 0,
+                        'publishCount' => 0,
+                        'publishAmount' => 0,
+                        'paidCount' => 0,
+                        'paidAmount' => 0,
+                        'totalRegPending' => 0,
+                        'recentInvoices' => [],
                     ];
+                });
+
+                if (isset($financeStats['recentInvoices']) && is_array($financeStats['recentInvoices'])) {
+                    $financeStats['recentInvoices'] = collect($financeStats['recentInvoices']);
                 }
             } catch (\Throwable $e) {
                 Log::error('Dashboard Finance Stats Error: ' . $e->getMessage());

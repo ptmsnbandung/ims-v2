@@ -4052,7 +4052,11 @@ class FinanceController extends Controller
                       ->orWhere('customer_name', 'like', "%{$search}%");
                 });
             }
-            $confirmations = $qConf->orderByDesc('created_at')->limit(100)->get();
+            $confirmations = $qConf
+                ->orderByRaw("CASE WHEN status NOT IN ('approved', 'rejected') THEN 0 ELSE 1 END")
+                ->orderByDesc('created_at')
+                ->limit(100)
+                ->get();
         }
 
         // 3. Query Invoices from trx_billing_layanan
@@ -4088,13 +4092,15 @@ class FinanceController extends Controller
             'trx_billing_layanan.date_create',
             'trx_batchjob_register.nama_pelanggan',
         ])
+        ->orderByRaw("CASE WHEN trx_billing_layanan.status_bill_lay = '14' THEN 0 ELSE 1 END")
         ->orderByDesc(DB::raw('COALESCE(trx_billing_layanan.payment_paid, trx_billing_layanan.date_update, trx_billing_layanan.date_create)'))
-        ->limit(100)
+        ->limit(200)
         ->get();
 
         // 4. Transform & Gabungkan Data Notifikasi
         $items = collect();
         $seenKodes = [];
+        $nowJkt = Carbon::now('Asia/Jakarta');
 
         // Tambahkan dari Payment Confirmations terlebih dahulu
         foreach ($confirmations as $c) {
@@ -4105,8 +4111,8 @@ class FinanceController extends Controller
                 $seenKodes[str_replace('-', '/', $kodeBillingConf)] = true;
             }
 
-            $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: Carbon::now());
-            $carbonDate = Carbon::parse($cDate);
+            $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: $nowJkt);
+            $carbonDate = Carbon::parse($cDate, 'Asia/Jakarta');
             $isApproved = (($c->status ?? '') === 'approved');
 
             // Cek invoice terkait jika ada
@@ -4131,7 +4137,7 @@ class FinanceController extends Controller
                 'status' => $c->status ?? 'pending',
                 'is_approved' => $isApproved,
                 'date' => $carbonDate->format('d M Y H:i'),
-                'time_ago' => $carbonDate->diffForHumans(),
+                'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
                 'timestamp' => $carbonDate->timestamp,
             ]);
         }
@@ -4145,7 +4151,7 @@ class FinanceController extends Controller
             $isPaid = ((string)$b->status_bill_lay === '15');
             $nominal = (float) ($b->amount_paid ?: $b->total_layanan ?: 0);
             $dateStr = $b->payment_paid ?: ($b->date_update ?: $b->date_create);
-            $carbonDate = $dateStr ? Carbon::parse($dateStr) : Carbon::now();
+            $carbonDate = $dateStr ? Carbon::parse($dateStr, 'Asia/Jakarta') : $nowJkt;
 
             $items->push((object)[
                 'type' => 'billing',
@@ -4162,13 +4168,24 @@ class FinanceController extends Controller
                 'status' => $isPaid ? 'approved' : 'pending',
                 'is_approved' => $isPaid,
                 'date' => $carbonDate->format('d M Y H:i'),
-                'time_ago' => $carbonDate->diffForHumans(),
+                'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
                 'timestamp' => $carbonDate->timestamp,
             ]);
         }
 
-        // Urutkan item dari yang terbaru
-        $items = $items->sortByDesc('timestamp')->values();
+        // Urutkan item:
+        // 1. Yang menunggu approval (is_approved === false dan status !== 'rejected') selalu di paling atas
+        // 2. Berdasarkan waktu terbaru (timestamp DESC)
+        $items = $items->sort(function ($a, $b) {
+            $aPending = (!$a->is_approved && $a->status !== 'rejected') ? 1 : 0;
+            $bPending = (!$b->is_approved && $b->status !== 'rejected') ? 1 : 0;
+
+            if ($aPending !== $bPending) {
+                return $bPending <=> $aPending; // 1 (pending) selalu di atas 0
+            }
+
+            return $b->timestamp <=> $a->timestamp; // terbaru di atas
+        })->values();
 
         // Manual Pagination via LengthAwarePaginator
         $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;

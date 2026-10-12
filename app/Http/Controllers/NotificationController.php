@@ -656,7 +656,8 @@ class NotificationController extends Controller
                     $nominal = (float) ($b->amount_paid ?: $b->total_layanan ?: 0);
                     $nama = $b->nama_pelanggan ?? ($b->nomor_internet ?: 'Pelanggan');
                     $dateStr = $b->payment_paid ?: ($b->date_update ?: $b->date_create);
-                    $carbonDate = $dateStr ? Carbon::parse($dateStr) : Carbon::now();
+                    $nowJkt = Carbon::now('Asia/Jakarta');
+                    $carbonDate = $dateStr ? Carbon::parse($dateStr, 'Asia/Jakarta') : $nowJkt;
 
                     $payments[] = [
                         'id' => 'bill_' . md5($b->kode_billing_layanan . '_' . $dateStr),
@@ -669,7 +670,7 @@ class NotificationController extends Controller
                         'status_label' => $isPaid ? 'LUNAS' : 'MENUNGGU VERIFIKASI',
                         'merchant' => $b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : 'Online / Snap'),
                         'date' => $carbonDate->format('d M Y H:i'),
-                        'time_ago' => $carbonDate->diffForHumans(),
+                        'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
                         'timestamp' => $carbonDate->timestamp,
                         'url' => route('finance.billing-layanan', ['search' => $b->kode_billing_layanan]),
                     ];
@@ -685,9 +686,10 @@ class NotificationController extends Controller
                     ->limit(10)
                     ->get();
 
+                $nowJkt = Carbon::now('Asia/Jakarta');
                 foreach ($confirmations as $c) {
-                    $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: Carbon::now());
-                    $carbonDate = Carbon::parse($cDate);
+                    $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: $nowJkt);
+                    $carbonDate = Carbon::parse($cDate, 'Asia/Jakarta');
                     $merchant = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: 'Transfer Manual'));
                     $payments[] = [
                         'id' => 'conf_' . md5(($c->id ?? '') . '_' . ($c->kode_billing_layanan ?? '')),
@@ -700,15 +702,22 @@ class NotificationController extends Controller
                         'status_label' => 'MENUNGGU VERIFIKASI',
                         'merchant' => $merchant,
                         'date' => $carbonDate->format('d M Y H:i'),
-                        'time_ago' => $carbonDate->diffForHumans(),
+                        'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
                         'timestamp' => $carbonDate->timestamp,
                         'url' => route('finance.billing-layanan', ['search' => $c->kode_billing_layanan ?? '']),
                     ];
                 }
             }
 
-            // Urutkan berdasarkan timestamp terbaru
-            usort($payments, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+            // Urutkan: transaksi waiting di paling atas, lalu terbaru berdasarkan timestamp
+            usort($payments, function($a, $b) {
+                $aWaiting = ($a['status'] === 'waiting') ? 1 : 0;
+                $bWaiting = ($b['status'] === 'waiting') ? 1 : 0;
+                if ($aWaiting !== $bWaiting) {
+                    return $bWaiting <=> $aWaiting;
+                }
+                return $b['timestamp'] <=> $a['timestamp'];
+            });
             $payments = array_slice($payments, 0, 15);
 
             return response()->json([

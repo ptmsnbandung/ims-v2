@@ -227,9 +227,9 @@ class OltConnectionService
         ];
 
         $xLabels = ['Mon', 'Sun', 'Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon', 'Sun'];
-        $numPoints = 64;
-        $width = 360;
-        $height = 100;
+        $numPoints = 72;
+        $width = 720;
+        $height = 105;
 
         $inPoints = [];
         $outPoints = [];

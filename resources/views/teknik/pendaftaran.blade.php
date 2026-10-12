@@ -932,56 +932,79 @@
                     <span class="text-xs text-slate-700 dark:text-slate-300 font-semibold">Memuat Data Pendaftaran...</span>
                 </div>
 
-                <!-- Modal Header & 2-Step Indicator -->
-                <div class="px-5 py-3 sm:px-6 sm:py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80">
-                    <div class="flex items-center justify-between mb-2.5">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
+                <!-- Modal Header & 2-Step Indicator (Modern Blue Gradient) -->
+                <div class="relative overflow-hidden rounded-t-2xl px-5 py-3.5 sm:px-6 sm:py-4 border-b border-blue-500/20 text-white shadow-sm"
+                     style="background: linear-gradient(115deg, #0a2540 0%, #0f3964 28%, #1e4ea8 65%, #0284c7 90%, #06b6d4 100%);">
+                    
+                    <!-- Ambient Glow Effects -->
+                    <div class="pointer-events-none absolute -right-8 -top-8 w-44 h-44 bg-cyan-400/20 rounded-full blur-2xl"></div>
+                    <div class="pointer-events-none absolute left-1/4 -bottom-10 w-48 h-48 bg-blue-500/20 rounded-full blur-xl"></div>
+
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xs">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm sm:text-base font-bold text-white tracking-wide" id="modal-title" x-text="isEditMode ? 'Edit Pendaftaran: ' + editNomorInternet : 'Form Registration'"></h3>
+                                    <p class="text-[11px] text-blue-100/80" x-text="isEditMode ? 'Perbarui data pendaftaran dan instalasi pelanggan' : 'Pendaftaran pelanggan baru Internet System Management'"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Close button -->
+                            <button type="button" 
+                                    @click="modalOpen = false"
+                                    class="text-white/70 hover:text-white p-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur-sm transition cursor-pointer">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                 </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-900 dark:text-white tracking-wide" id="modal-title" x-text="isEditMode ? 'Edit Pendaftaran: ' + editNomorInternet : 'Form Registration'"></h3>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400" x-text="isEditMode ? 'Perbarui data pendaftaran dan instalasi pelanggan' : 'Pendaftaran pelanggan baru Internet System Management'"></p>
-                            </div>
-                        </div>
-                        
-                        <!-- Close button -->
-                        <button type="button" 
-                                @click="modalOpen = false"
-                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 transition">
-                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- 2-Step Progress Indicator -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <!-- Step 1 Tab -->
-                        <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition duration-150"
-                             :class="currentStep === 1 ? 'bg-blue-50/80 dark:bg-blue-950/50 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 shadow-xs' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'">
-                            <div class="w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs"
-                                 :class="currentStep === 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'">
-                                1
-                            </div>
-                            <div class="text-left">
-                                <span class="block text-xs font-bold leading-tight" :class="currentStep === 1 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">Langkah 1</span>
-                                <span class="block text-[10px] text-slate-500 dark:text-slate-400">Data Pelanggan & KTP</span>
-                            </div>
+                            </button>
                         </div>
 
-                        <!-- Step 2 Tab -->
-                        <div class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition duration-150"
-                             :class="currentStep === 2 ? 'bg-blue-50/80 dark:bg-blue-950/50 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 shadow-xs' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500'">
-                            <div class="w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs"
-                                 :class="currentStep === 2 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'">
-                                2
+                        <!-- 2-Step Progress Indicator -->
+                        <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                            <!-- Step 1 Tab -->
+                            <div class="flex items-center gap-2.5 px-3.5 py-2 rounded-xl transition duration-150 cursor-pointer"
+                                 :class="currentStep === 1 
+                                     ? 'bg-white text-slate-800 shadow-md ring-2 ring-white/50' 
+                                     : 'bg-white/10 text-white/80 border border-white/15 hover:bg-white/15 backdrop-blur-sm'"
+                                 @click="if(currentStep === 2) currentStep = 1">
+                                <div class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs transition"
+                                     :class="currentStep === 1 
+                                         ? 'bg-blue-600 text-white shadow-xs' 
+                                         : 'bg-white/20 text-white'">
+                                    <template x-if="currentStep === 2">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    </template>
+                                    <template x-if="currentStep !== 2">
+                                        <span>1</span>
+                                    </template>
+                                </div>
+                                <div class="text-left">
+                                    <span class="block text-xs font-bold leading-tight" :class="currentStep === 1 ? 'text-slate-900' : 'text-white'">Langkah 1</span>
+                                    <span class="block text-[10px]" :class="currentStep === 1 ? 'text-blue-600 font-medium' : 'text-blue-100/70'">Data Pelanggan & KTP</span>
+                                </div>
                             </div>
-                            <div class="text-left">
-                                <span class="block text-xs font-bold leading-tight" :class="currentStep === 2 ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'">Langkah 2</span>
-                                <span class="block text-[10px] text-slate-500 dark:text-slate-400">Layanan & Lokasi Pasang</span>
+
+                            <!-- Step 2 Tab -->
+                            <div class="flex items-center gap-2.5 px-3.5 py-2 rounded-xl transition duration-150 cursor-pointer"
+                                 :class="currentStep === 2 
+                                     ? 'bg-white text-slate-800 shadow-md ring-2 ring-white/50' 
+                                     : 'bg-white/10 text-white/80 border border-white/15 hover:bg-white/15 backdrop-blur-sm'"
+                                 @click="if(nikPenduduk.trim() && namaPelanggan.trim() && nomorHp.trim()) currentStep = 2">
+                                <div class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs transition"
+                                     :class="currentStep === 2 
+                                         ? 'bg-blue-600 text-white shadow-xs' 
+                                         : 'bg-white/20 text-white'">
+                                    2
+                                </div>
+                                <div class="text-left">
+                                    <span class="block text-xs font-bold leading-tight" :class="currentStep === 2 ? 'text-slate-900' : 'text-white'">Langkah 2</span>
+                                    <span class="block text-[10px]" :class="currentStep === 2 ? 'text-blue-600 font-medium' : 'text-blue-100/70'">Layanan & Lokasi Pasang</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1006,13 +1029,13 @@
                     <input type="hidden" name="nomor_internet" :value="editNomorInternet">
                     
                     <!-- STEP 1: DATA PELANGGAN & KTP -->
-                    <div x-show="currentStep === 1" class="space-y-3.5">
+                    <div x-show="currentStep === 1" class="space-y-4">
                         
                         <!-- Section 1: Identitas Pelanggan -->
                         <div class="space-y-2.5">
-                            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                <span>Identitas & Kontak Pelanggan</span>
+                            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                                <span class="w-2 h-2 rounded-full bg-blue-600 ring-4 ring-blue-100 dark:ring-blue-900/30"></span>
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Identitas & Kontak Pelanggan</span>
                             </div>
 
                             <!-- Row 1: NIK, Nama, Jenis Kelamin, Tanggal Lahir (4 equal columns) -->
@@ -1026,7 +1049,7 @@
                                            name="nik_penduduk" 
                                            required
                                            placeholder="16 Digit NIK" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -1037,19 +1060,23 @@
                                            name="nama_pelanggan" 
                                            required
                                            placeholder="NAMA LENGKAP PELANGGAN" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Jenis Kelamin <span class="text-rose-500">*</span>
                                     </label>
-                                    <div class="h-[36px] flex items-center justify-around px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950">
-                                        <label class="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
-                                            <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="1" class="w-3.5 h-3.5 text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer">
+                                    <div class="grid grid-cols-2 gap-1 h-[38px] p-1 bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg">
+                                        <label class="flex items-center justify-center gap-1.5 text-xs font-medium rounded-md cursor-pointer transition select-none"
+                                               :class="jenisKelamin === '1' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'">
+                                            <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="1" class="sr-only">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                             <span class="text-[11px]">Laki-laki</span>
                                         </label>
-                                        <label class="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium">
-                                            <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="2" class="w-3.5 h-3.5 text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer">
+                                        <label class="flex items-center justify-center gap-1.5 text-xs font-medium rounded-md cursor-pointer transition select-none"
+                                               :class="jenisKelamin === '2' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'">
+                                            <input type="radio" x-model="jenisKelamin" name="jenis_kelamin" value="2" class="sr-only">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                             <span class="text-[11px]">Perempuan</span>
                                         </label>
                                     </div>
@@ -1061,7 +1088,7 @@
                                     <input type="date" 
                                            x-model="tanggalLahir"
                                            name="tanggal_lahir" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                 </div>
                             </div>
 
@@ -1075,7 +1102,7 @@
                                            x-model="email"
                                            name="email" 
                                            placeholder="nama@email.com" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -1086,7 +1113,7 @@
                                            name="nomor_hp" 
                                            required
                                            placeholder="08xxxxxxxxxx" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -1096,25 +1123,25 @@
                                            x-model="nomorHp2"
                                            name="nomor_hp_2" 
                                            placeholder="08xxxxxxxxxx" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Tipe Pelanggan
                                     </label>
-                                    <label class="flex items-center gap-2 h-[36px] px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium hover:border-blue-400 transition">
+                                    <label class="flex items-center gap-2 h-[38px] px-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-700 dark:text-slate-300 cursor-pointer font-medium hover:border-blue-400 transition select-none">
                                         <input type="checkbox" 
                                                x-model="isCorporate" 
                                                name="is_corporate" 
                                                value="1" 
-                                               class="w-3.5 h-3.5 rounded text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer">
-                                        <span class="text-[11px]">Ya, Corporate / Instansi</span>
+                                               class="w-4 h-4 rounded text-blue-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer">
+                                        <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Ya, Corporate / Instansi</span>
                                     </label>
                                 </div>
                             </div>
 
                             <!-- Row 2b: Nama PIC (Shown when Corporate is checked) -->
-                            <div x-show="isCorporate" x-cloak class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center gap-2.5">
+                            <div x-show="isCorporate" x-cloak class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center gap-2.5">
                                 <div class="w-full sm:w-80 shrink-0">
                                     <label class="block text-[10.5px] font-bold text-amber-700 dark:text-amber-400 mb-1">
                                         Nama PIC (Penanggung Jawab Perusahaan) <span class="text-rose-500">*</span>
@@ -1124,19 +1151,19 @@
                                            name="pic" 
                                            :disabled="!isCorporate"
                                            placeholder="NAMA PENANGGUNG JAWAB" 
-                                           class="w-full h-[34px] bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-lg px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-lg px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <span class="text-[10.5px] text-amber-700 dark:text-amber-400 leading-tight">
-                                    Isikan nama perwakilan resmi atau PIC yang bertanggung jawab atas tagihan dan layanan instansi.
+                                    Isikan nama perwakilan resmi atau PIC yang bertanggung jawab atas tagihan dan administrasi layanan instansi.
                                 </span>
                             </div>
                         </div>
 
                         <!-- Section 2: Alamat KTP & Lampiran Dokumen -->
-                        <div class="space-y-2.5 pt-1.5 border-t border-slate-200/80 dark:border-slate-800/80">
-                            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                <span>Alamat KTP & Lampiran Dokumen</span>
+                        <div class="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                                <span class="w-2 h-2 rounded-full bg-emerald-600 ring-4 ring-emerald-100 dark:ring-emerald-900/30"></span>
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Alamat KTP & Lampiran Dokumen</span>
                             </div>
 
                             <!-- Row 3: Wilayah KTP (4 equal columns with Searchable Dropdowns) -->
@@ -1148,7 +1175,7 @@
                                     </label>
                                     <button type="button"
                                             @click="open = !open; if(open) $nextTick(() => $refs.searchInput?.focus())"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left cursor-pointer">
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left cursor-pointer">
                                         <span class="truncate" :class="!provinsiKtp ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getProvinsiKtpLabel() || 'Pilih Provinsi'"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -1194,7 +1221,7 @@
                                     <button type="button"
                                             :disabled="!provinsiKtp"
                                             @click="if(provinsiKtp) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
                                             :class="!provinsiKtp ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
                                         <span class="truncate" :class="!kotaKtp ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKotaKtpLabel() || (provinsiKtp ? 'Pilih Kota/Kabupaten' : 'Pilih Provinsi Dahulu')"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1241,7 +1268,7 @@
                                     <button type="button"
                                             :disabled="!kotaKtp"
                                             @click="if(kotaKtp) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
                                             :class="!kotaKtp ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
                                         <span class="truncate" :class="!kecamatanKtp ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKecamatanKtpLabel() || (kotaKtp ? 'Pilih Kecamatan' : 'Pilih Kota Dahulu')"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1289,7 +1316,7 @@
                                     <button type="button"
                                             :disabled="!kecamatanKtp"
                                             @click="if(kecamatanKtp) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
                                             :class="!kecamatanKtp ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
                                         <span class="truncate" :class="!kelurahanKtp ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKelurahanKtpLabel() || (kecamatanKtp ? 'Pilih Kelurahan' : 'Pilih Kecamatan Dahulu')"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1340,12 +1367,12 @@
                                                x-model="rtKtp"
                                                name="rt_ktp" 
                                                placeholder="RT (001)" 
-                                               class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
+                                               class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center font-medium">
                                         <input type="text" 
                                                x-model="rwKtp"
                                                name="rw_ktp" 
                                                placeholder="RW (002)" 
-                                               class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
+                                               class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center font-medium">
                                     </div>
                                 </div>
                                 <div>
@@ -1356,13 +1383,13 @@
                                            x-model="alamatKtp"
                                            name="alamat_ktp" 
                                            placeholder="Jalan, No Rumah, Dusun..." 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Foto KTP <span class="text-rose-500">*</span>
                                     </label>
-                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-lg px-2.5 py-1 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex items-center justify-center h-[36px]">
+                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-lg px-2.5 py-1 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex items-center justify-center h-[38px]">
                                         <input type="file" 
                                                name="foto_ktp" 
                                                accept="image/*"
@@ -1391,7 +1418,7 @@
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Foto Rumah / Lokasi <span class="text-rose-500">*</span>
                                     </label>
-                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-lg px-2.5 py-1 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex items-center justify-center h-[36px]">
+                                    <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-lg px-2.5 py-1 text-center bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 transition cursor-pointer flex items-center justify-center h-[38px]">
                                         <input type="file" 
                                                name="foto_rumah" 
                                                accept="image/*"
@@ -1426,9 +1453,9 @@
                         
                         <!-- Section 1: Paket Layanan & Sales -->
                         <div class="space-y-2.5">
-                            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                <span>Paket Layanan & Informasi Sales</span>
+                            <div class="flex items-center gap-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                                <span class="w-2 h-2 rounded-full bg-blue-600 ring-4 ring-blue-100 dark:ring-blue-900/30"></span>
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Paket Layanan & Informasi Sales</span>
                             </div>
 
                             <!-- Row 1: Layanan, Paket Bandwidth, Group Layanan, Nama Sales (4 equal columns) -->
@@ -1441,7 +1468,7 @@
                                             @change="fetchPaket()"
                                             name="kode_kategori_bandwith"
                                             required
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                         <option value="">Pilih Layanan</option>
                                         @foreach($layananList as $l)
                                             <option value="{{ $l->kode_kategori_bandwith }}">{{ $l->nama_kategori_bandwith }}</option>
@@ -1456,7 +1483,7 @@
                                     <button type="button"
                                             :disabled="!selectedLayanan || loadingPaket"
                                             @click="if(selectedLayanan && !loadingPaket) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
                                             :class="(!selectedLayanan || loadingPaket) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
                                         <span class="truncate" :class="!selectedPaket ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="loadingPaket ? 'Memuat paket...' : (getPaketLabel() || (selectedLayanan ? 'Pilih Paket Layanan' : 'Pilih Layanan Dahulu'))"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1500,7 +1527,7 @@
                                     </label>
                                     <select x-model="groupLayanan"
                                             name="group_layanan" 
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                         <option value="MEDIANET">MEDIANET</option>
                                         <option value="DNET">DNET</option>
                                         <option value="CORPORATE">CORPORATE</option>
@@ -1515,19 +1542,19 @@
                                            name="nama_sales" 
                                            required
                                            placeholder="NAMA SALES" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none uppercase transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                             </div>
                         </div>
 
                         <!-- Section 2: Detail Lokasi & Alamat Pemasangan -->
-                        <div class="space-y-2.5 pt-1.5 border-t border-slate-200/80 dark:border-slate-800/80">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                                    <span>Lokasi & Alamat Pemasangan</span>
+                        <div class="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-600 ring-4 ring-emerald-100 dark:ring-emerald-900/30"></span>
+                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Lokasi & Alamat Pemasangan</span>
                                 </div>
-                                <label class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">
+                                <label class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40 transition select-none">
                                     <input type="checkbox" 
                                            x-model="sameAsKtp"
                                            @change="syncKtpToPasang()"
@@ -1545,7 +1572,7 @@
                                     <select x-model="jenisBangunan"
                                             name="jenis_bangunan" 
                                             required
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
                                         <option value="">Pilih Jenis Bangunan</option>
                                         @foreach($bangunanList as $b)
                                             <option value="{{ $b->jenis_bangunan }}">{{ $b->jenis_bangunan }}</option>
@@ -1560,7 +1587,7 @@
                                            x-model="nomorBangunan"
                                            name="nomor_bangunan" 
                                            placeholder="LT2/15, BLOK C/22" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -1570,7 +1597,7 @@
                                            x-model="lonLat"
                                            name="lon_lat" 
                                            placeholder="-6.914744, 107.609810" 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -1580,7 +1607,7 @@
                                            x-model="locMaps"
                                            name="loc_maps" 
                                            placeholder="https://maps.app.goo.gl/..." 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                             </div>
 
@@ -1593,7 +1620,7 @@
                                     </label>
                                     <button type="button"
                                             @click="open = !open; if(open) $nextTick(() => $refs.searchInput?.focus())"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left cursor-pointer">
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left cursor-pointer">
                                         <span class="truncate" :class="!provinsiPasang ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getProvinsiPasangLabel() || 'Pilih Provinsi'"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -1639,7 +1666,7 @@
                                     <button type="button"
                                             :disabled="!provinsiPasang"
                                             @click="if(provinsiPasang) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
                                             :class="!provinsiPasang ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
                                         <span class="truncate" :class="!kotaPasang ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKotaPasangLabel() || (provinsiPasang ? 'Pilih Kota/Kabupaten' : 'Pilih Provinsi Dahulu')"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1686,7 +1713,7 @@
                                     <button type="button"
                                             :disabled="!kotaPasang"
                                             @click="if(kotaPasang) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
                                             :class="!kotaPasang ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
                                         <span class="truncate" :class="!kecamatanPasang ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKecamatanPasangLabel() || (kotaPasang ? 'Pilih Kecamatan' : 'Pilih Kota Dahulu')"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1734,7 +1761,7 @@
                                     <button type="button"
                                             :disabled="!kecamatanPasang"
                                             @click="if(kecamatanPasang) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
                                             :class="!kecamatanPasang ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
                                         <span class="truncate" :class="!kelurahanPasang ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="getKelurahanPasangLabel() || (kecamatanPasang ? 'Pilih Kelurahan' : 'Pilih Kecamatan Dahulu')"></span>
                                         <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1785,12 +1812,12 @@
                                                x-model="rtPasang"
                                                name="rt_pasang" 
                                                placeholder="RT (001)" 
-                                               class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
+                                               class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
                                         <input type="text" 
                                                x-model="rwPasang"
                                                name="rw_pasang" 
                                                placeholder="RW (002)" 
-                                               class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
+                                               class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 text-center">
                                     </div>
                                 </div>
                                 <div class="lg:col-span-2">
@@ -1802,7 +1829,7 @@
                                            name="alamat_pasang" 
                                            required
                                            placeholder="Jalan, Blok, Patokan lokasi pemasangan..." 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -1812,7 +1839,7 @@
                                            x-model="noteRequest"
                                            name="note_request" 
                                            placeholder="Catatan instalasi (opsional)..." 
-                                           class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
+                                           class="w-full h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500">
                                 </div>
                             </div>
                         </div>
@@ -1824,18 +1851,17 @@
                             </div>
                             <span class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400" x-text="isEditMode ? 'Nomor Pelanggan Tetap' : 'Dibuat otomatis oleh sistem'"></span>
                         </div>
-
                     </div>
 
                     <!-- Modal Wizard Footer Action Buttons -->
-                    <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <div class="mt-5 pt-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                         
                         <!-- Step 1 Controls -->
                         <template x-if="currentStep === 1">
                             <div class="w-full flex items-center justify-between">
                                 <button type="button" 
                                         @click="modalOpen = false"
-                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-700">
+                                        class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer border border-slate-300 dark:border-slate-700 shadow-xs">
                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                     </svg>
@@ -1844,9 +1870,9 @@
 
                                 <button type="button" 
                                         @click="nextToStep2()"
-                                        class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+                                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-md shadow-blue-500/20 cursor-pointer transform hover:-translate-y-0.5">
                                     <span>Lanjut ke Langkah 2</span>
-                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                                     </svg>
                                 </button>
@@ -1858,23 +1884,29 @@
                             <div class="w-full flex items-center justify-between">
                                 <button type="button" 
                                         @click="currentStep = 1"
-                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer border border-slate-200 dark:border-slate-700">
+                                        class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer border border-slate-300 dark:border-slate-700 shadow-xs">
                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                                     </svg>
                                     <span>Kembali ke Langkah 1</span>
                                 </button>
 
-                                <button type="submit" 
-                                        class="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
-                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                                    </svg>
-                                    <span x-text="isEditMode ? 'Simpan Perubahan' : 'Simpan Registrasi'"></span>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" 
+                                            @click="modalOpen = false"
+                                            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer border border-slate-300 dark:border-slate-700">
+                                        <span>Batal</span>
+                                    </button>
+                                    <button type="submit" 
+                                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-md shadow-emerald-600/25 cursor-pointer transform hover:-translate-y-0.5">
+                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                                        </svg>
+                                        <span x-text="isEditMode ? 'Simpan Perubahan' : 'Simpan Registrasi'"></span>
+                                    </button>
+                                </div>
                             </div>
                         </template>
-
                     </div>
                 </form>
             </div>

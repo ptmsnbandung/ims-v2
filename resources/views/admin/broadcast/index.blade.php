@@ -288,7 +288,7 @@
 
 
     <!-- LANGKAH 2 & 3: DAFTAR PELANGGAN & PENGIRIMAN -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs p-4 sm:p-5 space-y-3.5">
+    <div id="tabel-pelanggan" class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs p-4 sm:p-5 space-y-3.5 scroll-mt-20">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2.5">
             <div class="flex items-center gap-2.5">
                 <span class="w-6 h-6 rounded-full bg-[#128C7E] text-white font-bold text-xs flex items-center justify-center shrink-0">2</span>
@@ -308,13 +308,13 @@
         </div>
 
         <!-- Filter Toolbar -->
-        <form method="GET" action="{{ route('admin.broadcast') }}" class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-2.5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        <form id="filterBroadcastForm" method="GET" action="{{ route('admin.broadcast') }}" class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
                 
                 <!-- Filter Status Tagihan -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Status Pelanggan:</label>
-                    <select name="status_tagihan" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                    <select name="status_tagihan" onchange="submitBroadcastFilter(this.form)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                         <option value="all" {{ $selectedStatusTagihan == 'all' ? 'selected' : '' }}>🌐 Semua Pelanggan</option>
                         <option value="unpaid" {{ $selectedStatusTagihan == 'unpaid' ? 'selected' : '' }}>⚠️ Belum Lunas / Jatuh Tempo</option>
                         <option value="paid" {{ $selectedStatusTagihan == 'paid' ? 'selected' : '' }}>✅ Lunas (PAID)</option>
@@ -325,7 +325,7 @@
                 <!-- Filter Status Pengiriman WA -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Status Kirim WA:</label>
-                    <select name="status_kirim" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                    <select name="status_kirim" onchange="submitBroadcastFilter(this.form)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                         <option value="all" {{ ($selectedStatusKirim ?? 'all') == 'all' ? 'selected' : '' }}>Semua Status Kirim</option>
                         <option value="sent" {{ ($selectedStatusKirim ?? '') == 'sent' ? 'selected' : '' }}>✅ Sudah Terkirim</option>
                         <option value="unsent" {{ ($selectedStatusKirim ?? '') == 'unsent' ? 'selected' : '' }}>⏳ Belum Terkirim</option>
@@ -335,7 +335,7 @@
                 <!-- Filter Periode Bulan -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Bulan Tagihan:</label>
-                    <select name="bulan" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                    <select name="bulan" onchange="submitBroadcastFilter(this.form)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                         @for($m = 1; $m <= 12; $m++)
                             @php $monthVal = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
                             <option value="{{ $monthVal }}" {{ $selectedBulan == $monthVal ? 'selected' : '' }}>
@@ -348,11 +348,21 @@
                 <!-- Filter Periode Tahun -->
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Tahun Tagihan:</label>
-                    <select name="tahun" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                    <select name="tahun" onchange="submitBroadcastFilter(this.form)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
                         <option value="all" {{ $selectedTahun == 'all' ? 'selected' : '' }}>Semua Tahun</option>
                         @for($y = date('Y'); $y >= date('Y') - 3; $y--)
                             <option value="{{ $y }}" {{ $selectedTahun == $y ? 'selected' : '' }}>{{ $y }}</option>
                         @endfor
+                    </select>
+                </div>
+
+                <!-- Filter Pilihan Jumlah Tampilkan User -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Tampilkan:</label>
+                    <select name="per_page" onchange="submitBroadcastFilter(this.form)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                        @foreach([10, 25, 50, 100, 200] as $opt)
+                            <option value="{{ $opt }}" {{ $perPage == $opt ? 'selected' : '' }}>{{ $opt }} Data</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -371,7 +381,7 @@
                 </label>
 
                 <div class="flex items-center gap-1.5">
-                    <a href="{{ route('admin.broadcast') }}" class="px-2.5 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition">
+                    <a href="{{ route('admin.broadcast') }}#tabel-pelanggan" onclick="sessionStorage.setItem('broadcast_scroll_to_table', '1')" class="px-2.5 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition">
                         Reset Filter
                     </a>
                 </div>
@@ -547,9 +557,14 @@
                 </table>
             </div>
 
-            <!-- Pagination (Compact) -->
-            <div class="p-2.5 sm:p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs">
-                {{ $pelangganList->links() }}
+            <!-- Pagination & Info -->
+            <div class="p-2.5 sm:p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs flex flex-col sm:flex-row items-center justify-between gap-2.5">
+                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    Menampilkan <span class="font-bold text-slate-800 dark:text-slate-200">{{ $pelangganList->firstItem() ?? 0 }}</span> sampai <span class="font-bold text-slate-800 dark:text-slate-200">{{ $pelangganList->lastItem() ?? 0 }}</span> dari <span class="font-bold text-slate-800 dark:text-slate-200">{{ $pelangganList->total() }}</span> pelanggan
+                </div>
+                <div class="overflow-x-auto max-w-full">
+                    {{ $pelangganList->links() }}
+                </div>
             </div>
         </div>
     </div>
@@ -757,6 +772,11 @@ function broadcastApp() {
 
         init() {
             this.loadSelectedTemplate();
+            if (sessionStorage.getItem('broadcast_scroll_to_table') === '1' || window.location.hash === '#tabel-pelanggan') {
+                sessionStorage.removeItem('broadcast_scroll_to_table');
+                window.scrollToBroadcastTable?.(false);
+                setTimeout(() => window.scrollToBroadcastTable?.(false), 80);
+            }
         },
 
         toggleSelectAll(e) {
@@ -1029,5 +1049,81 @@ function broadcastApp() {
         }
     };
 }
+
+// Helper to submit filter form while keeping scroll position at the table
+window.submitBroadcastFilter = function(form) {
+    sessionStorage.setItem('broadcast_scroll_to_table', '1');
+    if (form) {
+        form.submit();
+    } else {
+        document.getElementById('filterBroadcastForm')?.submit();
+    }
+};
+
+window.scrollToBroadcastTable = function(smooth = false) {
+    const el = document.getElementById('tabel-pelanggan');
+    if (!el) return;
+
+    try {
+        el.scrollIntoView({
+            behavior: smooth ? 'smooth' : 'auto',
+            block: 'start'
+        });
+    } catch (e) {}
+
+    const scrollContainer = document.querySelector('.ims-main-scroll');
+    if (scrollContainer) {
+        const headerEl = document.querySelector('header.sticky');
+        const headerHeight = headerEl ? headerEl.offsetHeight : 64;
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const offset = (elRect.top - containerRect.top) + scrollContainer.scrollTop - headerHeight - 12;
+        
+        scrollContainer.scrollTo({
+            top: Math.max(0, offset),
+            behavior: smooth ? 'smooth' : 'auto'
+        });
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    const filterForm = document.getElementById('filterBroadcastForm');
+    if (filterForm) {
+        filterForm.addEventListener('change', function (e) {
+            if (e.target && ['status_tagihan', 'status_kirim', 'bulan', 'tahun', 'per_page'].includes(e.target.name)) {
+                sessionStorage.setItem('broadcast_scroll_to_table', '1');
+            }
+        });
+        filterForm.addEventListener('input', function (e) {
+            if (e.target && e.target.name === 'search') {
+                sessionStorage.setItem('broadcast_scroll_to_table', '1');
+            }
+        });
+        filterForm.addEventListener('submit', function () {
+            sessionStorage.setItem('broadcast_scroll_to_table', '1');
+        });
+    }
+
+    // Attach click listeners to pagination links so page stays at table
+    document.querySelectorAll('#tabel-pelanggan a').forEach(function(link) {
+        link.addEventListener('click', function () {
+            sessionStorage.setItem('broadcast_scroll_to_table', '1');
+        });
+    });
+
+    // Check if scroll to table is needed
+    if (sessionStorage.getItem('broadcast_scroll_to_table') === '1' || window.location.hash === '#tabel-pelanggan') {
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        sessionStorage.removeItem('broadcast_scroll_to_table');
+        
+        window.scrollToBroadcastTable(false);
+        requestAnimationFrame(() => window.scrollToBroadcastTable(false));
+        setTimeout(() => window.scrollToBroadcastTable(false), 50);
+        setTimeout(() => window.scrollToBroadcastTable(false), 150);
+        setTimeout(() => window.scrollToBroadcastTable(false), 350);
+    }
+});
 </script>
 @endsection

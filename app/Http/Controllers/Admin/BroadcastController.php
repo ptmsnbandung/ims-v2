@@ -643,7 +643,11 @@ class BroadcastController extends Controller
         $selectedTahun = $request->filled('tahun') ? (string)$request->input('tahun') : $currentYear;
 
         $selectedWilayah = $request->input('wilayah', 'all');
-        $perPage = (int) $request->input('per_page', 15);
+        $allowedPerPage = [10, 25, 50, 100, 200];
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, $allowedPerPage)) {
+            $perPage = 10;
+        }
 
         $baseTable = '';
         $cols = [];
@@ -742,7 +746,8 @@ class BroadcastController extends Controller
 
         $pelangganList = $query->orderBy($sortField, 'asc')
             ->paginate($perPage)
-            ->withQueryString();
+            ->withQueryString()
+            ->fragment('tabel-pelanggan');
 
         foreach ($pelangganList as $p) {
             $p->clean_hp = $this->formatWaPhone($p->nomor_hp ?? '');

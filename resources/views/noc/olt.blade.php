@@ -112,7 +112,6 @@
     <!-- =================================================================== -->
     <div class="ims-banner relative overflow-hidden rounded-xl p-3.5 sm:p-4 shadow-sm border border-teal-500/20"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
-        <div class="pointer-events-none absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3.5 relative z-10">
             <div class="flex items-start sm:items-center gap-3">
                 <!-- Icon OLT Server -->
@@ -350,7 +349,7 @@
                             </div>
 
                             <!-- 3. SECTION KHUSUS: DATA TRAFFIC & OPTICAL TELEMETRY (REAL DARI OLT) -->
-                            <div class="p-3 sm:p-3.5 rounded-xl bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-50 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800/90 shadow-inner space-y-3">
+                            <div class="p-3 sm:p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 shadow-inner space-y-3">
                                 
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-1.5">
@@ -367,15 +366,15 @@
                                     <!-- Download Traffic Bar -->
                                     <div class="space-y-1">
                                         <div class="flex items-center justify-between text-[11px]">
-                                            <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400 font-medium">
-                                                <svg class="w-3 h-3 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                                                </svg>
-                                                <span>Download (Rx)</span>
-                                            </span>
-                                            <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400" x-text="telemetryMap['{{ $olt->kode_olt }}']?.download_formatted ?? '{{ $tData['download_formatted'] ?? '0 Mbps' }}'">
-                                                {{ $tData['download_formatted'] ?? '0 Mbps' }}
-                                            </span>
+                                             <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400 font-medium">
+                                                 <svg class="w-3 h-3 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                                                 </svg>
+                                                 <span>Download (Rx)</span>
+                                             </span>
+                                             <span class="font-mono font-bold text-cyan-600 dark:text-cyan-400" x-text="telemetryMap['{{ $olt->kode_olt }}']?.download_formatted ?? '{{ $tData['download_formatted'] ?? '0 Mbps' }}'">
+                                                 {{ $tData['download_formatted'] ?? '0 Mbps' }}
+                                             </span>
                                         </div>
                                         <div class="h-2 w-full rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden shadow-inner">
                                             <div class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-700 ease-out"
@@ -386,15 +385,15 @@
                                     <!-- Upload Traffic Bar -->
                                     <div class="space-y-1">
                                         <div class="flex items-center justify-between text-[11px]">
-                                            <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400 font-medium">
-                                                <svg class="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-                                                </svg>
-                                                <span>Upload (Tx)</span>
-                                            </span>
-                                            <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400" x-text="telemetryMap['{{ $olt->kode_olt }}']?.upload_formatted ?? '{{ $tData['upload_formatted'] ?? '0 Mbps' }}'">
-                                                {{ $tData['upload_formatted'] ?? '0 Mbps' }}
-                                            </span>
+                                             <span class="flex items-center gap-1 text-slate-600 dark:text-slate-400 font-medium">
+                                                 <svg class="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                                                 </svg>
+                                                 <span>Upload (Tx)</span>
+                                             </span>
+                                             <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400" x-text="telemetryMap['{{ $olt->kode_olt }}']?.upload_formatted ?? '{{ $tData['upload_formatted'] ?? '0 Mbps' }}'">
+                                                 {{ $tData['upload_formatted'] ?? '0 Mbps' }}
+                                             </span>
                                         </div>
                                         <div class="h-2 w-full rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden shadow-inner">
                                             <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-700 ease-out"
@@ -425,6 +424,117 @@
                                             </span>
                                             <span class="text-[9px] px-1 py-0.2 rounded font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                                                 Optimal
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. SECTION KHUSUS: MRTG LIVE TIME TRAFFIC GRAPH (PERSIS GAMBAR NOC MRTG/RRD) -->
+                            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Traffic Live Time (MRTG)</span>
+                                    </div>
+                                    <span class="text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                                        Real-time Monitor
+                                    </span>
+                                </div>
+
+                                <!-- Box Frame Grafik MRTG -->
+                                <div class="p-2 sm:p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 shadow-inner">
+                                    <div class="flex items-stretch gap-1.5">
+                                        <!-- Sumbu Y Kiri: Label "Bits per Second" + Angka Skala Y -->
+                                        <div class="flex items-center gap-1 select-none shrink-0">
+                                            <span class="text-[8px] font-bold tracking-tight text-slate-600 dark:text-slate-400" 
+                                                  style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                                                Bits per Second
+                                            </span>
+
+                                            <div class="flex flex-col justify-between items-end h-[95px] text-[8.5px] font-mono font-bold text-slate-700 dark:text-slate-300 leading-none py-0.5">
+                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[0] ?? '{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}'">{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}</span>
+                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[1] ?? '{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}'">{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}</span>
+                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[2] ?? '{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}'">{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}</span>
+                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[3] ?? '{{ $tData['mrtg']['y_labels'][3] ?? '3.3 M' }}'">{{ $tData['mrtg']['y_labels'][3] ?? '3.3 M' }}</span>
+                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[4] ?? '{{ $tData['mrtg']['y_labels'][4] ?? '0.0 M' }}'">{{ $tData['mrtg']['y_labels'][4] ?? '0.0 M' }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Plot Area (SVG Grafik MRTG + Sumbu X Bawah) -->
+                                        <div class="flex-1 min-w-0 flex flex-col">
+                                            <div class="relative w-full h-[95px] bg-[#f8fafc] dark:bg-[#060c18] border border-slate-700/80 dark:border-slate-600 rounded-xs overflow-hidden">
+                                                <svg viewBox="0 0 360 100" preserveAspectRatio="none" class="w-full h-full">
+                                                    <!-- Horizontal Dotted Grid Lines -->
+                                                    <line x1="0" y1="0" x2="360" y2="0" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="0" y1="25" x2="360" y2="25" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="0" y1="50" x2="360" y2="50" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="0" y1="75" x2="360" y2="75" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="0" y1="100" x2="360" y2="100" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+
+                                                    <!-- Vertical Dotted Grid Lines -->
+                                                    <line x1="45" y1="0" x2="45" y2="100" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="90" y1="0" x2="90" y2="100" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="135" y1="0" x2="135" y2="100" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="180" y1="0" x2="180" y2="100" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="225" y1="0" x2="225" y2="100" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="270" y1="0" x2="270" y2="100" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                    <line x1="315" y1="0" x2="315" y2="100" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+
+                                                    <!-- Red Vertical Markers (Marker Hari) -->
+                                                    <line x1="57.6" y1="0" x2="57.6" y2="100" stroke="#ef4444" stroke-width="1.3"/>
+                                                    <line x1="316.8" y1="0" x2="316.8" y2="100" stroke="#ef4444" stroke-width="1.3"/>
+
+                                                    <!-- Inbound Traffic: Solid Green Area -->
+                                                    <polygon :points="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.in_polygon ?? '{{ $tData['mrtg']['in_polygon'] ?? '' }}'" 
+                                                             fill="#00cc00" 
+                                                             fill-opacity="0.95"/>
+
+                                                    <!-- Outbound Traffic: Solid Blue Line -->
+                                                    <polyline :points="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.out_polyline ?? '{{ $tData['mrtg']['out_polyline'] ?? '' }}'" 
+                                                              fill="none" 
+                                                              stroke="#0000ff" 
+                                                              stroke-width="1.6"/>
+
+                                                    <!-- Red Arrow Indicator at 0.0M -->
+                                                    <polygon points="0,96 6,100 0,104" fill="#ef4444"/>
+                                                </svg>
+                                            </div>
+
+                                            <!-- Sumbu X: Timeline Hari -->
+                                            <div class="flex justify-between items-center text-[7.5px] font-bold font-mono text-slate-600 dark:text-slate-400 mt-1 px-0.5 select-none">
+                                                <span>Mon</span>
+                                                <span>Sun</span>
+                                                <span>Sat</span>
+                                                <span>Fri</span>
+                                                <span>Thu</span>
+                                                <span>Wed</span>
+                                                <span>Tue</span>
+                                                <span>Mon</span>
+                                                <span>Sun</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- MRTG Summary Legend (In & Out Stats) -->
+                                    <div class="mt-2 pt-1.5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[9px] font-mono">
+                                        <!-- Inbound Stats -->
+                                        <div class="flex items-center gap-1.5 truncate">
+                                            <span class="w-2.5 h-2.5 rounded-xs bg-[#00cc00] border border-emerald-600 shrink-0"></span>
+                                            <span class="text-slate-600 dark:text-slate-400 font-bold">In:</span>
+                                            <span class="text-slate-700 dark:text-slate-200">
+                                                Cur: <strong class="text-emerald-600 dark:text-emerald-400" x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.current_in ?? '{{ $tData['mrtg']['current_in'] ?? '0.0 M' }}'">{{ $tData['mrtg']['current_in'] ?? '0.0 M' }}</strong>
+                                                Max: <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.max_in ?? '{{ $tData['mrtg']['max_in'] ?? '0.0 M' }}'">{{ $tData['mrtg']['max_in'] ?? '0.0 M' }}</span>
+                                            </span>
+                                        </div>
+
+                                        <!-- Outbound Stats -->
+                                        <div class="flex items-center gap-1.5 truncate">
+                                            <span class="w-2.5 h-1 rounded-xs bg-[#0000ff] shrink-0"></span>
+                                            <span class="text-slate-600 dark:text-slate-400 font-bold">Out:</span>
+                                            <span class="text-slate-700 dark:text-slate-200">
+                                                Cur: <strong class="text-blue-600 dark:text-blue-400" x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.current_out ?? '{{ $tData['mrtg']['current_out'] ?? '0.0 M' }}'">{{ $tData['mrtg']['current_out'] ?? '0.0 M' }}</strong>
+                                                Max: <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.max_out ?? '{{ $tData['mrtg']['max_out'] ?? '0.0 M' }}'">{{ $tData['mrtg']['max_out'] ?? '0.0 M' }}</span>
                                             </span>
                                         </div>
                                     </div>

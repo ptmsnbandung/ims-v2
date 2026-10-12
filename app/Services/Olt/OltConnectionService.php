@@ -869,24 +869,64 @@ class OltConnectionService
                 $sn = $vendorPrefix . $hexPart;
             }
 
-            // Status koneksi (Online / Offline / Suspend)
-            $isOnline = ($cust->status_reg == '20') ? (($hash % 20) !== 0) : false; // 95% online
+            // Status koneksi standar NOC / Teknisi (UP, DOWN, LOS, SUSPEND)
             $isSuspend = in_array($cust->status_reg, ['21', '21.1']);
-            $statusText = $isSuspend ? 'suspend' : ($isOnline ? 'online' : 'offline');
+            $isOnline = false;
+            $isLos = false;
+            $statusText = 'DOWN';
 
-            // Optical Power (Redaman)
-            $rxPowerBase = -19.50 - (($hash % 60) / 10);
-            if (($hash % 15) === 0) {
-                $rxPowerBase = -27.20 - (($hash % 30) / 10);
-            }
-            $rxPower = round($rxPowerBase, 2);
-            $txPower = round(2.10 + (($hash % 10) / 10), 2);
+            if ($isSuspend) {
+                $statusText = 'SUSPEND';
+                $rxPower = -21.00;
+                $txPower = 0.00;
+                $redamanStatus = 'optimal';
+                $rxPowerDisplay = '-21.00 dBm (Isolir)';
+                $uptimeText = 'Terisolir (Suspend)';
+            } elseif ($cust->status_reg == '20') {
+                if (($hash % 22) === 0) {
+                    // Sinyal optik hilang / kabel FO putus -> LOS (Loss of Signal)
+                    $statusText = 'LOS';
+                    $isLos = true;
+                    $rxPower = -34.50 - (($hash % 15) / 10);
+                    $txPower = 0.00;
+                    $redamanStatus = 'kritis';
+                    $rxPowerDisplay = 'No Signal (LOS)';
+                    $uptimeText = 'LOS (Loss of Signal)';
+                } elseif (($hash % 16) === 0) {
+                    // Modem mati / adaptor padam -> DOWN
+                    $statusText = 'DOWN';
+                    $rxPower = -40.00;
+                    $txPower = 0.00;
+                    $redamanStatus = 'kritis';
+                    $rxPowerDisplay = 'Power Off';
+                    $uptimeText = 'Down (Power Off)';
+                } else {
+                    // Koneksi aktif -> UP
+                    $statusText = 'UP';
+                    $isOnline = true;
+                    $rxPowerBase = -19.50 - (($hash % 60) / 10);
+                    if (($hash % 15) === 0) {
+                        $rxPowerBase = -27.20 - (($hash % 30) / 10);
+                    }
+                    $rxPower = round($rxPowerBase, 2);
+                    $txPower = round(2.10 + (($hash % 10) / 10), 2);
 
-            $redamanStatus = 'optimal';
-            if ($rxPower < -26.5) {
+                    $redamanStatus = 'optimal';
+                    if ($rxPower < -26.5) {
+                        $redamanStatus = 'kritis';
+                    } elseif ($rxPower < -24.0) {
+                        $redamanStatus = 'normal';
+                    }
+                    $rxPowerDisplay = $rxPower . ' dBm';
+                    $uptimeText = floor($hash % 25 + 1) . 'd ' . floor($hash % 24) . 'h ' . floor($hash % 60) . 'm';
+                }
+            } else {
+                $statusText = 'DOWN';
+                $rxPower = -40.00;
+                $txPower = 0.00;
                 $redamanStatus = 'kritis';
-            } elseif ($rxPower < -24.0) {
-                $redamanStatus = 'normal';
+                $rxPowerDisplay = 'Down (Offline)';
+                $uptimeText = 'Down (Offline)';
             }
 
             // Bandwidth & Traffic Rate
@@ -894,8 +934,10 @@ class OltConnectionService
             $downRate = $isOnline ? round(max(0.6, $nominalBw * (0.25 + (($hash % 65) / 100))), 1) : 0.0;
             $upRate = $isOnline ? round(max(0.2, $downRate * (0.28 + (($hash % 25) / 100))), 1) : 0.0;
 
-            $totalRx += $downRate;
-            $totalTx += $upRate;
+            if ($isOnline) {
+                $totalRx += $downRate;
+                $totalTx += $upRate;
+            }
             $sumRxPower += $rxPower;
 
             $address = $cust->alamat_pasang ?: ($cust->alamat_p ?: 'Bandung, Jawa Barat');
@@ -907,10 +949,12 @@ class OltConnectionService
                 'nama_pelanggan' => $cust->nama_pelanggan ?: 'Pelanggan FTTH',
                 'sn' => $sn,
                 'status' => $statusText,
+                'status_raw' => $isOnline ? 'Online' : ($isLos ? 'LOS' : 'Offline'),
                 'is_online' => $isOnline,
+                'is_los' => $isLos,
                 'is_suspend' => $isSuspend,
-                'rx_power' => $rxPower . ' dBm',
-                'tx_power' => '+' . $txPower . ' dBm',
+                'rx_power' => $rxPowerDisplay,
+                'tx_power' => ($txPower > 0 ? ('+' . $txPower . ' dBm') : '0.00 dBm'),
                 'rx_power_num' => $rxPower,
                 'redaman_status' => $redamanStatus,
                 'download_mbps' => $downRate,
@@ -925,20 +969,23 @@ class OltConnectionService
                 'address' => $address,
                 'phone' => $cust->nomor_hp ?? '-',
                 'pop_name' => $cust->nama_pop ?? ($olt->nama_pop ?? 'POP MSN'),
-                'uptime' => $isOnline ? (floor($hash % 25 + 1) . 'd ' . floor($hash % 24) . 'h ' . floor($hash % 60) . 'm') : 'Offline (LOS)',
+                'uptime' => $uptimeText,
             ];
         }
 
         usort($onus, fn($a, $b) => $a['onu_id'] <=> $b['onu_id']);
 
         $totalCount = count($onus);
-        $onlineCount = count(array_filter($onus, fn($o) => $o['is_online']));
-        $offlineCount = $totalCount - $onlineCount;
+        $upCount = count(array_filter($onus, fn($o) => $o['status'] === 'UP'));
+        $downCount = count(array_filter($onus, fn($o) => $o['status'] === 'DOWN'));
+        $losCount = count(array_filter($onus, fn($o) => $o['status'] === 'LOS'));
+        $suspendCount = count(array_filter($onus, fn($o) => $o['status'] === 'SUSPEND'));
+        $offlineCount = $downCount + $losCount;
         $avgRxPower = $totalCount > 0 ? round($sumRxPower / $totalCount, 2) : -20.5;
 
         // Hitung rata-rata penggunaan traffic per ONU
-        $avgRxPerOnu = $onlineCount > 0 ? round($totalRx / $onlineCount, 2) : 0.0;
-        $avgTxPerOnu = $onlineCount > 0 ? round($totalTx / $onlineCount, 2) : 0.0;
+        $avgRxPerOnu = $upCount > 0 ? round($totalRx / $upCount, 2) : 0.0;
+        $avgTxPerOnu = $upCount > 0 ? round($totalTx / $upCount, 2) : 0.0;
 
         // Tambahkan porsi penggunaan traffic per ONU terhadap total port
         foreach ($onus as &$o) {
@@ -953,7 +1000,11 @@ class OltConnectionService
             'port_name' => "PON {$ponIndex}",
             'interface_name' => "gpon-olt_1/1/{$ponIndex}",
             'total_onus' => $totalCount,
-            'online_onus' => $onlineCount,
+            'online_onus' => $upCount,
+            'up_onus' => $upCount,
+            'down_onus' => $downCount,
+            'los_onus' => $losCount,
+            'suspend_onus' => $suspendCount,
             'offline_onus' => $offlineCount,
             'avg_rx_power' => $avgRxPower . ' dBm',
             'total_download_mbps' => round($totalRx, 1),

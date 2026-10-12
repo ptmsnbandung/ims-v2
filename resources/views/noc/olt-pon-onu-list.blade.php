@@ -114,86 +114,101 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 3. KPI STATS SUMMARY CARDS (7 KOLOM DENGAN RATA-RATA TRAFFIC / ONU) -->
+    <!-- 3. KPI STATS SUMMARY CARDS (ISTILAH NOC: UP, DOWN, LOS & TRAFFIC)    -->
     <!-- =================================================================== -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-        <!-- Card 1: Total ONU Terhubung -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <!-- Card 1: Total Terdaftar -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs">
-            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total ONU Terhubung</div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total ONU</div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-slate-900 dark:text-white" x-text="stats.total"></span>
                 <span class="text-[10px] font-semibold text-slate-500">Unit</span>
             </div>
             <div class="text-[10px] text-slate-400 mt-1 truncate">
-                Slot Max: 128 ONU
+                Slot Max: 128
             </div>
         </div>
 
-        <!-- Card 2: ONU Online -->
+        <!-- Card 2: ONU UP (HIJAU) -->
         <div class="bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/50 rounded-xl p-3 shadow-2xs">
             <div class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>ONU Online</span>
+                <span>ONU UP</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
-                <span class="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400" x-text="stats.online"></span>
-                <span class="text-[10px] font-bold text-emerald-600" x-text="Math.round((stats.online / Math.max(1, stats.total)) * 100) + '%'"></span>
+                <span class="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400" x-text="stats.up"></span>
+                <span class="text-[10px] font-bold text-emerald-600" x-text="Math.round((stats.up / Math.max(1, stats.total)) * 100) + '%'"></span>
             </div>
             <div class="text-[10px] text-emerald-600/90 dark:text-emerald-400/90 mt-1 truncate">
-                Beroperasi Normal
+                Online / Working
             </div>
         </div>
 
-        <!-- Card 3: ONU Offline (LOS) -->
-        <div class="bg-white dark:bg-slate-900 border border-rose-200/80 dark:border-rose-900/50 rounded-xl p-3 shadow-2xs">
-            <div class="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                <span>ONU Offline</span>
+        <!-- Card 3: ONU DOWN (MERAH) -->
+        <div class="bg-white dark:bg-slate-900 border border-red-200/80 dark:border-red-900/50 rounded-xl p-3 shadow-2xs">
+            <div class="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                <span>ONU DOWN</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
-                <span class="text-xl font-black font-mono text-rose-600 dark:text-rose-400" x-text="stats.offline"></span>
-                <span class="text-[10px] font-bold text-rose-600" x-text="Math.round((stats.offline / Math.max(1, stats.total)) * 100) + '%'"></span>
+                <span class="text-xl font-black font-mono text-red-600 dark:text-red-400" x-text="stats.down"></span>
+                <span class="text-[10px] font-bold text-red-600" x-text="Math.round((stats.down / Math.max(1, stats.total)) * 100) + '%'"></span>
             </div>
-            <div class="text-[10px] text-rose-600/90 dark:text-rose-400/90 mt-1 truncate">
-                LOS / Power Off
+            <div class="text-[10px] text-red-600/90 dark:text-red-400/90 mt-1 truncate">
+                Power Off / Offline
             </div>
         </div>
 
-        <!-- Card 4: Total Download Rx -->
+        <!-- Card 4: ONU LOS (LOSS OF SIGNAL - MERAH ROSE / PING) -->
+        <div class="bg-white dark:bg-slate-900 border border-rose-200/80 dark:border-rose-900/50 rounded-xl p-3 shadow-2xs">
+            <div class="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                <span>ONU LOS</span>
+            </div>
+            <div class="flex items-baseline justify-between mt-1">
+                <span class="text-xl font-black font-mono text-rose-600 dark:text-rose-400" x-text="stats.los"></span>
+                <span class="text-[10px] font-bold text-rose-600" x-text="Math.round((stats.los / Math.max(1, stats.total)) * 100) + '%'"></span>
+            </div>
+            <div class="text-[10px] text-rose-600/90 dark:text-rose-400/90 mt-1 truncate">
+                Optik Putus / Hilang
+            </div>
+        </div>
+
+        <!-- Card 5: Total Traffic Rx -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs">
             <div class="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider flex items-center gap-1">
                 <svg class="w-3 h-3 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
-                <span>Total Traffic Rx</span>
+                <span>Total Rx (Down)</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-cyan-600 dark:text-cyan-400" x-text="stats.totalRx.toFixed(1)"></span>
                 <span class="text-[10px] font-semibold text-slate-500">Mbps</span>
             </div>
             <div class="text-[10px] text-slate-400 mt-1 truncate">
-                Download Port PON
+                Agregat Download
             </div>
         </div>
 
-        <!-- Card 5: Total Upload Tx -->
+        <!-- Card 6: Total Traffic Tx -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs">
             <div class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
                 <svg class="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
-                <span>Total Traffic Tx</span>
+                <span>Total Tx (Up)</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-blue-600 dark:text-blue-400" x-text="stats.totalTx.toFixed(1)"></span>
                 <span class="text-[10px] font-semibold text-slate-500">Mbps</span>
             </div>
             <div class="text-[10px] text-slate-400 mt-1 truncate">
-                Upload Port PON
+                Agregat Upload
             </div>
         </div>
 
-        <!-- Card 6: RATA-RATA TRAFFIC PER ONU (FITUR BARU SPESIFIKASI USER) -->
+        <!-- Card 7: RATA-RATA TRAFFIC PER ONU -->
         <div class="bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800/60 rounded-xl p-3 shadow-2xs">
             <div class="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1">
                 <svg class="w-3 h-3 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -206,11 +221,11 @@
                 <span class="text-[9.5px] font-bold text-slate-500 dark:text-slate-400" x-text="'Rx / ' + stats.avgTxPerOnu.toFixed(1) + ' Tx'"></span>
             </div>
             <div class="text-[9.5px] text-indigo-600/80 dark:text-indigo-400/80 mt-1 truncate font-medium">
-                Total &divide; <span x-text="stats.online"></span> ONU Online
+                Total &divide; <span x-text="stats.up"></span> ONU UP
             </div>
         </div>
 
-        <!-- Card 7: Avg Redaman Rx -->
+        <!-- Card 8: Avg Redaman Rx -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs">
             <div class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
                 <svg class="w-3 h-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -229,7 +244,7 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 4. CONTROLS BAR: SEARCH, FILTER STATUS, REDAMAN, & VIEW MODE       -->
+    <!-- 4. CONTROLS BAR: SEARCH, FILTER STATUS (UP/DOWN/LOS), REDAMAN, VIEW -->
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs space-y-3">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -293,29 +308,41 @@
             </div>
         </div>
 
-        <!-- Filter Buttons (Status & Redaman) -->
+        <!-- Filter Buttons: Istilah NOC (Semua, UP, DOWN, LOS, SUSPEND) -->
         <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px]">
-            <!-- Status Filters -->
-            <span class="font-bold text-slate-500 mr-1">Status:</span>
+            <!-- Status Filters NOC -->
+            <span class="font-bold text-slate-500 mr-1">Status NOC:</span>
             <button @click="statusFilter = 'all'"
                     :class="statusFilter === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200'"
                     class="px-2.5 py-1 rounded-md font-bold transition">
                 Semua (<span x-text="onus.length"></span>)
             </button>
-            <button @click="statusFilter = 'online'"
-                    :class="statusFilter === 'online' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 hover:bg-emerald-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition">
-                Online (<span x-text="stats.online"></span>)
+            <!-- UP Filter (Hijau) -->
+            <button @click="statusFilter = 'UP'"
+                    :class="statusFilter === 'UP' ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 hover:bg-emerald-100'"
+                    class="px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>UP (<span x-text="stats.up"></span>)</span>
             </button>
-            <button @click="statusFilter = 'offline'"
-                    :class="statusFilter === 'offline' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-100'"
-                    class="px-2.5 py-1 rounded-md font-bold transition">
-                Offline (<span x-text="stats.offline"></span>)
+            <!-- DOWN Filter (Merah) -->
+            <button @click="statusFilter = 'DOWN'"
+                    :class="statusFilter === 'DOWN' ? 'bg-red-600 text-white shadow-2xs' : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 hover:bg-red-100'"
+                    class="px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                <span>DOWN (<span x-text="stats.down"></span>)</span>
             </button>
-            <button @click="statusFilter = 'suspend'"
-                    :class="statusFilter === 'suspend' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 hover:bg-amber-100'"
+            <!-- LOS Filter (Loss of Signal - Rose/Merah) -->
+            <button @click="statusFilter = 'LOS'"
+                    :class="statusFilter === 'LOS' ? 'bg-rose-600 text-white shadow-2xs' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-100'"
+                    class="px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                <span>LOS (<span x-text="stats.los"></span>)</span>
+            </button>
+            <!-- SUSPEND Filter (Amber) -->
+            <button @click="statusFilter = 'SUSPEND'"
+                    :class="statusFilter === 'SUSPEND' ? 'bg-amber-600 text-white shadow-2xs' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 hover:bg-amber-100'"
                     class="px-2.5 py-1 rounded-md font-bold transition">
-                Suspend (<span x-text="stats.suspend"></span>)
+                SUSPEND (<span x-text="stats.suspend"></span>)
             </button>
 
             <span class="text-slate-300 dark:text-slate-700 mx-1">|</span>
@@ -340,37 +367,29 @@
             <button @click="redamanFilter = 'kritis'"
                     :class="redamanFilter === 'kritis' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-100'"
                     class="px-2.5 py-1 rounded-md font-bold transition">
-                Kritis (&lt; -26.5 dBm)
+                Kritis / Drop
             </button>
         </div>
     </div>
 
     <!-- =================================================================== -->
-    <!-- 5. TAMPILAN 1: GRID CARD VIEW (RAPI, BERSIH, TERSTRUKTUR & NO OVERLAP)-->
+    <!-- 5. TAMPILAN 1: GRID CARD VIEW (LABEL UP / DOWN / LOS JELAS)         -->
     <!-- =================================================================== -->
     <div x-show="viewMode === 'grid'" class="space-y-4">
         <!-- Grid Items: 3 Kolom Responsif dengan Spacing Sempurna -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <template x-for="onu in filteredOnus" :key="onu.onu_id">
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-2xs hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between"
-                     :class="{
-                         'border-t-4 border-t-emerald-500': onu.status === 'online',
-                         'border-t-4 border-t-rose-500': onu.status === 'offline',
-                         'border-t-4 border-t-amber-500': onu.status === 'suspend'
-                     }">
+                     :class="'border-t-4 ' + getStatusInfo(onu).borderTop">
 
                     <!-- Bagian Konten Atas Card -->
                     <div class="space-y-3">
-                        <!-- 1. Header Card: Nama ONU, Identitas & Status Badge -->
+                        <!-- 1. Header Card: Nama ONU, Identitas & Status Badge (UP / DOWN / LOS) -->
                         <div class="flex items-start justify-between gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
                             <div class="flex items-start gap-2.5 min-w-0 flex-1">
                                 <!-- Badge Nomor Slot -->
                                 <div class="w-9 h-9 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 text-white shadow-xs"
-                                     :class="{
-                                         'bg-emerald-600': onu.status === 'online',
-                                         'bg-rose-600': onu.status === 'offline',
-                                         'bg-amber-600': onu.status === 'suspend'
-                                     }"
+                                     :class="getStatusInfo(onu).bgSlot"
                                      x-text="'#' + onu.onu_id">
                                 </div>
                                 <div class="min-w-0 flex-1">
@@ -388,20 +407,12 @@
                                 </div>
                             </div>
 
-                            <!-- Status Badge -->
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0"
-                                  :class="{
-                                      'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800': onu.status === 'online',
-                                      'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-400 border border-rose-200 dark:border-rose-800': onu.status === 'offline',
-                                      'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-200 dark:border-amber-800': onu.status === 'suspend'
-                                  }">
-                                <span class="w-1.5 h-1.5 rounded-full"
-                                      :class="{
-                                          'bg-emerald-500 animate-pulse': onu.status === 'online',
-                                          'bg-rose-500': onu.status === 'offline',
-                                          'bg-amber-500': onu.status === 'suspend'
-                                      }"></span>
-                                <span x-text="onu.status"></span>
+                            <!-- Status Badge NOC (UP = Hijau, DOWN = Merah, LOS = Rose/Blown Sinyal) -->
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-mono font-black uppercase tracking-wider shrink-0"
+                                  :class="getStatusInfo(onu).colorBadge">
+                                <span class="w-2 h-2 rounded-full"
+                                      :class="getStatusInfo(onu).dotClass"></span>
+                                <span x-text="getStatusInfo(onu).label"></span>
                             </span>
                         </div>
 
@@ -456,7 +467,7 @@
                                     </div>
                                     <div class="flex justify-between text-[9px] text-slate-400 mt-1">
                                         <span>Aktif Upload</span>
-                                        <span class="font-mono text-emerald-600">&bull; Live</span>
+                                        <span class="font-mono text-emerald-600" x-text="getStatusInfo(onu).label === 'UP' ? '&bull; Live' : '&bull; Idle'"></span>
                                     </div>
                                 </div>
                             </div>
@@ -468,7 +479,7 @@
                             </div>
                         </div>
 
-                        <!-- 3. Section Redaman Optik (Optical Power) -->
+                        <!-- 3. Section Redaman Optik (Power) & Deteksi LOS -->
                         <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800">
                             <div class="flex items-center justify-between text-[11px] mb-1.5">
                                 <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -484,7 +495,7 @@
                                           'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400': onu.redaman_status === 'normal',
                                           'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400': onu.redaman_status === 'kritis'
                                       }"
-                                      x-text="onu.redaman_status">
+                                      x-text="getStatusInfo(onu).label === 'LOS' ? 'LOS (Sinyal Hilang)' : (getStatusInfo(onu).label === 'DOWN' ? 'Offline' : onu.redaman_status)">
                                 </span>
                             </div>
 
@@ -493,9 +504,10 @@
                                     <span class="text-[10px] text-slate-500 font-sans">Rx Power:</span>
                                     <span class="font-bold text-[12px]"
                                           :class="{
-                                              'text-emerald-600 dark:text-emerald-400': onu.redaman_status === 'optimal',
-                                              'text-amber-600 dark:text-amber-400': onu.redaman_status === 'normal',
-                                              'text-rose-600 dark:text-rose-400': onu.redaman_status === 'kritis'
+                                              'text-emerald-600 dark:text-emerald-400': getStatusInfo(onu).label === 'UP' && onu.redaman_status === 'optimal',
+                                              'text-amber-600 dark:text-amber-400': getStatusInfo(onu).label === 'UP' && onu.redaman_status === 'normal',
+                                              'text-rose-600 dark:text-rose-400': getStatusInfo(onu).label === 'LOS' || onu.redaman_status === 'kritis',
+                                              'text-slate-400': getStatusInfo(onu).label === 'DOWN'
                                           }"
                                           x-text="onu.rx_power">
                                     </span>
@@ -539,7 +551,7 @@
                                 <span class="truncate" x-text="onu.address"></span>
                             </div>
                             <div class="flex items-center justify-between text-[10px]">
-                                <span>Uptime: <strong class="font-mono text-slate-700 dark:text-slate-300" x-text="onu.uptime"></strong></span>
+                                <span>Status / Uptime: <strong class="font-mono text-slate-700 dark:text-slate-300" x-text="onu.uptime"></strong></span>
                                 <span>POP: <span class="font-semibold text-slate-600 dark:text-slate-300" x-text="onu.pop_name"></span></span>
                             </div>
                         </div>
@@ -615,21 +627,13 @@
                                 </div>
                             </td>
 
-                            <!-- Status -->
+                            <!-- Status Badge NOC -->
                             <td class="py-2.5 px-3">
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                                      :class="{
-                                          'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400': onu.status === 'online',
-                                          'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-400': onu.status === 'offline',
-                                          'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400': onu.status === 'suspend'
-                                      }">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-mono font-black uppercase tracking-wider"
+                                      :class="getStatusInfo(onu).colorBadge">
                                     <span class="w-1.5 h-1.5 rounded-full"
-                                          :class="{
-                                              'bg-emerald-500 animate-pulse': onu.status === 'online',
-                                              'bg-rose-500': onu.status === 'offline',
-                                              'bg-amber-500': onu.status === 'suspend'
-                                          }"></span>
-                                    <span x-text="onu.status"></span>
+                                          :class="getStatusInfo(onu).dotClass"></span>
+                                    <span x-text="getStatusInfo(onu).label"></span>
                                 </span>
                             </td>
 
@@ -651,9 +655,10 @@
                                 <div>
                                     <span class="font-bold text-xs"
                                           :class="{
-                                              'text-emerald-600 dark:text-emerald-400': onu.redaman_status === 'optimal',
-                                              'text-amber-600 dark:text-amber-400': onu.redaman_status === 'normal',
-                                              'text-rose-600 dark:text-rose-400': onu.redaman_status === 'kritis'
+                                              'text-emerald-600 dark:text-emerald-400': getStatusInfo(onu).label === 'UP' && onu.redaman_status === 'optimal',
+                                              'text-amber-600 dark:text-amber-400': getStatusInfo(onu).label === 'UP' && onu.redaman_status === 'normal',
+                                              'text-rose-600 dark:text-rose-400': getStatusInfo(onu).label === 'LOS' || onu.redaman_status === 'kritis',
+                                              'text-slate-400': getStatusInfo(onu).label === 'DOWN'
                                           }"
                                           x-text="onu.rx_power">
                                     </span>
@@ -705,7 +710,7 @@
 </div>
 
 <!-- =================================================================== -->
-<!-- JAVASCRIPT LOGIC DENGAN AUTO-REFRESH & VISIBILITY CLEANUP           -->
+<!-- JAVASCRIPT LOGIC DENGAN LOGIKA STATUS NOC (UP / DOWN / LOS)         -->
 <!-- =================================================================== -->
 <script>
 function onuListManager(initialData, kodeOlt, ponIndex) {
@@ -728,11 +733,12 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
         isPageActive: true,
         visibilityHandler: null,
 
-        // Computed Stats
+        // Computed Stats Standar NOC
         stats: {
             total: 0,
-            online: 0,
-            offline: 0,
+            up: 0,
+            down: 0,
+            los: 0,
             suspend: 0,
             totalRx: 0,
             totalTx: 0,
@@ -776,12 +782,66 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             this.currentTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
         },
 
+        // Helper Status Standar NOC/Teknisi: UP (Hijau), DOWN (Merah), LOS (Rose / Ping)
+        getStatusInfo(onu) {
+            const raw = (onu.status || onu.status_raw || '').toString().trim().toUpperCase();
+            const rx = parseFloat(onu.rx_power_num || -25);
+            const isSignalLost = (onu.is_los || raw === 'LOS' || rx <= -32.0 || (onu.rx_power && onu.rx_power.toString().toUpperCase().includes('LOS')));
+
+            // 1. Kondisi LOS (Loss of Signal) jika sinyal optik hilang / kabel putus
+            if (isSignalLost) {
+                return {
+                    label: 'LOS',
+                    colorBadge: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-800',
+                    borderTop: 'border-t-rose-600',
+                    bgSlot: 'bg-rose-600',
+                    dotClass: 'bg-rose-500 animate-ping',
+                    desc: 'Loss of Signal'
+                };
+            }
+
+            // 2. Kondisi UP (Online / Working / Ready) -> Badge HIJAU
+            if (raw === 'UP' || raw === 'ONLINE' || raw === 'WORKING' || raw === 'READY' || onu.is_online) {
+                return {
+                    label: 'UP',
+                    colorBadge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800',
+                    borderTop: 'border-t-emerald-500',
+                    bgSlot: 'bg-emerald-600',
+                    dotClass: 'bg-emerald-500 animate-pulse',
+                    desc: 'Online Normal'
+                };
+            }
+
+            // 3. Kondisi SUSPEND (Terisolir) -> Badge AMBER
+            if (raw === 'SUSPEND' || raw === 'ISOLIR' || onu.is_suspend) {
+                return {
+                    label: 'SUSPEND',
+                    colorBadge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-400 border border-amber-300 dark:border-amber-800',
+                    borderTop: 'border-t-amber-500',
+                    bgSlot: 'bg-amber-600',
+                    dotClass: 'bg-amber-500',
+                    desc: 'Terisolir'
+                };
+            }
+
+            // 4. Kondisi DOWN (Offline / Power Off / Mati) -> Badge MERAH
+            return {
+                label: 'DOWN',
+                colorBadge: 'bg-red-100 text-red-800 dark:bg-red-950/70 dark:text-red-400 border border-red-300 dark:border-red-800',
+                borderTop: 'border-t-red-600',
+                bgSlot: 'bg-red-600',
+                dotClass: 'bg-red-500',
+                desc: 'Power Off / Offline'
+            };
+        },
+
         simulateLiveTraffic() {
             let sumRx = 0;
             let sumTx = 0;
 
             this.onus.forEach(onu => {
-                if (onu.is_online) {
+                const info = this.getStatusInfo(onu);
+                if (info.label === 'UP') {
                     const variance = (Math.random() - 0.48) * 0.4;
                     const maxBw = onu.nominal_bandwith || 20;
                     let newRx = Math.max(0.4, Math.min(maxBw, onu.download_mbps + variance));
@@ -796,49 +856,72 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
 
                     sumRx += newRx;
                     sumTx += newTx;
+                } else {
+                    onu.download_mbps = 0;
+                    onu.download_formatted = '0.0 Mbps';
+                    onu.upload_mbps = 0;
+                    onu.upload_formatted = '0.0 Mbps';
+                    onu.down_pct = 0;
                 }
             });
 
             this.stats.totalRx = sumRx;
             this.stats.totalTx = sumTx;
 
-            const activeCount = this.stats.online > 0 ? this.stats.online : 1;
+            const activeCount = this.stats.up > 0 ? this.stats.up : 1;
             this.stats.avgRxPerOnu = sumRx / activeCount;
             this.stats.avgTxPerOnu = sumTx / activeCount;
 
             // Update traffic share pct per ONU
             this.onus.forEach(onu => {
-                if (onu.is_online && sumRx > 0) {
+                if (this.getStatusInfo(onu).label === 'UP' && sumRx > 0) {
                     onu.traffic_share_pct = Math.round((onu.download_mbps / sumRx) * 1000) / 10;
+                } else {
+                    onu.traffic_share_pct = 0;
                 }
             });
         },
 
         calculateStats() {
             const total = this.onus.length;
-            const online = this.onus.filter(o => o.status === 'online').length;
-            const offline = this.onus.filter(o => o.status === 'offline').length;
-            const suspend = this.onus.filter(o => o.status === 'suspend').length;
-            
-            const totalRx = this.onus.reduce((acc, o) => acc + (parseFloat(o.download_mbps) || 0), 0);
-            const totalTx = this.onus.reduce((acc, o) => acc + (parseFloat(o.upload_mbps) || 0), 0);
+            let up = 0;
+            let down = 0;
+            let los = 0;
+            let suspend = 0;
 
-            const rxSum = this.onus.reduce((acc, o) => acc + (parseFloat(o.rx_power_num) || -21), 0);
+            let totalRx = 0;
+            let totalTx = 0;
+            let rxSum = 0;
+
+            this.onus.forEach(o => {
+                const info = this.getStatusInfo(o);
+                if (info.label === 'UP') {
+                    up++;
+                    totalRx += (parseFloat(o.download_mbps) || 0);
+                    totalTx += (parseFloat(o.upload_mbps) || 0);
+                } else if (info.label === 'LOS') {
+                    los++;
+                } else if (info.label === 'SUSPEND') {
+                    suspend++;
+                } else {
+                    down++;
+                }
+                rxSum += (parseFloat(o.rx_power_num) || -25);
+            });
+
+            const activeCount = up > 0 ? up : 1;
             const avgRx = total > 0 ? (rxSum / total).toFixed(2) : '-21.5';
-
-            const activeCount = online > 0 ? online : 1;
-            const avgRxPerOnu = totalRx / activeCount;
-            const avgTxPerOnu = totalTx / activeCount;
 
             this.stats = {
                 total,
-                online,
-                offline,
+                up,
+                down,
+                los,
                 suspend,
                 totalRx,
                 totalTx,
-                avgRxPerOnu,
-                avgTxPerOnu,
+                avgRxPerOnu: totalRx / activeCount,
+                avgTxPerOnu: totalTx / activeCount,
                 avgRxPower: avgRx
             };
         },
@@ -859,9 +942,9 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                 );
             }
 
-            // 2. Status Filter
+            // 2. Status Filter Standar NOC: UP, DOWN, LOS, SUSPEND
             if (this.statusFilter !== 'all') {
-                list = list.filter(o => o.status === this.statusFilter);
+                list = list.filter(o => this.getStatusInfo(o).label === this.statusFilter);
             }
 
             // 3. Redaman Filter

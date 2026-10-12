@@ -1926,31 +1926,120 @@
                         </div>
 
                         <!-- Foto Bukti Transfer (Upload Bukti Transfer) -->
-                        <div class="space-y-1.5" x-data="{ fotoBuktiPreview: null }">
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                                Upload Bukti Transfer
-                            </label>
-                            <div class="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-center hover:border-cyan-500 transition cursor-pointer bg-slate-50 dark:bg-slate-950/40 min-h-[42px] flex items-center justify-center">
+                        <div class="space-y-1.5" x-data="{
+                            isDragging: false,
+                            fotoBuktiPreview: null,
+                            fileName: '',
+                            fileSize: '',
+
+                            handleFile(file) {
+                                if (!file) return;
+                                if (!file.type.match('image.*') && file.type !== 'application/pdf') {
+                                    alert('Silakan upload file foto (JPG, PNG, WebP) atau PDF bukti transfer.');
+                                    return;
+                                }
+                                this.fileName = file.name;
+                                this.fileSize = (file.size / 1024 > 1024) 
+                                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB' 
+                                    : Math.round(file.size / 1024) + ' KB';
+
+                                if (file.type.match('image.*')) {
+                                    this.fotoBuktiPreview = URL.createObjectURL(file);
+                                } else {
+                                    this.fotoBuktiPreview = 'pdf';
+                                }
+                            },
+
+                            handleDrop(e) {
+                                this.isDragging = false;
+                                const files = e.dataTransfer.files;
+                                if (files && files.length > 0) {
+                                    const file = files[0];
+                                    const input = this.$refs.payFileInput;
+                                    const dataTransfer = new DataTransfer();
+                                    dataTransfer.items.add(file);
+                                    input.files = dataTransfer.files;
+                                    this.handleFile(file);
+                                }
+                            },
+
+                            clearFile() {
+                                this.fotoBuktiPreview = null;
+                                this.fileName = '';
+                                this.fileSize = '';
+                                if (this.$refs.payFileInput) {
+                                    this.$refs.payFileInput.value = '';
+                                }
+                            }
+                        }">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                    Upload Bukti Transfer <span class="text-slate-400 font-normal text-[11px]">(Drag &amp; Drop / Pilih File)</span>
+                                </label>
+                                <template x-if="fotoBuktiPreview">
+                                    <button type="button" @click="clearFile()" class="text-[11px] text-rose-500 hover:text-rose-600 font-semibold flex items-center gap-0.5 cursor-pointer">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <span>Hapus File</span>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <div class="relative border-2 border-dashed rounded-xl p-2.5 text-center transition-all duration-200 cursor-pointer overflow-hidden min-h-[58px] flex items-center justify-center"
+                                 :class="isDragging 
+                                     ? 'border-[#0891b2] bg-cyan-50/80 dark:bg-cyan-950/40 ring-2 ring-cyan-400/30 scale-[1.01]' 
+                                     : (fotoBuktiPreview ? 'border-emerald-400 bg-emerald-50/20 dark:bg-emerald-950/20' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/40 hover:border-[#0891b2] dark:hover:border-cyan-400')"
+                                 @dragover.prevent="isDragging = true"
+                                 @dragenter.prevent="isDragging = true"
+                                 @dragleave.prevent="isDragging = false"
+                                 @drop.prevent="handleDrop($event)">
+
                                 <input type="file"
+                                       x-ref="payFileInput"
                                        name="foto_bukti"
-                                       accept="image/*"
+                                       accept="image/*,application/pdf"
                                        capture="environment"
-                                       @change="const file = $event.target.files[0]; if(file) { fotoBuktiPreview = URL.createObjectURL(file); }"
-                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                                
+                                       @change="handleFile($event.target.files[0])"
+                                       class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+
+                                <!-- State Tanpa File -->
                                 <template x-if="!fotoBuktiPreview">
-                                    <div class="flex items-center justify-center gap-1.5 pointer-events-none text-slate-500 dark:text-slate-400">
-                                        <svg class="w-4 h-4 text-slate-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-                                        </svg>
-                                        <span class="text-[11px] font-medium">Upload Bukti Transfer</span>
+                                    <div class="flex items-center justify-center gap-2 pointer-events-none text-slate-500 dark:text-slate-400 py-1">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-200 flex-shrink-0"
+                                             :class="isDragging ? 'bg-[#0891b2] text-white scale-110' : 'bg-cyan-500/10 text-[#0891b2] dark:text-cyan-400'">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                            </svg>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200"
+                                               x-text="isDragging ? 'Lepaskan file foto di sini...' : 'Tarik & lepas foto di sini'"></p>
+                                            <p class="text-[10px] text-slate-400 dark:text-slate-500">atau <span class="text-[#0891b2] dark:text-cyan-400 font-semibold underline">klik browse file</span></p>
+                                        </div>
                                     </div>
                                 </template>
 
+                                <!-- State Ada File -->
                                 <template x-if="fotoBuktiPreview">
-                                    <div class="relative rounded-lg overflow-hidden max-h-16 flex items-center justify-center">
-                                        <img :src="fotoBuktiPreview" class="object-contain max-h-16 rounded shadow-sm">
+                                    <div class="py-0.5 flex items-center justify-center gap-2.5 w-full">
+                                        <template x-if="fotoBuktiPreview !== 'pdf'">
+                                            <div class="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 max-h-16 max-w-[80px] bg-slate-900/5 flex items-center justify-center flex-shrink-0">
+                                                <img :src="fotoBuktiPreview" class="object-contain max-h-16 rounded shadow-xs">
+                                            </div>
+                                        </template>
+                                        <template x-if="fotoBuktiPreview === 'pdf'">
+                                            <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-200 flex-shrink-0">
+                                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                                </svg>
+                                            </div>
+                                        </template>
+                                        <div class="text-left min-w-0 flex-1">
+                                            <div class="flex items-center gap-1">
+                                                <svg class="w-3 h-3 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block max-w-[170px]" x-text="fileName"></span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 font-mono mt-0.5" x-text="fileSize"></p>
+                                        </div>
                                     </div>
                                 </template>
                             </div>

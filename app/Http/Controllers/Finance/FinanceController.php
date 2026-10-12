@@ -4220,6 +4220,7 @@ class FinanceController extends Controller
             'metode_bayar' => 'nullable|string',
             'bank_tujuan' => 'nullable|string',
             'catatan' => 'nullable|string',
+            'foto_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ]);
 
         $user = Auth::user()?->nama ?? Auth::user()?->username ?? 'FINANCE';
@@ -4237,6 +4238,27 @@ class FinanceController extends Controller
             $nominal = $request->input('nominal_bayar');
             if (empty($nominal) || (float)$nominal <= 0) {
                 $nominal = (float) ($inv?->total_layanan ?: 0);
+            }
+
+            // Handle upload foto bukti transfer jika diupload via modal
+            $proofUrl = null;
+            if ($request->hasFile('foto_bukti')) {
+                try {
+                    $file = $request->file('foto_bukti');
+                    if ($file->isValid()) {
+                        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                        $cleanKode = preg_replace('/[^a-zA-Z0-9]/', '_', $kodeBilling);
+                        $filename = 'proof_' . $cleanKode . '_' . time() . '.' . $ext;
+                        $uploadPath = public_path('uploads/bukti_transfer');
+                        if (!file_exists($uploadPath)) {
+                            mkdir($uploadPath, 0755, true);
+                        }
+                        $file->move($uploadPath, $filename);
+                        $proofUrl = '/uploads/bukti_transfer/' . $filename;
+                    }
+                } catch (\Throwable $fe) {
+                    Log::warning("Gagal menyimpan foto bukti di approve notifikasi: " . $fe->getMessage());
+                }
             }
 
             if ($inv) {
@@ -4258,7 +4280,7 @@ class FinanceController extends Controller
                     'kode_billing_lay_log' => 'LOG-' . uniqid(),
                     'kode_billing_layanan' => $kodeBilling,
                     'status_bill_lay' => '15',
-                    'note_billing_lay' => "Pembayaran disetujui ({$bankTujuan} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} oleh {$userUpdate}",
+                    'note_billing_lay' => "Pembayaran disetujui ({$bankTujuan} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} oleh {$userUpdate}" . ($proofUrl ? ' (disertai bukti transfer)' : ''),
                     'date_create' => Carbon::now()->toDateTimeString(),
                     'user_create' => $userUpdate,
                     'hide' => '0',
@@ -4267,16 +4289,41 @@ class FinanceController extends Controller
 
             // Update status di payment_confirmations jika ada
             if (Schema::hasTable('payment_confirmations')) {
-                DB::table('payment_confirmations')
+                $existPc = DB::table('payment_confirmations')
                     ->where('kode_billing_layanan', $kodeBilling)
                     ->orWhere('kode_billing_layanan', str_replace('/', '-', $kodeBilling))
                     ->orWhere('kode_billing_layanan', str_replace('-', '/', $kodeBilling))
-                    ->update([
+                    ->first();
+
+                if ($existPc) {
+                    $updateData = [
                         'status' => 'approved',
                         'verified_at' => Carbon::now()->toDateTimeString(),
                         'admin_notes' => "Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}",
                         'updated_at' => Carbon::now()->toDateTimeString(),
+                    ];
+                    if ($proofUrl) {
+                        $updateData['proof_file'] = $proofUrl;
+                    }
+                    DB::table('payment_confirmations')
+                        ->where('id', $existPc->id)
+                        ->update($updateData);
+                } elseif ($proofUrl) {
+                    // Buat row baru di payment_confirmations dengan proof_file
+                    DB::table('payment_confirmations')->insert([
+                        'kode_billing_layanan' => $kodeBilling,
+                        'customer_id' => $inv?->nomor_internet ?? '-',
+                        'customer_name' => 'Pelanggan',
+                        'destination_bank' => $bankTujuan,
+                        'proof_file' => $proofUrl,
+                        'status' => 'approved',
+                        'verified_at' => Carbon::now()->toDateTimeString(),
+                        'notes' => $catatan,
+                        'admin_notes' => "Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}",
+                        'created_at' => Carbon::now()->toDateTimeString(),
+                        'updated_at' => Carbon::now()->toDateTimeString(),
                     ]);
+                }
             }
 
             // Cross-db sync jika ptmsn.payment_confirmations ada

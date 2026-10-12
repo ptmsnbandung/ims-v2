@@ -4013,17 +4013,112 @@ class FinanceController extends Controller
             $perPage = 15;
         }
 
-        // 1. KPI Counts
-        $kpiPendingCount = 0;
+        // 1. Ambil Payment Confirmations dari local database DAN cross-db ptmsn.payment_confirmations
+        $confirmations = collect();
+        $seenConfKeys = [];
+        $pendingKodeBillings = [];
+
+        // A. Dari tabel payment_confirmations database aktif
         if (Schema::hasTable('payment_confirmations')) {
-            $kpiPendingCount += DB::table('payment_confirmations')
-                ->where('status', '!=', 'approved')
-                ->where('status', '!=', 'rejected')
-                ->count();
+            try {
+                $qConf = DB::table('payment_confirmations');
+                if ($tab === 'pending') {
+                    $qConf->where('status', '!=', 'approved')->where('status', '!=', 'rejected');
+                } elseif ($tab === 'approved') {
+                    $qConf->where('status', 'approved');
+                }
+                if ($search !== '') {
+                    $qConf->where(function ($q) use ($search) {
+                        $q->where('kode_billing_layanan', 'like', "%{$search}%")
+                          ->orWhere('customer_id', 'like', "%{$search}%")
+                          ->orWhere('customer_name', 'like', "%{$search}%");
+                    });
+                }
+                $localConfs = $qConf->orderByDesc('id')->limit(150)->get();
+                foreach ($localConfs as $lc) {
+                    $k = $lc->kode_billing_layanan ?? '';
+                    $key = 'loc_' . ($lc->id ?? '') . '_' . $k;
+                    if (!isset($seenConfKeys[$key])) {
+                        $seenConfKeys[$key] = true;
+                        $confirmations->push($lc);
+                    }
+                    if (($lc->status ?? '') !== 'approved' && ($lc->status ?? '') !== 'rejected' && !empty($k)) {
+                        $pendingKodeBillings[] = $k;
+                        $pendingKodeBillings[] = str_replace('/', '-', $k);
+                        $pendingKodeBillings[] = str_replace('-', '/', $k);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::info('Local payment_confirmations notice: ' . $e->getMessage());
+            }
         }
-        $kpiPendingCount += DB::table('trx_billing_layanan')
-            ->where('status_bill_lay', '14')
-            ->count();
+
+        // B. Fallback cross-database ke ptmsn.payment_confirmations (seperti di bayar_transfer.php & billingLayanan)
+        try {
+            $wherePtmsn = "WHERE 1=1";
+            if ($tab === 'pending') {
+                $wherePtmsn .= " AND status != 'approved' AND status != 'rejected'";
+            } elseif ($tab === 'approved') {
+                $wherePtmsn .= " AND status = 'approved'";
+            }
+            if ($search !== '') {
+                $escapedSearch = addslashes($search);
+                $wherePtmsn .= " AND (kode_billing_layanan LIKE '%{$escapedSearch}%' OR customer_id LIKE '%{$escapedSearch}%' OR customer_name LIKE '%{$escapedSearch}%')";
+            }
+            $ptmsnConfs = DB::select("SELECT * FROM ptmsn.payment_confirmations {$wherePtmsn} ORDER BY id DESC LIMIT 150");
+            foreach ($ptmsnConfs as $pc) {
+                $k = $pc->kode_billing_layanan ?? '';
+                $key = 'ptmsn_' . ($pc->id ?? '') . '_' . $k;
+                if (!isset($seenConfKeys[$key])) {
+                    $seenConfKeys[$key] = true;
+                    $confirmations->push($pc);
+                }
+                if (($pc->status ?? '') !== 'approved' && ($pc->status ?? '') !== 'rejected' && !empty($k)) {
+                    $pendingKodeBillings[] = $k;
+                    $pendingKodeBillings[] = str_replace('/', '-', $k);
+                    $pendingKodeBillings[] = str_replace('-', '/', $k);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Abaikan jika database ptmsn tidak dapat diakses
+        }
+
+        $pendingKodeBillings = array_values(array_unique(array_filter($pendingKodeBillings)));
+
+        // 2. KPI Counts
+        $countedPendingKodes = [];
+        if (Schema::hasTable('payment_confirmations')) {
+            try {
+                $locPending = DB::table('payment_confirmations')
+                    ->where('status', '!=', 'approved')
+                    ->where('status', '!=', 'rejected')
+                    ->get();
+                foreach ($locPending as $lp) {
+                    $k = $lp->kode_billing_layanan ?? ('loc_' . $lp->id);
+                    $countedPendingKodes[$k] = true;
+                }
+            } catch (\Throwable $e) {}
+        }
+        try {
+            $ptPending = DB::select("SELECT id, kode_billing_layanan FROM ptmsn.payment_confirmations WHERE status != 'approved' AND status != 'rejected'");
+            foreach ($ptPending as $pp) {
+                $k = $pp->kode_billing_layanan ?? ('ptmsn_' . $pp->id);
+                $countedPendingKodes[$k] = true;
+            }
+        } catch (\Throwable $e) {}
+
+        $kpiPendingCount = count($countedPendingKodes);
+
+        // Tambahkan tagihan status '14' (Menunggu Verifikasi) di trx_billing_layanan yang belum terhitung
+        try {
+            $stat14Count = DB::table('trx_billing_layanan')
+                ->where('status_bill_lay', '14')
+                ->when(!empty($countedPendingKodes), function ($q) use ($countedPendingKodes) {
+                    $q->whereNotIn('kode_billing_layanan', array_keys($countedPendingKodes));
+                })
+                ->count();
+            $kpiPendingCount += $stat14Count;
+        } catch (\Throwable $e) {}
 
         $kpiTodayCount = DB::table('trx_billing_layanan')
             ->where('status_bill_lay', '15')
@@ -4036,46 +4131,48 @@ class FinanceController extends Controller
             ->whereMonth(DB::raw('COALESCE(payment_paid, date_update)'), Carbon::now()->month)
             ->sum(DB::raw('CAST(COALESCE(amount_paid, total_layanan, 0) AS DECIMAL(15,2))'));
 
-        // 2. Query Payment Confirmations (Manual Transfer Proofs)
-        $confirmations = collect();
-        if (Schema::hasTable('payment_confirmations')) {
-            $qConf = DB::table('payment_confirmations');
-            if ($tab === 'pending') {
-                $qConf->where('status', '!=', 'approved')->where('status', '!=', 'rejected');
-            } elseif ($tab === 'approved') {
-                $qConf->where('status', 'approved');
-            }
-            if ($search !== '') {
-                $qConf->where(function($q) use ($search) {
-                    $q->where('kode_billing_layanan', 'like', "%{$search}%")
-                      ->orWhere('customer_id', 'like', "%{$search}%")
-                      ->orWhere('customer_name', 'like', "%{$search}%");
-                });
-            }
-            $confirmations = $qConf
-                ->orderByRaw("CASE WHEN status NOT IN ('approved', 'rejected') THEN 0 ELSE 1 END")
-                ->orderByDesc('created_at')
-                ->limit(100)
-                ->get();
+        // 3. Query Invoices from trx_billing_layanan
+        $tableCustomer = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
+        $qBill = DB::table('trx_billing_layanan')
+            ->leftJoin($tableCustomer, 'trx_billing_layanan.nomor_internet', '=', "{$tableCustomer}.nomor_internet");
+
+        // Abaikan user BROADBAND FREE agar tabel bersih
+        if (Schema::hasColumn($tableCustomer, 'nama_kategori_bandwith')) {
+            $qBill->where(function ($q) use ($tableCustomer) {
+                $q->whereNull("{$tableCustomer}.nama_kategori_bandwith")
+                  ->orWhere("{$tableCustomer}.nama_kategori_bandwith", 'NOT LIKE', '%BROADBAND FREE%');
+            });
         }
 
-        // 3. Query Invoices from trx_billing_layanan
-        $qBill = DB::table('trx_billing_layanan')
-            ->leftJoin('trx_batchjob_register', 'trx_billing_layanan.nomor_internet', '=', 'trx_batchjob_register.nomor_internet');
-
         if ($tab === 'pending') {
-            $qBill->where('trx_billing_layanan.status_bill_lay', '14');
+            $qBill->where(function ($q) use ($pendingKodeBillings) {
+                $q->where('trx_billing_layanan.status_bill_lay', '14');
+                if (!empty($pendingKodeBillings)) {
+                    $q->orWhere(function ($sub) use ($pendingKodeBillings) {
+                        $sub->whereIn('trx_billing_layanan.kode_billing_layanan', $pendingKodeBillings)
+                            ->where('trx_billing_layanan.status_bill_lay', '!=', '15');
+                    });
+                }
+            });
         } elseif ($tab === 'approved') {
             $qBill->where('trx_billing_layanan.status_bill_lay', '15');
         } else {
-            $qBill->whereIn('trx_billing_layanan.status_bill_lay', ['14', '15']);
+            $qBill->where(function ($q) use ($pendingKodeBillings) {
+                $q->whereIn('trx_billing_layanan.status_bill_lay', ['14', '15']);
+                if (!empty($pendingKodeBillings)) {
+                    $q->orWhere(function ($sub) use ($pendingKodeBillings) {
+                        $sub->whereIn('trx_billing_layanan.kode_billing_layanan', $pendingKodeBillings)
+                            ->where('trx_billing_layanan.status_bill_lay', '!=', '15');
+                    });
+                }
+            });
         }
 
         if ($search !== '') {
-            $qBill->where(function($q) use ($search) {
+            $qBill->where(function ($q) use ($search, $tableCustomer) {
                 $q->where('trx_billing_layanan.kode_billing_layanan', 'like', "%{$search}%")
                   ->orWhere('trx_billing_layanan.nomor_internet', 'like', "%{$search}%")
-                  ->orWhere('trx_batchjob_register.nama_pelanggan', 'like', "%{$search}%");
+                  ->orWhere("{$tableCustomer}.nama_pelanggan", 'like', "%{$search}%");
             });
         }
 
@@ -4090,9 +4187,9 @@ class FinanceController extends Controller
             'trx_billing_layanan.payment_paid',
             'trx_billing_layanan.date_update',
             'trx_billing_layanan.date_create',
-            'trx_batchjob_register.nama_pelanggan',
+            "{$tableCustomer}.nama_pelanggan",
         ])
-        ->orderByRaw("CASE WHEN trx_billing_layanan.status_bill_lay = '14' THEN 0 ELSE 1 END")
+        ->orderByRaw("CASE WHEN trx_billing_layanan.status_bill_lay != '15' THEN 0 ELSE 1 END")
         ->orderByDesc(DB::raw('COALESCE(trx_billing_layanan.payment_paid, trx_billing_layanan.date_update, trx_billing_layanan.date_create)'))
         ->limit(200)
         ->get();
@@ -4101,6 +4198,19 @@ class FinanceController extends Controller
         $items = collect();
         $seenKodes = [];
         $nowJkt = Carbon::now('Asia/Jakarta');
+
+        // Mapping konfirmasi berdasarkan kode billing untuk lookup instan
+        $confirmationsByKode = collect();
+        foreach ($confirmations as $c) {
+            $k = $c->kode_billing_layanan ?? '';
+            if (!empty($k)) {
+                if (!$confirmationsByKode->has($k)) $confirmationsByKode->put($k, $c);
+                $kDash = str_replace('/', '-', $k);
+                if (!$confirmationsByKode->has($kDash)) $confirmationsByKode->put($kDash, $c);
+                $kSlash = str_replace('-', '/', $k);
+                if (!$confirmationsByKode->has($kSlash)) $confirmationsByKode->put($kSlash, $c);
+            }
+        }
 
         // Tambahkan dari Payment Confirmations terlebih dahulu
         foreach ($confirmations as $c) {
@@ -4115,26 +4225,45 @@ class FinanceController extends Controller
             $carbonDate = Carbon::parse($cDate, 'Asia/Jakarta');
             $isApproved = (($c->status ?? '') === 'approved');
 
-            // Cek invoice terkait jika ada
-            $relatedBill = !empty($kodeBillingConf) 
-                ? DB::table('trx_billing_layanan')->where('kode_billing_layanan', $kodeBillingConf)->first() 
-                : null;
+            // Cek invoice terkait jika ada (mendukung variasi / dan -)
+            $relatedBill = null;
+            if (!empty($kodeBillingConf)) {
+                $relatedBill = DB::table('trx_billing_layanan')
+                    ->where('kode_billing_layanan', $kodeBillingConf)
+                    ->orWhere('kode_billing_layanan', str_replace('/', '-', $kodeBillingConf))
+                    ->orWhere('kode_billing_layanan', str_replace('-', '/', $kodeBillingConf))
+                    ->first();
+            }
+
             $nominal = (float) ($relatedBill?->total_layanan ?: $relatedBill?->amount_paid ?: 0);
             $bankTujuan = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: ($relatedBill?->merchant_type ?: 'Transfer Manual')));
+
+            $namaPelanggan = $c->customer_name ?? null;
+            $noInternet = $c->customer_id ?? null;
+            if (empty($namaPelanggan) && $relatedBill) {
+                $noInternet = $noInternet ?: $relatedBill->nomor_internet;
+                $cust = DB::table($tableCustomer)->where('nomor_internet', $relatedBill->nomor_internet)->first();
+                $namaPelanggan = $cust?->nama_pelanggan ?? 'Pelanggan';
+            }
+            if (empty($namaPelanggan)) {
+                $namaPelanggan = 'Pelanggan';
+            }
+
+            $proofFile = ($c->proof_file ?? null) ?: (($c->bukti_transfer ?? null) ?: ($c->file ?? null));
 
             $items->push((object)[
                 'type' => 'confirmation',
                 'id' => $c->id ?? $kodeBillingConf,
-                'kode_billing' => $kodeBillingConf ?: '-',
-                'nomor_internet' => ($c->customer_id ?? null) ?: ($relatedBill?->nomor_internet ?? '-'),
-                'nama_pelanggan' => ($c->customer_name ?? null) ?: ($relatedBill?->nama_pelanggan ?? 'Pelanggan'),
+                'kode_billing' => $kodeBillingConf ?: ($relatedBill?->kode_billing_layanan ?? '-'),
+                'nomor_internet' => $noInternet ?: ($relatedBill?->nomor_internet ?? '-'),
+                'nama_pelanggan' => $namaPelanggan,
                 'nominal' => $nominal,
                 'nominal_formatted' => $nominal > 0 ? ('Rp ' . number_format($nominal, 0, ',', '.')) : 'Menunggu Pengecekan',
                 'bank_tujuan' => $bankTujuan,
-                'proof_file' => ($c->proof_file ?? null) ?: (($c->bukti_transfer ?? null) ?: ($c->file ?? null)),
+                'proof_file' => $proofFile,
                 'notes' => $c->notes ?? ($c->keterangan ?? null),
                 'admin_notes' => $c->admin_notes ?? null,
-                'status' => $c->status ?? 'pending',
+                'status' => $c->status ?? ($isApproved ? 'approved' : 'pending'),
                 'is_approved' => $isApproved,
                 'date' => $carbonDate->format('d M Y H:i'),
                 'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
@@ -4144,14 +4273,23 @@ class FinanceController extends Controller
 
         // Tambahkan dari billingRows jika belum ada di confirmation
         foreach ($billingRows as $b) {
-            if (isset($seenKodes[$b->kode_billing_layanan])) {
+            $kb = $b->kode_billing_layanan;
+            if (isset($seenKodes[$kb]) || isset($seenKodes[str_replace('/', '-', $kb)]) || isset($seenKodes[str_replace('-', '/', $kb)])) {
                 continue;
             }
+
+            $conf = $confirmationsByKode->get($kb)
+                ?? $confirmationsByKode->get(str_replace('/', '-', $kb))
+                ?? $confirmationsByKode->get(str_replace('-', '/', $kb))
+                ?? null;
 
             $isPaid = ((string)$b->status_bill_lay === '15');
             $nominal = (float) ($b->amount_paid ?: $b->total_layanan ?: 0);
             $dateStr = $b->payment_paid ?: ($b->date_update ?: $b->date_create);
             $carbonDate = $dateStr ? Carbon::parse($dateStr, 'Asia/Jakarta') : $nowJkt;
+
+            $proofFile = $conf ? (($conf->proof_file ?? null) ?: (($conf->bukti_transfer ?? null) ?: ($conf->file ?? null))) : null;
+            $isPendingVerif = (!$isPaid && ($b->status_bill_lay === '14' || !empty($proofFile) || ($conf && ($conf->status ?? '') !== 'approved')));
 
             $items->push((object)[
                 'type' => 'billing',
@@ -4161,11 +4299,11 @@ class FinanceController extends Controller
                 'nama_pelanggan' => $b->nama_pelanggan ?? ($b->nomor_internet ?: 'Pelanggan'),
                 'nominal' => $nominal,
                 'nominal_formatted' => 'Rp ' . number_format($nominal, 0, ',', '.'),
-                'bank_tujuan' => $b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : 'Online / Snap'),
-                'proof_file' => null,
-                'notes' => null,
-                'admin_notes' => null,
-                'status' => $isPaid ? 'approved' : 'pending',
+                'bank_tujuan' => ($conf->destination_bank ?? null) ?: ($b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : 'Online / Snap')),
+                'proof_file' => $proofFile,
+                'notes' => $conf->notes ?? null,
+                'admin_notes' => $conf->admin_notes ?? null,
+                'status' => $isPaid ? 'approved' : ($isPendingVerif ? 'pending' : 'pending'),
                 'is_approved' => $isPaid,
                 'date' => $carbonDate->format('d M Y H:i'),
                 'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),

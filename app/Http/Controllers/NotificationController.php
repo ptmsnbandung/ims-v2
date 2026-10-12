@@ -677,23 +677,62 @@ class NotificationController extends Controller
                 }
             }
 
-            // 2. Konfirmasi Transfer Manual dari Pelanggan (payment_confirmations)
+            // 2. Konfirmasi Transfer Manual dari Pelanggan (payment_confirmations lokal)
+            $seenConfKodes = [];
             if ($this->hasTableFast('payment_confirmations')) {
-                $confirmations = DB::table('payment_confirmations')
-                    ->where('status', '!=', 'approved')
-                    ->where('status', '!=', 'rejected')
-                    ->orderBy('created_at', 'desc')
-                    ->limit(10)
-                    ->get();
+                try {
+                    $confirmations = DB::table('payment_confirmations')
+                        ->where('status', '!=', 'approved')
+                        ->where('status', '!=', 'rejected')
+                        ->orderBy('created_at', 'desc')
+                        ->limit(10)
+                        ->get();
 
+                    $nowJkt = Carbon::now('Asia/Jakarta');
+                    foreach ($confirmations as $c) {
+                        $k = $c->kode_billing_layanan ?? '';
+                        if (!empty($k)) $seenConfKodes[$k] = true;
+                        $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: $nowJkt);
+                        $carbonDate = Carbon::parse($cDate, 'Asia/Jakarta');
+                        $merchant = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: 'Transfer Manual'));
+                        $payments[] = [
+                            'id' => 'conf_' . md5(($c->id ?? '') . '_' . $k),
+                            'kode_billing' => $k ?: '-',
+                            'nomor_internet' => $c->customer_id ?? '-',
+                            'nama_pelanggan' => $c->customer_name ?? 'Pelanggan',
+                            'nominal' => 0,
+                            'nominal_formatted' => 'Bukti Transfer',
+                            'status' => 'waiting',
+                            'status_label' => 'MENUNGGU VERIFIKASI',
+                            'merchant' => $merchant,
+                            'date' => $carbonDate->format('d M Y H:i'),
+                            'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
+                            'timestamp' => $carbonDate->timestamp,
+                            'url' => route('finance.billing-layanan', ['search' => $k ?: '']),
+                        ];
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            // 2.1 Fallback cross-database ptmsn.payment_confirmations
+            try {
+                $ptmsnPending = DB::select("
+                    SELECT * FROM ptmsn.payment_confirmations 
+                    WHERE status != 'approved' AND status != 'rejected'
+                    ORDER BY id DESC LIMIT 10
+                ");
                 $nowJkt = Carbon::now('Asia/Jakarta');
-                foreach ($confirmations as $c) {
+                foreach ($ptmsnPending as $c) {
+                    $k = $c->kode_billing_layanan ?? '';
+                    if (!empty($k) && isset($seenConfKodes[$k])) {
+                        continue;
+                    }
                     $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: $nowJkt);
                     $carbonDate = Carbon::parse($cDate, 'Asia/Jakarta');
                     $merchant = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: 'Transfer Manual'));
                     $payments[] = [
-                        'id' => 'conf_' . md5(($c->id ?? '') . '_' . ($c->kode_billing_layanan ?? '')),
-                        'kode_billing' => $c->kode_billing_layanan ?? '-',
+                        'id' => 'ptmsn_conf_' . md5(($c->id ?? '') . '_' . $k),
+                        'kode_billing' => $k ?: '-',
                         'nomor_internet' => $c->customer_id ?? '-',
                         'nama_pelanggan' => $c->customer_name ?? 'Pelanggan',
                         'nominal' => 0,
@@ -704,10 +743,10 @@ class NotificationController extends Controller
                         'date' => $carbonDate->format('d M Y H:i'),
                         'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
                         'timestamp' => $carbonDate->timestamp,
-                        'url' => route('finance.billing-layanan', ['search' => $c->kode_billing_layanan ?? '']),
+                        'url' => route('finance.billing-layanan', ['search' => $k ?: '']),
                     ];
                 }
-            }
+            } catch (\Throwable $e) {}
 
             // Urutkan: transaksi waiting di paling atas, lalu terbaru berdasarkan timestamp
             usort($payments, function($a, $b) {

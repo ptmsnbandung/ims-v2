@@ -622,13 +622,13 @@
 
     <!-- Modal Bulk Queue Dispatcher (Meta Cloud API & WhatsApp Web) -->
     <div x-show="showBulkModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-4" @click.away="if(!isSendingBulk) showBulkModal = false">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col p-5 sm:p-6 shadow-2xl space-y-4" @click.away="closeBulkModal()">
             <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 shrink-0">
                 <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <span class="text-emerald-600 dark:text-emerald-400">🚀</span>
                     <span>Dispatcher Broadcast Massal WhatsApp</span>
                 </h3>
-                <button @click="if(!isSendingBulk) showBulkModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold p-1 leading-none transition cursor-pointer">&times;</button>
+                <button @click="closeBulkModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg font-bold p-1 leading-none transition cursor-pointer">&times;</button>
             </div>
 
             <!-- Progress Bar -->
@@ -680,7 +680,7 @@
                 <span class="text-[11px] text-slate-500 dark:text-slate-400" x-text="metodeKirim === 'meta_api' ? 'Pengiriman otomatis via Meta WhatsApp Cloud API.' : 'Pengiriman manual via WhatsApp Web.'"></span>
                 
                 <div class="flex items-center gap-2">
-                    <button @click="showBulkModal = false" :disabled="isSendingBulk" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold disabled:opacity-50 cursor-pointer">
+                    <button @click="closeBulkModal()" :disabled="isSendingBulk" type="button" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold disabled:opacity-50 cursor-pointer">
                         Tutup
                     </button>
                     
@@ -926,6 +926,8 @@ function broadcastApp() {
                     } else {
                         alert("✅ " + (data.message || 'Pesan berhasil dikirim!'));
                     }
+                    sessionStorage.setItem('broadcast_scroll_to_table', '1');
+                    window.location.reload();
                 } else {
                     alert("⚠️ " + (data.message || "Gagal mengirim pesan!"));
                 }
@@ -1045,6 +1047,18 @@ function broadcastApp() {
                 
                 this.currentBulkIndex++;
                 this.updateBulkProgress();
+            }
+        },
+
+        closeBulkModal() {
+            if (this.isSendingBulk) return;
+            this.showBulkModal = false;
+
+            // Jika ada pesan yang terkirim selama proses broadcast, reload halaman
+            // agar data tabel & status log terupdate tapi filter dan posisi scroll tetap dipertahankan
+            if (this.bulkSentCount > 0) {
+                sessionStorage.setItem('broadcast_scroll_to_table', '1');
+                window.location.reload();
             }
         }
     };

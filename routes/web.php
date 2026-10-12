@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::get('/api/notifications/poll', [NotificationController::class, 'poll'])->name('api.notifications.poll');
     Route::get('/api/notifications/stream', [NotificationController::class, 'stream'])->name('api.notifications.stream');
+    Route::get('/api/notifications/payments', [NotificationController::class, 'getRecentPayments'])->name('api.notifications.payments');
 
     // Routes Role Master Admin & Direktur
     Route::middleware('role:admin,direktur')->prefix('admin')->name('admin.')->group(function () {

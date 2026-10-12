@@ -35,6 +35,113 @@
 
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin']))
+    <script>
+        function financeNotificationBell() {
+            return {
+                open: false,
+                isLoading: false,
+                hasNewAlert: false,
+                payments: [],
+                readIds: [],
+                pollTimer: null,
+
+                init() {
+                    try {
+                        this.readIds = JSON.parse(localStorage.getItem('ims_read_payment_ids') || '[]');
+                    } catch (e) {
+                        this.readIds = [];
+                    }
+
+                    this.fetchPayments(true);
+
+                    // Polling data pembayaran setiap 30 detik
+                    this.pollTimer = setInterval(() => {
+                        this.fetchPayments(true);
+                    }, 30000);
+
+                    // Reaktif terhadap notifikasi suara / toast global dari ImsVoice
+                    window.addEventListener('ims-new-toast', (e) => {
+                        const detail = e.detail || {};
+                        const type = (detail.type || '').toLowerCase();
+                        const title = (detail.title || '').toLowerCase();
+                        if (type === 'pembayaran' || title.includes('bayar') || title.includes('lunas') || title.includes('tagihan')) {
+                            this.hasNewAlert = true;
+                            this.fetchPayments(true);
+                        }
+                    });
+                },
+
+                get unreadCount() {
+                    return this.payments.filter(p => !this.readIds.includes(p.id)).length;
+                },
+
+                isUnread(id) {
+                    return !this.readIds.includes(id);
+                },
+
+                async fetchPayments(silent = false) {
+                    if (!silent) this.isLoading = true;
+                    try {
+                        const res = await fetch('{{ route("api.notifications.payments") }}', {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.status === 'success') {
+                                const oldIds = this.payments.map(p => p.id);
+                                const hasNewIncoming = (data.payments || []).some(p => !oldIds.includes(p.id));
+                                if (hasNewIncoming && this.payments.length > 0) {
+                                    this.hasNewAlert = true;
+                                }
+                                this.payments = data.payments || [];
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Gagal memuat notifikasi pembayaran:', e);
+                    } finally {
+                        if (!silent) this.isLoading = false;
+                    }
+                },
+
+                markRead(id) {
+                    if (!this.readIds.includes(id)) {
+                        this.readIds.push(id);
+                        if (this.readIds.length > 200) {
+                            this.readIds = this.readIds.slice(-200);
+                        }
+                        localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
+                    }
+                },
+
+                markAllAsRead() {
+                    this.payments.forEach(p => {
+                        if (!this.readIds.includes(p.id)) {
+                            this.readIds.push(p.id);
+                        }
+                    });
+                    if (this.readIds.length > 200) {
+                        this.readIds = this.readIds.slice(-200);
+                    }
+                    localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
+                    this.hasNewAlert = false;
+                },
+
+                toggleOpen() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        this.hasNewAlert = false;
+                        this.fetchPayments(true);
+                    }
+                }
+            };
+        }
+    </script>
+    @endif
     <style>
         [x-cloak] { display: none !important; }
 
@@ -997,6 +1104,181 @@
                     <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
                         
 
+
+                        @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin']))
+                        <!-- Tombol Lonceng Notifikasi Pembayaran Masuk (Finance) -->
+                        <div class="relative" x-data="financeNotificationBell()">
+                            <button @click="toggleOpen()"
+                                    type="button"
+                                    :title="unreadCount > 0 ? (unreadCount + ' Pembayaran Masuk Belum Dibaca') : 'Notifikasi Pembayaran Masuk'"
+                                    class="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs relative group"
+                                    aria-label="Notifikasi Pembayaran">
+                                <!-- Bell SVG Icon -->
+                                <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                                </svg>
+                                
+                                <!-- Ripple Ping Effect for New Incoming Payment -->
+                                <span x-show="unreadCount > 0 && hasNewAlert" x-cloak
+                                      class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-400 opacity-75 animate-ping"></span>
+
+                                <!-- Badge Unread Count -->
+                                <span x-show="unreadCount > 0" x-cloak
+                                      class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900"
+                                      x-text="unreadCount > 99 ? '99+' : unreadCount">
+                                </span>
+                            </button>
+
+                            <!-- Dropdown Menu Notifikasi -->
+                            <div x-show="open"
+                                 x-cloak
+                                 @click.away="open = false"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                                 class="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
+                                
+                                <!-- Header Dropdown -->
+                                <div class="px-4 py-3 bg-gradient-to-r from-slate-50 via-slate-50 to-slate-100 dark:from-slate-800/80 dark:via-slate-800/60 dark:to-slate-800 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-1.5">
+                                                <h4 class="text-xs font-bold text-slate-900 dark:text-white leading-tight">Pembayaran Masuk</h4>
+                                                <span x-show="unreadCount > 0" x-cloak
+                                                      class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                                                      x-text="unreadCount + ' Baru'"></span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Notifikasi billing & konfirmasi bayar</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <!-- Tombol Refresh -->
+                                        <button @click="fetchPayments()" 
+                                                type="button"
+                                                title="Muat Ulang Data"
+                                                class="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition cursor-pointer">
+                                            <svg class="w-3.5 h-3.5" :class="isLoading ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                            </svg>
+                                        </button>
+                                        <!-- Tombol Tandai Semua Dibaca -->
+                                        <button x-show="unreadCount > 0" x-cloak
+                                                @click="markAllAsRead()"
+                                                type="button"
+                                                title="Tandai Semua Dibaca"
+                                                class="px-2 py-1 rounded-lg text-[10px] font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 shadow-2xs transition cursor-pointer flex items-center gap-1">
+                                            <svg class="w-3 h-3 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                            <span>Baca Semua</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Body Notifikasi List -->
+                                <div class="max-h-[360px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
+                                    <!-- Loading State -->
+                                    <template x-if="isLoading && payments.length === 0">
+                                        <div class="p-6 text-center">
+                                            <svg class="w-6 h-6 mx-auto animate-spin text-[#0891b2] mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                            </svg>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">Memeriksa pembayaran masuk...</p>
+                                        </div>
+                                    </template>
+
+                                    <!-- Empty State -->
+                                    <template x-if="!isLoading && payments.length === 0">
+                                        <div class="py-8 px-4 text-center">
+                                            <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mb-2">
+                                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v9.75c0 .414.336.75.75.75h.75m0-11.25H12m6.75 0H21m0 0v9.75a.75.75 0 0 1-.75.75h-.75m0-10.5v-.75A.75.75 0 0 0 19.5 4.5H18" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Belum ada pembayaran masuk</p>
+                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Data pembayaran lunas terbaru akan tampil otomatis di sini.</p>
+                                        </div>
+                                    </template>
+
+                                    <!-- Payment Items -->
+                                    <template x-for="item in payments" :key="item.id">
+                                        <a :href="item.url"
+                                           @click="markRead(item.id)"
+                                           class="p-3 sm:p-3.5 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group cursor-pointer block relative"
+                                           :class="isUnread(item.id) ? 'bg-sky-50/50 dark:bg-sky-950/20' : ''">
+                                            
+                                            <!-- Status Icon -->
+                                            <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-2xs mt-0.5"
+                                                 :class="item.status === 'paid' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 ring-1 ring-emerald-200 dark:ring-emerald-800' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-800'">
+                                                <template x-if="item.status === 'paid'">
+                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                                    </svg>
+                                                </template>
+                                                <template x-if="item.status !== 'paid'">
+                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                    </svg>
+                                                </template>
+                                            </div>
+
+                                            <!-- Content Detail -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between gap-1 mb-0.5">
+                                                    <div class="flex items-center gap-1.5 min-w-0">
+                                                        <span class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="item.nama_pelanggan"></span>
+                                                        <span x-show="isUnread(item.id)" class="w-2 h-2 rounded-full bg-[#0891b2] flex-shrink-0" title="Belum dibaca"></span>
+                                                    </div>
+                                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 flex-shrink-0" x-text="item.time_ago"></span>
+                                                </div>
+
+                                                <div class="flex items-center justify-between gap-2 mt-1">
+                                                    <div class="min-w-0">
+                                                        <p class="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
+                                                            <span x-text="item.nomor_internet"></span> &middot; <span class="font-medium text-slate-700 dark:text-slate-300" x-text="item.kode_billing"></span>
+                                                        </p>
+                                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate" x-text="item.merchant"></p>
+                                                    </div>
+                                                    <div class="text-right flex-shrink-0">
+                                                        <span class="text-xs font-bold" 
+                                                              :class="item.status === 'paid' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"
+                                                              x-text="item.nominal_formatted"></span>
+                                                        <div>
+                                                            <span class="inline-block px-1.5 py-0.2 rounded text-[9px] font-bold"
+                                                                  :class="item.status === 'paid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'"
+                                                                  x-text="item.status_label"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </template>
+                                </div>
+
+                                <!-- Footer Dropdown -->
+                                <div class="p-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200/80 dark:border-slate-800 text-center">
+                                    <a href="{{ route('finance.billing-layanan') }}"
+                                       @click="open = false"
+                                       class="inline-flex items-center justify-center gap-1.5 w-full py-1.5 px-3 rounded-xl text-xs font-semibold text-[#0891b2] hover:text-[#05404f] dark:text-cyan-400 dark:hover:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-slate-700/50 transition">
+                                        <span>Buka Semua Billing & Pembayaran</span>
+                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                        </svg>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                        @endif
 
                         <!-- Theme Toggle Button (Light / Dark Mode) -->
                         <button @click="toggleTheme()" 

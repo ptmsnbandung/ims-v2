@@ -597,5 +597,129 @@ class NotificationController extends Controller
 
         return $notifications;
     }
+
+    /**
+     * Endpoint untuk daftar pembayaran masuk terbaru (Khusus Finance & Direktur)
+     */
+    public function getRecentPayments(Request $request): JsonResponse
+    {
+        /** @var \App\Models\Pengguna|null $user */
+        $user = $request->user();
+        if (!$user || !$user->hasRole(['finance', 'direktur', 'admin'])) {
+            return response()->json(['status' => 'forbidden', 'payments' => []], 403);
+        }
+
+        try {
+            $payments = [];
+
+            // 1. Tagihan Layanan Lunas (status 15) & Menunggu Verifikasi (status 14)
+            if ($this->hasTableFast('trx_billing_layanan')) {
+                $query = DB::table('trx_billing_layanan')
+                    ->whereIn('trx_billing_layanan.status_bill_lay', ['14', '15']);
+
+                if ($this->hasTableFast('trx_batchjob_register')) {
+                    $query->leftJoin('trx_batchjob_register', 'trx_billing_layanan.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
+                        ->select([
+                            'trx_billing_layanan.kode_billing_layanan',
+                            'trx_billing_layanan.nomor_internet',
+                            'trx_billing_layanan.total_layanan',
+                            'trx_billing_layanan.amount_paid',
+                            'trx_billing_layanan.status_bill_lay',
+                            'trx_billing_layanan.payment_type',
+                            'trx_billing_layanan.merchant_type',
+                            'trx_billing_layanan.payment_paid',
+                            'trx_billing_layanan.date_update',
+                            'trx_billing_layanan.date_create',
+                            'trx_batchjob_register.nama_pelanggan',
+                        ]);
+                } else {
+                    $query->select([
+                        'trx_billing_layanan.kode_billing_layanan',
+                        'trx_billing_layanan.nomor_internet',
+                        'trx_billing_layanan.total_layanan',
+                        'trx_billing_layanan.amount_paid',
+                        'trx_billing_layanan.status_bill_lay',
+                        'trx_billing_layanan.payment_type',
+                        'trx_billing_layanan.merchant_type',
+                        'trx_billing_layanan.payment_paid',
+                        'trx_billing_layanan.date_update',
+                        'trx_billing_layanan.date_create',
+                    ]);
+                }
+
+                $billingRows = $query->orderByDesc(DB::raw('COALESCE(trx_billing_layanan.payment_paid, trx_billing_layanan.date_update, trx_billing_layanan.date_create)'))
+                    ->limit(15)
+                    ->get();
+
+                foreach ($billingRows as $b) {
+                    $isPaid = (string) $b->status_bill_lay === '15';
+                    $nominal = (float) ($b->amount_paid ?: $b->total_layanan ?: 0);
+                    $nama = $b->nama_pelanggan ?? ($b->nomor_internet ?: 'Pelanggan');
+                    $dateStr = $b->payment_paid ?: ($b->date_update ?: $b->date_create);
+                    $carbonDate = $dateStr ? Carbon::parse($dateStr) : Carbon::now();
+
+                    $payments[] = [
+                        'id' => 'bill_' . md5($b->kode_billing_layanan . '_' . $dateStr),
+                        'kode_billing' => $b->kode_billing_layanan,
+                        'nomor_internet' => $b->nomor_internet ?? '-',
+                        'nama_pelanggan' => $nama,
+                        'nominal' => $nominal,
+                        'nominal_formatted' => 'Rp ' . number_format($nominal, 0, ',', '.'),
+                        'status' => $isPaid ? 'paid' : 'waiting',
+                        'status_label' => $isPaid ? 'LUNAS' : 'MENUNGGU VERIFIKASI',
+                        'merchant' => $b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : 'Online / Snap'),
+                        'date' => $carbonDate->format('d M Y H:i'),
+                        'time_ago' => $carbonDate->diffForHumans(),
+                        'timestamp' => $carbonDate->timestamp,
+                        'url' => route('finance.billing-layanan', ['search' => $b->kode_billing_layanan]),
+                    ];
+                }
+            }
+
+            // 2. Konfirmasi Transfer Manual dari Pelanggan (payment_confirmations)
+            if ($this->hasTableFast('payment_confirmations')) {
+                $confirmations = DB::table('payment_confirmations')
+                    ->where('status', '!=', 'approved')
+                    ->where('status', '!=', 'rejected')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(10)
+                    ->get();
+
+                foreach ($confirmations as $c) {
+                    $cDate = $c->created_at ?: ($c->updated_at ?: Carbon::now());
+                    $carbonDate = Carbon::parse($cDate);
+                    $payments[] = [
+                        'id' => 'conf_' . md5($c->id . '_' . $c->kode_billing_layanan),
+                        'kode_billing' => $c->kode_billing_layanan,
+                        'nomor_internet' => $c->customer_id ?? '-',
+                        'nama_pelanggan' => $c->customer_name ?? 'Pelanggan',
+                        'nominal' => 0,
+                        'nominal_formatted' => 'Bukti Transfer',
+                        'status' => 'waiting',
+                        'status_label' => 'MENUNGGU VERIFIKASI',
+                        'merchant' => $c->destination_bank ?: 'Transfer Manual',
+                        'date' => $carbonDate->format('d M Y H:i'),
+                        'time_ago' => $carbonDate->diffForHumans(),
+                        'timestamp' => $carbonDate->timestamp,
+                        'url' => route('finance.billing-layanan', ['search' => $c->kode_billing_layanan]),
+                    ];
+                }
+            }
+
+            // Urutkan berdasarkan timestamp terbaru
+            usort($payments, fn($a, $b) => $b['timestamp'] <=> $a['timestamp']);
+            $payments = array_slice($payments, 0, 15);
+
+            return response()->json([
+                'status' => 'success',
+                'payments' => $payments,
+                'count' => count($payments),
+                'server_time' => Carbon::now()->timestamp,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Get recent payments error: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'payments' => [], 'message' => $e->getMessage()], 500);
+        }
+    }
 }
 

@@ -7,14 +7,19 @@
 
     <title>{{ isset($title) && $title ? ($title . ' | IMSv2 | PT MEDIA SOLUSI NETWORK') : 'IMSv2 | PT MEDIA SOLUSI NETWORK' }}</title>
 
-    <!-- Compact Density Base Scale (~80% Browser Zoom Scale) -->
+    <!-- Base Scale for Guest Authentication Pages -->
     <style>
         html {
-            font-size: 13px !important;
+            font-size: 15px !important;
+        }
+        @media (min-width: 640px) {
+            html {
+                font-size: 15.5px !important;
+            }
         }
         @media (max-width: 639.98px) {
             html {
-                font-size: 14.5px !important;
+                font-size: 14px !important;
             }
         }
     </style>
@@ -118,31 +123,35 @@
     </div>
 
     <!-- Main Container -->
-    <div class="min-h-full flex flex-col justify-center py-6 sm:py-8 sm:px-6 lg:px-8 relative z-10">
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="min-h-full flex flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8 relative z-10">
+        <div class="sm:mx-auto sm:w-full sm:max-w-xl">
             <!-- Brand Logo / Header -->
             <div class="flex flex-col items-center text-center">
-                <div class="w-14 h-14 rounded-2xl bg-white/95 backdrop-blur-md p-2 shadow-xl shadow-cyan-950/40 border border-white/80 mb-2.5 flex items-center justify-center transition duration-300 hover:scale-105">
+                <div class="w-16 h-16 rounded-2xl bg-white/95 backdrop-blur-xl p-2.5 shadow-2xl shadow-cyan-950/40 border border-white/90 mb-3 flex items-center justify-center ring-4 ring-white/15 transition-transform duration-300 hover:scale-105">
                     <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
+                <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]">
                     IMS<span class="bg-gradient-to-r from-cyan-300 via-teal-200 to-sky-300 bg-clip-text text-transparent font-black">-V2</span>
                 </h1>
-                <p class="mt-0.5 text-xs font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">
+                <p class="mt-1 text-xs sm:text-sm font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">
                     Internet System Management Portal
                 </p>
             </div>
         </div>
 
-        <div class="mt-4 sm:mx-auto sm:w-full sm:max-w-[420px] px-4">
+        <div class="mt-6 sm:mx-auto sm:w-full sm:max-w-[480px] md:max-w-[500px] px-4 sm:px-0">
             <!-- Elevated Glassmorphism White Card -->
-            <div class="bg-white/95 backdrop-blur-2xl border border-white/80 shadow-[0_20px_50px_rgba(3,43,67,0.35)] rounded-2xl p-5 sm:p-6 text-slate-800 transition duration-200">
+            <div class="relative bg-white/95 backdrop-blur-2xl border border-white/90 shadow-[0_25px_60px_-15px_rgba(3,43,67,0.4),0_10px_25px_-5px_rgba(3,43,67,0.2)] rounded-3xl p-7 sm:p-9 text-slate-800 transition duration-200 overflow-hidden ring-1 ring-black/[0.04]">
+                <!-- Top Accent Gradient Line -->
+                <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 via-teal-400 to-sky-500"></div>
                 @yield('content')
             </div>
 
             <!-- Footer -->
-            <div class="mt-4 text-center text-[11px] font-semibold text-cyan-100/80 drop-shadow">
-                &copy; {{ date('Y') }} PT. Media Solusi Network &bull; IMS-V2
+            <div class="mt-5 text-center text-xs font-semibold text-cyan-100/85 drop-shadow flex items-center justify-center gap-2">
+                <span>&copy; {{ date('Y') }} PT. Media Solusi Network</span>
+                <span class="inline-block w-1 h-1 rounded-full bg-cyan-300/70"></span>
+                <span class="text-white/95">IMS-V2</span>
             </div>
         </div>
     </div>

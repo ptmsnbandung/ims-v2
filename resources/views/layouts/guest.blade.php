@@ -131,7 +131,7 @@
     <div class="w-full max-w-[440px] px-4 sm:px-0 flex flex-col items-center justify-center relative z-10 my-auto">
         <!-- Brand Logo / Header -->
         <div class="flex flex-col items-center text-center mb-2.5">
-            <div class="w-12 h-12 rounded-2xl bg-white/95 backdrop-blur-xl p-2 shadow-xl shadow-cyan-950/40 border border-white/90 mb-1.5 flex items-center justify-center ring-4 ring-white/10 transition-transform duration-300 hover:scale-105">
+            <div class="w-14 h-14 rounded-2xl bg-white/95 backdrop-blur-xl p-1.5 shadow-xl shadow-cyan-950/40 border border-white/90 mb-1.5 flex items-center justify-center ring-4 ring-white/10 transition-transform duration-300 hover:scale-105">
                 <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
             </div>
             <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] leading-tight">

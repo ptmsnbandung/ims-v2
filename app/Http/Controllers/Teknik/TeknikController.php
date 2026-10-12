@@ -2443,77 +2443,66 @@ class TeknikController extends Controller
                            ->paginate($perPage)
                            ->withQueryString();
 
-        // Master data dropdowns (cached 1 hour)
-        $layananList = Cache::remember('pelanggan_layanan_list', 3600, function () {
-            return Schema::hasTable('m_bandwith_kategori')
-                ? DB::table('m_bandwith_kategori')->where('disable', 0)->get()
-                : collect();
-        });
+        // Master data dropdowns (Direct DB query for accuracy & safety)
+        $layananList = Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith_kategori')->where('disable', 0)->get()
+            : collect();
 
-        $statusList = Cache::remember('pelanggan_status_list', 3600, function () use ($confirmedStatuses) {
-            return Schema::hasTable('m_status_registrasi')
-                ? DB::table('m_status_registrasi')->whereIn('status_reg', $confirmedStatuses)->get()
-                : collect();
-        });
+        $statusList = Schema::hasTable('m_status_registrasi')
+            ? DB::table('m_status_registrasi')->whereIn('status_reg', $confirmedStatuses)->get()
+            : collect();
 
-        $wilayahList = Cache::remember('pelanggan_wilayah_list', 3600, function () {
-            return Schema::hasTable('m_wilayah_perangkat')
-                ? DB::table('m_wilayah_perangkat')->get()
-                : collect();
-        });
+        $wilayahList = Schema::hasTable('m_wilayah_perangkat')
+            ? DB::table('m_wilayah_perangkat')->get()
+            : collect();
 
-        // Detailed Bandwidth Breakdown Counts (cached 60 seconds)
-        $bwCounts = Cache::remember('pelanggan_bw_counts', 60, function () use ($confirmedStatuses, $layananList) {
-            $rawBandwidthCounts = DB::table('view_batchjob')
-                ->select('status_reg', 'kode_kategori_bandwith', DB::raw('count(*) as total'))
-                ->whereIn('status_reg', $confirmedStatuses)
-                ->groupBy('status_reg', 'kode_kategori_bandwith')
-                ->get();
+        // Detailed Bandwidth Breakdown Counts
+        $rawBandwidthCounts = DB::table('view_batchjob')
+            ->select('status_reg', 'kode_kategori_bandwith', DB::raw('count(*) as total'))
+            ->whereIn('status_reg', $confirmedStatuses)
+            ->groupBy('status_reg', 'kode_kategori_bandwith')
+            ->get();
 
-            $counts = [
-                'aktif' => [],
-                'terminasi' => [],
-                'suspend' => [],
-                'total_aktif' => 0,
-                'total_terminasi' => 0,
-                'total_suspend' => 0,
-            ];
+        $bwCounts = [
+            'aktif' => [],
+            'terminasi' => [],
+            'suspend' => [],
+            'total_aktif' => 0,
+            'total_terminasi' => 0,
+            'total_suspend' => 0,
+        ];
 
-            foreach ($layananList as $l) {
-                $counts['aktif'][$l->kode_kategori_bandwith] = 0;
-                $counts['terminasi'][$l->kode_kategori_bandwith] = 0;
-                $counts['suspend'][$l->kode_kategori_bandwith] = 0;
+        foreach ($layananList as $l) {
+            $katKey = is_object($l) ? ($l->kode_kategori_bandwith ?? '') : (is_array($l) ? ($l['kode_kategori_bandwith'] ?? '') : (string)$l);
+            $bwCounts['aktif'][$katKey] = 0;
+            $bwCounts['terminasi'][$katKey] = 0;
+            $bwCounts['suspend'][$katKey] = 0;
+        }
+
+        foreach ($rawBandwidthCounts as $row) {
+            $kat = $row->kode_kategori_bandwith;
+            if ($row->status_reg == '20') {
+                $bwCounts['aktif'][$kat] = ($bwCounts['aktif'][$kat] ?? 0) + $row->total;
+                $bwCounts['total_aktif'] += $row->total;
+            } elseif (in_array($row->status_reg, ['23', '23.1'])) {
+                $bwCounts['terminasi'][$kat] = ($bwCounts['terminasi'][$kat] ?? 0) + $row->total;
+                $bwCounts['total_terminasi'] += $row->total;
+            } elseif (in_array($row->status_reg, ['21', '21.1'])) {
+                $bwCounts['suspend'][$kat] = ($bwCounts['suspend'][$kat] ?? 0) + $row->total;
+                $bwCounts['total_suspend'] += $row->total;
             }
+        }
 
-            foreach ($rawBandwidthCounts as $row) {
-                $kat = $row->kode_kategori_bandwith;
-                if ($row->status_reg == '20') {
-                    $counts['aktif'][$kat] = ($counts['aktif'][$kat] ?? 0) + $row->total;
-                    $counts['total_aktif'] += $row->total;
-                } elseif (in_array($row->status_reg, ['23', '23.1'])) {
-                    $counts['terminasi'][$kat] = ($counts['terminasi'][$kat] ?? 0) + $row->total;
-                    $counts['total_terminasi'] += $row->total;
-                } elseif (in_array($row->status_reg, ['21', '21.1'])) {
-                    $counts['suspend'][$kat] = ($counts['suspend'][$kat] ?? 0) + $row->total;
-                    $counts['total_suspend'] += $row->total;
-                }
-            }
-
-            return $counts;
-        });
-
-        // List Paket Bandwidth untuk modal UP/Downgrade (cached 1 hour)
-        $paketList = Cache::remember('pelanggan_paket_list', 3600, function () {
-            return Schema::hasTable('m_bandwith') && Schema::hasTable('m_bandwith_kategori')
-                ? DB::table('m_bandwith as b')
-                    ->join('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
-                    ->select('b.kode_bandwith', 'b.nominal_bandwith', 'b.harga_bandwith', 'k.nama_kategori_bandwith')
-                    ->where('b.hide', '0')
-                    ->orderBy('k.nama_kategori_bandwith')
-                    ->orderBy('b.nominal_bandwith')
-                    ->get()
-                : collect();
-        });
+        // List Paket Bandwidth untuk modal UP/Downgrade
+        $paketList = Schema::hasTable('m_bandwith') && Schema::hasTable('m_bandwith_kategori')
+            ? DB::table('m_bandwith as b')
+                ->join('m_bandwith_kategori as k', 'b.kode_kategori_bandwith', '=', 'k.kode_kategori_bandwith')
+                ->select('b.kode_bandwith', 'b.nominal_bandwith', 'b.harga_bandwith', 'k.nama_kategori_bandwith')
+                ->where('b.hide', '0')
+                ->orderBy('k.nama_kategori_bandwith')
+                ->orderBy('b.nominal_bandwith')
+                ->get()
+            : collect();
 
         return view('teknik.pelanggan', [
             'user' => $request->user(),

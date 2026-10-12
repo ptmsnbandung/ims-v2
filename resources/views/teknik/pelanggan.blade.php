@@ -261,14 +261,16 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2">
                 @foreach($layananList as $layanan)
                     @php
-                        $count = $bwCounts['aktif'][$layanan->kode_kategori_bandwith] ?? 0;
-                        $isActiveFilter = ($filters['status'] ?? '') == '20' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
+                        $lKode = is_object($layanan) ? ($layanan->kode_kategori_bandwith ?? '') : (is_array($layanan) ? ($layanan['kode_kategori_bandwith'] ?? '') : (string)$layanan);
+                        $lNama = is_object($layanan) ? ($layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith) : (is_array($layanan) ? ($layanan['alias_nama_kategori'] ?? $layanan['nama_kategori_bandwith'] ?? '') : (string)$layanan);
+                        $count = $bwCounts['aktif'][$lKode] ?? 0;
+                        $isActiveFilter = ($filters['status'] ?? '') == '20' && ($filters['layanan'] ?? '') == $lKode;
                     @endphp
-                    <a href="{{ route($pelangganRoute, ['status' => '20', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
+                    <a href="{{ route($pelangganRoute, ['status' => '20', 'layanan' => $lKode]) }}" 
                        class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-blue-50/90 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700' }} flex flex-col justify-between min-h-[58px]">
                         <div class="flex items-center justify-between gap-1">
-                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
-                                {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title="{{ $lNama }}">
+                                {{ $lNama }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-blue-600 dark:bg-blue-400' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
@@ -314,14 +316,16 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2">
                 @foreach($layananList as $layanan)
                     @php
-                        $count = $bwCounts['terminasi'][$layanan->kode_kategori_bandwith] ?? 0;
-                        $isActiveFilter = ($filters['status'] ?? '') == '23' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
+                        $lKode = is_object($layanan) ? ($layanan->kode_kategori_bandwith ?? '') : (is_array($layanan) ? ($layanan['kode_kategori_bandwith'] ?? '') : (string)$layanan);
+                        $lNama = is_object($layanan) ? ($layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith) : (is_array($layanan) ? ($layanan['alias_nama_kategori'] ?? $layanan['nama_kategori_bandwith'] ?? '') : (string)$layanan);
+                        $count = $bwCounts['terminasi'][$lKode] ?? 0;
+                        $isActiveFilter = ($filters['status'] ?? '') == '23' && ($filters['layanan'] ?? '') == $lKode;
                     @endphp
-                    <a href="{{ route($pelangganRoute, ['status' => '23', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
+                    <a href="{{ route($pelangganRoute, ['status' => '23', 'layanan' => $lKode]) }}" 
                        class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-rose-50/90 dark:bg-rose-500/15 border-rose-500 ring-2 ring-rose-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700' }} flex flex-col justify-between min-h-[58px]">
                         <div class="flex items-center justify-between gap-1">
-                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-rose-300 dark:group-hover:border-rose-600 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
-                                {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-rose-300 dark:group-hover:border-rose-600 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition truncate" title="{{ $lNama }}">
+                                {{ $lNama }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-rose-600 dark:bg-rose-400' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
@@ -367,14 +371,16 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-2">
                 @foreach($layananList as $layanan)
                     @php
-                        $count = $bwCounts['suspend'][$layanan->kode_kategori_bandwith] ?? 0;
-                        $isActiveFilter = ($filters['status'] ?? '') == '21' && ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith;
+                        $lKode = is_object($layanan) ? ($layanan->kode_kategori_bandwith ?? '') : (is_array($layanan) ? ($layanan['kode_kategori_bandwith'] ?? '') : (string)$layanan);
+                        $lNama = is_object($layanan) ? ($layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith) : (is_array($layanan) ? ($layanan['alias_nama_kategori'] ?? $layanan['nama_kategori_bandwith'] ?? '') : (string)$layanan);
+                        $count = $bwCounts['suspend'][$lKode] ?? 0;
+                        $isActiveFilter = ($filters['status'] ?? '') == '21' && ($filters['layanan'] ?? '') == $lKode;
                     @endphp
-                    <a href="{{ route($pelangganRoute, ['status' => '21', 'layanan' => $layanan->kode_kategori_bandwith]) }}" 
+                    <a href="{{ route($pelangganRoute, ['status' => '21', 'layanan' => $lKode]) }}" 
                        class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700' }} flex flex-col justify-between min-h-[58px]">
                         <div class="flex items-center justify-between gap-1">
-                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-amber-300 dark:group-hover:border-amber-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate" title="{{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}">
-                                {{ $layanan->alias_nama_kategori ?: $layanan->nama_kategori_bandwith }}
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-amber-300 dark:group-hover:border-amber-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate" title="{{ $lNama }}">
+                                {{ $lNama }}
                             </span>
                             <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $count > 0 ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                         </div>
@@ -426,8 +432,12 @@
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition cursor-pointer">
                         <option value="">SEMUA LAYANAN</option>
                         @foreach($layananList as $layanan)
-                            <option value="{{ $layanan->kode_kategori_bandwith }}" {{ ($filters['layanan'] ?? '') == $layanan->kode_kategori_bandwith ? 'selected' : '' }}>
-                                {{ $layanan->nama_kategori_bandwith }}
+                            @php
+                                $lKode = is_object($layanan) ? ($layanan->kode_kategori_bandwith ?? '') : (is_array($layanan) ? ($layanan['kode_kategori_bandwith'] ?? '') : (string)$layanan);
+                                $lNama = is_object($layanan) ? ($layanan->nama_kategori_bandwith ?? $lKode) : (is_array($layanan) ? ($layanan['nama_kategori_bandwith'] ?? $lKode) : (string)$layanan);
+                            @endphp
+                            <option value="{{ $lKode }}" {{ ($filters['layanan'] ?? '') == $lKode ? 'selected' : '' }}>
+                                {{ $lNama }}
                             </option>
                         @endforeach
                     </select>

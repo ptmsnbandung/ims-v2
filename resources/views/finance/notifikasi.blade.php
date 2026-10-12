@@ -469,10 +469,19 @@
                                 <div class="min-w-0 max-w-full">
                                     @php
                                         $rawBank = $item->bank_tujuan ?? 'Transfer';
-                                        $bankShort = Str::before($rawBank, ' - ');
-                                        $bankDetail = Str::contains($rawBank, ' - ') ? Str::after($rawBank, ' - ') : null;
+                                        // Hapus teks atas nama (contoh: "(a.n. Media Solusi Network)", "(an. ...)", "a.n. ...", "atas nama ...")
+                                        $cleanBank = preg_replace('/\s*\(\s*(?:a\.?n\.?|a\/n|atas\s+nama)\b[^)]*\)/i', '', $rawBank);
+                                        $cleanBank = preg_replace('/\s*\b(?:a\.?n\.?|a\/n|atas\s+nama)\b.*$/i', '', $cleanBank);
+                                        $cleanBank = trim($cleanBank);
+                                        $cleanBank = preg_replace('/\s*-\s*$/', '', $cleanBank);
+
+                                        $bankShort = Str::before($cleanBank, ' - ');
+                                        $bankDetail = Str::contains($cleanBank, ' - ') ? trim(Str::after($cleanBank, ' - ')) : null;
+                                        if ($bankDetail !== null && ($bankDetail === '' || $bankDetail === '-')) {
+                                            $bankDetail = null;
+                                        }
                                     @endphp
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[10px] max-w-full truncate" title="{{ $rawBank }}">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[10px] max-w-full truncate" title="{{ $cleanBank }}">
                                         <svg class="w-2.5 h-2.5 text-[#0891b2] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                                         </svg>
@@ -520,7 +529,7 @@
                                                     nomor_internet: '{{ $item->nomor_internet }}',
                                                     nominal: {{ $item->nominal }},
                                                     nominal_formatted: '{{ $item->nominal_formatted }}',
-                                                    bank_tujuan: '{{ $item->bank_tujuan }}'
+                                                    bank_tujuan: '{{ $bankShort }}'
                                                 })"
                                                 class="px-2 py-0.5 rounded-md text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-2xs transition flex items-center gap-0.5 cursor-pointer shrink-0"
                                                 title="Setujui Pembayaran">

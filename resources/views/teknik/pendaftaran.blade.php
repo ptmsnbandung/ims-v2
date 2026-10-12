@@ -1448,19 +1448,51 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div>
+                                <div class="relative" x-data="{ open: false, search: '' }">
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
                                         Paket Bandwidth <span class="text-rose-500">*</span>
                                     </label>
-                                    <select x-model="selectedPaket"
-                                            name="kode_bandwith" 
-                                            required
-                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition">
-                                        <option value="">Pilih Paket Layanan</option>
-                                        <template x-for="p in paketList" :key="p.kode_bandwith">
-                                            <option :value="p.kode_bandwith" x-text="p.nominal_bandwith + ' Mbps - Rp ' + Number(p.harga_bandwith).toLocaleString('id-ID')"></option>
-                                        </template>
-                                    </select>
+                                    <input type="hidden" name="kode_bandwith" :value="selectedPaket" required>
+                                    <button type="button"
+                                            :disabled="!selectedLayanan || loadingPaket"
+                                            @click="if(selectedLayanan && !loadingPaket) { open = !open; if(open) $nextTick(() => $refs.searchInput?.focus()) }"
+                                            class="w-full h-[36px] bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition flex items-center justify-between text-left"
+                                            :class="(!selectedLayanan || loadingPaket) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'">
+                                        <span class="truncate" :class="!selectedPaket ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'" x-text="loadingPaket ? 'Memuat paket...' : (getPaketLabel() || (selectedLayanan ? 'Pilih Paket Layanan' : 'Pilih Layanan Dahulu'))"></span>
+                                        <svg class="w-4 h-4 text-slate-400 transition-transform flex-shrink-0 ml-1" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open && selectedLayanan" 
+                                         x-cloak 
+                                         @click.outside="open = false; search = ''"
+                                         class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl p-1.5 text-xs min-w-[200px]">
+                                        <div class="relative mb-1">
+                                            <input type="text"
+                                                   x-ref="searchInput"
+                                                   x-model="search"
+                                                   placeholder="Cari paket..."
+                                                   class="w-full h-7 pl-7 pr-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md focus:border-blue-500 outline-none text-slate-800 dark:text-slate-200">
+                                            <svg class="w-3.5 h-3.5 absolute left-2 top-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="max-h-48 overflow-y-auto space-y-0.5">
+                                            <template x-for="p in (paketList || []).filter(p => !search || (p.nominal_bandwith + ' ' + p.harga_bandwith).toLowerCase().includes(search.toLowerCase()))" :key="p.kode_bandwith">
+                                                <button type="button"
+                                                        @click="selectedPaket = p.kode_bandwith; open = false; search = ''"
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-200 flex items-center justify-between transition cursor-pointer"
+                                                        :class="String(selectedPaket) === String(p.kode_bandwith) ? 'bg-blue-500/10 font-bold text-blue-600 dark:text-blue-400' : ''">
+                                                    <span x-text="p.nominal_bandwith + ' Mbps - Rp ' + Number(p.harga_bandwith).toLocaleString('id-ID')"></span>
+                                                    <span x-show="String(selectedPaket) === String(p.kode_bandwith)" class="text-blue-600 dark:text-blue-400 font-bold">✓</span>
+                                                </button>
+                                            </template>
+                                            <div x-show="(paketList || []).filter(p => !search || (p.nominal_bandwith + ' ' + p.harga_bandwith).toLowerCase().includes(search.toLowerCase())).length === 0" class="py-2 text-center text-[11px] text-slate-400">
+                                                Tidak ditemukan
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -1858,8 +1890,7 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
-             @click="scheduleSurveyModalOpen = false"></div>
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
             <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-4xl">
@@ -2012,8 +2043,7 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
-             @click="reportSurveyModalOpen = false"></div>
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
             <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
@@ -2276,8 +2306,7 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
-             @click="scheduleInstalasiModalOpen = false"></div>
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
             <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
@@ -2528,8 +2557,7 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
-             @click="reportInstalasiModalOpen = false"></div>
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
             <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-5xl">
@@ -2762,8 +2790,7 @@
          class="fixed inset-0 z-50 overflow-y-auto"
          role="dialog" aria-modal="true">
         
-        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" 
-             @click="requestAktivasiModalOpen = false"></div>
+        <div class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"></div>
 
         <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
             <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 w-full max-w-lg">
@@ -3501,6 +3528,10 @@ function pendaftaranWorkflowComponent() {
             const found = (this.kelurahanPasangList || []).find(k => String(k.kode_wilayah_kelurahan) === String(this.kelurahanPasang));
             return found ? found.nama_kelurahan : '';
         },
+        getPaketLabel() {
+            const found = (this.paketList || []).find(p => String(p.kode_bandwith) === String(this.selectedPaket));
+            return found ? (found.nominal_bandwith + ' Mbps - Rp ' + Number(found.harga_bandwith).toLocaleString('id-ID')) : '';
+        },
 
         // Preview Image helper
         handleFilePreview(e, type) {
@@ -3529,8 +3560,11 @@ function pendaftaranWorkflowComponent() {
             this.nomorHp = '';
             this.nomorHp2 = '';
             this.provinsiKtp = '';
+            this.kotaKtpList = [];
             this.kotaKtp = '';
+            this.kecamatanKtpList = [];
             this.kecamatanKtp = '';
+            this.kelurahanKtpList = [];
             this.kelurahanKtp = '';
             this.rtKtp = '';
             this.rwKtp = '';
@@ -3541,11 +3575,15 @@ function pendaftaranWorkflowComponent() {
             this.nomorBangunan = '';
             this.groupLayanan = 'MEDIANET';
             this.selectedLayanan = '';
+            this.paketList = [];
             this.selectedPaket = '';
             this.sameAsKtp = false;
             this.provinsiPasang = '';
+            this.kotaPasangList = [];
             this.kotaPasang = '';
+            this.kecamatanPasangList = [];
             this.kecamatanPasang = '';
+            this.kelurahanPasangList = [];
             this.kelurahanPasang = '';
             this.rtPasang = '';
             this.rwPasang = '';

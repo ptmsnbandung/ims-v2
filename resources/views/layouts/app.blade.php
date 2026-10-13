@@ -173,6 +173,206 @@
         }
     </script>
     @endif
+
+    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
+    <script>
+        function nocNotificationBell() {
+            return {
+                open: false,
+                isLoading: false,
+                hasNewAlert: false,
+                alerts: [],
+                intentional: [],
+                summary: {
+                    total_active: 0,
+                    total_los_down: 0,
+                    total_tickets: 0,
+                    total_intentional: 0
+                },
+                readKeys: [],
+                pollTimer: null,
+
+                init() {
+                    try {
+                        this.readKeys = JSON.parse(localStorage.getItem('ims_read_noc_alert_keys') || '[]');
+                    } catch (e) {
+                        this.readKeys = [];
+                    }
+
+                    this.fetchAlerts(true);
+
+                    // Polling data isu NOC setiap 30 detik
+                    this.pollTimer = setInterval(() => {
+                        this.fetchAlerts(true);
+                    }, 30000);
+
+                    // Reaktif terhadap perubahan status intentional / pemulihan dari halaman notifikasi
+                    window.addEventListener('noc-notifications-updated', () => {
+                        this.fetchAlerts(true);
+                    });
+
+                    // Reaktif terhadap perubahan status read
+                    window.addEventListener('ims-noc-read-updated', () => {
+                        try {
+                            this.readKeys = JSON.parse(localStorage.getItem('ims_read_noc_alert_keys') || '[]');
+                        } catch (e) {
+                            this.readKeys = [];
+                        }
+                    });
+
+                    // Reaktif terhadap notifikasi suara / toast global dari ImsVoice
+                    window.addEventListener('ims-new-toast', (e) => {
+                        const detail = e.detail || {};
+                        const type = (detail.type || '').toLowerCase();
+                        const title = (detail.title || '').toLowerCase();
+                        if (type.includes('noc') || type.includes('tiket') || title.includes('los') || title.includes('down') || title.includes('tiket')) {
+                            this.hasNewAlert = true;
+                            this.fetchAlerts(true);
+                        }
+                    });
+                },
+
+                get activeCount() {
+                    return this.summary && this.summary.total_active !== undefined ? this.summary.total_active : this.alerts.length;
+                },
+
+                get unreadCount() {
+                    return this.alerts.filter(a => !this.readKeys.includes(a.id) && !this.readKeys.includes(a.device_key)).length;
+                },
+
+                isUnread(id, key = null) {
+                    if (this.readKeys.includes(id)) return false;
+                    if (key && this.readKeys.includes(key)) return false;
+                    return true;
+                },
+
+                async fetchAlerts(silent = false) {
+                    if (!silent) this.isLoading = true;
+                    try {
+                        const res = await fetch('{{ route("noc.api.notifications") }}', {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        if (res.ok) {
+                            const resData = await res.json();
+                            if (resData.status === 'success' && resData.data) {
+                                const oldKeys = this.alerts.map(a => a.id);
+                                const newAlerts = resData.data.alerts || [];
+                                const hasNewIncoming = newAlerts.some(a => !oldKeys.includes(a.id));
+                                if (hasNewIncoming && this.alerts.length > 0) {
+                                    this.hasNewAlert = true;
+                                }
+                                this.alerts = newAlerts;
+                                this.intentional = resData.data.intentional || [];
+                                this.summary = resData.data.summary || {
+                                    total_active: this.alerts.length,
+                                    total_los_down: 0,
+                                    total_tickets: 0,
+                                    total_intentional: 0
+                                };
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Gagal memuat notifikasi NOC:', e);
+                    } finally {
+                        if (!silent) this.isLoading = false;
+                    }
+                },
+
+                markRead(item) {
+                    const id = typeof item === 'object' && item !== null ? item.id : item;
+                    const key = typeof item === 'object' && item !== null ? item.device_key : null;
+                    let changed = false;
+                    if (id && !this.readKeys.includes(id)) {
+                        this.readKeys.push(id);
+                        changed = true;
+                    }
+                    if (key && !this.readKeys.includes(key)) {
+                        this.readKeys.push(key);
+                        changed = true;
+                    }
+                    if (changed) {
+                        if (this.readKeys.length > 300) {
+                            this.readKeys = this.readKeys.slice(-300);
+                        }
+                        localStorage.setItem('ims_read_noc_alert_keys', JSON.stringify(this.readKeys));
+                        window.dispatchEvent(new CustomEvent('ims-noc-read-updated'));
+                    }
+                },
+
+                markAllAsRead() {
+                    let changed = false;
+                    this.alerts.forEach(a => {
+                        if (a.id && !this.readKeys.includes(a.id)) {
+                            this.readKeys.push(a.id);
+                            changed = true;
+                        }
+                        if (a.device_key && !this.readKeys.includes(a.device_key)) {
+                            this.readKeys.push(a.device_key);
+                            changed = true;
+                        }
+                    });
+                    if (changed) {
+                        if (this.readKeys.length > 300) {
+                            this.readKeys = this.readKeys.slice(-300);
+                        }
+                        localStorage.setItem('ims_read_noc_alert_keys', JSON.stringify(this.readKeys));
+                        window.dispatchEvent(new CustomEvent('ims-noc-read-updated'));
+                    }
+                    this.hasNewAlert = false;
+                },
+
+                async markIntentionalQuick(item) {
+                    const reason = prompt(`Tandai ${item.device_name} sebagai Intentional (Pemeliharaan)?\n\nMasukkan alasan (misal: Maintenance, Pemindahan Kabel, dsb):`, 'Maintenance / Pekerjaan Pemindahan Kabel');
+                    if (reason === null) return;
+
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const res = await fetch('{{ route("noc.api.notifications.intentional") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                device_key: item.device_key,
+                                device_type: item.device_type,
+                                device_name: item.device_name,
+                                olt_kode: item.olt_kode,
+                                pon_index: item.pon_index,
+                                onu_id: item.onu_id,
+                                interface_name: item.interface_name,
+                                nomor_internet: item.nomor_internet,
+                                reason: reason || 'Pemeliharaan perangkat oleh NOC'
+                            })
+                        });
+
+                        if (res.ok) {
+                            await this.fetchAlerts(true);
+                            window.dispatchEvent(new CustomEvent('noc-notifications-updated'));
+                        } else {
+                            alert('Gagal menandai perangkat sebagai intentional.');
+                        }
+                    } catch (e) {
+                        alert('Terjadi kesalahan: ' + e.message);
+                    }
+                },
+
+                toggleOpen() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        this.hasNewAlert = false;
+                        this.fetchAlerts(true);
+                    }
+                }
+            };
+        }
+    </script>
+    @endif
     <style>
         [x-cloak] { display: none !important; }
 
@@ -730,6 +930,19 @@
                         </div>
                     </div>
 
+                    <!-- 1. Pusat Notifikasi NOC -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('noc.notifikasi') }}"
+                           class="ims-nav-item {{ request()->routeIs('noc.notifikasi*') ? 'active' : '' }}"
+                           title="Pusat Notifikasi NOC (Radar Outage & Tiket)">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                            </svg>
+                            <span class="ims-nav-text">Pusat Notifikasi</span>
+                        </a>
+                        <div class="ims-tooltip">Pusat Notifikasi NOC</div>
+                    </div>
+
                     <!-- 2. Tiket -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('teknik.tiket') }}"
@@ -1153,6 +1366,232 @@
                     <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
                         
 
+
+                        @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
+                        <!-- Tombol Lonceng Notifikasi NOC (Radar Outage LOS/DOWN & Tiket Masuk) -->
+                        <div class="relative" x-data="nocNotificationBell()">
+                            <button @click="toggleOpen()"
+                                    type="button"
+                                    :title="activeCount > 0 ? (activeCount + ' Isu Jaringan / Tiket Perlu Atensi NOC') : 'Radar Alarm NOC (Normal)'"
+                                    class="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs relative group"
+                                    aria-label="Notifikasi NOC">
+                                <!-- Bell SVG Icon -->
+                                <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                                </svg>
+                                
+                                <!-- Distinct NOC Indicator Dot (Cyan/Rose) -->
+                                <span class="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full shadow-2xs transition-colors"
+                                      :class="activeCount > 0 ? 'bg-rose-500 ring-1 ring-white dark:ring-slate-900' : 'bg-cyan-500'"></span>
+
+                                <!-- Ripple Ping Effect for New / Unread Outage Alert -->
+                                <span x-show="activeCount > 0 && hasNewAlert" x-cloak
+                                      class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-400 opacity-75 animate-ping"></span>
+
+                                <!-- Badge Active Issues Count -->
+                                <span x-show="activeCount > 0" x-cloak
+                                      class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900 font-mono"
+                                      x-text="activeCount > 99 ? '99+' : activeCount">
+                                </span>
+                            </button>
+
+                            <!-- Dropdown Menu Notifikasi NOC -->
+                            <div x-show="open"
+                                 x-cloak
+                                 @click.away="open = false"
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                                 class="absolute right-0 mt-2 w-[350px] sm:w-[410px] max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
+                                
+                                <!-- Header Dropdown -->
+                                <div class="px-3.5 py-2.5 bg-gradient-to-r from-slate-900 to-[#04333e] text-white border-b border-teal-500/20 flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-cyan-300 flex items-center justify-center flex-shrink-0 border border-teal-400/30">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.122a6.75 6.75 0 0 1 0-9.548m9.546 0a6.75 6.75 0 0 1 0 9.548M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                            </svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="flex items-center gap-1.5 flex-nowrap">
+                                                <h4 class="text-xs font-bold text-white leading-none whitespace-nowrap">Radar Alarm NOC</h4>
+                                                <span x-show="activeCount > 0" x-cloak
+                                                      class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500 text-white whitespace-nowrap leading-none shadow-2xs font-mono"
+                                                      x-text="activeCount + ' Isu Aktif'"></span>
+                                                <span x-show="activeCount === 0" x-cloak
+                                                      class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/80 text-white whitespace-nowrap leading-none shadow-2xs">
+                                                    Normal
+                                                </span>
+                                            </div>
+                                            <p class="text-[10px] text-teal-200/80 truncate mt-0.5">Deteksi LOS/DOWN &amp; Tiket Gangguan</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                        <!-- Tombol Baca Semua -->
+                                        <button x-show="unreadCount > 0" x-cloak
+                                                @click="markAllAsRead()"
+                                                type="button"
+                                                title="Tandai Semua Dibaca"
+                                                class="px-2 py-1 rounded-md text-[10px] font-semibold text-slate-200 hover:text-white bg-white/10 hover:bg-white/20 transition flex items-center gap-1 cursor-pointer">
+                                            <svg class="w-3 h-3 text-cyan-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                            <span>Baca Semua</span>
+                                        </button>
+                                        <!-- Tombol Refresh -->
+                                        <button @click="fetchAlerts()" 
+                                                type="button"
+                                                title="Muat Ulang Data NOC"
+                                                class="p-1 rounded-md text-teal-200 hover:text-white bg-white/10 hover:bg-white/20 transition cursor-pointer">
+                                            <svg class="w-3.5 h-3.5" :class="isLoading ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Mini Bar Stats -->
+                                <div class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[10px]">
+                                    <div class="flex items-center gap-3">
+                                        <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                            <span>LOS/DOWN:</span>
+                                            <b class="text-rose-600 dark:text-rose-400 font-mono" x-text="summary.total_los_down || 0"></b>
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                            <span>Tiket:</span>
+                                            <b class="text-blue-600 dark:text-blue-400 font-mono" x-text="summary.total_tickets || 0"></b>
+                                        </span>
+                                    </div>
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        <span>Intentional:</span>
+                                        <b class="font-mono text-slate-700 dark:text-slate-300" x-text="summary.total_intentional || 0"></b>
+                                    </span>
+                                </div>
+
+                                <!-- Body Notifikasi List -->
+                                <div class="max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
+                                    <!-- Loading State -->
+                                    <template x-if="isLoading && alerts.length === 0">
+                                        <div class="p-6 text-center">
+                                            <svg class="w-6 h-6 mx-auto animate-spin text-teal-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                            </svg>
+                                            <p class="text-xs text-slate-500 dark:text-slate-400">Memindai status perangkat &amp; tiket...</p>
+                                        </div>
+                                    </template>
+
+                                    <!-- Empty State (Semua Normal) -->
+                                    <template x-if="!isLoading && alerts.length === 0">
+                                        <div class="py-8 px-4 text-center">
+                                            <div class="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
+                                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                            </div>
+                                            <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Kondisi Jaringan Prima</p>
+                                            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Tidak ada OLT/ONU yang LOS/DOWN atau tiket gangguan terbuka.</p>
+                                        </div>
+                                    </template>
+
+                                    <!-- Alert Items (Maksimal 4 notifikasi di dropdown navbar) -->
+                                    <template x-for="item in alerts.slice(0, 4)" :key="item.id">
+                                        <div class="p-3 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group relative"
+                                             :class="isUnread(item.id, item.device_key) ? 'bg-rose-50/30 dark:bg-rose-950/20' : ''">
+                                            
+                                            <!-- Status Icon -->
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                                                 :class="item.status === 'LOS' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 ring-1 ring-rose-300/60 dark:ring-rose-800/60' : (item.status === 'DOWN' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 ring-1 ring-amber-300/60 dark:ring-amber-800/60' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 ring-1 ring-blue-300/60 dark:ring-blue-800/60')">
+                                                <template x-if="item.status === 'LOS'">
+                                                    <svg class="w-4 h-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                                                    </svg>
+                                                </template>
+                                                <template x-if="item.status === 'DOWN'">
+                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+                                                    </svg>
+                                                </template>
+                                                <template x-if="item.device_type === 'tiket'">
+                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                                                    </svg>
+                                                </template>
+                                            </div>
+
+                                            <!-- Content Detail -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center justify-between gap-1 mb-0.5">
+                                                    <div class="flex items-center gap-1.5 min-w-0">
+                                                        <span class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="item.title"></span>
+                                                        <span x-show="isUnread(item.id, item.device_key)" class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" title="Belum dibaca"></span>
+                                                    </div>
+                                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 flex-shrink-0 whitespace-nowrap" x-text="item.created_at"></span>
+                                                </div>
+
+                                                <p class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate" x-text="item.device_name"></p>
+                                                
+                                                <p class="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5" x-text="item.message"></p>
+
+                                                <!-- Action Buttons Row -->
+                                                <div class="flex items-center justify-between gap-2 mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
+                                                          :class="item.badge_color"
+                                                          x-text="item.status"></span>
+
+                                                    <div class="flex items-center gap-1.5">
+                                                        <!-- Button Mark Intentional (Hanya untuk perangkat OLT/ONU/Port) -->
+                                                        <template x-if="item.device_type !== 'tiket'">
+                                                            <button @click.stop="markIntentionalQuick(item)"
+                                                                    type="button"
+                                                                    title="Tandai pemeliharaan sengaja agar alarm tidak berbunyi"
+                                                                    class="px-2 py-0.5 rounded text-[10px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-300 dark:border-amber-800 transition cursor-pointer">
+                                                                Intentional
+                                                            </button>
+                                                        </template>
+
+                                                        <!-- Tombol Direct Link -->
+                                                        <a :href="item.url"
+                                                           @click="markRead(item); open = false"
+                                                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold text-white bg-teal-600 hover:bg-teal-500 transition cursor-pointer">
+                                                            <span x-text="item.action_label || 'Buka'"></span>
+                                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                                            </svg>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Footer Dropdown Terpadu -->
+                                <div class="px-3.5 py-2.5 bg-slate-50/90 dark:bg-slate-800/80 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
+                                    <a href="{{ route('noc.dashboard') }}"
+                                       @click="open = false"
+                                       class="text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition">
+                                        NOC Command
+                                    </a>
+                                    <a href="{{ route('noc.notifikasi') }}"
+                                       @click="open = false"
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-2xs hover:shadow-xs transition">
+                                        <span>Buka Pusat Notifikasi</span>
+                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                        @endif
 
                         @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin']))
                         <!-- Tombol Lonceng Notifikasi Pembayaran Masuk (Finance) -->

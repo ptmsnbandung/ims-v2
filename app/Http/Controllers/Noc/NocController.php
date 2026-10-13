@@ -3494,4 +3494,345 @@ class NocController extends Controller
 
         return collect();
     }
+
+    /**
+     * Halaman Pusat Notifikasi & Monitoring Isu Jaringan NOC
+     */
+    public function notifikasi(Request $request, OltConnectionService $oltService): View
+    {
+        $data = $this->getNocNotificationsData($oltService);
+
+        return view('noc.notifikasi', [
+            'user' => $request->user(),
+            'alerts' => $data['alerts'],
+            'intentional' => $data['intentional'],
+            'summary' => $data['summary'],
+            'updatedAt' => $data['updated_at'],
+        ]);
+    }
+
+    /**
+     * API JSON Notifikasi untuk Bell Navbar dan Live Polling NOC
+     */
+    public function getNocNotificationsJson(Request $request, OltConnectionService $oltService): JsonResponse
+    {
+        $data = $this->getNocNotificationsData($oltService);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Tandai Perangkat sebagai Intentional (Sengaja di-downkan / di-LOS-kan untuk Maintenance)
+     */
+    public function markIntentional(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_key' => 'required|string|max:190',
+            'device_type' => 'nullable|string|max:50',
+            'device_name' => 'nullable|string|max:255',
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $user = auth()->user();
+        $deviceKey = trim($request->input('device_key'));
+        $reason = trim($request->input('reason') ?: 'Pemeliharaan perangkat / Maintenance terjadwal oleh NOC');
+
+        DB::table('noc_intentional_downtimes')->updateOrInsert(
+            ['device_key' => $deviceKey],
+            [
+                'device_type' => $request->input('device_type', 'onu'),
+                'device_name' => $request->input('device_name'),
+                'olt_kode' => $request->input('olt_kode'),
+                'pon_index' => $request->input('pon_index'),
+                'onu_id' => $request->input('onu_id'),
+                'interface_name' => $request->input('interface_name'),
+                'nomor_internet' => $request->input('nomor_internet'),
+                'reason' => $reason,
+                'marked_by' => $user?->nama ?: 'NOC Engineer',
+                'is_active' => true,
+                'marked_at' => now(),
+                'resolved_at' => null,
+                'updated_at' => now(),
+                'created_at' => now(),
+            ]
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Perangkat berhasil ditandai sebagai Intentional (Pemeliharaan). Notifikasi tidak akan muncul sebagai gangguan aktif.',
+            'device_key' => $deviceKey,
+        ]);
+    }
+
+    /**
+     * Cabut status Intentional (Batal ditandai / Kembali ke pemantauan normal)
+     */
+    public function unmarkIntentional(Request $request): JsonResponse
+    {
+        $request->validate([
+            'device_key' => 'required|string|max:190',
+        ]);
+
+        $deviceKey = trim($request->input('device_key'));
+
+        DB::table('noc_intentional_downtimes')
+            ->where('device_key', $deviceKey)
+            ->update([
+                'is_active' => false,
+                'resolved_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Tanda Intentional berhasil dicabut. Perangkat kembali ke pemantauan gangguan normal.',
+            'device_key' => $deviceKey,
+        ]);
+    }
+
+    /**
+     * Kumpulan Data Notifikasi Isu Jaringan & Tiket NOC
+     */
+    public function getNocNotificationsData(?OltConnectionService $oltService = null): array
+    {
+        $oltService = $oltService ?: app(OltConnectionService::class);
+        $intentionalRecords = DB::table('noc_intentional_downtimes')
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('device_key');
+
+        $activeAlerts = [];
+        $intentionalAlerts = [];
+
+        // 1. TIKET GANGGUAN BARU / BELUM SELESAI (status != 14 && status != Selesai)
+        if (Schema::hasTable('trx_tiket_gangguan')) {
+            try {
+                $tickets = DB::table('trx_tiket_gangguan')
+                    ->leftJoin('view_batchjob', 'trx_tiket_gangguan.nomor_internet', '=', 'view_batchjob.nomor_internet')
+                    ->where(function ($q) {
+                        $q->where('trx_tiket_gangguan.status', '11')
+                          ->orWhere(function ($sub) {
+                              $sub->where('trx_tiket_gangguan.status', '!=', '14')
+                                  ->where('trx_tiket_gangguan.status', '!=', 'Selesai');
+                          });
+                    })
+                    ->where(function ($q) {
+                        $q->whereNull('trx_tiket_gangguan.hide')
+                          ->orWhere('trx_tiket_gangguan.hide', '!=', '1');
+                    })
+                    ->select([
+                        'trx_tiket_gangguan.tiket',
+                        'trx_tiket_gangguan.nomor_internet',
+                        'trx_tiket_gangguan.keluhan',
+                        'trx_tiket_gangguan.indikasi',
+                        'trx_tiket_gangguan.status',
+                        'trx_tiket_gangguan.nomor_hp',
+                        'trx_tiket_gangguan.date_create',
+                        'view_batchjob.nama_pelanggan',
+                        'view_batchjob.alamat_pasang',
+                        'view_batchjob.olt',
+                        'view_batchjob.index_olt',
+                    ])
+                    ->orderBy('trx_tiket_gangguan.date_create', 'desc')
+                    ->limit(20)
+                    ->get();
+
+                foreach ($tickets as $t) {
+                    $devKey = 'tiket_' . $t->tiket;
+                    $isIntentional = $intentionalRecords->has($devKey);
+                    $namaPelanggan = $t->nama_pelanggan ?: ($t->nomor_internet ?: 'Pelanggan');
+                    $isLosTicket = stripos($t->keluhan ?? '', 'los') !== false || stripos($t->indikasi ?? '', 'los') !== false;
+
+                    $item = [
+                        'id' => $devKey,
+                        'device_key' => $devKey,
+                        'device_type' => 'tiket',
+                        'title' => $isLosTicket ? 'Tiket Gangguan: Indikasi LOS' : 'Tiket Gangguan Masuk',
+                        'device_name' => "Tiket #{$t->tiket} - {$namaPelanggan}",
+                        'subtitle' => $namaPelanggan . ' (' . ($t->nomor_internet ?: '-') . ')',
+                        'message' => $t->keluhan ?: ($t->indikasi ?: 'Tiket gangguan baru memerlukan penanganan NOC/Teknik.'),
+                        'status' => $t->status === '11' ? 'Baru (Open)' : 'Diproses',
+                        'severity' => $isLosTicket ? 'danger' : 'warning',
+                        'badge_color' => $isLosTicket ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white',
+                        'icon_type' => 'ticket',
+                        'olt_kode' => $t->olt,
+                        'interface_name' => $t->index_olt,
+                        'nomor_internet' => $t->nomor_internet,
+                        'created_at' => $t->date_create ? Carbon::parse($t->date_create)->format('d M Y, H:i') : '-',
+                        'created_at_raw' => $t->date_create,
+                        'url' => route('teknik.tiket.gangguan'),
+                        'action_label' => 'Buka Tiket',
+                        'is_intentional' => $isIntentional,
+                        'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                    ];
+
+                    if ($isIntentional) {
+                        $intentionalAlerts[] = $item;
+                    } else {
+                        $activeAlerts[] = $item;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('NOC notif tickets error: ' . $e->getMessage());
+            }
+        }
+
+        // 2. STATUS PERANGKAT OLT (Konektivitas OLT Utama)
+        if (Schema::hasTable('m_olt')) {
+            try {
+                $olts = DB::table('m_olt')->where('is_active', 1)->get();
+                foreach ($olts as $olt) {
+                    $devKey = 'olt_' . $olt->kode_olt;
+                    $isIntentional = $intentionalRecords->has($devKey);
+
+                    // Test socket reachability jika IP terkonfigurasi
+                    $ip = trim($olt->ip_address ?? '');
+                    $port = (int)($olt->port ?? 23);
+                    $isDown = false;
+
+                    if (!empty($ip)) {
+                        $pingCacheKey = "olt_socket_ping_{$olt->kode_olt}";
+                        $isDown = Cache::remember($pingCacheKey, 30, function () use ($ip, $port) {
+                            $fp = @fsockopen($ip, $port, $errno, $errstr, 1.2);
+                            if (!$fp) {
+                                return true; // Down
+                            }
+                            fclose($fp);
+                            return false; // Up
+                        });
+                    }
+
+                    if ($isDown) {
+                        $item = [
+                            'id' => $devKey,
+                            'device_key' => $devKey,
+                            'device_type' => 'olt',
+                            'title' => 'OLT Server DOWN / Terputus',
+                            'device_name' => ($olt->name_olt ?? 'OLT Server') . " ({$olt->kode_olt})",
+                            'subtitle' => "IP: {$olt->ip_address}:{$olt->port} &middot; POP: " . ($olt->nama_pop ?? 'POP MSN'),
+                            'message' => "Host OLT tidak merespon koneksi jaringan ({$olt->ip_address}:{$olt->port}). Layanan berpotensi terganggu.",
+                            'status' => 'DOWN',
+                            'severity' => 'danger',
+                            'badge_color' => 'bg-rose-600 text-white',
+                            'icon_type' => 'server',
+                            'olt_kode' => $olt->kode_olt,
+                            'interface_name' => null,
+                            'nomor_internet' => null,
+                            'created_at' => now()->format('d M Y, H:i'),
+                            'created_at_raw' => now()->toDateTimeString(),
+                            'url' => route('noc.olt'),
+                            'action_label' => 'Cek Master OLT',
+                            'is_intentional' => $isIntentional,
+                            'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                        ];
+
+                        if ($isIntentional) {
+                            $intentionalAlerts[] = $item;
+                        } else {
+                            $activeAlerts[] = $item;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('NOC notif OLT error: ' . $e->getMessage());
+            }
+        }
+
+        // 3. PERANGKAT ONU & PORT PON YANG LOS / DOWN
+        try {
+            $olts = DB::table('m_olt')->where('is_active', 1)->get();
+            foreach ($olts as $olt) {
+                $maxPorts = min(8, (int)($olt->capacity_olt ?: 8));
+                for ($p = 1; $p <= $maxPorts; $p++) {
+                    $cacheKey = "olt_live_hw_onu_{$olt->kode_olt}_{$p}";
+                    $hwOnu = Cache::get($cacheKey);
+                    if ($hwOnu && !empty($hwOnu['states'])) {
+                        foreach ($hwOnu['states'] as $onuId => $stateInfo) {
+                            $phase = strtolower($stateInfo['phase'] ?? '');
+                            if (in_array($phase, ['los', 'lost', 'dyinggasp', 'offline', 'poweroff'])) {
+                                $isLos = in_array($phase, ['los', 'lost']);
+                                $slot = $oltService->getOltGponSlot($olt);
+                                $interface = "gpon-onu_1/{$slot}/{$p}:{$onuId}";
+                                $devKey = "onu_{$interface}";
+                                $isIntentional = $intentionalRecords->has($devKey);
+
+                                $matchedUser = DB::table('view_batchjob')
+                                    ->where('index_olt', 'like', "%{$interface}%")
+                                    ->orWhere('index_olt', 'like', "%{$p}:{$onuId}%")
+                                    ->first();
+
+                                $custName = $matchedUser->nama_pelanggan ?? "ONU #{$onuId}";
+                                $custNo = $matchedUser->nomor_internet ?? '-';
+                                $rxPower = isset($hwOnu['powers'][$onuId]) ? $hwOnu['powers'][$onuId] . ' dBm' : 'N/A';
+
+                                $item = [
+                                    'id' => $devKey,
+                                    'device_key' => $devKey,
+                                    'device_type' => 'onu',
+                                    'title' => $isLos ? 'ONU LOS (Loss of Signal)' : 'ONU DOWN (Offline / Power Off)',
+                                    'device_name' => "{$interface} - {$custName}",
+                                    'subtitle' => "OLT: {$olt->name_olt} &middot; Port PON {$p} &middot; No: {$custNo}",
+                                    'message' => $isLos 
+                                        ? "Sinyal optik kabel terputus / loss pada {$interface} ({$custName}). Redaman Rx: {$rxPower}"
+                                        : "Perangkat modem offline atau mati listrik pada {$interface} ({$custName}).",
+                                    'status' => $isLos ? 'LOS' : 'DOWN',
+                                    'severity' => $isLos ? 'danger' : 'warning',
+                                    'badge_color' => $isLos ? 'bg-rose-500 text-white' : 'bg-amber-600 text-white',
+                                    'icon_type' => 'radio',
+                                    'olt_kode' => $olt->kode_olt,
+                                    'pon_index' => $p,
+                                    'onu_id' => $onuId,
+                                    'interface_name' => $interface,
+                                    'nomor_internet' => $custNo,
+                                    'rx_power' => $rxPower,
+                                    'created_at' => now()->format('d M Y, H:i'),
+                                    'created_at_raw' => now()->toDateTimeString(),
+                                    'url' => route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $p]),
+                                    'action_label' => 'Buka Port PON',
+                                    'is_intentional' => $isIntentional,
+                                    'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                                ];
+
+                                if ($isIntentional) {
+                                    $intentionalAlerts[] = $item;
+                                } else {
+                                    $activeAlerts[] = $item;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('NOC notif ONU scan error: ' . $e->getMessage());
+        }
+
+        // Urutkan active alerts berdasarkan tingkat severity (danger duluan) lalu waktu terbaru
+        usort($activeAlerts, function ($a, $b) {
+            if ($a['severity'] === 'danger' && $b['severity'] !== 'danger') return -1;
+            if ($b['severity'] === 'danger' && $a['severity'] !== 'danger') return 1;
+            return strcmp($b['created_at_raw'] ?? '', $a['created_at_raw'] ?? '');
+        });
+
+        $totalActive = count($activeAlerts);
+        $totalLosDown = count(array_filter($activeAlerts, fn($a) => in_array($a['status'], ['LOS', 'DOWN'])));
+        $totalTickets = count(array_filter($activeAlerts, fn($a) => $a['device_type'] === 'tiket'));
+        $totalIntentional = count($intentionalAlerts);
+
+        return [
+            'alerts' => $activeAlerts,
+            'intentional' => $intentionalAlerts,
+            'summary' => [
+                'total_active' => $totalActive,
+                'total_los_down' => $totalLosDown,
+                'total_tickets' => $totalTickets,
+                'total_intentional' => $totalIntentional,
+            ],
+            'updated_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
+            'timestamp' => now()->timestamp,
+        ];
+    }
 }

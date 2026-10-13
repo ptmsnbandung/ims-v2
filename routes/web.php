@@ -225,6 +225,12 @@ Route::middleware('auth')->group(function () {
         // 9. Tiket Gangguan (Pelaksana Utama NOC)
         Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');
         Route::get('/tiket-gangguan', [TeknikController::class, 'tiketGangguan'])->name('tiket.gangguan');
+
+        // 10. Pusat Notifikasi & Monitoring Isu Jaringan NOC
+        Route::get('/notifikasi', [NocController::class, 'notifikasi'])->name('notifikasi');
+        Route::get('/api/notifications', [NocController::class, 'getNocNotificationsJson'])->name('api.notifications');
+        Route::post('/api/notifications/intentional', [NocController::class, 'markIntentional'])->name('api.notifications.intentional');
+        Route::post('/api/notifications/unmark-intentional', [NocController::class, 'unmarkIntentional'])->name('api.notifications.unmark-intentional');
     });
 
     // Routes Role Finance & Direktur & Admin

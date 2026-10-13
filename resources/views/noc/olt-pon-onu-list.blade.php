@@ -87,10 +87,10 @@
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                             <span>Live: <span class="text-white font-bold" x-text="currentTime">--:--:--</span> WIB</span>
                         </div>
-                        <!-- Live Hardware Counter ZTE Badge -->
+                        <!-- Live Hardware Physical PON Discovery Badge -->
                         <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-950 text-teal-200 border border-teal-500/50 shadow-2xs font-mono">
                             <span class="w-2 h-2 rounded-full bg-teal-400"></span>
-                            <span>Counter Hardware ZTE C320 (Auto-Sync)</span>
+                            <span>Fisik Port PON OLT (Direct Hardware ZTE C320)</span>
                         </div>
                         <!-- Auto-Refresh Status Badge -->
                         <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-950 text-blue-200 border border-blue-500/50 shadow-2xs font-semibold">

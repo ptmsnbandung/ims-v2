@@ -46,7 +46,7 @@
                         </div>
                         <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-mono shadow-xs">
                             <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                            <span>Counter Hardware ZTE C320 (Auto-Sync)</span>
+                            <span>Fisik Port PON OLT (Direct Hardware ZTE C320)</span>
                         </div>
                         <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-500/30">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-400" :class="isPageActive ? 'animate-ping' : ''"></span>

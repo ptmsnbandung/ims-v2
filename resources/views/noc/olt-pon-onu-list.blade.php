@@ -1483,13 +1483,20 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             })
             .then(data => {
                 if (data) {
-                    this.cliData = data;
-                    if (data.success && this.selectedOnu) {
-                        if (data.down_rx_formatted && data.down_rx_formatted !== 'N/A') this.selectedOnu.rx_power = data.down_rx_formatted;
-                        if (data.up_tx_formatted && data.up_tx_formatted !== 'N/A') this.selectedOnu.tx_power = data.up_tx_formatted;
-                        if (data.down_tx_formatted && data.down_tx_formatted !== 'N/A') this.selectedOnu.olt_tx = data.down_tx_formatted;
-                        if (data.up_rx_formatted && data.up_rx_formatted !== 'N/A') this.selectedOnu.olt_rx = data.up_rx_formatted;
-                        if (data.attenuation_formatted && data.attenuation_formatted !== 'N/A') this.selectedOnu.attenuation_db = data.attenuation_formatted;
+                    if (data.success) {
+                        this.cliData = data;
+                        if (this.selectedOnu) {
+                            if (data.down_rx_formatted && data.down_rx_formatted !== 'N/A') this.selectedOnu.rx_power = data.down_rx_formatted;
+                            if (data.up_tx_formatted && data.up_tx_formatted !== 'N/A') this.selectedOnu.tx_power = data.up_tx_formatted;
+                            if (data.down_tx_formatted && data.down_tx_formatted !== 'N/A') this.selectedOnu.olt_tx = data.down_tx_formatted;
+                            if (data.up_rx_formatted && data.up_rx_formatted !== 'N/A') this.selectedOnu.olt_rx = data.up_rx_formatted;
+                            if (data.attenuation_formatted && data.attenuation_formatted !== 'N/A') this.selectedOnu.attenuation_db = data.attenuation_formatted;
+                        }
+                    } else {
+                        // Jika OLT offline atau terjadi kendala, pertahankan angka sinyal yang sudah ada di kartu
+                        this.cliData.raw_output = data.raw_output || data.message || 'Gagal mengeksekusi CLI.';
+                        this.cliData.command = data.command || this.cliData.command;
+                        this.cliData.checked_at = data.checked_at || this.cliData.checked_at;
                     }
                 }
             })

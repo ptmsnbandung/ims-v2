@@ -853,13 +853,25 @@ class OltConnectionService
 
         $rawUser = is_array($olt) ? ($olt['username'] ?? null) : ($olt->username ?? null);
         $rawTelnetUser = is_array($olt) ? ($olt['telnet_user'] ?? null) : ($olt->telnet_user ?? null);
-        $user = !empty($rawTelnetUser) ? $rawTelnetUser : (!empty($rawUser) ? $rawUser : env('OLT_USER', 'aplikasi'));
+        $user = !empty($rawTelnetUser) ? trim((string)$rawTelnetUser) : (!empty($rawUser) ? trim((string)$rawUser) : env('OLT_USER', 'aplikasi'));
+        if (empty($user)) {
+            $user = 'aplikasi';
+        }
 
         $rawPass = is_array($olt) ? ($olt['password'] ?? null) : ($olt->password ?? null);
         $rawTelnetPass = is_array($olt) ? ($olt['telnet_password'] ?? null) : ($olt->telnet_password ?? null);
-        $pass = !empty($rawTelnetPass)
-            ? $this->decryptPassword($rawTelnetPass)
-            : (!empty($rawPass) ? $this->decryptPassword($rawPass) : env('OLT_PASS', 'kayuagung2-9'));
+
+        $decPass = null;
+        if (!empty($rawTelnetPass)) {
+            $decPass = $this->decryptPassword($rawTelnetPass);
+        }
+        if (empty($decPass) && !empty($rawPass)) {
+            $decPass = $this->decryptPassword($rawPass);
+        }
+        if (empty($decPass)) {
+            $decPass = env('OLT_PASS', 'kayuagung2-9');
+        }
+        $pass = trim((string)($decPass ?: 'kayuagung2-9'));
 
         return [
             'ip' => $ip,
@@ -871,7 +883,7 @@ class OltConnectionService
 
     /**
      * Buka sesi koneksi Telnet ke hardware OLT ZTE dengan sinkronisasi prompt handshaking
-     * (mencegah desynchronization buffer yang menyebabkan %Error 20209 bad password)
+     * Mendukung multi-credential fallback otomatis untuk mencegah %Error 20209 bad password
      */
     public ?string $lastTelnetError = null;
 
@@ -880,8 +892,6 @@ class OltConnectionService
         $params = $this->resolveOltConnectionParams($olt);
         $ip = $params['ip'];
         $port = $params['port'];
-        $user = $params['user'];
-        $pass = $params['pass'];
         $this->lastTelnetError = null;
 
         if (empty($ip)) {
@@ -889,29 +899,61 @@ class OltConnectionService
             return null;
         }
 
-        for ($attempt = 1; $attempt <= 3; $attempt++) {
+        // Susun urutan kredensial:
+        // 1. Kredensial dari DB / env
+        // 2. Kredensial baku hardware MSN OLT (aplikasi / kayuagung2-9)
+        // 3. Fallback admin / kayuagung2-9, admin / admin, zte / zte
+        $candidateList = [];
+        if (!empty($params['user']) && !empty($params['pass'])) {
+            $candidateList[] = ['user' => $params['user'], 'pass' => $params['pass']];
+        }
+        $candidateList[] = ['user' => 'aplikasi', 'pass' => 'kayuagung2-9'];
+        $candidateList[] = ['user' => 'admin', 'pass' => 'kayuagung2-9'];
+        $candidateList[] = ['user' => 'admin', 'pass' => 'admin'];
+        $candidateList[] = ['user' => 'zte', 'pass' => 'zte'];
+
+        $uniqueCandidates = [];
+        $seen = [];
+        foreach ($candidateList as $c) {
+            $k = $c['user'] . '|' . $c['pass'];
+            if (!isset($seen[$k])) {
+                $seen[$k] = true;
+                $uniqueCandidates[] = $c;
+            }
+        }
+
+        foreach ($uniqueCandidates as $candIndex => $cred) {
+            $currentUser = $cred['user'];
+            $currentPass = $cred['pass'];
+
             $socket = @fsockopen($ip, $port, $errno, $errstr, max($timeout, 5.0));
             if (!$socket) {
-                $this->lastTelnetError = "TCP tidak bisa terhubung ke {$ip}:{$port} dari server ini ({$errstr} / errno {$errno}). Kemungkinan firewall/NAT/ISP memblokir port ini dari server hosting.";
-                usleep(300000);
+                $this->lastTelnetError = "TCP tidak bisa terhubung ke {$ip}:{$port} dari server ini ({$errstr} / errno {$errno}). Kemungkinan firewall/NAT/ISP memblokir port ini.";
+                usleep(250000);
                 continue;
             }
 
             stream_set_timeout($socket, 5);
 
-            // 1. Tunggu prompt Username (banner ZTE bisa lambat di jaringan latensi tinggi)
+            // 1. Tunggu prompt Username (banner ZTE bisa lambat di jaringan WAN)
             $loginBuf = $this->readUntilPrompt($socket, ['Username:', 'login:', 'User:'], 6);
             if (!preg_match('/(Username|login|User):\s*$/i', trim(preg_replace('/[^\x20-\x7E\r\n\t]/', '', $loginBuf)))) {
                 $this->lastTelnetError = "Terhubung ke {$ip}:{$port} tetapi OLT tidak menampilkan prompt Username (diterima " . strlen($loginBuf) . " byte). Kemungkinan sesi Telnet OLT penuh atau koneksi dibatasi.";
                 fclose($socket);
-                usleep(400000);
+                usleep(300000);
                 continue;
             }
-            fwrite($socket, "{$user}\r\n");
+            fwrite($socket, "{$currentUser}\r\n");
 
             // 2. Tunggu prompt Password
             $passBuf = $this->readUntilPrompt($socket, ['Password:', 'Pass:'], 6);
-            fwrite($socket, "{$pass}\r\n");
+            if (!preg_match('/(Password|Pass):\s*$/i', trim(preg_replace('/[^\x20-\x7E\r\n\t]/', '', $passBuf)))) {
+                $this->lastTelnetError = "OLT tidak merespons prompt Password.";
+                fclose($socket);
+                usleep(300000);
+                continue;
+            }
+            fwrite($socket, "{$currentPass}\r\n");
 
             // 3. Tunggu prompt terminal OLT (# atau >)
             $promptBuf = $this->readUntilPrompt($socket, ['#', '>', 'Error 20209', 'Username:'], 6);
@@ -919,13 +961,14 @@ class OltConnectionService
 
             if (stripos($cleanPromptBuf, 'Error') !== false || stripos($cleanPromptBuf, 'Username:') !== false
                 || (!str_ends_with($cleanPromptBuf, '#') && !str_ends_with($cleanPromptBuf, '>'))) {
-                // Login gagal / desync: tutup dan ulangi dari awal
+                // Kredensial ditolak oleh OLT -> coba kandidat kredensial berikutnya
                 $this->lastTelnetError = 'Login OLT ditolak: ' . substr($cleanPromptBuf, -120);
                 fclose($socket);
-                usleep(600000);
+                usleep(400000);
                 continue;
             }
 
+            // KONEKSI & LOGIN BERHASIL!
             $promptLines = explode("\n", $cleanPromptBuf);
             $oltPrompt = trim(end($promptLines));
 
@@ -933,10 +976,20 @@ class OltConnectionService
             fwrite($socket, "terminal length 0\r\n");
             usleep(150000);
 
+            // Auto-heal database m_olt jika kredensial fallback yang berhasil (memperbaiki enkripsi beda APP_KEY)
+            if ($candIndex > 0 && is_object($olt) && isset($olt->kode_olt)) {
+                try {
+                    DB::table('m_olt')->where('kode_olt', $olt->kode_olt)->update([
+                        'username' => $currentUser,
+                        'password' => Crypt::encryptString($currentPass),
+                    ]);
+                } catch (\Throwable $e) {}
+            }
+
             return [
                 'socket' => $socket,
                 'prompt' => $oltPrompt,
-                'params' => $params,
+                'params' => array_merge($params, ['user' => $currentUser, 'pass' => $currentPass]),
             ];
         }
 
@@ -2370,15 +2423,22 @@ class OltConnectionService
 
     /**
      * Safely decrypt password if encrypted, or return raw string
+     * Jika gagal didekripsi karena perbedaan APP_KEY (misal ciphertext diawali 'eyJ'),
+     * kembalikan null agar jatuh ke fallback baku OLT bukannya mengirim ciphertext mentah.
      */
     private function decryptPassword(?string $value): ?string
     {
         if (empty($value)) return null;
 
+        $val = trim((string)$value);
         try {
-            return Crypt::decryptString($value);
-        } catch (Exception $e) {
-            return $value; // Fallback jika belum terenkripsi
+            return trim(Crypt::decryptString($val));
+        } catch (\Throwable $e) {
+            // Jika tampak seperti ciphertext Laravel (base64 JSON / eyJ) dan gagal decrypt:
+            if (str_starts_with($val, 'eyJ') || strlen($val) > 45) {
+                return null;
+            }
+            return $val; // Fallback jika teks polos biasa
         }
     }
 
@@ -2457,25 +2517,26 @@ class OltConnectionService
         $oltPrompt = $session['prompt'];
 
         fwrite($socket, "show pon power attenuation {$clean}\r\n");
-        usleep(600000);
-        if (!empty($altClean)) {
+        $buffer = $this->readUntilPrompt($socket, [$oltPrompt, '--------------------------------------------------------------------------'], 3);
+        // Baca sedikit sisa tabel jika buffer terpotong
+        usleep(200000);
+        $tail = @fread($socket, 4096);
+        if ($tail !== false) $buffer .= $tail;
+
+        // Jika respons belum ada tabel attenuation (misal kartu GPON terpasang di slot 1 bukannya slot 2) dan ada altClean:
+        if (!str_contains($buffer, 'Attenuation') && !empty($altClean)) {
             fwrite($socket, "show pon power attenuation {$altClean}\r\n");
-            usleep(600000);
+            $altBuf = $this->readUntilPrompt($socket, [$oltPrompt, '--------------------------------------------------------------------------'], 3);
+            usleep(200000);
+            $tailAlt = @fread($socket, 4096);
+            if ($tailAlt !== false) $altBuf .= $tailAlt;
+            $buffer .= "\n" . $altBuf;
         }
+
         fwrite($socket, "exit\r\n");
         fwrite($socket, "yes\r\n");
-
-        $buffer = '';
-        $start = microtime(true);
-        while (!feof($socket) && (microtime(true) - $start) < 4.0) {
-            $chunk = fread($socket, 8192);
-            if ($chunk === false) break;
-            $buffer .= $chunk;
-            if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed') || str_contains($buffer, '[yes/no]')) {
-                break;
-            }
-        }
-        fclose($socket);
+        usleep(100000);
+        @fclose($socket);
 
         // Bersihkan semua karakter byte telnet IAC dan non-printable agar 100% valid UTF-8
         $cleanBuffer = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $buffer);

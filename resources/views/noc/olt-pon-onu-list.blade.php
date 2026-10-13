@@ -785,7 +785,7 @@
                             <!-- Paket Layanan -->
                             <div class="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800">
                                 <span class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider block">Paket Internet:</span>
-                                <span class="font-bold text-indigo-600 dark:text-indigo-400 truncate block mt-0.5 text-xs" x-text="onu.package_name"></span>
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400 truncate block mt-0.5 text-xs" x-text="onu.nama_kategori_bandwith || onu.package_name"></span>
                             </div>
                         </div>
 
@@ -949,7 +949,7 @@
 
                             <!-- Paket -->
                             <td class="py-2.5 px-3">
-                                <span class="font-semibold text-slate-800 dark:text-slate-200 block" x-text="onu.package_name"></span>
+                                <span class="font-semibold text-slate-800 dark:text-slate-200 block" x-text="onu.nama_kategori_bandwith || onu.package_name"></span>
                                 <span class="text-[10px] text-slate-400" x-text="onu.nominal_bandwith + ' Mbps'"></span>
                             </td>
 

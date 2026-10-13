@@ -1796,7 +1796,7 @@ class OltConnectionService
                 // 1. Preload data database untuk enrichment (Nama, Nomor Internet, ODP, Paket BW)
                 $dbBySlot = [];
                 $dbBySn = [];
-                $regs = DB::table('trx_batchjob_register')
+                $regs = DB::table('view_batchjob')
                     ->where(function($q) use ($kodeOlt, $olt) {
                         $name = strtolower($olt->name_olt ?? ($olt->nama_olt ?? ''));
                         $q->where('olt', $kodeOlt);
@@ -1937,9 +1937,15 @@ class OltConnectionService
                         $pel = $pelanggansMap[strtoupper(trim($custName))] ?? null;
                         $address = $pel['alamat'] ?? 'Bandung, Jawa Barat';
                         $phone = $pel['hp'] ?? '-';
-                        $speedVal = (float)($billingsMap[$custNo] ?? 20);
+                        $speedVal = (float)($billingsMap[$custNo] ?? ($matched->nominal_bandwith ?? 20));
                         if ($speedVal <= 0) $speedVal = 20;
-                        $packageName = 'Home Fiber ' . (int)$speedVal . 'M';
+                        $packageName = !empty($matched->nama_kategori_bandwith)
+                            ? $matched->nama_kategori_bandwith
+                            : (!empty($matched->alias_nama_kategori)
+                                ? $matched->alias_nama_kategori
+                                : (!empty($matched->nama_bandwith)
+                                    ? $matched->nama_bandwith
+                                    : ('Home Fiber ' . (int)$speedVal . 'M')));
                         $displayName = "ONU-{$onuId} - {$custName}";
                     } else {
                         $custNo = "SN-{$sn}";
@@ -2036,6 +2042,7 @@ class OltConnectionService
                         'upload_mbps' => $upRate,
                         'upload_formatted' => $upRate . ' Mbps',
                         'package_name' => $packageName,
+                        'nama_kategori_bandwith' => $matched->nama_kategori_bandwith ?? null,
                         'nominal_bandwith' => $speedVal,
                         'down_pct' => min(100, round(($downRate / max(1, $speedVal)) * 100)),
                         'onu_name' => "ONU {$onuId}",
@@ -2131,8 +2138,8 @@ class OltConnectionService
             $batchjobMap = [];
             if (!empty($nomorInternets)) {
                 try {
-                    $batchjobMap = DB::table('trx_batchjob_register')
-                        ->select('nomor_internet', 'index_olt', 'status_reg', 'ont_us', 'note_request')
+                    $batchjobMap = DB::table('view_batchjob')
+                        ->select('nomor_internet', 'index_olt', 'status_reg', 'ont_us', 'note_request', 'nama_kategori_bandwith', 'alias_nama_kategori', 'nama_bandwith')
                         ->whereIn('nomor_internet', $nomorInternets)
                         ->get()
                         ->keyBy('nomor_internet')
@@ -2338,7 +2345,14 @@ class OltConnectionService
                     'download_formatted' => $downRate . ' Mbps',
                     'upload_mbps' => $upRate,
                     'upload_formatted' => $upRate . ' Mbps',
-                    'package_name' => 'Home Fiber ' . (int)$speedVal . 'M',
+                    'package_name' => (!empty($batchjobMap[$custNo]->nama_kategori_bandwith)
+                        ? $batchjobMap[$custNo]->nama_kategori_bandwith
+                        : (!empty($batchjobMap[$custNo]->alias_nama_kategori)
+                            ? $batchjobMap[$custNo]->alias_nama_kategori
+                            : (!empty($batchjobMap[$custNo]->nama_bandwith)
+                                ? $batchjobMap[$custNo]->nama_bandwith
+                                : ('Home Fiber ' . (int)$speedVal . 'M')))),
+                    'nama_kategori_bandwith' => $batchjobMap[$custNo]->nama_kategori_bandwith ?? null,
                     'nominal_bandwith' => $speedVal,
                     'down_pct' => min(100, round(($downRate / max(1, $speedVal)) * 100)),
                     'onu_name' => "ONU {$onuSlot}",
@@ -2561,7 +2575,8 @@ class OltConnectionService
                 'download_formatted' => $downRate . ' Mbps',
                 'upload_mbps' => $upRate,
                 'upload_formatted' => $upRate . ' Mbps',
-                'package_name' => $cust->nama_kategori_bandwith ?: 'Home Fiber ' . (int)$nominalBw . 'M',
+                'package_name' => $cust->nama_kategori_bandwith ?: ($cust->alias_nama_kategori ?: ($cust->nama_bandwith ?: ('Home Fiber ' . (int)$nominalBw . 'M'))),
+                'nama_kategori_bandwith' => $cust->nama_kategori_bandwith ?? null,
                 'nominal_bandwith' => $nominalBw,
                 'down_pct' => min(100, round(($downRate / max(1, $nominalBw)) * 100)),
                 'onu_name' => "ONU {$onuSlot}",

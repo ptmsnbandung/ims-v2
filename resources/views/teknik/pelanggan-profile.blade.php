@@ -1590,11 +1590,6 @@
                                 </span>
 
 
-                                <!-- OLT Server -->
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-blue-600 dark:text-blue-400 shadow-2xs">
-                                    <span class="text-slate-400 font-sans">OLT:</span>
-                                    <span x-text="onu?.olt_name || '{{ $customer->olt ?: '-' }}'"></span>
-                                </span>
 
                                 <!-- Optical Power SFP Rx & Tx -->
                                 <template x-if="onu && onu.rx_power && onu.rx_power !== '-'">

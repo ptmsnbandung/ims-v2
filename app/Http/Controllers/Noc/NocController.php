@@ -4067,7 +4067,8 @@ class NocController extends Controller
         });
 
         $totalActive = count($activeAlerts);
-        $totalLosDown = count(array_filter($activeAlerts, fn($a) => in_array($a['status'], ['LOS', 'DOWN'])));
+        $totalLos = count(array_filter($activeAlerts, fn($a) => $a['status'] === 'LOS'));
+        $totalDown = count(array_filter($activeAlerts, fn($a) => $a['status'] === 'DOWN'));
         $totalTickets = count(array_filter($activeAlerts, fn($a) => $a['device_type'] === 'tiket'));
         $totalIntentional = count($intentionalAlerts);
 
@@ -4076,7 +4077,9 @@ class NocController extends Controller
             'intentional' => $intentionalAlerts,
             'summary' => [
                 'total_active' => $totalActive,
-                'total_los_down' => $totalLosDown,
+                'total_los' => $totalLos,
+                'total_down' => $totalDown,
+                'total_los_down' => $totalLos + $totalDown,
                 'total_tickets' => $totalTickets,
                 'total_intentional' => $totalIntentional,
             ],

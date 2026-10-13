@@ -722,16 +722,14 @@ class OltConnectionService
             );
 
         $query->where(function ($q) use ($kodeOlt, $namaOlt, $kodePop) {
-            // 1. Cocokkan kode OLT langsung
+            // 1. Cocokkan kode OLT langsung pada trx_batchjob_register
             if (!empty($kodeOlt)) {
-                $q->where('trx_batchjob_register.olt', $kodeOlt)
-                  ->orWhere('view_batchjob.olt', $kodeOlt);
+                $q->where('trx_batchjob_register.olt', $kodeOlt);
             }
 
-            // 2. Cocokkan nama OLT
+            // 2. Cocokkan nama OLT pada trx_batchjob_register
             if (!empty($namaOlt)) {
-                $q->orWhere('trx_batchjob_register.olt', 'like', "%{$namaOlt}%")
-                  ->orWhere('view_batchjob.olt', 'like', "%{$namaOlt}%");
+                $q->orWhere('trx_batchjob_register.olt', 'like', "%{$namaOlt}%");
             }
 
             // 3. Cocokkan kode POP jika terdaftar di m_olt

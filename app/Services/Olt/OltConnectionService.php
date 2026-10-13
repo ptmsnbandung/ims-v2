@@ -940,7 +940,7 @@ class OltConnectionService
      * Memastikan routing port OLT akurat:
      * - O2 (Babakan Tarogong / Bagong): Port 45525
      * - O1 (Kayu Agung): Port 45523
-     * - O3 (BBU / Soreang): Port 45528
+     * - O3 (BBU / Soreang / Bojong Sayang): Port 45524
      */
     public function resolveOltConnectionParams(object|array|null $olt): array
     {
@@ -955,13 +955,13 @@ class OltConnectionService
         $rawTelnetPort = is_array($olt) ? ($olt['telnet_port'] ?? 0) : ($olt->telnet_port ?? 0);
         $port = !empty($rawTelnetPort) ? (int)$rawTelnetPort : (!empty($rawPort) && (int)$rawPort !== 23 ? (int)$rawPort : 0);
 
-        if ($port === 0) {
+        if ($port === 0 || $port === 45528 || ($port === 45523 && ($kodeOlt === 'O2' || $kodeOlt === 'O3' || str_contains($namaOlt, 'babakan') || str_contains($namaOlt, 'soreang') || str_contains($namaOlt, 'bbu') || str_contains($namaOlt, 'bojong')))) {
             if ($kodeOlt === 'O2' || str_contains($namaOlt, 'babakan') || str_contains($namaOlt, 'tarogong') || str_contains($namaOlt, 'bagong')) {
                 $port = 45525;
             } elseif ($kodeOlt === 'O1' || str_contains($namaOlt, 'kayu') || str_contains($namaOlt, 'agung')) {
                 $port = 45523;
-            } elseif ($kodeOlt === 'O3' || str_contains($namaOlt, 'bbu') || str_contains($namaOlt, 'soreang')) {
-                $port = 45528;
+            } elseif ($kodeOlt === 'O3' || str_contains($namaOlt, 'bbu') || str_contains($namaOlt, 'soreang') || str_contains($namaOlt, 'bojong')) {
+                $port = 45524;
             } else {
                 $port = (int)env('OLT_PORT', 45523);
             }
@@ -1129,8 +1129,9 @@ class OltConnectionService
             $socket = $session['socket'];
 
             $slot = $this->getOltGponSlot($olt);
+            $maxPorts = 16;
 
-            for ($p = 1; $p <= 8; $p++) {
+            for ($p = 1; $p <= $maxPorts; $p++) {
                 fwrite($socket, "show interface gpon-olt_1/{$slot}/{$p}\r\n");
                 fwrite($socket, "show gpon onu state gpon-olt_1/{$slot}/{$p}\r\n");
             }
@@ -1141,7 +1142,7 @@ class OltConnectionService
 
             $buffer = '';
             $start = microtime(true);
-            while (!feof($socket) && (microtime(true) - $start) < 2.5) {
+            while (!feof($socket) && (microtime(true) - $start) < 3.0) {
                 $chunk = fread($socket, 8192);
                 if ($chunk === false) break;
                 $buffer .= $chunk;
@@ -1152,7 +1153,7 @@ class OltConnectionService
             fclose($socket);
 
             $ports = [];
-            for ($p = 1; $p <= 8; $p++) {
+            for ($p = 1; $p <= $maxPorts; $p++) {
                 $pattern = '/gpon-olt_1\/' . $slot . '\/' . $p . ' is (activate|deactivate)[^#]+?OLT statistic:\s+Input rate\s*:\s*(\d+)\s*Bps[^#]+?Output rate:\s*(\d+)\s*Bps/is';
                 if (!preg_match($pattern, $buffer, $m)) {
                     $pattern = '/gpon-olt_1\/[12]\/' . $p . ' is (activate|deactivate)[^#]+?OLT statistic:\s+Input rate\s*:\s*(\d+)\s*Bps[^#]+?Output rate:\s*(\d+)\s*Bps/is';
@@ -1291,13 +1292,43 @@ class OltConnectionService
             }
 
             $states = [];
-            if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+(\w+)\s+(\w+)\s+(\w+)/i', $buffer, $mState, PREG_SET_ORDER)) {
+            $stateBlock = $buffer;
+            if (preg_match('/show gpon onu state\s+[^\r\n]+[\r\n]+(.*?)(?=show pon power|show interface|show gpon onu baseinfo|MSN|OLT|$)/is', $buffer, $mBlock)) {
+                $stateBlock = $mBlock[1];
+            }
+
+            if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+([^\r\n]+)/i', $stateBlock, $mState, PREG_SET_ORDER)) {
                 foreach ($mState as $s) {
                     $onuId = (int)$s[1];
+                    $tokens = preg_split('/\s+/', trim($s[2]));
+                    $admin = strtolower($tokens[0] ?? '');
+                    $omcc = strtolower($tokens[1] ?? '');
+
+                    // Baris valid show gpon onu state wajib dimulai dengan admin state enable/disable
+                    if ($admin !== 'enable' && $admin !== 'disable') {
+                        continue;
+                    }
+
+                    $phase = 'unknown';
+                    $knownPhases = ['working', 'ready', 'online', 'operation', 'los', 'lost', 'dyinggasp', 'offline', 'poweroff', 'logging', 'syncmib'];
+                    foreach (array_reverse($tokens) as $t) {
+                        if (in_array(strtolower($t), $knownPhases)) {
+                            $phase = $t;
+                            break;
+                        }
+                    }
+                    if ($phase === 'unknown') {
+                        if (isset($tokens[3]) && in_array(strtolower($tokens[2]), ['operation', 'unknown'])) {
+                            $phase = $tokens[3];
+                        } else {
+                            $phase = $tokens[2] ?? 'unknown';
+                        }
+                    }
+
                     $states[$onuId] = [
-                        'admin' => $s[2],
-                        'omcc' => $s[3],
-                        'phase' => $s[4],
+                        'admin' => $admin,
+                        'omcc' => $omcc,
+                        'phase' => $phase,
                     ];
                 }
             }
@@ -1441,13 +1472,43 @@ class OltConnectionService
             fclose($socket);
 
             $states = [];
-            if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+(\w+)\s+(\w+)\s+(\w+)/i', $buffer, $matches, PREG_SET_ORDER)) {
+            $stateBlock = $buffer;
+            if (preg_match('/show gpon onu state\s+[^\r\n]+[\r\n]+(.*?)(?=show pon power|show interface|show gpon onu baseinfo|MSN|OLT|$)/is', $buffer, $mBlock)) {
+                $stateBlock = $mBlock[1];
+            }
+
+            if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+([^\r\n]+)/i', $stateBlock, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $m) {
                     $onuId = (int)$m[1];
+                    $tokens = preg_split('/\s+/', trim($m[2]));
+                    $admin = strtolower($tokens[0] ?? '');
+                    $omcc = strtolower($tokens[1] ?? '');
+
+                    // Baris valid show gpon onu state wajib dimulai dengan admin state enable/disable
+                    if ($admin !== 'enable' && $admin !== 'disable') {
+                        continue;
+                    }
+
+                    $phase = 'unknown';
+                    $knownPhases = ['working', 'ready', 'online', 'operation', 'los', 'lost', 'dyinggasp', 'offline', 'poweroff', 'logging', 'syncmib'];
+                    foreach (array_reverse($tokens) as $t) {
+                        if (in_array(strtolower($t), $knownPhases)) {
+                            $phase = $t;
+                            break;
+                        }
+                    }
+                    if ($phase === 'unknown') {
+                        if (isset($tokens[3]) && in_array(strtolower($tokens[2]), ['operation', 'unknown'])) {
+                            $phase = $tokens[3];
+                        } else {
+                            $phase = $tokens[2] ?? 'unknown';
+                        }
+                    }
+
                     $states[$onuId] = [
-                        'admin' => $m[2],
-                        'omcc' => $m[3],
-                        'phase' => $m[4],
+                        'admin' => $admin,
+                        'omcc' => $omcc,
+                        'phase' => $phase,
                     ];
                 }
             }
@@ -1829,7 +1890,7 @@ class OltConnectionService
                 $upUsersCount = 0;
                 foreach ($baseinfo as $onuId => $bi) {
                     $st = $states[$onuId]['phase'] ?? ($bi['state_base'] ?? 'unknown');
-                    if (in_array(strtolower($st), ['working', 'ready', 'online'])) {
+                    if (in_array(strtolower($st), ['working', 'ready', 'online', 'operation'])) {
                         $upUsersCount++;
                         $matched = $dbBySlot[$onuId] ?? ($dbBySn[$bi['sn']] ?? null);
                         $cNo = $matched->nomor_internet ?? '';
@@ -1877,7 +1938,7 @@ class OltConnectionService
                     $isOnline = false;
                     $isLos = false;
                     $isSuspend = false;
-                    if (in_array($phase, ['working', 'ready', 'online'])) {
+                    if (in_array($phase, ['working', 'ready', 'online', 'operation'])) {
                         $statusText = 'UP';
                         $isOnline = true;
                     } elseif (in_array($phase, ['los', 'lost'])) {
@@ -2092,8 +2153,8 @@ class OltConnectionService
                 $slotMatch = preg_match('/(?:1\/[12]\/\d+:|:)(\d+)/', $rawIndexOlt, $sm) ? (int)$sm[1] : null;
                 $phase = ($slotMatch && isset($realHwOnu['states'][$slotMatch])) ? strtolower($realHwOnu['states'][$slotMatch]['phase'] ?? '') : '';
                 $isUserUp = ($slotMatch && isset($realHwOnu['states'][$slotMatch]))
-                    ? in_array($phase, ['working', 'ready', 'online'])
-                    : (($reg->status_reg ?? '20') == '20');
+                    ? in_array($phase, ['working', 'ready', 'online', 'operation'])
+                    : (!in_array($reg->status_reg ?? '20', ['21', '21.1', '23', '23.1', '15']));
 
                 if ($isUserUp) {
                     $upUsersCount++;
@@ -2153,7 +2214,7 @@ class OltConnectionService
 
                 if ($hwState) {
                     $phase = strtolower($hwState['phase'] ?? '');
-                    if (in_array($phase, ['working', 'ready', 'online'])) {
+                    if (in_array($phase, ['working', 'ready', 'online', 'operation'])) {
                         $statusText = 'UP';
                         $isOnline = true;
                     } elseif (in_array($phase, ['los', 'lost'])) {
@@ -2180,7 +2241,7 @@ class OltConnectionService
                         $txPower = 0.00;
                         $rxPowerDisplay = '-21.00 dBm';
                         $uptimeText = 'Terisolir (Suspend)';
-                    } elseif (($reg->status_reg ?? '20') == '20') {
+                    } elseif (!in_array($reg->status_reg ?? '20', ['21', '21.1', '23', '23.1', '15'])) {
                         $statusText = 'UP';
                         $isOnline = true;
                         $rxPower = round(-19.50 - (($hash % 50) / 10), 2);

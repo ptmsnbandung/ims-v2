@@ -417,6 +417,15 @@
     <style>
         [x-cloak] { display: none !important; }
 
+        @keyframes imsToastProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+        .ims-toast-progress-bar {
+            width: 100%;
+            animation: imsToastProgress 8s linear forwards;
+        }
+
         /* Responsive helpers for Desktop Table vs Mobile Cards */
         @media (min-width: 768px) {
             .ims-mobile-only {
@@ -2142,89 +2151,195 @@
              }
          }"
          @ims-new-toast.window="addToast($event.detail)"
-         class="fixed top-5 right-5 z-[999999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0">
+          class="fixed top-6 right-6 z-[999999] flex flex-col gap-3 max-w-sm sm:max-w-md w-full pointer-events-none px-4 sm:px-0">
         
         <template x-for="t in toasts" :key="t.id">
-            <div class="pointer-events-auto w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xl shadow-black/15 flex items-start gap-3 transition-all duration-300 transform translate-y-0"
+            <div class="pointer-events-auto relative overflow-hidden w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 shadow-2xl flex items-start gap-3.5 transition-all duration-300 transform translate-y-0"
+                 :class="{
+                     'border-l-4 border-l-rose-500 border border-rose-500/30 shadow-rose-500/10': t.type === 'noc_alarm' || t.status === 'LOS' || t.type === 'tiket',
+                     'border-l-4 border-l-amber-500 border border-amber-500/30 shadow-amber-500/10': t.status === 'DOWN' || t.type === 'suspend',
+                     'border-l-4 border-l-emerald-500 border border-emerald-500/30 shadow-emerald-500/10': t.type === 'pendaftaran' || t.type === 'pembayaran',
+                     'border-l-4 border-l-cyan-500 border border-cyan-500/30 shadow-cyan-500/10': t.type === 'instalasi' || t.type === 'updown',
+                     'border-l-4 border-l-teal-500 border border-slate-200 dark:border-slate-800 shadow-slate-900/15': !['noc_alarm', 'tiket', 'suspend', 'pendaftaran', 'pembayaran', 'instalasi', 'updown'].includes(t.type)
+                 }"
                  x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                 x-transition:enter-start="opacity-0 translate-y-3 scale-95"
                  x-transition:enter-end="opacity-100 translate-y-0 scale-100"
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 scale-100"
                  x-transition:leave-end="opacity-0 scale-90">
                 
-                <!-- Toast Icon -->
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                <!-- Toast Icon Box with Pulse Beacon -->
+                <div class="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                      :class="{
+                         'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': t.type === 'noc_alarm' || t.status === 'LOS' || t.type === 'tiket',
+                         'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30': t.status === 'DOWN' || t.type === 'suspend',
                          'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': t.type === 'pendaftaran' || t.type === 'pembayaran',
-                         'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30': t.type === 'instalasi',
-                         'bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/30': t.type === 'request_invoice',
-                         'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': t.type === 'tiket',
-                         'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30': t.type === 'updown',
-                         'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30': t.type === 'suspend',
-                         'bg-slate-500/15 text-slate-600 dark:text-slate-300 border border-slate-500/30': t.type === 'terminasi',
+                         'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30': t.type === 'instalasi' || t.type === 'updown',
                          'bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30': !t.type
                      }">
+
+                    <!-- Pulsing Alert Beacon on Top Right of Icon -->
+                    <template x-if="t.type === 'noc_alarm' || t.status === 'LOS'">
+                        <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-600"></span>
+                        </span>
+                    </template>
+                    <template x-if="t.status === 'DOWN'">
+                        <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-600"></span>
+                        </span>
+                    </template>
+
+                    <!-- Icon: NOC ALARM / LOS / DOWN -->
+                    <template x-if="t.type === 'noc_alarm' || t.status === 'LOS' || t.status === 'DOWN'">
+                        <svg class="w-5 h-5 text-rose-600 dark:text-rose-400 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                    </template>
+
+                    <!-- Icon: Instalasi -->
                     <template x-if="t.type === 'instalasi'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                         </svg>
                     </template>
+
+                    <!-- Icon: Pendaftaran -->
                     <template x-if="t.type === 'pendaftaran'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
                         </svg>
                     </template>
+
+                    <!-- Icon: Pembayaran -->
                     <template x-if="t.type === 'pembayaran'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v8.25m0-8.25h16.5m0 0v8.25m0-8.25h1.5a.75.75 0 0 1 .75.75v.75m-2.25 0h2.25m-2.25 0a60.07 60.07 0 0 0-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V8.25m2.25 0H21M9 12.75a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" />
                         </svg>
                     </template>
+
+                    <!-- Icon: Request Invoice -->
                     <template x-if="t.type === 'request_invoice'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                         </svg>
                     </template>
+
+                    <!-- Icon: Tiket -->
                     <template x-if="t.type === 'tiket'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                         </svg>
                     </template>
+
+                    <!-- Icon: UpDown -->
                     <template x-if="t.type === 'updown'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                         </svg>
                     </template>
+
+                    <!-- Icon: Suspend -->
                     <template x-if="t.type === 'suspend'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
                         </svg>
                     </template>
+
+                    <!-- Icon: Terminasi -->
                     <template x-if="t.type === 'terminasi'">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                         </svg>
                     </template>
-                    <template x-if="!t.type">
+
+                    <!-- Icon Default / Fallback -->
+                    <template x-if="!['noc_alarm', 'instalasi', 'pendaftaran', 'pembayaran', 'request_invoice', 'tiket', 'updown', 'suspend', 'terminasi'].includes(t.type)">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                         </svg>
                     </template>
                 </div>
 
-                <!-- Toast Content -->
-                <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-2">
-                        <h5 class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="t.title"></h5>
-                        <button type="button" @click="removeToast(t.id)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold leading-none cursor-pointer">&times;</button>
+                <!-- Toast Content Body -->
+                <div class="flex-1 min-w-0 pr-1">
+                    <!-- Top Pill Category & Close Button -->
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <template x-if="t.type === 'noc_alarm' || t.status === 'LOS'">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-mono">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                                <span>Radar LOS Alert</span>
+                            </span>
+                        </template>
+                        <template x-if="t.status === 'DOWN'">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span>Device Down</span>
+                            </span>
+                        </template>
+                        <template x-if="t.type === 'tiket'">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-mono">
+                                <span>Tiket Gangguan</span>
+                            </span>
+                        </template>
+                        <template x-if="t.type === 'pendaftaran'">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono">
+                                <span>Pendaftaran Baru</span>
+                            </span>
+                        </template>
+                        <template x-if="t.type === 'pembayaran'">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono">
+                                <span>Pembayaran Masuk</span>
+                            </span>
+                        </template>
+                        <template x-if="!['noc_alarm', 'tiket', 'pendaftaran', 'pembayaran'].includes(t.type) && !t.status">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30 font-mono">
+                                <span>Notifikasi IMS</span>
+                            </span>
+                        </template>
+
+                        <!-- Close Button -->
+                        <button type="button" 
+                                @click="removeToast(t.id)" 
+                                class="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                                title="Tutup Notifikasi">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-snug" x-text="t.message"></p>
+
+                    <!-- Title -->
+                    <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight" x-text="t.title"></h5>
+
+                    <!-- Message Body -->
+                    <p class="text-[11.5px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed" x-text="t.message"></p>
+
+                    <!-- Link Action Button -->
                     <template x-if="t.url">
-                        <a :href="t.url" class="inline-flex items-center gap-1 text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline mt-1.5">
-                            <span>Buka Halaman</span>
-                            <span>&rarr;</span>
-                        </a>
+                        <div class="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                            <a :href="t.url" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-cyan-400 hover:underline">
+                                <span>Lihat Rincian</span>
+                                <span>&rarr;</span>
+                            </a>
+                        </div>
                     </template>
+                </div>
+
+                <!-- Animated Auto-Close Bottom Progress Bar -->
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full ims-toast-progress-bar"
+                         :class="{
+                             'bg-rose-500': t.type === 'noc_alarm' || t.status === 'LOS' || t.type === 'tiket',
+                             'bg-amber-500': t.status === 'DOWN' || t.type === 'suspend',
+                             'bg-emerald-500': t.type === 'pendaftaran' || t.type === 'pembayaran',
+                             'bg-cyan-500': t.type === 'instalasi' || t.type === 'updown',
+                             'bg-teal-500': !t.type
+                         }">
+                    </div>
                 </div>
             </div>
         </template>
@@ -2482,9 +2597,12 @@
                     const name = item.device_name || item.title || 'Perangkat Jaringan';
                     window.ImsVoice.enqueueNotification({
                         type: 'noc_alarm',
-                        title: st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi',
+                        status: st,
+                        title: item.title || (st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi'),
                         message: item.message || `${name} mengalami gangguan ${st}`,
-                        speech_text: `Perhatian! Terdeteksi ${statusLabel} pada ${name}.`,
+                        speech_text: item.speech_text || `Perhatian! Terdeteksi ${statusLabel} pada ${name}.`,
+                        device_name: name,
+                        url: item.url || null
                     });
                 }
             } catch (e) {}

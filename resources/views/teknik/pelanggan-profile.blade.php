@@ -1715,8 +1715,8 @@
 
                         </div>
 
-                        <!-- Graph Mode Toggle & Dynamic Legend -->
-                        <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                        <!-- Graph Mode Toggle -->
+                        <div class="flex items-center justify-between gap-2 pt-0.5">
                             <!-- View Switcher -->
                             <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700">
                                 <button type="button" 
@@ -1733,28 +1733,6 @@
                                     <svg class="w-3.5 h-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
                                     <span>MRTG Multi-Day / 7 Hari</span>
                                 </button>
-                            </div>
-
-                            <!-- Clear Distinct Legend with Live Values -->
-                            <div class="flex items-center gap-2 text-xs font-mono">
-                                <!-- In (Rx) Legend Pill -->
-                                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                                    <span class="w-3 h-2 rounded-xs bg-emerald-500 inline-block shadow-xs"></span>
-                                    <span class="font-sans font-bold text-[11px]">In (Rx):</span>
-                                    <span class="font-bold text-[11px]" x-text="onu?.current_rx_formatted || '0.0 Mbps'"></span>
-                                </div>
-                                <!-- Out (Tx) Legend Pill -->
-                                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-500/10 border border-sky-500/30 text-sky-600 dark:text-sky-400">
-                                    <span class="w-3 h-1 rounded-xs bg-sky-400 inline-block shadow-xs"></span>
-                                    <span class="font-sans font-bold text-[11px]">Out (Tx):</span>
-                                    <span class="font-bold text-[11px]" x-text="onu?.current_tx_formatted || '0.0 Mbps'"></span>
-                                </div>
-                                <!-- Dynamic Auto-Scale Indicator Pill -->
-                                <div class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10.5px]">
-                                    <span>Skala Y:</span>
-                                    <strong class="text-slate-700 dark:text-slate-200" x-text="chartMaxY.toFixed(1) + ' Mbps'"></strong>
-                                    <span class="text-[9px] uppercase px-1 py-0.2 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded font-semibold">Auto</span>
-                                </div>
                             </div>
                         </div>
 

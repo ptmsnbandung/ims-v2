@@ -81,7 +81,7 @@
                         </h2>
                     </div>
                     <p class="text-[11px] text-[#c6edf3] mt-0.5 leading-tight" style="color: #c6edf3 !important;">
-                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; Host: <span class="font-mono text-cyan-200 font-bold">{{ $olt->ip_address ?? '103.161.206.214' }}</span> &middot; POP: <span class="text-white font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
+                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; POP: <span class="text-white font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
                     </p>
 
                     <!-- Status Bar & Live Clock (Semua Kontras Jelas) -->
@@ -90,11 +90,6 @@
                         <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#04333e]/85 text-emerald-300 border border-teal-400/30 shadow-2xs font-mono">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                             <span>Live: <span class="text-white font-bold" x-text="currentTime">--:--:--</span> WIB</span>
-                        </div>
-                        <!-- Live Hardware Physical PON Discovery Badge -->
-                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#04333e]/85 text-teal-200 border border-teal-400/30 shadow-2xs font-mono">
-                            <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
-                            <span>Fisik Port PON OLT (Direct Hardware ZTE C320)</span>
                         </div>
                         <!-- Auto-Refresh & Real Sync Status Badge -->
                         <button @click="refreshRealData()" 

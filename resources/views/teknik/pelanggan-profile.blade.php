@@ -1760,106 +1760,91 @@
 
                         <!-- VIEW 1: GRAFIK LIVE WAVE REAL-TIME (DYNAMIC SVG) -->
                         <div x-show="activeView === 'live'" class="p-2.5 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden">
-                            <!-- Main Plot Grid Area -->
-                            <div class="flex items-stretch gap-2 h-[145px]">
-                                <!-- Y Axis Labels -->
-                                <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-bold text-slate-400 select-none py-0.5 w-11 shrink-0">
-                                    <template x-for="(yLbl, yIdx) in yAxisLabels" :key="yIdx">
-                                        <span x-text="yLbl"></span>
-                                    </template>
-                                </div>
-
-                                <!-- SVG Live Wave Canvas -->
-                                <div class="flex-1 min-w-0 h-full relative bg-[#070d19] border border-slate-700/60 rounded-lg overflow-hidden">
-                                    <!-- Empty / Initial Loading Screen -->
-                                    <div x-show="loading && !historyPoints.length" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs z-10">
-                                        <div class="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold">
-                                            <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                            <span>Menghubungkan ke OLT & mengambil telemetry...</span>
-                                        </div>
+                            <!-- Chart Wrapper (H-full w-full with optimal responsive height) -->
+                            <div class="w-full h-[155px] sm:h-[170px] relative">
+                                <!-- Empty / Initial Loading Screen -->
+                                <div x-show="loading && !historyPoints.length" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs z-10 rounded-lg">
+                                    <div class="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold">
+                                        <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <span>Menghubungkan ke OLT & mengambil telemetry...</span>
                                     </div>
-
-                                    <!-- Main SVG Canvas -->
-                                    <svg viewBox="0 0 720 140" preserveAspectRatio="none" class="w-full h-full block">
-                                        <defs>
-                                            <!-- Gradient Rx (Emerald Glow Area) -->
-                                            <linearGradient id="liveRxGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.45"/>
-                                                <stop offset="60%" stop-color="#059669" stop-opacity="0.15"/>
-                                                <stop offset="100%" stop-color="#047857" stop-opacity="0.01"/>
-                                            </linearGradient>
-                                            <!-- Gradient Tx (Sky Blue Glow Area) -->
-                                            <linearGradient id="liveTxGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.30"/>
-                                                <stop offset="60%" stop-color="#0284c7" stop-opacity="0.10"/>
-                                                <stop offset="100%" stop-color="#0369a1" stop-opacity="0.01"/>
-                                            </linearGradient>
-                                        </defs>
-
-                                        <!-- Horizontal Grid Lines -->
-                                        <line x1="0" y1="0" x2="720" y2="0" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="0" y1="35" x2="720" y2="35" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="0" y1="70" x2="720" y2="70" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
-                                        <line x1="0" y1="140" x2="720" y2="140" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
-
-                                        <!-- Vertical Grid Lines (Time Intervals) -->
-                                        <line x1="120" y1="0" x2="120" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
-                                        <line x1="240" y1="0" x2="240" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
-                                        <line x1="360" y1="0" x2="360" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
-                                        <line x1="480" y1="0" x2="480" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
-                                        <line x1="600" y1="0" x2="600" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
-
-                                        <!-- Tx Filled Polygon (Upload Area) -->
-                                        <polygon :points="liveTxPolygon" fill="url(#liveTxGrad)"/>
-
-                                        <!-- Rx Filled Polygon (Download Area) -->
-                                        <polygon :points="liveRxPolygon" fill="url(#liveRxGrad)"/>
-
-                                        <!-- Tx Outline Stroke Line (Upload - Vivid Sky Blue) -->
-                                        <polyline :points="liveTxPolyline" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-
-                                        <!-- Rx Outline Stroke Line (Download - Emerald Green) -->
-                                        <polyline :points="liveRxPolyline" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-
-                                        <!-- Pulsing Dots on Current Latest Points -->
-                                        <template x-if="liveRxPoints.length > 0">
-                                            <g>
-                                                <!-- Rx Latest Glowing Dot -->
-                                                <circle :cx="liveRxPoints[liveRxPoints.length - 1].x" 
-                                                        :cy="liveRxPoints[liveRxPoints.length - 1].y" 
-                                                        r="7" fill="#10b981" opacity="0.35"/>
-                                                <circle :cx="liveRxPoints[liveRxPoints.length - 1].x" 
-                                                        :cy="liveRxPoints[liveRxPoints.length - 1].y" 
-                                                        r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.8"/>
-
-                                                <!-- Tx Latest Glowing Dot -->
-                                                <circle :cx="liveTxPoints[liveTxPoints.length - 1].x" 
-                                                        :cy="liveTxPoints[liveTxPoints.length - 1].y" 
-                                                        r="6" fill="#38bdf8" opacity="0.35"/>
-                                                <circle :cx="liveTxPoints[liveTxPoints.length - 1].x" 
-                                                        :cy="liveTxPoints[liveTxPoints.length - 1].y" 
-                                                        r="3.5" fill="#38bdf8" stroke="#ffffff" stroke-width="1.8"/>
-                                            </g>
-                                        </template>
-                                    </svg>
                                 </div>
-                            </div>
 
-                            <!-- X Axis Time Labels -->
-                            <div class="flex items-center mt-1">
-                                <div class="w-11 shrink-0"></div>
-                                <div class="flex-1 flex justify-between items-center text-[8.5px] font-mono text-slate-400 px-1 select-none">
-                                    <template x-if="historyPoints.length > 0">
-                                        <span x-text="historyPoints[0]?.time || ''"></span>
+                                <!-- Unified Precision SVG Chart -->
+                                <svg viewBox="0 0 760 155" preserveAspectRatio="none" class="w-full h-full block">
+                                    <defs>
+                                        <!-- Gradient Rx (Emerald Glow Area) -->
+                                        <linearGradient id="liveRxGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.45"/>
+                                            <stop offset="60%" stop-color="#059669" stop-opacity="0.15"/>
+                                            <stop offset="100%" stop-color="#047857" stop-opacity="0.01"/>
+                                        </linearGradient>
+                                        <!-- Gradient Tx (Sky Blue Glow Area) -->
+                                        <linearGradient id="liveTxGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.30"/>
+                                            <stop offset="60%" stop-color="#0284c7" stop-opacity="0.10"/>
+                                            <stop offset="100%" stop-color="#0369a1" stop-opacity="0.01"/>
+                                        </linearGradient>
+                                    </defs>
+
+                                    <!-- Plot Background Area Rect -->
+                                    <rect x="48" y="6" width="702" height="129" rx="4" fill="#070d19" stroke="#334155" stroke-width="0.8" opacity="0.9"/>
+
+                                    <!-- Horizontal Grid Lines (Aligned precisely to Y-Axis Ticks) -->
+                                    <line x1="48" y1="6" x2="750" y2="6" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="48" y1="38.25" x2="750" y2="38.25" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="48" y1="70.5" x2="750" y2="70.5" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
+                                    <line x1="48" y1="102.75" x2="750" y2="102.75" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
+                                    <!-- Base Line (0.0 M Anchor Line) -->
+                                    <line x1="48" y1="135" x2="750" y2="135" stroke="#475569" stroke-width="1.2" opacity="0.9"/>
+
+                                    <!-- Vertical Grid Lines (Time Intervals) -->
+                                    <line x1="188" y1="6" x2="188" y2="135" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+                                    <line x1="329" y1="6" x2="329" y2="135" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+                                    <line x1="470" y1="6" x2="470" y2="135" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+                                    <line x1="611" y1="6" x2="611" y2="135" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+
+                                    <!-- Y-Axis Labels (Directly Aligned at Grid Coordinates) -->
+                                    <text x="42" y="6" dominant-baseline="central" text-anchor="end" font-size="8.5" font-family="monospace" font-weight="bold" fill="#94a3b8" x-text="yAxisLabels[0]"></text>
+                                    <text x="42" y="38.25" dominant-baseline="central" text-anchor="end" font-size="8.5" font-family="monospace" font-weight="bold" fill="#94a3b8" x-text="yAxisLabels[1]"></text>
+                                    <text x="42" y="70.5" dominant-baseline="central" text-anchor="end" font-size="8.5" font-family="monospace" font-weight="bold" fill="#94a3b8" x-text="yAxisLabels[2]"></text>
+                                    <text x="42" y="102.75" dominant-baseline="central" text-anchor="end" font-size="8.5" font-family="monospace" font-weight="bold" fill="#94a3b8" x-text="yAxisLabels[3]"></text>
+                                    <text x="42" y="135" dominant-baseline="central" text-anchor="end" font-size="8.5" font-family="monospace" font-weight="bold" fill="#94a3b8" x-text="yAxisLabels[4]"></text>
+
+                                    <!-- Tx (Upload) Monotone Area & Smooth Curve -->
+                                    <path :d="liveTxArea" fill="url(#liveTxGrad)"/>
+                                    <path :d="liveTxPath" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+                                    <!-- Rx (Download) Monotone Area & Smooth Curve -->
+                                    <path :d="liveRxArea" fill="url(#liveRxGrad)"/>
+                                    <path :d="liveRxPath" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+                                    <!-- Pulsing Dots on Current Latest Points -->
+                                    <template x-if="liveRxPoints.length > 0">
+                                        <g>
+                                            <!-- Rx Latest Glowing Dot -->
+                                            <circle :cx="liveRxPoints[liveRxPoints.length - 1].x" 
+                                                    :cy="liveRxPoints[liveRxPoints.length - 1].y" 
+                                                    r="6" fill="#10b981" opacity="0.35"/>
+                                            <circle :cx="liveRxPoints[liveRxPoints.length - 1].x" 
+                                                    :cy="liveRxPoints[liveRxPoints.length - 1].y" 
+                                                    r="3.5" fill="#10b981" stroke="#ffffff" stroke-width="1.8"/>
+
+                                            <!-- Tx Latest Glowing Dot -->
+                                            <circle :cx="liveTxPoints[liveTxPoints.length - 1].x" 
+                                                    :cy="liveTxPoints[liveTxPoints.length - 1].y" 
+                                                    r="5" fill="#38bdf8" opacity="0.35"/>
+                                            <circle :cx="liveTxPoints[liveTxPoints.length - 1].x" 
+                                                    :cy="liveTxPoints[liveTxPoints.length - 1].y" 
+                                                    r="2.8" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5"/>
+                                        </g>
                                     </template>
-                                    <template x-if="historyPoints.length > 12">
-                                        <span x-text="historyPoints[Math.floor(historyPoints.length / 2)]?.time || ''"></span>
-                                    </template>
-                                    <template x-if="historyPoints.length > 0">
-                                        <span class="text-emerald-400 font-bold" x-text="(historyPoints[historyPoints.length - 1]?.time || '') + ' (Kini)'"></span>
-                                    </template>
-                                </div>
+
+                                    <!-- X-Axis Time Labels (Positioned neatly outside the plot area below the baseline) -->
+                                    <text x="48" y="148" text-anchor="start" font-size="8.5" font-family="monospace" fill="#94a3b8" x-text="historyPoints[0]?.time || ''"></text>
+                                    <text x="399" y="148" text-anchor="middle" font-size="8.5" font-family="monospace" fill="#94a3b8" x-text="historyPoints.length > 12 ? (historyPoints[Math.floor(historyPoints.length / 2)]?.time || '') : ''"></text>
+                                    <text x="750" y="148" text-anchor="end" font-size="8.5" font-family="monospace" font-weight="bold" fill="#34d399" x-text="historyPoints.length > 0 ? ((historyPoints[historyPoints.length - 1]?.time || '') + ' (Kini)') : ''"></text>
+                                </svg>
                             </div>
                         </div>
 
@@ -2567,71 +2552,105 @@ function liveOnuTraffic(nomorInternet) {
 
         get liveRxPoints() {
             if (!this.historyPoints.length) return [];
-            const w = 720;
-            const h = 140;
+            const left = 48;
+            const right = 750;
+            const top = 6;
+            const bottom = 135;
+            const plotW = right - left; // 702
+            const plotH = bottom - top; // 129
             const maxY = this.chartMaxY;
             const count = this.historyPoints.length;
-            const stepX = count > 1 ? w / (count - 1) : w;
-            const padTop = 6;
-            const padBottom = 6;
-            const plotH = h - padTop - padBottom;
+            const stepX = count > 1 ? plotW / (count - 1) : plotW;
 
             return this.historyPoints.map((p, idx) => {
-                const x = Number((idx * stepX).toFixed(1));
-                const ratio = Math.min(1, Math.max(0, (p.rx || 0) / maxY));
-                const y = Number((h - padBottom - (ratio * plotH)).toFixed(1));
+                const x = Number((left + (idx * stepX)).toFixed(1));
+                const val = Number(p.rx) || 0;
+                const ratio = Math.min(1, Math.max(0, val / maxY));
+                const y = Number((bottom - (ratio * plotH)).toFixed(1));
                 return { x, y, val: p.rx, time: p.time };
             });
         },
 
-        get liveRxPolygon() {
-            const pts = this.liveRxPoints;
-            if (!pts.length) return '';
-            const w = 720;
-            const h = 140;
-            const coords = pts.map(p => `${p.x},${p.y}`).join(' ');
-            return `0,${h} ${coords} ${w},${h}`;
-        },
-
-        get liveRxPolyline() {
-            const pts = this.liveRxPoints;
-            if (!pts.length) return '';
-            return pts.map(p => `${p.x},${p.y}`).join(' ');
-        },
-
         get liveTxPoints() {
             if (!this.historyPoints.length) return [];
-            const w = 720;
-            const h = 140;
+            const left = 48;
+            const right = 750;
+            const top = 6;
+            const bottom = 135;
+            const plotW = right - left; // 702
+            const plotH = bottom - top; // 129
             const maxY = this.chartMaxY;
             const count = this.historyPoints.length;
-            const stepX = count > 1 ? w / (count - 1) : w;
-            const padTop = 6;
-            const padBottom = 6;
-            const plotH = h - padTop - padBottom;
+            const stepX = count > 1 ? plotW / (count - 1) : plotW;
 
             return this.historyPoints.map((p, idx) => {
-                const x = Number((idx * stepX).toFixed(1));
-                const ratio = Math.min(1, Math.max(0, (p.tx || 0) / maxY));
-                const y = Number((h - padBottom - (ratio * plotH)).toFixed(1));
+                const x = Number((left + (idx * stepX)).toFixed(1));
+                const val = Number(p.tx) || 0;
+                const ratio = Math.min(1, Math.max(0, val / maxY));
+                const y = Number((bottom - (ratio * plotH)).toFixed(1));
                 return { x, y, val: p.tx, time: p.time };
             });
         },
 
-        get liveTxPolygon() {
-            const pts = this.liveTxPoints;
-            if (!pts.length) return '';
-            const w = 720;
-            const h = 140;
-            const coords = pts.map(p => `${p.x},${p.y}`).join(' ');
-            return `0,${h} ${coords} ${w},${h}`;
+        getMonotonePath(pts) {
+            if (!pts || !pts.length) return '';
+            if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+            if (pts.length === 2) return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`;
+
+            let path = `M ${pts[0].x} ${pts[0].y}`;
+            const tension = 0.22;
+            const topLimit = 6;
+            const bottomLimit = 135;
+
+            for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = i > 0 ? pts[i - 1] : pts[i];
+                const p1 = pts[i];
+                const p2 = pts[i + 1];
+                const p3 = i < pts.length - 2 ? pts[i + 2] : p2;
+
+                let cp1x = p1.x + (p2.x - p0.x) * tension;
+                let cp1y = p1.y + (p2.y - p0.y) * tension;
+
+                let cp2x = p2.x - (p3.x - p1.x) * tension;
+                let cp2y = p2.y - (p3.y - p1.y) * tension;
+
+                // Batasi agar kontrol kurva tidak pernah keluar dari batas plot (mencegah clipping)
+                cp1y = Math.min(bottomLimit, Math.max(topLimit, cp1y));
+                cp2y = Math.min(bottomLimit, Math.max(topLimit, cp2y));
+
+                path += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+            }
+            return path;
         },
 
-        get liveTxPolyline() {
-            const pts = this.liveTxPoints;
-            if (!pts.length) return '';
-            return pts.map(p => `${p.x},${p.y}`).join(' ');
+        getMonotoneArea(pts, baseLineY = 135) {
+            if (!pts || !pts.length) return '';
+            const linePath = this.getMonotonePath(pts);
+            const first = pts[0];
+            const last = pts[pts.length - 1];
+            return `${linePath} L ${last.x.toFixed(1)} ${baseLineY} L ${first.x.toFixed(1)} ${baseLineY} Z`;
         },
+
+        get liveRxPath() {
+            return this.getMonotonePath(this.liveRxPoints);
+        },
+
+        get liveRxArea() {
+            return this.getMonotoneArea(this.liveRxPoints, 135);
+        },
+
+        get liveTxPath() {
+            return this.getMonotonePath(this.liveTxPoints);
+        },
+
+        get liveTxArea() {
+            return this.getMonotoneArea(this.liveTxPoints, 135);
+        },
+
+        get liveRxPolygon() { return this.liveRxArea; },
+        get liveRxPolyline() { return this.liveRxPoints.map(p => `${p.x},${p.y}`).join(' '); },
+        get liveTxPolygon() { return this.liveTxArea; },
+        get liveTxPolyline() { return this.liveTxPoints.map(p => `${p.x},${p.y}`).join(' '); },
 
         init() {
             this.fetchData();

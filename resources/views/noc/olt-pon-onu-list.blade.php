@@ -590,7 +590,7 @@
                                         <span class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="'ID: ' + onu.nomor_internet"></span>
                                         <span class="text-slate-300 dark:text-slate-700">&bull;</span>
                                         <span class="font-mono text-slate-500 dark:text-slate-400 truncate" x-text="onu.interface_onu"></span>
-                                        <template x-if="onu.odp_name && onu.odp_name !== '-'">
+                                        <template x-if="onu.odp_name && onu.odp_name !== '-' && onu.odp_name.toUpperCase() !== 'ODP' && onu.odp_name.toUpperCase() !== 'N/A' && onu.odp_name.toUpperCase() !== 'HARDWARE OLT'">
                                             <span class="inline-flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.2 rounded text-[9.5px]">
                                                 <span x-text="'ODP: ' + onu.odp_name"></span>
                                             </span>
@@ -885,7 +885,7 @@
                                     <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400" x-text="onu.onu_name"></span>
                                     <span class="text-slate-400">&middot;</span>
                                     <span class="font-mono text-blue-600 dark:text-blue-400" x-text="onu.nomor_internet"></span>
-                                    <template x-if="onu.odp_name && onu.odp_name !== '-'">
+                                    <template x-if="onu.odp_name && onu.odp_name !== '-' && onu.odp_name.toUpperCase() !== 'ODP' && onu.odp_name.toUpperCase() !== 'N/A' && onu.odp_name.toUpperCase() !== 'HARDWARE OLT'">
                                         <span class="inline-flex items-center gap-1">
                                             <span class="text-slate-400">&middot;</span>
                                             <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="'ODP: ' + onu.odp_name"></span>

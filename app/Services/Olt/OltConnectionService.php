@@ -1812,7 +1812,38 @@ class OltConnectionService
                         }
                     })
                     ->get();
+                $userOdpMap = [];
+                $userOdpByNameMap = [];
+                if ($gomsnOltId && Schema::hasTable("gomsn.odp{$gomsnOltId}") && Schema::hasTable("gomsn.users{$gomsnOltId}")) {
+                    $odps = DB::table("gomsn.odp{$gomsnOltId}")->get()->keyBy('id');
+                    $gUsers = DB::table("gomsn.users{$gomsnOltId}")->get();
+                    foreach ($gUsers as $gu) {
+                        $odpName = ($gu->odp_id && isset($odps[$gu->odp_id])) ? trim($odps[$gu->odp_id]->nama_odp) : null;
+                        if ($odpName && strtoupper($odpName) !== 'ODP' && strtoupper($odpName) !== 'N/A') {
+                            $gu->odp_name = $odpName;
+                            if (!empty($gu->nomor_internet)) {
+                                $userOdpMap[trim($gu->nomor_internet)] = $odpName;
+                            }
+                            if (!empty($gu->nama_user)) {
+                                $userOdpByNameMap[strtoupper(trim($gu->nama_user))] = $odpName;
+                            }
+                        }
+                        $sn = strtoupper(trim($gu->keterangan ?? ''));
+                        if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
+                            $dbBySn[$sn] = $gu;
+                        }
+                    }
+                }
+
                 foreach ($regs as $r) {
+                    $cNo = trim($r->nomor_internet ?? '');
+                    $cName = strtoupper(trim($r->nama_pelanggan ?? ''));
+                    if (!empty($cNo) && isset($userOdpMap[$cNo])) {
+                        $r->odp_name = $userOdpMap[$cNo];
+                    } elseif (!empty($cName) && isset($userOdpByNameMap[$cName])) {
+                        $r->odp_name = $userOdpByNameMap[$cName];
+                    }
+
                     $sn = strtoupper(trim($r->note_request ?? ''));
                     if (!empty($sn) && strlen($sn) >= 6) {
                         $dbBySn[$sn] = $r;
@@ -1821,20 +1852,6 @@ class OltConnectionService
                     if (preg_match('/(?:1\/[12]\/' . $portNum . ':|' . $portNum . ':)(\d+)/', $idx, $m)) {
                         $onuSlotNum = (int)$m[1];
                         $dbBySlot[$onuSlotNum] = $r;
-                    }
-                }
-
-                if ($gomsnOltId && Schema::hasTable("gomsn.odp{$gomsnOltId}") && Schema::hasTable("gomsn.users{$gomsnOltId}")) {
-                    $odps = DB::table("gomsn.odp{$gomsnOltId}")->get()->keyBy('id');
-                    $gUsers = DB::table("gomsn.users{$gomsnOltId}")->get();
-                    foreach ($gUsers as $gu) {
-                        $sn = strtoupper(trim($gu->keterangan ?? ''));
-                        if ($gu->odp_id && isset($odps[$gu->odp_id])) {
-                            $gu->odp_name = $odps[$gu->odp_id]->nama_odp;
-                        }
-                        if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
-                            $dbBySn[$sn] = $gu;
-                        }
                     }
                 }
 
@@ -1915,7 +1932,8 @@ class OltConnectionService
                     if ($matched) {
                         $custNo = $matched->nomor_internet ?? ('1000' . $onuId);
                         $custName = $matched->nama_pelanggan ?? ($matched->nama_user ?? 'Pelanggan FTTH');
-                        $odpName = $matched->odp_name ?? 'ODP';
+                        $odpRaw = $matched->odp_name ?? ($userOdpMap[$custNo] ?? ($userOdpByNameMap[strtoupper(trim($custName))] ?? null));
+                        $odpName = (!empty($odpRaw) && strtoupper(trim($odpRaw)) !== 'ODP' && strtoupper(trim($odpRaw)) !== 'N/A' && strtoupper(trim($odpRaw)) !== 'HARDWARE OLT') ? trim($odpRaw) : '-';
                         $pel = $pelanggansMap[strtoupper(trim($custName))] ?? null;
                         $address = $pel['alamat'] ?? 'Bandung, Jawa Barat';
                         $phone = $pel['hp'] ?? '-';
@@ -1926,7 +1944,7 @@ class OltConnectionService
                     } else {
                         $custNo = "SN-{$sn}";
                         $custName = "ONU-{$onuId} ({$bi['type']})";
-                        $odpName = 'Hardware OLT';
+                        $odpName = '-';
                         $address = "Perangkat OLT Fisik (Port {$portNum})";
                         $phone = '-';
                         $speedVal = 20.0;
@@ -2180,7 +2198,8 @@ class OltConnectionService
                 $pel = $pelanggansMap[strtoupper(trim($u->nama_user))] ?? null;
                 $address = $pel['alamat'] ?? 'Bandung, Jawa Barat';
                 $phone = $pel['hp'] ?? '-';
-                $odpName = isset($odpMap[$u->odp_id]) ? $odpMap[$u->odp_id]->nama_odp : 'ODP';
+                $odpRaw = isset($odpMap[$u->odp_id]) ? trim($odpMap[$u->odp_id]->nama_odp) : null;
+                $odpName = (!empty($odpRaw) && strtoupper(trim($odpRaw)) !== 'ODP' && strtoupper(trim($odpRaw)) !== 'N/A' && strtoupper(trim($odpRaw)) !== 'HARDWARE OLT') ? $odpRaw : '-';
 
                 // Serial Number
                 $sn = trim((string)($u->keterangan ?? ($reg->note_request ?? '')));

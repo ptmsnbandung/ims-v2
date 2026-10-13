@@ -966,9 +966,13 @@ class OltConnectionService
             fwrite($socket, "terminal length 0\r\n");
             usleep(250000);
 
+            fwrite($socket, "show gpon onu baseinfo gpon-olt_1/1/{$portIndex}\r\n");
             fwrite($socket, "show gpon onu baseinfo gpon-olt_1/2/{$portIndex}\r\n");
+            fwrite($socket, "show gpon onu state gpon-olt_1/1/{$portIndex}\r\n");
             fwrite($socket, "show gpon onu state gpon-olt_1/2/{$portIndex}\r\n");
+            fwrite($socket, "show pon power onu-rx gpon-olt_1/1/{$portIndex}\r\n");
             fwrite($socket, "show pon power onu-rx gpon-olt_1/2/{$portIndex}\r\n");
+            fwrite($socket, "show interface gpon-olt_1/1/{$portIndex}\r\n");
             fwrite($socket, "show interface gpon-olt_1/2/{$portIndex}\r\n");
             fwrite($socket, "exit\r\n");
             fwrite($socket, "yes\r\n");
@@ -986,7 +990,7 @@ class OltConnectionService
             fclose($socket);
 
             $baseinfo = [];
-            if (preg_match_all('/(?:gpon-onu_1\/2\/' . $portIndex . ':|1\/2\/' . $portIndex . ':)(\d+)\s+([A-Za-z0-9_\-]+)\s+\w+\s+SN:([A-Za-z0-9]+)(?:\s+(\w+))?/i', $buffer, $mBase, PREG_SET_ORDER)) {
+            if (preg_match_all('/(?:gpon-onu_1\/[12]\/' . $portIndex . ':|1\/[12]\/' . $portIndex . ':)(\d+)\s+([A-Za-z0-9_\-]+)\s+\w+\s+SN:([A-Za-z0-9]+)(?:\s+(\w+))?/i', $buffer, $mBase, PREG_SET_ORDER)) {
                 foreach ($mBase as $b) {
                     $onuId = (int)$b[1];
                     $baseinfo[$onuId] = [
@@ -999,7 +1003,7 @@ class OltConnectionService
             }
 
             $states = [];
-            if (preg_match_all('/(?:1\/2\/' . $portIndex . ':|gpon-onu_1\/2\/' . $portIndex . ':)(\d+)\s+(\w+)\s+(\w+)\s+(\w+)/i', $buffer, $mState, PREG_SET_ORDER)) {
+            if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+(\w+)\s+(\w+)\s+(\w+)/i', $buffer, $mState, PREG_SET_ORDER)) {
                 foreach ($mState as $s) {
                     $onuId = (int)$s[1];
                     $states[$onuId] = [
@@ -1011,7 +1015,7 @@ class OltConnectionService
             }
 
             $powers = [];
-            if (preg_match_all('/(?:1\/2\/' . $portIndex . ':|gpon-onu_1\/2\/' . $portIndex . ':)(\d+)\s+([-\d\.]+|N\/A)/i', $buffer, $mPow, PREG_SET_ORDER)) {
+            if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+([-\d\.]+|N\/A)/i', $buffer, $mPow, PREG_SET_ORDER)) {
                 foreach ($mPow as $p) {
                     $onuId = (int)$p[1];
                     $powers[$onuId] = $p[2];
@@ -1065,7 +1069,9 @@ class OltConnectionService
             fwrite($socket, "terminal length 0\r\n");
             usleep(250000);
 
+            fwrite($socket, "show gpon onu state gpon-olt_1/1/{$portIndex}\r\n");
             fwrite($socket, "show gpon onu state gpon-olt_1/2/{$portIndex}\r\n");
+            fwrite($socket, "show pon power onu-rx gpon-olt_1/1/{$portIndex}\r\n");
             fwrite($socket, "show pon power onu-rx gpon-olt_1/2/{$portIndex}\r\n");
             fwrite($socket, "exit\r\n");
             fwrite($socket, "yes\r\n");
@@ -1083,7 +1089,7 @@ class OltConnectionService
             fclose($socket);
 
             $states = [];
-            if (preg_match_all('/(?:1\/2\/' . $portIndex . ':|gpon-onu_1\/2\/' . $portIndex . ':)(\d+)\s+(\w+)\s+(\w+)\s+(\w+)/i', $buffer, $matches, PREG_SET_ORDER)) {
+            if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+(\w+)\s+(\w+)\s+(\w+)/i', $buffer, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $m) {
                     $onuId = (int)$m[1];
                     $states[$onuId] = [
@@ -1095,7 +1101,7 @@ class OltConnectionService
             }
 
             $powers = [];
-            if (preg_match_all('/(?:1\/2\/' . $portIndex . ':|gpon-onu_1\/2\/' . $portIndex . ':)(\d+)\s+([-\d\.]+|N\/A)/i', $buffer, $matches, PREG_SET_ORDER)) {
+            if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+([-\d\.]+|N\/A)/i', $buffer, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $m) {
                     $onuId = (int)$m[1];
                     $powers[$onuId] = $m[2];

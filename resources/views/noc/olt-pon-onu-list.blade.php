@@ -81,7 +81,7 @@
                         </h2>
                     </div>
                     <p class="text-[11px] text-[#c6edf3] mt-0.5 leading-tight" style="color: #c6edf3 !important;">
-                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; POP: <span class="text-white font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
+                        {{ $olt->name_olt ?? 'OLT Server' }}
                     </p>
 
                     <!-- Status Bar & Live Clock (Semua Kontras Jelas) -->
@@ -798,9 +798,8 @@
                                 </svg>
                                 <span class="truncate" x-text="onu.address" :title="onu.address"></span>
                             </div>
-                            <div class="flex items-center justify-between text-[10px]">
+                            <div class="flex items-center text-[10px]">
                                 <span class="flex items-center gap-1">Status / Uptime: <strong class="font-mono text-slate-700 dark:text-slate-300" x-text="onu.uptime"></strong></span>
-                                <span class="font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded" x-text="'POP: ' + onu.pop_name"></span>
                             </div>
                         </div>
                     </div>

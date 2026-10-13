@@ -32,7 +32,7 @@
                         </h2>
                     </div>
                     <p class="text-[11px] text-slate-300 mt-0.5">
-                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; POP: <span class="text-slate-200">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
+                        {{ $olt->name_olt ?? 'OLT Server' }}
                     </p>
                     
                     <!-- Stats Badges Bar & Live Clock -->

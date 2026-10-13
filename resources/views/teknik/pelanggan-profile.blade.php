@@ -1589,11 +1589,6 @@
                                     <span x-text="onu?.status || 'CHECKING...'"></span>
                                 </span>
 
-                                <!-- Interface OLT -->
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-800 dark:text-slate-200 shadow-2xs">
-                                    <span class="text-slate-400 font-sans">Port:</span>
-                                    <span x-text="onu?.interface_onu || '{{ $customer->index_olt ?: '-' }}'"></span>
-                                </span>
 
                                 <!-- OLT Server -->
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-blue-600 dark:text-blue-400 shadow-2xs">

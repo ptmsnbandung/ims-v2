@@ -862,7 +862,7 @@ class NocController extends Controller
                 'success' => true,
                 'ponTelemetry' => $ponTelemetry,
                 'oltTelemetry' => $oltService->getOltRealTelemetry($olt, $startDate, $endDate),
-                'updated_at' => now()->format('H:i:s') . ' WIB',
+                'updated_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             ]);
         }
 
@@ -906,7 +906,7 @@ class NocController extends Controller
             return response()->json([
                 'success' => true,
                 'onuData' => $onuData,
-                'updated_at' => now()->format('H:i:s') . ' WIB',
+                'updated_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             ]);
         }
 
@@ -3424,7 +3424,7 @@ class NocController extends Controller
                 'stats' => $stats,
                 'items' => $items,
                 'uncfg_count' => count($uncfgData),
-                'updated_at' => now()->format('H:i:s') . ' WIB',
+                'updated_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             ]);
         }
 

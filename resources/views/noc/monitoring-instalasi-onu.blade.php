@@ -594,7 +594,7 @@ function monitoringInstalasiManager(initialItems, initialStats, selectedTanggal,
 
         // Timer & Polling Real-time
         currentTime: '',
-        lastSynced: '{{ now()->format("H:i:s") }} WIB',
+        lastSynced: '{{ now()->timezone("Asia/Jakarta")->format("H:i:s") }} WIB',
         isFetching: false,
         timer: null,
         pollTimer: null,
@@ -641,10 +641,24 @@ function monitoringInstalasiManager(initialItems, initialStats, selectedTanggal,
             }
         },
 
+        formatWibTime(date = new Date()) {
+            try {
+                const formatter = new Intl.DateTimeFormat('id-ID', {
+                    timeZone: 'Asia/Jakarta',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+                return formatter.format(date).replace(/\./g, ':');
+            } catch (e) {
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+            }
+        },
+
         updateClock() {
-            const now = new Date();
-            const pad = (n) => String(n).padStart(2, '0');
-            this.currentTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            this.currentTime = this.formatWibTime(new Date());
         },
 
         // Background / Manual Polling Data Real-time
@@ -666,7 +680,7 @@ function monitoringInstalasiManager(initialItems, initialStats, selectedTanggal,
                 if (data && data.success) {
                     this.items = data.items || [];
                     this.stats = data.stats || this.stats;
-                    this.lastSynced = data.updated_at || (new Date().toLocaleTimeString() + ' WIB');
+                    this.lastSynced = data.updated_at || (this.formatWibTime(new Date()) + ' WIB');
                 }
             })
             .catch(err => console.debug('Polling monitoring instalasi notice:', err))

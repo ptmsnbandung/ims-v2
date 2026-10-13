@@ -873,6 +873,8 @@ class OltConnectionService
      * Buka sesi koneksi Telnet ke hardware OLT ZTE dengan sinkronisasi prompt handshaking
      * (mencegah desynchronization buffer yang menyebabkan %Error 20209 bad password)
      */
+    public ?string $lastTelnetError = null;
+
     public function openOltTelnetSession(object|array|null $olt, float $timeout = 4.0): ?array
     {
         $params = $this->resolveOltConnectionParams($olt);
@@ -880,14 +882,17 @@ class OltConnectionService
         $port = $params['port'];
         $user = $params['user'];
         $pass = $params['pass'];
+        $this->lastTelnetError = null;
 
         if (empty($ip)) {
+            $this->lastTelnetError = 'IP OLT kosong.';
             return null;
         }
 
         for ($attempt = 1; $attempt <= 3; $attempt++) {
             $socket = @fsockopen($ip, $port, $errno, $errstr, max($timeout, 5.0));
             if (!$socket) {
+                $this->lastTelnetError = "TCP tidak bisa terhubung ke {$ip}:{$port} dari server ini ({$errstr} / errno {$errno}). Kemungkinan firewall/NAT/ISP memblokir port ini dari server hosting.";
                 usleep(300000);
                 continue;
             }
@@ -897,6 +902,7 @@ class OltConnectionService
             // 1. Tunggu prompt Username (banner ZTE bisa lambat di jaringan latensi tinggi)
             $loginBuf = $this->readUntilPrompt($socket, ['Username:', 'login:', 'User:'], 6);
             if (!preg_match('/(Username|login|User):\s*$/i', trim(preg_replace('/[^\x20-\x7E\r\n\t]/', '', $loginBuf)))) {
+                $this->lastTelnetError = "Terhubung ke {$ip}:{$port} tetapi OLT tidak menampilkan prompt Username (diterima " . strlen($loginBuf) . " byte). Kemungkinan sesi Telnet OLT penuh atau koneksi dibatasi.";
                 fclose($socket);
                 usleep(400000);
                 continue;
@@ -914,6 +920,7 @@ class OltConnectionService
             if (stripos($cleanPromptBuf, 'Error') !== false || stripos($cleanPromptBuf, 'Username:') !== false
                 || (!str_ends_with($cleanPromptBuf, '#') && !str_ends_with($cleanPromptBuf, '>'))) {
                 // Login gagal / desync: tutup dan ulangi dari awal
+                $this->lastTelnetError = 'Login OLT ditolak: ' . substr($cleanPromptBuf, -120);
                 fclose($socket);
                 usleep(600000);
                 continue;
@@ -2428,7 +2435,7 @@ class OltConnectionService
         if (!$session) {
             return [
                 'success' => false,
-                'message' => "Gagal terhubung ke OLT {$params['ip']}:{$params['port']}",
+                'message' => "Gagal terhubung ke OLT {$params['ip']}:{$params['port']}. " . ($this->lastTelnetError ?? ''),
                 'command' => "show pon power attenuation {$clean}",
                 'interface' => $clean,
                 'down_rx' => null,
@@ -2441,7 +2448,7 @@ class OltConnectionService
                 'up_rx_formatted' => 'N/A',
                 'attenuation_db' => null,
                 'attenuation_formatted' => 'N/A',
-                'raw_output' => "Connection failed to {$params['ip']}:{$params['port']}. Silakan periksa IP/Port OLT.",
+                'raw_output' => "Connection failed to {$params['ip']}:{$params['port']}.\n" . ($this->lastTelnetError ?? 'Silakan periksa IP/Port OLT.'),
                 'checked_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             ];
         }

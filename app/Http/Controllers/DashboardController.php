@@ -559,6 +559,51 @@ class DashboardController extends Controller
             }
         }
 
+        // 4. STATUS OLT LIVE REAL-TIME (Cukup Nama OLT & Status UP/DOWN)
+        $oltLiveStatus = Cache::remember('dashboard_olt_live_status', 20, function () {
+            if (!Schema::hasTable('m_olt')) {
+                return [];
+            }
+
+            try {
+                $olts = DB::table('m_olt')
+                    ->where('is_active', 1)
+                    ->select('kode_olt', 'name_olt', 'ip_address', 'port')
+                    ->orderBy('kode_olt', 'asc')
+                    ->get();
+
+                $list = [];
+                foreach ($olts as $o) {
+                    $ip = trim($o->ip_address ?? '');
+                    $port = (int)($o->port ?? 23);
+                    $isOnline = false;
+
+                    if (!empty($ip)) {
+                        $fp = @fsockopen($ip, $port, $errno, $errstr, 1.2);
+                        if ($fp) {
+                            $isOnline = true;
+                            fclose($fp);
+                        }
+                    }
+
+                    $list[] = [
+                        'kode_olt' => $o->kode_olt,
+                        'name_olt' => $o->name_olt ?: "OLT {$o->kode_olt}",
+                        'ip_address' => $ip,
+                        'port' => $port,
+                        'status' => $isOnline ? 'UP' : 'DOWN',
+                        'status_label' => $isOnline ? 'Online' : 'Offline',
+                        'is_online' => $isOnline,
+                    ];
+                }
+
+                return $list;
+            } catch (\Throwable $e) {
+                Log::warning('Dashboard OLT live query failed: ' . $e->getMessage());
+                return [];
+            }
+        });
+
         return view('dashboard', [
             'user' => $user,
             'newUserStats' => $newUserStats,
@@ -568,6 +613,7 @@ class DashboardController extends Controller
             'availableYears' => $availableYears,
             'selectedBulan' => $selectedBulan,
             'selectedTahun' => $selectedTahun,
+            'oltLiveStatus' => $oltLiveStatus,
         ]);
     }
 }

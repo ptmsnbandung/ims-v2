@@ -256,83 +256,73 @@
                 </div>
             </div>
 
-            <!-- 4. Peringkat Wilayah / Kota (Rincian Kota) -->
+            <!-- 4. Status OLT Live (Cukup Nama OLT & Statusnya Saja) -->
             <div class="md:col-span-4 lg:col-span-4 p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate leading-none">
-                            <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0" style="display: inline-block;"></span>
-                            <span>Peringkat Wilayah / Kota</span>
-                        </h4>
-                        <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-1">
-                            Rincian user per wilayah pasang.
-                        </p>
+                    <div class="flex flex-row items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                        <div class="min-w-0">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate leading-none">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0" style="display: inline-block;"></span>
+                                <span>Status OLT Live</span>
+                            </h4>
+                            <p class="text-[9.5px] text-slate-400 dark:text-slate-500 truncate mt-1">
+                                Status konektivitas OLT real-time.
+                            </p>
+                        </div>
+
+                        <!-- Live Pulse Indicator Pill -->
+                        <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs flex-shrink-0">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-[8px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 leading-none">Live Ping</span>
+                        </div>
                     </div>
 
-                    <div class="pt-1 space-y-1.5">
-                        @php
-                            $maxCityTotal = $chartData['totalCityUsers'] > 0 ? $chartData['totalCityUsers'] : 1;
-                            $cityColors = ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'];
-                            $rawBreakdown = $chartData['cityBreakdown'] ?? [];
-                            if (is_array($rawBreakdown)) {
-                                $breakdownItems = $rawBreakdown;
-                            } elseif (is_object($rawBreakdown) && $rawBreakdown instanceof \Traversable && !($rawBreakdown instanceof \__PHP_Incomplete_Class)) {
-                                $breakdownItems = iterator_to_array($rawBreakdown);
-                            } else {
-                                $breakdownItems = is_array($chartData['cityLabels'] ?? null) ? $chartData['cityLabels'] : [];
-                            }
-                        @endphp
-                        @forelse($breakdownItems as $cIdx => $cItem)
+                    <div class="pt-1.5 space-y-1.5">
+                        @forelse($oltLiveStatus ?? [] as $oltItem)
                             @php
-                                if (is_string($cItem)) {
-                                    $cName = $cItem;
-                                    $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
-                                    $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
-                                } elseif (is_array($cItem)) {
-                                    $cName = (string) ($cItem['kota_name'] ?? '');
-                                    $cTot = (int) ($cItem['total'] ?? 0);
-                                    $cAktif = (int) ($cItem['total_aktif'] ?? 0);
-                                } elseif (is_object($cItem) && !($cItem instanceof \__PHP_Incomplete_Class)) {
-                                    $cName = (string) ($cItem->kota_name ?? '');
-                                    $cTot = (int) ($cItem->total ?? 0);
-                                    $cAktif = (int) ($cItem->total_aktif ?? 0);
-                                } else {
-                                    $cName = (string) ($chartData['cityLabels'][$cIdx] ?? 'Wilayah');
-                                    $cTot = (int) ($chartData['citySeries'][$cIdx] ?? 0);
-                                    $cAktif = (int) ($chartData['cityAktifSeries'][$cIdx] ?? 0);
-                                }
-                                $cName = trim($cName);
-                                $cPct = round(($cTot / $maxCityTotal) * 100, 1);
-                                $cBarColor = $cityColors[$loop->index % count($cityColors)];
+                                $isUp = ($oltItem['status'] ?? 'UP') === 'UP' || ($oltItem['is_online'] ?? false);
                             @endphp
-                            <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 space-y-0.5 hover:bg-slate-100/60 transition">
-                                <div class="flex items-center justify-between text-[9px]">
-                                    <div class="flex items-center gap-1.5 min-w-0">
-                                        <span class="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7.5px] font-black {{ $loop->first ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' : ($loop->iteration == 2 ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500') }}">
-                                            {{ $loop->iteration }}
-                                        </span>
-                                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate" title="{{ $cName }}">{{ $cName }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 font-mono flex-shrink-0">
-                                        <span class="font-black text-slate-900 dark:text-white text-[9.5px]">{{ number_format($cTot) }}</span>
-                                        <span class="text-[7.5px] text-slate-400">({{ $cPct }}%)</span>
-                                    </div>
+                            <div class="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-2 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 transition">
+                                <!-- Nama OLT -->
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-2 h-2 rounded-full {{ $isUp ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }} shrink-0"></span>
+                                    <span class="font-bold text-[11px] text-slate-800 dark:text-slate-200 truncate" title="{{ $oltItem['name_olt'] ?? 'OLT' }}">
+                                        {{ $oltItem['name_olt'] ?? 'OLT' }}
+                                    </span>
                                 </div>
-                                <div class="w-full h-1 bg-slate-200/80 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full transition-all duration-500" style="width: {{ $cPct }}%; background-color: {{ $cBarColor }};"></div>
+                                
+                                <!-- Status OLT -->
+                                <div class="flex-shrink-0">
+                                    @if($isUp)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            <span>UP</span>
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                            <span>DOWN</span>
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         @empty
-                            <div class="p-2 text-center text-[9px] text-slate-400">
-                                Belum ada data wilayah pelanggan
+                            <div class="p-3 text-center text-[10px] text-slate-400">
+                                Belum ada data OLT terdaftar
                             </div>
                         @endforelse
                     </div>
                 </div>
 
                 <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8.5px] text-slate-400">
-                    <span>Total Wilayah</span>
-                    <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ is_countable($chartData['cityLabels'] ?? null) ? count($chartData['cityLabels']) : 3 }} Kota</span>
+                    <span class="flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>Total: <strong class="text-slate-700 dark:text-slate-300 font-mono">{{ count($oltLiveStatus ?? []) }} OLT</strong></span>
+                    </span>
+                    <a href="{{ route('noc.olt') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
+                        <span>Data OLT</span>
+                        <span>&rarr;</span>
+                    </a>
                 </div>
             </div>
 

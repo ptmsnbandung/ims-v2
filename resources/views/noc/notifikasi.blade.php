@@ -46,6 +46,17 @@
                     <span>Live: <span class="text-white" x-text="currentTime">--:--:--</span> WIB</span>
                 </div>
 
+                <!-- Tombol Tes Suara Alarm -->
+                <button @click="testSoundAlert()"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 border border-rose-400/40 shadow-xs transition cursor-pointer"
+                        title="Tes notifikasi suara jika ada perangkat LOS atau DOWN">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75Z" />
+                    </svg>
+                    <span>Tes Suara Alarm</span>
+                </button>
+
                 <!-- Tombol Refresh -->
                 <button @click="refreshData()"
                         :disabled="isLoading"
@@ -564,7 +575,12 @@ function nocNotifikasiPage() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.status === 'success' && data.data) {
-                        this.alerts = data.data.alerts || [];
+                        const newAlerts = data.data.alerts || [];
+
+                        // NOTIFIKASI SUARA: Mainkan suara alarm jika ada perangkat berstatus LOS atau DOWN
+                        this.checkAndPlaySound(newAlerts);
+
+                        this.alerts = newAlerts;
                         this.intentional = data.data.intentional || [];
                         this.summary = data.data.summary || {
                             total_active: this.alerts.length,
@@ -578,6 +594,53 @@ function nocNotifikasiPage() {
                 console.warn('Gagal memuat notifikasi:', e);
             } finally {
                 if (!silent) this.isLoading = false;
+            }
+        },
+
+        checkAndPlaySound(alerts) {
+            if (!Array.isArray(alerts) || alerts.length === 0) return;
+            let playedKeys = [];
+            try {
+                playedKeys = JSON.parse(localStorage.getItem('ims_noc_sound_played_keys') || '[]');
+            } catch (e) {
+                playedKeys = [];
+            }
+
+            // Ambil alert aktif yang berstatus LOS atau DOWN dan bukan intentional/muted
+            const losDownAlerts = alerts.filter(a => {
+                if (a.is_intentional) return false;
+                const st = (a.status || '').toUpperCase();
+                return st === 'LOS' || st === 'DOWN';
+            });
+
+            // Cari yang belum pernah dibunyikan
+            const unplayed = losDownAlerts.filter(a => !playedKeys.includes(a.id) && !playedKeys.includes(a.device_key));
+
+            if (unplayed.length > 0) {
+                if (typeof window.playNocEmergencySound === 'function') {
+                    window.playNocEmergencySound(unplayed[0]);
+                }
+
+                // Simpan ke localStorage agar tidak membunyikan spam berulang tiap 20 detik
+                unplayed.forEach(a => {
+                    if (a.id) playedKeys.push(a.id);
+                    if (a.device_key) playedKeys.push(a.device_key);
+                });
+                if (playedKeys.length > 200) playedKeys = playedKeys.slice(-200);
+                try {
+                    localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedKeys));
+                } catch (e) {}
+            }
+        },
+
+        testSoundAlert() {
+            if (typeof window.playNocEmergencySound === 'function') {
+                window.playNocEmergencySound({
+                    status: 'LOS',
+                    title: 'Uji Coba Alarm Suara NOC',
+                    device_name: 'Simulasi Perangkat LOS',
+                    message: 'Tes notifikasi suara deteksi LOS dan DOWN berhasil dibunyikan.'
+                }, true);
             }
         },
 

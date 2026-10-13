@@ -264,6 +264,10 @@
                                 if (hasNewIncoming && this.alerts.length > 0) {
                                     this.hasNewAlert = true;
                                 }
+
+                                // NOTIFIKASI SUARA: Bunyikan suara alarm jika ada perangkat berstatus LOS atau DOWN
+                                this.checkAndPlaySound(newAlerts);
+
                                 this.alerts = newAlerts;
                                 this.intentional = resData.data.intentional || [];
                                 this.summary = resData.data.summary || {
@@ -278,6 +282,43 @@
                         console.warn('Gagal memuat notifikasi NOC:', e);
                     } finally {
                         if (!silent) this.isLoading = false;
+                    }
+                },
+
+                checkAndPlaySound(alerts) {
+                    if (!Array.isArray(alerts) || alerts.length === 0) return;
+                    
+                    let playedKeys = [];
+                    try {
+                        playedKeys = JSON.parse(localStorage.getItem('ims_noc_sound_played_keys') || '[]');
+                    } catch (e) {
+                        playedKeys = [];
+                    }
+
+                    // Ambil alert aktif yang berstatus LOS atau DOWN dan bukan dimute / intentional
+                    const losDownAlerts = alerts.filter(a => {
+                        if (a.is_intentional) return false;
+                        const st = (a.status || '').toUpperCase();
+                        return st === 'LOS' || st === 'DOWN';
+                    });
+
+                    // Cari yang belum pernah dibunyikan
+                    const unplayed = losDownAlerts.filter(a => !playedKeys.includes(a.id) && !playedKeys.includes(a.device_key));
+
+                    if (unplayed.length > 0) {
+                        if (typeof window.playNocEmergencySound === 'function') {
+                            window.playNocEmergencySound(unplayed[0]);
+                        }
+
+                        // Simpan ke localStorage agar tidak membunyikan spam berulang tiap 30 detik
+                        unplayed.forEach(a => {
+                            if (a.id) playedKeys.push(a.id);
+                            if (a.device_key) playedKeys.push(a.device_key);
+                        });
+                        if (playedKeys.length > 200) playedKeys = playedKeys.slice(-200);
+                        try {
+                            localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedKeys));
+                        } catch (e) {}
                     }
                 },
 
@@ -2398,6 +2439,56 @@
         document.addEventListener('DOMContentLoaded', () => {
             window.ImsVoice.init();
         });
+
+        // Global NOC Emergency Alert Audio Synthesizer & Voice Chime (LOS & DOWN)
+        window.playNocEmergencySound = function(alertItem, force = false) {
+            // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctx = new AudioCtx();
+                    const now = ctx.currentTime;
+                    
+                    // High-low alarm beeps: E6 (1318Hz) -> C6 (1046Hz) -> E6 (1318Hz)
+                    const tones = [
+                        { freq: 1318.51, start: 0.00, dur: 0.18, type: 'sawtooth' },
+                        { freq: 1046.50, start: 0.20, dur: 0.18, type: 'sine' },
+                        { freq: 1318.51, start: 0.40, dur: 0.25, type: 'sawtooth' }
+                    ];
+
+                    tones.forEach(t => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = t.type;
+                        osc.frequency.setValueAtTime(t.freq, now + t.start);
+                        gain.gain.setValueAtTime(0.3, now + t.start);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + t.start);
+                        osc.stop(now + t.start + t.dur);
+                    });
+                }
+            } catch (e) {
+                console.warn('Web Audio alarm tone error:', e);
+            }
+
+            // 2. Play speech via window.ImsVoice if available
+            try {
+                if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === 'function') {
+                    const item = alertItem || {};
+                    const st = (item.status || 'LOS').toUpperCase();
+                    const statusLabel = st === 'LOS' ? 'Loss of Signal' : 'Down';
+                    const name = item.device_name || item.title || 'Perangkat Jaringan';
+                    window.ImsVoice.enqueueNotification({
+                        type: 'noc_alarm',
+                        title: st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi',
+                        message: item.message || `${name} mengalami gangguan ${st}`,
+                        speech_text: `Perhatian! Terdeteksi ${statusLabel} pada ${name}.`,
+                    });
+                }
+            } catch (e) {}
+        };
     </script>
 
     <!-- SweetAlert2 Global Notification -->

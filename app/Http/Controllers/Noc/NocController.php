@@ -3668,10 +3668,35 @@ class NocController extends Controller
         // 1. TIKET GANGGUAN BARU / BELUM SELESAI (status != 14 && status != Selesai)
         if (Schema::hasTable('trx_tiket_gangguan')) {
             try {
-                $tickets = DB::table('trx_tiket_gangguan')
-                    ->leftJoin('view_batchjob', 'trx_tiket_gangguan.nomor_internet', '=', 'view_batchjob.nomor_internet')
-                    ->leftJoin('trx_batchjob_register', 'trx_tiket_gangguan.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
-                    ->where(function ($q) {
+                $ticketQuery = DB::table('trx_tiket_gangguan');
+                if (Schema::hasTable('trx_batchjob_register')) {
+                    $ticketQuery->leftJoin('trx_batchjob_register', 'trx_tiket_gangguan.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
+                        ->select([
+                            'trx_tiket_gangguan.tiket',
+                            'trx_tiket_gangguan.nomor_internet',
+                            'trx_tiket_gangguan.keluhan',
+                            'trx_tiket_gangguan.indikasi',
+                            'trx_tiket_gangguan.status',
+                            'trx_tiket_gangguan.nomor_hp',
+                            'trx_tiket_gangguan.date_create',
+                            'trx_batchjob_register.nama_pelanggan',
+                            'trx_batchjob_register.alamat_pasang',
+                            'trx_batchjob_register.olt',
+                            'trx_batchjob_register.index_olt',
+                        ]);
+                } else {
+                    $ticketQuery->select([
+                        'trx_tiket_gangguan.tiket',
+                        'trx_tiket_gangguan.nomor_internet',
+                        'trx_tiket_gangguan.keluhan',
+                        'trx_tiket_gangguan.indikasi',
+                        'trx_tiket_gangguan.status',
+                        'trx_tiket_gangguan.nomor_hp',
+                        'trx_tiket_gangguan.date_create',
+                    ]);
+                }
+
+                $tickets = $ticketQuery->where(function ($q) {
                         $q->where('trx_tiket_gangguan.status', '11')
                           ->orWhere(function ($sub) {
                               $sub->where('trx_tiket_gangguan.status', '!=', '14')
@@ -3682,19 +3707,6 @@ class NocController extends Controller
                         $q->whereNull('trx_tiket_gangguan.hide')
                           ->orWhere('trx_tiket_gangguan.hide', '!=', '1');
                     })
-                    ->select([
-                        'trx_tiket_gangguan.tiket',
-                        'trx_tiket_gangguan.nomor_internet',
-                        'trx_tiket_gangguan.keluhan',
-                        'trx_tiket_gangguan.indikasi',
-                        'trx_tiket_gangguan.status',
-                        'trx_tiket_gangguan.nomor_hp',
-                        'trx_tiket_gangguan.date_create',
-                        'view_batchjob.nama_pelanggan',
-                        'view_batchjob.alamat_pasang',
-                        'trx_batchjob_register.olt',
-                        'view_batchjob.index_olt',
-                    ])
                     ->orderBy('trx_tiket_gangguan.date_create', 'desc')
                     ->limit(20)
                     ->get();
@@ -3717,8 +3729,8 @@ class NocController extends Controller
                         'severity' => $isLosTicket ? 'danger' : 'warning',
                         'badge_color' => $isLosTicket ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white',
                         'icon_type' => 'ticket',
-                        'olt_kode' => $t->olt,
-                        'interface_name' => $t->index_olt,
+                        'olt_kode' => $t->olt ?? null,
+                        'interface_name' => $t->index_olt ?? null,
                         'nomor_internet' => $t->nomor_internet,
                         'created_at' => $t->date_create ? Carbon::parse($t->date_create)->format('d M Y, H:i') : '-',
                         'created_at_raw' => $t->date_create,
@@ -3800,67 +3812,169 @@ class NocController extends Controller
             }
         }
 
-        // 3. PERANGKAT ONU & PORT PON YANG LOS / DOWN
+        // 3. SCAN REALTIME PERANGKAT ONU & PORT PON YANG LOS / DOWN DARI OLT FISIK
         try {
-            $olts = DB::table('m_olt')->where('is_active', 1)->get();
-            foreach ($olts as $olt) {
-                $maxPorts = min(8, (int)($olt->capacity_olt ?: 8));
-                for ($p = 1; $p <= $maxPorts; $p++) {
-                    $cacheKey = "olt_live_hw_onu_{$olt->kode_olt}_{$p}";
-                    $hwOnu = Cache::get($cacheKey);
-                    if ($hwOnu && !empty($hwOnu['states'])) {
-                        foreach ($hwOnu['states'] as $onuId => $stateInfo) {
-                            $phase = strtolower($stateInfo['phase'] ?? '');
-                            if (in_array($phase, ['los', 'lost', 'dyinggasp', 'offline', 'poweroff'])) {
-                                $isLos = in_array($phase, ['los', 'lost']);
-                                $slot = $oltService->getOltGponSlot($olt);
-                                $interface = "gpon-onu_1/{$slot}/{$p}:{$onuId}";
-                                $devKey = "onu_{$interface}";
-                                $isIntentional = $intentionalRecords->has($devKey);
+            $isForceRefresh = request()->boolean('refresh') || request()->query('sync') === '1';
 
-                                $matchedUser = DB::table('view_batchjob')
-                                    ->where('index_olt', 'like', "%{$interface}%")
-                                    ->orWhere('index_olt', 'like', "%{$p}:{$onuId}%")
-                                    ->first();
+            // Preload database registrasi pelanggan untuk enrichment instan
+            $regMap = [];
+            if (Schema::hasTable('trx_batchjob_register')) {
+                try {
+                    $allRegs = DB::table('trx_batchjob_register')
+                        ->select('nomor_internet', 'nama_pelanggan', 'alamat_pasang', 'olt', 'index_olt')
+                        ->whereNotNull('index_olt')
+                        ->get();
+                    foreach ($allRegs as $r) {
+                        $idx = trim($r->index_olt);
+                        $regMap[$idx] = $r;
+                        if (preg_match('/1\/[12]\/(\d+:\d+)/', $idx, $m)) {
+                            $regMap[$m[1]] = $r;
+                        }
+                        if (preg_match('/(\d+:\d+)/', $idx, $m)) {
+                            $regMap[$m[1]] = $r;
+                        }
+                        if (!empty($r->nomor_internet)) {
+                            $regMap['no_' . $r->nomor_internet] = $r;
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
 
-                                $custName = $matchedUser->nama_pelanggan ?? "ONU #{$onuId}";
-                                $custNo = $matchedUser->nomor_internet ?? '-';
-                                $rxPower = isset($hwOnu['powers'][$onuId]) ? $hwOnu['powers'][$onuId] . ' dBm' : 'N/A';
+            if (Schema::hasTable('m_olt')) {
+                $olts = DB::table('m_olt')->where('is_active', 1)->get();
+                foreach ($olts as $olt) {
+                    $cacheKey = "olt_live_all_onu_states_{$olt->kode_olt}";
+                    if ($isForceRefresh) {
+                        Cache::forget($cacheKey);
+                    }
 
-                                $item = [
-                                    'id' => $devKey,
-                                    'device_key' => $devKey,
-                                    'device_type' => 'onu',
-                                    'title' => $isLos ? 'ONU LOS (Loss of Signal)' : 'ONU DOWN (Offline / Power Off)',
-                                    'device_name' => "{$interface} - {$custName}",
-                                    'subtitle' => "OLT: {$olt->name_olt} &middot; Port PON {$p} &middot; No: {$custNo}",
-                                    'message' => $isLos 
-                                        ? "Sinyal optik kabel terputus / loss pada {$interface} ({$custName}). Redaman Rx: {$rxPower}"
-                                        : "Perangkat modem offline atau mati listrik pada {$interface} ({$custName}).",
-                                    'status' => $isLos ? 'LOS' : 'DOWN',
-                                    'severity' => $isLos ? 'danger' : 'warning',
-                                    'badge_color' => $isLos ? 'bg-rose-500 text-white' : 'bg-amber-600 text-white',
-                                    'icon_type' => 'radio',
-                                    'olt_kode' => $olt->kode_olt,
-                                    'pon_index' => $p,
-                                    'onu_id' => $onuId,
-                                    'interface_name' => $interface,
-                                    'nomor_internet' => $custNo,
-                                    'rx_power' => $rxPower,
-                                    'created_at' => now()->format('d M Y, H:i'),
-                                    'created_at_raw' => now()->toDateTimeString(),
-                                    'url' => route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $p]),
-                                    'action_label' => 'Buka Port PON',
-                                    'is_intentional' => $isIntentional,
-                                    'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
-                                ];
+                    // Ambil status seluruh ONU pada OLT fisik (cache 60 detik untuk performa instan)
+                    $abnormalOnus = Cache::remember($cacheKey, 60, function () use ($olt, $oltService) {
+                        try {
+                            $sess = $oltService->openOltTelnetSession($olt, 2.5);
+                            if (!$sess) return [];
+                            $socket = $sess['socket'];
+                            fwrite($socket, "terminal length 0\r\n");
+                            fwrite($socket, "show gpon onu state\r\n");
+                            fwrite($socket, "exit\r\n");
+                            fwrite($socket, "yes\r\n");
 
-                                if ($isIntentional) {
-                                    $intentionalAlerts[] = $item;
-                                } else {
-                                    $activeAlerts[] = $item;
+                            $buf = '';
+                            $start = microtime(true);
+                            while (!feof($socket) && (microtime(true) - $start) < 4.0) {
+                                $chunk = fread($socket, 8192);
+                                if ($chunk === false) break;
+                                $buf .= $chunk;
+                                if (str_contains($buf, 'logout') || str_contains($buf, 'closed')) break;
+                            }
+                            fclose($socket);
+
+                            $clean = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $buf);
+                            $results = [];
+
+                            if (preg_match_all('/(?:gpon-onu_)?(1\/[12]\/(\d+):(\d+))\s+(\w+)\s+(\w+)\s+(\w+)/i', $clean, $matches, PREG_SET_ORDER)) {
+                                foreach ($matches as $m) {
+                                    $phase = strtolower($m[6]);
+                                    if (in_array($phase, ['los', 'lost', 'dyinggasp', 'offline', 'poweroff'])) {
+                                        $results[] = [
+                                            'interface' => $m[1],
+                                            'port' => (int)$m[2],
+                                            'onu_id' => (int)$m[3],
+                                            'admin' => $m[4],
+                                            'omcc' => $m[5],
+                                            'phase' => $phase,
+                                            'is_los' => in_array($phase, ['los', 'lost']),
+                                        ];
+                                    }
                                 }
                             }
+                            return $results;
+                        } catch (\Throwable $e) {
+                            Log::warning("NOC OLT scan error on {$olt->kode_olt}: " . $e->getMessage());
+                            return [];
+                        }
+                    });
+
+                    // Fallback pemeriksaan cache per PON jika full scan kosong
+                    if (empty($abnormalOnus)) {
+                        $maxPorts = min(8, (int)($olt->capacity_olt ?: 8));
+                        for ($p = 1; $p <= $maxPorts; $p++) {
+                            $hwDiscovery = Cache::get("olt_live_hw_pon_physical_onus_{$olt->kode_olt}_{$p}");
+                            if ($hwDiscovery && !empty($hwDiscovery['states'])) {
+                                foreach ($hwDiscovery['states'] as $onuId => $st) {
+                                    $ph = strtolower($st['phase'] ?? '');
+                                    if (in_array($ph, ['los', 'lost', 'dyinggasp', 'offline', 'poweroff'])) {
+                                        $slot = $oltService->getOltGponSlot($olt);
+                                        $abnormalOnus[] = [
+                                            'interface' => "1/{$slot}/{$p}:{$onuId}",
+                                            'port' => $p,
+                                            'onu_id' => $onuId,
+                                            'admin' => $st['admin'] ?? 'enable',
+                                            'omcc' => $st['omcc'] ?? 'enable',
+                                            'phase' => $ph,
+                                            'is_los' => in_array($ph, ['los', 'lost']),
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    foreach ($abnormalOnus as $st) {
+                        $interface = $st['interface'];
+                        $port = $st['port'];
+                        $onuId = $st['onu_id'];
+                        $isLos = $st['is_los'];
+                        $fullInterface = "gpon-onu_{$interface}";
+                        $devKey = "onu_{$fullInterface}";
+                        $isIntentional = $intentionalRecords->has($devKey);
+
+                        $matchedUser = $regMap[$interface] ?? ($regMap["{$port}:{$onuId}"] ?? null);
+                        if (!$matchedUser && Schema::hasTable('trx_batchjob_register')) {
+                            try {
+                                $matchedUser = DB::table('trx_batchjob_register')
+                                    ->where('index_olt', 'like', "%{$interface}%")
+                                    ->orWhere('index_olt', 'like', "%{$port}:{$onuId}%")
+                                    ->first();
+                            } catch (\Throwable $e) {}
+                        }
+
+                        $custName = $matchedUser->nama_pelanggan ?? "ONU #{$onuId}";
+                        $custNo = $matchedUser->nomor_internet ?? '-';
+                        $phaseLabel = strtoupper($st['phase'] ?? ($isLos ? 'LOS' : 'DOWN'));
+
+                        $item = [
+                            'id' => $devKey,
+                            'device_key' => $devKey,
+                            'device_type' => 'onu',
+                            'title' => $isLos ? 'ONU LOS (Loss of Signal)' : "ONU DOWN ({$phaseLabel})",
+                            'device_name' => "{$fullInterface} - {$custName}",
+                            'subtitle' => "OLT: {$olt->name_olt} &middot; Port PON {$port} &middot; No: {$custNo}",
+                            'message' => $isLos 
+                                ? "Sinyal optik fiber terputus / LOS pada {$fullInterface} ({$custName}). Kabel optik putus atau redaman loss."
+                                : "Perangkat modem padam / offline ({$phaseLabel}) pada {$fullInterface} ({$custName}).",
+                            'status' => $isLos ? 'LOS' : 'DOWN',
+                            'severity' => $isLos ? 'danger' : 'warning',
+                            'badge_color' => $isLos ? 'bg-rose-500 text-white' : 'bg-amber-600 text-white',
+                            'icon_type' => 'radio',
+                            'olt_kode' => $olt->kode_olt,
+                            'pon_index' => $port,
+                            'onu_id' => $onuId,
+                            'interface_name' => $fullInterface,
+                            'nomor_internet' => $custNo,
+                            'rx_power' => $isLos ? 'No Signal (LOS)' : 'Offline / Power Off',
+                            'created_at' => now()->format('d M Y, H:i'),
+                            'created_at_raw' => now()->toDateTimeString(),
+                            'url' => route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $port]),
+                            'action_label' => 'Buka Port PON',
+                            'is_intentional' => $isIntentional,
+                            'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                        ];
+
+                        if ($isIntentional) {
+                            $intentionalAlerts[] = $item;
+                        } else {
+                            $activeAlerts[] = $item;
                         }
                     }
                 }

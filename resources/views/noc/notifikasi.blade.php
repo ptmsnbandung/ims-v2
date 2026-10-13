@@ -554,7 +554,8 @@ function nocNotifikasiPage() {
         async refreshData(silent = false) {
             if (!silent) this.isLoading = true;
             try {
-                const res = await fetch('{{ route("noc.api.notifications") }}', {
+                const url = !silent ? '{{ route("noc.api.notifications") }}?refresh=1' : '{{ route("noc.api.notifications") }}';
+                const res = await fetch(url, {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'

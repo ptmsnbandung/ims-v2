@@ -692,93 +692,140 @@ class OltConnectionService
     }
 
     /**
+     * Scope query pelanggan aktif yang benar dan real terdaftar pada OLT tertentu
+     */
+    public function getOltCustomerBaseQuery(object $olt)
+    {
+        $kodeOlt = $olt->kode_olt ?? '';
+        $namaOlt = strtolower($olt->name_olt ?? ($olt->nama_olt ?? ''));
+        $kodePop = $olt->kode_pop ?? '';
+
+        $query = DB::table('view_batchjob')
+            ->leftJoin('trx_batchjob_register', 'view_batchjob.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
+            ->leftJoin('m_pop', 'view_batchjob.kode_pop', '=', 'm_pop.kode_pop')
+            ->whereNotIn('view_batchjob.status_reg', ['23', '23.1', '15'])
+            ->select(
+                'view_batchjob.nomor_internet',
+                'view_batchjob.nama_pelanggan',
+                DB::raw('COALESCE(NULLIF(trx_batchjob_register.index_olt, ""), NULLIF(view_batchjob.index_olt, "")) as index_olt'),
+                'view_batchjob.nominal_bandwith',
+                'view_batchjob.nama_kategori_bandwith',
+                'view_batchjob.alamat_pasang',
+                'view_batchjob.alamat_p',
+                'view_batchjob.status_reg',
+                'view_batchjob.kode_pop',
+                'm_pop.nama_pop',
+                'view_batchjob.nomor_hp',
+                'trx_batchjob_register.note_request',
+                'trx_batchjob_register.ont_us',
+                'trx_batchjob_register.olt'
+            );
+
+        $query->where(function ($q) use ($kodeOlt, $namaOlt, $kodePop) {
+            // 1. Cocokkan kode OLT langsung
+            if (!empty($kodeOlt)) {
+                $q->where('trx_batchjob_register.olt', $kodeOlt)
+                  ->orWhere('view_batchjob.olt', $kodeOlt);
+            }
+
+            // 2. Cocokkan nama OLT
+            if (!empty($namaOlt)) {
+                $q->orWhere('trx_batchjob_register.olt', 'like', "%{$namaOlt}%")
+                  ->orWhere('view_batchjob.olt', 'like', "%{$namaOlt}%");
+            }
+
+            // 3. Cocokkan kode POP jika terdaftar di m_olt
+            if (!empty($kodePop)) {
+                $q->orWhere('view_batchjob.kode_pop', $kodePop);
+            }
+
+            // 4. Alias pemetaan sistem IMS (NocController standard)
+            if ($kodeOlt === 'O1' || str_contains($namaOlt, 'kayu agung')) {
+                $q->orWhere('trx_batchjob_register.olt', 'MSN')
+                  ->orWhere('trx_batchjob_register.olt', 'like', '%Kayu Agung%')
+                  ->orWhere('view_batchjob.kode_pop', 'pop73117')
+                  ->orWhere('m_pop.nama_pop', 'like', '%Kayu Agung%');
+            } elseif ($kodeOlt === 'O2' || str_contains($namaOlt, 'babakan tarogong') || str_contains($namaOlt, 'bagong')) {
+                $q->orWhere('trx_batchjob_register.olt', 'Bagong')
+                  ->orWhere('trx_batchjob_register.olt', 'like', '%Babakan Tarogong%')
+                  ->orWhere('view_batchjob.kode_pop', 'pop9348')
+                  ->orWhere('m_pop.nama_pop', 'like', '%Babakan Tarogong%');
+            } elseif ($kodeOlt === 'O3' || str_contains($namaOlt, 'bbu') || str_contains($namaOlt, 'soreang')) {
+                $q->orWhere('trx_batchjob_register.olt', 'Soreang')
+                  ->orWhere('trx_batchjob_register.olt', 'like', '%BBU%')
+                  ->orWhere('view_batchjob.kode_pop', 'pop26685')
+                  ->orWhere('m_pop.nama_pop', 'like', '%MediaNet%')
+                  ->orWhere('m_pop.nama_pop', 'like', '%BBU%');
+            }
+        });
+
+        return $query;
+    }
+
+    /**
      * Ambil data telemetry & grafik MRTG untuk masing-masing Port PON pada OLT
      */
     public function getOltPonPortsTelemetry(object $olt, ?string $startDate = null, ?string $endDate = null): array
     {
         $kodeOlt = $olt->kode_olt ?? 'OLT01';
-        $capacity = !empty($olt->capacity_olt) ? (int)$olt->capacity_olt : 8;
-        if ($capacity <= 0) $capacity = 8;
 
-        $portUsers = array_fill(1, $capacity, 0);
+        // Ambil semua pelanggan real OLT ini
+        $customers = $this->getOltCustomerBaseQuery($olt)->get();
 
-        // Kumpulkan alias OLT (kode OLT, nama OLT, alias populer seperti Bagong dll)
-        $oltAliases = array_filter([$kodeOlt, $olt->name_olt ?? null, $olt->nama_olt ?? null]);
-        if (str_contains(strtolower($olt->name_olt ?? ''), 'babakan tarogong') || str_contains(strtolower($olt->name_olt ?? ''), 'bagong')) {
-            $oltAliases[] = 'Bagong';
-            $oltAliases[] = 'Babakan';
-        }
-        if (str_contains(strtolower($olt->name_olt ?? ''), 'kayu agung')) {
-            $oltAliases[] = 'Kayu Agung';
-            $oltAliases[] = 'O1';
-        }
-        if (str_contains(strtolower($olt->name_olt ?? ''), 'bbu')) {
-            $oltAliases[] = 'BBU';
+        // Cari nomor port tertinggi dari pelanggan OLT ini (minimal 8 port standar GPON)
+        $maxPort = 8;
+        if (!empty($olt->capacity_olt) && is_numeric($olt->capacity_olt) && (int)$olt->capacity_olt > $maxPort) {
+            $maxPort = (int)$olt->capacity_olt;
         }
 
-        // 1. Ambil pelanggan yang secara eksplisit terdaftar di OLT ini
-        $oltCustomers = DB::table('trx_batchjob_register')
-            ->whereIn('olt', $oltAliases)
-            ->whereNotNull('index_olt')
-            ->where('index_olt', '!=', '')
-            ->whereNotIn('status_reg', ['23', '23.1', '15'])
-            ->get();
-
-        foreach ($oltCustomers as $c) {
+        foreach ($customers as $c) {
             $idx = trim((string)$c->index_olt);
-            if (preg_match('/(?:1\/1\/|1\/2\/|pon[-_]?|port[-_]?)(\d+)/i', $idx, $m)) {
+            if (preg_match('/(?:1\/1\/|1\/2\/|pon[-_]?|port[-_]?)(\d+):/i', $idx, $m)) {
+                $p = (int)$m[1];
+                if ($p > $maxPort) {
+                    $maxPort = $p;
+                }
+            }
+        }
+
+        $portUsers = array_fill(1, $maxPort, 0);
+
+        foreach ($customers as $c) {
+            $idx = trim((string)$c->index_olt);
+            $matchedPort = null;
+            if (preg_match('/(?:1\/1\/|1\/2\/|pon[-_]?|port[-_]?)(\d+):/i', $idx, $m)) {
                 $pNum = (int)$m[1];
-                if ($pNum >= 1 && $pNum <= $capacity) {
-                    $portUsers[$pNum]++;
+                if ($pNum >= 1 && $pNum <= $maxPort) {
+                    $matchedPort = $pNum;
+                }
+            } elseif (preg_match('/^(\d+):/i', $idx, $m)) {
+                $pNum = (int)$m[1];
+                if ($pNum >= 1 && $pNum <= $maxPort) {
+                    $matchedPort = $pNum;
                 }
             }
-        }
 
-        // 2. Untuk port yang belum memiliki data di OLT ini, ambil data port dari view_batchjob & trx_batchjob_register
-        // agar sinkron dengan data yang ditampilkan di halaman Daftar ONU
-        $needPorts = [];
-        for ($p = 1; $p <= $capacity; $p++) {
-            if ($portUsers[$p] === 0) {
-                $needPorts[] = $p;
-            }
-        }
-
-        if (!empty($needPorts)) {
-            $sharedCustomers = DB::table('view_batchjob')
-                ->leftJoin('trx_batchjob_register', 'view_batchjob.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
-                ->where(function($q) {
-                    $q->whereNotNull('view_batchjob.index_olt')->where('view_batchjob.index_olt', '!=', '')
-                      ->orWhereNotNull('trx_batchjob_register.index_olt')->where('trx_batchjob_register.index_olt', '!=', '');
-                })
-                ->whereNotIn('view_batchjob.status_reg', ['23', '23.1', '15'])
-                ->select(
-                    'view_batchjob.nomor_internet',
-                    'view_batchjob.index_olt as v_idx',
-                    'trx_batchjob_register.index_olt as t_idx'
-                )
-                ->get();
-
-            foreach ($sharedCustomers as $row) {
-                $idx = trim($row->v_idx ?: $row->t_idx ?: '');
-                if (preg_match('/(?:1\/1\/|1\/2\/|pon[-_]?|port[-_]?)(\d+)/i', $idx, $m)) {
-                    $pNum = (int)$m[1];
-                    if (in_array($pNum, $needPorts, true)) {
-                        $portUsers[$pNum]++;
-                    }
-                }
+            if ($matchedPort) {
+                $portUsers[$matchedPort]++;
             }
         }
 
         $portsData = [];
-        for ($p = 1; $p <= $capacity; $p++) {
+        for ($p = 1; $p <= $maxPort; $p++) {
             $userCount = $portUsers[$p];
-            if ($userCount == 0) {
-                $userCount = ((abs(crc32($kodeOlt . '_port_' . $p)) % 25) + 8);
-            }
 
-            // Simulasi bandwidth proporsional terhadap user count
-            $downMbps = round(max(1.8, ($userCount * 0.85) + ((abs(crc32($kodeOlt . '_d_' . $p)) % 100) / 20)), 1);
-            $upMbps = round(max(0.6, ($downMbps * 0.38) + ((abs(crc32($kodeOlt . '_u_' . $p)) % 50) / 25)), 1);
+            // Simulasi bandwidth proporsional terhadap user count real
+            if ($userCount > 0) {
+                $downMbps = round(max(1.8, ($userCount * 0.85) + ((abs(crc32($kodeOlt . '_d_' . $p)) % 100) / 20)), 1);
+                $upMbps = round(max(0.6, ($downMbps * 0.38) + ((abs(crc32($kodeOlt . '_u_' . $p)) % 50) / 25)), 1);
+                $laserTx = '+' . number_format(4.10 + (($p % 5) * 0.08), 2) . ' dBm';
+                $laserRx = '-' . number_format(19.20 + (($p % 7) * 0.25), 2) . ' dBm';
+            } else {
+                $downMbps = 0.0;
+                $upMbps = 0.0;
+                $laserTx = '+4.10 dBm';
+                $laserRx = '-40.00 dBm';
+            }
 
             $mrtgSeries = $this->generateMrtgSeries("{$kodeOlt}_pon_{$p}", $downMbps, $upMbps, $startDate, $endDate);
 
@@ -786,12 +833,12 @@ class OltConnectionService
                 'port_index' => $p,
                 'port_name' => "PON {$p}",
                 'interface_name' => "gpon-olt_1/1/{$p}",
-                'status' => 'online',
+                'status' => $userCount > 0 ? 'online' : 'idle',
                 'user_count' => $userCount,
                 'max_capacity' => 64,
                 'utilization_pct' => min(100, round(($userCount / 64) * 100)),
-                'tx_power' => '+' . number_format(4.10 + (($p % 5) * 0.08), 2) . ' dBm',
-                'rx_power' => '-' . number_format(19.20 + (($p % 7) * 0.25), 2) . ' dBm',
+                'tx_power' => $laserTx,
+                'rx_power' => $laserRx,
                 'download_mbps' => $downMbps,
                 'download_formatted' => $downMbps . ' Mbps',
                 'upload_mbps' => $upMbps,
@@ -808,71 +855,37 @@ class OltConnectionService
      */
     public function getPonOnuList(object $olt, int $ponIndex): array
     {
-        $kodeOlt = $olt->kode_olt ?? 'OLT01';
+        // Deteksi port maksimum yang tersedia pada OLT ini (minimal 8 port)
+        $maxPort = 8;
+        if (!empty($olt->capacity_olt) && is_numeric($olt->capacity_olt) && (int)$olt->capacity_olt > $maxPort) {
+            $maxPort = (int)$olt->capacity_olt;
+        }
 
-        // Query pelanggan aktif pada PON port ini
-        $query = DB::table('view_batchjob')
-            ->leftJoin('trx_batchjob_register', 'view_batchjob.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
-            ->leftJoin('m_pop', 'view_batchjob.kode_pop', '=', 'm_pop.kode_pop')
-            ->where(function ($q) use ($ponIndex) {
-                $q->where('view_batchjob.index_olt', 'like', "%1/1/{$ponIndex}:%")
-                  ->orWhere('view_batchjob.index_olt', 'like', "%1/2/{$ponIndex}:%")
-                  ->orWhere('view_batchjob.index_olt', 'like', "%pon-{$ponIndex}:%")
-                  ->orWhere('trx_batchjob_register.index_olt', 'like', "%1/1/{$ponIndex}:%")
-                  ->orWhere('trx_batchjob_register.index_olt', 'like', "%1/2/{$ponIndex}:%")
-                  ->orWhere('trx_batchjob_register.index_olt', 'like', "%pon-{$ponIndex}:%");
-            })
-            ->whereNotIn('view_batchjob.status_reg', ['23', '23.1', '15'])
-            ->select(
-                'view_batchjob.nomor_internet',
-                'view_batchjob.nama_pelanggan',
-                'view_batchjob.index_olt',
-                'view_batchjob.nominal_bandwith',
-                'view_batchjob.nama_kategori_bandwith',
-                'view_batchjob.alamat_pasang',
-                'view_batchjob.alamat_p',
-                'view_batchjob.status_reg',
-                'view_batchjob.kode_pop',
-                'm_pop.nama_pop',
-                'view_batchjob.nomor_hp',
-                'trx_batchjob_register.note_request',
-                'trx_batchjob_register.ont_us',
-                'trx_batchjob_register.olt'
-            );
+        $allOltCustomers = $this->getOltCustomerBaseQuery($olt)->get();
+        foreach ($allOltCustomers as $ac) {
+            $idx = trim((string)$ac->index_olt);
+            if (preg_match('/(?:1\/1\/|1\/2\/|pon[-_]?|port[-_]?)(\d+):/i', $idx, $m)) {
+                $p = (int)$m[1];
+                if ($p > $maxPort) {
+                    $maxPort = $p;
+                }
+            }
+        }
+
+        // Query pelanggan aktif pada PON port ini HANYA yang benar-benar milik OLT ini
+        $query = $this->getOltCustomerBaseQuery($olt);
+        $query->where(function ($q) use ($ponIndex) {
+            $q->where('view_batchjob.index_olt', 'like', "%1/1/{$ponIndex}:%")
+              ->orWhere('view_batchjob.index_olt', 'like', "%1/2/{$ponIndex}:%")
+              ->orWhere('view_batchjob.index_olt', 'like', "%pon-{$ponIndex}:%")
+              ->orWhere('view_batchjob.index_olt', 'like', "{$ponIndex}:%")
+              ->orWhere('trx_batchjob_register.index_olt', 'like', "%1/1/{$ponIndex}:%")
+              ->orWhere('trx_batchjob_register.index_olt', 'like', "%1/2/{$ponIndex}:%")
+              ->orWhere('trx_batchjob_register.index_olt', 'like', "%pon-{$ponIndex}:%")
+              ->orWhere('trx_batchjob_register.index_olt', 'like', "{$ponIndex}:%");
+        });
 
         $dbCustomers = $query->get();
-
-        // Jika jumlah pelanggan di database untuk port ini sedikit, ambil data pelanggan terhubung lainnya untuk port ini
-        if ($dbCustomers->count() < 8) {
-            $existingIds = $dbCustomers->pluck('nomor_internet')->toArray();
-            $moreCustomers = DB::table('view_batchjob')
-                ->leftJoin('trx_batchjob_register', 'view_batchjob.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
-                ->leftJoin('m_pop', 'view_batchjob.kode_pop', '=', 'm_pop.kode_pop')
-                ->whereNotIn('view_batchjob.nomor_internet', $existingIds)
-                ->whereNotNull('view_batchjob.index_olt')
-                ->where('view_batchjob.index_olt', '!=', '')
-                ->whereNotIn('view_batchjob.status_reg', ['23', '23.1', '15'])
-                ->select(
-                    'view_batchjob.nomor_internet',
-                    'view_batchjob.nama_pelanggan',
-                    'view_batchjob.index_olt',
-                    'view_batchjob.nominal_bandwith',
-                    'view_batchjob.nama_kategori_bandwith',
-                    'view_batchjob.alamat_pasang',
-                    'view_batchjob.alamat_p',
-                    'view_batchjob.status_reg',
-                    'view_batchjob.kode_pop',
-                    'm_pop.nama_pop',
-                    'view_batchjob.nomor_hp',
-                    'trx_batchjob_register.note_request',
-                    'trx_batchjob_register.ont_us',
-                    'trx_batchjob_register.olt'
-                )
-                ->limit(15 - $dbCustomers->count())
-                ->get();
-
-            $dbCustomers = $dbCustomers->concat($moreCustomers);
-        }
 
         $onus = [];
         $onuIdCounter = 1;
@@ -1032,6 +1045,7 @@ class OltConnectionService
             'port_index' => $ponIndex,
             'port_name' => "PON {$ponIndex}",
             'interface_name' => "gpon-olt_1/1/{$ponIndex}",
+            'max_port' => $maxPort,
             'total_onus' => $totalCount,
             'online_onus' => $upCount,
             'up_onus' => $upCount,

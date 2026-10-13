@@ -105,7 +105,7 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start lg:self-center">
                 <label class="text-[11px] font-semibold text-slate-300">Pilih Port PON:</label>
                 <div class="flex items-center gap-1 bg-slate-800/90 p-1.5 rounded-lg border border-slate-700 shadow-inner">
-                    @for($p = 1; $p <= 8; $p++)
+                    @for($p = 1; $p <= ($onuData['max_port'] ?? 8); $p++)
                         <a href="{{ route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $p]) }}"
                            class="px-2.5 py-1 rounded-md text-[11px] font-mono font-bold transition {{ $p == $ponIndex ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-700' }}">
                             P{{ $p }}

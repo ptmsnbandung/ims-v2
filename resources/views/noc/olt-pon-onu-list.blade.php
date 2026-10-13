@@ -126,8 +126,14 @@
     <!-- =================================================================== -->
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         <!-- Card 1: Total Terdaftar -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs">
-            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total ONU</div>
+        <div @click="statusFilter = 'all'; redamanFilter = 'all'"
+             :class="statusFilter === 'all' && redamanFilter === 'all' ? 'ring-2 ring-blue-500 shadow-md' : 'hover:border-slate-300 dark:hover:border-slate-700'"
+             class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs cursor-pointer hover:shadow-xs transition select-none"
+             title="Klik untuk tampilkan semua ONU">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                <span>Total ONU</span>
+                <span x-show="statusFilter === 'all' && redamanFilter === 'all'" class="text-[8px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1 py-0.2 rounded">Aktif</span>
+            </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-slate-900 dark:text-white" x-text="stats.total"></span>
                 <span class="text-[10px] font-semibold text-slate-500">Unit</span>
@@ -138,10 +144,16 @@
         </div>
 
         <!-- Card 2: ONU UP (HIJAU) -->
-        <div class="bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/50 rounded-xl p-3 shadow-2xs">
-            <div class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>ONU UP</span>
+        <div @click="statusFilter = (statusFilter === 'UP' ? 'all' : 'UP')"
+             :class="statusFilter === 'UP' ? 'ring-2 ring-emerald-500 shadow-md border-emerald-400' : 'hover:border-emerald-300 dark:hover:border-emerald-800'"
+             class="bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-emerald-900/50 rounded-xl p-3 shadow-2xs cursor-pointer hover:shadow-xs transition select-none"
+             title="Klik untuk filter ONU UP saja">
+            <div class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>ONU UP</span>
+                </span>
+                <span x-show="statusFilter === 'UP'" class="text-[8px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1 py-0.2 rounded">Aktif</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400" x-text="stats.up"></span>
@@ -153,10 +165,16 @@
         </div>
 
         <!-- Card 3: ONU DOWN (MERAH) -->
-        <div class="bg-white dark:bg-slate-900 border border-red-200/80 dark:border-red-900/50 rounded-xl p-3 shadow-2xs">
-            <div class="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                <span>ONU DOWN</span>
+        <div @click="statusFilter = (statusFilter === 'DOWN' ? 'all' : 'DOWN')"
+             :class="statusFilter === 'DOWN' ? 'ring-2 ring-red-500 shadow-md border-red-400' : 'hover:border-red-300 dark:hover:border-red-800'"
+             class="bg-white dark:bg-slate-900 border border-red-200/80 dark:border-red-900/50 rounded-xl p-3 shadow-2xs cursor-pointer hover:shadow-xs transition select-none"
+             title="Klik untuk filter ONU DOWN saja">
+            <div class="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider flex items-center justify-between">
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span>ONU DOWN</span>
+                </span>
+                <span x-show="statusFilter === 'DOWN'" class="text-[8px] font-bold text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-950 px-1 py-0.2 rounded">Aktif</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-red-600 dark:text-red-400" x-text="stats.down"></span>
@@ -168,10 +186,16 @@
         </div>
 
         <!-- Card 4: ONU LOS (LOSS OF SIGNAL - MERAH ROSE / PING) -->
-        <div class="bg-white dark:bg-slate-900 border border-rose-200/80 dark:border-rose-900/50 rounded-xl p-3 shadow-2xs">
-            <div class="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-                <span>ONU LOS</span>
+        <div @click="statusFilter = (statusFilter === 'LOS' ? 'all' : 'LOS')"
+             :class="statusFilter === 'LOS' ? 'ring-2 ring-rose-500 shadow-md border-rose-400' : 'hover:border-rose-300 dark:hover:border-rose-800'"
+             class="bg-white dark:bg-slate-900 border border-rose-200/80 dark:border-rose-900/50 rounded-xl p-3 shadow-2xs cursor-pointer hover:shadow-xs transition select-none"
+             title="Klik untuk filter ONU LOS saja">
+            <div class="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center justify-between">
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                    <span>ONU LOS</span>
+                </span>
+                <span x-show="statusFilter === 'LOS'" class="text-[8px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950 px-1 py-0.2 rounded">Aktif</span>
             </div>
             <div class="flex items-baseline justify-between mt-1">
                 <span class="text-xl font-black font-mono text-rose-600 dark:text-rose-400" x-text="stats.los"></span>
@@ -252,46 +276,120 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 4. CONTROLS BAR: SEARCH, FILTER STATUS & REDAMAN (TERSTRUKTUR RAPI) -->
+    <!-- 4. CONTROLS BAR: SEARCH & COMPACT FILTER CONTROLS                   -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-2xs space-y-3">
-        <!-- Baris Atas: Search Input & View Switcher -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <!-- Search Input -->
-            <div class="relative flex-1 max-w-md">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs space-y-2.5">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5">
+            
+            <!-- Kiri: Search Input & Dropdown Filters (Status, Redaman, Sort) -->
+            <div class="flex flex-wrap items-center gap-2 flex-1">
+                <!-- Search Input -->
+                <div class="relative flex-1 min-w-[200px] max-w-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="text"
+                           x-model="searchQuery"
+                           placeholder="Cari Pelanggan, No Internet, SN, Slot..."
+                           class="w-full pl-9 pr-8 py-2 rounded-lg text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button x-show="searchQuery" 
+                            @click="searchQuery = ''"
+                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
-                <input type="text"
-                       x-model="searchQuery"
-                       placeholder="Cari Nama Pelanggan, No Internet, SN, Slot..."
-                       class="w-full pl-9 pr-8 py-2 rounded-lg text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button x-show="searchQuery" 
-                        @click="searchQuery = ''"
-                        class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600">
+
+                <!-- Filter Status NOC (Dropdown) -->
+                <div class="relative">
+                    <select x-model="statusFilter"
+                            class="pl-8 pr-7 py-2 rounded-lg text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none transition"
+                            :class="statusFilter !== 'all' ? 'border-blue-500 bg-blue-50/60 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 font-bold' : ''">
+                        <option value="all">Status: Semua Status</option>
+                        <option value="UP">Status: UP (Online)</option>
+                        <option value="DOWN">Status: DOWN (Offline)</option>
+                        <option value="LOS">Status: LOS (Kabel Putus)</option>
+                        <option value="SUSPEND">Status: SUSPEND (Isolir)</option>
+                    </select>
+                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400"
+                         :class="statusFilter !== 'all' ? 'text-blue-600 dark:text-blue-400' : ''">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Filter Redaman Optik (Dropdown) -->
+                <div class="relative">
+                    <select x-model="redamanFilter"
+                            class="pl-8 pr-7 py-2 rounded-lg text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none transition"
+                            :class="redamanFilter !== 'all' ? 'border-amber-500 bg-amber-50/60 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 font-bold' : ''">
+                        <option value="all">Redaman: Semua</option>
+                        <option value="optimal">Redaman: Optimal (&gt; -24 dBm)</option>
+                        <option value="normal">Redaman: Normal (-24 s/d -26.5 dBm)</option>
+                        <option value="kritis">Redaman: Kritis (&lt; -26.5 dBm)</option>
+                    </select>
+                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400"
+                         :class="redamanFilter !== 'all' ? 'text-amber-500' : ''">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div class="relative">
+                    <select x-model="sortBy"
+                            class="pl-7 pr-7 py-2 rounded-lg text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none">
+                        <option value="onu_id_asc">Urutkan: Slot (1 &rarr; 128)</option>
+                        <option value="onu_id_desc">Urutkan: Slot (128 &rarr; 1)</option>
+                        <option value="traffic_desc">Urutkan: Traffic Rx Terbesar</option>
+                        <option value="name_asc">Urutkan: Nama (A - Z)</option>
+                        <option value="power_asc">Urutkan: Redaman Terbaik</option>
+                        <option value="power_desc">Urutkan: Redaman Kritis</option>
+                    </select>
+                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Tombol Reset Filter -->
+                <button x-show="statusFilter !== 'all' || redamanFilter !== 'all' || searchQuery !== ''"
+                        @click="resetFilters()"
+                        class="px-2.5 py-2 rounded-lg text-xs font-bold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white border border-rose-200 dark:border-rose-900/50 flex items-center gap-1 transition"
+                        title="Reset Filter ke Default">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
+                    <span>Reset</span>
                 </button>
             </div>
 
-            <!-- View Mode & Sort -->
-            <div class="flex items-center gap-2">
-                <!-- Sort Dropdown -->
-                <div class="flex items-center gap-1.5 text-xs">
-                    <span class="text-slate-500 hidden sm:inline">Urutkan:</span>
-                    <select x-model="sortBy"
-                            class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="onu_id_asc">Slot ONU (1 &rarr; 128)</option>
-                        <option value="onu_id_desc">Slot ONU (128 &rarr; 1)</option>
-                        <option value="traffic_desc">Traffic Terbesar (Rx)</option>
-                        <option value="name_asc">Nama Pelanggan (A - Z)</option>
-                        <option value="power_asc">Redaman Paling Bagus</option>
-                        <option value="power_desc">Redaman Paling Kritis</option>
-                    </select>
-                </div>
+            <!-- Kanan: Counter Hasil & View Switcher -->
+            <div class="flex items-center justify-between lg:justify-end gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800">
+                <span class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    Menampilkan <strong class="text-slate-900 dark:text-white" x-text="filteredOnus.length"></strong> dari <strong class="text-slate-900 dark:text-white" x-text="onus.length"></strong> ONU
+                </span>
 
                 <!-- Grid / Table View Switcher -->
                 <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
@@ -302,7 +400,7 @@
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                         </svg>
-                        <span class="hidden sm:inline">Grid Card</span>
+                        <span class="hidden sm:inline">Grid</span>
                     </button>
                     <button @click="viewMode = 'table'"
                             :class="viewMode === 'table' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-2xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
@@ -317,92 +415,31 @@
             </div>
         </div>
 
-        <!-- Filter Controls: 2 Baris Terpisah & Terstruktur (Gambar 2 Perbaikan) -->
-        <div class="space-y-2 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs">
-            <!-- Baris 1: Status Koneksi NOC (UP / DOWN / LOS / SUSPEND) -->
-            <div class="flex flex-wrap items-center gap-2">
-                <span class="font-bold text-slate-600 dark:text-slate-300 min-w-[90px] text-[11px] flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Status NOC:</span>
+        <!-- Active Filter Badges Strip (Muncul otomatis saat filter aktif) -->
+        <div x-show="statusFilter !== 'all' || redamanFilter !== 'all' || searchQuery"
+             class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px]">
+            <span class="text-slate-400 font-medium">Filter Aktif:</span>
+            
+            <template x-if="searchQuery">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    <span>Cari: "<span x-text="searchQuery"></span>"</span>
+                    <button @click="searchQuery = ''" class="hover:text-blue-900 font-bold">&times;</button>
                 </span>
-                <div class="flex flex-wrap items-center gap-1.5">
-                    <!-- Semua -->
-                    <button @click="statusFilter = 'all'"
-                            :class="statusFilter === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition">
-                        Semua (<span x-text="onus.length"></span>)
-                    </button>
-                    <!-- UP (Hijau) -->
-                    <button @click="statusFilter = 'UP'"
-                            :class="statusFilter === 'UP' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 hover:bg-emerald-100'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        <span>UP (<span x-text="stats.up"></span>)</span>
-                    </button>
-                    <!-- DOWN (Merah) -->
-                    <button @click="statusFilter = 'DOWN'"
-                            :class="statusFilter === 'DOWN' ? 'bg-red-600 text-white shadow-xs' : 'bg-red-50 text-red-800 border border-red-300 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800 hover:bg-red-100'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                        <span>DOWN (<span x-text="stats.down"></span>)</span>
-                    </button>
-                    <!-- LOS (Rose / Pink Merah) -->
-                    <button @click="statusFilter = 'LOS'"
-                            :class="statusFilter === 'LOS' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-800 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 hover:bg-rose-100'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
-                        <span>LOS (<span x-text="stats.los"></span>)</span>
-                    </button>
-                    <!-- SUSPEND (Amber) -->
-                    <button @click="statusFilter = 'SUSPEND'"
-                            :class="statusFilter === 'SUSPEND' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 hover:bg-amber-100'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                        <span>SUSPEND (<span x-text="stats.suspend"></span>)</span>
-                    </button>
-                </div>
-            </div>
+            </template>
 
-            <!-- Baris 2: Kualitas Redaman Optik (Optimal, Normal, Kritis) -->
-            <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100/80 dark:border-slate-800/80">
-                <span class="font-bold text-slate-600 dark:text-slate-300 min-w-[90px] text-[11px] flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <span>Redaman:</span>
+            <template x-if="statusFilter !== 'all'">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-semibold">
+                    <span>Status: <strong x-text="statusFilter"></strong></span>
+                    <button @click="statusFilter = 'all'" class="hover:text-indigo-900 font-black">&times;</button>
                 </span>
-                <div class="flex flex-wrap items-center gap-1.5">
-                    <!-- Semua -->
-                    <button @click="redamanFilter = 'all'"
-                            :class="redamanFilter === 'all' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 border border-slate-200 dark:border-slate-700'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition">
-                        Semua
-                    </button>
-                    <!-- Optimal -->
-                    <button @click="redamanFilter = 'optimal'"
-                            :class="redamanFilter === 'optimal' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 hover:bg-emerald-100'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1">
-                        <span>Optimal (&gt; -24 dBm)</span>
-                        <span class="opacity-80" x-text="'(' + stats.redamanOptimal + ')'"></span>
-                    </button>
-                    <!-- Normal -->
-                    <button @click="redamanFilter = 'normal'"
-                            :class="redamanFilter === 'normal' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-800 border border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 hover:bg-amber-100'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1">
-                        <span>Normal (-24 s/d -26.5 dBm)</span>
-                        <span class="opacity-80" x-text="'(' + stats.redamanNormal + ')'"></span>
-                    </button>
-                    <!-- Kritis -->
-                    <button @click="redamanFilter = 'kritis'"
-                            :class="redamanFilter === 'kritis' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-800 border border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 hover:bg-rose-100'"
-                            class="px-2.5 py-1 rounded-md font-bold text-[11px] transition flex items-center gap-1">
-                        <span>Kritis / Drop (&lt; -26.5 dBm)</span>
-                        <span class="opacity-80" x-text="'(' + stats.redamanKritis + ')'"></span>
-                    </button>
-                </div>
-            </div>
+            </template>
+
+            <template x-if="redamanFilter !== 'all'">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-semibold">
+                    <span>Redaman: <strong x-text="redamanFilter"></strong></span>
+                    <button @click="redamanFilter = 'all'" class="hover:text-amber-900 font-black">&times;</button>
+                </span>
+            </template>
         </div>
     </div>
 
@@ -872,8 +909,7 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
         // Helper Status Standar NOC/Teknisi: UP (Hijau), DOWN (Merah), LOS (Rose / Ping)
         getStatusInfo(onu) {
             const raw = (onu.status || onu.status_raw || '').toString().trim().toUpperCase();
-            const rx = parseFloat(onu.rx_power_num || -25);
-            const isSignalLost = (onu.is_los || raw === 'LOS' || rx <= -32.0 || (onu.rx_power && onu.rx_power.toString().toUpperCase().includes('LOS')));
+            const isSignalLost = (onu.is_los || raw === 'LOS' || raw === 'LOSSOFSIGNAL' || (onu.rx_power && onu.rx_power.toString().toUpperCase().includes('LOS')));
 
             // 1. Kondisi LOS (Loss of Signal) jika sinyal optik hilang / kabel putus
             if (isSignalLost) {
@@ -993,6 +1029,7 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             let totalRx = 0;
             let totalTx = 0;
             let rxSum = 0;
+            let rxCount = 0;
 
             this.onus.forEach(o => {
                 const info = this.getStatusInfo(o);
@@ -1000,29 +1037,31 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                     up++;
                     totalRx += (parseFloat(o.download_mbps) || 0);
                     totalTx += (parseFloat(o.upload_mbps) || 0);
+
+                    const rxPowerNum = parseFloat(o.rx_power_num || -25);
+                    rxSum += rxPowerNum;
+                    rxCount++;
+
+                    // Hitung klasifikasi redaman HANYA untuk ONU UP / aktif
+                    if (rxPowerNum < -26.5) {
+                        kritis++;
+                    } else if (rxPowerNum >= -24.0) {
+                        optimal++;
+                    } else {
+                        normal++;
+                    }
                 } else if (info.label === 'LOS') {
                     los++;
+                    kritis++;
                 } else if (info.label === 'SUSPEND') {
                     suspend++;
                 } else {
                     down++;
                 }
-
-                const rxPowerNum = parseFloat(o.rx_power_num || -25);
-                rxSum += rxPowerNum;
-
-                // Hitung klasifikasi redaman
-                if (info.label === 'LOS' || rxPowerNum < -26.5) {
-                    kritis++;
-                } else if (rxPowerNum >= -24.0) {
-                    optimal++;
-                } else {
-                    normal++;
-                }
             });
 
             const activeCount = up > 0 ? up : 1;
-            const avgRx = total > 0 ? (rxSum / total).toFixed(2) : '-21.5';
+            const avgRx = rxCount > 0 ? (rxSum / rxCount).toFixed(2) : (total > 0 ? '-21.5' : '0.0');
 
             this.stats = {
                 total,

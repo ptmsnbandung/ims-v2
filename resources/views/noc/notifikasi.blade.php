@@ -369,8 +369,8 @@
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto"
          aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+        <!-- Backdrop with Blur -->
+        <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
              @click="modalOpen = false"></div>
 
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
@@ -378,9 +378,10 @@
                  @click.away="modalOpen = false">
                 
                 <!-- Header Modal -->
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold">
+                <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold flex-shrink-0"
+                             style="background-color: #ecfeff !important; color: #0891b2 !important; border: 1px solid #cffafe !important;">
                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.32l-3.276 3.277a1.5 1.5 0 0 1-2.122-2.122l3.277-3.276a4.5 4.5 0 0 0-6.32 4.486c.048.58.024 1.193-.14 1.743" />
                             </svg>
@@ -389,7 +390,7 @@
                             <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white" id="modal-title">
                                 Mark as Intentional (Pemeliharaan)
                             </h3>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Tandai perangkat sedang dalam pemeliharaan sengaja oleh tim NOC.</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Tandai perangkat sedang dalam pemeliharaan sengaja oleh tim NOC.</p>
                         </div>
                     </div>
                     <button @click="modalOpen = false" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer">
@@ -400,39 +401,43 @@
                 <!-- Body Modal -->
                 <div class="mt-4 space-y-4">
                     <!-- Info Perangkat Terpilih -->
-                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 text-xs">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Perangkat:</span>
-                        <div class="font-bold text-slate-900 dark:text-white mt-0.5" x-text="targetItem?.device_name"></div>
+                        <div class="font-bold text-slate-900 dark:text-white text-sm mt-0.5" x-text="targetItem?.device_name"></div>
                         <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" x-text="targetItem?.subtitle"></div>
                     </div>
 
                     <!-- Preset Alasan Cepat -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Pilih Alasan Pemeliharaan:</label>
-                        <div class="grid grid-cols-2 gap-1.5">
+                        <div class="grid grid-cols-2 gap-2">
                             <button @click="reasonInput = 'Perapihan jalur kabel optik ODP'"
                                     type="button"
-                                    class="p-2 rounded-xl text-left text-xs border transition cursor-pointer"
-                                    :class="reasonInput === 'Perapihan jalur kabel optik ODP' ? 'bg-cyan-50 border-cyan-500 text-cyan-800 font-bold dark:bg-cyan-950/60 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'">
-                                🔧 Perapihan Kabel ODP
+                                    class="p-2.5 rounded-xl text-left text-xs border transition cursor-pointer flex items-center justify-between"
+                                    :class="reasonInput === 'Perapihan jalur kabel optik ODP' ? 'border-cyan-500 font-bold dark:text-cyan-300 ring-2 ring-cyan-500/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'"
+                                    :style="reasonInput === 'Perapihan jalur kabel optik ODP' ? 'background-color: #ecfeff !important; color: #0e7490 !important; border-color: #06b6d4 !important;' : ''">
+                                <span>🔧 Perapihan Kabel ODP</span>
                             </button>
                             <button @click="reasonInput = 'Maintenance terjadwal perangkat / server'"
                                     type="button"
-                                    class="p-2 rounded-xl text-left text-xs border transition cursor-pointer"
-                                    :class="reasonInput === 'Maintenance terjadwal perangkat / server' ? 'bg-cyan-50 border-cyan-500 text-cyan-800 font-bold dark:bg-cyan-950/60 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'">
-                                🕒 Maintenance Terjadwal
+                                    class="p-2.5 rounded-xl text-left text-xs border transition cursor-pointer flex items-center justify-between"
+                                    :class="reasonInput === 'Maintenance terjadwal perangkat / server' ? 'border-cyan-500 font-bold dark:text-cyan-300 ring-2 ring-cyan-500/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'"
+                                    :style="reasonInput === 'Maintenance terjadwal perangkat / server' ? 'background-color: #ecfeff !important; color: #0e7490 !important; border-color: #06b6d4 !important;' : ''">
+                                <span>🕒 Maintenance Terjadwal</span>
                             </button>
                             <button @click="reasonInput = 'Isolasi gangguan segmen jaringan'"
                                     type="button"
-                                    class="p-2 rounded-xl text-left text-xs border transition cursor-pointer"
-                                    :class="reasonInput === 'Isolasi gangguan segmen jaringan' ? 'bg-cyan-50 border-cyan-500 text-cyan-800 font-bold dark:bg-cyan-950/60 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'">
-                                🛡️ Isolasi Gangguan
+                                    class="p-2.5 rounded-xl text-left text-xs border transition cursor-pointer flex items-center justify-between"
+                                    :class="reasonInput === 'Isolasi gangguan segmen jaringan' ? 'border-cyan-500 font-bold dark:text-cyan-300 ring-2 ring-cyan-500/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'"
+                                    :style="reasonInput === 'Isolasi gangguan segmen jaringan' ? 'background-color: #ecfeff !important; color: #0e7490 !important; border-color: #06b6d4 !important;' : ''">
+                                <span>🛡️ Isolasi Gangguan</span>
                             </button>
                             <button @click="reasonInput = 'Penggantian modem / ONT pelanggan'"
                                     type="button"
-                                    class="p-2 rounded-xl text-left text-xs border transition cursor-pointer"
-                                    :class="reasonInput === 'Penggantian modem / ONT pelanggan' ? 'bg-cyan-50 border-cyan-500 text-cyan-800 font-bold dark:bg-cyan-950/60 dark:text-cyan-300' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'">
-                                🔄 Penggantian Modem
+                                    class="p-2.5 rounded-xl text-left text-xs border transition cursor-pointer flex items-center justify-between"
+                                    :class="reasonInput === 'Penggantian modem / ONT pelanggan' ? 'border-cyan-500 font-bold dark:text-cyan-300 ring-2 ring-cyan-500/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50'"
+                                    :style="reasonInput === 'Penggantian modem / ONT pelanggan' ? 'background-color: #ecfeff !important; color: #0e7490 !important; border-color: #06b6d4 !important;' : ''">
+                                <span>🔄 Penggantian Modem</span>
                             </button>
                         </div>
                     </div>
@@ -447,26 +452,28 @@
                     </div>
 
                     <!-- Warning Alert -->
-                    <div class="p-3 rounded-xl bg-cyan-50/70 dark:bg-cyan-950/30 border border-cyan-200/80 dark:border-cyan-800 text-[11px] text-cyan-800 dark:text-cyan-300 leading-relaxed">
-                        <strong class="font-bold">Info:</strong> Setelah ditandai Intentional, status perangkat tidak akan membunyikan alarm gangguan dan tidak dihitung sebagai insiden darurat aktif pada dashboard maupun tombol lonceng navbar.
+                    <div class="p-3 rounded-xl border text-[11px] leading-relaxed"
+                         style="background-color: #f0fdfa !important; color: #0f766e !important; border-color: #99f6e4 !important;">
+                        <strong class="font-bold">Info:</strong> Setelah ditandai Intentional, status perangkat tidak akan memicu alarm dan tidak dihitung sebagai insiden darurat aktif pada dashboard maupun tombol lonceng navbar.
                     </div>
                 </div>
 
                 <!-- Footer Modal -->
-                <div class="mt-5 flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div class="mt-5 flex items-center justify-end gap-2.5 pt-3.5 border-t border-slate-100 dark:border-slate-800">
                     <button @click="modalOpen = false"
                             type="button"
-                            class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+                            class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
                         Batal
                     </button>
                     <button @click="submitIntentional()"
                             :disabled="isSubmitting"
                             type="button"
-                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 shadow-xs transition cursor-pointer disabled:opacity-50">
-                        <svg class="w-4 h-4" :class="isSubmitting ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            style="background: #0891b2 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(8, 145, 178, 0.3) !important;"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer hover:brightness-110 active:scale-95 disabled:opacity-50">
+                        <svg class="w-4 h-4" :class="isSubmitting ? 'animate-spin' : ''" style="color: #ffffff !important;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                         </svg>
-                        <span>Tandai Sebagai Intentional</span>
+                        <span style="color: #ffffff !important;">Tandai Sebagai Intentional</span>
                     </button>
                 </div>
             </div>

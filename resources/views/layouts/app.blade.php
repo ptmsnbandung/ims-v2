@@ -1408,34 +1408,39 @@
                                  class="absolute right-0 mt-2 w-[350px] sm:w-[410px] max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
                                 
                                 <!-- Header Dropdown -->
-                                <div class="px-3.5 py-2.5 bg-gradient-to-r from-slate-900 to-[#04333e] text-white border-b border-teal-500/20 flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-cyan-300 flex items-center justify-center flex-shrink-0 border border-teal-400/30">
+                                <div class="px-4 py-3 border-b flex items-center justify-between gap-2 text-white"
+                                     style="background-color: #0b192c !important; color: #ffffff !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important;">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                                             style="background-color: rgba(8, 145, 178, 0.2) !important; color: #22d3ee !important; border: 1px solid rgba(34, 211, 238, 0.3) !important;">
                                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.122a6.75 6.75 0 0 1 0-9.548m9.546 0a6.75 6.75 0 0 1 0 9.548M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                             </svg>
                                         </div>
                                         <div class="min-w-0">
                                             <div class="flex items-center gap-1.5 flex-nowrap">
-                                                <h4 class="text-xs font-bold text-white leading-none whitespace-nowrap">Radar Alarm NOC</h4>
+                                                <h4 class="text-xs font-bold text-white leading-none whitespace-nowrap" style="color: #ffffff !important;">Radar Alarm NOC</h4>
                                                 <span x-show="activeCount > 0" x-cloak
-                                                      class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500 text-white whitespace-nowrap leading-none shadow-2xs font-mono"
+                                                      class="px-2 py-0.5 rounded-full text-[9px] font-bold text-white whitespace-nowrap leading-none font-mono"
+                                                      style="background-color: #e11d48 !important; color: #ffffff !important;"
                                                       x-text="activeCount + ' Isu Aktif'"></span>
                                                 <span x-show="activeCount === 0" x-cloak
-                                                      class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/80 text-white whitespace-nowrap leading-none shadow-2xs">
+                                                      class="px-2 py-0.5 rounded-full text-[9px] font-bold text-white whitespace-nowrap leading-none"
+                                                      style="background-color: #059669 !important; color: #ffffff !important;">
                                                     Normal
                                                 </span>
                                             </div>
-                                            <p class="text-[10px] text-teal-200/80 truncate mt-0.5">Deteksi LOS/DOWN &amp; Tiket Gangguan</p>
+                                            <p class="text-[10px] truncate mt-1" style="color: #cbd5e1 !important;">Deteksi LOS/DOWN &amp; Tiket Gangguan</p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                    <div class="flex items-center gap-1.5 flex-shrink-0">
                                         <!-- Tombol Baca Semua -->
                                         <button x-show="unreadCount > 0" x-cloak
                                                 @click="markAllAsRead()"
                                                 type="button"
                                                 title="Tandai Semua Dibaca"
-                                                class="px-2 py-1 rounded-md text-[10px] font-semibold text-slate-200 hover:text-white bg-white/10 hover:bg-white/20 transition flex items-center gap-1 cursor-pointer">
+                                                style="background-color: rgba(255,255,255,0.12) !important; color: #ffffff !important;"
+                                                class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:opacity-90 transition flex items-center gap-1 cursor-pointer">
                                             <svg class="w-3 h-3 text-cyan-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                             </svg>
@@ -1445,7 +1450,8 @@
                                         <button @click="fetchAlerts()" 
                                                 type="button"
                                                 title="Muat Ulang Data NOC"
-                                                class="p-1 rounded-md text-teal-200 hover:text-white bg-white/10 hover:bg-white/20 transition cursor-pointer">
+                                                style="background-color: rgba(255,255,255,0.12) !important; color: #ffffff !important;"
+                                                class="p-1.5 rounded-lg hover:opacity-90 transition cursor-pointer">
                                             <svg class="w-3.5 h-3.5" :class="isLoading ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
@@ -1454,23 +1460,23 @@
                                 </div>
 
                                 <!-- Mini Bar Stats -->
-                                <div class="px-3.5 py-1.5 bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[10px]">
+                                <div class="px-4 py-2 border-b flex items-center justify-between text-[11px] bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700/80 font-medium">
                                     <div class="flex items-center gap-3">
-                                        <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300">
-                                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                        <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                            <span class="w-2 h-2 rounded-full" style="background-color: #ef4444 !important;"></span>
                                             <span>LOS/DOWN:</span>
-                                            <b class="text-rose-600 dark:text-rose-400 font-mono" x-text="summary.total_los_down || 0"></b>
+                                            <b class="font-mono" style="color: #dc2626 !important;" x-text="summary.total_los_down || 0"></b>
                                         </span>
-                                        <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300">
-                                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                            <span class="w-2 h-2 rounded-full" style="background-color: #3b82f6 !important;"></span>
                                             <span>Tiket:</span>
-                                            <b class="text-blue-600 dark:text-blue-400 font-mono" x-text="summary.total_tickets || 0"></b>
+                                            <b class="font-mono" style="color: #2563eb !important;" x-text="summary.total_tickets || 0"></b>
                                         </span>
                                     </div>
-                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+                                        <span class="w-2 h-2 rounded-full" style="background-color: #94a3b8 !important;"></span>
                                         <span>Intentional:</span>
-                                        <b class="font-mono text-slate-700 dark:text-slate-300" x-text="summary.total_intentional || 0"></b>
+                                        <b class="font-mono text-slate-800 dark:text-slate-200" x-text="summary.total_intentional || 0"></b>
                                     </span>
                                 </div>
 
@@ -1489,20 +1495,21 @@
 
                                     <!-- Empty State (Semua Normal) -->
                                     <template x-if="!isLoading && alerts.length === 0">
-                                        <div class="py-8 px-4 text-center">
-                                            <div class="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-2">
-                                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <div class="py-9 px-5 text-center">
+                                            <div class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-2.5 shadow-xs"
+                                                 style="background-color: #ecfdf5 !important; color: #10b981 !important;">
+                                                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                                 </svg>
                                             </div>
-                                            <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Kondisi Jaringan Prima</p>
-                                            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Tidak ada OLT/ONU yang LOS/DOWN atau tiket gangguan terbuka.</p>
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-100">Kondisi Jaringan Prima</p>
+                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[260px] mx-auto leading-relaxed">Tidak ada OLT/ONU yang LOS/DOWN atau tiket gangguan terbuka.</p>
                                         </div>
                                     </template>
 
                                     <!-- Alert Items (Maksimal 4 notifikasi di dropdown navbar) -->
                                     <template x-for="item in alerts.slice(0, 4)" :key="item.id">
-                                        <div class="p-3 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group relative"
+                                        <div class="p-3.5 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group relative"
                                              :class="isUnread(item.id, item.device_key) ? 'bg-rose-50/30 dark:bg-rose-950/20' : ''">
                                             
                                             <!-- Status Icon -->
@@ -1559,7 +1566,8 @@
                                                         <!-- Tombol Direct Link -->
                                                         <a :href="item.url"
                                                            @click="markRead(item); open = false"
-                                                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold text-white bg-teal-600 hover:bg-teal-500 transition cursor-pointer">
+                                                           style="background-color: #0891b2 !important; color: #ffffff !important;"
+                                                           class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer hover:brightness-110">
                                                             <span x-text="item.action_label || 'Buka'"></span>
                                                             <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -1573,17 +1581,18 @@
                                 </div>
 
                                 <!-- Footer Dropdown Terpadu -->
-                                <div class="px-3.5 py-2.5 bg-slate-50/90 dark:bg-slate-800/80 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
+                                <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
                                     <a href="{{ route('noc.dashboard') }}"
                                        @click="open = false"
-                                       class="text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition">
+                                       class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition">
                                         NOC Command
                                     </a>
                                     <a href="{{ route('noc.notifikasi') }}"
                                        @click="open = false"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 shadow-2xs hover:shadow-xs transition">
-                                        <span>Buka Pusat Notifikasi</span>
-                                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                       style="background: #0891b2 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(8, 145, 178, 0.25) !important;"
+                                       class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition cursor-pointer">
+                                        <span style="color: #ffffff !important;">Buka Pusat Notifikasi</span>
+                                        <svg class="w-3.5 h-3.5" style="color: #ffffff !important;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                                         </svg>
                                     </a>

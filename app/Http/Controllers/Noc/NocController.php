@@ -3525,6 +3525,38 @@ class NocController extends Controller
     }
 
     /**
+     * Memastikan tabel noc_intentional_downtimes selalu tersedia di database secara otomatis
+     */
+    protected function ensureNocIntentionalTableExists(): void
+    {
+        try {
+            if (!Schema::hasTable('noc_intentional_downtimes')) {
+                Schema::create('noc_intentional_downtimes', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->id();
+                    $table->string('device_key', 190)->unique();
+                    $table->string('device_type', 50)->default('onu');
+                    $table->string('device_name')->nullable();
+                    $table->string('olt_kode', 50)->nullable();
+                    $table->unsignedInteger('pon_index')->nullable();
+                    $table->unsignedInteger('onu_id')->nullable();
+                    $table->string('interface_name', 100)->nullable();
+                    $table->string('nomor_internet', 50)->nullable();
+                    $table->text('reason')->nullable();
+                    $table->string('marked_by', 100)->nullable();
+                    $table->boolean('is_active')->default(true);
+                    $table->timestamp('marked_at')->nullable();
+                    $table->timestamp('resolved_at')->nullable();
+                    $table->timestamps();
+
+                    $table->index(['device_type', 'is_active']);
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning('NOC auto-create noc_intentional_downtimes error: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Tandai Perangkat sebagai Intentional (Sengaja di-downkan / di-LOS-kan untuk Maintenance)
      */
     public function markIntentional(Request $request): JsonResponse
@@ -3536,35 +3568,44 @@ class NocController extends Controller
             'reason' => 'nullable|string|max:500',
         ]);
 
+        $this->ensureNocIntentionalTableExists();
+
         $user = auth()->user();
         $deviceKey = trim($request->input('device_key'));
         $reason = trim($request->input('reason') ?: 'Pemeliharaan perangkat / Maintenance terjadwal oleh NOC');
 
-        DB::table('noc_intentional_downtimes')->updateOrInsert(
-            ['device_key' => $deviceKey],
-            [
-                'device_type' => $request->input('device_type', 'onu'),
-                'device_name' => $request->input('device_name'),
-                'olt_kode' => $request->input('olt_kode'),
-                'pon_index' => $request->input('pon_index'),
-                'onu_id' => $request->input('onu_id'),
-                'interface_name' => $request->input('interface_name'),
-                'nomor_internet' => $request->input('nomor_internet'),
-                'reason' => $reason,
-                'marked_by' => $user?->nama ?: 'NOC Engineer',
-                'is_active' => true,
-                'marked_at' => now(),
-                'resolved_at' => null,
-                'updated_at' => now(),
-                'created_at' => now(),
-            ]
-        );
+        try {
+            DB::table('noc_intentional_downtimes')->updateOrInsert(
+                ['device_key' => $deviceKey],
+                [
+                    'device_type' => $request->input('device_type', 'onu'),
+                    'device_name' => $request->input('device_name'),
+                    'olt_kode' => $request->input('olt_kode'),
+                    'pon_index' => $request->input('pon_index'),
+                    'onu_id' => $request->input('onu_id'),
+                    'interface_name' => $request->input('interface_name'),
+                    'nomor_internet' => $request->input('nomor_internet'),
+                    'reason' => $reason,
+                    'marked_by' => $user?->nama ?: 'NOC Engineer',
+                    'is_active' => true,
+                    'marked_at' => now(),
+                    'resolved_at' => null,
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Perangkat berhasil ditandai sebagai Intentional (Pemeliharaan). Notifikasi tidak akan muncul sebagai gangguan aktif.',
-            'device_key' => $deviceKey,
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Perangkat berhasil ditandai sebagai Intentional (Pemeliharaan). Notifikasi tidak akan muncul sebagai gangguan aktif.',
+                'device_key' => $deviceKey,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menandai perangkat: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -3576,21 +3617,29 @@ class NocController extends Controller
             'device_key' => 'required|string|max:190',
         ]);
 
+        $this->ensureNocIntentionalTableExists();
         $deviceKey = trim($request->input('device_key'));
 
-        DB::table('noc_intentional_downtimes')
-            ->where('device_key', $deviceKey)
-            ->update([
-                'is_active' => false,
-                'resolved_at' => now(),
-                'updated_at' => now(),
-            ]);
+        try {
+            DB::table('noc_intentional_downtimes')
+                ->where('device_key', $deviceKey)
+                ->update([
+                    'is_active' => false,
+                    'resolved_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Tanda Intentional berhasil dicabut. Perangkat kembali ke pemantauan gangguan normal.',
-            'device_key' => $deviceKey,
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Tanda Intentional berhasil dicabut. Perangkat kembali ke pemantauan gangguan normal.',
+                'device_key' => $deviceKey,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mencabut status intentional: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -3599,10 +3648,19 @@ class NocController extends Controller
     public function getNocNotificationsData(?OltConnectionService $oltService = null): array
     {
         $oltService = $oltService ?: app(OltConnectionService::class);
-        $intentionalRecords = DB::table('noc_intentional_downtimes')
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('device_key');
+        $this->ensureNocIntentionalTableExists();
+
+        $intentionalRecords = collect();
+        if (Schema::hasTable('noc_intentional_downtimes')) {
+            try {
+                $intentionalRecords = DB::table('noc_intentional_downtimes')
+                    ->where('is_active', true)
+                    ->get()
+                    ->keyBy('device_key');
+            } catch (\Throwable $e) {
+                $intentionalRecords = collect();
+            }
+        }
 
         $activeAlerts = [];
         $intentionalAlerts = [];

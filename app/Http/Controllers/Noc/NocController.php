@@ -3612,6 +3612,7 @@ class NocController extends Controller
             try {
                 $tickets = DB::table('trx_tiket_gangguan')
                     ->leftJoin('view_batchjob', 'trx_tiket_gangguan.nomor_internet', '=', 'view_batchjob.nomor_internet')
+                    ->leftJoin('trx_batchjob_register', 'trx_tiket_gangguan.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
                     ->where(function ($q) {
                         $q->where('trx_tiket_gangguan.status', '11')
                           ->orWhere(function ($sub) {
@@ -3633,7 +3634,7 @@ class NocController extends Controller
                         'trx_tiket_gangguan.date_create',
                         'view_batchjob.nama_pelanggan',
                         'view_batchjob.alamat_pasang',
-                        'view_batchjob.olt',
+                        'trx_batchjob_register.olt',
                         'view_batchjob.index_olt',
                     ])
                     ->orderBy('trx_tiket_gangguan.date_create', 'desc')

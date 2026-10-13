@@ -1796,22 +1796,30 @@ class OltConnectionService
                 // 1. Preload data database untuk enrichment (Nama, Nomor Internet, ODP, Paket BW)
                 $dbBySlot = [];
                 $dbBySn = [];
-                $regs = DB::table('view_batchjob')
-                    ->where(function($q) use ($kodeOlt, $olt) {
+                try {
+                    $regs = $this->getOltCustomerBaseQuery($olt)->get();
+                } catch (\Throwable $e) {
+                    try {
                         $name = strtolower($olt->name_olt ?? ($olt->nama_olt ?? ''));
-                        $q->where('olt', $kodeOlt);
-                        if (!empty($name)) {
-                            $q->orWhere('olt', 'like', "%{$name}%");
-                        }
-                        if ($kodeOlt === 'O1' || str_contains($name, 'kayu agung') || str_contains($name, 'msn')) {
-                            $q->orWhere('olt', 'MSN')->orWhere('olt', 'like', '%Kayu%');
-                        } elseif ($kodeOlt === 'O2' || str_contains($name, 'babakan tarogong') || str_contains($name, 'bagong')) {
-                            $q->orWhere('olt', 'Bagong')->orWhere('olt', 'like', '%Babakan%')->orWhere('olt', 'like', '%Tarogong%');
-                        } elseif ($kodeOlt === 'O3' || str_contains($name, 'soreang') || str_contains($name, 'bbu')) {
-                            $q->orWhere('olt', 'Soreang')->orWhere('olt', 'like', '%Soreang%')->orWhere('olt', 'like', '%BBU%');
-                        }
-                    })
-                    ->get();
+                        $regs = DB::table('trx_batchjob_register')
+                            ->where(function($q) use ($kodeOlt, $name) {
+                                $q->where('olt', $kodeOlt);
+                                if (!empty($name)) {
+                                    $q->orWhere('olt', 'like', "%{$name}%");
+                                }
+                                if ($kodeOlt === 'O1' || str_contains($name, 'kayu agung') || str_contains($name, 'msn')) {
+                                    $q->orWhere('olt', 'MSN')->orWhere('olt', 'like', '%Kayu%');
+                                } elseif ($kodeOlt === 'O2' || str_contains($name, 'babakan tarogong') || str_contains($name, 'bagong')) {
+                                    $q->orWhere('olt', 'Bagong')->orWhere('olt', 'like', '%Babakan%')->orWhere('olt', 'like', '%Tarogong%');
+                                } elseif ($kodeOlt === 'O3' || str_contains($name, 'soreang') || str_contains($name, 'bbu')) {
+                                    $q->orWhere('olt', 'Soreang')->orWhere('olt', 'like', '%Soreang%')->orWhere('olt', 'like', '%BBU%');
+                                }
+                            })
+                            ->get();
+                    } catch (\Throwable $e2) {
+                        $regs = collect();
+                    }
+                }
                 $userOdpMap = [];
                 $userOdpByNameMap = [];
                 if ($gomsnOltId && Schema::hasTable("gomsn.odp{$gomsnOltId}") && Schema::hasTable("gomsn.users{$gomsnOltId}")) {

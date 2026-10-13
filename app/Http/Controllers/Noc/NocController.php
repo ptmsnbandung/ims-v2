@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
@@ -3816,6 +3817,14 @@ class NocController extends Controller
         try {
             $isForceRefresh = request()->boolean('refresh') || request()->query('sync') === '1';
 
+            $normalizeOlt = function($oltStr) {
+                $s = strtolower(trim((string)$oltStr));
+                if ($s === 'o1' || str_contains($s, 'msn') || str_contains($s, 'kayu')) return 'O1';
+                if ($s === 'o2' || str_contains($s, 'bagong') || str_contains($s, 'babakan') || str_contains($s, 'tarogong')) return 'O2';
+                if ($s === 'o3' || str_contains($s, 'soreang') || str_contains($s, 'bbu')) return 'O3';
+                return strtoupper($s);
+            };
+
             // Preload database registrasi pelanggan untuk enrichment instan
             $regMap = [];
             if (Schema::hasTable('trx_batchjob_register')) {
@@ -3825,14 +3834,20 @@ class NocController extends Controller
                         ->whereNotNull('index_olt')
                         ->get();
                     foreach ($allRegs as $r) {
-                        $idx = trim($r->index_olt);
-                        $regMap[$idx] = $r;
-                        if (preg_match('/1\/[12]\/(\d+:\d+)/', $idx, $m)) {
-                            $regMap[$m[1]] = $r;
+                        $oltKode = $normalizeOlt($r->olt);
+                        $rawIdx = trim($r->index_olt);
+                        $cleanIdx = str_ireplace('gpon-onu_', '', $rawIdx);
+
+                        // Key spesifik OLT untuk mencegah tabrakan slot/port antar OLT berbeda
+                        $regMap["{$oltKode}_{$rawIdx}"] = $r;
+                        $regMap["{$oltKode}_{$cleanIdx}"] = $r;
+                        if (preg_match('/(\d+:\d+)/', $cleanIdx, $m)) {
+                            $regMap["{$oltKode}_{$m[1]}"] = $r;
                         }
-                        if (preg_match('/(\d+:\d+)/', $idx, $m)) {
-                            $regMap[$m[1]] = $r;
-                        }
+
+                        // Key fallback generik
+                        if (!isset($regMap[$rawIdx])) $regMap[$rawIdx] = $r;
+                        if (!isset($regMap[$cleanIdx])) $regMap[$cleanIdx] = $r;
                         if (!empty($r->nomor_internet)) {
                             $regMap['no_' . $r->nomor_internet] = $r;
                         }
@@ -3861,7 +3876,7 @@ class NocController extends Controller
 
                             $buf = '';
                             $start = microtime(true);
-                            while (!feof($socket) && (microtime(true) - $start) < 4.0) {
+                            while (!feof($socket) && (microtime(true) - $start) < 4.5) {
                                 $chunk = fread($socket, 8192);
                                 if ($chunk === false) break;
                                 $buf .= $chunk;
@@ -3870,18 +3885,39 @@ class NocController extends Controller
                             fclose($socket);
 
                             $clean = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $buf);
+                            $lines = explode("\n", $clean);
                             $results = [];
 
-                            if (preg_match_all('/(?:gpon-onu_)?(1\/[12]\/(\d+):(\d+))\s+(\w+)\s+(\w+)\s+(\w+)/i', $clean, $matches, PREG_SET_ORDER)) {
-                                foreach ($matches as $m) {
-                                    $phase = strtolower($m[6]);
-                                    if (in_array($phase, ['los', 'lost', 'dyinggasp', 'offline', 'poweroff'])) {
+                            // Parse universal: mendukung OLT 4 kolom (O1, O2) maupun 5 kolom dengan O7 State (O3 Soreang)
+                            $abnormalPhases = ['los', 'lost', 'offline', 'poweroff', 'dyinggasp'];
+                            foreach ($lines as $line) {
+                                $line = trim($line);
+                                if (empty($line) || str_starts_with($line, '-') || str_starts_with($line, 'OnuIndex')) {
+                                    continue;
+                                }
+
+                                if (preg_match('/(?:gpon-onu_)?(1\/[12]\/(\d+):(\d+))\s+(.+)/i', $line, $m)) {
+                                    $interface = $m[1];
+                                    $port = (int)$m[2];
+                                    $onuId = (int)$m[3];
+                                    $tokens = preg_split('/\s+/', trim($m[4]));
+
+                                    $phase = '';
+                                    foreach (array_reverse($tokens) as $t) {
+                                        $tLower = strtolower($t);
+                                        if (in_array($tLower, $abnormalPhases)) {
+                                            $phase = $tLower;
+                                            break;
+                                        }
+                                    }
+
+                                    if ($phase) {
                                         $results[] = [
-                                            'interface' => $m[1],
-                                            'port' => (int)$m[2],
-                                            'onu_id' => (int)$m[3],
-                                            'admin' => $m[4],
-                                            'omcc' => $m[5],
+                                            'interface' => $interface,
+                                            'port' => $port,
+                                            'onu_id' => $onuId,
+                                            'admin' => $tokens[0] ?? 'enable',
+                                            'omcc' => $tokens[1] ?? 'disable',
                                             'phase' => $phase,
                                             'is_los' => in_array($phase, ['los', 'lost']),
                                         ];
@@ -3927,14 +3963,38 @@ class NocController extends Controller
                         $isLos = $st['is_los'];
                         $fullInterface = "gpon-onu_{$interface}";
                         $devKey = "onu_{$fullInterface}";
-                        $isIntentional = $intentionalRecords->has($devKey);
+                        $devKeyWithOlt = "onu_{$olt->kode_olt}_{$fullInterface}";
+                        $isIntentional = $intentionalRecords->has($devKeyWithOlt) || $intentionalRecords->has($devKey);
+                        $intentionalData = $isIntentional 
+                            ? ($intentionalRecords->get($devKeyWithOlt) ?? $intentionalRecords->get($devKey)) 
+                            : null;
 
-                        $matchedUser = $regMap[$interface] ?? ($regMap["{$port}:{$onuId}"] ?? null);
+                        // Cari user terdaftar dengan mencocokkan OLT dan interface
+                        $matchedUser = $regMap["{$olt->kode_olt}_{$interface}"]
+                            ?? ($regMap["{$olt->kode_olt}_{$fullInterface}"]
+                            ?? ($regMap["{$olt->kode_olt}_{$port}:{$onuId}"]
+                            ?? ($regMap[$interface]
+                            ?? ($regMap[$fullInterface]
+                            ?? ($regMap["{$port}:{$onuId}"] ?? null)))));
+
                         if (!$matchedUser && Schema::hasTable('trx_batchjob_register')) {
                             try {
+                                $oltAliases = match($olt->kode_olt) {
+                                    'O1' => ['O1', 'Kayu Agung', 'MSN'],
+                                    'O2' => ['O2', 'Bagong', 'Babakan Tarogong'],
+                                    'O3' => ['O3', 'Soreang', 'BBU'],
+                                    default => [$olt->kode_olt, $olt->name_olt],
+                                };
                                 $matchedUser = DB::table('trx_batchjob_register')
-                                    ->where('index_olt', 'like', "%{$interface}%")
-                                    ->orWhere('index_olt', 'like', "%{$port}:{$onuId}%")
+                                    ->where(function($q) use ($oltAliases) {
+                                        foreach ($oltAliases as $alias) {
+                                            $q->orWhere('olt', 'like', "%{$alias}%");
+                                        }
+                                    })
+                                    ->where(function($q) use ($interface, $port, $onuId) {
+                                        $q->where('index_olt', 'like', "%{$interface}%")
+                                          ->orWhere('index_olt', 'like', "%{$port}:{$onuId}%");
+                                    })
                                     ->first();
                             } catch (\Throwable $e) {}
                         }
@@ -3948,6 +4008,14 @@ class NocController extends Controller
                         $custName = $matchedUser->nama_pelanggan ?? "ONU #{$onuId}";
                         $custNo = $matchedUser->nomor_internet ?? '-';
                         $phaseLabel = strtoupper($st['phase'] ?? ($isLos ? 'LOS' : 'DOWN'));
+
+                        $actionUrl = (!empty($custNo) && $custNo !== '-' && (Route::has('teknik.pelanggan.profile') || Route::has('pelanggan.profile')))
+                            ? (Route::has('teknik.pelanggan.profile') ? route('teknik.pelanggan.profile', ['nomor_internet' => $custNo]) : route('pelanggan.profile', ['nomor_internet' => $custNo]))
+                            : route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $port]);
+
+                        $actionLabel = (!empty($custNo) && $custNo !== '-')
+                            ? 'Buka Profil Pelanggan'
+                            : 'Buka Port PON';
 
                         $item = [
                             'id' => $devKey,
@@ -3973,10 +4041,10 @@ class NocController extends Controller
                             'rx_power' => $isLos ? 'No Signal (LOS)' : 'Offline / Power Off',
                             'created_at' => now()->format('d M Y, H:i'),
                             'created_at_raw' => now()->toDateTimeString(),
-                            'url' => route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $port]),
-                            'action_label' => 'Buka Port PON',
+                            'url' => $actionUrl,
+                            'action_label' => $actionLabel,
                             'is_intentional' => $isIntentional,
-                            'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                            'intentional_data' => $intentionalData,
                         ];
 
                         if ($isIntentional) {

@@ -893,40 +893,15 @@ class OltConnectionService
         stream_set_timeout($socket, (int)ceil($timeout));
 
         // 1. Tunggu prompt Username: atau login:
-        $loginBuf = '';
-        $start = microtime(true);
-        while (!feof($socket) && (microtime(true) - $start) < 3.5) {
-            $c = fgetc($socket);
-            if ($c === false) break;
-            $loginBuf .= $c;
-            if (str_ends_with($loginBuf, 'Username:') || str_ends_with($loginBuf, 'login:')) break;
-        }
-
-        // 2. Kirim Username
+        $loginBuf = $this->readUntilPrompt($socket, ['Username:', 'login:', 'User:'], 3.0);
         fwrite($socket, "{$user}\r\n");
 
-        // 3. Tunggu prompt Password:
-        $passBuf = '';
-        $start = microtime(true);
-        while (!feof($socket) && (microtime(true) - $start) < 3.5) {
-            $c = fgetc($socket);
-            if ($c === false) break;
-            $passBuf .= $c;
-            if (str_ends_with($passBuf, 'Password:')) break;
-        }
-
-        // 4. Kirim Password
+        // 2. Tunggu prompt Password:
+        $passBuf = $this->readUntilPrompt($socket, ['Password:', 'Pass:'], 3.0);
         fwrite($socket, "{$pass}\r\n");
 
-        // 5. Tunggu prompt terminal OLT (# atau >)
-        $promptBuf = '';
-        $start = microtime(true);
-        while (!feof($socket) && (microtime(true) - $start) < 3.5) {
-            $c = fgetc($socket);
-            if ($c === false) break;
-            $promptBuf .= $c;
-            if (str_contains($promptBuf, '#') || str_contains($promptBuf, '>')) break;
-        }
+        // 3. Tunggu prompt terminal OLT (# atau >)
+        $promptBuf = $this->readUntilPrompt($socket, ['#', '>'], 3.0);
 
         $cleanPromptBuf = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $promptBuf);
         $promptLines = explode("\n", trim($cleanPromptBuf));

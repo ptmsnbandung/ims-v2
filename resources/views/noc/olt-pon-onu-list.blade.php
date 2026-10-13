@@ -1035,13 +1035,16 @@
                 <!-- Body Modal -->
                 <div class="p-5 space-y-4">
                     <!-- Command Line Box -->
-                    <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between font-mono text-xs text-emerald-400">
+                    <div class="p-2.5 rounded-xl border flex items-center justify-between font-mono text-xs shadow-inner" style="background-color: #020617 !important; border-color: #1e293b !important;">
                         <div class="flex items-center gap-2 overflow-x-auto">
-                            <span class="text-slate-500 select-none">OLT#</span>
-                            <span class="font-bold text-white select-all" x-text="cliData.command"></span>
+                            <span class="text-cyan-400 font-bold select-none">OLT#</span>
+                            <span class="font-bold text-white select-all tracking-wide" x-text="cliData.command || ('show pon power attenuation ' + (selectedOnu?.interface_onu || ''))"></span>
                         </div>
-                        <button @click="copyText(cliData.command)" class="text-slate-400 hover:text-cyan-300 transition text-[11px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 shrink-0 cursor-pointer">
-                            Salin Perintah
+                        <button @click="copyText(cliData.command || ('show pon power attenuation ' + (selectedOnu?.interface_onu || '')), 'Perintah CLI')" class="text-slate-300 hover:text-cyan-300 transition text-[11px] px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 shrink-0 cursor-pointer flex items-center gap-1">
+                            <svg class="w-3 h-3 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <span>Salin Perintah</span>
                         </button>
                     </div>
 
@@ -1087,27 +1090,30 @@
                     <div>
                         <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">
                             <span class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span>Output Asli CLI Terminal OLT ZTE:</span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>Output Asli CLI Terminal OLT ZTE C320:</span>
                             </span>
-                            <span class="text-[10.5px] font-mono text-slate-400" x-text="'Waktu: ' + (cliData.checked_at || currentTime)"></span>
+                            <span class="text-[10.5px] font-mono text-cyan-500 dark:text-cyan-400 font-semibold" x-text="'Waktu: ' + (cliData.checked_at || currentTime)"></span>
                         </div>
-                        <div class="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 text-slate-200 font-mono text-xs overflow-x-auto relative shadow-inner min-h-[140px]">
-                            <div x-show="cliLoading" class="absolute inset-0 bg-slate-950/80 backdrop-blur-2xs flex items-center justify-center gap-2 text-cyan-400 text-xs">
-                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <div class="p-4 rounded-xl border overflow-x-auto relative shadow-2xl min-h-[170px]"
+                             style="background-color: #0b0f19 !important; border-color: #1e293b !important;">
+                            <div x-show="cliLoading" class="absolute inset-0 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center gap-2.5 text-cyan-400 text-xs font-mono font-bold z-10">
+                                <svg class="w-4 h-4 animate-spin text-cyan-400" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                                 </svg>
-                                <span>Membaca data live dari OLT...</span>
+                                <span>Mengeksekusi perintah CLI langsung ke OLT...</span>
                             </div>
-                            <pre class="leading-relaxed whitespace-pre font-mono text-[11.5px] text-emerald-300" x-text="cliData.raw_output"></pre>
+                            <pre class="leading-relaxed whitespace-pre font-mono text-xs select-all block"
+                                 style="color: #34d399 !important; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; font-size: 11.5px !important; line-height: 1.6 !important;"
+                                 x-text="cliData.raw_output || 'Sedang memuat data dari OLT...'"></pre>
                         </div>
                     </div>
                 </div>
 
                 <!-- Footer Modal -->
                 <div class="bg-slate-50 dark:bg-slate-800/50 px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                    <button @click="copyText(cliData.raw_output)" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 transition cursor-pointer">
+                    <button @click="copyText(cliData.raw_output, 'Output Terminal')" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 transition cursor-pointer">
                         Salin Output Terminal
                     </button>
                     <div class="flex items-center gap-2">
@@ -1470,16 +1476,20 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             fetch(`{{ url('/noc/olt') }}/${this.kodeOlt}/onu-attenuation?interface=${iface}`, {
                 headers: { 'Accept': 'application/json' }
             })
-            .then(res => res.json())
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || ('HTTP ' + res.status));
+                return data;
+            })
             .then(data => {
                 if (data) {
                     this.cliData = data;
                     if (data.success && this.selectedOnu) {
-                        if (data.down_rx_formatted) this.selectedOnu.rx_power = data.down_rx_formatted;
-                        if (data.up_tx_formatted) this.selectedOnu.tx_power = data.up_tx_formatted;
-                        if (data.down_tx_formatted) this.selectedOnu.olt_tx = data.down_tx_formatted;
-                        if (data.up_rx_formatted) this.selectedOnu.olt_rx = data.up_rx_formatted;
-                        if (data.attenuation_formatted) this.selectedOnu.attenuation_db = data.attenuation_formatted;
+                        if (data.down_rx_formatted && data.down_rx_formatted !== 'N/A') this.selectedOnu.rx_power = data.down_rx_formatted;
+                        if (data.up_tx_formatted && data.up_tx_formatted !== 'N/A') this.selectedOnu.tx_power = data.up_tx_formatted;
+                        if (data.down_tx_formatted && data.down_tx_formatted !== 'N/A') this.selectedOnu.olt_tx = data.down_tx_formatted;
+                        if (data.up_rx_formatted && data.up_rx_formatted !== 'N/A') this.selectedOnu.olt_rx = data.up_rx_formatted;
+                        if (data.attenuation_formatted && data.attenuation_formatted !== 'N/A') this.selectedOnu.attenuation_db = data.attenuation_formatted;
                     }
                 }
             })
@@ -1503,10 +1513,10 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             this.sortBy = 'onu_id_asc';
         },
 
-        copyText(text) {
+        copyText(text, label = 'Teks') {
             if (!text) return;
             navigator.clipboard.writeText(text).then(() => {
-                alert('Serial Number ' + text + ' berhasil disalin ke clipboard!');
+                alert(label + ' berhasil disalin ke clipboard!');
             }).catch(() => {});
         }
     };

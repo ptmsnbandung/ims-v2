@@ -685,7 +685,7 @@ class NocController extends Controller
             $olt->brand = $olt->brand ?? 'ZTE C320';
             $olt->model = $olt->model ?? 'C320';
             $olt->hostname = $olt->hostname ?? $olt->kode_olt;
-            $olt->capacity_olt = $olt->capacity_olt ?? 8;
+            $olt->capacity_olt = is_numeric($olt->capacity_olt ?? null) ? (int)$olt->capacity_olt : 8;
             $olt->protocol = $olt->protocol ?? 'telnet';
             $olt->port = $olt->port ?? 23;
             $olt->username = $olt->username ?? 'admin';
@@ -715,7 +715,7 @@ class NocController extends Controller
 
         // Hitung total OLT & total PON Port & Registered PON
         $totalOlt = DB::table('m_olt')->count();
-        $totalPonPort = $olts->sum('capacity_olt') ?: 0;
+        $totalPonPort = $olts->sum(fn($o) => is_numeric($o->capacity_olt) ? (int)$o->capacity_olt : 8) ?: 0;
         if ($totalPonPort == 0 && $totalOlt > 0) {
             $totalPonPort = $totalOlt * 8; // fallback default 8 port/olt
         }
@@ -752,10 +752,10 @@ class NocController extends Controller
         $gpons = Schema::hasTable('m_gpon') ? DB::table('m_gpon')->get() : collect();
         $pons = Schema::hasTable('m_pon') ? DB::table('m_pon')->get() : collect();
 
-        // Ambil data real telemetry OLT (Traffic Upload/Download, Rx/Tx optical power)
+        // Ambil data telemetry OLT (menggunakan cached snapshot / baseline instan agar halaman dimuat < 100ms)
         $telemetryMap = [];
         foreach ($olts as $olt) {
-            $telemetryMap[$olt->kode_olt] = $oltService->getOltRealTelemetry($olt);
+            $telemetryMap[$olt->kode_olt] = $oltService->getCachedOrBaselineTelemetry($olt);
         }
 
         return view('noc.olt', [
@@ -1113,7 +1113,7 @@ class NocController extends Controller
         $startDate = $request->input('start_date') ?: $request->query('start_date');
         $endDate = $request->input('end_date') ?: $request->query('end_date');
 
-        $data = $oltService->getOltRealTelemetry($olt, $startDate, $endDate);
+        $data = $oltService->getOltRealTelemetry($olt, $startDate, $endDate, true);
 
         return response()->json($data, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
     }
@@ -2574,13 +2574,15 @@ class NocController extends Controller
             $r->customer_count = $customerCounts[$r->id] ?? 0;
             
             if ($r->is_active) {
-                $liveStatus[$r->id] = Cache::remember('mikrotik_status_' . $r->id, 60, function () use ($r) {
+                $liveStatus[$r->id] = Cache::remember('mikrotik_status_' . $r->id, 180, function () use ($r) {
                     try {
-                        $pass = $r->password;
+                        $pass = $r->password ?: config('mikrotik.pass', 'kayuagung2-9');
                         try {
                             $pass = Crypt::decryptString($pass);
-                        } catch (\Exception $e) {
-                            // Fallback to raw password
+                        } catch (\Throwable $e) {
+                            if (is_string($pass) && str_starts_with($pass, 'eyJ')) {
+                                $pass = config('mikrotik.pass', 'kayuagung2-9');
+                            }
                         }
 
                         $service = new \App\Services\Network\MikrotikService([

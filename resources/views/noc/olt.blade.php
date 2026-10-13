@@ -32,6 +32,22 @@
             @endforeach
         },
         
+        init() {
+            // Latar belakang async sync untuk OLT yang belum memiliki cache telemetry live tanpa memblokir render halaman
+            const olts = [
+                @foreach($olts as $o)
+                    '{{ $o->kode_olt }}',
+                @endforeach
+            ];
+            olts.forEach((k, idx) => {
+                if (this.telemetryMap[k]?.is_baseline) {
+                    setTimeout(() => {
+                        this.refreshTelemetry(k);
+                    }, 400 + (idx * 800));
+                }
+            });
+        },
+
         confirmDelete(kodeOlt, nameOlt) {
             this.oltToDelete = { kode: kodeOlt, name: nameOlt };
             this.deleteActionUrl = '{{ url('/noc/olt') }}/' + encodeURIComponent(kodeOlt) + '/delete';

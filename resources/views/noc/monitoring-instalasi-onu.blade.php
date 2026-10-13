@@ -220,12 +220,12 @@
     @endif
 
     <!-- =================================================================== -->
-    <!-- 5. FILTER BAR LENGKAP: TANGGAL, TEKNISI, STATUS & LIVE SEARCH       -->
+    <!-- 5. FILTER BAR LENGKAP: TANGGAL (DEFAULT HARI INI), STATUS & SEARCH   -->
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs space-y-3">
         <form method="GET" action="{{ route('noc.monitoring-instalasi-onu') }}" class="grid grid-cols-1 md:grid-cols-12 gap-2.5">
-            <!-- 1. Filter Tanggal Instalasi -->
-            <div class="md:col-span-3">
+            <!-- 1. Filter Tanggal Instalasi (Default Hari Ini) -->
+            <div class="md:col-span-4 lg:col-span-3">
                 <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1">
                     <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
@@ -238,35 +238,16 @@
                            value="{{ $selectedTanggal }}"
                            class="w-full px-2.5 py-1.5 text-xs font-mono rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     @if($selectedTanggal)
-                    <a href="{{ route('noc.monitoring-instalasi-onu', ['teknisi' => $selectedTeknisi, 'status' => $selectedStatus]) }}" 
-                       class="px-2 py-1 text-[11px] text-slate-400 hover:text-rose-500 transition" title="Clear Tanggal">
+                    <a href="{{ route('noc.monitoring-instalasi-onu', ['tanggal' => '', 'status' => $selectedStatus]) }}" 
+                       class="px-2 py-1 text-[11px] text-slate-400 hover:text-rose-500 transition font-bold" title="Tampilkan Semua Tanggal">
                         &times;
                     </a>
                     @endif
                 </div>
             </div>
 
-            <!-- 2. Filter Nama Teknisi -->
-            <div class="md:col-span-3">
-                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                    </svg>
-                    <span>Nama Teknisi:</span>
-                </label>
-                <select name="teknisi" 
-                        class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                    <option value="all">-- Semua Teknisi ({{ count($teknisiList) }}) --</option>
-                    @foreach($teknisiList as $tek)
-                        <option value="{{ $tek }}" {{ $selectedTeknisi === $tek ? 'selected' : '' }}>
-                            {{ $tek }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- 3. Pencarian Kata Kunci (Pelanggan, SN, Slot) -->
-            <div class="md:col-span-4">
+            <!-- 2. Pencarian Kata Kunci (Pelanggan, No Internet, SN, Slot) -->
+            <div class="md:col-span-5 lg:col-span-6">
                 <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1 flex items-center gap-1">
                     <svg class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -280,8 +261,8 @@
                        class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-400" />
             </div>
 
-            <!-- 4. Tombol Aksi Submit & Reset -->
-            <div class="md:col-span-2 flex items-end gap-1.5">
+            <!-- 3. Tombol Aksi Submit & Reset -->
+            <div class="md:col-span-3 lg:col-span-3 flex items-end gap-1.5">
                 <button type="submit" 
                         class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition cursor-pointer">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -290,8 +271,8 @@
                     <span>Filter</span>
                 </button>
                 <a href="{{ route('noc.monitoring-instalasi-onu') }}" 
-                   class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition"
-                   title="Reset Semua Filter">
+                   class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition"
+                   title="Reset ke Default Hari Ini">
                     Reset
                 </a>
             </div>

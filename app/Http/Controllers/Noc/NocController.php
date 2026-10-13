@@ -3177,30 +3177,14 @@ class NocController extends Controller
      */
     public function monitoringInstalasiOnu(Request $request, OltConnectionService $oltService): View|JsonResponse
     {
-        $selectedTanggal = $request->query('tanggal');
-        $selectedTeknisi = $request->query('teknisi', 'all');
+        // Default filter tanggal: hari ini (date('Y-m-d')) jika tidak ada parameter tanggal
+        $selectedTanggal = $request->has('tanggal') ? $request->query('tanggal') : date('Y-m-d');
         $selectedStatus = $request->query('status', 'all');
         $search = trim($request->query('search', ''));
-
-        // 1. Ambil list teknisi untuk filter dropdown
         $teknisiList = [];
-        if (Schema::hasTable('tb_m_karyawan')) {
-            $teknisiList = DB::table('tb_m_karyawan')
-                ->where('status_aktif', '1')
-                ->orderBy('nama_karyawan', 'asc')
-                ->pluck('nama_karyawan')
-                ->toArray();
-        }
-        $userCreates = DB::table('view_batchjob')
-            ->whereNotNull('user_create')
-            ->where('user_create', '!=', '')
-            ->distinct()
-            ->pluck('user_create')
-            ->toArray();
-        $teknisiList = array_values(array_unique(array_filter(array_merge($teknisiList, $userCreates))));
-        sort($teknisiList);
+        $selectedTeknisi = 'all';
 
-        // 2. Query data instalasi pelanggan dari trx_batchjob_register
+        // 1. Query data instalasi pelanggan dari trx_batchjob_register
         $query = DB::table('trx_batchjob_register')
             ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
             ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
@@ -3216,17 +3200,11 @@ class NocController extends Controller
                   ->orWhereNotNull('trx_batchjob_register.index_olt');
             });
 
+        // Filter berdasarkan tanggal jika ada (default hari ini)
         if (!empty($selectedTanggal)) {
             $query->where(function($q) use ($selectedTanggal) {
                 $q->whereDate('trx_batchjob_register.date_create', $selectedTanggal)
                   ->orWhereDate('trx_batchjob_register.date_update', $selectedTanggal);
-            });
-        }
-
-        if (!empty($selectedTeknisi) && $selectedTeknisi !== 'all') {
-            $query->where(function($q) use ($selectedTeknisi) {
-                $q->where('trx_batchjob_register.user_create', 'like', "%{$selectedTeknisi}%")
-                  ->orWhere('trx_batchjob_register.user_update', 'like', "%{$selectedTeknisi}%");
             });
         }
 

@@ -885,40 +885,55 @@ class OltConnectionService
             return null;
         }
 
-        $socket = @fsockopen($ip, $port, $errno, $errstr, $timeout);
-        if (!$socket) {
-            return null;
+        for ($attempt = 1; $attempt <= 3; $attempt++) {
+            $socket = @fsockopen($ip, $port, $errno, $errstr, max($timeout, 5.0));
+            if (!$socket) {
+                usleep(300000);
+                continue;
+            }
+
+            stream_set_timeout($socket, 5);
+
+            // 1. Tunggu prompt Username (banner ZTE bisa lambat di jaringan latensi tinggi)
+            $loginBuf = $this->readUntilPrompt($socket, ['Username:', 'login:', 'User:'], 6);
+            if (!preg_match('/(Username|login|User):\s*$/i', trim(preg_replace('/[^\x20-\x7E\r\n\t]/', '', $loginBuf)))) {
+                fclose($socket);
+                usleep(400000);
+                continue;
+            }
+            fwrite($socket, "{$user}\r\n");
+
+            // 2. Tunggu prompt Password
+            $passBuf = $this->readUntilPrompt($socket, ['Password:', 'Pass:'], 6);
+            fwrite($socket, "{$pass}\r\n");
+
+            // 3. Tunggu prompt terminal OLT (# atau >)
+            $promptBuf = $this->readUntilPrompt($socket, ['#', '>', 'Error 20209', 'Username:'], 6);
+            $cleanPromptBuf = trim(preg_replace('/[^\x20-\x7E\r\n\t]/', '', $promptBuf));
+
+            if (stripos($cleanPromptBuf, 'Error') !== false || stripos($cleanPromptBuf, 'Username:') !== false
+                || (!str_ends_with($cleanPromptBuf, '#') && !str_ends_with($cleanPromptBuf, '>'))) {
+                // Login gagal / desync: tutup dan ulangi dari awal
+                fclose($socket);
+                usleep(600000);
+                continue;
+            }
+
+            $promptLines = explode("\n", $cleanPromptBuf);
+            $oltPrompt = trim(end($promptLines));
+
+            // Matikan paging terminal
+            fwrite($socket, "terminal length 0\r\n");
+            usleep(150000);
+
+            return [
+                'socket' => $socket,
+                'prompt' => $oltPrompt,
+                'params' => $params,
+            ];
         }
 
-        stream_set_timeout($socket, (int)ceil($timeout));
-
-        // 1. Tunggu prompt Username: atau login:
-        $loginBuf = $this->readUntilPrompt($socket, ['Username:', 'login:', 'User:'], 3.0);
-        fwrite($socket, "{$user}\r\n");
-
-        // 2. Tunggu prompt Password:
-        $passBuf = $this->readUntilPrompt($socket, ['Password:', 'Pass:'], 3.0);
-        fwrite($socket, "{$pass}\r\n");
-
-        // 3. Tunggu prompt terminal OLT (# atau >)
-        $promptBuf = $this->readUntilPrompt($socket, ['#', '>'], 3.0);
-
-        $cleanPromptBuf = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $promptBuf);
-        $promptLines = explode("\n", trim($cleanPromptBuf));
-        $oltPrompt = trim(end($promptLines));
-        if (!str_ends_with($oltPrompt, '#') && !str_ends_with($oltPrompt, '>')) {
-            $oltPrompt = 'OLT#';
-        }
-
-        // Matikan paging terminal
-        fwrite($socket, "terminal length 0\r\n");
-        usleep(150000);
-
-        return [
-            'socket' => $socket,
-            'prompt' => $oltPrompt,
-            'params' => $params,
-        ];
+        return null;
     }
 
     /**
@@ -954,7 +969,7 @@ class OltConnectionService
                 $chunk = fread($socket, 8192);
                 if ($chunk === false) break;
                 $buffer .= $chunk;
-                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed')) {
+                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed') || str_contains($buffer, '[yes/no]')) {
                     break;
                 }
             }
@@ -1077,7 +1092,7 @@ class OltConnectionService
                 $chunk = fread($socket, 8192);
                 if ($chunk === false) break;
                 $buffer .= $chunk;
-                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed')) {
+                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed') || str_contains($buffer, '[yes/no]')) {
                     break;
                 }
             }
@@ -1243,7 +1258,7 @@ class OltConnectionService
                 $chunk = fread($socket, 8192);
                 if ($chunk === false) break;
                 $buffer .= $chunk;
-                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed')) {
+                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed') || str_contains($buffer, '[yes/no]')) {
                     break;
                 }
             }
@@ -2449,7 +2464,7 @@ class OltConnectionService
             $chunk = fread($socket, 8192);
             if ($chunk === false) break;
             $buffer .= $chunk;
-            if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed')) {
+            if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed') || str_contains($buffer, '[yes/no]')) {
                 break;
             }
         }

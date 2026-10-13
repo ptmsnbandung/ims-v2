@@ -848,12 +848,14 @@ class OltConnectionService
             fwrite($socket, "terminal length 0\r\n");
             usleep(250000);
 
+            $slot = $this->getOltGponSlot($olt);
+
             for ($p = 1; $p <= 8; $p++) {
-                fwrite($socket, "show interface gpon-olt_1/2/{$p}\r\n");
-                fwrite($socket, "show gpon onu state gpon-olt_1/2/{$p}\r\n");
+                fwrite($socket, "show interface gpon-olt_1/{$slot}/{$p}\r\n");
+                fwrite($socket, "show gpon onu state gpon-olt_1/{$slot}/{$p}\r\n");
             }
             fwrite($socket, "show processor\r\n");
-            fwrite($socket, "show interface optical-module-info gpon-olt_1/2/4\r\n");
+            fwrite($socket, "show interface optical-module-info gpon-olt_1/{$slot}/1\r\n");
             fwrite($socket, "exit\r\n");
             fwrite($socket, "yes\r\n");
 
@@ -871,8 +873,12 @@ class OltConnectionService
 
             $ports = [];
             for ($p = 1; $p <= 8; $p++) {
-                $pattern = '/gpon-olt_1\/2\/' . $p . ' is (activate|deactivate)[^#]+?OLT statistic:\s+Input rate\s*:\s*(\d+)\s*Bps[^#]+?Output rate:\s*(\d+)\s*Bps/is';
-                if (preg_match($pattern, $buffer, $m)) {
+                $pattern = '/gpon-olt_1\/' . $slot . '\/' . $p . ' is (activate|deactivate)[^#]+?OLT statistic:\s+Input rate\s*:\s*(\d+)\s*Bps[^#]+?Output rate:\s*(\d+)\s*Bps/is';
+                if (!preg_match($pattern, $buffer, $m)) {
+                    $pattern = '/gpon-olt_1\/[12]\/' . $p . ' is (activate|deactivate)[^#]+?OLT statistic:\s+Input rate\s*:\s*(\d+)\s*Bps[^#]+?Output rate:\s*(\d+)\s*Bps/is';
+                    preg_match($pattern, $buffer, $m);
+                }
+                if ($m) {
                     $status = $m[1];
                     $inBps = (int)$m[2];
                     $outBps = (int)$m[3];
@@ -880,7 +886,7 @@ class OltConnectionService
                     $downMbps = round(($outBps * 8) / 1000000, 2);
 
                     $onuCount = 0;
-                    if (preg_match_all('/(?:1\/2\/' . $p . ':|gpon-onu_1\/2\/' . $p . ':)(\d+)/i', $buffer, $mState)) {
+                    if (preg_match_all('/(?:1\/[12]\/' . $p . ':|gpon-onu_1\/[12]\/' . $p . ':)(\d+)/i', $buffer, $mState)) {
                         $onuCount = count(array_unique($mState[1]));
                     }
 
@@ -1122,6 +1128,7 @@ class OltConnectionService
     public function getOltPonPortsTelemetry(object $olt, ?string $startDate = null, ?string $endDate = null): array
     {
         $kodeOlt = $olt->kode_olt ?? 'OLT01';
+        $slot = $this->getOltGponSlot($olt);
         $gomsnOltId = $this->resolveGomsnOltId($olt);
 
         // Otomatis ambil counter byte langsung dari OLT fisik ZTE
@@ -1184,7 +1191,7 @@ class OltConnectionService
                     'port_index' => $portIndex,
                     'pon_id' => $p->id,
                     'port_name' => $p->nama_pon,
-                    'interface_name' => "gpon-olt_1/2/{$portIndex}",
+                    'interface_name' => "gpon-olt_1/{$slot}/{$portIndex}",
                     'status' => ($downMbps > 0 || $effectiveUserCount > 0) ? 'online' : 'idle',
                     'is_hw_counter' => $isHwCounter,
                     'user_count' => $effectiveUserCount,
@@ -1278,7 +1285,7 @@ class OltConnectionService
                 'port_index' => $p,
                 'pon_id' => $p,
                 'port_name' => "PON {$p}",
-                'interface_name' => "gpon-olt_1/2/{$p}",
+                'interface_name' => "gpon-olt_1/{$slot}/{$p}",
                 'status' => ($downMbps > 0 || $effectiveUserCount > 0) ? 'online' : 'idle',
                 'is_hw_counter' => $isHwCounter,
                 'user_count' => $effectiveUserCount,
@@ -1335,6 +1342,8 @@ class OltConnectionService
                 $portNum = (int)$m[1];
             }
 
+            $slot = $this->getOltGponSlot($olt);
+
             // ===================================================================
             // A. UTAMA: DISCOVERY ONU LANGSUNG DARI PERANGKAT FISIK PORT PON OLT
             // ===================================================================
@@ -1358,6 +1367,10 @@ class OltConnectionService
                         }
                         if ($kodeOlt === 'O1' || str_contains($name, 'kayu agung') || str_contains($name, 'msn')) {
                             $q->orWhere('olt', 'MSN')->orWhere('olt', 'like', '%Kayu%');
+                        } elseif ($kodeOlt === 'O2' || str_contains($name, 'babakan tarogong') || str_contains($name, 'bagong')) {
+                            $q->orWhere('olt', 'Bagong')->orWhere('olt', 'like', '%Babakan%')->orWhere('olt', 'like', '%Tarogong%');
+                        } elseif ($kodeOlt === 'O3' || str_contains($name, 'soreang') || str_contains($name, 'bbu')) {
+                            $q->orWhere('olt', 'Soreang')->orWhere('olt', 'like', '%Soreang%')->orWhere('olt', 'like', '%BBU%');
                         }
                     })
                     ->get();
@@ -1368,8 +1381,8 @@ class OltConnectionService
                     }
                     $idx = trim($r->index_olt ?? '');
                     if (preg_match('/(?:1\/[12]\/' . $portNum . ':|' . $portNum . ':)(\d+)/', $idx, $m)) {
-                        $slot = (int)$m[1];
-                        $dbBySlot[$slot] = $r;
+                        $onuSlotNum = (int)$m[1];
+                        $dbBySlot[$onuSlotNum] = $r;
                     }
                 }
 
@@ -1529,9 +1542,17 @@ class OltConnectionService
                     }
                     $sumRxPower += $rxPower;
 
+                    $realIndex = !empty($matched->index_olt) ? trim($matched->index_olt) : null;
+                    if ($realIndex) {
+                        if (!str_starts_with($realIndex, 'gpon-onu_') && str_starts_with($realIndex, '1/')) {
+                            $realIndex = 'gpon-onu_' . $realIndex;
+                        }
+                    }
+                    $interfaceOnu = $realIndex ?: "gpon-onu_1/{$slot}/{$portNum}:{$onuId}";
+
                     $onus[] = [
                         'onu_id' => $onuId,
-                        'interface_onu' => "gpon-onu_1/2/{$portNum}:{$onuId}",
+                        'interface_onu' => $interfaceOnu,
                         'nomor_internet' => $custNo,
                         'nama_pelanggan' => $custName,
                         'odp_name' => $odpName,
@@ -1589,7 +1610,7 @@ class OltConnectionService
                 return [
                     'port_index' => $portNum,
                     'port_name' => $portName,
-                    'interface_name' => "gpon-olt_1/2/{$portNum}",
+                    'interface_name' => "gpon-olt_1/{$slot}/{$portNum}",
                     'max_port' => $allPons->count(),
                     'total_onus' => $totalCount,
                     'online_onus' => $upCount,
@@ -1809,9 +1830,17 @@ class OltConnectionService
                 }
                 $sumRxPower += $rxPower;
 
+                $realIndex = !empty($batchjobMap[$custNo]->index_olt) ? trim($batchjobMap[$custNo]->index_olt) : null;
+                if ($realIndex) {
+                    if (!str_starts_with($realIndex, 'gpon-onu_') && str_starts_with($realIndex, '1/')) {
+                        $realIndex = 'gpon-onu_' . $realIndex;
+                    }
+                }
+                $interfaceOnu = $realIndex ?: "gpon-onu_1/{$slot}/{$portNum}:{$onuSlot}";
+
                 $onus[] = [
                     'onu_id' => $onuSlot,
-                    'interface_onu' => "gpon-onu_1/2/{$portNum}:{$onuSlot}",
+                    'interface_onu' => $interfaceOnu,
                     'nomor_internet' => $custNo,
                     'nama_pelanggan' => $u->nama_user ?: 'Pelanggan FTTH',
                     'odp_name' => $odpName,
@@ -1872,7 +1901,7 @@ class OltConnectionService
             return [
                 'port_index' => $portNum,
                 'port_name' => $portName,
-                'interface_name' => "gpon-olt_1/2/{$portNum}",
+                'interface_name' => "gpon-olt_1/{$slot}/{$portNum}",
                 'max_port' => $allPons->count(),
                 'total_onus' => $totalCount,
                 'online_onus' => $upCount,
@@ -1895,6 +1924,7 @@ class OltConnectionService
         }
 
         // 2. Fallback jika bukan gomsn (tabel batchjob lama)
+        $slot = $this->getOltGponSlot($olt);
         $maxPort = 8;
         if (!empty($olt->capacity_olt) && is_numeric($olt->capacity_olt) && (int)$olt->capacity_olt > $maxPort) {
             $maxPort = (int)$olt->capacity_olt;
@@ -2023,9 +2053,17 @@ class OltConnectionService
 
             $address = $cust->alamat_pasang ?: ($cust->alamat_p ?: 'Bandung, Jawa Barat');
 
+            $realIndex = !empty($rawIndex) ? trim($rawIndex) : null;
+            if ($realIndex) {
+                if (!str_starts_with($realIndex, 'gpon-onu_') && str_starts_with($realIndex, '1/')) {
+                    $realIndex = 'gpon-onu_' . $realIndex;
+                }
+            }
+            $interfaceOnu = $realIndex ?: "gpon-onu_1/{$slot}/{$ponIndex}:{$onuSlot}";
+
             $onus[] = [
                 'onu_id' => $onuSlot,
-                'interface_onu' => "gpon-onu_1/1/{$ponIndex}:{$onuSlot}",
+                'interface_onu' => $interfaceOnu,
                 'nomor_internet' => $custNo,
                 'nama_pelanggan' => $cust->nama_pelanggan ?: 'Pelanggan FTTH',
                 'odp_name' => '-',
@@ -2079,7 +2117,7 @@ class OltConnectionService
         return [
             'port_index' => $ponIndex,
             'port_name' => "PON {$ponIndex}",
-            'interface_name' => "gpon-olt_1/1/{$ponIndex}",
+            'interface_name' => "gpon-olt_1/{$slot}/{$ponIndex}",
             'max_port' => $maxPort,
             'total_onus' => $totalCount,
             'online_onus' => $upCount,
@@ -2111,6 +2149,30 @@ class OltConnectionService
         } catch (Exception $e) {
             return $value; // Fallback jika belum terenkripsi
         }
+    }
+
+    /**
+     * Tentukan slot kartu GPON hardware OLT (1/1/x atau 1/2/x):
+     * - OLT Babakan Tarogong (O2 / Bagong): Slot 1 (1/1/)
+     * - OLT Kayu Agung (O1 / MSN) & OLT Soreang (O3 / BBU): Slot 2 (1/2/)
+     */
+    public function getOltGponSlot(object|array|null $olt): int
+    {
+        if (!$olt) return 2;
+        $name = is_array($olt) ? strtoupper($olt['name_olt'] ?? '') : strtoupper($olt->name_olt ?? '');
+        $kode = is_array($olt) ? strtoupper($olt['kode_olt'] ?? '') : strtoupper($olt->kode_olt ?? '');
+
+        // Babakan Tarogong -> Slot 1 (1/1/)
+        if ($kode === 'O2' || str_contains($name, 'BABAKAN') || str_contains($name, 'TAROGONG') || str_contains($name, 'BAGONG')) {
+            return 1;
+        }
+
+        // Kayu Agung & Soreang / BBU -> Slot 2 (1/2/)
+        if ($kode === 'O1' || $kode === 'O3' || str_contains($name, 'KAYU') || str_contains($name, 'AGUNG') || str_contains($name, 'SOREANG') || str_contains($name, 'BBU') || str_contains($name, 'MSN')) {
+            return 2;
+        }
+
+        return 2;
     }
 }
 

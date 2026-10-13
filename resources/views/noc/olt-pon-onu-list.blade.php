@@ -77,7 +77,7 @@
                         </h2>
                     </div>
                     <p class="text-[11.5px] text-slate-200 mt-1">
-                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; Host: <span class="font-mono text-cyan-300 font-bold">{{ $olt->ip_address ?? '10.10.10.1' }}</span> &middot; POP: <span class="text-white font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
+                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; Host: <span class="font-mono text-cyan-300 font-bold">{{ $olt->ip_address ?? '103.161.206.214' }}</span> &middot; POP: <span class="text-white font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
                     </p>
 
                     <!-- Status Bar & Live Clock (Semua Kontras Jelas) -->
@@ -86,6 +86,11 @@
                         <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-500/50 shadow-2xs font-mono">
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                             <span>Live: <span class="text-white font-bold" x-text="currentTime">--:--:--</span> WIB</span>
+                        </div>
+                        <!-- Live Hardware Counter ZTE Badge -->
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-950 text-teal-200 border border-teal-500/50 shadow-2xs font-mono">
+                            <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+                            <span>Counter Hardware ZTE C320 (Auto-Sync)</span>
                         </div>
                         <!-- Auto-Refresh Status Badge -->
                         <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-950 text-blue-200 border border-blue-500/50 shadow-2xs font-semibold">

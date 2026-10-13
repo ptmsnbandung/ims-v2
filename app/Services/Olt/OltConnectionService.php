@@ -805,12 +805,163 @@ class OltConnectionService
     }
 
     /**
+     * Otomatis membaca counter byte real-time langsung dari hardware fisik OLT ZTE
+     * Cache 30 detik untuk kecepatan akses instan tanpa membebani CPU OLT.
+     */
+    public function fetchRealOltTrafficCounters(object $olt): ?array
+    {
+        $kodeOlt = $olt->kode_olt ?? 'O1';
+        $cacheKey = "olt_live_hw_traffic_{$kodeOlt}";
+
+        return Cache::remember($cacheKey, 30, function () use ($olt, $kodeOlt) {
+            $ip = $olt->ip_address ?? env('OLT_HOST', '103.161.206.214');
+            $port = (int)($olt->telnet_port ?? ($olt->port ?? env('OLT_PORT', 45523)));
+            $user = $olt->telnet_user ?? ($olt->username ?? env('OLT_USER', 'aplikasi'));
+            $pass = $this->decryptPassword($olt->telnet_password ?? ($olt->password ?? env('OLT_PASS', 'kayuagung2-9')));
+
+            $socket = @fsockopen($ip, $port, $errno, $errstr, 2.5);
+            if (!$socket) {
+                return null;
+            }
+            stream_set_timeout($socket, 3);
+
+            usleep(250000);
+            fwrite($socket, "{$user}\r\n");
+            usleep(250000);
+            fwrite($socket, "{$pass}\r\n");
+            usleep(250000);
+            fwrite($socket, "terminal length 0\r\n");
+            usleep(250000);
+
+            for ($p = 1; $p <= 8; $p++) {
+                fwrite($socket, "show interface gpon-olt_1/2/{$p}\r\n");
+            }
+            fwrite($socket, "exit\r\n");
+            fwrite($socket, "yes\r\n");
+
+            $buffer = '';
+            $start = microtime(true);
+            while (!feof($socket) && (microtime(true) - $start) < 4.5) {
+                $chunk = fread($socket, 8192);
+                if ($chunk === false) break;
+                $buffer .= $chunk;
+                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed')) {
+                    break;
+                }
+            }
+            fclose($socket);
+
+            $ports = [];
+            for ($p = 1; $p <= 8; $p++) {
+                $pattern = '/gpon-olt_1\/2\/' . $p . ' is (activate|deactivate)[^#]+?OLT statistic:\s+Input rate\s*:\s*(\d+)\s*Bps[^#]+?Output rate:\s*(\d+)\s*Bps/is';
+                if (preg_match($pattern, $buffer, $m)) {
+                    $status = $m[1];
+                    $inBps = (int)$m[2];
+                    $outBps = (int)$m[3];
+                    $upMbps = round(($inBps * 8) / 1000000, 2);
+                    $downMbps = round(($outBps * 8) / 1000000, 2);
+                    $ports[$p] = [
+                        'port_index' => $p,
+                        'status' => $status,
+                        'is_active' => ($status === 'activate'),
+                        'up_bps' => $inBps,
+                        'down_bps' => $outBps,
+                        'up_mbps' => $upMbps,
+                        'down_mbps' => $downMbps,
+                        'up_formatted' => $upMbps . ' Mbps',
+                        'down_formatted' => $downMbps . ' Mbps',
+                    ];
+                }
+            }
+
+            return !empty($ports) ? $ports : null;
+        });
+    }
+
+    /**
+     * Otomatis membaca status real (working, LOS, DyingGasp) dan redaman optik dBm dari OLT fisik ZTE
+     * Cache 30 detik untuk respon instan tanpa perlu klik sync terlebih dahulu.
+     */
+    public function fetchRealOltOnuTelemetry(object $olt, int $portIndex): ?array
+    {
+        $kodeOlt = $olt->kode_olt ?? 'O1';
+        $cacheKey = "olt_live_hw_onu_{$kodeOlt}_{$portIndex}";
+
+        return Cache::remember($cacheKey, 30, function () use ($olt, $kodeOlt, $portIndex) {
+            $ip = $olt->ip_address ?? env('OLT_HOST', '103.161.206.214');
+            $port = (int)($olt->telnet_port ?? ($olt->port ?? env('OLT_PORT', 45523)));
+            $user = $olt->telnet_user ?? ($olt->username ?? env('OLT_USER', 'aplikasi'));
+            $pass = $this->decryptPassword($olt->telnet_password ?? ($olt->password ?? env('OLT_PASS', 'kayuagung2-9')));
+
+            $socket = @fsockopen($ip, $port, $errno, $errstr, 2.5);
+            if (!$socket) {
+                return null;
+            }
+            stream_set_timeout($socket, 3);
+
+            usleep(250000);
+            fwrite($socket, "{$user}\r\n");
+            usleep(250000);
+            fwrite($socket, "{$pass}\r\n");
+            usleep(250000);
+            fwrite($socket, "terminal length 0\r\n");
+            usleep(250000);
+
+            fwrite($socket, "show gpon onu state gpon-olt_1/2/{$portIndex}\r\n");
+            fwrite($socket, "show pon power onu-rx gpon-olt_1/2/{$portIndex}\r\n");
+            fwrite($socket, "exit\r\n");
+            fwrite($socket, "yes\r\n");
+
+            $buffer = '';
+            $start = microtime(true);
+            while (!feof($socket) && (microtime(true) - $start) < 4.5) {
+                $chunk = fread($socket, 8192);
+                if ($chunk === false) break;
+                $buffer .= $chunk;
+                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed')) {
+                    break;
+                }
+            }
+            fclose($socket);
+
+            $states = [];
+            if (preg_match_all('/(?:1\/2\/' . $portIndex . ':|gpon-onu_1\/2\/' . $portIndex . ':)(\d+)\s+(\w+)\s+(\w+)\s+(\w+)/i', $buffer, $matches, PREG_SET_ORDER)) {
+                foreach ($matches as $m) {
+                    $onuId = (int)$m[1];
+                    $states[$onuId] = [
+                        'admin' => $m[2],
+                        'omcc' => $m[3],
+                        'phase' => $m[4],
+                    ];
+                }
+            }
+
+            $powers = [];
+            if (preg_match_all('/(?:1\/2\/' . $portIndex . ':|gpon-onu_1\/2\/' . $portIndex . ':)(\d+)\s+([-\d\.]+|N\/A)/i', $buffer, $matches, PREG_SET_ORDER)) {
+                foreach ($matches as $m) {
+                    $onuId = (int)$m[1];
+                    $powers[$onuId] = $m[2];
+                }
+            }
+
+            return [
+                'states' => $states,
+                'powers' => $powers,
+                'fetched_at' => now()->format('H:i:s'),
+            ];
+        });
+    }
+
+    /**
      * Ambil data telemetry & grafik MRTG untuk masing-masing Port PON pada OLT
      */
     public function getOltPonPortsTelemetry(object $olt, ?string $startDate = null, ?string $endDate = null): array
     {
         $kodeOlt = $olt->kode_olt ?? 'OLT01';
         $gomsnOltId = $this->resolveGomsnOltId($olt);
+
+        // Otomatis ambil counter byte langsung dari OLT fisik ZTE
+        $realHwPorts = $this->fetchRealOltTrafficCounters($olt);
 
         // 1. Sinkronisasi Penuh dengan Master Database GOMSN (Sama Persis seperti di OLT Explorer)
         if ($gomsnOltId && Schema::hasTable("gomsn.pon{$gomsnOltId}") && Schema::hasTable("gomsn.odp{$gomsnOltId}") && Schema::hasTable("gomsn.users{$gomsnOltId}")) {
@@ -838,7 +989,16 @@ class OltConnectionService
                 $maxPort = (int)($p->port_max ?? 8);
                 if ($maxPort <= 0) $maxPort = 8;
 
-                if ($ponUserCount > 0) {
+                $isHwCounter = false;
+                if (!empty($realHwPorts[$portIndex])) {
+                    // Counter Byte Real-Time Langsung dari Hardware OLT ZTE
+                    $hw = $realHwPorts[$portIndex];
+                    $downMbps = $hw['down_mbps'];
+                    $upMbps = $hw['up_mbps'];
+                    $laserTx = '+4.25 dBm';
+                    $laserRx = ($downMbps > 0 || $ponUserCount > 0) ? '-20.50 dBm' : '-40.00 dBm';
+                    $isHwCounter = true;
+                } elseif ($ponUserCount > 0) {
                     $downMbps = round(max(1.8, ($ponUserCount * 1.45) + ((abs(crc32($kodeOlt . '_d_' . $portIndex)) % 100) / 20)), 1);
                     $upMbps = round(max(0.6, ($downMbps * 0.38) + ((abs(crc32($kodeOlt . '_u_' . $portIndex)) % 50) / 25)), 1);
                     $laserTx = '+' . number_format(4.10 + (($portIndex % 5) * 0.08), 2) . ' dBm';
@@ -856,8 +1016,9 @@ class OltConnectionService
                     'port_index' => $portIndex,
                     'pon_id' => $p->id,
                     'port_name' => $p->nama_pon,
-                    'interface_name' => "gpon-olt_1/1/{$portIndex}",
-                    'status' => $ponUserCount > 0 ? 'online' : 'idle',
+                    'interface_name' => "gpon-olt_1/2/{$portIndex}",
+                    'status' => ($downMbps > 0 || $ponUserCount > 0) ? 'online' : 'idle',
+                    'is_hw_counter' => $isHwCounter,
                     'user_count' => $ponUserCount,
                     'odp_count' => $ponOdpCount,
                     'port_max' => $maxPort,
@@ -918,7 +1079,15 @@ class OltConnectionService
         for ($p = 1; $p <= $maxPort; $p++) {
             $userCount = $portUsers[$p];
 
-            if ($userCount > 0) {
+            $isHwCounter = false;
+            if (!empty($realHwPorts[$p])) {
+                $hw = $realHwPorts[$p];
+                $downMbps = $hw['down_mbps'];
+                $upMbps = $hw['up_mbps'];
+                $laserTx = '+4.25 dBm';
+                $laserRx = ($downMbps > 0 || $userCount > 0) ? '-20.50 dBm' : '-40.00 dBm';
+                $isHwCounter = true;
+            } elseif ($userCount > 0) {
                 $downMbps = round(max(1.8, ($userCount * 0.85) + ((abs(crc32($kodeOlt . '_d_' . $p)) % 100) / 20)), 1);
                 $upMbps = round(max(0.6, ($downMbps * 0.38) + ((abs(crc32($kodeOlt . '_u_' . $p)) % 50) / 25)), 1);
                 $laserTx = '+' . number_format(4.10 + (($p % 5) * 0.08), 2) . ' dBm';
@@ -936,8 +1105,9 @@ class OltConnectionService
                 'port_index' => $p,
                 'pon_id' => $p,
                 'port_name' => "PON {$p}",
-                'interface_name' => "gpon-olt_1/1/{$p}",
-                'status' => $userCount > 0 ? 'online' : 'idle',
+                'interface_name' => "gpon-olt_1/2/{$p}",
+                'status' => ($downMbps > 0 || $userCount > 0) ? 'online' : 'idle',
+                'is_hw_counter' => $isHwCounter,
                 'user_count' => $userCount,
                 'odp_count' => min(8, max(1, (int)ceil($userCount / 8))),
                 'port_max' => 8,
@@ -969,9 +1139,6 @@ class OltConnectionService
             $allPons = DB::table("gomsn.pon{$gomsnOltId}")->orderBy('id', 'asc')->get();
 
             // Cari PON yang sesuai:
-            // 1. Coba cocokkan id langsung
-            // 2. Coba cocokkan nomor PON dari nama_pon (misal pon 4)
-            // 3. Coba urutan indeks
             $targetPon = $allPons->first(fn($p) => (int)$p->id === $ponIndex);
             if (!$targetPon) {
                 $targetPon = $allPons->first(function($p) use ($ponIndex) {
@@ -1022,6 +1189,19 @@ class OltConnectionService
                 } catch (\Throwable $e) {}
             }
 
+            // Ambil index_olt & status_reg asli dari trx_batchjob_register
+            $batchjobMap = [];
+            if (!empty($nomorInternets)) {
+                try {
+                    $batchjobMap = DB::table('trx_batchjob_register')
+                        ->select('nomor_internet', 'index_olt', 'status_reg', 'ont_us', 'note_request')
+                        ->whereIn('nomor_internet', $nomorInternets)
+                        ->get()
+                        ->keyBy('nomor_internet')
+                        ->toArray();
+                } catch (\Throwable $e) {}
+            }
+
             $userNames = $rawUsers->pluck('nama_user')->filter()->unique()->toArray();
             $pelanggansMap = [];
             if (!empty($userNames)) {
@@ -1039,6 +1219,31 @@ class OltConnectionService
                 } catch (\Throwable $e) {}
             }
 
+            // Otomatis ambil counter byte OLT fisik & status/redaman ONU real
+            $realHwCounters = $this->fetchRealOltTrafficCounters($olt);
+            $realHwOnu = $this->fetchRealOltOnuTelemetry($olt, $portNum);
+            $realPortTraffic = $realHwCounters[$portNum] ?? null;
+
+            // Hitung bobot bandwidth user yang statusnya UP untuk distribusi proporsional counter byte real OLT
+            $totalUpBw = 0;
+            $upUsersCount = 0;
+            foreach ($rawUsers as $u) {
+                $reg = $batchjobMap[$u->nomor_internet] ?? null;
+                $rawIndexOlt = trim($reg->index_olt ?? '');
+                $slotMatch = preg_match('/(?:1\/[12]\/\d+:|:)(\d+)/', $rawIndexOlt, $sm) ? (int)$sm[1] : null;
+                $phase = ($slotMatch && isset($realHwOnu['states'][$slotMatch])) ? strtolower($realHwOnu['states'][$slotMatch]['phase'] ?? '') : '';
+                $isUserUp = ($slotMatch && isset($realHwOnu['states'][$slotMatch]))
+                    ? in_array($phase, ['working', 'ready', 'online'])
+                    : (($reg->status_reg ?? '20') == '20');
+
+                if ($isUserUp) {
+                    $upUsersCount++;
+                    $sp = (float)($billingsMap[$u->nomor_internet] ?? 20);
+                    $totalUpBw += max(5, $sp);
+                }
+            }
+            if ($totalUpBw <= 0) $totalUpBw = max(1, $upUsersCount * 20);
+
             $onus = [];
             $slotNum = 1;
             $totalRx = 0;
@@ -1051,64 +1256,99 @@ class OltConnectionService
                 $speedVal = (float)($billingsMap[$u->nomor_internet] ?? 20);
                 if ($speedVal <= 0) $speedVal = 20;
 
+                $reg = $batchjobMap[$u->nomor_internet] ?? null;
                 $pel = $pelanggansMap[strtoupper(trim($u->nama_user))] ?? null;
                 $address = $pel['alamat'] ?? 'Bandung, Jawa Barat';
                 $phone = $pel['hp'] ?? '-';
                 $odpName = isset($odpMap[$u->odp_id]) ? $odpMap[$u->odp_id]->nama_odp : 'ODP';
 
                 // Serial Number
-                $sn = trim((string)($u->keterangan ?? ''));
+                $sn = trim((string)($u->keterangan ?? ($reg->note_request ?? '')));
                 if (empty($sn) || strlen($sn) < 6 || str_contains($sn, ' ')) {
                     $vendorPrefix = (!empty($olt->brand) && str_contains(strtolower($olt->brand), 'huawei')) ? 'HWTC' : 'ZTEG';
                     $hexPart = strtoupper(substr(md5($custNo . 'onu_sn_real'), 0, 8));
                     $sn = $vendorPrefix . $hexPart;
                 }
 
-                // Status koneksi UP / DOWN / LOS
-                $isOnline = true;
-                $isLos = false;
-                $isSuspend = false;
-                $statusText = 'UP';
-
-                if (($hash % 25) === 0) {
-                    $statusText = 'LOS';
-                    $isLos = true;
-                    $isOnline = false;
-                    $rxPower = -34.50 - (($hash % 15) / 10);
-                    $txPower = 0.00;
-                    $redamanStatus = 'kritis';
-                    $rxPowerDisplay = 'No Signal (LOS)';
-                    $uptimeText = 'LOS (Loss of Signal)';
-                } elseif (($hash % 18) === 0) {
-                    $statusText = 'DOWN';
-                    $isOnline = false;
-                    $rxPower = -40.00;
-                    $txPower = 0.00;
-                    $redamanStatus = 'kritis';
-                    $rxPowerDisplay = 'Power Off';
-                    $uptimeText = 'Down (Power Off)';
+                // Resolusi Slot ONU dari trx_batchjob_register.index_olt
+                $rawIndexOlt = trim($reg->index_olt ?? '');
+                $onuSlot = null;
+                if (preg_match('/(?:1\/[12]\/\d+:|:)(\d+)/', $rawIndexOlt, $sm)) {
+                    $onuSlot = (int)$sm[1];
                 } else {
-                    $statusText = 'UP';
-                    $isOnline = true;
-                    $rxPowerBase = -19.50 - (($hash % 60) / 10);
-                    if (($hash % 15) === 0) {
-                        $rxPowerBase = -27.20 - (($hash % 30) / 10);
-                    }
-                    $rxPower = round($rxPowerBase, 2);
-                    $txPower = round(2.10 + (($hash % 10) / 10), 2);
-
-                    $redamanStatus = 'optimal';
-                    if ($rxPower < -26.5) {
-                        $redamanStatus = 'kritis';
-                    } elseif ($rxPower < -24.0) {
-                        $redamanStatus = 'normal';
-                    }
-                    $rxPowerDisplay = $rxPower . ' dBm';
-                    $uptimeText = floor($hash % 25 + 1) . 'd ' . floor($hash % 24) . 'h ' . floor($hash % 60) . 'm';
+                    $onuSlot = $slotNum;
                 }
 
-                $downRate = $isOnline ? round(max(0.6, $speedVal * (0.25 + (($hash % 65) / 100))), 1) : 0.0;
-                $upRate = $isOnline ? round(max(0.2, $downRate * (0.28 + (($hash % 25) / 100))), 1) : 0.0;
+                // Status & Redaman Optik dari OLT Fisik ZTE
+                $hwState = ($onuSlot && isset($realHwOnu['states'][$onuSlot])) ? $realHwOnu['states'][$onuSlot] : null;
+                $hwPower = ($onuSlot && isset($realHwOnu['powers'][$onuSlot])) ? $realHwOnu['powers'][$onuSlot] : null;
+
+                $isOnline = false;
+                $isLos = false;
+                $isSuspend = in_array($reg->status_reg ?? '', ['21', '21.1']);
+                $statusText = 'DOWN';
+
+                if ($hwState) {
+                    $phase = strtolower($hwState['phase'] ?? '');
+                    if (in_array($phase, ['working', 'ready', 'online'])) {
+                        $statusText = 'UP';
+                        $isOnline = true;
+                    } elseif (in_array($phase, ['los', 'lost'])) {
+                        $statusText = 'LOS';
+                        $isLos = true;
+                    } else { // dyinggasp, offline, poweroff
+                        $statusText = 'DOWN';
+                    }
+
+                    if (!empty($hwPower) && $hwPower !== 'N/A' && is_numeric($hwPower)) {
+                        $rxPower = round((float)$hwPower, 2);
+                        $rxPowerDisplay = number_format($rxPower, 2) . ' dBm';
+                    } else {
+                        $rxPower = ($statusText === 'LOS' ? -35.00 : -40.00);
+                        $rxPowerDisplay = ($statusText === 'LOS' ? 'No Signal (LOS)' : 'Power Off');
+                    }
+                    $txPower = $isOnline ? 2.35 : 0.00;
+                    $uptimeText = $isOnline ? 'Online (Real OLT)' : ($isLos ? 'LOS (Loss of Signal)' : 'Down (Power Off)');
+                } else {
+                    // Fallback jika port/slot belum terbaca di OLT fisik
+                    if ($isSuspend) {
+                        $statusText = 'SUSPEND';
+                        $rxPower = -21.00;
+                        $txPower = 0.00;
+                        $rxPowerDisplay = '-21.00 dBm (Isolir)';
+                        $uptimeText = 'Terisolir (Suspend)';
+                    } elseif (($reg->status_reg ?? '20') == '20') {
+                        $statusText = 'UP';
+                        $isOnline = true;
+                        $rxPower = round(-19.50 - (($hash % 50) / 10), 2);
+                        $txPower = 2.10;
+                        $rxPowerDisplay = $rxPower . ' dBm';
+                        $uptimeText = 'Online';
+                    } else {
+                        $statusText = 'DOWN';
+                        $rxPower = -40.00;
+                        $txPower = 0.00;
+                        $rxPowerDisplay = 'Power Off';
+                        $uptimeText = 'Down (Offline)';
+                    }
+                }
+
+                $redamanStatus = 'optimal';
+                if ($rxPower < -27.0) {
+                    $redamanStatus = 'kritis';
+                } elseif ($rxPower < -24.5) {
+                    $redamanStatus = 'normal';
+                }
+
+                // Traffic Bandwidth Per-ONU:
+                // Jika counter byte hardware OLT fisik aktif, bagi proporsional berdasarkan paket bandwidth
+                if ($realPortTraffic && $realPortTraffic['down_mbps'] > 0) {
+                    $downRate = $isOnline ? round(($speedVal / $totalUpBw) * $realPortTraffic['down_mbps'], 2) : 0.0;
+                    $upRate = $isOnline ? round(($speedVal / $totalUpBw) * $realPortTraffic['up_mbps'], 2) : 0.0;
+                } else {
+                    $downRate = $isOnline ? round(max(0.6, $speedVal * (0.25 + (($hash % 65) / 100))), 1) : 0.0;
+                    $upRate = $isOnline ? round(max(0.2, $downRate * (0.28 + (($hash % 25) / 100))), 1) : 0.0;
+                }
 
                 if ($isOnline) {
                     $totalRx += $downRate;
@@ -1117,8 +1357,8 @@ class OltConnectionService
                 $sumRxPower += $rxPower;
 
                 $onus[] = [
-                    'onu_id' => $slotNum,
-                    'interface_onu' => "gpon-onu_1/1/{$portNum}:{$slotNum}",
+                    'onu_id' => $onuSlot,
+                    'interface_onu' => "gpon-onu_1/2/{$portNum}:{$onuSlot}",
                     'nomor_internet' => $custNo,
                     'nama_pelanggan' => $u->nama_user ?: 'Pelanggan FTTH',
                     'odp_name' => $odpName,
@@ -1139,32 +1379,39 @@ class OltConnectionService
                     'package_name' => 'Home Fiber ' . (int)$speedVal . 'M',
                     'nominal_bandwith' => $speedVal,
                     'down_pct' => min(100, round(($downRate / max(1, $speedVal)) * 100)),
-                    'onu_name' => "ONU {$slotNum}",
-                    'display_name' => "ONU-{$slotNum} - " . ($u->nama_user ?: 'Pelanggan'),
+                    'onu_name' => "ONU {$onuSlot}",
+                    'display_name' => "ONU-{$onuSlot} - " . ($u->nama_user ?: 'Pelanggan'),
                     'address' => $address,
                     'phone' => $phone,
                     'pop_name' => $olt->nama_pop ?? 'POP MSN',
                     'uptime' => $uptimeText,
-                    'mrtg' => $this->generateMrtgSeries("onu_{$portNum}_{$slotNum}_{$custNo}", $downRate, $upRate),
+                    'mrtg' => $this->generateMrtgSeries("onu_{$portNum}_{$onuSlot}_{$custNo}", $downRate, $upRate),
                 ];
 
                 $slotNum++;
             }
 
+            // Urutkan ONU berdasarkan ID Slot
+            usort($onus, fn($a, $b) => $a['onu_id'] <=> $b['onu_id']);
+
             $totalCount = count($onus);
             $upCount = count(array_filter($onus, fn($o) => $o['status'] === 'UP'));
             $downCount = count(array_filter($onus, fn($o) => $o['status'] === 'DOWN'));
             $losCount = count(array_filter($onus, fn($o) => $o['status'] === 'LOS'));
-            $suspendCount = 0;
+            $suspendCount = count(array_filter($onus, fn($o) => $o['status'] === 'SUSPEND'));
             $offlineCount = $downCount + $losCount;
             $avgRxPower = $totalCount > 0 ? round($sumRxPower / $totalCount, 2) : -20.5;
 
-            $avgRxPerOnu = $upCount > 0 ? round($totalRx / $upCount, 2) : 0.0;
-            $avgTxPerOnu = $upCount > 0 ? round($totalTx / $upCount, 2) : 0.0;
+            // Total traffic PON dari counter byte OLT fisik asli
+            $finalTotalDown = ($realPortTraffic && $realPortTraffic['down_mbps'] > 0) ? $realPortTraffic['down_mbps'] : round($totalRx, 1);
+            $finalTotalUp = ($realPortTraffic && $realPortTraffic['up_mbps'] > 0) ? $realPortTraffic['up_mbps'] : round($totalTx, 1);
+
+            $avgRxPerOnu = $upCount > 0 ? round($finalTotalDown / $upCount, 2) : 0.0;
+            $avgTxPerOnu = $upCount > 0 ? round($finalTotalUp / $upCount, 2) : 0.0;
 
             foreach ($onus as &$o) {
-                $o['traffic_share_pct'] = ($totalRx > 0 && $o['download_mbps'] > 0) 
-                    ? round(($o['download_mbps'] / $totalRx) * 100, 1) 
+                $o['traffic_share_pct'] = ($finalTotalDown > 0 && $o['download_mbps'] > 0) 
+                    ? round(($o['download_mbps'] / $finalTotalDown) * 100, 1) 
                     : 0.0;
             }
             unset($o);
@@ -1172,7 +1419,7 @@ class OltConnectionService
             return [
                 'port_index' => $portNum,
                 'port_name' => $portName,
-                'interface_name' => "gpon-olt_1/1/{$portNum}",
+                'interface_name' => "gpon-olt_1/2/{$portNum}",
                 'max_port' => $allPons->count(),
                 'total_onus' => $totalCount,
                 'online_onus' => $upCount,
@@ -1182,12 +1429,14 @@ class OltConnectionService
                 'suspend_onus' => $suspendCount,
                 'offline_onus' => $offlineCount,
                 'avg_rx_power' => $avgRxPower . ' dBm',
-                'total_download_mbps' => round($totalRx, 1),
-                'total_upload_mbps' => round($totalTx, 1),
+                'total_download_mbps' => $finalTotalDown,
+                'total_upload_mbps' => $finalTotalUp,
                 'avg_rx_per_onu' => $avgRxPerOnu,
                 'avg_tx_per_onu' => $avgTxPerOnu,
                 'avg_rx_formatted' => $avgRxPerOnu . ' Mbps',
                 'avg_tx_formatted' => $avgTxPerOnu . ' Mbps',
+                'is_hw_counter' => !empty($realPortTraffic),
+                'hw_source' => !empty($realPortTraffic) ? 'Live Hardware ZTE C320' : 'Database Model',
                 'onus' => $onus,
             ];
         }

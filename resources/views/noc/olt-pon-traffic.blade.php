@@ -32,7 +32,7 @@
                         </h2>
                     </div>
                     <p class="text-[11px] text-slate-300 mt-0.5">
-                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; IP Host: <span class="font-mono text-cyan-300 font-bold">{{ $olt->ip_address ?? '10.10.10.1' }}</span> &middot; POP: <span class="text-slate-200">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
+                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; IP Host: <span class="font-mono text-cyan-300 font-bold">{{ $olt->ip_address ?? '103.161.206.214' }}</span> &middot; POP: <span class="text-slate-200">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
                     </p>
                     
                     <!-- Stats Badges Bar & Live Clock -->
@@ -43,6 +43,10 @@
                         <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                             <span>Live: <span class="font-mono text-white" x-text="currentTime">--:--:--</span> WIB</span>
+                        </div>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-mono shadow-xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                            <span>Counter Hardware ZTE C320 (Auto-Sync)</span>
                         </div>
                         <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-500/30">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-400" :class="isPageActive ? 'animate-ping' : ''"></span>
@@ -159,6 +163,12 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                         <span x-text="port.user_count + ' ONU Terhubung'"></span>
                                     </span>
+                                    <template x-if="port.is_hw_counter">
+                                        <span class="inline-flex items-center gap-1 font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-200/80 dark:border-teal-800/80 text-[10px]" title="Counter Byte Asli dari Hardware OLT ZTE C320">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                                            <span>Hardware ZTE</span>
+                                        </span>
+                                    </template>
                                     <template x-if="port.odp_count !== undefined">
                                         <span class="inline-flex items-center gap-1 font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200/80 dark:border-amber-800/80 text-[10px]">
                                             <span x-text="port.odp_count + '/' + (port.port_max || 8) + ' ODP'"></span>

@@ -3783,7 +3783,7 @@ class NocController extends Controller
                             'device_type' => 'olt',
                             'title' => 'OLT Server DOWN / Terputus',
                             'device_name' => ($olt->name_olt ?? 'OLT Server') . " ({$olt->kode_olt})",
-                            'subtitle' => "IP: {$olt->ip_address}:{$olt->port} &middot; POP: " . ($olt->nama_pop ?? 'POP MSN'),
+                            'subtitle' => "IP: {$olt->ip_address}:{$olt->port} • POP: " . ($olt->nama_pop ?? 'POP MSN'),
                             'message' => "Host OLT tidak merespon koneksi jaringan ({$olt->ip_address}:{$olt->port}). Layanan berpotensi terganggu.",
                             'status' => 'DOWN',
                             'severity' => 'danger',
@@ -3939,25 +3939,23 @@ class NocController extends Controller
                             } catch (\Throwable $e) {}
                         }
 
-                        // HANYA tampilkan perangkat yang status internetnya Aktif ('20') atau Suspend ('21', '21.1')
+                        // HANYA tampilkan perangkat yang status internetnya Aktif ('20')
                         $regStatus = (string)($matchedUser->status_reg ?? '');
-                        if (!in_array($regStatus, ['20', '21', '21.1'])) {
-                            continue; // Abaikan jika sudah terminasi (23), batal (15), atau belum terdaftar
+                        if ($regStatus !== '20') {
+                            continue; // Abaikan jika suspend (21), terminasi (23), batal (15), atau belum terdaftar
                         }
 
-                        $isSuspendCustomer = in_array($regStatus, ['21', '21.1']);
                         $custName = $matchedUser->nama_pelanggan ?? "ONU #{$onuId}";
                         $custNo = $matchedUser->nomor_internet ?? '-';
                         $phaseLabel = strtoupper($st['phase'] ?? ($isLos ? 'LOS' : 'DOWN'));
-                        $statusBadgeText = $isSuspendCustomer ? ' (Suspend)' : '';
 
                         $item = [
                             'id' => $devKey,
                             'device_key' => $devKey,
                             'device_type' => 'onu',
                             'title' => $isLos ? 'ONU LOS (Loss of Signal)' : "ONU DOWN ({$phaseLabel})",
-                            'device_name' => "{$fullInterface} - {$custName}{$statusBadgeText}",
-                            'subtitle' => "OLT: {$olt->name_olt} &middot; Port PON {$port} &middot; No: {$custNo}" . ($isSuspendCustomer ? ' &middot; <span class="font-bold text-amber-600 dark:text-amber-400">Status: Suspend</span>' : ' &middot; <span class="font-medium text-emerald-600 dark:text-emerald-400">Status: Aktif</span>'),
+                            'device_name' => "{$fullInterface} - {$custName}",
+                            'subtitle' => "OLT: {$olt->name_olt} • Port PON {$port} • No: {$custNo}",
                             'message' => $isLos 
                                 ? "Sinyal optik fiber terputus / LOS pada {$fullInterface} ({$custName}). Kabel optik putus atau redaman loss."
                                 : "Perangkat modem padam / offline ({$phaseLabel}) pada {$fullInterface} ({$custName}).",
@@ -3967,7 +3965,7 @@ class NocController extends Controller
                             'icon_type' => 'radio',
                             'olt_kode' => $olt->kode_olt,
                             'status_reg' => $regStatus,
-                            'status_layanan' => $isSuspendCustomer ? 'Suspend' : 'Aktif',
+                            'status_layanan' => 'Aktif',
                             'pon_index' => $port,
                             'onu_id' => $onuId,
                             'interface_name' => $fullInterface,

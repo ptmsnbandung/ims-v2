@@ -294,7 +294,7 @@
                             <!-- Device Identifier & Subtitle -->
                             <div class="flex items-center flex-wrap gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1">
                                 <span class="font-bold text-slate-900 dark:text-white" x-text="item.device_name"></span>
-                                <span class="text-slate-400">&middot;</span>
+                                <span class="text-slate-400 font-bold">•</span>
                                 <span class="font-normal text-slate-500 dark:text-slate-400" x-text="item.subtitle"></span>
                                 <template x-if="item.rx_power && item.rx_power !== 'N/A'">
                                     <span class="inline-flex items-center gap-1 font-mono text-[11px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">

@@ -121,12 +121,12 @@
             <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Laporan masuk dari user / teknisi</p>
         </div>
 
-        <!-- 4. Ditandai Intentional / Maintenance -->
+        <!-- 4. Ditandai Mute Alert / Maintenance -->
         <div @click="activeTab = 'intentional'"
              class="p-4 rounded-2xl border transition cursor-pointer relative overflow-hidden group"
              :class="activeTab === 'intentional' ? 'bg-cyan-50/80 dark:bg-cyan-950/30 border-cyan-500 shadow-md ring-2 ring-cyan-500/20' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs'">
             <div class="flex items-center justify-between">
-                <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pemeliharaan (Intentional)</span>
+                <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Mute Alert (Pemeliharaan)</span>
                 <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold">
                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.32l-3.276 3.277a1.5 1.5 0 0 1-2.122-2.122l3.277-3.276a4.5 4.5 0 0 0-6.32 4.486c.048.58.024 1.193-.14 1.743" />
@@ -137,7 +137,7 @@
                 <span class="text-2xl sm:text-3xl font-black font-mono text-cyan-600 dark:text-cyan-400" x-text="summary.total_intentional"></span>
                 <span class="text-xs font-semibold text-slate-400">Perangkat</span>
             </div>
-            <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Sengaja di-downkan / maintenance</p>
+            <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Notifikasi dibisukan / maintenance</p>
         </div>
     </div>
 
@@ -176,7 +176,7 @@
             <button @click="activeTab = 'intentional'"
                     class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                     :class="activeTab === 'intentional' ? 'bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
-                <span>Pemeliharaan (Mark as Intentional)</span>
+                <span>Mute Alert</span>
                 <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
                       :class="activeTab === 'intentional' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
                       x-text="intentional.length"></span>
@@ -225,7 +225,7 @@
                 </p>
                 <template x-if="activeTab === 'intentional'">
                     <p class="text-xs text-cyan-600 dark:text-cyan-400 mt-2 font-semibold">
-                        Belum ada perangkat yang ditandai dalam pemeliharaan (Mark as Intentional).
+                        Belum ada perangkat yang dibisukan (Mute Alert).
                     </p>
                 </template>
             </div>
@@ -331,29 +331,29 @@
                             </svg>
                         </a>
 
-                        <!-- Tombol Mark as Intentional -->
+                        <!-- Tombol Mute Alert -->
                         <template x-if="!item.is_intentional">
                             <button @click="openIntentionalModal(item)"
                                     type="button"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-cyan-700 hover:text-cyan-800 bg-cyan-50 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 dark:hover:bg-cyan-900/60 border border-cyan-200 dark:border-cyan-800 transition cursor-pointer"
-                                    title="Tandai bahwa perangkat ini sengaja di-downkan/di-LOS-kan (misal pemeliharaan kabel)">
+                                    title="Bisukan notifikasi perangkat ini selama pemeliharaan/perbaikan">
                                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.32l-3.276 3.277a1.5 1.5 0 0 1-2.122-2.122l3.277-3.276a4.5 4.5 0 0 0-6.32 4.486c.048.58.024 1.193-.14 1.743" />
                                 </svg>
-                                <span>Mark as Intentional</span>
+                                <span>Mute Alert</span>
                             </button>
                         </template>
 
-                        <!-- Tombol Batal Tandai (Unmark) -->
+                        <!-- Tombol Batal Mute (Unmute) -->
                         <template x-if="item.is_intentional">
                             <button @click="unmarkIntentional(item)"
                                     type="button"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 transition cursor-pointer"
-                                    title="Cabut status intentional / pemeliharaan">
+                                    title="Nyalakan kembali notifikasi (Unmute Alert)">
                                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                 </svg>
-                                <span>Batal Tandai (Unmark)</span>
+                                <span>Unmute Alert</span>
                             </button>
                         </template>
                     </div>
@@ -363,7 +363,7 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- 5. MODAL TANDAI PERANGKAT: MARK AS INTENTIONAL                      -->
+    <!-- 5. MODAL MUTE ALERT PERANGKAT                                       -->
     <!-- =================================================================== -->
     <div x-show="modalOpen"
          x-cloak
@@ -388,9 +388,9 @@
                         </div>
                         <div>
                             <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white" id="modal-title">
-                                Mark as Intentional (Pemeliharaan)
+                                Mute Alert (Bisukan Peringatan)
                             </h3>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Tandai perangkat sedang dalam pemeliharaan sengaja oleh tim NOC.</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Bisukan alarm & notifikasi perangkat ini selama masa pemeliharaan/perbaikan.</p>
                         </div>
                     </div>
                     <button @click="modalOpen = false" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition cursor-pointer">
@@ -454,7 +454,7 @@
                     <!-- Warning Alert -->
                     <div class="p-3 rounded-xl border text-[11px] leading-relaxed"
                          style="background-color: #f0fdfa !important; color: #0f766e !important; border-color: #99f6e4 !important;">
-                        <strong class="font-bold">Info:</strong> Setelah ditandai Intentional, status perangkat tidak akan memicu alarm dan tidak dihitung sebagai insiden darurat aktif pada dashboard maupun tombol lonceng navbar.
+                        <strong class="font-bold">Info:</strong> Setelah di-Mute Alert, status perangkat tidak akan memicu alarm dan tidak dihitung sebagai insiden darurat aktif pada dashboard maupun tombol lonceng navbar.
                     </div>
                 </div>
 
@@ -473,7 +473,7 @@
                         <svg class="w-4 h-4" :class="isSubmitting ? 'animate-spin' : ''" style="color: #ffffff !important;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                         </svg>
-                        <span style="color: #ffffff !important;">Tandai Sebagai Intentional</span>
+                        <span style="color: #ffffff !important;">Mute Alert Sekarang</span>
                     </button>
                 </div>
             </div>

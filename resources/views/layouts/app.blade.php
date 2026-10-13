@@ -1475,7 +1475,7 @@
                                     </div>
                                     <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                                         <span class="w-2 h-2 rounded-full" style="background-color: #94a3b8 !important;"></span>
-                                        <span>Intentional:</span>
+                                        <span>Mute Alert:</span>
                                         <b class="font-mono text-slate-800 dark:text-slate-200" x-text="summary.total_intentional || 0"></b>
                                     </span>
                                 </div>

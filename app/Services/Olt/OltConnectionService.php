@@ -1762,7 +1762,7 @@ class OltConnectionService
                         $statusText = 'SUSPEND';
                         $rxPower = -21.00;
                         $txPower = 0.00;
-                        $rxPowerDisplay = '-21.00 dBm (Isolir)';
+                        $rxPowerDisplay = '-21.00 dBm';
                         $uptimeText = 'Terisolir (Suspend)';
                     } elseif (($reg->status_reg ?? '20') == '20') {
                         $statusText = 'UP';
@@ -1958,7 +1958,7 @@ class OltConnectionService
                 $rxPower = -21.00;
                 $txPower = 0.00;
                 $redamanStatus = 'optimal';
-                $rxPowerDisplay = '-21.00 dBm (Isolir)';
+                $rxPowerDisplay = '-21.00 dBm';
                 $uptimeText = 'Terisolir (Suspend)';
             } elseif ($cust->status_reg == '20') {
                 if (($hash % 22) === 0) {

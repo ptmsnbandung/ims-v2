@@ -3200,39 +3200,48 @@ class NocController extends Controller
         $teknisiList = array_values(array_unique(array_filter(array_merge($teknisiList, $userCreates))));
         sort($teknisiList);
 
-        // 2. Query data instalasi pelanggan
-        $query = DB::table('view_batchjob')
+        // 2. Query data instalasi pelanggan dari trx_batchjob_register
+        $query = DB::table('trx_batchjob_register')
+            ->leftJoin('m_pelanggan', 'trx_batchjob_register.nik_penduduk', '=', 'm_pelanggan.nik_penduduk')
+            ->leftJoin('m_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'm_bandwith.kode_bandwith')
+            ->select([
+                'trx_batchjob_register.*',
+                DB::raw('COALESCE(trx_batchjob_register.nama_pelanggan, m_pelanggan.nama_penduduk) as nama_pelanggan'),
+                DB::raw('COALESCE(m_pelanggan.nomor_hp, m_pelanggan.nomor_hp_2) as nomor_hp'),
+                'm_bandwith.nominal_bandwith',
+                'm_bandwith.nama_bandwith',
+            ])
             ->where(function($q) {
-                $q->whereIn('status_reg', ['18', '18.1', '19', '19.1', '20'])
-                  ->orWhereNotNull('index_olt');
+                $q->whereIn('trx_batchjob_register.status_reg', ['18', '18.1', '19', '19.1', '20'])
+                  ->orWhereNotNull('trx_batchjob_register.index_olt');
             });
 
         if (!empty($selectedTanggal)) {
             $query->where(function($q) use ($selectedTanggal) {
-                $q->whereDate('date_create', $selectedTanggal)
-                  ->orWhereDate('date_update', $selectedTanggal);
+                $q->whereDate('trx_batchjob_register.date_create', $selectedTanggal)
+                  ->orWhereDate('trx_batchjob_register.date_update', $selectedTanggal);
             });
         }
 
         if (!empty($selectedTeknisi) && $selectedTeknisi !== 'all') {
             $query->where(function($q) use ($selectedTeknisi) {
-                $q->where('user_create', 'like', "%{$selectedTeknisi}%")
-                  ->orWhere('user_update', 'like', "%{$selectedTeknisi}%");
+                $q->where('trx_batchjob_register.user_create', 'like', "%{$selectedTeknisi}%")
+                  ->orWhere('trx_batchjob_register.user_update', 'like', "%{$selectedTeknisi}%");
             });
         }
 
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
-                $q->where('nama_pelanggan', 'like', "%{$search}%")
-                  ->orWhere('nomor_internet', 'like', "%{$search}%")
-                  ->orWhere('note_request', 'like', "%{$search}%")
-                  ->orWhere('alamat_pasang', 'like', "%{$search}%")
-                  ->orWhere('index_olt', 'like', "%{$search}%");
+                $q->where('trx_batchjob_register.nama_pelanggan', 'like', "%{$search}%")
+                  ->orWhere('trx_batchjob_register.nomor_internet', 'like', "%{$search}%")
+                  ->orWhere('trx_batchjob_register.note_request', 'like', "%{$search}%")
+                  ->orWhere('trx_batchjob_register.alamat_pasang', 'like', "%{$search}%")
+                  ->orWhere('trx_batchjob_register.index_olt', 'like', "%{$search}%");
             });
         }
 
         // Ambil data instalasi (batasi 100 terbaru)
-        $rawRecords = $query->orderBy('date_create', 'desc')->limit(100)->get();
+        $rawRecords = $query->orderBy('trx_batchjob_register.date_create', 'desc')->limit(100)->get();
 
         // 3. Scan hardware OLT ZTE C320 real-time
         $defaultOlt = DB::table('m_olt')->first();
@@ -3353,7 +3362,7 @@ class NocController extends Controller
             }
 
             // Fallback status dari status registrasi jika belum ada mapping hardware
-            if (!$isHwFound && $r->status_reg === '20') {
+            if (!$isHwFound && ($r->status_reg ?? '') === '20') {
                 $statusKey = 'sudah_up';
                 $statusLabel = 'Sudah UP';
                 $statusBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800';
@@ -3372,21 +3381,32 @@ class NocController extends Controller
                 continue;
             }
 
+            $custNo = $r->nomor_internet ?? '';
+            $custName = $r->nama_pelanggan ?? 'Pelanggan Baru';
+            $alamat = ($r->alamat_pasang ?? null) ?: (($r->alamat_p ?? null) ?: '-');
+            $hp = ($r->nomor_hp ?? null) ?: (($r->nomor_hp_2 ?? null) ?: '-');
+            $bw = !empty($r->nominal_bandwith) ? ($r->nominal_bandwith . ' Mbps') : 'Fiber 20 Mbps';
+            $oltName = ($r->olt ?? null) ?: ($defaultOlt->kode_olt ?? 'O1');
+            $idxOlt = ($r->index_olt ?? null) ?: 'Belum di-assign';
+            $teknisi = ($r->user_create ?? null) ?: (($r->user_update ?? null) ?: 'Tim Teknisi Lapangan');
+            $tglInstalasi = !empty($r->date_create) ? date('d-m-Y H:i', strtotime($r->date_create)) : date('d-m-Y H:i');
+            $tglRaw = !empty($r->date_create) ? date('Y-m-d', strtotime($r->date_create)) : date('Y-m-d');
+
             $items[] = [
-                'nomor_internet' => $r->nomor_internet,
-                'nama_pelanggan' => $r->nama_pelanggan ?? 'Pelanggan Baru',
-                'alamat_pasang' => $r->alamat_pasang ?? ($r->alamat_p ?? '-'),
-                'nomor_hp' => $r->nomor_hp ?: ($r->nomor_hp_2 ?: '-'),
-                'paket_layanan' => $r->nominal_bandwith ? ($r->nominal_bandwith . ' Mbps') : 'Fiber 20 Mbps',
-                'olt' => $r->olt ?: ($defaultOlt->kode_olt ?? 'O1'),
-                'index_olt' => $r->index_olt ?: 'Belum di-assign',
+                'nomor_internet' => $custNo,
+                'nama_pelanggan' => $custName,
+                'alamat_pasang' => $alamat,
+                'nomor_hp' => $hp,
+                'paket_layanan' => $bw,
+                'olt' => $oltName,
+                'index_olt' => $idxOlt,
                 'port_num' => $portNum,
                 'slot_num' => $slotNum,
                 'serial_number' => $sn ?: '-',
                 'ont_type' => $ontType,
-                'teknisi' => $r->user_create ?: ($r->user_update ?: 'Tim Teknisi Lapangan'),
-                'tanggal_instalasi' => date('d-m-Y H:i', strtotime($r->date_create ?? 'now')),
-                'tanggal_raw' => date('Y-m-d', strtotime($r->date_create ?? 'now')),
+                'teknisi' => $teknisi,
+                'tanggal_instalasi' => $tglInstalasi,
+                'tanggal_raw' => $tglRaw,
                 'status_key' => $statusKey,
                 'status_label' => $statusLabel,
                 'status_badge' => $statusBadge,

@@ -820,6 +820,133 @@ class OltConnectionService
     }
 
     /**
+     * Resolusi otomatis parameter koneksi OLT (IP, Port Telnet, Username, Password)
+     * Memastikan routing port OLT akurat:
+     * - O2 (Babakan Tarogong / Bagong): Port 45525
+     * - O1 (Kayu Agung): Port 45523
+     * - O3 (BBU / Soreang): Port 45528
+     */
+    public function resolveOltConnectionParams(object|array|null $olt): array
+    {
+        $kodeOlt = strtoupper(is_array($olt) ? ($olt['kode_olt'] ?? '') : ($olt->kode_olt ?? ''));
+        $namaOlt = strtolower(is_array($olt) ? ($olt['name_olt'] ?? '') : ($olt->name_olt ?? ''));
+
+        $ip = !empty(is_array($olt) ? ($olt['ip_address'] ?? null) : ($olt->ip_address ?? null))
+            ? (is_array($olt) ? $olt['ip_address'] : $olt->ip_address)
+            : env('OLT_HOST', '103.161.206.214');
+
+        $rawPort = is_array($olt) ? ($olt['port'] ?? 0) : ($olt->port ?? 0);
+        $rawTelnetPort = is_array($olt) ? ($olt['telnet_port'] ?? 0) : ($olt->telnet_port ?? 0);
+        $port = !empty($rawTelnetPort) ? (int)$rawTelnetPort : (!empty($rawPort) && (int)$rawPort !== 23 ? (int)$rawPort : 0);
+
+        if ($port === 0) {
+            if ($kodeOlt === 'O2' || str_contains($namaOlt, 'babakan') || str_contains($namaOlt, 'tarogong') || str_contains($namaOlt, 'bagong')) {
+                $port = 45525;
+            } elseif ($kodeOlt === 'O1' || str_contains($namaOlt, 'kayu') || str_contains($namaOlt, 'agung')) {
+                $port = 45523;
+            } elseif ($kodeOlt === 'O3' || str_contains($namaOlt, 'bbu') || str_contains($namaOlt, 'soreang')) {
+                $port = 45528;
+            } else {
+                $port = (int)env('OLT_PORT', 45523);
+            }
+        }
+
+        $rawUser = is_array($olt) ? ($olt['username'] ?? null) : ($olt->username ?? null);
+        $rawTelnetUser = is_array($olt) ? ($olt['telnet_user'] ?? null) : ($olt->telnet_user ?? null);
+        $user = !empty($rawTelnetUser) ? $rawTelnetUser : (!empty($rawUser) ? $rawUser : env('OLT_USER', 'aplikasi'));
+
+        $rawPass = is_array($olt) ? ($olt['password'] ?? null) : ($olt->password ?? null);
+        $rawTelnetPass = is_array($olt) ? ($olt['telnet_password'] ?? null) : ($olt->telnet_password ?? null);
+        $pass = !empty($rawTelnetPass)
+            ? $this->decryptPassword($rawTelnetPass)
+            : (!empty($rawPass) ? $this->decryptPassword($rawPass) : env('OLT_PASS', 'kayuagung2-9'));
+
+        return [
+            'ip' => $ip,
+            'port' => $port,
+            'user' => $user,
+            'pass' => $pass,
+        ];
+    }
+
+    /**
+     * Buka sesi koneksi Telnet ke hardware OLT ZTE dengan sinkronisasi prompt handshaking
+     * (mencegah desynchronization buffer yang menyebabkan %Error 20209 bad password)
+     */
+    public function openOltTelnetSession(object|array|null $olt, float $timeout = 4.0): ?array
+    {
+        $params = $this->resolveOltConnectionParams($olt);
+        $ip = $params['ip'];
+        $port = $params['port'];
+        $user = $params['user'];
+        $pass = $params['pass'];
+
+        if (empty($ip)) {
+            return null;
+        }
+
+        $socket = @fsockopen($ip, $port, $errno, $errstr, $timeout);
+        if (!$socket) {
+            return null;
+        }
+
+        stream_set_timeout($socket, (int)ceil($timeout));
+
+        // 1. Tunggu prompt Username: atau login:
+        $loginBuf = '';
+        $start = microtime(true);
+        while (!feof($socket) && (microtime(true) - $start) < 3.5) {
+            $c = fgetc($socket);
+            if ($c === false) break;
+            $loginBuf .= $c;
+            if (str_ends_with($loginBuf, 'Username:') || str_ends_with($loginBuf, 'login:')) break;
+        }
+
+        // 2. Kirim Username
+        fwrite($socket, "{$user}\r\n");
+
+        // 3. Tunggu prompt Password:
+        $passBuf = '';
+        $start = microtime(true);
+        while (!feof($socket) && (microtime(true) - $start) < 3.5) {
+            $c = fgetc($socket);
+            if ($c === false) break;
+            $passBuf .= $c;
+            if (str_ends_with($passBuf, 'Password:')) break;
+        }
+
+        // 4. Kirim Password
+        fwrite($socket, "{$pass}\r\n");
+
+        // 5. Tunggu prompt terminal OLT (# atau >)
+        $promptBuf = '';
+        $start = microtime(true);
+        while (!feof($socket) && (microtime(true) - $start) < 3.5) {
+            $c = fgetc($socket);
+            if ($c === false) break;
+            $promptBuf .= $c;
+            if (str_contains($promptBuf, '#') || str_contains($promptBuf, '>')) break;
+        }
+
+        $cleanPromptBuf = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $promptBuf);
+        $promptLines = explode("\n", trim($cleanPromptBuf));
+        $oltPrompt = trim(end($promptLines));
+        if (!str_ends_with($oltPrompt, '#') && !str_ends_with($oltPrompt, '>')) {
+            $oltPrompt = 'OLT#';
+        }
+
+        // Matikan paging terminal
+        fwrite($socket, "terminal length 0\r\n");
+        usleep(150000);
+
+        return [
+            'socket' => $socket,
+            'prompt' => $oltPrompt,
+            'params' => $params,
+        ];
+    }
+
+    /**
      * Otomatis membaca counter byte real-time langsung dari hardware fisik OLT ZTE
      * Cache 30 detik untuk kecepatan akses instan tanpa membebani CPU OLT.
      */
@@ -829,24 +956,11 @@ class OltConnectionService
         $cacheKey = "olt_live_hw_traffic_{$kodeOlt}";
 
         return Cache::remember($cacheKey, 30, function () use ($olt, $kodeOlt) {
-            $ip = !empty($olt->ip_address) ? $olt->ip_address : env('OLT_HOST', '103.161.206.214');
-            $port = !empty($olt->telnet_port) ? (int)$olt->telnet_port : (!empty($olt->port) && (int)$olt->port !== 23 ? (int)$olt->port : (int)env('OLT_PORT', 45523));
-            $user = !empty($olt->telnet_user) ? $olt->telnet_user : (!empty($olt->username) ? $olt->username : env('OLT_USER', 'aplikasi'));
-            $pass = !empty($olt->telnet_password) ? $this->decryptPassword($olt->telnet_password) : (!empty($olt->password) ? $this->decryptPassword($olt->password) : env('OLT_PASS', 'kayuagung2-9'));
-
-            $socket = @fsockopen($ip, $port, $errno, $errstr, 2.5);
-            if (!$socket) {
+            $session = $this->openOltTelnetSession($olt, 3.0);
+            if (!$session) {
                 return null;
             }
-            stream_set_timeout($socket, 3);
-
-            usleep(250000);
-            fwrite($socket, "{$user}\r\n");
-            usleep(250000);
-            fwrite($socket, "{$pass}\r\n");
-            usleep(250000);
-            fwrite($socket, "terminal length 0\r\n");
-            usleep(250000);
+            $socket = $session['socket'];
 
             $slot = $this->getOltGponSlot($olt);
 
@@ -953,24 +1067,11 @@ class OltConnectionService
         }
 
         return Cache::remember($cacheKey, 60, function () use ($olt, $kodeOlt, $portIndex) {
-            $ip = !empty($olt->ip_address) ? $olt->ip_address : env('OLT_HOST', '103.161.206.214');
-            $port = !empty($olt->telnet_port) ? (int)$olt->telnet_port : (!empty($olt->port) && (int)$olt->port !== 23 ? (int)$olt->port : (int)env('OLT_PORT', 45523));
-            $user = !empty($olt->telnet_user) ? $olt->telnet_user : (!empty($olt->username) ? $olt->username : env('OLT_USER', 'aplikasi'));
-            $pass = !empty($olt->telnet_password) ? $this->decryptPassword($olt->telnet_password) : (!empty($olt->password) ? $this->decryptPassword($olt->password) : env('OLT_PASS', 'kayuagung2-9'));
-
-            $socket = @fsockopen($ip, $port, $errno, $errstr, 2.5);
-            if (!$socket) {
+            $session = $this->openOltTelnetSession($olt, 3.5);
+            if (!$session) {
                 return null;
             }
-            stream_set_timeout($socket, 4);
-
-            usleep(250000);
-            fwrite($socket, "{$user}\r\n");
-            usleep(250000);
-            fwrite($socket, "{$pass}\r\n");
-            usleep(250000);
-            fwrite($socket, "terminal length 0\r\n");
-            usleep(250000);
+            $socket = $session['socket'];
 
             $slot = $this->getOltGponSlot($olt);
             $altSlot = ($slot === 1) ? 2 : 1;
@@ -1120,24 +1221,11 @@ class OltConnectionService
         $cacheKey = "olt_live_hw_onu_{$kodeOlt}_{$portIndex}";
 
         return Cache::remember($cacheKey, 30, function () use ($olt, $kodeOlt, $portIndex) {
-            $ip = !empty($olt->ip_address) ? $olt->ip_address : env('OLT_HOST', '103.161.206.214');
-            $port = !empty($olt->telnet_port) ? (int)$olt->telnet_port : (!empty($olt->port) && (int)$olt->port !== 23 ? (int)$olt->port : (int)env('OLT_PORT', 45523));
-            $user = !empty($olt->telnet_user) ? $olt->telnet_user : (!empty($olt->username) ? $olt->username : env('OLT_USER', 'aplikasi'));
-            $pass = !empty($olt->telnet_password) ? $this->decryptPassword($olt->telnet_password) : (!empty($olt->password) ? $this->decryptPassword($olt->password) : env('OLT_PASS', 'kayuagung2-9'));
-
-            $socket = @fsockopen($ip, $port, $errno, $errstr, 2.5);
-            if (!$socket) {
+            $session = $this->openOltTelnetSession($olt, 3.0);
+            if (!$session) {
                 return null;
             }
-            stream_set_timeout($socket, 3);
-
-            usleep(250000);
-            fwrite($socket, "{$user}\r\n");
-            usleep(250000);
-            fwrite($socket, "{$pass}\r\n");
-            usleep(250000);
-            fwrite($socket, "terminal length 0\r\n");
-            usleep(250000);
+            $socket = $session['socket'];
 
             $slot = $this->getOltGponSlot($olt);
 
@@ -2328,12 +2416,7 @@ class OltConnectionService
      */
     public function getOnuAttenuation(object $olt, string $interfaceOnu): array
     {
-        $ip = !empty($olt->ip_address) ? $olt->ip_address : env('OLT_HOST', '103.161.206.214');
-        $port = !empty($olt->telnet_port) ? (int)$olt->telnet_port : (!empty($olt->port) && (int)$olt->port !== 23 ? (int)$olt->port : (int)env('OLT_PORT', 45523));
-        $user = !empty($olt->telnet_user) ? $olt->telnet_user : (!empty($olt->username) ? $olt->username : env('OLT_USER', 'aplikasi'));
-        $pass = !empty($olt->telnet_password) ? $this->decryptPassword($olt->telnet_password) : (!empty($olt->password) ? $this->decryptPassword($olt->password) : env('OLT_PASS', 'kayuagung2-9'));
-
-        // Normalisasi format interface ONU
+        $params = $this->resolveOltConnectionParams($olt);
         $clean = trim($interfaceOnu);
         if (!str_starts_with($clean, 'gpon-onu_')) {
             if (str_starts_with($clean, '1/')) {
@@ -2351,10 +2434,11 @@ class OltConnectionService
             $altClean = str_replace('1/2/', '1/1/', $clean);
         }
 
-        if (empty($ip)) {
+        $session = $this->openOltTelnetSession($olt, 4.0);
+        if (!$session) {
             return [
                 'success' => false,
-                'message' => 'IP Address OLT belum dikonfigurasi.',
+                'message' => "Gagal terhubung ke OLT {$params['ip']}:{$params['port']}",
                 'command' => "show pon power attenuation {$clean}",
                 'interface' => $clean,
                 'down_rx' => null,
@@ -2367,51 +2451,26 @@ class OltConnectionService
                 'up_rx_formatted' => 'N/A',
                 'attenuation_db' => null,
                 'attenuation_formatted' => 'N/A',
-                'raw_output' => 'OLT IP address is null. Silakan atur IP OLT di menu konfigurasi.',
+                'raw_output' => "Connection failed to {$params['ip']}:{$params['port']}. Silakan periksa IP/Port OLT.",
                 'checked_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             ];
         }
 
-        $socket = @fsockopen($ip, $port, $errno, $errstr, 3.0);
-        if (!$socket) {
-            return [
-                'success' => false,
-                'message' => "Gagal terhubung ke OLT {$ip}:{$port} ($errstr)",
-                'command' => "show pon power attenuation {$clean}",
-                'interface' => $clean,
-                'down_rx' => null,
-                'down_rx_formatted' => 'N/A',
-                'up_tx' => null,
-                'up_tx_formatted' => 'N/A',
-                'down_tx' => null,
-                'down_tx_formatted' => 'N/A',
-                'up_rx' => null,
-                'up_rx_formatted' => 'N/A',
-                'attenuation_db' => null,
-                'attenuation_formatted' => 'N/A',
-                'raw_output' => "Connection failed to {$ip}:{$port}: {$errstr} ({$errno})",
-                'checked_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
-            ];
-        }
+        $socket = $session['socket'];
+        $oltPrompt = $session['prompt'];
 
-        stream_set_timeout($socket, 4);
-        usleep(250000);
-        fwrite($socket, "{$user}\r\n");
-        usleep(250000);
-        fwrite($socket, "{$pass}\r\n");
-        usleep(250000);
-        fwrite($socket, "terminal length 0\r\n");
-        usleep(250000);
         fwrite($socket, "show pon power attenuation {$clean}\r\n");
+        usleep(600000);
         if (!empty($altClean)) {
             fwrite($socket, "show pon power attenuation {$altClean}\r\n");
+            usleep(600000);
         }
         fwrite($socket, "exit\r\n");
         fwrite($socket, "yes\r\n");
 
         $buffer = '';
         $start = microtime(true);
-        while (!feof($socket) && (microtime(true) - $start) < 4.5) {
+        while (!feof($socket) && (microtime(true) - $start) < 4.0) {
             $chunk = fread($socket, 8192);
             if ($chunk === false) break;
             $buffer .= $chunk;
@@ -2423,15 +2482,16 @@ class OltConnectionService
 
         // Bersihkan semua karakter byte telnet IAC dan non-printable agar 100% valid UTF-8
         $cleanBuffer = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $buffer);
+        $cleanBuffer = preg_replace('/The configuration is changed,confirm to logout without saving\?\s*\[yes\/no\]:/i', '', $cleanBuffer);
 
         $activeCmd = "show pon power attenuation {$clean}";
         $activeBlock = '';
 
         // 1. Cek apakah ada tabel attenuation di perintah utama
-        $patternTable = '/(?:OLT\s+ONU\s+Attenuation|show pon power attenuation ' . preg_quote($clean, '/') . ')(.*?)(?:show pon power attenuation|OLT[^\r\n]*#|The configuration is changed|$)/is';
+        $patternTable = '/(?:OLT\s+ONU\s+Attenuation|show pon power attenuation ' . preg_quote($clean, '/') . ')(.*?)(?:show pon power attenuation|' . preg_quote($oltPrompt, '/') . '|The configuration is changed|$)/is';
         if (preg_match($patternTable, $cleanBuffer, $mPrimary)) {
             $candidate = trim($mPrimary[0]);
-            if (str_contains($candidate, 'Attenuation') || str_contains($candidate, 'up') && str_contains($candidate, 'Rx')) {
+            if (str_contains($candidate, 'Attenuation') || (str_contains($candidate, 'up') && str_contains($candidate, 'Rx'))) {
                 $activeCmd = "show pon power attenuation {$clean}";
                 $activeBlock = $candidate;
             }
@@ -2439,10 +2499,10 @@ class OltConnectionService
 
         // 2. Jika perintah utama tidak menghasilkan tabel atau invalid slot, cek perintah alternatif
         if (empty($activeBlock) && !empty($altClean)) {
-            $patternAlt = '/(?:OLT\s+ONU\s+Attenuation|show pon power attenuation ' . preg_quote($altClean, '/') . ')(.*?)(?:OLT[^\r\n]*#|The configuration is changed|$)/is';
+            $patternAlt = '/(?:OLT\s+ONU\s+Attenuation|show pon power attenuation ' . preg_quote($altClean, '/') . ')(.*?)(?:' . preg_quote($oltPrompt, '/') . '|The configuration is changed|$)/is';
             if (preg_match($patternAlt, $cleanBuffer, $mAlt)) {
                 $candidateAlt = trim($mAlt[0]);
-                if (str_contains($candidateAlt, 'Attenuation') || str_contains($candidateAlt, 'up') && str_contains($candidateAlt, 'Rx')) {
+                if (str_contains($candidateAlt, 'Attenuation') || (str_contains($candidateAlt, 'up') && str_contains($candidateAlt, 'Rx'))) {
                     $activeCmd = "show pon power attenuation {$altClean}";
                     $activeBlock = $candidateAlt;
                 }
@@ -2451,15 +2511,19 @@ class OltConnectionService
 
         // 3. Fallback jika parsing block belum match, ambil blok pertama yang mengandung Attenuation
         if (empty($activeBlock)) {
-            if (preg_match('/(\s*OLT\s+ONU\s+Attenuation.*?)(?:OLT[^\r\n]*#|The configuration is changed|$)/is', $cleanBuffer, $mTable)) {
+            if (preg_match('/(\s*OLT\s+ONU\s+Attenuation.*?)(?:' . preg_quote($oltPrompt, '/') . '|The configuration is changed|$)/is', $cleanBuffer, $mTable)) {
                 $activeBlock = trim($mTable[1]);
             } else {
                 $activeBlock = trim($cleanBuffer);
             }
         }
 
-        // Susun teks terminal asli persis CLI ZTE
-        $rawTerminal = "OLT#" . $activeCmd . "\n" . $activeBlock . "\nOLT#";
+        $activeBlock = trim($activeBlock);
+        if (str_ends_with($activeBlock, $oltPrompt)) {
+            $rawTerminal = $oltPrompt . $activeCmd . "\n" . $activeBlock;
+        } else {
+            $rawTerminal = $oltPrompt . $activeCmd . "\n" . $activeBlock . "\n" . $oltPrompt;
+        }
 
         $downRx = null;
         $downTx = null;

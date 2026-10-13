@@ -127,6 +127,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pelanggan', [TeknikController::class, 'pelanggan'])->name('pelanggan');
         Route::get('/pelanggan/export', [TeknikController::class, 'exportPelanggan'])->name('pelanggan.export');
         Route::get('/pelanggan/{nomor_internet}', [TeknikController::class, 'profilePelanggan'])->name('pelanggan.profile');
+        Route::get('/pelanggan/{nomor_internet}/live-traffic', [TeknikController::class, 'liveTrafficOnu'])->name('pelanggan.live-traffic');
         Route::get('/dokumen/langganan/{nomor_internet}', [TeknikController::class, 'dokumenLangganan'])->name('dokumen.langganan');
         Route::get('/dokumen/survey/{nomor_internet}', [TeknikController::class, 'dokumenSurvey'])->name('dokumen.survey');
         Route::get('/dokumen/instalasi/{nomor_internet}', [TeknikController::class, 'dokumenInstalasi'])->name('dokumen.instalasi');

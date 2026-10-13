@@ -150,7 +150,7 @@
 
                     <!-- Jenis Kelamin -->
                     <div class="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                        ( {{ $customer->jenis_kelamin == 1 ? 'L' : ($customer->jenis_kelamin == 2 ? 'P' : '-') }} )
+                        ( {{ ($customer->jenis_kelamin ?? null) == 1 ? 'L' : (($customer->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )
                     </div>
 
                     <!-- Bandwidth & Package -->
@@ -198,7 +198,7 @@
                         <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
                             <span>Tanggal lahir</span>
                             <span class="font-semibold text-slate-800 dark:text-slate-200">
-                                {{ $customer->tanggal_lahir && $customer->tanggal_lahir != '0000-00-00' ? \Carbon\Carbon::parse($customer->tanggal_lahir)->translatedFormat('d F Y') : '-' }}
+                                {{ !empty($customer->tanggal_lahir) && $customer->tanggal_lahir != '0000-00-00' ? \Carbon\Carbon::parse($customer->tanggal_lahir)->translatedFormat('d F Y') : '-' }}
                             </span>
                         </div>
                         <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -281,7 +281,7 @@
                             ALAMAT KTP
                         </span>
                         <p class="text-slate-700 dark:text-slate-300 uppercase leading-relaxed font-medium">
-                            {{ trim(str_replace(['Â', 'â', '€', '™'], '', (string)($customer->alamat_k ?: ($customer->alamat_ktp ?: '-')))) }}
+                            {{ trim(str_replace(['Â', 'â', '€', '™'], '', (string)($customer->alamat_k ?? ($customer->alamat_ktp ?? '-')))) }}
                         </p>
                     </div>
 
@@ -291,7 +291,7 @@
                             ALAMAT PEMASANGAN
                         </span>
                         <p class="text-slate-700 dark:text-slate-300 uppercase leading-relaxed font-medium">
-                            {{ trim(str_replace(['Â', 'â', '€', '™'], '', (string)($customer->alamat_p ?: ($customer->alamat_pasang ?: '-')))) }}
+                            {{ trim(str_replace(['Â', 'â', '€', '™'], '', (string)($customer->alamat_p ?? ($customer->alamat_pasang ?? '-')))) }}
                         </p>
                     </div>
 
@@ -497,7 +497,7 @@
                                     <td class="py-4 px-5 align-top space-y-1.5">
                                         <div>
                                             <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
-                                                {{ $customer->desc_registrasi ?: 'Registrasi' }}
+                                                {{ $customer->desc_registrasi ?? 'Registrasi' }}
                                             </span>
                                         </div>
                                         <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
@@ -546,7 +546,7 @@
                             
                             <!-- 1. KTP.jpeg -->
                             @php
-                                $ktpFile = $customer->foto_ktp;
+                                $ktpFile = $customer->foto_ktp ?? null;
                                 $ktpUrl = $ktpFile ? asset('uploads/registrasi/' . $ktpFile) : null;
                             @endphp
                             <div class="p-4 rounded-2xl border {{ $ktpFile ? 'border-blue-500/30 bg-blue-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
@@ -589,7 +589,7 @@
 
                             <!-- 2. Rumah.jpeg -->
                             @php
-                                $rumahFile = $customer->foto_rumah;
+                                $rumahFile = $customer->foto_rumah ?? null;
                                 $rumahUrl = $rumahFile ? asset('uploads/registrasi/' . $rumahFile) : null;
                             @endphp
                             <div class="p-4 rounded-2xl border {{ $rumahFile ? 'border-amber-500/30 bg-amber-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
@@ -632,7 +632,7 @@
 
                             <!-- 3. PETA.jpeg -->
                             @php
-                                $petaFile = $customer->foto_peta;
+                                $petaFile = $customer->foto_peta ?? null;
                                 $petaUrl = $petaFile ? asset('uploads/registrasi/' . $petaFile) : null;
                             @endphp
                             <div class="p-4 rounded-2xl border {{ $petaFile ? 'border-teal-500/30 bg-teal-500/[0.02]' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/70' }} shadow-sm hover:shadow-md transition flex flex-col items-center justify-between text-center min-h-[175px] group">
@@ -1343,8 +1343,8 @@
                                     POP/ODN
                                 </h4>
                                 <ul class="space-y-1 text-slate-600 dark:text-slate-400 font-sans">
-                                    <li>&mdash; Nama : <span class="text-slate-800 dark:text-slate-200 font-medium">{{ $customer->nama_pop ?: '-' }}</span></li>
-                                    <li>&mdash; Desc : <span class="text-slate-800 dark:text-slate-200 font-medium">{{ $customer->desc_pop ?: '-' }}</span></li>
+                                    <li>&mdash; Nama : <span class="text-slate-800 dark:text-slate-200 font-medium">{{ $customer->nama_pop ?? '-' }}</span></li>
+                                    <li>&mdash; Desc : <span class="text-slate-800 dark:text-slate-200 font-medium">{{ $customer->desc_pop ?? '-' }}</span></li>
                                 </ul>
                             </div>
 
@@ -1475,6 +1475,428 @@
                                     @endforelse
                                 </tbody>
                             </table>
+                        </div>
+
+                    </div>
+
+                    <!-- ======================================================= -->
+                    <!-- 7.B SECTION: TRAFFIC LIVE ONU PELANGGAN (REAL-TIME)     -->
+                    <!-- ======================================================= -->
+                    <div x-data="liveOnuTraffic('{{ $customer->nomor_internet }}')" 
+                         class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                        
+                        <!-- Header Section: Judul, Indikator Live, & Tombol Kontrol -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-cyan-500/20 dark:from-emerald-500/10 dark:to-cyan-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-inner">
+                                    <svg class="w-5 h-5 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.25 2.25L15 7.5" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h3 class="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                            Traffic Live ONU Pelanggan
+                                        </h3>
+                                        <!-- Live Stream Badge -->
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition"
+                                              :class="isLive ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/80 shadow-2xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'">
+                                            <span class="w-2 h-2 rounded-full"
+                                                  :class="isLive ? 'bg-emerald-500 animate-ping' : 'bg-slate-400'"></span>
+                                            <span x-text="isLive ? 'LIVE STREAM' : 'STREAM PAUSED'"></span>
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Monitoring bandwidth real-time (Rx Download / Tx Upload) & redaman optik langsung dari OLT
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Controls: Toggle Live, Interval, & Manual Refresh -->
+                            <div class="flex items-center flex-wrap gap-2 self-start sm:self-auto">
+                                <!-- Interval Buttons -->
+                                <div class="flex items-center bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[10.5px] font-mono font-bold">
+                                    <button type="button" 
+                                            @click="changeInterval(3000)"
+                                            :class="pollInterval === 3000 ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-2xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                                            class="px-2 py-0.5 rounded-md transition cursor-pointer">
+                                        3s
+                                    </button>
+                                    <button type="button" 
+                                            @click="changeInterval(5000)"
+                                            :class="pollInterval === 5000 ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-2xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                                            class="px-2 py-0.5 rounded-md transition cursor-pointer">
+                                        5s
+                                    </button>
+                                    <button type="button" 
+                                            @click="changeInterval(10000)"
+                                            :class="pollInterval === 10000 ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-2xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                                            class="px-2 py-0.5 rounded-md transition cursor-pointer">
+                                        10s
+                                    </button>
+                                </div>
+
+                                <!-- Pause/Resume Live Toggle -->
+                                <button type="button" 
+                                        @click="toggleLive()"
+                                        :class="isLive ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/60 hover:bg-amber-100' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100'"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition shadow-2xs cursor-pointer">
+                                    <template x-if="isLive">
+                                        <div class="flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg>
+                                            <span>Pause</span>
+                                        </div>
+                                    </template>
+                                    <template x-if="!isLive">
+                                        <div class="flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></svg>
+                                            <span>Resume</span>
+                                        </div>
+                                    </template>
+                                </button>
+
+                                <!-- Manual Refresh -->
+                                <button type="button" 
+                                        @click="fetchData(false)"
+                                        :disabled="fetching"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60">
+                                    <svg class="w-3.5 h-3.5" :class="fetching ? 'animate-spin text-blue-600' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                    </svg>
+                                    <span>Refresh</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Telemetry Meta Bar (Interface, OLT, Status, SFP Power, & Last Updated) -->
+                        <div class="bg-slate-50 dark:bg-slate-950/60 rounded-xl p-3 border border-slate-200/90 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                            <div class="flex items-center flex-wrap gap-2 font-mono">
+                                <!-- Status Badge -->
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                      :class="{
+                                          'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300': onu?.status === 'UP',
+                                          'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300': onu?.status === 'DOWN',
+                                          'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300': onu?.status === 'LOS',
+                                          'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400': !onu || onu?.status === 'UNMAPPED'
+                                      }">
+                                    <span class="w-1.5 h-1.5 rounded-full"
+                                          :class="{
+                                              'bg-emerald-500': onu?.status === 'UP',
+                                              'bg-rose-500': onu?.status === 'DOWN',
+                                              'bg-amber-500': onu?.status === 'LOS',
+                                              'bg-slate-400': !onu || onu?.status === 'UNMAPPED'
+                                          }"></span>
+                                    <span x-text="onu?.status || 'CHECKING...'"></span>
+                                </span>
+
+                                <!-- Interface OLT -->
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-800 dark:text-slate-200">
+                                    <span class="text-slate-400 font-sans">Port:</span>
+                                    <span x-text="onu?.interface_onu || '{{ $customer->index_olt ?: '-' }}'"></span>
+                                </span>
+
+                                <!-- OLT Server -->
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                                    <span class="text-slate-400 font-sans">OLT:</span>
+                                    <span x-text="onu?.olt_name || '{{ $customer->olt ?: '-' }}'"></span>
+                                </span>
+
+                                <!-- Optical Power SFP Rx & Tx -->
+                                <template x-if="onu && onu.rx_power && onu.rx_power !== '-'">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px]">
+                                        <span class="text-slate-400 font-sans">Redaman Rx:</span>
+                                        <strong :class="parseFloat(onu.rx_power) < -27 ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'"
+                                                x-text="onu.rx_power"></strong>
+                                        <span class="text-slate-300 dark:text-slate-700">&middot;</span>
+                                        <span class="text-slate-400 font-sans">Tx:</span>
+                                        <span class="font-bold text-slate-700 dark:text-slate-300" x-text="onu.tx_power"></span>
+                                    </span>
+                                </template>
+                            </div>
+
+                            <!-- Last Updated & Auto Poll Indicator -->
+                            <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                                <span>Terakhir diperbarui:</span>
+                                <span class="font-mono font-bold text-slate-700 dark:text-slate-200" x-text="lastUpdated"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-500" :class="fetching ? 'animate-ping' : ''"></span>
+                            </div>
+                        </div>
+
+                        <!-- 2-Column KPI STATS SUMMARY CARDS: Rx (Download) & Tx (Upload) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            
+                            <!-- 1. Card Download (Rx / Inbound Traffic) -->
+                            <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/5 via-cyan-500/5 to-transparent dark:from-emerald-950/20 dark:via-cyan-950/10 dark:to-transparent border border-emerald-500/20 dark:border-emerald-500/20 relative overflow-hidden shadow-sm">
+                                <div class="flex items-start justify-between">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span>Download (Rx / Inbound)</span>
+                                        </div>
+                                        <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                                            Trafik yang ditarik oleh pelanggan dari jaringan
+                                        </div>
+                                    </div>
+                                    <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                        Paket: <span x-text="(onu?.nominal_bandwith || '{{ $customer->nominal_bandwith ?: 20 }}') + ' Mbps'"></span>
+                                    </span>
+                                </div>
+
+                                <!-- Current Big Value -->
+                                <div class="mt-3 flex items-baseline gap-2">
+                                    <span class="text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400"
+                                          x-text="onu?.current_rx_formatted || '0.00 Mbps'"></span>
+                                    <span class="text-xs font-bold text-emerald-500 flex items-center">&darr; Cur</span>
+                                </div>
+
+                                <!-- Throughput Progress Bar relative to Package -->
+                                <div class="mt-2 space-y-1">
+                                    <div class="h-2 w-full bg-emerald-100 dark:bg-emerald-950/80 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
+                                             :style="'width: ' + Math.min(100, Math.round(((onu?.current_rx || 0) / Math.max(1, (onu?.nominal_bandwith || 20))) * 100)) + '%'"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Max & Avg Mini Stats -->
+                                <div class="mt-3 pt-3 border-t border-emerald-500/15 flex items-center justify-between text-xs font-mono">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-slate-400 font-sans font-semibold">Max:</span>
+                                        <strong class="text-slate-800 dark:text-slate-200 font-bold" x-text="onu?.max_rx_formatted || '0.0 Mbps'"></strong>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-slate-400 font-sans font-semibold">Avg:</span>
+                                        <strong class="text-slate-700 dark:text-slate-300 font-bold" x-text="onu?.avg_rx_formatted || '0.0 Mbps'"></strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Card Upload (Tx / Outbound Traffic) -->
+                            <div class="p-4 rounded-2xl bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-transparent dark:from-blue-950/20 dark:via-indigo-950/10 dark:to-transparent border border-blue-500/20 dark:border-blue-500/20 relative overflow-hidden shadow-sm">
+                                <div class="flex items-start justify-between">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
+                                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                            <span>Upload (Tx / Outbound)</span>
+                                        </div>
+                                        <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                                            Trafik yang dikirimkan oleh modem pelanggan ke OLT
+                                        </div>
+                                    </div>
+                                    <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                        Laser Upstream
+                                    </span>
+                                </div>
+
+                                <!-- Current Big Value -->
+                                <div class="mt-3 flex items-baseline gap-2">
+                                    <span class="text-3xl font-black font-mono tracking-tight text-blue-600 dark:text-blue-400"
+                                          x-text="onu?.current_tx_formatted || '0.00 Mbps'"></span>
+                                    <span class="text-xs font-bold text-blue-500 flex items-center">&uarr; Cur</span>
+                                </div>
+
+                                <!-- Throughput Progress Bar -->
+                                <div class="mt-2 space-y-1">
+                                    <div class="h-2 w-full bg-blue-100 dark:bg-blue-950/80 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
+                                             :style="'width: ' + Math.min(100, Math.round(((onu?.current_tx || 0) / Math.max(1, (onu?.max_tx || 10))) * 100)) + '%'"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Max & Avg Mini Stats -->
+                                <div class="mt-3 pt-3 border-t border-blue-500/15 flex items-center justify-between text-xs font-mono">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-slate-400 font-sans font-semibold">Max:</span>
+                                        <strong class="text-slate-800 dark:text-slate-200 font-bold" x-text="onu?.max_tx_formatted || '0.0 Mbps'"></strong>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-slate-400 font-sans font-semibold">Avg:</span>
+                                        <strong class="text-slate-700 dark:text-slate-300 font-bold" x-text="onu?.avg_tx_formatted || '0.0 Mbps'"></strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Graph Mode Toggle (Real-Time Live Wave vs MRTG Multi-Day Trend) -->
+                        <div class="flex items-center justify-between pt-1">
+                            <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700">
+                                <button type="button" 
+                                        @click="activeView = 'live'"
+                                        :class="activeView === 'live' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                                        class="px-3 py-1 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500" :class="isLive ? 'animate-pulse' : ''"></span>
+                                    <span>Grafik Real-Time Live (25s)</span>
+                                </button>
+                                <button type="button" 
+                                        @click="activeView = 'mrtg'"
+                                        :class="activeView === 'mrtg' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+                                        class="px-3 py-1 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+                                    <span>MRTG Multi-Day / 7 Hari</span>
+                                </button>
+                            </div>
+
+                            <!-- Legend Pills -->
+                            <div class="flex items-center gap-3 text-xs font-mono">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-3 h-2 rounded-xs bg-emerald-500 inline-block shadow-2xs"></span>
+                                    <span class="text-slate-600 dark:text-slate-300 font-bold">In (Rx)</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-3 h-0.5 rounded-xs bg-blue-500 inline-block shadow-2xs"></span>
+                                    <span class="text-slate-600 dark:text-slate-300 font-bold">Out (Tx)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VIEW 1: GRAFIK LIVE WAVE REAL-TIME (DYNAMIC SVG) -->
+                        <div x-show="activeView === 'live'" class="p-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden">
+                            <!-- Background Grid Overlay -->
+                            <div class="flex items-stretch gap-2 h-[155px]">
+                                <!-- Y Axis Labels -->
+                                <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-bold text-slate-400 select-none py-1 w-12 shrink-0">
+                                    <template x-for="(yLbl, yIdx) in yAxisLabels" :key="yIdx">
+                                        <span x-text="yLbl"></span>
+                                    </template>
+                                </div>
+
+                                <!-- SVG Live Wave Canvas -->
+                                <div class="flex-1 min-w-0 h-full relative bg-[#070d19] border border-slate-700/60 rounded-xl overflow-hidden">
+                                    <!-- Empty / Initial Loading Screen -->
+                                    <div x-show="loading && !historyPoints.length" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs z-10">
+                                        <div class="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold">
+                                            <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                            <span>Menghubungkan ke OLT & mengambil telemetry...</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Main SVG Canvas -->
+                                    <svg viewBox="0 0 720 140" preserveAspectRatio="none" class="w-full h-full block">
+                                        <defs>
+                                            <!-- Gradient Rx (Green Glow Area) -->
+                                            <linearGradient id="liveRxGrad" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.55"/>
+                                                <stop offset="60%" stop-color="#059669" stop-opacity="0.2"/>
+                                                <stop offset="100%" stop-color="#047857" stop-opacity="0.02"/>
+                                            </linearGradient>
+                                            <!-- Gradient Tx (Blue Glow Area) -->
+                                            <linearGradient id="liveTxGrad" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"/>
+                                                <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.01"/>
+                                            </linearGradient>
+                                        </defs>
+
+                                        <!-- Horizontal Grid Lines -->
+                                        <line x1="0" y1="0" x2="720" y2="0" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                        <line x1="0" y1="35" x2="720" y2="35" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                        <line x1="0" y1="70" x2="720" y2="70" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                        <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                        <line x1="0" y1="140" x2="720" y2="140" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
+
+                                        <!-- Vertical Grid Lines (Time Intervals) -->
+                                        <line x1="120" y1="0" x2="120" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+                                        <line x1="240" y1="0" x2="240" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+                                        <line x1="360" y1="0" x2="360" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+                                        <line x1="480" y1="0" x2="480" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+                                        <line x1="600" y1="0" x2="600" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
+
+                                        <!-- Rx Filled Polygon (Download Area) -->
+                                        <polygon :points="liveRxPolygon" fill="url(#liveRxGrad)"/>
+
+                                        <!-- Rx Outline Stroke Line -->
+                                        <polyline :points="liveRxPolyline" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+                                        <!-- Tx Filled Polygon & Outline Stroke Line (Upload) -->
+                                        <polyline :points="liveTxPolyline" fill="none" stroke="#3b82f6" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
+
+                                        <!-- Pulsing Dot on Current Latest Point -->
+                                        <template x-if="liveRxPoints.length > 0">
+                                            <g>
+                                                <!-- Rx Latest Glowing Dot -->
+                                                <circle :cx="liveRxPoints[liveRxPoints.length - 1].x" 
+                                                        :cy="liveRxPoints[liveRxPoints.length - 1].y" 
+                                                        r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.5"/>
+                                                <!-- Tx Latest Glowing Dot -->
+                                                <circle :cx="liveTxPoints[liveTxPoints.length - 1].x" 
+                                                        :cy="liveTxPoints[liveTxPoints.length - 1].y" 
+                                                        r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                                            </g>
+                                        </template>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- X Axis Time Labels -->
+                            <div class="flex items-center mt-1">
+                                <div class="w-12 shrink-0"></div>
+                                <div class="flex-1 flex justify-between items-center text-[8px] font-mono text-slate-500 px-1 select-none">
+                                    <template x-if="historyPoints.length > 0">
+                                        <span x-text="historyPoints[0]?.time || ''"></span>
+                                    </template>
+                                    <template x-if="historyPoints.length > 12">
+                                        <span x-text="historyPoints[Math.floor(historyPoints.length / 2)]?.time || ''"></span>
+                                    </template>
+                                    <template x-if="historyPoints.length > 0">
+                                        <span class="text-emerald-400 font-bold" x-text="(historyPoints[historyPoints.length - 1]?.time || '') + ' (Kini)'"></span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VIEW 2: GRAFIK MRTG CACTI MULTI-DAY -->
+                        <div x-show="activeView === 'mrtg'" x-cloak class="p-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+                            <template x-if="onu && onu.mrtg">
+                                <div>
+                                    <div class="flex items-stretch gap-2 h-[155px]">
+                                        <!-- Y Axis Labels MRTG -->
+                                        <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-bold text-slate-400 select-none py-1 w-12 shrink-0">
+                                            <template x-for="(yLbl, yIdx) in (onu.mrtg?.y_labels || [])" :key="yIdx">
+                                                <span x-text="yLbl"></span>
+                                            </template>
+                                        </div>
+
+                                        <!-- Plot Area SVG MRTG -->
+                                        <div class="flex-1 min-w-0 h-full bg-[#060c18] border border-slate-700/80 rounded-xl overflow-hidden relative">
+                                            <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
+                                                <line x1="0" y1="0" x2="720" y2="0" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+
+                                                <!-- In Traffic Polygon (Solid Green Area) -->
+                                                <polygon :points="onu.mrtg.in_polygon || ''" fill="#00cc00" fill-opacity="0.9"/>
+                                                <!-- Out Traffic Polyline (Solid Blue Line) -->
+                                                <polyline :points="onu.mrtg.out_polyline || ''" fill="none" stroke="#3b82f6" stroke-width="1.8"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sumbu X MRTG Labels -->
+                                    <div class="flex items-center mt-1">
+                                        <div class="w-12 shrink-0"></div>
+                                        <div class="flex-1 flex justify-between items-center text-[8px] font-mono text-slate-400 px-1 select-none">
+                                            <template x-for="(xLbl, xIdx) in (onu.mrtg.x_labels || [])" :key="xIdx">
+                                                <span x-text="xLbl"></span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="!onu || !onu.mrtg">
+                                <div class="py-12 text-center text-slate-500 text-xs">
+                                    Data MRTG belum tersedia untuk perangkat ini.
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Error State Alert (Jika ONU Unmapped atau Gagal) -->
+                        <div x-show="errorMessage" x-cloak class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-amber-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                                <span x-text="errorMessage"></span>
+                            </div>
+                            <button type="button" @click="fetchData(false)" class="underline font-bold hover:text-amber-900 cursor-pointer">Coba Lagi</button>
                         </div>
 
                     </div>
@@ -2062,6 +2484,233 @@ function triggerProfileUnifiedAction(nomorInternet, namaPelanggan, action) {
             });
         }
     });
+}
+
+// =========================================================
+// LIVE REAL-TIME ONU TRAFFIC CONTROLLER (ALPINES.JS HOOKS)
+// =========================================================
+function liveOnuTraffic(nomorInternet) {
+    return {
+        nomorInternet: nomorInternet,
+        loading: true,
+        fetching: false,
+        isLive: true,
+        pollInterval: 3000,
+        timer: null,
+        activeView: 'live',
+        onu: null,
+        historyPoints: [],
+        maxHistory: 25,
+        errorMessage: null,
+        lastUpdated: '-',
+
+        get chartMaxY() {
+            if (!this.historyPoints.length) return 10;
+            const maxVal = Math.max(...this.historyPoints.map(p => Math.max(p.rx || 0, p.tx || 0)));
+            const nominal = parseFloat(this.onu?.nominal_bandwith || 10);
+            return Math.max(5, Math.ceil(Math.max(maxVal * 1.25, nominal * 1.1) / 5) * 5);
+        },
+
+        get yAxisLabels() {
+            const max = this.chartMaxY;
+            const step = max / 4;
+            return [
+                (max).toFixed(1) + ' M',
+                (max - step).toFixed(1) + ' M',
+                (max - (step * 2)).toFixed(1) + ' M',
+                (max - (step * 3)).toFixed(1) + ' M',
+                '0.0 M'
+            ];
+        },
+
+        get liveRxPoints() {
+            if (!this.historyPoints.length) return [];
+            const w = 720;
+            const h = 140;
+            const maxY = this.chartMaxY;
+            const count = this.historyPoints.length;
+            const stepX = count > 1 ? w / (count - 1) : w;
+
+            return this.historyPoints.map((p, idx) => {
+                const x = Number((idx * stepX).toFixed(1));
+                const y = Number((h - (((p.rx || 0) / maxY) * h)).toFixed(1));
+                return { x, y, val: p.rx, time: p.time };
+            });
+        },
+
+        get liveRxPolygon() {
+            const pts = this.liveRxPoints;
+            if (!pts.length) return '';
+            const w = 720;
+            const h = 140;
+            const coords = pts.map(p => `${p.x},${p.y}`).join(' ');
+            return `0,${h} ${coords} ${w},${h}`;
+        },
+
+        get liveRxPolyline() {
+            const pts = this.liveRxPoints;
+            if (!pts.length) return '';
+            return pts.map(p => `${p.x},${p.y}`).join(' ');
+        },
+
+        get liveTxPoints() {
+            if (!this.historyPoints.length) return [];
+            const w = 720;
+            const h = 140;
+            const maxY = this.chartMaxY;
+            const count = this.historyPoints.length;
+            const stepX = count > 1 ? w / (count - 1) : w;
+
+            return this.historyPoints.map((p, idx) => {
+                const x = Number((idx * stepX).toFixed(1));
+                const y = Number((h - (((p.tx || 0) / maxY) * h)).toFixed(1));
+                return { x, y, val: p.tx, time: p.time };
+            });
+        },
+
+        get liveTxPolyline() {
+            const pts = this.liveTxPoints;
+            if (!pts.length) return '';
+            return pts.map(p => `${p.x},${p.y}`).join(' ');
+        },
+
+        init() {
+            this.fetchData();
+
+            if (this.isLive) {
+                this.startTimer();
+            }
+
+            // Watch tab switch in parent component
+            this.$watch('activeTab', (newTab) => {
+                if (newTab === 'perangkat') {
+                    if (this.isLive && !this.timer) {
+                        this.fetchData(true);
+                        this.startTimer();
+                    }
+                } else {
+                    this.stopTimer();
+                }
+            });
+
+            // Visibility Change: pause when browser tab is inactive / minimized
+            this._visHandler = () => {
+                if (document.hidden) {
+                    this.stopTimer();
+                } else {
+                    if (this.activeTab === 'perangkat' && this.isLive) {
+                        this.fetchData(true);
+                        this.startTimer();
+                    }
+                }
+            };
+            document.addEventListener('visibilitychange', this._visHandler);
+
+            // Cleanup when leaving page
+            this._unloadHandler = () => {
+                this.stopTimer();
+            };
+            window.addEventListener('beforeunload', this._unloadHandler);
+            window.addEventListener('pagehide', this._unloadHandler);
+
+            // Alpine lifecycle cleanup hook
+            if (this.$cleanup) {
+                this.$cleanup(() => {
+                    this.destroy();
+                });
+            }
+        },
+
+        destroy() {
+            this.stopTimer();
+            if (this._visHandler) {
+                document.removeEventListener('visibilitychange', this._visHandler);
+            }
+            if (this._unloadHandler) {
+                window.removeEventListener('beforeunload', this._unloadHandler);
+                window.removeEventListener('pagehide', this._unloadHandler);
+            }
+        },
+
+        startTimer() {
+            this.stopTimer();
+            this.timer = setInterval(() => {
+                if (!document.hidden && this.activeTab === 'perangkat' && this.isLive) {
+                    this.fetchData(true);
+                }
+            }, this.pollInterval);
+        },
+
+        stopTimer() {
+            if (this.timer) {
+                clearInterval(this.timer);
+                this.timer = null;
+            }
+        },
+
+        toggleLive() {
+            this.isLive = !this.isLive;
+            if (this.isLive) {
+                this.fetchData(true);
+                this.startTimer();
+            } else {
+                this.stopTimer();
+            }
+        },
+
+        changeInterval(ms) {
+            this.pollInterval = ms;
+            if (this.isLive) {
+                this.startTimer();
+            }
+        },
+
+        async fetchData(silent = false) {
+            if (this.fetching) return;
+            this.fetching = true;
+            if (!silent) this.errorMessage = null;
+
+            try {
+                const res = await fetch(`/teknik/pelanggan/${encodeURIComponent(this.nomorInternet)}/live-traffic`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    this.onu = data;
+                    this.lastUpdated = data.timestamp || new Date().toLocaleTimeString('id-ID');
+
+                    const pt = data.point || {
+                        time: new Date().toLocaleTimeString('id-ID', { hour12: false }),
+                        rx: parseFloat(data.current_rx) || 0,
+                        tx: parseFloat(data.current_tx) || 0
+                    };
+
+                    this.historyPoints.push(pt);
+                    if (this.historyPoints.length > this.maxHistory) {
+                        this.historyPoints.shift();
+                    }
+                } else {
+                    this.errorMessage = data.message || 'Gagal mengambil telemetry live traffic.';
+                }
+            } catch (err) {
+                console.error('Fetch live ONU traffic error:', err);
+                if (!silent) {
+                    this.errorMessage = 'Koneksi ke OLT terputus atau timeout.';
+                }
+            } finally {
+                this.loading = false;
+                this.fetching = false;
+            }
+        }
+    };
 }
 </script>
 @endsection

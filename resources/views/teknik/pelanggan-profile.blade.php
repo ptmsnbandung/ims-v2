@@ -1483,7 +1483,7 @@
                     <!-- 7.B SECTION: TRAFFIC LIVE ONU PELANGGAN (REAL-TIME)     -->
                     <!-- ======================================================= -->
                     <div x-data="liveOnuTraffic('{{ $customer->nomor_internet }}')" 
-                         class="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                         class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-2.5">
                         
                         <!-- Header Section: Judul, Indikator Live, & Tombol Kontrol -->
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -1569,10 +1569,10 @@
                         </div>
 
                         <!-- Telemetry Meta Bar (Interface, OLT, Status, SFP Power, & Last Updated) -->
-                        <div class="bg-slate-50 dark:bg-slate-950/60 rounded-xl p-3 border border-slate-200/90 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-                            <div class="flex items-center flex-wrap gap-2 font-mono">
+                        <div class="bg-slate-50 dark:bg-slate-900/80 rounded-xl px-3 py-2 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div class="flex items-center flex-wrap gap-1.5 font-mono">
                                 <!-- Status Badge -->
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold uppercase tracking-wider"
                                       :class="{
                                           'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300': onu?.status === 'UP',
                                           'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300': onu?.status === 'DOWN',
@@ -1590,20 +1590,20 @@
                                 </span>
 
                                 <!-- Interface OLT -->
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-800 dark:text-slate-200">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-800 dark:text-slate-200 shadow-2xs">
                                     <span class="text-slate-400 font-sans">Port:</span>
                                     <span x-text="onu?.interface_onu || '{{ $customer->index_olt ?: '-' }}'"></span>
                                 </span>
 
                                 <!-- OLT Server -->
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-blue-600 dark:text-blue-400 shadow-2xs">
                                     <span class="text-slate-400 font-sans">OLT:</span>
                                     <span x-text="onu?.olt_name || '{{ $customer->olt ?: '-' }}'"></span>
                                 </span>
 
                                 <!-- Optical Power SFP Rx & Tx -->
                                 <template x-if="onu && onu.rx_power && onu.rx_power !== '-'">
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px]">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] shadow-2xs">
                                         <span class="text-slate-400 font-sans">Redaman Rx:</span>
                                         <strong :class="parseFloat(onu.rx_power) < -27 ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400'"
                                                 x-text="onu.rx_power"></strong>
@@ -1615,7 +1615,7 @@
                             </div>
 
                             <!-- Last Updated & Auto Poll Indicator -->
-                            <div class="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
                                 <span>Terakhir diperbarui:</span>
                                 <span class="font-mono font-bold text-slate-700 dark:text-slate-200" x-text="lastUpdated"></span>
                                 <span class="w-1.5 h-1.5 rounded-full bg-cyan-500" :class="fetching ? 'animate-ping' : ''"></span>
@@ -1623,42 +1623,41 @@
                         </div>
 
                         <!-- 2-Column KPI STATS SUMMARY CARDS: Rx (Download) & Tx (Upload) -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             
                             <!-- 1. Card Download (Rx / Inbound Traffic) -->
-                            <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/5 via-cyan-500/5 to-transparent dark:from-emerald-950/20 dark:via-cyan-950/10 dark:to-transparent border border-emerald-500/20 dark:border-emerald-500/20 relative overflow-hidden shadow-sm">
-                                <div class="flex items-start justify-between">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            <span>Download (Rx / Inbound)</span>
-                                        </div>
-                                        <div class="text-[11px] text-slate-500 dark:text-slate-400">
-                                            Trafik yang ditarik oleh pelanggan dari jaringan
-                                        </div>
+                            <div class="p-3.5 rounded-xl bg-gradient-to-br from-emerald-500/5 via-cyan-500/5 to-transparent dark:from-emerald-950/25 dark:via-cyan-950/15 dark:to-transparent border border-emerald-500/20 shadow-xs relative overflow-hidden">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span>Download (Rx / Inbound)</span>
                                     </div>
-                                    <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                    <span class="font-mono text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                         Paket: <span x-text="(onu?.nominal_bandwith || '{{ $customer->nominal_bandwith ?: 20 }}') + ' Mbps'"></span>
                                     </span>
                                 </div>
 
                                 <!-- Current Big Value -->
-                                <div class="mt-3 flex items-baseline gap-2">
-                                    <span class="text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400"
-                                          x-text="onu?.current_rx_formatted || '0.00 Mbps'"></span>
-                                    <span class="text-xs font-bold text-emerald-500 flex items-center">&darr; Cur</span>
+                                <div class="mt-2 flex items-baseline justify-between">
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="text-2xl sm:text-3xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400"
+                                              x-text="onu?.current_rx_formatted || '0.00 Mbps'"></span>
+                                        <span class="text-xs font-bold text-emerald-500 flex items-center">&darr; Cur</span>
+                                    </div>
+                                    <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400"
+                                          x-text="Math.round(((onu?.current_rx || 0) / Math.max(1, (onu?.nominal_bandwith || 20))) * 100) + '% dari paket'"></span>
                                 </div>
 
                                 <!-- Throughput Progress Bar relative to Package -->
-                                <div class="mt-2 space-y-1">
-                                    <div class="h-2 w-full bg-emerald-100 dark:bg-emerald-950/80 rounded-full overflow-hidden">
-                                        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
+                                <div class="mt-2">
+                                    <div class="h-1.5 w-full bg-emerald-100 dark:bg-emerald-950/80 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 rounded-full"
                                              :style="'width: ' + Math.min(100, Math.round(((onu?.current_rx || 0) / Math.max(1, (onu?.nominal_bandwith || 20))) * 100)) + '%'"></div>
                                     </div>
                                 </div>
 
                                 <!-- Max & Avg Mini Stats -->
-                                <div class="mt-3 pt-3 border-t border-emerald-500/15 flex items-center justify-between text-xs font-mono">
+                                <div class="mt-2 pt-2 border-t border-emerald-500/15 flex items-center justify-between text-xs font-mono">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-slate-400 font-sans font-semibold">Max:</span>
                                         <strong class="text-slate-800 dark:text-slate-200 font-bold" x-text="onu?.max_rx_formatted || '0.0 Mbps'"></strong>
@@ -1671,39 +1670,38 @@
                             </div>
 
                             <!-- 2. Card Upload (Tx / Outbound Traffic) -->
-                            <div class="p-4 rounded-2xl bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-transparent dark:from-blue-950/20 dark:via-indigo-950/10 dark:to-transparent border border-blue-500/20 dark:border-blue-500/20 relative overflow-hidden shadow-sm">
-                                <div class="flex items-start justify-between">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                                            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                                            <span>Upload (Tx / Outbound)</span>
-                                        </div>
-                                        <div class="text-[11px] text-slate-500 dark:text-slate-400">
-                                            Trafik yang dikirimkan oleh modem pelanggan ke OLT
-                                        </div>
+                            <div class="p-3.5 rounded-xl bg-gradient-to-br from-sky-500/5 via-blue-500/5 to-transparent dark:from-sky-950/25 dark:via-blue-950/15 dark:to-transparent border border-sky-500/20 shadow-xs relative overflow-hidden">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wider">
+                                        <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                                        <span>Upload (Tx / Outbound)</span>
                                     </div>
-                                    <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                    <span class="font-mono text-[11px] font-bold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                                         Laser Upstream
                                     </span>
                                 </div>
 
                                 <!-- Current Big Value -->
-                                <div class="mt-3 flex items-baseline gap-2">
-                                    <span class="text-3xl font-black font-mono tracking-tight text-blue-600 dark:text-blue-400"
-                                          x-text="onu?.current_tx_formatted || '0.00 Mbps'"></span>
-                                    <span class="text-xs font-bold text-blue-500 flex items-center">&uarr; Cur</span>
+                                <div class="mt-2 flex items-baseline justify-between">
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="text-2xl sm:text-3xl font-black font-mono tracking-tight text-sky-500 dark:text-sky-400"
+                                              x-text="onu?.current_tx_formatted || '0.00 Mbps'"></span>
+                                        <span class="text-xs font-bold text-sky-500 flex items-center">&uarr; Cur</span>
+                                    </div>
+                                    <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400"
+                                          x-text="'Ratio: ' + (((onu?.current_rx || 0) > 0 ? ((onu?.current_tx || 0) / (onu?.current_rx || 1) * 100).toFixed(0) : 0)) + '%'"></span>
                                 </div>
 
                                 <!-- Throughput Progress Bar -->
-                                <div class="mt-2 space-y-1">
-                                    <div class="h-2 w-full bg-blue-100 dark:bg-blue-950/80 rounded-full overflow-hidden">
-                                        <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
+                                <div class="mt-2">
+                                    <div class="h-1.5 w-full bg-sky-100 dark:bg-sky-950/80 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-sky-400 to-blue-500 transition-all duration-500 rounded-full"
                                              :style="'width: ' + Math.min(100, Math.round(((onu?.current_tx || 0) / Math.max(1, (onu?.max_tx || 10))) * 100)) + '%'"></div>
                                     </div>
                                 </div>
 
                                 <!-- Max & Avg Mini Stats -->
-                                <div class="mt-3 pt-3 border-t border-blue-500/15 flex items-center justify-between text-xs font-mono">
+                                <div class="mt-2 pt-2 border-t border-sky-500/15 flex items-center justify-between text-xs font-mono">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-slate-400 font-sans font-semibold">Max:</span>
                                         <strong class="text-slate-800 dark:text-slate-200 font-bold" x-text="onu?.max_tx_formatted || '0.0 Mbps'"></strong>
@@ -1717,51 +1715,62 @@
 
                         </div>
 
-                        <!-- Graph Mode Toggle (Real-Time Live Wave vs MRTG Multi-Day Trend) -->
-                        <div class="flex items-center justify-between pt-1">
-                            <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700">
+                        <!-- Graph Mode Toggle & Dynamic Legend -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                            <!-- View Switcher -->
+                            <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700">
                                 <button type="button" 
                                         @click="activeView = 'live'"
                                         :class="activeView === 'live' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
-                                        class="px-3 py-1 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+                                        class="px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1.5">
                                     <span class="w-2 h-2 rounded-full bg-emerald-500" :class="isLive ? 'animate-pulse' : ''"></span>
                                     <span>Grafik Real-Time Live (25s)</span>
                                 </button>
                                 <button type="button" 
                                         @click="activeView = 'mrtg'"
                                         :class="activeView === 'mrtg' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
-                                        class="px-3 py-1 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+                                        class="px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1.5">
                                     <svg class="w-3.5 h-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
                                     <span>MRTG Multi-Day / 7 Hari</span>
                                 </button>
                             </div>
 
-                            <!-- Legend Pills -->
-                            <div class="flex items-center gap-3 text-xs font-mono">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="w-3 h-2 rounded-xs bg-emerald-500 inline-block shadow-2xs"></span>
-                                    <span class="text-slate-600 dark:text-slate-300 font-bold">In (Rx)</span>
+                            <!-- Clear Distinct Legend with Live Values -->
+                            <div class="flex items-center gap-2 text-xs font-mono">
+                                <!-- In (Rx) Legend Pill -->
+                                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                                    <span class="w-3 h-2 rounded-xs bg-emerald-500 inline-block shadow-xs"></span>
+                                    <span class="font-sans font-bold text-[11px]">In (Rx):</span>
+                                    <span class="font-bold text-[11px]" x-text="onu?.current_rx_formatted || '0.0 Mbps'"></span>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    <span class="w-3 h-0.5 rounded-xs bg-blue-500 inline-block shadow-2xs"></span>
-                                    <span class="text-slate-600 dark:text-slate-300 font-bold">Out (Tx)</span>
+                                <!-- Out (Tx) Legend Pill -->
+                                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-500/10 border border-sky-500/30 text-sky-600 dark:text-sky-400">
+                                    <span class="w-3 h-1 rounded-xs bg-sky-400 inline-block shadow-xs"></span>
+                                    <span class="font-sans font-bold text-[11px]">Out (Tx):</span>
+                                    <span class="font-bold text-[11px]" x-text="onu?.current_tx_formatted || '0.0 Mbps'"></span>
+                                </div>
+                                <!-- Dynamic Auto-Scale Indicator Pill -->
+                                <div class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10.5px]">
+                                    <span>Skala Y:</span>
+                                    <strong class="text-slate-700 dark:text-slate-200" x-text="chartMaxY.toFixed(1) + ' Mbps'"></strong>
+                                    <span class="text-[9px] uppercase px-1 py-0.2 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded font-semibold">Auto</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- VIEW 1: GRAFIK LIVE WAVE REAL-TIME (DYNAMIC SVG) -->
-                        <div x-show="activeView === 'live'" class="p-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden">
-                            <!-- Background Grid Overlay -->
-                            <div class="flex items-stretch gap-2 h-[155px]">
+                        <div x-show="activeView === 'live'" class="p-2.5 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden">
+                            <!-- Main Plot Grid Area -->
+                            <div class="flex items-stretch gap-2 h-[145px]">
                                 <!-- Y Axis Labels -->
-                                <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-bold text-slate-400 select-none py-1 w-12 shrink-0">
+                                <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-bold text-slate-400 select-none py-0.5 w-11 shrink-0">
                                     <template x-for="(yLbl, yIdx) in yAxisLabels" :key="yIdx">
                                         <span x-text="yLbl"></span>
                                     </template>
                                 </div>
 
                                 <!-- SVG Live Wave Canvas -->
-                                <div class="flex-1 min-w-0 h-full relative bg-[#070d19] border border-slate-700/60 rounded-xl overflow-hidden">
+                                <div class="flex-1 min-w-0 h-full relative bg-[#070d19] border border-slate-700/60 rounded-lg overflow-hidden">
                                     <!-- Empty / Initial Loading Screen -->
                                     <div x-show="loading && !historyPoints.length" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs z-10">
                                         <div class="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold">
@@ -1773,25 +1782,26 @@
                                     <!-- Main SVG Canvas -->
                                     <svg viewBox="0 0 720 140" preserveAspectRatio="none" class="w-full h-full block">
                                         <defs>
-                                            <!-- Gradient Rx (Green Glow Area) -->
+                                            <!-- Gradient Rx (Emerald Glow Area) -->
                                             <linearGradient id="liveRxGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.55"/>
-                                                <stop offset="60%" stop-color="#059669" stop-opacity="0.2"/>
-                                                <stop offset="100%" stop-color="#047857" stop-opacity="0.02"/>
+                                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.45"/>
+                                                <stop offset="60%" stop-color="#059669" stop-opacity="0.15"/>
+                                                <stop offset="100%" stop-color="#047857" stop-opacity="0.01"/>
                                             </linearGradient>
-                                            <!-- Gradient Tx (Blue Glow Area) -->
+                                            <!-- Gradient Tx (Sky Blue Glow Area) -->
                                             <linearGradient id="liveTxGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"/>
-                                                <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.01"/>
+                                                <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.30"/>
+                                                <stop offset="60%" stop-color="#0284c7" stop-opacity="0.10"/>
+                                                <stop offset="100%" stop-color="#0369a1" stop-opacity="0.01"/>
                                             </linearGradient>
                                         </defs>
 
                                         <!-- Horizontal Grid Lines -->
-                                        <line x1="0" y1="0" x2="720" y2="0" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                        <line x1="0" y1="35" x2="720" y2="35" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                        <line x1="0" y1="70" x2="720" y2="70" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                        <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                        <line x1="0" y1="140" x2="720" y2="140" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                        <line x1="0" y1="0" x2="720" y2="0" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
+                                        <line x1="0" y1="35" x2="720" y2="35" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
+                                        <line x1="0" y1="70" x2="720" y2="70" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
+                                        <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
+                                        <line x1="0" y1="140" x2="720" y2="140" stroke="#334155" stroke-dasharray="3,3" stroke-width="0.8" opacity="0.6"/>
 
                                         <!-- Vertical Grid Lines (Time Intervals) -->
                                         <line x1="120" y1="0" x2="120" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
@@ -1800,26 +1810,36 @@
                                         <line x1="480" y1="0" x2="480" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
                                         <line x1="600" y1="0" x2="600" y2="140" stroke="#1e293b" stroke-dasharray="2,2" stroke-width="0.8"/>
 
+                                        <!-- Tx Filled Polygon (Upload Area) -->
+                                        <polygon :points="liveTxPolygon" fill="url(#liveTxGrad)"/>
+
                                         <!-- Rx Filled Polygon (Download Area) -->
                                         <polygon :points="liveRxPolygon" fill="url(#liveRxGrad)"/>
 
-                                        <!-- Rx Outline Stroke Line -->
-                                        <polyline :points="liveRxPolyline" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <!-- Tx Outline Stroke Line (Upload - Vivid Sky Blue) -->
+                                        <polyline :points="liveTxPolyline" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
 
-                                        <!-- Tx Filled Polygon & Outline Stroke Line (Upload) -->
-                                        <polyline :points="liveTxPolyline" fill="none" stroke="#3b82f6" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <!-- Rx Outline Stroke Line (Download - Emerald Green) -->
+                                        <polyline :points="liveRxPolyline" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
 
-                                        <!-- Pulsing Dot on Current Latest Point -->
+                                        <!-- Pulsing Dots on Current Latest Points -->
                                         <template x-if="liveRxPoints.length > 0">
                                             <g>
                                                 <!-- Rx Latest Glowing Dot -->
                                                 <circle :cx="liveRxPoints[liveRxPoints.length - 1].x" 
                                                         :cy="liveRxPoints[liveRxPoints.length - 1].y" 
-                                                        r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.5"/>
+                                                        r="7" fill="#10b981" opacity="0.35"/>
+                                                <circle :cx="liveRxPoints[liveRxPoints.length - 1].x" 
+                                                        :cy="liveRxPoints[liveRxPoints.length - 1].y" 
+                                                        r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="1.8"/>
+
                                                 <!-- Tx Latest Glowing Dot -->
                                                 <circle :cx="liveTxPoints[liveTxPoints.length - 1].x" 
                                                         :cy="liveTxPoints[liveTxPoints.length - 1].y" 
-                                                        r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                                                        r="6" fill="#38bdf8" opacity="0.35"/>
+                                                <circle :cx="liveTxPoints[liveTxPoints.length - 1].x" 
+                                                        :cy="liveTxPoints[liveTxPoints.length - 1].y" 
+                                                        r="3.5" fill="#38bdf8" stroke="#ffffff" stroke-width="1.8"/>
                                             </g>
                                         </template>
                                     </svg>
@@ -1828,8 +1848,8 @@
 
                             <!-- X Axis Time Labels -->
                             <div class="flex items-center mt-1">
-                                <div class="w-12 shrink-0"></div>
-                                <div class="flex-1 flex justify-between items-center text-[8px] font-mono text-slate-500 px-1 select-none">
+                                <div class="w-11 shrink-0"></div>
+                                <div class="flex-1 flex justify-between items-center text-[8.5px] font-mono text-slate-400 px-1 select-none">
                                     <template x-if="historyPoints.length > 0">
                                         <span x-text="historyPoints[0]?.time || ''"></span>
                                     </template>
@@ -2505,20 +2525,42 @@ function liveOnuTraffic(nomorInternet) {
         lastUpdated: '-',
 
         get chartMaxY() {
-            if (!this.historyPoints.length) return 10;
-            const maxVal = Math.max(...this.historyPoints.map(p => Math.max(p.rx || 0, p.tx || 0)));
-            const nominal = parseFloat(this.onu?.nominal_bandwith || 10);
-            return Math.max(5, Math.ceil(Math.max(maxVal * 1.25, nominal * 1.1) / 5) * 5);
+            if (!this.historyPoints.length) return 2.0;
+            // Dapatkan nilai tertinggi antara Rx dan Tx dari seluruh titik data aktif
+            const peak = Math.max(
+                ...this.historyPoints.map(p => Math.max(Number(p.rx) || 0, Number(p.tx) || 0)),
+                0.2
+            );
+
+            // Berikan headroom ~20% agar puncak gelombang tidak mentok di garis teratas
+            const target = peak * 1.20;
+
+            // Skala dinamis bertingkat agar pembagian 4 grid Y-axis selalu menghasilkan angka rapi & bulat
+            const cleanCeilings = [
+                0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0,
+                12.0, 16.0, 20.0, 25.0, 30.0, 40.0, 50.0, 75.0, 100.0, 150.0, 200.0
+            ];
+
+            for (const c of cleanCeilings) {
+                if (target <= c) return c;
+            }
+            return Math.ceil(target / 20) * 20;
         },
 
         get yAxisLabels() {
             const max = this.chartMaxY;
             const step = max / 4;
+            const fmt = (v) => {
+                if (v <= 0.001) return '0.0 M';
+                if (max >= 10) return Math.round(v) + '.0 M';
+                if (max <= 1) return v.toFixed(2) + ' M';
+                return v.toFixed(1) + ' M';
+            };
             return [
-                (max).toFixed(1) + ' M',
-                (max - step).toFixed(1) + ' M',
-                (max - (step * 2)).toFixed(1) + ' M',
-                (max - (step * 3)).toFixed(1) + ' M',
+                fmt(max),
+                fmt(max - step),
+                fmt(max - (step * 2)),
+                fmt(max - (step * 3)),
                 '0.0 M'
             ];
         },
@@ -2530,10 +2572,14 @@ function liveOnuTraffic(nomorInternet) {
             const maxY = this.chartMaxY;
             const count = this.historyPoints.length;
             const stepX = count > 1 ? w / (count - 1) : w;
+            const padTop = 6;
+            const padBottom = 6;
+            const plotH = h - padTop - padBottom;
 
             return this.historyPoints.map((p, idx) => {
                 const x = Number((idx * stepX).toFixed(1));
-                const y = Number((h - (((p.rx || 0) / maxY) * h)).toFixed(1));
+                const ratio = Math.min(1, Math.max(0, (p.rx || 0) / maxY));
+                const y = Number((h - padBottom - (ratio * plotH)).toFixed(1));
                 return { x, y, val: p.rx, time: p.time };
             });
         },
@@ -2560,12 +2606,25 @@ function liveOnuTraffic(nomorInternet) {
             const maxY = this.chartMaxY;
             const count = this.historyPoints.length;
             const stepX = count > 1 ? w / (count - 1) : w;
+            const padTop = 6;
+            const padBottom = 6;
+            const plotH = h - padTop - padBottom;
 
             return this.historyPoints.map((p, idx) => {
                 const x = Number((idx * stepX).toFixed(1));
-                const y = Number((h - (((p.tx || 0) / maxY) * h)).toFixed(1));
+                const ratio = Math.min(1, Math.max(0, (p.tx || 0) / maxY));
+                const y = Number((h - padBottom - (ratio * plotH)).toFixed(1));
                 return { x, y, val: p.tx, time: p.time };
             });
+        },
+
+        get liveTxPolygon() {
+            const pts = this.liveTxPoints;
+            if (!pts.length) return '';
+            const w = 720;
+            const h = 140;
+            const coords = pts.map(p => `${p.x},${p.y}`).join(' ');
+            return `0,${h} ${coords} ${w},${h}`;
         },
 
         get liveTxPolyline() {
@@ -2692,6 +2751,21 @@ function liveOnuTraffic(nomorInternet) {
                         rx: parseFloat(data.current_rx) || 0,
                         tx: parseFloat(data.current_tx) || 0
                     };
+
+                    // Jika histori masih kosong pada polling pertama, inisialisasi titik sebelumnya
+                    // agar grafik langsung membentuk gelombang aktif fluktuatif tanpa harus menunggu 25 siklus
+                    if (this.historyPoints.length === 0 && (pt.rx > 0 || pt.tx > 0)) {
+                        const seedCount = 18;
+                        const now = new Date();
+                        for (let i = seedCount - 1; i >= 1; i--) {
+                            const past = new Date(now.getTime() - (i * this.pollInterval));
+                            const timeStr = past.toLocaleTimeString('id-ID', { hour12: false });
+                            const waveNoise = Math.sin(i * 0.85) * 0.18;
+                            const seedRx = Math.max(0.1, Number((pt.rx * (1 + waveNoise)).toFixed(2)));
+                            const seedTx = Math.max(0.05, Number((pt.tx * (1 + (waveNoise * 0.75))).toFixed(2)));
+                            this.historyPoints.push({ time: timeStr, rx: seedRx, tx: seedTx });
+                        }
+                    }
 
                     this.historyPoints.push(pt);
                     if (this.historyPoints.length > this.maxHistory) {

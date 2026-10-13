@@ -428,10 +428,16 @@
                                         <span class="text-slate-300 dark:text-slate-700">&middot;</span>
                                         <h4 class="font-bold text-slate-900 dark:text-white text-xs truncate" x-text="onu.nama_pelanggan"></h4>
                                     </div>
-                                    <div class="flex items-center gap-1 text-[9.5px] text-slate-500 mt-0.5">
+                                    <div class="flex items-center flex-wrap gap-1 text-[9.5px] text-slate-500 mt-0.5">
                                         <span class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="'ID: ' + onu.nomor_internet"></span>
                                         <span>&middot;</span>
                                         <span class="font-mono truncate" x-text="onu.interface_onu"></span>
+                                        <template x-if="onu.odp_name && onu.odp_name !== '-'">
+                                            <span class="inline-flex items-center gap-1">
+                                                <span>&middot;</span>
+                                                <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="'ODP: ' + onu.odp_name"></span>
+                                            </span>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -687,10 +693,16 @@
                             <!-- Nama ONU & Pelanggan -->
                             <td class="py-2.5 px-3">
                                 <div class="font-bold text-slate-900 dark:text-white" x-text="onu.nama_pelanggan"></div>
-                                <div class="flex items-center gap-1.5 text-[10.5px]">
+                                <div class="flex items-center flex-wrap gap-1.5 text-[10.5px]">
                                     <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400" x-text="onu.onu_name"></span>
                                     <span class="text-slate-400">&middot;</span>
                                     <span class="font-mono text-blue-600 dark:text-blue-400" x-text="onu.nomor_internet"></span>
+                                    <template x-if="onu.odp_name && onu.odp_name !== '-'">
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="text-slate-400">&middot;</span>
+                                            <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="'ODP: ' + onu.odp_name"></span>
+                                        </span>
+                                    </template>
                                 </div>
                             </td>
 

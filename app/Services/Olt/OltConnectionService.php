@@ -112,18 +112,18 @@ class OltConnectionService
         // 2. Query aggregate real users & capacity from database for this OLT
         $registeredUsers = 0;
         try {
-            $registeredUsers = DB::table('trx_batchjob_register')
-                ->where('olt', $kodeOlt)
-                ->whereNotNull('index_olt')
-                ->where('index_olt', '!=', '')
-                ->whereNotIn('status_reg', ['23', '23.1', '15'])
-                ->count();
+            $gomsnOltId = $this->resolveGomsnOltId($olt);
+            if ($gomsnOltId && Schema::hasTable("gomsn.users{$gomsnOltId}")) {
+                $registeredUsers = DB::table("gomsn.users{$gomsnOltId}")->count();
+            }
 
             if ($registeredUsers === 0) {
-                $cleanId = preg_replace('/\D/', '', $kodeOlt);
-                if (!empty($cleanId) && Schema::hasTable("gomsn.users{$cleanId}")) {
-                    $registeredUsers = DB::table("gomsn.users{$cleanId}")->count();
-                }
+                $registeredUsers = DB::table('trx_batchjob_register')
+                    ->where('olt', $kodeOlt)
+                    ->whereNotNull('index_olt')
+                    ->where('index_olt', '!=', '')
+                    ->whereNotIn('status_reg', ['23', '23.1', '15'])
+                    ->count();
             }
         } catch (\Throwable $e) {
             $registeredUsers = 0;
@@ -761,16 +761,123 @@ class OltConnectionService
     }
 
     /**
+     * Resolve numeric OLT ID for gomsn tables (1 for MSN, 2 for Bagong, 3 for Soreang)
+     */
+    public function resolveGomsnOltId(object|string $olt): ?int
+    {
+        $code = is_object($olt) ? ($olt->kode_olt ?? '') : (string)$olt;
+        $name = is_object($olt) ? strtolower($olt->name_olt ?? ($olt->nama_olt ?? '')) : strtolower((string)$olt);
+
+        // 1. Direct digit matching in code (e.g. "O1" -> 1, "O2" -> 2, "O3" -> 3, "1" -> 1)
+        $cleanId = preg_replace('/\D/', '', $code);
+        if (!empty($cleanId) && is_numeric($cleanId)) {
+            $intId = (int)$cleanId;
+            if (Schema::hasTable("gomsn.pon{$intId}")) {
+                return $intId;
+            }
+        }
+
+        // 2. Name matching
+        if (str_contains($name, 'kayu agung') || str_contains($name, 'msn')) {
+            return 1;
+        }
+        if (str_contains($name, 'babakan tarogong') || str_contains($name, 'bagong')) {
+            return 2;
+        }
+        if (str_contains($name, 'bbu') || str_contains($name, 'soreang')) {
+            return 3;
+        }
+
+        // 3. Fallback: Check if gomsn.olt has matching record
+        try {
+            if (Schema::hasTable('gomsn.olt')) {
+                $matched = DB::table('gomsn.olt')
+                    ->where('nama_olt', 'like', "%{$code}%")
+                    ->orWhere('nama_olt', 'like', "%{$name}%")
+                    ->first();
+                if ($matched) {
+                    return (int)$matched->olt_id;
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        return 1;
+    }
+
+    /**
      * Ambil data telemetry & grafik MRTG untuk masing-masing Port PON pada OLT
      */
     public function getOltPonPortsTelemetry(object $olt, ?string $startDate = null, ?string $endDate = null): array
     {
         $kodeOlt = $olt->kode_olt ?? 'OLT01';
+        $gomsnOltId = $this->resolveGomsnOltId($olt);
 
-        // Ambil semua pelanggan real OLT ini
+        // 1. Sinkronisasi Penuh dengan Master Database GOMSN (Sama Persis seperti di OLT Explorer)
+        if ($gomsnOltId && Schema::hasTable("gomsn.pon{$gomsnOltId}") && Schema::hasTable("gomsn.odp{$gomsnOltId}") && Schema::hasTable("gomsn.users{$gomsnOltId}")) {
+            $pons = DB::table("gomsn.pon{$gomsnOltId}")->orderBy('id', 'asc')->get();
+            $odps = DB::table("gomsn.odp{$gomsnOltId}")->get();
+            $users = DB::table("gomsn.users{$gomsnOltId}")->get();
+
+            $usersByOdp = $users->groupBy('odp_id');
+            $odpsByPon = $odps->groupBy('pon_id');
+
+            $portsData = [];
+            foreach ($pons as $idx => $p) {
+                $ponOdps = $odpsByPon->get($p->id, collect());
+                $ponOdpCount = $ponOdps->count();
+                $ponUserCount = 0;
+                foreach ($ponOdps as $odp) {
+                    $ponUserCount += $usersByOdp->get($odp->id, collect())->count();
+                }
+
+                $portIndex = $idx + 1;
+                if (preg_match('/pon\s*(\d+)/i', $p->nama_pon, $m)) {
+                    $portIndex = (int)$m[1];
+                }
+
+                $maxPort = (int)($p->port_max ?? 8);
+                if ($maxPort <= 0) $maxPort = 8;
+
+                if ($ponUserCount > 0) {
+                    $downMbps = round(max(1.8, ($ponUserCount * 1.45) + ((abs(crc32($kodeOlt . '_d_' . $portIndex)) % 100) / 20)), 1);
+                    $upMbps = round(max(0.6, ($downMbps * 0.38) + ((abs(crc32($kodeOlt . '_u_' . $portIndex)) % 50) / 25)), 1);
+                    $laserTx = '+' . number_format(4.10 + (($portIndex % 5) * 0.08), 2) . ' dBm';
+                    $laserRx = '-' . number_format(19.20 + (($portIndex % 7) * 0.25), 2) . ' dBm';
+                } else {
+                    $downMbps = 0.0;
+                    $upMbps = 0.0;
+                    $laserTx = '+4.10 dBm';
+                    $laserRx = '-40.00 dBm';
+                }
+
+                $mrtgSeries = $this->generateMrtgSeries("{$kodeOlt}_pon_{$portIndex}", $downMbps, $upMbps, $startDate, $endDate);
+
+                $portsData[] = [
+                    'port_index' => $portIndex,
+                    'pon_id' => $p->id,
+                    'port_name' => $p->nama_pon,
+                    'interface_name' => "gpon-olt_1/1/{$portIndex}",
+                    'status' => $ponUserCount > 0 ? 'online' : 'idle',
+                    'user_count' => $ponUserCount,
+                    'odp_count' => $ponOdpCount,
+                    'port_max' => $maxPort,
+                    'max_capacity' => 64,
+                    'utilization_pct' => min(100, round(($ponUserCount / 64) * 100)),
+                    'tx_power' => $laserTx,
+                    'rx_power' => $laserRx,
+                    'download_mbps' => $downMbps,
+                    'download_formatted' => $downMbps . ' Mbps',
+                    'upload_mbps' => $upMbps,
+                    'upload_formatted' => $upMbps . ' Mbps',
+                    'mrtg' => $mrtgSeries,
+                ];
+            }
+
+            return $portsData;
+        }
+
+        // 2. Fallback jika tabel gomsn belum tersedia: Ambil dari view_batchjob & trx_batchjob_register
         $customers = $this->getOltCustomerBaseQuery($olt)->get();
-
-        // Cari nomor port tertinggi dari pelanggan OLT ini (minimal 8 port standar GPON)
         $maxPort = 8;
         if (!empty($olt->capacity_olt) && is_numeric($olt->capacity_olt) && (int)$olt->capacity_olt > $maxPort) {
             $maxPort = (int)$olt->capacity_olt;
@@ -787,7 +894,6 @@ class OltConnectionService
         }
 
         $portUsers = array_fill(1, $maxPort, 0);
-
         foreach ($customers as $c) {
             $idx = trim((string)$c->index_olt);
             $matchedPort = null;
@@ -812,7 +918,6 @@ class OltConnectionService
         for ($p = 1; $p <= $maxPort; $p++) {
             $userCount = $portUsers[$p];
 
-            // Simulasi bandwidth proporsional terhadap user count real
             if ($userCount > 0) {
                 $downMbps = round(max(1.8, ($userCount * 0.85) + ((abs(crc32($kodeOlt . '_d_' . $p)) % 100) / 20)), 1);
                 $upMbps = round(max(0.6, ($downMbps * 0.38) + ((abs(crc32($kodeOlt . '_u_' . $p)) % 50) / 25)), 1);
@@ -829,10 +934,13 @@ class OltConnectionService
 
             $portsData[] = [
                 'port_index' => $p,
+                'pon_id' => $p,
                 'port_name' => "PON {$p}",
                 'interface_name' => "gpon-olt_1/1/{$p}",
                 'status' => $userCount > 0 ? 'online' : 'idle',
                 'user_count' => $userCount,
+                'odp_count' => min(8, max(1, (int)ceil($userCount / 8))),
+                'port_max' => 8,
                 'max_capacity' => 64,
                 'utilization_pct' => min(100, round(($userCount / 64) * 100)),
                 'tx_power' => $laserTx,
@@ -853,7 +961,238 @@ class OltConnectionService
      */
     public function getPonOnuList(object $olt, int $ponIndex): array
     {
-        // Deteksi port maksimum yang tersedia pada OLT ini (minimal 8 port)
+        $kodeOlt = $olt->kode_olt ?? 'OLT01';
+        $gomsnOltId = $this->resolveGomsnOltId($olt);
+
+        // 1. Sinkronisasi Penuh dengan Master Database GOMSN (Sama Persis seperti di OLT Explorer)
+        if ($gomsnOltId && Schema::hasTable("gomsn.pon{$gomsnOltId}") && Schema::hasTable("gomsn.odp{$gomsnOltId}") && Schema::hasTable("gomsn.users{$gomsnOltId}")) {
+            $allPons = DB::table("gomsn.pon{$gomsnOltId}")->orderBy('id', 'asc')->get();
+
+            // Cari PON yang sesuai:
+            // 1. Coba cocokkan id langsung
+            // 2. Coba cocokkan nomor PON dari nama_pon (misal pon 4)
+            // 3. Coba urutan indeks
+            $targetPon = $allPons->first(fn($p) => (int)$p->id === $ponIndex);
+            if (!$targetPon) {
+                $targetPon = $allPons->first(function($p) use ($ponIndex) {
+                    if (preg_match('/pon\s*(\d+)/i', $p->nama_pon, $m)) {
+                        return (int)$m[1] === $ponIndex;
+                    }
+                    return false;
+                });
+            }
+            if (!$targetPon && isset($allPons[$ponIndex - 1])) {
+                $targetPon = $allPons[$ponIndex - 1];
+            }
+            if (!$targetPon) {
+                $targetPon = $allPons->first();
+            }
+
+            $portName = $targetPon ? $targetPon->nama_pon : "PON {$ponIndex}";
+            $portNum = $ponIndex;
+            if ($targetPon && preg_match('/pon\s*(\d+)/i', $targetPon->nama_pon, $m)) {
+                $portNum = (int)$m[1];
+            }
+
+            // Ambil semua ODP pada PON ini
+            $odps = $targetPon ? DB::table("gomsn.odp{$gomsnOltId}")->where('pon_id', $targetPon->id)->get() : collect();
+            $odpMap = $odps->keyBy('id');
+            $odpIds = $odps->pluck('id')->toArray();
+
+            // Ambil semua user pada ODP-ODP tersebut
+            $rawUsers = !empty($odpIds) 
+                ? DB::table("gomsn.users{$gomsnOltId}")->whereIn('odp_id', $odpIds)->orderBy('id', 'asc')->get() 
+                : collect();
+
+            // Enrich dengan data billing bandwidth dan data pelanggan
+            $nomorInternets = $rawUsers->pluck('nomor_internet')->filter()->unique()->toArray();
+            $billingsMap = [];
+            if (!empty($nomorInternets)) {
+                try {
+                    $billingsMap = DB::table('trx_billing_layanan')
+                        ->select('nomor_internet', 'nominal_bandwith')
+                        ->whereIn('nomor_internet', $nomorInternets)
+                        ->where('tahun_tagihan', '>=', date('Y') - 1)
+                        ->orderBy('tahun_tagihan', 'desc')
+                        ->orderBy('bulan_tagihan', 'desc')
+                        ->get()
+                        ->unique('nomor_internet')
+                        ->pluck('nominal_bandwith', 'nomor_internet')
+                        ->toArray();
+                } catch (\Throwable $e) {}
+            }
+
+            $userNames = $rawUsers->pluck('nama_user')->filter()->unique()->toArray();
+            $pelanggansMap = [];
+            if (!empty($userNames)) {
+                try {
+                    $pelanggansMap = DB::table('m_pelanggan')
+                        ->select('nama_penduduk', 'alamat_ktp', 'nomor_hp', 'nomor_hp_2')
+                        ->whereIn('nama_penduduk', $userNames)
+                        ->get()
+                        ->keyBy(fn($p) => strtoupper(trim($p->nama_penduduk)))
+                        ->map(fn($p) => [
+                            'alamat' => !empty($p->alamat_ktp) ? strtoupper(trim($p->alamat_ktp)) : '-',
+                            'hp' => $p->nomor_hp ?: ($p->nomor_hp_2 ?: '-')
+                        ])
+                        ->toArray();
+                } catch (\Throwable $e) {}
+            }
+
+            $onus = [];
+            $slotNum = 1;
+            $totalRx = 0;
+            $totalTx = 0;
+            $sumRxPower = 0;
+
+            foreach ($rawUsers as $u) {
+                $custNo = $u->nomor_internet ?? ('1000' . $slotNum);
+                $hash = abs(crc32($custNo));
+                $speedVal = (float)($billingsMap[$u->nomor_internet] ?? 20);
+                if ($speedVal <= 0) $speedVal = 20;
+
+                $pel = $pelanggansMap[strtoupper(trim($u->nama_user))] ?? null;
+                $address = $pel['alamat'] ?? 'Bandung, Jawa Barat';
+                $phone = $pel['hp'] ?? '-';
+                $odpName = isset($odpMap[$u->odp_id]) ? $odpMap[$u->odp_id]->nama_odp : 'ODP';
+
+                // Serial Number
+                $sn = trim((string)($u->keterangan ?? ''));
+                if (empty($sn) || strlen($sn) < 6 || str_contains($sn, ' ')) {
+                    $vendorPrefix = (!empty($olt->brand) && str_contains(strtolower($olt->brand), 'huawei')) ? 'HWTC' : 'ZTEG';
+                    $hexPart = strtoupper(substr(md5($custNo . 'onu_sn_real'), 0, 8));
+                    $sn = $vendorPrefix . $hexPart;
+                }
+
+                // Status koneksi UP / DOWN / LOS
+                $isOnline = true;
+                $isLos = false;
+                $isSuspend = false;
+                $statusText = 'UP';
+
+                if (($hash % 25) === 0) {
+                    $statusText = 'LOS';
+                    $isLos = true;
+                    $isOnline = false;
+                    $rxPower = -34.50 - (($hash % 15) / 10);
+                    $txPower = 0.00;
+                    $redamanStatus = 'kritis';
+                    $rxPowerDisplay = 'No Signal (LOS)';
+                    $uptimeText = 'LOS (Loss of Signal)';
+                } elseif (($hash % 18) === 0) {
+                    $statusText = 'DOWN';
+                    $isOnline = false;
+                    $rxPower = -40.00;
+                    $txPower = 0.00;
+                    $redamanStatus = 'kritis';
+                    $rxPowerDisplay = 'Power Off';
+                    $uptimeText = 'Down (Power Off)';
+                } else {
+                    $statusText = 'UP';
+                    $isOnline = true;
+                    $rxPowerBase = -19.50 - (($hash % 60) / 10);
+                    if (($hash % 15) === 0) {
+                        $rxPowerBase = -27.20 - (($hash % 30) / 10);
+                    }
+                    $rxPower = round($rxPowerBase, 2);
+                    $txPower = round(2.10 + (($hash % 10) / 10), 2);
+
+                    $redamanStatus = 'optimal';
+                    if ($rxPower < -26.5) {
+                        $redamanStatus = 'kritis';
+                    } elseif ($rxPower < -24.0) {
+                        $redamanStatus = 'normal';
+                    }
+                    $rxPowerDisplay = $rxPower . ' dBm';
+                    $uptimeText = floor($hash % 25 + 1) . 'd ' . floor($hash % 24) . 'h ' . floor($hash % 60) . 'm';
+                }
+
+                $downRate = $isOnline ? round(max(0.6, $speedVal * (0.25 + (($hash % 65) / 100))), 1) : 0.0;
+                $upRate = $isOnline ? round(max(0.2, $downRate * (0.28 + (($hash % 25) / 100))), 1) : 0.0;
+
+                if ($isOnline) {
+                    $totalRx += $downRate;
+                    $totalTx += $upRate;
+                }
+                $sumRxPower += $rxPower;
+
+                $onus[] = [
+                    'onu_id' => $slotNum,
+                    'interface_onu' => "gpon-onu_1/1/{$portNum}:{$slotNum}",
+                    'nomor_internet' => $custNo,
+                    'nama_pelanggan' => $u->nama_user ?: 'Pelanggan FTTH',
+                    'odp_name' => $odpName,
+                    'sn' => $sn,
+                    'status' => $statusText,
+                    'status_raw' => $isOnline ? 'Online' : ($isLos ? 'LOS' : 'Offline'),
+                    'is_online' => $isOnline,
+                    'is_los' => $isLos,
+                    'is_suspend' => $isSuspend,
+                    'rx_power' => $rxPowerDisplay,
+                    'tx_power' => ($txPower > 0 ? ('+' . $txPower . ' dBm') : '0.00 dBm'),
+                    'rx_power_num' => $rxPower,
+                    'redaman_status' => $redamanStatus,
+                    'download_mbps' => $downRate,
+                    'download_formatted' => $downRate . ' Mbps',
+                    'upload_mbps' => $upRate,
+                    'upload_formatted' => $upRate . ' Mbps',
+                    'package_name' => 'Home Fiber ' . (int)$speedVal . 'M',
+                    'nominal_bandwith' => $speedVal,
+                    'down_pct' => min(100, round(($downRate / max(1, $speedVal)) * 100)),
+                    'onu_name' => "ONU {$slotNum}",
+                    'display_name' => "ONU-{$slotNum} - " . ($u->nama_user ?: 'Pelanggan'),
+                    'address' => $address,
+                    'phone' => $phone,
+                    'pop_name' => $olt->nama_pop ?? 'POP MSN',
+                    'uptime' => $uptimeText,
+                    'mrtg' => $this->generateMrtgSeries("onu_{$portNum}_{$slotNum}_{$custNo}", $downRate, $upRate),
+                ];
+
+                $slotNum++;
+            }
+
+            $totalCount = count($onus);
+            $upCount = count(array_filter($onus, fn($o) => $o['status'] === 'UP'));
+            $downCount = count(array_filter($onus, fn($o) => $o['status'] === 'DOWN'));
+            $losCount = count(array_filter($onus, fn($o) => $o['status'] === 'LOS'));
+            $suspendCount = 0;
+            $offlineCount = $downCount + $losCount;
+            $avgRxPower = $totalCount > 0 ? round($sumRxPower / $totalCount, 2) : -20.5;
+
+            $avgRxPerOnu = $upCount > 0 ? round($totalRx / $upCount, 2) : 0.0;
+            $avgTxPerOnu = $upCount > 0 ? round($totalTx / $upCount, 2) : 0.0;
+
+            foreach ($onus as &$o) {
+                $o['traffic_share_pct'] = ($totalRx > 0 && $o['download_mbps'] > 0) 
+                    ? round(($o['download_mbps'] / $totalRx) * 100, 1) 
+                    : 0.0;
+            }
+            unset($o);
+
+            return [
+                'port_index' => $portNum,
+                'port_name' => $portName,
+                'interface_name' => "gpon-olt_1/1/{$portNum}",
+                'max_port' => $allPons->count(),
+                'total_onus' => $totalCount,
+                'online_onus' => $upCount,
+                'up_onus' => $upCount,
+                'down_onus' => $downCount,
+                'los_onus' => $losCount,
+                'suspend_onus' => $suspendCount,
+                'offline_onus' => $offlineCount,
+                'avg_rx_power' => $avgRxPower . ' dBm',
+                'total_download_mbps' => round($totalRx, 1),
+                'total_upload_mbps' => round($totalTx, 1),
+                'avg_rx_per_onu' => $avgRxPerOnu,
+                'avg_tx_per_onu' => $avgTxPerOnu,
+                'avg_rx_formatted' => $avgRxPerOnu . ' Mbps',
+                'avg_tx_formatted' => $avgTxPerOnu . ' Mbps',
+                'onus' => $onus,
+            ];
+        }
+
+        // 2. Fallback jika bukan gomsn (tabel batchjob lama)
         $maxPort = 8;
         if (!empty($olt->capacity_olt) && is_numeric($olt->capacity_olt) && (int)$olt->capacity_olt > $maxPort) {
             $maxPort = (int)$olt->capacity_olt;
@@ -927,7 +1266,6 @@ class OltConnectionService
                 $uptimeText = 'Terisolir (Suspend)';
             } elseif ($cust->status_reg == '20') {
                 if (($hash % 22) === 0) {
-                    // Sinyal optik hilang / kabel FO putus -> LOS (Loss of Signal)
                     $statusText = 'LOS';
                     $isLos = true;
                     $rxPower = -34.50 - (($hash % 15) / 10);
@@ -936,7 +1274,6 @@ class OltConnectionService
                     $rxPowerDisplay = 'No Signal (LOS)';
                     $uptimeText = 'LOS (Loss of Signal)';
                 } elseif (($hash % 16) === 0) {
-                    // Modem mati / adaptor padam -> DOWN
                     $statusText = 'DOWN';
                     $rxPower = -40.00;
                     $txPower = 0.00;
@@ -944,7 +1281,6 @@ class OltConnectionService
                     $rxPowerDisplay = 'Power Off';
                     $uptimeText = 'Down (Power Off)';
                 } else {
-                    // Koneksi aktif -> UP
                     $statusText = 'UP';
                     $isOnline = true;
                     $rxPowerBase = -19.50 - (($hash % 60) / 10);
@@ -990,6 +1326,7 @@ class OltConnectionService
                 'interface_onu' => "gpon-onu_1/1/{$ponIndex}:{$onuSlot}",
                 'nomor_internet' => $custNo,
                 'nama_pelanggan' => $cust->nama_pelanggan ?: 'Pelanggan FTTH',
+                'odp_name' => '-',
                 'sn' => $sn,
                 'status' => $statusText,
                 'status_raw' => $isOnline ? 'Online' : ($isLos ? 'LOS' : 'Offline'),
@@ -1027,11 +1364,9 @@ class OltConnectionService
         $offlineCount = $downCount + $losCount;
         $avgRxPower = $totalCount > 0 ? round($sumRxPower / $totalCount, 2) : -20.5;
 
-        // Hitung rata-rata penggunaan traffic per ONU
         $avgRxPerOnu = $upCount > 0 ? round($totalRx / $upCount, 2) : 0.0;
         $avgTxPerOnu = $upCount > 0 ? round($totalTx / $upCount, 2) : 0.0;
 
-        // Tambahkan porsi penggunaan traffic per ONU terhadap total port
         foreach ($onus as &$o) {
             $o['traffic_share_pct'] = ($totalRx > 0 && $o['download_mbps'] > 0) 
                 ? round(($o['download_mbps'] / $totalRx) * 100, 1) 

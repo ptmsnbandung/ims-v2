@@ -159,6 +159,11 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                         <span x-text="port.user_count + ' ONU Terhubung'"></span>
                                     </span>
+                                    <template x-if="port.odp_count !== undefined">
+                                        <span class="inline-flex items-center gap-1 font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200/80 dark:border-amber-800/80 text-[10px]">
+                                            <span x-text="port.odp_count + '/' + (port.port_max || 8) + ' ODP'"></span>
+                                        </span>
+                                    </template>
                                     <span>&middot;</span>
                                     <span class="text-slate-600 dark:text-slate-300">
                                         Slot: <span x-text="port.user_count"></span>/<span x-text="port.max_capacity"></span> (<span x-text="port.utilization_pct"></span>%)

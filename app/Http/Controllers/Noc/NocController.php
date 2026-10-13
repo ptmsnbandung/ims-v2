@@ -693,6 +693,15 @@ class NocController extends Controller
             $olt->snmp_version = $olt->snmp_version ?? 'v2c';
             $olt->snmp_community = $olt->snmp_community ?? 'public';
 
+            // Sinkronkan kapasitas port PON dengan master topologi gomsn
+            $gomsnOltId = $oltService->resolveGomsnOltId($olt);
+            if ($gomsnOltId && Schema::hasTable("gomsn.pon{$gomsnOltId}")) {
+                $gPonCount = DB::table("gomsn.pon{$gomsnOltId}")->count();
+                if ($gPonCount > 0) {
+                    $olt->capacity_olt = $gPonCount;
+                }
+            }
+
             if (!isset($olt->nama_pop) || empty($olt->nama_pop)) {
                 if (!empty($olt->kode_pop) && isset($popByKodePop[$olt->kode_pop])) {
                     $olt->nama_pop = $popByKodePop[$olt->kode_pop]->nama_pop;
@@ -706,7 +715,7 @@ class NocController extends Controller
 
         // Hitung total OLT & total PON Port & Registered PON
         $totalOlt = DB::table('m_olt')->count();
-        $totalPonPort = DB::table('m_olt')->sum('capacity_olt') ?: 0;
+        $totalPonPort = $olts->sum('capacity_olt') ?: 0;
         if ($totalPonPort == 0 && $totalOlt > 0) {
             $totalPonPort = $totalOlt * 8; // fallback default 8 port/olt
         }
@@ -732,7 +741,12 @@ class NocController extends Controller
 
         $registeredPonCounts = [];
         foreach ($olts as $olt) {
-            $registeredPonCounts[$olt->kode_olt] = (int)($registeredCountsRaw[$olt->kode_olt] ?? 0);
+            $gomsnOltId = $oltService->resolveGomsnOltId($olt);
+            if ($gomsnOltId && Schema::hasTable("gomsn.users{$gomsnOltId}")) {
+                $registeredPonCounts[$olt->kode_olt] = (int)DB::table("gomsn.users{$gomsnOltId}")->count();
+            } else {
+                $registeredPonCounts[$olt->kode_olt] = (int)($registeredCountsRaw[$olt->kode_olt] ?? 0);
+            }
         }
 
         $gpons = Schema::hasTable('m_gpon') ? DB::table('m_gpon')->get() : collect();
@@ -824,6 +838,9 @@ class NocController extends Controller
         $this->ensureOltTableColumns();
 
         $olt = DB::table('m_olt')->where('kode_olt', $kode_olt)->first();
+        if (!$olt && is_numeric($kode_olt)) {
+            $olt = DB::table('m_olt')->where('kode_olt', 'O' . $kode_olt)->first();
+        }
         if (!$olt) {
             abort(404, "Data OLT {$kode_olt} tidak ditemukan.");
         }
@@ -859,6 +876,9 @@ class NocController extends Controller
         $this->ensureOltTableColumns();
 
         $olt = DB::table('m_olt')->where('kode_olt', $kode_olt)->first();
+        if (!$olt && is_numeric($kode_olt)) {
+            $olt = DB::table('m_olt')->where('kode_olt', 'O' . $kode_olt)->first();
+        }
         if (!$olt) {
             abort(404, "Data OLT {$kode_olt} tidak ditemukan.");
         }

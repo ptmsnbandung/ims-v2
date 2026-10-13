@@ -3243,20 +3243,29 @@ class NocController extends Controller
         // Ambil data instalasi (batasi 100 terbaru)
         $rawRecords = $query->orderBy('trx_batchjob_register.date_create', 'desc')->limit(100)->get();
 
-        // 3. Scan hardware OLT ZTE C320 real-time
+        // 3. Status Hardware OLT ZTE C320 (Optimasi: Gunakan Cache agar navigasi halaman instan <100ms)
         $defaultOlt = DB::table('m_olt')->first();
         $uncfgData = [];
         $hwPons = [];
+        $isForceRefresh = $request->boolean('refresh') || $request->query('sync') === '1';
 
         if ($defaultOlt) {
-            // Ambil unconfigured ONUs dari hardware OLT
-            try {
-                $uncfgRes = $oltService->scanUnconfiguredOnu($defaultOlt);
-                $uncfgData = $uncfgRes['data'] ?? [];
-            } catch (\Throwable $e) {}
+            $kodeOlt = $defaultOlt->kode_olt ?? 'O1';
+            $uncfgCacheKey = "olt_live_uncfg_onus_{$kodeOlt}";
 
-            // Pre-scan port PON yang muncul pada instalasi
-            $portsNeeded = [];
+            // Scan unconfigured ONU dari OLT
+            if ($isForceRefresh) {
+                try {
+                    $uncfgRes = $oltService->scanUnconfiguredOnu($defaultOlt, true);
+                    $uncfgData = $uncfgRes['data'] ?? [];
+                } catch (\Throwable $e) {}
+            } elseif (Cache::has($uncfgCacheKey)) {
+                $uncfgRes = Cache::get($uncfgCacheKey);
+                $uncfgData = $uncfgRes['data'] ?? [];
+            }
+
+            // Kumpulkan port PON yang relevan dengan instalasi
+            $portsNeeded = [4 => true, 5 => true];
             foreach ($rawRecords as $r) {
                 $idx = trim($r->index_olt ?? '');
                 if (preg_match('/(?:1\/[12]\/(\d+):|(\d+):)(\d+)/', $idx, $m)) {
@@ -3267,14 +3276,15 @@ class NocController extends Controller
                 }
             }
 
-            // Selalu sertakan port aktif PON 4 dan 5 jika belum ada
-            $portsNeeded[4] = true;
-            $portsNeeded[5] = true;
-
             foreach (array_keys($portsNeeded) as $pNum) {
-                try {
-                    $hwPons[$pNum] = $oltService->fetchRealOltPhysicalOnus($defaultOlt, $pNum);
-                } catch (\Throwable $e) {}
+                $hwCacheKey = "olt_live_hw_pon_physical_onus_{$kodeOlt}_{$pNum}";
+                if ($isForceRefresh) {
+                    try {
+                        $hwPons[$pNum] = $oltService->fetchRealOltPhysicalOnus($defaultOlt, $pNum, true);
+                    } catch (\Throwable $e) {}
+                } elseif (Cache::has($hwCacheKey)) {
+                    $hwPons[$pNum] = Cache::get($hwCacheKey);
+                }
             }
         }
 

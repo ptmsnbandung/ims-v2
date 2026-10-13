@@ -55,67 +55,71 @@
     <!-- =================================================================== -->
     <!-- 2. TOP HERO HEADER BANNER (HIGH-CONTRAST COMMAND CENTER DARK SLATE) -->
     <!-- =================================================================== -->
-    <div class="relative overflow-hidden rounded-xl p-4 shadow-md border border-slate-700/80 bg-slate-900 text-white">
+    <div class="ims-banner relative overflow-hidden rounded-xl p-3.5 sm:p-4 shadow-sm border border-teal-500/20 text-white"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        <!-- Glow Decorative Elements -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="pointer-events-none absolute left-1/3 -top-12 w-48 h-48 bg-teal-400/10 rounded-full blur-xl"></div>
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 relative z-10">
             <!-- Info Kiri: OLT & Port Identitas -->
             <div class="flex items-start sm:items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm border border-blue-400/30">
+                <div class="w-11 h-11 rounded-xl bg-blue-500/20 border border-blue-400/30 text-cyan-300 flex items-center justify-center shrink-0 shadow-inner">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                     </svg>
                 </div>
                 <div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-blue-600 text-white shadow-2xs">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-white text-slate-800 shadow-2xs tracking-wide">
                             {{ $olt->kode_olt }}
                         </span>
-                        <span class="px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-indigo-600 text-white shadow-2xs">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#04333e]/90 text-cyan-300 border border-teal-400/30 shadow-2xs">
                             {{ $onuData['interface_name'] ?? ('gpon-olt_1/1/' . $ponIndex) }}
                         </span>
-                        <h2 class="text-sm sm:text-base font-bold text-white tracking-tight">
+                        <h2 class="text-sm sm:text-base font-bold text-white tracking-tight" style="color: #FFFFFF !important;">
                             Monitoring Daftar ONU: {{ $onuData['port_name'] ?? ('PON ' . $ponIndex) }}
                         </h2>
                     </div>
-                    <p class="text-[11.5px] text-slate-200 mt-1">
-                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; Host: <span class="font-mono text-cyan-300 font-bold">{{ $olt->ip_address ?? '103.161.206.214' }}</span> &middot; POP: <span class="text-white font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
+                    <p class="text-[11.5px] text-[#c6edf3] mt-0.5 leading-relaxed" style="color: #c6edf3 !important;">
+                        {{ $olt->name_olt ?? 'OLT Server' }} &middot; Host: <span class="font-mono text-cyan-200 font-bold">{{ $olt->ip_address ?? '103.161.206.214' }}</span> &middot; POP: <span class="text-white font-semibold">{{ $olt->nama_pop ?? 'POP MSN' }}</span>
                     </p>
 
                     <!-- Status Bar & Live Clock (Semua Kontras Jelas) -->
                     <div class="flex flex-wrap items-center gap-2 mt-2 text-[10.5px] font-bold">
                         <!-- Live Clock Badge -->
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-500/50 shadow-2xs font-mono">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#04333e]/85 text-emerald-300 border border-teal-400/30 shadow-2xs font-mono">
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                             <span>Live: <span class="text-white font-bold" x-text="currentTime">--:--:--</span> WIB</span>
                         </div>
                         <!-- Live Hardware Physical PON Discovery Badge -->
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-teal-950 text-teal-200 border border-teal-500/50 shadow-2xs font-mono">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#04333e]/85 text-teal-200 border border-teal-400/30 shadow-2xs font-mono">
                             <span class="w-2 h-2 rounded-full bg-teal-400"></span>
                             <span>Fisik Port PON OLT (Direct Hardware ZTE C320)</span>
                         </div>
                         <!-- Auto-Refresh & Real Sync Status Badge -->
                         <button @click="refreshRealData()" 
                                 :disabled="isFetching"
-                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950 text-emerald-200 border border-emerald-500/50 shadow-2xs font-semibold hover:bg-emerald-900 transition cursor-pointer"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#04333e]/85 text-cyan-200 border border-cyan-400/30 shadow-2xs font-semibold hover:bg-[#064757] transition cursor-pointer"
                                 title="Klik untuk refresh data ONU langsung dari hardware ZTE C320 sekarang">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400" :class="isFetching ? 'animate-spin' : (isPageActive ? 'animate-pulse' : '')"></span>
+                            <span class="w-2 h-2 rounded-full bg-cyan-400" :class="isFetching ? 'animate-spin' : (isPageActive ? 'animate-pulse' : '')"></span>
                             <span x-text="isFetching ? 'Membaca OLT Fisik...' : ('Sync OLT: ' + lastSynced)"></span>
                         </button>
                         <!-- Total Terhubung Badge -->
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-slate-100 border border-slate-600 shadow-2xs font-mono">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#04333e]/85 text-white border border-teal-400/30 shadow-2xs font-mono">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
                             <span x-text="stats.total + ' ONU Terhubung'"></span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Switcher Port PON Lain di OLT ini -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start lg:self-center">
-                <label class="text-[11px] font-semibold text-slate-300">Pilih Port PON:</label>
-                <div class="flex items-center gap-1 bg-slate-800/90 p-1.5 rounded-lg border border-slate-700 shadow-inner">
+            <!-- Switcher Port PON Lain di OLT ini (Glassmorphism Capsule) -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 self-start lg:self-center">
+                <span class="text-[11px] font-semibold text-teal-100/90 whitespace-nowrap">Pilih Port PON:</span>
+                <div class="flex items-center gap-1 bg-black/25 backdrop-blur-md p-1.5 rounded-xl border border-white/15 shadow-inner">
                     @for($p = 1; $p <= ($onuData['max_port'] ?? 8); $p++)
                         <a href="{{ route('noc.olt.pon.onu-list', ['kode_olt' => $olt->kode_olt, 'pon_index' => $p]) }}"
-                           class="px-2.5 py-1 rounded-md text-[11px] font-mono font-bold transition {{ $p == $ponIndex ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white hover:bg-slate-700' }}">
+                           class="px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition {{ $p == $ponIndex ? 'bg-cyan-500 text-white shadow-sm ring-1 ring-white/30' : 'text-teal-100/80 hover:text-white hover:bg-white/15' }}">
                             P{{ $p }}
                         </a>
                     @endfor

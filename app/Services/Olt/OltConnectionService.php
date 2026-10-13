@@ -383,8 +383,15 @@ class OltConnectionService
     /**
      * Scan Unconfigured (Unregistered / New) ONUs from OLT
      */
-    public function scanUnconfiguredOnu(object $olt): array
+    public function scanUnconfiguredOnu(object $olt, bool $force = false): array
     {
+        $kodeOlt = $olt->kode_olt ?? 'O1';
+        $cacheKey = "olt_live_uncfg_onus_{$kodeOlt}";
+
+        if (!$force && Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
         $ip = $olt->ip_address ?? null;
         $port = $olt->port ?? 23;
         $username = $olt->username ?? null;
@@ -407,13 +414,18 @@ class OltConnectionService
 
             $uncfgList = $this->parseUnconfiguredOnu($brand, $cliOutput);
 
-            return [
+            $result = [
                 'success' => true,
                 'message' => 'Scan ONU baru selesai.',
                 'total_found' => count($uncfgList),
                 'data' => $uncfgList,
                 'raw' => $cliOutput,
             ];
+
+            // Cache 60 detik untuk mempercepat navigasi dan meringankan OLT
+            Cache::put($cacheKey, $result, 60);
+
+            return $result;
         } catch (Exception $e) {
             return [
                 'success' => false,
@@ -925,12 +937,16 @@ class OltConnectionService
      * - show interface (Counter Agregat Byte Real)
      * Cache 30 detik untuk respon instan tanpa membebani perangkat OLT.
      */
-    public function fetchRealOltPhysicalOnus(object $olt, int $portIndex): ?array
+    public function fetchRealOltPhysicalOnus(object $olt, int $portIndex, bool $force = false): ?array
     {
         $kodeOlt = $olt->kode_olt ?? 'O1';
         $cacheKey = "olt_live_hw_pon_physical_onus_{$kodeOlt}_{$portIndex}";
 
-        return Cache::remember($cacheKey, 30, function () use ($olt, $kodeOlt, $portIndex) {
+        if ($force) {
+            Cache::forget($cacheKey);
+        }
+
+        return Cache::remember($cacheKey, 60, function () use ($olt, $kodeOlt, $portIndex) {
             $ip = !empty($olt->ip_address) ? $olt->ip_address : env('OLT_HOST', '103.161.206.214');
             $port = !empty($olt->telnet_port) ? (int)$olt->telnet_port : (!empty($olt->port) && (int)$olt->port !== 23 ? (int)$olt->port : (int)env('OLT_PORT', 45523));
             $user = !empty($olt->telnet_user) ? $olt->telnet_user : (!empty($olt->username) ? $olt->username : env('OLT_USER', 'aplikasi'));

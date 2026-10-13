@@ -48,32 +48,36 @@
     <!-- =================================================================== -->
     <!-- 2. HERO COMMAND CENTER BANNER (HIGH-CONTRAST DARK SLATE)            -->
     <!-- =================================================================== -->
-    <div class="relative overflow-hidden rounded-xl p-4 shadow-md border border-slate-700/80 bg-slate-900 text-white">
+    <div class="ims-banner relative overflow-hidden rounded-xl p-3.5 sm:p-4 shadow-sm border border-teal-500/20 text-white"
+         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
+        <!-- Glow Decorative Elements -->
+        <div class="pointer-events-none absolute -right-10 -bottom-10 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+        <div class="pointer-events-none absolute left-1/3 -top-12 w-48 h-48 bg-teal-400/10 rounded-full blur-xl"></div>
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 relative z-10">
             <!-- Info Kiri: Title & Deskripsi -->
             <div class="flex items-start sm:items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm border border-blue-400/30">
+                <div class="w-11 h-11 rounded-xl bg-blue-500/20 border border-blue-400/30 text-cyan-300 flex items-center justify-center shrink-0 shadow-inner">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z" />
                     </svg>
                 </div>
                 <div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-blue-600 text-white shadow-2xs">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-white text-slate-800 shadow-2xs tracking-wide">
                             NOC LIVE MONITOR
                         </span>
-                        <h2 class="text-sm sm:text-base font-bold text-white tracking-tight">
+                        <h2 class="text-sm sm:text-base font-bold text-white tracking-tight" style="color: #FFFFFF !important;">
                             Monitoring Instalasi ONU Baru
                         </h2>
                     </div>
-                    <p class="text-[11.5px] text-slate-300 mt-1">
+                    <p class="text-[11.5px] text-[#c6edf3] mt-0.5 leading-relaxed" style="color: #c6edf3 !important;">
                         Pelacakan real-time progres pemasangan modem ONU teknisi di lapangan & validasi handshake sinyal optik hardware OLT ZTE C320.
                     </p>
 
-                    <!-- Status Badges -->
+                    <!-- Status Badges Bar -->
                     <div class="flex flex-wrap items-center gap-2 mt-2 text-[10.5px] font-bold">
                         <!-- Live Clock Badge -->
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-500/50 shadow-2xs font-mono">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#04333e]/85 text-emerald-300 border border-teal-400/30 shadow-2xs font-mono">
                             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                             <span>Live: <span class="text-white font-bold" x-text="currentTime">--:--:--</span> WIB</span>
                         </div>
@@ -81,7 +85,7 @@
                         <!-- Auto-Refresh Button & Sync State -->
                         <button @click="refreshData(true)" 
                                 :disabled="isFetching"
-                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-950 text-blue-200 border border-blue-500/50 shadow-2xs font-semibold hover:bg-blue-900 transition cursor-pointer"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#04333e]/85 text-cyan-200 border border-cyan-400/30 shadow-2xs font-semibold hover:bg-[#064757] transition cursor-pointer"
                                 title="Klik untuk sinkronisasi paksa pembacaan hardware OLT sekarang">
                             <svg class="w-3 h-3 text-cyan-400" :class="isFetching ? 'animate-spin' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -89,22 +93,22 @@
                             <span x-text="isFetching ? 'Membaca Hardware OLT...' : ('Sync Live: ' + lastSynced)"></span>
                         </button>
 
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700 shadow-2xs font-mono text-[10px]">
-                            <span>Auto-Poll: 15s</span>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#04333e]/85 text-teal-200 border border-teal-400/30 shadow-2xs font-mono text-[10px]">
+                            <span>Auto-Poll: 45s</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Info Kanan: Quick Summary KPI -->
-            <div class="flex items-center gap-2 self-start lg:self-center">
-                <div class="px-3.5 py-2 rounded-xl bg-slate-800/80 border border-slate-700/80 text-right">
-                    <span class="text-[10px] text-slate-400 block font-medium">Tingkat Keberhasilan UP</span>
-                    <span class="text-base sm:text-lg font-mono font-bold text-emerald-400" x-text="stats.up_percentage + '%'"></span>
+            <!-- Info Kanan: Quick Summary KPI (Glassmorphism Cards) -->
+            <div class="flex items-center gap-2.5 self-start lg:self-center">
+                <div class="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-right shadow-sm">
+                    <span class="text-[10px] text-teal-100/90 block font-medium">Tingkat Keberhasilan UP</span>
+                    <span class="text-base sm:text-lg font-mono font-black text-emerald-300" x-text="stats.up_percentage + '%'"></span>
                 </div>
-                <div class="px-3.5 py-2 rounded-xl bg-slate-800/80 border border-slate-700/80 text-right">
-                    <span class="text-[10px] text-slate-400 block font-medium">Rata-rata Rx Power</span>
-                    <span class="text-base sm:text-lg font-mono font-bold text-cyan-400" x-text="stats.avg_rx_power"></span>
+                <div class="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 text-right shadow-sm">
+                    <span class="text-[10px] text-teal-100/90 block font-medium">Rata-rata Rx Power</span>
+                    <span class="text-base sm:text-lg font-mono font-black text-cyan-200" x-text="stats.avg_rx_power"></span>
                 </div>
             </div>
         </div>
@@ -624,12 +628,12 @@ function monitoringInstalasiManager(initialItems, initialStats, selectedTanggal,
                 this.updateClock();
             }, 1000);
 
-            // 2. Background Auto-refresh setiap 15 detik (menyesuaikan aktivitas teknisi lapangan)
+            // 2. Background Auto-refresh setiap 45 detik (ramah beban worker & sinkron dengan cache)
             this.pollTimer = setInterval(() => {
                 if (this.isPageActive && !this.isFetching) {
                     this.refreshData(false);
                 }
-            }, 15000);
+            }, 45000);
 
             // 3. Page Visibility Listener (Pause polling saat tab tidak dibuka)
             this.visibilityHandler = () => {

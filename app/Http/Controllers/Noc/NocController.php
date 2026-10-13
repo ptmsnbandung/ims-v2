@@ -833,7 +833,7 @@ class NocController extends Controller
     /**
      * Detail Traffic per Port PON (Setiap port memiliki grafik traffic sendiri)
      */
-    public function oltPonTraffic(Request $request, string $kode_olt, OltConnectionService $oltService): View
+    public function oltPonTraffic(Request $request, string $kode_olt, OltConnectionService $oltService): View|JsonResponse
     {
         $this->ensureOltTableColumns();
 
@@ -856,6 +856,16 @@ class NocController extends Controller
         $endDate = $request->query('end_date');
 
         $ponTelemetry = $oltService->getOltPonPortsTelemetry($olt, $startDate, $endDate);
+
+        if ($request->expectsJson() || $request->query('format') === 'json') {
+            return response()->json([
+                'success' => true,
+                'ponTelemetry' => $ponTelemetry,
+                'oltTelemetry' => $oltService->getOltRealTelemetry($olt, $startDate, $endDate),
+                'updated_at' => now()->format('H:i:s') . ' WIB',
+            ]);
+        }
+
         $allOlts = DB::table('m_olt')->orderBy('kode_olt')->get();
 
         return view('noc.olt-pon-traffic', [
@@ -871,7 +881,7 @@ class NocController extends Controller
     /**
      * Menampilkan Daftar ONU (Optical Network Unit) yang terhubung ke Port PON tertentu
      */
-    public function oltPonOnuList(Request $request, string $kode_olt, int $pon_index, OltConnectionService $oltService): View
+    public function oltPonOnuList(Request $request, string $kode_olt, int $pon_index, OltConnectionService $oltService): View|JsonResponse
     {
         $this->ensureOltTableColumns();
 
@@ -891,6 +901,15 @@ class NocController extends Controller
         }
 
         $onuData = $oltService->getPonOnuList($olt, $pon_index);
+
+        if ($request->expectsJson() || $request->query('format') === 'json') {
+            return response()->json([
+                'success' => true,
+                'onuData' => $onuData,
+                'updated_at' => now()->format('H:i:s') . ' WIB',
+            ]);
+        }
+
         $allOlts = DB::table('m_olt')->orderBy('kode_olt')->get();
 
         return view('noc.olt-pon-onu-list', [

@@ -48,10 +48,13 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
                             <span>Fisik Port PON OLT (Direct Hardware ZTE C320)</span>
                         </div>
-                        <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-400" :class="isPageActive ? 'animate-ping' : ''"></span>
-                            <span x-text="isPageActive ? 'Auto-Refresh 1s Aktif' : 'Paused (Tab Tidak Aktif)'"></span>
-                        </div>
+                        <button @click="fetchFreshTraffic()" 
+                                :disabled="isFetching"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition cursor-pointer shadow-xs"
+                                title="Klik untuk membaca counter byte terbaru dari OLT sekarang">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" :class="isFetching ? 'animate-ping' : (isPageActive ? 'animate-pulse' : '')"></span>
+                            <span x-text="isFetching ? 'Membaca Hardware OLT...' : ('Sync Counter: ' + lastSynced)"></span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -333,7 +336,10 @@ function ponLiveManager(initialPorts) {
     return {
         ports: initialPorts || [],
         currentTime: '',
+        lastSynced: '{{ now()->format("H:i:s") }} WIB',
+        isFetching: false,
         timer: null,
+        pollTimer: null,
         isPageActive: true,
         visibilityHandler: null,
         unloadHandler: null,
@@ -351,6 +357,7 @@ function ponLiveManager(initialPorts) {
                     this.isPageActive = true;
                     this.updateClock();
                     this.startLiveEngine();
+                    this.fetchFreshTraffic();
                 }
             };
             document.addEventListener('visibilitychange', this.visibilityHandler);
@@ -376,19 +383,31 @@ function ponLiveManager(initialPorts) {
 
         startLiveEngine() {
             if (this.timer) return;
+            // Running clock 1 detik
             this.timer = setInterval(() => {
-                // Hanya dieksekusi jika tab/halaman browser sedang aktif dilihat
                 if (!document.hidden && this.isPageActive) {
                     this.updateClock();
-                    this.tickTraffic();
                 }
             }, 1000);
+
+            // Polling hardware ZTE C320 real setiap 30 detik (sesuai cache TTL)
+            if (!this.pollTimer) {
+                this.pollTimer = setInterval(() => {
+                    if (!document.hidden && this.isPageActive) {
+                        this.fetchFreshTraffic();
+                    }
+                }, 30000);
+            }
         },
 
         stopLiveEngine() {
             if (this.timer) {
                 clearInterval(this.timer);
                 this.timer = null;
+            }
+            if (this.pollTimer) {
+                clearInterval(this.pollTimer);
+                this.pollTimer = null;
             }
         },
 
@@ -398,28 +417,22 @@ function ponLiveManager(initialPorts) {
             this.currentTime = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
         },
 
-        tickTraffic() {
-            // Update live metrics traffic setiap detik secara mulus dan natural
-            this.ports.forEach((port) => {
-                const baseDown = parseFloat(port.download_mbps) || 4.0;
-                const baseUp = parseFloat(port.upload_mbps) || 1.5;
-
-                // Variasi natural ±1% s/d 3%
-                const deltaDown = (Math.random() * 0.3 - 0.15);
-                const deltaUp = (Math.random() * 0.15 - 0.07);
-
-                const newDown = Math.max(0.4, +(baseDown + deltaDown).toFixed(1));
-                const newUp = Math.max(0.2, +(baseUp + deltaUp).toFixed(1));
-
-                port.download_mbps = newDown;
-                port.download_formatted = `${newDown} Mbps`;
-                port.upload_mbps = newUp;
-                port.upload_formatted = `${newUp} Mbps`;
-
-                if (port.mrtg) {
-                    port.mrtg.current_in = `${newDown} M`;
-                    port.mrtg.current_out = `${newUp} M`;
+        fetchFreshTraffic() {
+            if (this.isFetching) return;
+            this.isFetching = true;
+            fetch(window.location.pathname + '?format=json', {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success && Array.isArray(data.ponTelemetry)) {
+                    this.ports = data.ponTelemetry;
+                    this.lastSynced = data.updated_at || (new Date().toLocaleTimeString() + ' WIB');
                 }
+            })
+            .catch(err => console.debug('Polling OLT real traffic notice:', err))
+            .finally(() => {
+                this.isFetching = false;
             });
         }
     };

@@ -92,11 +92,14 @@
                             <span class="w-2 h-2 rounded-full bg-teal-400"></span>
                             <span>Fisik Port PON OLT (Direct Hardware ZTE C320)</span>
                         </div>
-                        <!-- Auto-Refresh Status Badge -->
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-950 text-blue-200 border border-blue-500/50 shadow-2xs font-semibold">
-                            <span class="w-2 h-2 rounded-full bg-blue-400" :class="isPageActive ? 'animate-ping' : ''"></span>
-                            <span x-text="isPageActive ? 'Auto-Refresh 1 Detik Aktif' : 'Paused (Tab Tidak Aktif)'"></span>
-                        </div>
+                        <!-- Auto-Refresh & Real Sync Status Badge -->
+                        <button @click="refreshRealData()" 
+                                :disabled="isFetching"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950 text-emerald-200 border border-emerald-500/50 shadow-2xs font-semibold hover:bg-emerald-900 transition cursor-pointer"
+                                title="Klik untuk refresh data ONU langsung dari hardware ZTE C320 sekarang">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400" :class="isFetching ? 'animate-spin' : (isPageActive ? 'animate-pulse' : '')"></span>
+                            <span x-text="isFetching ? 'Membaca OLT Fisik...' : ('Sync OLT: ' + lastSynced)"></span>
+                        </button>
                         <!-- Total Terhubung Badge -->
                         <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800 text-slate-100 border border-slate-600 shadow-2xs font-mono">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
@@ -826,6 +829,13 @@
                 </tbody>
             </table>
         </div>
+        <div class="px-3.5 py-2 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+            <span class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>* Traffic per ONU didistribusikan proporsional sesuai paket bandwidth pelanggan dari total counter byte hardware real port PON ZTE C320.</span>
+            </span>
+            <span class="font-mono text-[10.5px] text-slate-400" x-text="'Sinkronisasi hardware: ' + lastSynced"></span>
+        </div>
     </div>
 
 </div>
@@ -848,9 +858,12 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
         sortBy: 'onu_id_asc',
         viewMode: 'grid',
 
-        // Timer & Page Visibility
+        // Timer, Polling & Page Visibility
         currentTime: '',
+        lastSynced: '{{ now()->format("H:i:s") }} WIB',
+        isFetching: false,
         timer: null,
+        pollTimer: null,
         isPageActive: true,
         visibilityHandler: null,
 
@@ -875,17 +888,25 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             this.calculateStats();
             this.updateClock();
 
-            // Set running clock & live telemetry auto-refresh
+            // 1. Set running clock
             this.timer = setInterval(() => {
                 this.updateClock();
-                if (this.isPageActive) {
-                    this.simulateLiveTraffic();
-                }
             }, 1000);
+
+            // 2. Polling data real dari hardware OLT ZTE C320 setiap 30 detik (sinkron dengan cache 30s)
+            this.pollTimer = setInterval(() => {
+                if (this.isPageActive) {
+                    this.refreshRealData();
+                }
+            }, 30000);
 
             // Page Visibility API Cleanup
             this.visibilityHandler = () => {
                 this.isPageActive = !document.hidden;
+                if (this.isPageActive) {
+                    this.updateClock();
+                    this.refreshRealData();
+                }
             };
             document.addEventListener('visibilitychange', this.visibilityHandler);
         },
@@ -894,6 +915,10 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             if (this.timer) {
                 clearInterval(this.timer);
                 this.timer = null;
+            }
+            if (this.pollTimer) {
+                clearInterval(this.pollTimer);
+                this.pollTimer = null;
             }
             if (this.visibilityHandler) {
                 document.removeEventListener('visibilitychange', this.visibilityHandler);
@@ -958,60 +983,25 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             };
         },
 
-        simulateLiveTraffic() {
-            let sumRx = 0;
-            let sumTx = 0;
-
-            this.onus.forEach(onu => {
-                const info = this.getStatusInfo(onu);
-                if (info.label === 'UP') {
-                    const variance = (Math.random() - 0.48) * 0.4;
-                    const maxBw = onu.nominal_bandwith || 20;
-                    let newRx = Math.max(0.4, Math.min(maxBw, onu.download_mbps + variance));
-                    newRx = Math.round(newRx * 10) / 10;
-                    let newTx = Math.max(0.2, Math.round((newRx * 0.35 + (Math.random() * 0.2)) * 10) / 10);
-
-                    onu.download_mbps = newRx;
-                    onu.download_formatted = newRx.toFixed(1) + ' Mbps';
-                    onu.upload_mbps = newTx;
-                    onu.upload_formatted = newTx.toFixed(1) + ' Mbps';
-                    onu.down_pct = Math.min(100, Math.round((newRx / maxBw) * 100));
-
-                    // Update MRTG legend stats live
-                    if (onu.mrtg) {
-                        onu.mrtg.current_in = newRx.toFixed(1) + ' M';
-                        onu.mrtg.current_out = newTx.toFixed(1) + ' M';
-                    }
-
-                    sumRx += newRx;
-                    sumTx += newTx;
-                } else {
-                    onu.download_mbps = 0;
-                    onu.download_formatted = '0.0 Mbps';
-                    onu.upload_mbps = 0;
-                    onu.upload_formatted = '0.0 Mbps';
-                    onu.down_pct = 0;
-                    if (onu.mrtg) {
-                        onu.mrtg.current_in = '0.0 M';
-                        onu.mrtg.current_out = '0.0 M';
-                    }
+        // Polling background data ONU asli dari hardware OLT ZTE C320
+        refreshRealData() {
+            if (this.isFetching) return;
+            this.isFetching = true;
+            fetch(window.location.pathname + '?format=json', {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success && data.onuData) {
+                    this.onus = data.onuData.onus || [];
+                    this.portInfo = data.onuData || {};
+                    this.calculateStats();
+                    this.lastSynced = data.updated_at || (new Date().toLocaleTimeString() + ' WIB');
                 }
-            });
-
-            this.stats.totalRx = sumRx;
-            this.stats.totalTx = sumTx;
-
-            const activeCount = this.stats.up > 0 ? this.stats.up : 1;
-            this.stats.avgRxPerOnu = sumRx / activeCount;
-            this.stats.avgTxPerOnu = sumTx / activeCount;
-
-            // Update traffic share pct per ONU
-            this.onus.forEach(onu => {
-                if (this.getStatusInfo(onu).label === 'UP' && sumRx > 0) {
-                    onu.traffic_share_pct = Math.round((onu.download_mbps / sumRx) * 1000) / 10;
-                } else {
-                    onu.traffic_share_pct = 0;
-                }
+            })
+            .catch(err => console.debug('Polling real ONU list notice:', err))
+            .finally(() => {
+                this.isFetching = false;
             });
         },
 

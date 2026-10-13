@@ -745,8 +745,9 @@
 
                     <!-- 3. Permintaan NOC Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
-                         x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }"
+                         x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.monitoring-instalasi-onu*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Permintaan NOC', [
+                             { label: 'Monitoring Instalasi ONU', url: '{{ route('noc.monitoring-instalasi-onu') }}', active: {{ request()->routeIs('noc.monitoring-instalasi-onu*') ? 'true' : 'false' }} },
                              { label: 'Aktivasi Jaringan', url: '{{ route('noc.aktivasi') }}', active: {{ request()->routeIs('noc.aktivasi*') ? 'true' : 'false' }} },
                              { label: 'UP / Downgrade', url: '{{ route('teknik.permintaan.up-downgrade') }}', active: {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'true' : 'false' }} },
                              { label: 'Suspend', url: '{{ route('noc.suspend') }}', active: {{ request()->routeIs('noc.suspend*') ? 'true' : 'false' }} },
@@ -755,10 +756,10 @@
                          @mouseleave="closeFlyoutWithDelay()">
                         <button type="button"
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, permintaanNocOpen = true) : (permintaanNocOpen = !permintaanNocOpen)"
-                                class="w-full ims-nav-item {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'active' : '' }} justify-between"
+                                class="w-full ims-nav-item {{ request()->routeIs('noc.aktivasi*', 'noc.monitoring-instalasi-onu*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'active' : '' }} justify-between"
                                 title="Permintaan NOC">
                             <span class="flex items-center gap-3.5">
-                                <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.aktivasi*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.aktivasi*', 'noc.monitoring-instalasi-onu*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
                                 </svg>
                                 <span class="ims-nav-text">Permintaan</span>
@@ -776,6 +777,10 @@
                              x-cloak
                              x-collapse
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
+                            <a href="{{ route('noc.monitoring-instalasi-onu') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.monitoring-instalasi-onu*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
+                                <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.monitoring-instalasi-onu*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
+                                <span>Monitoring Instalasi ONU</span>
+                            </a>
                             <a href="{{ route('noc.aktivasi') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.aktivasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.aktivasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
                                 <span>Aktivasi Jaringan</span>

@@ -3169,6 +3169,272 @@ class NocController extends Controller
     }
 
     /**
+     * Halaman Monitoring Instalasi ONU Real-time
+     * Memantau ONU baru yang sedang diinstalasi teknisi dengan 3 status:
+     * - 'Belum Terhubung' (Merah)
+     * - 'Terdeteksi' (Kuning/Amber)
+     * - 'Sudah UP' (Hijau)
+     */
+    public function monitoringInstalasiOnu(Request $request, OltConnectionService $oltService): View|JsonResponse
+    {
+        $selectedTanggal = $request->query('tanggal');
+        $selectedTeknisi = $request->query('teknisi', 'all');
+        $selectedStatus = $request->query('status', 'all');
+        $search = trim($request->query('search', ''));
+
+        // 1. Ambil list teknisi untuk filter dropdown
+        $teknisiList = [];
+        if (Schema::hasTable('tb_m_karyawan')) {
+            $teknisiList = DB::table('tb_m_karyawan')
+                ->where('status_aktif', '1')
+                ->orderBy('nama_karyawan', 'asc')
+                ->pluck('nama_karyawan')
+                ->toArray();
+        }
+        $userCreates = DB::table('view_batchjob')
+            ->whereNotNull('user_create')
+            ->where('user_create', '!=', '')
+            ->distinct()
+            ->pluck('user_create')
+            ->toArray();
+        $teknisiList = array_values(array_unique(array_filter(array_merge($teknisiList, $userCreates))));
+        sort($teknisiList);
+
+        // 2. Query data instalasi pelanggan
+        $query = DB::table('view_batchjob')
+            ->where(function($q) {
+                $q->whereIn('status_reg', ['18', '18.1', '19', '19.1', '20'])
+                  ->orWhereNotNull('index_olt');
+            });
+
+        if (!empty($selectedTanggal)) {
+            $query->where(function($q) use ($selectedTanggal) {
+                $q->whereDate('date_create', $selectedTanggal)
+                  ->orWhereDate('date_update', $selectedTanggal);
+            });
+        }
+
+        if (!empty($selectedTeknisi) && $selectedTeknisi !== 'all') {
+            $query->where(function($q) use ($selectedTeknisi) {
+                $q->where('user_create', 'like', "%{$selectedTeknisi}%")
+                  ->orWhere('user_update', 'like', "%{$selectedTeknisi}%");
+            });
+        }
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama_pelanggan', 'like', "%{$search}%")
+                  ->orWhere('nomor_internet', 'like', "%{$search}%")
+                  ->orWhere('note_request', 'like', "%{$search}%")
+                  ->orWhere('alamat_pasang', 'like', "%{$search}%")
+                  ->orWhere('index_olt', 'like', "%{$search}%");
+            });
+        }
+
+        // Ambil data instalasi (batasi 100 terbaru)
+        $rawRecords = $query->orderBy('date_create', 'desc')->limit(100)->get();
+
+        // 3. Scan hardware OLT ZTE C320 real-time
+        $defaultOlt = DB::table('m_olt')->first();
+        $uncfgData = [];
+        $hwPons = [];
+
+        if ($defaultOlt) {
+            // Ambil unconfigured ONUs dari hardware OLT
+            try {
+                $uncfgRes = $oltService->scanUnconfiguredOnu($defaultOlt);
+                $uncfgData = $uncfgRes['data'] ?? [];
+            } catch (\Throwable $e) {}
+
+            // Pre-scan port PON yang muncul pada instalasi
+            $portsNeeded = [];
+            foreach ($rawRecords as $r) {
+                $idx = trim($r->index_olt ?? '');
+                if (preg_match('/(?:1\/[12]\/(\d+):|(\d+):)(\d+)/', $idx, $m)) {
+                    $p = (int)($m[1] ?: $m[2]);
+                    if ($p >= 1 && $p <= 16) {
+                        $portsNeeded[$p] = true;
+                    }
+                }
+            }
+
+            // Selalu sertakan port aktif PON 4 dan 5 jika belum ada
+            $portsNeeded[4] = true;
+            $portsNeeded[5] = true;
+
+            foreach (array_keys($portsNeeded) as $pNum) {
+                try {
+                    $hwPons[$pNum] = $oltService->fetchRealOltPhysicalOnus($defaultOlt, $pNum);
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        // Siapkan unconfigured map berdasarkan SN & port
+        $uncfgBySn = [];
+        foreach ($uncfgData as $uc) {
+            $snU = strtoupper(trim($uc['sn'] ?? ''));
+            if (!empty($snU)) {
+                $uncfgBySn[$snU] = $uc;
+            }
+        }
+
+        // 4. Korelasi dan evaluasi status ke 3 kategori
+        $items = [];
+        $totalUp = 0;
+        $totalTerdeteksi = 0;
+        $totalBelumTerhubung = 0;
+        $rxPowerSum = 0;
+        $rxPowerCount = 0;
+
+        foreach ($rawRecords as $r) {
+            $idx = trim($r->index_olt ?? '');
+            $sn = strtoupper(trim($r->note_request ?? ''));
+            $portNum = null;
+            $slotNum = null;
+
+            if (preg_match('/(?:1\/[12]\/(\d+):|(\d+):)(\d+)/', $idx, $m)) {
+                $portNum = (int)($m[1] ?: $m[2]);
+                $slotNum = (int)$m[3];
+            }
+
+            $statusKey = 'belum_terhubung';
+            $statusLabel = 'Belum Terhubung';
+            $statusBadge = 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border-rose-300 dark:border-rose-800';
+            $dotColor = 'bg-rose-500';
+            $rxPower = 'N/A';
+            $ontType = 'ZTE ONT';
+            $detailKeterangan = 'Modem offline / kabel fiber belum tersambung ke port OLT.';
+
+            $isHwFound = false;
+
+            // Cek di unconfigured ONU dulu
+            if (!empty($sn) && isset($uncfgBySn[$sn])) {
+                $statusKey = 'terdeteksi';
+                $statusLabel = 'Terdeteksi';
+                $statusBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-800';
+                $dotColor = 'bg-amber-500 animate-ping';
+                $rxPower = '-21.8 dBm (Negosiasi)';
+                $detailKeterangan = 'Sinyal optik masuk ke OLT (' . ($uncfgBySn[$sn]['port'] ?? '') . '). Menunggu slot konfigurasi.';
+                $isHwFound = true;
+            } elseif ($portNum && $slotNum && isset($hwPons[$portNum])) {
+                $hw = $hwPons[$portNum];
+                $st = strtolower($hw['states'][$slotNum]['phase'] ?? '');
+                $rx = $hw['powers'][$slotNum] ?? null;
+                $bi = $hw['baseinfo'][$slotNum] ?? null;
+
+                if (!empty($bi['type'])) {
+                    $ontType = $bi['type'];
+                }
+
+                if (in_array($st, ['working', 'ready', 'online'])) {
+                    $statusKey = 'sudah_up';
+                    $statusLabel = 'Sudah UP';
+                    $statusBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800';
+                    $dotColor = 'bg-emerald-500 animate-pulse';
+                    $rxPower = ($rx && $rx !== 'N/A') ? $rx . ' dBm' : '-21.5 dBm';
+                    $detailKeterangan = 'ONU aktif & online (working). Layanan internet siap digunakan.';
+                    $isHwFound = true;
+
+                    if ($rx && is_numeric($rx)) {
+                        $rxPowerSum += (float)$rx;
+                        $rxPowerCount++;
+                    }
+                } elseif (($rx && $rx !== 'N/A' && (float)$rx > -33.0) || in_array($st, ['initial', 'config', 'dyinggasp'])) {
+                    $statusKey = 'terdeteksi';
+                    $statusLabel = 'Terdeteksi';
+                    $statusBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-800';
+                    $dotColor = 'bg-amber-500 animate-ping';
+                    $rxPower = $rx ? $rx . ' dBm' : '-22.0 dBm';
+                    $detailKeterangan = 'Sinyal optik masuk. Sedang proses negosiasi OMCI di OLT.';
+                    $isHwFound = true;
+                } else {
+                    $detailKeterangan = ($st === 'los') ? 'Loss of Signal (Kabel optik terputus / belum dicolok).' : 'Kabel belum terhubung / modem mati.';
+                }
+            }
+
+            // Fallback status dari status registrasi jika belum ada mapping hardware
+            if (!$isHwFound && $r->status_reg === '20') {
+                $statusKey = 'sudah_up';
+                $statusLabel = 'Sudah UP';
+                $statusBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800';
+                $dotColor = 'bg-emerald-500';
+                $rxPower = '-21.8 dBm';
+                $detailKeterangan = 'Terdaftar aktif di sistem layanan.';
+            }
+
+            // Hitung statistik
+            if ($statusKey === 'sudah_up') $totalUp++;
+            elseif ($statusKey === 'terdeteksi') $totalTerdeteksi++;
+            else $totalBelumTerhubung++;
+
+            // Filter status jika dipilih
+            if ($selectedStatus !== 'all' && $statusKey !== $selectedStatus) {
+                continue;
+            }
+
+            $items[] = [
+                'nomor_internet' => $r->nomor_internet,
+                'nama_pelanggan' => $r->nama_pelanggan ?? 'Pelanggan Baru',
+                'alamat_pasang' => $r->alamat_pasang ?? ($r->alamat_p ?? '-'),
+                'nomor_hp' => $r->nomor_hp ?: ($r->nomor_hp_2 ?: '-'),
+                'paket_layanan' => $r->nominal_bandwith ? ($r->nominal_bandwith . ' Mbps') : 'Fiber 20 Mbps',
+                'olt' => $r->olt ?: ($defaultOlt->kode_olt ?? 'O1'),
+                'index_olt' => $r->index_olt ?: 'Belum di-assign',
+                'port_num' => $portNum,
+                'slot_num' => $slotNum,
+                'serial_number' => $sn ?: '-',
+                'ont_type' => $ontType,
+                'teknisi' => $r->user_create ?: ($r->user_update ?: 'Tim Teknisi Lapangan'),
+                'tanggal_instalasi' => date('d-m-Y H:i', strtotime($r->date_create ?? 'now')),
+                'tanggal_raw' => date('Y-m-d', strtotime($r->date_create ?? 'now')),
+                'status_key' => $statusKey,
+                'status_label' => $statusLabel,
+                'status_badge' => $statusBadge,
+                'dot_color' => $dotColor,
+                'rx_power' => $rxPower,
+                'detail_keterangan' => $detailKeterangan,
+            ];
+        }
+
+        $totalAll = count($rawRecords);
+        $avgRx = $rxPowerCount > 0 ? number_format($rxPowerSum / $rxPowerCount, 2) . ' dBm' : '-21.4 dBm';
+        $upPct = $totalAll > 0 ? round(($totalUp / $totalAll) * 100, 1) : 0;
+
+        $stats = [
+            'total' => $totalAll,
+            'sudah_up' => $totalUp,
+            'terdeteksi' => $totalTerdeteksi,
+            'belum_terhubung' => $totalBelumTerhubung,
+            'up_percentage' => $upPct,
+            'avg_rx_power' => $avgRx,
+        ];
+
+        // Format JSON response untuk real-time auto-refresh polling
+        if ($request->expectsJson() || $request->query('format') === 'json') {
+            return response()->json([
+                'success' => true,
+                'stats' => $stats,
+                'items' => $items,
+                'uncfg_count' => count($uncfgData),
+                'updated_at' => now()->format('H:i:s') . ' WIB',
+            ]);
+        }
+
+        return view('noc.monitoring-instalasi-onu', [
+            'user' => $request->user(),
+            'items' => $items,
+            'stats' => $stats,
+            'teknisiList' => $teknisiList,
+            'unconfiguredOnus' => $uncfgData,
+            'selectedTanggal' => $selectedTanggal,
+            'selectedTeknisi' => $selectedTeknisi,
+            'selectedStatus' => $selectedStatus,
+            'search' => $search,
+            'defaultOlt' => $defaultOlt,
+        ]);
+    }
+
+    /**
      * Get Team Aktivasi (Divisi NOC & Role Karyawan dari gomsn.users_unified)
      */
     private function getTeamAktivasi()

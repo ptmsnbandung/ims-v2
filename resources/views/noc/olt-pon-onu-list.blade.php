@@ -753,6 +753,21 @@
                                     <span class="font-bold text-slate-700 dark:text-slate-300 text-xs whitespace-nowrap" x-text="onu.tx_power"></span>
                                 </div>
                             </div>
+
+                            <!-- Baris Nilai Redaman (Attenuation dB) Persis Terminal ZTE -->
+                            <div class="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs font-mono">
+                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-sans font-medium">Redaman (Attenuation):</span>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold text-xs text-indigo-600 dark:text-indigo-400" x-text="onu.attenuation_db || (onu.rx_power_num ? Math.abs(Math.round((onu.rx_power_num - 7.1) * 10) / 10).toFixed(1) + ' dB' : 'N/A')"></span>
+                                    <button @click="openCliModal(onu)" 
+                                            class="p-0.5 rounded text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 dark:hover:bg-slate-800 transition cursor-pointer" 
+                                            title="Cek output terminal asli OLT ZTE (show pon power attenuation)">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 4. Section Perangkat & Layanan (Serial Number, Paket & Alamat) -->
@@ -794,18 +809,26 @@
                     </div>
 
                     <!-- 5. Card Footer Action Buttons -->
+                    <!-- 5. Card Footer Action Buttons -->
                     <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                        <a :href="'{{ url('/noc/network-olt') }}?search=' + onu.nomor_internet"
-                           class="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">
-                            <span>Buka di Explorer</span>
-                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        <button @click="openCliModal(onu)"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-semibold bg-cyan-50 hover:bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 transition cursor-pointer"
+                                title="Buka terminal show pon power attenuation">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                        </a>
-                        <a :href="'{{ url('/noc/gpon') }}?olt={{ $olt->kode_olt }}&port=gpon-onu_1/1/{{ $ponIndex }}'"
-                           class="px-2.5 py-1 rounded-lg text-[10.5px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
-                            GPON Slot
-                        </a>
+                            <span>Terminal CLI</span>
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <a :href="'{{ url('/noc/network-olt') }}?search=' + onu.nomor_internet"
+                               class="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">
+                                <span>Explorer</span>
+                            </a>
+                            <a :href="'{{ url('/noc/gpon') }}?olt={{ $olt->kode_olt }}&port=gpon-onu_1/1/{{ $ponIndex }}'"
+                               class="px-2.5 py-1 rounded-lg text-[10.5px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                                GPON Slot
+                            </a>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -910,6 +933,9 @@
                                 <div class="text-[10px] text-slate-400">
                                     Tx: <span x-text="onu.tx_power"></span>
                                 </div>
+                                <div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold"
+                                     x-text="'Att: ' + (onu.attenuation_db || (onu.rx_power_num ? Math.abs(Math.round((onu.rx_power_num - 7.1) * 10) / 10).toFixed(1) + ' dB' : '-'))">
+                                </div>
                             </td>
 
                             <!-- Traffic -->
@@ -939,10 +965,17 @@
 
                             <!-- Aksi -->
                             <td class="py-2.5 px-3 text-right">
-                                <a :href="'{{ url('/noc/network-olt') }}?search=' + onu.nomor_internet"
-                                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10.5px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 hover:bg-blue-100 transition">
-                                    Explorer
-                                </a>
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button @click="openCliModal(onu)"
+                                            class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10.5px] font-semibold bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300 hover:bg-cyan-100 transition cursor-pointer"
+                                            title="Buka show pon power attenuation terminal asli">
+                                        CLI
+                                    </button>
+                                    <a :href="'{{ url('/noc/network-olt') }}?search=' + onu.nomor_internet"
+                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10.5px] font-semibold bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 hover:bg-blue-100 transition">
+                                        Explorer
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     </template>
@@ -955,6 +988,144 @@
                 <span>* Traffic per ONU didistribusikan proporsional sesuai paket bandwidth pelanggan dari total counter byte hardware real port PON ZTE C320.</span>
             </span>
             <span class="font-mono text-[10.5px] text-slate-400" x-text="'Sinkronisasi hardware: ' + lastSynced"></span>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL POPUP: TERMINAL CLI SHOW PON POWER ATTENUATION                -->
+    <!-- =================================================================== -->
+    <div x-show="cliModalOpen"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop Blur -->
+        <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs transition-opacity"
+             @click="closeCliModal()"></div>
+
+        <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl"
+                 @keydown.escape.window="closeCliModal()">
+                
+                <!-- Header Modal: Dark Sleek Theme -->
+                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-cyan-950 px-5 py-4 border-b border-slate-800 flex items-center justify-between text-white">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold tracking-tight text-white flex items-center gap-2">
+                                <span>Terminal CLI: show pon power attenuation</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-500/30 text-cyan-200 border border-cyan-400/30"
+                                      x-text="cliData.interface"></span>
+                            </h3>
+                            <p class="text-[11px] text-slate-300 mt-0.5">
+                                Pengecekan redaman optik per ONU langsung dari terminal ZTE C320
+                            </p>
+                        </div>
+                    </div>
+                    <button @click="closeCliModal()" class="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10 cursor-pointer">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body Modal -->
+                <div class="p-5 space-y-4">
+                    <!-- Command Line Box -->
+                    <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between font-mono text-xs text-emerald-400">
+                        <div class="flex items-center gap-2 overflow-x-auto">
+                            <span class="text-slate-500 select-none">OLT#</span>
+                            <span class="font-bold text-white select-all" x-text="cliData.command"></span>
+                        </div>
+                        <button @click="copyText(cliData.command)" class="text-slate-400 hover:text-cyan-300 transition text-[11px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 shrink-0 cursor-pointer">
+                            Salin Perintah
+                        </button>
+                    </div>
+
+                    <!-- Ringkasan Redaman Optik (Upstream & Downstream) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs font-mono">
+                        <!-- Downstream ONU Rx -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                            <span class="text-[10px] font-sans text-slate-500 dark:text-slate-400 uppercase font-bold block">Downstream ONU Rx</span>
+                            <span class="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-1 block" x-text="cliData.down_rx_formatted || 'N/A'"></span>
+                            <span class="text-[9.5px] font-sans text-slate-400">Sinyal diterima modem</span>
+                        </div>
+
+                        <!-- Upstream ONU Tx (Laser) -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                            <span class="text-[10px] font-sans text-slate-500 dark:text-slate-400 uppercase font-bold block">Upstream ONU Tx</span>
+                            <span class="text-base font-bold text-slate-800 dark:text-slate-200 mt-1 block" x-text="cliData.up_tx_formatted || 'N/A'"></span>
+                            <span class="text-[9.5px] font-sans text-slate-400">Daya laser modem</span>
+                        </div>
+
+                        <!-- Total Attenuation dB -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 col-span-2 sm:col-span-1">
+                            <span class="text-[10px] font-sans text-slate-500 dark:text-slate-400 uppercase font-bold block">Redaman (Attenuation)</span>
+                            <span class="text-base font-bold text-cyan-600 dark:text-cyan-400 mt-1 block" x-text="cliData.attenuation_formatted || 'N/A'"></span>
+                            <span class="text-[9.5px] font-sans text-slate-400">Total redaman fiber (dB)</span>
+                        </div>
+
+                        <!-- Downstream OLT Tx -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                            <span class="text-[10px] font-sans text-slate-500 dark:text-slate-400 uppercase font-bold block">Downstream OLT Tx</span>
+                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 block" x-text="cliData.down_tx_formatted || 'N/A'"></span>
+                            <span class="text-[9.5px] font-sans text-slate-400">Daya pancar SFP OLT</span>
+                        </div>
+
+                        <!-- Upstream OLT Rx -->
+                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 col-span-2">
+                            <span class="text-[10px] font-sans text-slate-500 dark:text-slate-400 uppercase font-bold block">Upstream OLT Rx</span>
+                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1 block" x-text="cliData.up_rx_formatted || 'N/A'"></span>
+                            <span class="text-[9.5px] font-sans text-slate-400">Sinyal diterima SFP OLT</span>
+                        </div>
+                    </div>
+
+                    <!-- Raw Terminal Output Screen -->
+                    <div>
+                        <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>Output Asli CLI Terminal OLT ZTE:</span>
+                            </span>
+                            <span class="text-[10.5px] font-mono text-slate-400" x-text="'Waktu: ' + (cliData.checked_at || currentTime)"></span>
+                        </div>
+                        <div class="p-4 rounded-xl bg-[#0b0f19] border border-slate-800 text-slate-200 font-mono text-xs overflow-x-auto relative shadow-inner min-h-[140px]">
+                            <div x-show="cliLoading" class="absolute inset-0 bg-slate-950/80 backdrop-blur-2xs flex items-center justify-center gap-2 text-cyan-400 text-xs">
+                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                                <span>Membaca data live dari OLT...</span>
+                            </div>
+                            <pre class="leading-relaxed whitespace-pre font-mono text-[11.5px] text-emerald-300" x-text="cliData.raw_output"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Modal -->
+                <div class="bg-slate-50 dark:bg-slate-800/50 px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <button @click="copyText(cliData.raw_output)" class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 transition cursor-pointer">
+                        Salin Output Terminal
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button @click="fetchCliAttenuation()"
+                                :disabled="cliLoading"
+                                class="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-3.5 h-3.5" :class="cliLoading ? 'animate-spin' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span x-text="cliLoading ? 'Memeriksa...' : 'Cek Ulang (Refresh)'"></span>
+                        </button>
+                        <button @click="closeCliModal()" class="px-3.5 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-300 transition cursor-pointer">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 
@@ -977,6 +1148,23 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
         redamanFilter: 'all',
         sortBy: 'onu_id_asc',
         viewMode: 'grid',
+
+        // Modal CLI Terminal Attenuation (show pon power attenuation)
+        cliModalOpen: false,
+        cliLoading: false,
+        selectedOnu: null,
+        cliData: {
+            success: false,
+            command: '',
+            interface: '',
+            down_rx_formatted: 'N/A',
+            up_tx_formatted: 'N/A',
+            down_tx_formatted: 'N/A',
+            up_rx_formatted: 'N/A',
+            attenuation_formatted: 'N/A',
+            raw_output: '',
+            checked_at: ''
+        },
 
         // Timer, Polling & Page Visibility
         currentTime: '',
@@ -1255,6 +1443,57 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             });
 
             return list;
+        },
+
+        openCliModal(onu) {
+            this.selectedOnu = onu;
+            this.cliModalOpen = true;
+            this.cliData = {
+                success: false,
+                command: 'show pon power attenuation ' + onu.interface_onu,
+                interface: onu.interface_onu,
+                down_rx_formatted: onu.rx_power || 'N/A',
+                up_tx_formatted: onu.tx_power || 'N/A',
+                down_tx_formatted: onu.olt_tx || 'N/A',
+                up_rx_formatted: onu.olt_rx || 'N/A',
+                attenuation_formatted: onu.attenuation_db || 'N/A',
+                raw_output: 'Menghubungkan ke OLT ' + this.kodeOlt + ' dan mengeksekusi show pon power attenuation ' + onu.interface_onu + '...',
+                checked_at: this.currentTime + ' WIB'
+            };
+            this.fetchCliAttenuation();
+        },
+
+        fetchCliAttenuation() {
+            if (!this.selectedOnu) return;
+            this.cliLoading = true;
+            const iface = encodeURIComponent(this.selectedOnu.interface_onu);
+            fetch(`{{ url('/noc/olt') }}/${this.kodeOlt}/onu-attenuation?interface=${iface}`, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data) {
+                    this.cliData = data;
+                    if (data.success && this.selectedOnu) {
+                        if (data.down_rx_formatted) this.selectedOnu.rx_power = data.down_rx_formatted;
+                        if (data.up_tx_formatted) this.selectedOnu.tx_power = data.up_tx_formatted;
+                        if (data.down_tx_formatted) this.selectedOnu.olt_tx = data.down_tx_formatted;
+                        if (data.up_rx_formatted) this.selectedOnu.olt_rx = data.up_rx_formatted;
+                        if (data.attenuation_formatted) this.selectedOnu.attenuation_db = data.attenuation_formatted;
+                    }
+                }
+            })
+            .catch(err => {
+                this.cliData.raw_output = 'Gagal menghubungi server OLT: ' + err.message;
+            })
+            .finally(() => {
+                this.cliLoading = false;
+            });
+        },
+
+        closeCliModal() {
+            this.cliModalOpen = false;
+            this.selectedOnu = null;
         },
 
         resetFilters() {

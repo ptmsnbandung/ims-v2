@@ -159,6 +159,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/olt/{kode_olt}/edit', [NocController::class, 'oltEdit'])->name('olt.edit');
         Route::get('/olt/{kode_olt}/traffic-pon', [NocController::class, 'oltPonTraffic'])->name('olt.pon-traffic');
         Route::get('/olt/{kode_olt}/pon/{pon_index}/onu', [NocController::class, 'oltPonOnuList'])->name('olt.pon.onu-list');
+        Route::get('/olt/{kode_olt}/onu-attenuation', [NocController::class, 'checkOnuAttenuation'])->name('olt.onu-attenuation');
         Route::get('/monitoring-instalasi-onu', [NocController::class, 'monitoringInstalasiOnu'])->name('monitoring-instalasi-onu');
         Route::post('/olt/store', [NocController::class, 'storeOlt'])->name('olt.store');
         Route::post('/olt/{kode_olt}/delete', [NocController::class, 'deleteOlt'])->name('olt.delete');

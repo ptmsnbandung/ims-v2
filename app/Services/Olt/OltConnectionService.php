@@ -972,20 +972,46 @@ class OltConnectionService
             fwrite($socket, "terminal length 0\r\n");
             usleep(250000);
 
-            fwrite($socket, "show gpon onu baseinfo gpon-olt_1/1/{$portIndex}\r\n");
-            fwrite($socket, "show gpon onu baseinfo gpon-olt_1/2/{$portIndex}\r\n");
-            fwrite($socket, "show gpon onu state gpon-olt_1/1/{$portIndex}\r\n");
-            fwrite($socket, "show gpon onu state gpon-olt_1/2/{$portIndex}\r\n");
-            fwrite($socket, "show pon power onu-rx gpon-olt_1/1/{$portIndex}\r\n");
-            fwrite($socket, "show pon power onu-rx gpon-olt_1/2/{$portIndex}\r\n");
-            fwrite($socket, "show interface gpon-olt_1/1/{$portIndex}\r\n");
-            fwrite($socket, "show interface gpon-olt_1/2/{$portIndex}\r\n");
+            $slot = $this->getOltGponSlot($olt);
+
+            fwrite($socket, "show gpon onu baseinfo gpon-olt_1/{$slot}/{$portIndex}\r\n");
+            fwrite($socket, "show gpon onu state gpon-olt_1/{$slot}/{$portIndex}\r\n");
+            fwrite($socket, "show interface gpon-olt_1/{$slot}/{$portIndex}\r\n");
+
+            // Ambil daftar ONU ID yang terdaftar pada PON ini dari DB untuk query attenuation
+            $targetOnuIds = [];
+            try {
+                $targetOnuIds = DB::table('trx_batchjob_register')
+                    ->where(function($q) use ($olt, $slot) {
+                        $q->where('olt', $olt->kode_olt);
+                        if ($slot === 1) $q->orWhere('olt', 'Bagong');
+                        else $q->orWhere('olt', 'MSN')->orWhere('olt', 'Soreang');
+                    })
+                    ->where('index_olt', 'like', "%1/{$slot}/{$portIndex}:%")
+                    ->pluck('index_olt')
+                    ->map(function($idx) {
+                        return preg_match('/:(\d+)/', (string)$idx, $m) ? (int)$m[1] : null;
+                    })
+                    ->filter()
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->toArray();
+            } catch (\Throwable $e) {}
+
+            // Kirim perintah show pon power attenuation untuk masing-masing ONU (sama seperti di terminal)
+            $onuListToQuery = array_values(array_unique(array_merge(range(1, 8), $targetOnuIds)));
+            sort($onuListToQuery);
+            foreach ($onuListToQuery as $oId) {
+                fwrite($socket, "show pon power attenuation gpon-onu_1/{$slot}/{$portIndex}:{$oId}\r\n");
+            }
+            fwrite($socket, "show pon power onu-rx gpon-olt_1/{$slot}/{$portIndex}\r\n");
             fwrite($socket, "exit\r\n");
             fwrite($socket, "yes\r\n");
 
             $buffer = '';
             $start = microtime(true);
-            while (!feof($socket) && (microtime(true) - $start) < 5.5) {
+            while (!feof($socket) && (microtime(true) - $start) < 6.0) {
                 $chunk = fread($socket, 8192);
                 if ($chunk === false) break;
                 $buffer .= $chunk;
@@ -1021,10 +1047,33 @@ class OltConnectionService
             }
 
             $powers = [];
+            $laserTxPowers = [];
+            $oltTxPowers = [];
+            $oltRxPowers = [];
+            $attenuations = [];
+
+            // 1. Parse show pon power attenuation gpon-onu_1/X/Y:Z (sama persis terminal)
+            $patternAtt = '/show pon power attenuation (?:gpon-onu_)?1\/[12]\/' . $portIndex . ':(\d+)[^#]+?up\s+Rx\s*:\s*([-\d\.]+)\s*\(dbm\)\s+Tx\s*:\s*([-\d\.]+)\s*\(dbm\).*?down\s+Tx\s*:\s*([-\d\.]+)\s*\(dbm\)\s+Rx\s*:\s*([-\d\.]+)\s*\(dbm\)(?:\s+([-\d\.]+)\s*\(dB\))?/is';
+            if (preg_match_all($patternAtt, $buffer, $mAtt, PREG_SET_ORDER)) {
+                foreach ($mAtt as $ma) {
+                    $onuId = (int)$ma[1];
+                    $powers[$onuId] = (float)$ma[5]; // down ONU Rx
+                    $laserTxPowers[$onuId] = (float)$ma[3]; // up ONU Tx
+                    $oltTxPowers[$onuId] = (float)$ma[4]; // down OLT Tx
+                    $oltRxPowers[$onuId] = (float)$ma[2]; // up OLT Rx
+                    if (isset($ma[6])) {
+                        $attenuations[$onuId] = (float)$ma[6]; // Attenuation dB
+                    }
+                }
+            }
+
+            // 2. Fallback parse show pon power onu-rx jika ada ONU yang belum tercover
             if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+([-\d\.]+|N\/A)/i', $buffer, $mPow, PREG_SET_ORDER)) {
                 foreach ($mPow as $p) {
                     $onuId = (int)$p[1];
-                    $powers[$onuId] = $p[2];
+                    if (!isset($powers[$onuId])) {
+                        $powers[$onuId] = $p[2];
+                    }
                 }
             }
 
@@ -1039,9 +1088,13 @@ class OltConnectionService
                 'baseinfo' => $baseinfo,
                 'states' => $states,
                 'powers' => $powers,
+                'laser_tx_powers' => $laserTxPowers,
+                'olt_tx_powers' => $oltTxPowers,
+                'olt_rx_powers' => $oltRxPowers,
+                'attenuations' => $attenuations,
                 'port_down_mbps' => $portDown,
                 'port_up_mbps' => $portUp,
-                'fetched_at' => now()->format('H:i:s'),
+                'fetched_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             ];
         });
     }
@@ -1075,16 +1128,44 @@ class OltConnectionService
             fwrite($socket, "terminal length 0\r\n");
             usleep(250000);
 
-            fwrite($socket, "show gpon onu state gpon-olt_1/1/{$portIndex}\r\n");
-            fwrite($socket, "show gpon onu state gpon-olt_1/2/{$portIndex}\r\n");
-            fwrite($socket, "show pon power onu-rx gpon-olt_1/1/{$portIndex}\r\n");
-            fwrite($socket, "show pon power onu-rx gpon-olt_1/2/{$portIndex}\r\n");
+            $slot = $this->getOltGponSlot($olt);
+
+            fwrite($socket, "show gpon onu state gpon-olt_1/{$slot}/{$portIndex}\r\n");
+
+            // Ambil daftar ONU ID dari DB untuk query attenuation
+            $targetOnuIds = [];
+            try {
+                $targetOnuIds = DB::table('trx_batchjob_register')
+                    ->where(function($q) use ($olt, $slot) {
+                        $q->where('olt', $olt->kode_olt);
+                        if ($slot === 1) $q->orWhere('olt', 'Bagong');
+                        else $q->orWhere('olt', 'MSN')->orWhere('olt', 'Soreang');
+                    })
+                    ->where('index_olt', 'like', "%1/{$slot}/{$portIndex}:%")
+                    ->pluck('index_olt')
+                    ->map(function($idx) {
+                        return preg_match('/:(\d+)/', (string)$idx, $m) ? (int)$m[1] : null;
+                    })
+                    ->filter()
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->toArray();
+            } catch (\Throwable $e) {}
+
+            // Kirim perintah show pon power attenuation untuk masing-masing ONU (persis terminal)
+            $onuListToQuery = array_values(array_unique(array_merge(range(1, 8), $targetOnuIds)));
+            sort($onuListToQuery);
+            foreach ($onuListToQuery as $oId) {
+                fwrite($socket, "show pon power attenuation gpon-onu_1/{$slot}/{$portIndex}:{$oId}\r\n");
+            }
+            fwrite($socket, "show pon power onu-rx gpon-olt_1/{$slot}/{$portIndex}\r\n");
             fwrite($socket, "exit\r\n");
             fwrite($socket, "yes\r\n");
 
             $buffer = '';
             $start = microtime(true);
-            while (!feof($socket) && (microtime(true) - $start) < 4.5) {
+            while (!feof($socket) && (microtime(true) - $start) < 5.0) {
                 $chunk = fread($socket, 8192);
                 if ($chunk === false) break;
                 $buffer .= $chunk;
@@ -1107,17 +1188,44 @@ class OltConnectionService
             }
 
             $powers = [];
+            $laserTxPowers = [];
+            $oltTxPowers = [];
+            $oltRxPowers = [];
+            $attenuations = [];
+
+            // 1. Parse show pon power attenuation (sama persis terminal)
+            $patternAtt = '/show pon power attenuation (?:gpon-onu_)?1\/[12]\/' . $portIndex . ':(\d+)[^#]+?up\s+Rx\s*:\s*([-\d\.]+)\s*\(dbm\)\s+Tx\s*:\s*([-\d\.]+)\s*\(dbm\).*?down\s+Tx\s*:\s*([-\d\.]+)\s*\(dbm\)\s+Rx\s*:\s*([-\d\.]+)\s*\(dbm\)(?:\s+([-\d\.]+)\s*\(dB\))?/is';
+            if (preg_match_all($patternAtt, $buffer, $mAtt, PREG_SET_ORDER)) {
+                foreach ($mAtt as $ma) {
+                    $onuId = (int)$ma[1];
+                    $powers[$onuId] = (float)$ma[5]; // down ONU Rx
+                    $laserTxPowers[$onuId] = (float)$ma[3]; // up ONU Tx
+                    $oltTxPowers[$onuId] = (float)$ma[4]; // down OLT Tx
+                    $oltRxPowers[$onuId] = (float)$ma[2]; // up OLT Rx
+                    if (isset($ma[6])) {
+                        $attenuations[$onuId] = (float)$ma[6]; // Attenuation dB
+                    }
+                }
+            }
+
+            // 2. Fallback parse show pon power onu-rx
             if (preg_match_all('/(?:1\/[12]\/' . $portIndex . ':|gpon-onu_1\/[12]\/' . $portIndex . ':)(\d+)\s+([-\d\.]+|N\/A)/i', $buffer, $matches, PREG_SET_ORDER)) {
                 foreach ($matches as $m) {
                     $onuId = (int)$m[1];
-                    $powers[$onuId] = $m[2];
+                    if (!isset($powers[$onuId])) {
+                        $powers[$onuId] = $m[2];
+                    }
                 }
             }
 
             return [
                 'states' => $states,
                 'powers' => $powers,
-                'fetched_at' => now()->format('H:i:s'),
+                'laser_tx_powers' => $laserTxPowers,
+                'olt_tx_powers' => $oltTxPowers,
+                'olt_rx_powers' => $oltRxPowers,
+                'attenuations' => $attenuations,
+                'fetched_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             ];
         });
     }
@@ -1352,6 +1460,10 @@ class OltConnectionService
                 $baseinfo = $hwDiscovery['baseinfo'];
                 $states = $hwDiscovery['states'];
                 $powers = $hwDiscovery['powers'];
+                $laserTxPowers = $hwDiscovery['laser_tx_powers'] ?? [];
+                $oltTxPowers = $hwDiscovery['olt_tx_powers'] ?? [];
+                $oltRxPowers = $hwDiscovery['olt_rx_powers'] ?? [];
+                $attenuations = $hwDiscovery['attenuations'] ?? [];
                 $portDown = $hwDiscovery['port_down_mbps'];
                 $portUp = $hwDiscovery['port_up_mbps'];
 
@@ -1517,7 +1629,10 @@ class OltConnectionService
                         $rxPower = ($statusText === 'LOS' ? -35.00 : -40.00);
                         $rxPowerDisplay = ($statusText === 'LOS' ? 'No Signal (LOS)' : 'Power Off');
                     }
-                    $txPower = $isOnline ? 2.35 : 0.00;
+                    $txPower = isset($laserTxPowers[$onuId]) ? (float)$laserTxPowers[$onuId] : ($isOnline ? 2.35 : 0.00);
+                    $attenuationVal = $attenuations[$onuId] ?? null;
+                    $oltTxVal = $oltTxPowers[$onuId] ?? null;
+                    $oltRxVal = $oltRxPowers[$onuId] ?? null;
                     $uptimeText = $isOnline ? 'Online (Real OLT)' : ($isLos ? 'LOS (Loss of Signal)' : 'Down (Power Off)');
 
                     $redamanStatus = 'optimal';
@@ -1564,7 +1679,12 @@ class OltConnectionService
                         'is_los' => $isLos,
                         'is_suspend' => $isSuspend,
                         'rx_power' => $rxPowerDisplay,
-                        'tx_power' => ($txPower > 0 ? ('+' . $txPower . ' dBm') : '0.00 dBm'),
+                        'tx_power' => ($txPower > 0 ? ('+' . number_format($txPower, 2) . ' dBm') : '0.00 dBm'),
+                        'tx_power_num' => $txPower,
+                        'attenuation_db' => $attenuationVal !== null ? (number_format($attenuationVal, 2) . ' dB') : null,
+                        'attenuation_num' => $attenuationVal,
+                        'olt_rx' => $oltRxVal !== null ? (number_format($oltRxVal, 2) . ' dBm') : null,
+                        'olt_tx' => $oltTxVal !== null ? ('+' . number_format($oltTxVal, 2) . ' dBm') : null,
                         'rx_power_num' => $rxPower,
                         'redaman_status' => $redamanStatus,
                         'download_mbps' => $downRate,
@@ -1753,9 +1873,13 @@ class OltConnectionService
                     $onuSlot = $slotNum;
                 }
 
-                // Status & Redaman Optik dari OLT Fisik ZTE
+                // Status & Redaman Optik dari OLT Fisik ZTE (show pon power attenuation)
                 $hwState = ($onuSlot && isset($realHwOnu['states'][$onuSlot])) ? $realHwOnu['states'][$onuSlot] : null;
                 $hwPower = ($onuSlot && isset($realHwOnu['powers'][$onuSlot])) ? $realHwOnu['powers'][$onuSlot] : null;
+                $hwLaserTx = ($onuSlot && isset($realHwOnu['laser_tx_powers'][$onuSlot])) ? $realHwOnu['laser_tx_powers'][$onuSlot] : null;
+                $hwOltTx = ($onuSlot && isset($realHwOnu['olt_tx_powers'][$onuSlot])) ? $realHwOnu['olt_tx_powers'][$onuSlot] : null;
+                $hwOltRx = ($onuSlot && isset($realHwOnu['olt_rx_powers'][$onuSlot])) ? $realHwOnu['olt_rx_powers'][$onuSlot] : null;
+                $hwAtt = ($onuSlot && isset($realHwOnu['attenuations'][$onuSlot])) ? $realHwOnu['attenuations'][$onuSlot] : null;
 
                 $isOnline = false;
                 $isLos = false;
@@ -1781,7 +1905,7 @@ class OltConnectionService
                         $rxPower = ($statusText === 'LOS' ? -35.00 : -40.00);
                         $rxPowerDisplay = ($statusText === 'LOS' ? 'No Signal (LOS)' : 'Power Off');
                     }
-                    $txPower = $isOnline ? 2.35 : 0.00;
+                    $txPower = $hwLaserTx !== null ? (float)$hwLaserTx : ($isOnline ? 2.35 : 0.00);
                     $uptimeText = $isOnline ? 'Online (Real OLT)' : ($isLos ? 'LOS (Loss of Signal)' : 'Down (Power Off)');
                 } else {
                     // Fallback jika port/slot belum terbaca di OLT fisik
@@ -1851,7 +1975,12 @@ class OltConnectionService
                     'is_los' => $isLos,
                     'is_suspend' => $isSuspend,
                     'rx_power' => $rxPowerDisplay,
-                    'tx_power' => ($txPower > 0 ? ('+' . $txPower . ' dBm') : '0.00 dBm'),
+                    'tx_power' => ($txPower > 0 ? ('+' . number_format($txPower, 2) . ' dBm') : '0.00 dBm'),
+                    'tx_power_num' => $txPower,
+                    'attenuation_db' => $hwAtt !== null ? (number_format($hwAtt, 2) . ' dB') : null,
+                    'attenuation_num' => $hwAtt,
+                    'olt_rx' => $hwOltRx !== null ? (number_format($hwOltRx, 2) . ' dBm') : null,
+                    'olt_tx' => $hwOltTx !== null ? ('+' . number_format($hwOltTx, 2) . ' dBm') : null,
                     'rx_power_num' => $rxPower,
                     'redaman_status' => $redamanStatus,
                     'download_mbps' => $downRate,
@@ -2173,6 +2302,123 @@ class OltConnectionService
         }
 
         return 2;
+    }
+
+    /**
+     * Jalankan perintah CLI terminal langsung:
+     * show pon power attenuation gpon-onu_1/{slot}/{port}:{onuId}
+     * Menghasilkan nilai persis sama seperti pengecekan di terminal CLI OLT ZTE.
+     */
+    public function getOnuAttenuation(object $olt, string $interfaceOnu): array
+    {
+        $ip = $olt->ip_address ?? null;
+        $port = !empty($olt->telnet_port) ? (int)$olt->telnet_port : (!empty($olt->port) && (int)$olt->port !== 23 ? (int)$olt->port : (int)env('OLT_PORT', 23));
+        $user = !empty($olt->telnet_user) ? $olt->telnet_user : (!empty($olt->username) ? $olt->username : env('OLT_USER', 'aplikasi'));
+        $pass = !empty($olt->telnet_password) ? $this->decryptPassword($olt->telnet_password) : (!empty($olt->password) ? $this->decryptPassword($olt->password) : env('OLT_PASS', 'kayuagung2-9'));
+
+        // Normalisasi format interface ONU
+        $clean = trim($interfaceOnu);
+        if (!str_starts_with($clean, 'gpon-onu_') && str_starts_with($clean, '1/')) {
+            $clean = 'gpon-onu_' . $clean;
+        }
+
+        if (empty($ip)) {
+            return [
+                'success' => false,
+                'message' => 'IP Address OLT belum dikonfigurasi.',
+                'command' => "show pon power attenuation {$clean}",
+                'down_rx' => null,
+                'up_tx' => null,
+                'down_tx' => null,
+                'up_rx' => null,
+                'attenuation_db' => null,
+                'raw_output' => 'OLT IP address is null.',
+            ];
+        }
+
+        $socket = @fsockopen($ip, $port, $errno, $errstr, 2.5);
+        if (!$socket) {
+            return [
+                'success' => false,
+                'message' => "Gagal terhubung ke OLT {$ip}:{$port} ($errstr)",
+                'command' => "show pon power attenuation {$clean}",
+                'down_rx' => null,
+                'up_tx' => null,
+                'down_tx' => null,
+                'up_rx' => null,
+                'attenuation_db' => null,
+                'raw_output' => "Connection failed: $errstr",
+            ];
+        }
+
+        stream_set_timeout($socket, 4);
+        usleep(250000);
+        fwrite($socket, "{$user}\r\n");
+        usleep(250000);
+        fwrite($socket, "{$pass}\r\n");
+        usleep(250000);
+        fwrite($socket, "terminal length 0\r\n");
+        usleep(250000);
+        fwrite($socket, "show pon power attenuation {$clean}\r\n");
+        fwrite($socket, "exit\r\n");
+        fwrite($socket, "yes\r\n");
+
+        $buffer = '';
+        $start = microtime(true);
+        while (!feof($socket) && (microtime(true) - $start) < 4.5) {
+            $chunk = fread($socket, 8192);
+            if ($chunk === false) break;
+            $buffer .= $chunk;
+            if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed')) {
+                break;
+            }
+        }
+        fclose($socket);
+
+        $downRx = null;
+        $downTx = null;
+        $upTx = null;
+        $upRx = null;
+        $attDb = null;
+
+        $cmdOutput = '';
+        if (preg_match('/(\s*OLT\s+ONU\s+Attenuation.*?)(?:OLT[^\r\n]*#|The configuration is changed|$)/is', $buffer, $mBlock)) {
+            $cmdOutput = trim($mBlock[1]);
+        } elseif (preg_match('/show pon power attenuation [^\r\n]+[\r\n]+(.*?)(?:OLT[^\r\n]*#|The configuration is changed|$)/is', $buffer, $mBlock)) {
+            $cmdOutput = trim($mBlock[1]);
+        } else {
+            $cmdOutput = trim($buffer);
+        }
+
+        if (preg_match('/up\s+Rx\s*:\s*([-\d\.]+)\s*\(dbm\)\s+Tx\s*:\s*([-\d\.]+)\s*\(dbm\)(?:\s+([-\d\.]+)\s*\(dB\))?/i', $cmdOutput, $mUp)) {
+            $upRx = (float)$mUp[1];
+            $upTx = (float)$mUp[2];
+        }
+        if (preg_match('/down\s+Tx\s*:\s*([-\d\.]+)\s*\(dbm\)\s+Rx\s*:\s*([-\d\.]+)\s*\(dbm\)(?:\s+([-\d\.]+)\s*\(dB\))?/i', $cmdOutput, $mDown)) {
+            $downTx = (float)$mDown[1];
+            $downRx = (float)$mDown[2];
+            if (isset($mDown[3])) {
+                $attDb = (float)$mDown[3];
+            }
+        }
+
+        return [
+            'success' => ($downRx !== null),
+            'command' => "show pon power attenuation {$clean}",
+            'interface' => $clean,
+            'down_rx' => $downRx,
+            'down_rx_formatted' => $downRx !== null ? ($downRx . ' dBm') : 'N/A',
+            'up_tx' => $upTx,
+            'up_tx_formatted' => $upTx !== null ? ('+' . $upTx . ' dBm') : 'N/A',
+            'down_tx' => $downTx,
+            'down_tx_formatted' => $downTx !== null ? ('+' . $downTx . ' dBm') : 'N/A',
+            'up_rx' => $upRx,
+            'up_rx_formatted' => $upRx !== null ? ($upRx . ' dBm') : 'N/A',
+            'attenuation_db' => $attDb,
+            'attenuation_formatted' => $attDb !== null ? ($attDb . ' dB') : 'N/A',
+            'raw_output' => $cmdOutput,
+            'checked_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
+        ];
     }
 }
 

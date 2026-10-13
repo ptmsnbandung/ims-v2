@@ -922,6 +922,26 @@ class NocController extends Controller
     }
 
     /**
+     * Jalankan perintah CLI OLT terminal langsung:
+     * show pon power attenuation gpon-onu_1/{slot}/{port}:{onuId}
+     */
+    public function checkOnuAttenuation(Request $request, string $kode_olt, OltConnectionService $oltService): JsonResponse
+    {
+        $olt = DB::table('m_olt')->where('kode_olt', $kode_olt)->first();
+        if (!$olt) {
+            return response()->json(['success' => false, 'message' => 'OLT tidak ditemukan.'], 404);
+        }
+
+        $interface = $request->query('interface') ?? $request->input('interface');
+        if (!$interface) {
+            return response()->json(['success' => false, 'message' => 'Interface ONU wajib disertakan (contoh: gpon-onu_1/1/1:1).'], 400);
+        }
+
+        $result = $oltService->getOnuAttenuation($olt, $interface);
+        return response()->json($result);
+    }
+
+    /**
      * Store / Update OLT
      */
     public function storeOlt(Request $request): RedirectResponse

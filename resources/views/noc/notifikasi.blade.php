@@ -34,7 +34,7 @@
                     Pusat Notifikasi & Pemantauan Gangguan Jaringan
                 </h2>
                 <p class="text-xs text-[#c6edf3] mt-0.5 leading-relaxed max-w-2xl" style="color: #c6edf3 !important;">
-                    Mendeteksi otomatis OLT, PON, atau ONU yang mengalami LOS/DOWN serta tiket gangguan masuk. Masalah otomatis terhapus ketika pulih (UP) atau tiket selesai ditangani.
+                    Mendeteksi otomatis OLT, PON, atau ONU yang mengalami LOS/DOWN serta tiket gangguan, ubah layanan, ubah password, relokasi, dan aktivasi pasang baru. Masalah otomatis terhapus ketika pulih (UP) atau tiket selesai ditangani.
                 </p>
             </div>
 
@@ -124,12 +124,12 @@
             <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Memerlukan atensi teknis</p>
         </div>
 
-        <!-- 4. Tiket Gangguan Baru -->
+        <!-- 4. Tiket (Gangguan, Ubah Layanan, Ubah Password, Relokasi, Aktivasi Baru) -->
         <div @click="activeTab = 'tiket'"
              class="p-4 rounded-2xl border transition cursor-pointer relative overflow-hidden group"
              :class="activeTab === 'tiket' ? 'bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-500 shadow-md ring-2 ring-indigo-500/20' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs'">
             <div class="flex items-center justify-between">
-                <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiket Gangguan</span>
+                <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiket</span>
                 <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
@@ -140,7 +140,7 @@
                 <span class="text-2xl sm:text-3xl font-black font-mono text-indigo-600 dark:text-indigo-400" x-text="summary.total_tickets"></span>
                 <span class="text-xs font-semibold text-slate-400">Tiket Open</span>
             </div>
-            <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Laporan masuk dari user</p>
+            <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Gangguan, Layanan & Aktivasi</p>
         </div>
 
         <!-- 5. Ditandai Mute Alert / Maintenance -->
@@ -166,69 +166,145 @@
     <!-- =================================================================== -->
     <!-- 3. TABS FILTER & PENCARIAN                                          -->
     <!-- =================================================================== -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-        <div class="flex items-center flex-wrap gap-1">
-            <!-- 1. Perangkat LOS (DEFAULT AKTIF) -->
-            <button @click="activeTab = 'los'"
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                    :class="activeTab === 'los' ? 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-500/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
-                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse" x-show="activeTab === 'los'"></span>
-                <span>Perangkat LOS</span>
-                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
-                      :class="activeTab === 'los' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300'"
-                      x-text="summary.total_los || 0"></span>
-            </button>
+    <div class="space-y-2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div class="flex items-center flex-wrap gap-1">
+                <!-- 1. Perangkat LOS (DEFAULT AKTIF) -->
+                <button @click="activeTab = 'los'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        :class="activeTab === 'los' ? 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-500/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse" x-show="activeTab === 'los'"></span>
+                    <span>Perangkat LOS</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                          :class="activeTab === 'los' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300'"
+                          x-text="summary.total_los || 0"></span>
+                </button>
 
-            <!-- 2. Perangkat DOWN -->
-            <button @click="activeTab = 'down'"
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                    :class="activeTab === 'down' ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
-                <span>Perangkat DOWN</span>
-                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
-                      :class="activeTab === 'down' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300'"
-                      x-text="summary.total_down || 0"></span>
-            </button>
+                <!-- 2. Perangkat DOWN -->
+                <button @click="activeTab = 'down'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        :class="activeTab === 'down' ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
+                    <span>Perangkat DOWN</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                          :class="activeTab === 'down' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300'"
+                          x-text="summary.total_down || 0"></span>
+                </button>
 
-            <!-- 3. Semua Isu Aktif -->
-            <button @click="activeTab = 'all'"
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                    :class="activeTab === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
-                <span>Semua Isu Aktif</span>
-                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
-                      :class="activeTab === 'all' ? 'bg-white/20 dark:bg-black/20 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
-                      x-text="alerts.length"></span>
-            </button>
+                <!-- 3. Semua Isu Aktif -->
+                <button @click="activeTab = 'all'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        :class="activeTab === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
+                    <span>Semua Isu Aktif</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                          :class="activeTab === 'all' ? 'bg-white/20 dark:bg-black/20 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
+                          x-text="alerts.length"></span>
+                </button>
 
-            <!-- 4. Tiket Gangguan -->
-            <button @click="activeTab = 'tiket'"
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                    :class="activeTab === 'tiket' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
-                <span>Tiket Gangguan</span>
-                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
-                      :class="activeTab === 'tiket' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
-                      x-text="summary.total_tickets"></span>
-            </button>
+                <!-- 4. Tiket -->
+                <button @click="activeTab = 'tiket'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        :class="activeTab === 'tiket' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
+                    <span>Tiket</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                          :class="activeTab === 'tiket' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
+                          x-text="summary.total_tickets"></span>
+                </button>
 
-            <!-- 5. Mute Alert -->
-            <button @click="activeTab = 'intentional'"
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                    :class="activeTab === 'intentional' ? 'bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
-                <span>Mute Alert</span>
-                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
-                      :class="activeTab === 'intentional' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
-                      x-text="intentional.length"></span>
-            </button>
+                <!-- 5. Mute Alert -->
+                <button @click="activeTab = 'intentional'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        :class="activeTab === 'intentional' ? 'bg-cyan-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
+                    <span>Mute Alert</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                          :class="activeTab === 'intentional' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
+                          x-text="intentional.length"></span>
+                </button>
+            </div>
+
+            <!-- Search Box -->
+            <div class="relative w-full sm:w-64">
+                <input type="text"
+                       x-model="searchKeyword"
+                       placeholder="Cari OLT, ONU, Pelanggan, Tiket..."
+                       class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
         </div>
 
-        <!-- Search Box -->
-        <div class="relative w-full sm:w-64">
-            <input type="text"
-                   x-model="searchKeyword"
-                   placeholder="Cari OLT, ONU, Pelanggan, Tiket..."
-                   class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500">
-            <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
+        <!-- SUB-FILTER KATEGORI TIKET (Hanya muncul jika tab TIKET aktif) -->
+        <div x-show="activeTab === 'tiket'"
+             x-cloak
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 -translate-y-1"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="flex items-center flex-wrap gap-1.5 bg-indigo-50/70 dark:bg-indigo-950/30 p-2 rounded-2xl border border-indigo-200/80 dark:border-indigo-900/60 shadow-2xs">
+            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1 pl-1">
+                <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Kategori Tiket:
+            </span>
+            <button @click="ticketFilter = 'all'"
+                    type="button"
+                    class="px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                    :class="ticketFilter === 'all' ? 'bg-indigo-600 text-white shadow-2xs font-bold' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800'">
+                <span>Semua Tiket</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                      :class="ticketFilter === 'all' ? 'bg-white/20 text-white' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'"
+                      x-text="summary.total_tickets || 0"></span>
+            </button>
+            <button @click="ticketFilter = 'gangguan'"
+                    type="button"
+                    class="px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                    :class="ticketFilter === 'gangguan' ? 'bg-rose-600 text-white shadow-2xs font-bold' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800'">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                <span>Tiket Gangguan</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                      :class="ticketFilter === 'gangguan' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'"
+                      x-text="summary.total_gangguan || 0"></span>
+            </button>
+            <button @click="ticketFilter = 'ubah_layanan'"
+                    type="button"
+                    class="px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                    :class="ticketFilter === 'ubah_layanan' ? 'bg-blue-600 text-white shadow-2xs font-bold' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800'">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                <span>Tiket Ubah Layanan</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                      :class="ticketFilter === 'ubah_layanan' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'"
+                      x-text="summary.total_ubah_layanan || 0"></span>
+            </button>
+            <button @click="ticketFilter = 'ubah_password'"
+                    type="button"
+                    class="px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                    :class="ticketFilter === 'ubah_password' ? 'bg-purple-600 text-white shadow-2xs font-bold' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800'">
+                <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                <span>Tiket Ubah Password</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                      :class="ticketFilter === 'ubah_password' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'"
+                      x-text="summary.total_ubah_password || 0"></span>
+            </button>
+            <button @click="ticketFilter = 'relokasi'"
+                    type="button"
+                    class="px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                    :class="ticketFilter === 'relokasi' ? 'bg-teal-600 text-white shadow-2xs font-bold' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800'">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                <span>Relokasi Layanan</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                      :class="ticketFilter === 'relokasi' ? 'bg-white/20 text-white' : 'bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300'"
+                      x-text="summary.total_relokasi || 0"></span>
+            </button>
+            <button @click="ticketFilter = 'aktivasi_baru'"
+                    type="button"
+                    class="px-2.5 py-1 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                    :class="ticketFilter === 'aktivasi_baru' ? 'bg-emerald-600 text-white shadow-2xs font-bold' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-800'">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>Aktivasi Pasang Baru</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                      :class="ticketFilter === 'aktivasi_baru' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'"
+                      x-text="summary.total_aktivasi || 0"></span>
+            </button>
         </div>
     </div>
 
@@ -257,9 +333,9 @@
                     </svg>
                 </div>
                 <h3 class="text-base font-bold text-slate-800 dark:text-slate-100"
-                    x-text="activeTab === 'los' ? 'Tidak Ada Perangkat LOS' : (activeTab === 'down' ? 'Tidak Ada Perangkat DOWN' : (activeTab === 'intentional' ? 'Tidak Ada Perangkat Mute Alert' : 'Tidak Ada Isu Gangguan Aktif'))"></h3>
+                    x-text="activeTab === 'los' ? 'Tidak Ada Perangkat LOS' : (activeTab === 'down' ? 'Tidak Ada Perangkat DOWN' : (activeTab === 'tiket' ? 'Tidak Ada Tiket Terbuka' : (activeTab === 'intentional' ? 'Tidak Ada Perangkat Mute Alert' : 'Tidak Ada Isu Gangguan Aktif')))"></h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto"
-                   x-text="activeTab === 'los' ? 'Seluruh serat optik dan redaman ONU normal. Tidak ada kabel optik putus atau signal loss!' : (activeTab === 'down' ? 'Tidak ada ONU atau modem pelanggan yang offline / padam!' : (activeTab === 'intentional' ? 'Belum ada perangkat yang ditandai pemeliharaan (Mute Alert).' : 'Semua perangkat OLT, PON, dan ONU termonitor berjalan normal (UP), dan seluruh tiket gangguan telah diselesaikan.'))"></p>
+                   x-text="activeTab === 'los' ? 'Seluruh serat optik dan redaman ONU normal. Tidak ada kabel optik putus atau signal loss!' : (activeTab === 'down' ? 'Tidak ada ONU atau modem pelanggan yang offline / padam!' : (activeTab === 'tiket' ? 'Seluruh tiket gangguan, ubah layanan, ubah password, relokasi, dan aktivasi pasang baru telah selesai ditangani.' : (activeTab === 'intentional' ? 'Belum ada perangkat yang ditandai pemeliharaan (Mute Alert).' : 'Semua perangkat OLT, PON, dan ONU termonitor berjalan normal (UP), dan seluruh tiket telah diselesaikan.')))"></p>
             </div>
         </template>
 
@@ -301,6 +377,13 @@
                         <!-- Info Detail -->
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center flex-wrap gap-2">
+                                <!-- Category Badge untuk Tiket -->
+                                <template x-if="item.ticket_category_label">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-2xs font-mono"
+                                          :class="item.category_badge_color || 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200'"
+                                          x-text="item.ticket_category_label"></span>
+                                </template>
+
                                 <!-- Title -->
                                 <h4 class="text-sm font-bold text-slate-900 dark:text-white" x-text="item.title"></h4>
                                 
@@ -525,6 +608,7 @@
 function nocNotifikasiPage() {
     return {
         activeTab: 'los', // Default: 'los' (Loss of Signal), 'down', 'all', 'tiket', 'intentional'
+        ticketFilter: 'all', // Sub-filter tiket: 'all', 'gangguan', 'ubah_layanan', 'ubah_password', 'relokasi', 'aktivasi_baru'
         searchKeyword: '',
         isLoading: false,
         isFetching: false,
@@ -538,7 +622,7 @@ function nocNotifikasiPage() {
         
         alerts: {!! json_encode($alerts ?? []) !!},
         intentional: {!! json_encode($intentional ?? []) !!},
-        summary: {!! json_encode($summary ?? ['total_active' => 0, 'total_los' => 0, 'total_down' => 0, 'total_los_down' => 0, 'total_tickets' => 0, 'total_intentional' => 0]) !!},
+        summary: {!! json_encode($summary ?? ['total_active' => 0, 'total_los' => 0, 'total_down' => 0, 'total_los_down' => 0, 'total_tickets' => 0, 'total_gangguan' => 0, 'total_ubah_layanan' => 0, 'total_ubah_password' => 0, 'total_relokasi' => 0, 'total_aktivasi' => 0, 'total_intentional' => 0]) !!},
 
         init() {
             this.updateClock();
@@ -599,6 +683,9 @@ function nocNotifikasiPage() {
                 list = this.alerts;
             } else if (this.activeTab === 'tiket') {
                 list = this.alerts.filter(item => item.device_type === 'tiket');
+                if (this.ticketFilter !== 'all') {
+                    list = list.filter(item => (item.ticket_category || '') === this.ticketFilter);
+                }
             } else if (this.activeTab === 'intentional') {
                 list = this.intentional;
             } else if (this.activeTab === 'perangkat') {
@@ -612,7 +699,9 @@ function nocNotifikasiPage() {
                     (item.device_name && item.device_name.toLowerCase().includes(kw)) ||
                     (item.subtitle && item.subtitle.toLowerCase().includes(kw)) ||
                     (item.message && item.message.toLowerCase().includes(kw)) ||
-                    (item.status && item.status.toLowerCase().includes(kw))
+                    (item.status && item.status.toLowerCase().includes(kw)) ||
+                    (item.ticket_category_label && item.ticket_category_label.toLowerCase().includes(kw)) ||
+                    (item.nomor_internet && item.nomor_internet.toLowerCase().includes(kw))
                 );
             }
 
@@ -656,8 +745,15 @@ function nocNotifikasiPage() {
                         this.intentional = data.data.intentional || [];
                         this.summary = data.data.summary || {
                             total_active: this.alerts.length,
+                            total_los: 0,
+                            total_down: 0,
                             total_los_down: 0,
                             total_tickets: 0,
+                            total_gangguan: 0,
+                            total_ubah_layanan: 0,
+                            total_ubah_password: 0,
+                            total_relokasi: 0,
+                            total_aktivasi: 0,
                             total_intentional: this.intentional.length
                         };
                     }

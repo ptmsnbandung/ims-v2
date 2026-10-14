@@ -150,6 +150,7 @@ class NotificationController extends Controller
                         'trx_tiket_gangguan.tiket',
                         'trx_tiket_gangguan.nomor_internet',
                         'trx_tiket_gangguan.keluhan',
+                        'trx_tiket_gangguan.kat_tiket',
                         'trx_tiket_gangguan.date_create',
                         'view_batchjob.nama_pelanggan',
                     ])
@@ -162,14 +163,29 @@ class NotificationController extends Controller
                     $keluhan = $t->keluhan ? ' - ' . substr($t->keluhan, 0, 40) : '';
                     $tKey = $t->tiket ?: $t->nomor_internet;
                     $tDate = $t->date_create ?: 'created';
+                    $kat = (string)($t->kat_tiket ?? '11');
+
+                    if ($kat === '12') {
+                        $title = 'Tiket Ubah Password';
+                        $speech = "Ada tiket ubah password baru dari {$nama}";
+                        $url = route('teknik.tiket.gangguan', ['kategori' => 'ubah_password']);
+                    } elseif ($kat === '13') {
+                        $title = 'Tiket Relokasi Layanan';
+                        $speech = "Ada tiket relokasi layanan baru dari {$nama}";
+                        $url = route('teknik.tiket.gangguan', ['kategori' => 'relokasi']);
+                    } else {
+                        $title = 'Tiket Gangguan Baru';
+                        $speech = "Ada tiket gangguan baru dari {$nama}";
+                        $url = route('teknik.tiket.gangguan', ['kategori' => 'gangguan']);
+                    }
 
                     $notifications[] = [
                         'id' => 'tiket_' . $tKey . '_' . md5($tDate),
                         'type' => 'tiket',
-                        'title' => 'Tiket Gangguan Baru',
-                        'message' => "Tiket gangguan dari {$nama}{$keluhan}",
-                        'speech_text' => "Ada tiket gangguan baru dari {$nama}",
-                        'url' => route('teknik.tiket.gangguan'),
+                        'title' => $title,
+                        'message' => "{$title} dari {$nama}{$keluhan}",
+                        'speech_text' => $speech,
+                        'url' => $url,
                         'created_at' => $t->date_create,
                     ];
                 }

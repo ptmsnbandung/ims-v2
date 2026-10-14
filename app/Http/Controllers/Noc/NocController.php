@@ -3714,7 +3714,8 @@ class NocController extends Controller
         $activeAlerts = [];
         $intentionalAlerts = [];
 
-        // 1. TIKET GANGGUAN BARU / BELUM SELESAI (status != 14 && status != Selesai)
+        // 1. TIKET (GANGGUAN, UBAH PASSWORD, RELOKASI, UBAH LAYANAN, AKTIVASI PASANG BARU)
+        // 1.a TIKET GANGGUAN, UBAH PASSWORD, & RELOKASI LAYANAN (trx_tiket_gangguan)
         if (Schema::hasTable('trx_tiket_gangguan')) {
             try {
                 $ticketQuery = DB::table('trx_tiket_gangguan');
@@ -3726,6 +3727,7 @@ class NocController extends Controller
                             'trx_tiket_gangguan.keluhan',
                             'trx_tiket_gangguan.indikasi',
                             'trx_tiket_gangguan.status',
+                            'trx_tiket_gangguan.kat_tiket',
                             'trx_tiket_gangguan.nomor_hp',
                             'trx_tiket_gangguan.date_create',
                             'trx_batchjob_register.nama_pelanggan',
@@ -3740,6 +3742,7 @@ class NocController extends Controller
                         'trx_tiket_gangguan.keluhan',
                         'trx_tiket_gangguan.indikasi',
                         'trx_tiket_gangguan.status',
+                        'trx_tiket_gangguan.kat_tiket',
                         'trx_tiket_gangguan.nomor_hp',
                         'trx_tiket_gangguan.date_create',
                     ]);
@@ -3757,35 +3760,173 @@ class NocController extends Controller
                           ->orWhere('trx_tiket_gangguan.hide', '!=', '1');
                     })
                     ->orderBy('trx_tiket_gangguan.date_create', 'desc')
-                    ->limit(20)
+                    ->limit(50)
                     ->get();
 
                 foreach ($tickets as $t) {
-                    $devKey = 'tiket_' . $t->tiket;
-                    $isIntentional = $intentionalRecords->has($devKey);
+                    $kat = (string)($t->kat_tiket ?? '11');
                     $namaPelanggan = $t->nama_pelanggan ?: ($t->nomor_internet ?: 'Pelanggan');
-                    $isLosTicket = stripos($t->keluhan ?? '', 'los') !== false || stripos($t->indikasi ?? '', 'los') !== false;
+
+                    if ($kat === '12') {
+                        // Tiket Ubah Password
+                        $devKey = 'ubah_pw_' . $t->tiket;
+                        $isIntentional = $intentionalRecords->has($devKey);
+                        $item = [
+                            'id' => $devKey,
+                            'device_key' => $devKey,
+                            'device_type' => 'tiket',
+                            'ticket_category' => 'ubah_password',
+                            'ticket_category_label' => 'Tiket Ubah Password',
+                            'category_badge_color' => 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+                            'title' => 'Tiket Ubah Password',
+                            'device_name' => "Ubah Password #{$t->tiket} - {$namaPelanggan}",
+                            'subtitle' => $namaPelanggan . ' (' . ($t->nomor_internet ?: '-') . ')',
+                            'message' => $t->keluhan ?: 'Permintaan perubahan konfigurasi password Wi-Fi / PPPoE pelanggan.',
+                            'status' => $t->status === '11' ? 'Baru (Open)' : ($t->status === '12' ? 'On Schedule' : 'Diproses'),
+                            'severity' => 'warning',
+                            'badge_color' => 'bg-purple-600 text-white',
+                            'icon_type' => 'ticket',
+                            'olt_kode' => $t->olt ?? null,
+                            'interface_name' => $t->index_olt ?? null,
+                            'nomor_internet' => $t->nomor_internet,
+                            'created_at' => $t->date_create ? Carbon::parse($t->date_create)->format('d M Y, H:i') : '-',
+                            'created_at_raw' => $t->date_create,
+                            'duration_human' => $t->date_create ? Carbon::parse($t->date_create)->locale('id')->diffForHumans() : null,
+                            'url' => route('teknik.tiket.gangguan', ['kategori' => 'ubah_password']),
+                            'action_label' => 'Buka Tiket Password',
+                            'is_intentional' => $isIntentional,
+                            'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                        ];
+                    } elseif ($kat === '13') {
+                        // Tiket Relokasi Layanan
+                        $devKey = 'relokasi_' . $t->tiket;
+                        $isIntentional = $intentionalRecords->has($devKey);
+                        $item = [
+                            'id' => $devKey,
+                            'device_key' => $devKey,
+                            'device_type' => 'tiket',
+                            'ticket_category' => 'relokasi',
+                            'ticket_category_label' => 'Relokasi Layanan',
+                            'category_badge_color' => 'bg-teal-100 text-teal-700 dark:bg-teal-950/70 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+                            'title' => 'Tiket Relokasi Layanan',
+                            'device_name' => "Relokasi #{$t->tiket} - {$namaPelanggan}",
+                            'subtitle' => $namaPelanggan . ' (' . ($t->nomor_internet ?: '-') . ')',
+                            'message' => $t->keluhan ?: 'Permintaan pemindahan alamat instalasi / pergeseran titik kabel (Relokasi).',
+                            'status' => $t->status === '11' ? 'Baru (Open)' : ($t->status === '12' ? 'On Schedule' : 'Diproses'),
+                            'severity' => 'warning',
+                            'badge_color' => 'bg-teal-600 text-white',
+                            'icon_type' => 'ticket',
+                            'olt_kode' => $t->olt ?? null,
+                            'interface_name' => $t->index_olt ?? null,
+                            'nomor_internet' => $t->nomor_internet,
+                            'created_at' => $t->date_create ? Carbon::parse($t->date_create)->format('d M Y, H:i') : '-',
+                            'created_at_raw' => $t->date_create,
+                            'duration_human' => $t->date_create ? Carbon::parse($t->date_create)->locale('id')->diffForHumans() : null,
+                            'url' => route('teknik.tiket.gangguan', ['kategori' => 'relokasi']),
+                            'action_label' => 'Proses Relokasi',
+                            'is_intentional' => $isIntentional,
+                            'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                        ];
+                    } else {
+                        // Tiket Gangguan
+                        $devKey = 'tiket_' . $t->tiket;
+                        $isIntentional = $intentionalRecords->has($devKey);
+                        $isLosTicket = stripos($t->keluhan ?? '', 'los') !== false || stripos($t->indikasi ?? '', 'los') !== false;
+                        $item = [
+                            'id' => $devKey,
+                            'device_key' => $devKey,
+                            'device_type' => 'tiket',
+                            'ticket_category' => 'gangguan',
+                            'ticket_category_label' => 'Tiket Gangguan',
+                            'category_badge_color' => 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+                            'title' => $isLosTicket ? 'Tiket Gangguan: Indikasi LOS' : 'Tiket Gangguan Masuk',
+                            'device_name' => "Tiket #{$t->tiket} - {$namaPelanggan}",
+                            'subtitle' => $namaPelanggan . ' (' . ($t->nomor_internet ?: '-') . ')',
+                            'message' => $t->keluhan ?: ($t->indikasi ?: 'Tiket gangguan baru memerlukan penanganan NOC/Teknik.'),
+                            'status' => $t->status === '11' ? 'Baru (Open)' : ($t->status === '12' ? 'On Schedule' : 'Diproses'),
+                            'severity' => $isLosTicket ? 'danger' : 'warning',
+                            'badge_color' => $isLosTicket ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white',
+                            'icon_type' => 'ticket',
+                            'olt_kode' => $t->olt ?? null,
+                            'interface_name' => $t->index_olt ?? null,
+                            'nomor_internet' => $t->nomor_internet,
+                            'created_at' => $t->date_create ? Carbon::parse($t->date_create)->format('d M Y, H:i') : '-',
+                            'created_at_raw' => $t->date_create,
+                            'duration_human' => $t->date_create ? Carbon::parse($t->date_create)->locale('id')->diffForHumans() : null,
+                            'url' => route('teknik.tiket.gangguan', ['kategori' => 'gangguan']),
+                            'action_label' => 'Buka Tiket',
+                            'is_intentional' => $isIntentional,
+                            'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                        ];
+                    }
+
+                    if ($item['is_intentional']) {
+                        $intentionalAlerts[] = $item;
+                    } else {
+                        $activeAlerts[] = $item;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('NOC notif tickets error: ' . $e->getMessage());
+            }
+        }
+
+        // 1.b TIKET UBAH LAYANAN (Upgrade / Downgrade / Ubah Paket Internet)
+        if (Schema::hasTable('trx_ubah_layanan')) {
+            try {
+                $updownQuery = DB::table('trx_ubah_layanan')
+                    ->whereIn('trx_ubah_layanan.status_ubah_layanan', ['11', '12'])
+                    ->where(function ($q) {
+                        $q->whereNull('trx_ubah_layanan.hide')
+                          ->orWhere('trx_ubah_layanan.hide', '!=', '1');
+                    });
+
+                if (Schema::hasTable('trx_batchjob_register')) {
+                    $updownQuery->leftJoin('trx_batchjob_register', 'trx_ubah_layanan.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
+                        ->select([
+                            'trx_ubah_layanan.*',
+                            'trx_batchjob_register.nama_pelanggan',
+                            'trx_batchjob_register.alamat_pasang',
+                            'trx_batchjob_register.olt',
+                            'trx_batchjob_register.index_olt',
+                        ]);
+                } else {
+                    $updownQuery->select(['trx_ubah_layanan.*']);
+                }
+
+                $updowns = $updownQuery->orderBy('trx_ubah_layanan.date_create', 'desc')
+                    ->limit(30)
+                    ->get();
+
+                foreach ($updowns as $u) {
+                    $devKey = 'ubah_layanan_' . $u->kode_trx_ubah_layanan;
+                    $isIntentional = $intentionalRecords->has($devKey);
+                    $namaPelanggan = $u->nama_pelanggan ?: ($u->nomor_internet ?: 'Pelanggan');
+                    $tglRaw = $u->date_create ?: $u->date_request;
 
                     $item = [
                         'id' => $devKey,
                         'device_key' => $devKey,
                         'device_type' => 'tiket',
-                        'title' => $isLosTicket ? 'Tiket Gangguan: Indikasi LOS' : 'Tiket Gangguan Masuk',
-                        'device_name' => "Tiket #{$t->tiket} - {$namaPelanggan}",
-                        'subtitle' => $namaPelanggan . ' (' . ($t->nomor_internet ?: '-') . ')',
-                        'message' => $t->keluhan ?: ($t->indikasi ?: 'Tiket gangguan baru memerlukan penanganan NOC/Teknik.'),
-                        'status' => $t->status === '11' ? 'Baru (Open)' : 'Diproses',
-                        'severity' => $isLosTicket ? 'danger' : 'warning',
-                        'badge_color' => $isLosTicket ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white',
+                        'ticket_category' => 'ubah_layanan',
+                        'ticket_category_label' => 'Tiket Ubah Layanan',
+                        'category_badge_color' => 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                        'title' => 'Tiket Ubah Layanan',
+                        'device_name' => "Ubah Layanan #{$u->kode_trx_ubah_layanan} - {$namaPelanggan}",
+                        'subtitle' => $namaPelanggan . ' (' . ($u->nomor_internet ?: '-') . ')',
+                        'message' => $u->note_request ?: 'Permintaan penyesuaian profil bandwidth / paket layanan internet oleh Finance.',
+                        'status' => $u->status_ubah_layanan === '11' ? 'Request Baru' : 'On Schedule',
+                        'severity' => 'info',
+                        'badge_color' => 'bg-blue-600 text-white',
                         'icon_type' => 'ticket',
-                        'olt_kode' => $t->olt ?? null,
-                        'interface_name' => $t->index_olt ?? null,
-                        'nomor_internet' => $t->nomor_internet,
-                        'created_at' => $t->date_create ? Carbon::parse($t->date_create)->format('d M Y, H:i') : '-',
-                        'created_at_raw' => $t->date_create,
-                        'duration_human' => $t->date_create ? Carbon::parse($t->date_create)->locale('id')->diffForHumans() : null,
-                        'url' => route('teknik.tiket.gangguan'),
-                        'action_label' => 'Buka Tiket',
+                        'olt_kode' => $u->olt ?? null,
+                        'interface_name' => $u->index_olt ?? null,
+                        'nomor_internet' => $u->nomor_internet,
+                        'created_at' => $tglRaw ? Carbon::parse($tglRaw)->format('d M Y, H:i') : '-',
+                        'created_at_raw' => $tglRaw,
+                        'duration_human' => $tglRaw ? Carbon::parse($tglRaw)->locale('id')->diffForHumans() : null,
+                        'url' => route('teknik.permintaan.up-downgrade'),
+                        'action_label' => 'Proses Ubah Layanan',
                         'is_intentional' => $isIntentional,
                         'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
                     ];
@@ -3797,7 +3938,107 @@ class NocController extends Controller
                     }
                 }
             } catch (\Throwable $e) {
-                Log::warning('NOC notif tickets error: ' . $e->getMessage());
+                Log::warning('NOC notif ubah layanan error: ' . $e->getMessage());
+            }
+        }
+
+        // 1.c AKTIVASI PASANG BARU (Instalasi Selesai, Menunggu / Terjadwal Aktivasi NOC)
+        if (Schema::hasTable('trx_batchjob_register')) {
+            try {
+                $aktivasiQuery = DB::table('trx_batchjob_register')
+                    ->whereIn('trx_batchjob_register.status_reg', ['18', '18.1', '19', '19.1'])
+                    ->where(function ($q) {
+                        $q->whereNull('trx_batchjob_register.hide')
+                          ->orWhere('trx_batchjob_register.hide', '!=', '1');
+                    });
+
+                if (Schema::hasTable('trx_instalasi')) {
+                    $aktivasiQuery->leftJoin('trx_instalasi', 'trx_batchjob_register.nomor_internet', '=', 'trx_instalasi.nomor_internet')
+                        ->select([
+                            'trx_batchjob_register.nomor_internet',
+                            'trx_batchjob_register.nama_pelanggan',
+                            'trx_batchjob_register.alamat_pasang',
+                            'trx_batchjob_register.olt',
+                            'trx_batchjob_register.index_olt',
+                            'trx_batchjob_register.status_reg',
+                            'trx_batchjob_register.date_create',
+                            'trx_batchjob_register.date_update',
+                            'trx_instalasi.instalasi_team',
+                            'trx_instalasi.instalasi_note_finish',
+                        ]);
+                } else {
+                    $aktivasiQuery->select([
+                        'trx_batchjob_register.nomor_internet',
+                        'trx_batchjob_register.nama_pelanggan',
+                        'trx_batchjob_register.alamat_pasang',
+                        'trx_batchjob_register.olt',
+                        'trx_batchjob_register.index_olt',
+                        'trx_batchjob_register.status_reg',
+                        'trx_batchjob_register.date_create',
+                        'trx_batchjob_register.date_update',
+                    ]);
+                }
+
+                $aktivasies = $aktivasiQuery->orderBy('trx_batchjob_register.date_update', 'desc')
+                    ->orderBy('trx_batchjob_register.date_create', 'desc')
+                    ->limit(30)
+                    ->get();
+
+                foreach ($aktivasies as $p) {
+                    $devKey = 'aktivasi_' . $p->nomor_internet;
+                    $isIntentional = $intentionalRecords->has($devKey);
+                    $namaPelanggan = $p->nama_pelanggan ?: ($p->nomor_internet ?: 'Pelanggan Baru');
+                    $tgl = $p->date_update ?: $p->date_create;
+
+                    $msgParts = [];
+                    if (!empty($p->instalasi_team)) {
+                        $msgParts[] = "Teknisi: {$p->instalasi_team}";
+                    }
+                    if (!empty($p->instalasi_note_finish)) {
+                        $msgParts[] = "Catatan: {$p->instalasi_note_finish}";
+                    } else {
+                        $msgParts[] = "Instalasi selesai. Menunggu aktivasi jaringan & konfigurasi OLT oleh NOC.";
+                    }
+                    $message = implode(' • ', $msgParts);
+
+                    $isScheduled = in_array((string)$p->status_reg, ['19', '19.1']);
+                    $statusLabel = $isScheduled ? 'Terjadwal NOC' : 'Siap Aktivasi';
+
+                    $item = [
+                        'id' => $devKey,
+                        'device_key' => $devKey,
+                        'device_type' => 'tiket',
+                        'ticket_category' => 'aktivasi_baru',
+                        'ticket_category_label' => 'Aktivasi Pasang Baru',
+                        'category_badge_color' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+                        'title' => 'Aktivasi Pasang Baru',
+                        'device_name' => "Pasang Baru #{$p->nomor_internet} - {$namaPelanggan}",
+                        'subtitle' => $namaPelanggan . ' (' . ($p->nomor_internet ?: '-') . ')' . ($p->olt ? " • OLT {$p->olt}" : ''),
+                        'message' => $message,
+                        'status' => $statusLabel,
+                        'severity' => $isScheduled ? 'info' : 'success',
+                        'badge_color' => $isScheduled ? 'bg-cyan-600 text-white' : 'bg-emerald-600 text-white',
+                        'icon_type' => 'ticket',
+                        'olt_kode' => $p->olt ?? null,
+                        'interface_name' => $p->index_olt ?? null,
+                        'nomor_internet' => $p->nomor_internet,
+                        'created_at' => $tgl ? Carbon::parse($tgl)->format('d M Y, H:i') : '-',
+                        'created_at_raw' => $tgl,
+                        'duration_human' => $tgl ? Carbon::parse($tgl)->locale('id')->diffForHumans() : null,
+                        'url' => route('noc.aktivasi', ['status' => 'siap_aktivasi', 'search' => $p->nomor_internet]),
+                        'action_label' => 'Aktivasi NOC',
+                        'is_intentional' => $isIntentional,
+                        'intentional_data' => $isIntentional ? $intentionalRecords->get($devKey) : null,
+                    ];
+
+                    if ($isIntentional) {
+                        $intentionalAlerts[] = $item;
+                    } else {
+                        $activeAlerts[] = $item;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('NOC notif aktivasi error: ' . $e->getMessage());
             }
         }
 
@@ -4222,6 +4463,12 @@ class NocController extends Controller
         $totalTickets = count(array_filter($activeAlerts, fn($a) => $a['device_type'] === 'tiket'));
         $totalIntentional = count($intentionalAlerts);
 
+        $totalGangguan = count(array_filter($activeAlerts, fn($a) => ($a['ticket_category'] ?? '') === 'gangguan'));
+        $totalUbahLayanan = count(array_filter($activeAlerts, fn($a) => ($a['ticket_category'] ?? '') === 'ubah_layanan'));
+        $totalUbahPassword = count(array_filter($activeAlerts, fn($a) => ($a['ticket_category'] ?? '') === 'ubah_password'));
+        $totalRelokasi = count(array_filter($activeAlerts, fn($a) => ($a['ticket_category'] ?? '') === 'relokasi'));
+        $totalAktivasi = count(array_filter($activeAlerts, fn($a) => ($a['ticket_category'] ?? '') === 'aktivasi_baru'));
+
         return [
             'alerts' => $activeAlerts,
             'intentional' => $intentionalAlerts,
@@ -4231,6 +4478,11 @@ class NocController extends Controller
                 'total_down' => $totalDown,
                 'total_los_down' => $totalLos + $totalDown,
                 'total_tickets' => $totalTickets,
+                'total_gangguan' => $totalGangguan,
+                'total_ubah_layanan' => $totalUbahLayanan,
+                'total_ubah_password' => $totalUbahPassword,
+                'total_relokasi' => $totalRelokasi,
+                'total_aktivasi' => $totalAktivasi,
                 'total_intentional' => $totalIntentional,
             ],
             'updated_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',

@@ -857,7 +857,9 @@ class NocController extends Controller
         $endDate = $request->query('end_date');
         $isForce = $request->boolean('refresh') || $request->query('sync') === '1' || $request->query('force') === '1';
 
-        $cacheKey = "noc_pon_traffic_view_{$olt->kode_olt}_" . ($startDate ?? 'def') . '_' . ($endDate ?? 'def');
+        $sKey = $startDate ? md5($startDate) : 'def';
+        $eKey = $endDate ? md5($endDate) : 'def';
+        $cacheKey = "noc_pon_traffic_view_{$olt->kode_olt}_{$sKey}_{$eKey}";
         if ($isForce) {
             Cache::forget($cacheKey);
         }
@@ -882,8 +884,8 @@ class NocController extends Controller
             'olt' => $olt,
             'allOlts' => $allOlts,
             'ponTelemetry' => $ponTelemetry,
-            'startDate' => $startDate ?? now()->subDays(7)->format('Y-m-d'),
-            'endDate' => $endDate ?? now()->format('Y-m-d'),
+            'startDate' => $startDate ? Carbon::parse($startDate)->format('Y-m-d\TH:i') : now()->subDays(7)->startOfDay()->format('Y-m-d\TH:i'),
+            'endDate' => $endDate ? Carbon::parse($endDate)->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i'),
         ]);
     }
 

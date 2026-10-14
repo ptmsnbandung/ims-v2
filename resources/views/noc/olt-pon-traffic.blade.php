@@ -93,27 +93,29 @@
                     <span>Filter Periode:</span>
                 </span>
 
-                <!-- Dari Tanggal -->
+                <!-- Dari Tanggal & Jam -->
                 <div class="flex items-center gap-1.5">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Dari Tanggal:</label>
-                    <input type="date" 
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Dari Tanggal & Jam:</label>
+                    <input type="datetime-local" 
+                           step="60"
                            name="start_date" 
                            value="{{ $startDate }}"
                            class="px-2 py-0.5 text-xs font-mono rounded bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     <span class="text-[10px] text-slate-400 font-mono hidden md:inline">
-                        ({{ \Carbon\Carbon::parse($startDate)->format('d-m-Y') }})
+                        ({{ \Carbon\Carbon::parse($startDate)->format('d-m-Y H:i') }})
                     </span>
                 </div>
 
-                <!-- Sampai Tanggal -->
+                <!-- Sampai Tanggal & Jam -->
                 <div class="flex items-center gap-1.5">
-                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Sampai Tanggal:</label>
-                    <input type="date" 
+                    <label class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Sampai Tanggal & Jam:</label>
+                    <input type="datetime-local" 
+                           step="60"
                            name="end_date" 
                            value="{{ $endDate }}"
                            class="px-2 py-0.5 text-xs font-mono rounded bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                     <span class="text-[10px] text-slate-400 font-mono hidden md:inline">
-                        ({{ \Carbon\Carbon::parse($endDate)->format('d-m-Y') }})
+                        ({{ \Carbon\Carbon::parse($endDate)->format('d-m-Y H:i') }})
                     </span>
                 </div>
             </div>

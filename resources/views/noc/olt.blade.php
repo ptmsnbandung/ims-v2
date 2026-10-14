@@ -16,8 +16,8 @@
         dateFilters: {
             @foreach($olts as $o)
                 '{{ $o->kode_olt }}': {
-                    start_date: '{{ $telemetryMap[$o->kode_olt]['mrtg']['start_date_input'] ?? now()->subDays(7)->format('Y-m-d') }}',
-                    end_date: '{{ $telemetryMap[$o->kode_olt]['mrtg']['end_date_input'] ?? now()->format('Y-m-d') }}',
+                    start_date: '{{ $telemetryMap[$o->kode_olt]['mrtg']['start_date_input'] ?? now()->subDays(7)->startOfDay()->format('Y-m-d\TH:i') }}',
+                    end_date: '{{ $telemetryMap[$o->kode_olt]['mrtg']['end_date_input'] ?? now()->format('Y-m-d\TH:i') }}',
                 },
             @endforeach
         },
@@ -59,6 +59,25 @@
             navigator.clipboard.writeText(ip);
             this.copiedIp = ip;
             setTimeout(() => { this.copiedIp = null; }, 2000);
+        },
+
+        formatDateTimeDisplay(val) {
+            if (!val) return '';
+            try {
+                if (val.includes('T')) {
+                    const parts = val.split('T');
+                    const dFmt = parts[0].split('-').reverse().join('-');
+                    return '(' + dFmt + ' ' + (parts[1] || '') + ')';
+                }
+                if (val.includes(' ')) {
+                    const parts = val.split(' ');
+                    const dFmt = parts[0].split('-').reverse().join('-');
+                    return '(' + dFmt + ' ' + (parts[1] || '') + ')';
+                }
+                return '(' + val.split('-').reverse().join('-') + ')';
+            } catch(e) {
+                return '(' + val + ')';
+            }
         },
 
         async filterTrafficByDate(kodeOlt) {
@@ -545,34 +564,36 @@
                                         </div>
                                     </div>
 
-                                    <!-- Date Range Picker: Dari Tanggal & Sampai Tanggal (DD-MM-YYYY) -->
+                                    <!-- Date Range Picker: Dari Tanggal/Jam & Sampai Tanggal/Jam (DD-MM-YYYY HH:mm) -->
                                     <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
                                         <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                                            <!-- Dari Tanggal -->
+                                            <!-- Dari Tanggal & Jam -->
                                             <div class="flex items-center gap-1.5">
-                                                <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">Dari Tanggal:</span>
+                                                <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">Dari Tanggal & Jam:</span>
                                                 <div class="relative">
-                                                    <input type="date" 
+                                                    <input type="datetime-local" 
+                                                           step="60"
                                                            x-model="dateFilters['{{ $olt->kode_olt }}'].start_date" 
                                                            class="px-2 py-0.5 text-[11px] font-mono rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                                           title="Format: DD-MM-YYYY" />
+                                                           title="Format: DD-MM-YYYY HH:mm" />
                                                 </div>
                                                 <span class="text-[9px] text-slate-400 font-mono hidden xl:inline" 
-                                                      x-text="dateFilters['{{ $olt->kode_olt }}'].start_date ? '(' + dateFilters['{{ $olt->kode_olt }}'].start_date.split('-').reverse().join('-') + ')' : ''">
+                                                      x-text="formatDateTimeDisplay(dateFilters['{{ $olt->kode_olt }}'].start_date)">
                                                 </span>
                                             </div>
 
-                                            <!-- Sampai Tanggal -->
+                                            <!-- Sampai Tanggal & Jam -->
                                             <div class="flex items-center gap-1.5">
-                                                <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">Sampai Tanggal:</span>
+                                                <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">Sampai Tanggal & Jam:</span>
                                                 <div class="relative">
-                                                    <input type="date" 
+                                                    <input type="datetime-local" 
+                                                           step="60"
                                                            x-model="dateFilters['{{ $olt->kode_olt }}'].end_date" 
                                                            class="px-2 py-0.5 text-[11px] font-mono rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                                           title="Format: DD-MM-YYYY" />
+                                                           title="Format: DD-MM-YYYY HH:mm" />
                                                 </div>
                                                 <span class="text-[9px] text-slate-400 font-mono hidden xl:inline" 
-                                                      x-text="dateFilters['{{ $olt->kode_olt }}'].end_date ? '(' + dateFilters['{{ $olt->kode_olt }}'].end_date.split('-').reverse().join('-') + ')' : ''">
+                                                      x-text="formatDateTimeDisplay(dateFilters['{{ $olt->kode_olt }}'].end_date)">
                                                 </span>
                                             </div>
                                         </div>

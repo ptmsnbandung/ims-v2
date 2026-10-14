@@ -92,7 +92,9 @@ class OltConnectionService
     public function getCachedOrBaselineTelemetry(object $olt, ?string $startDate = null, ?string $endDate = null): array
     {
         $kodeOlt = (string)($olt->kode_olt ?? 'OLT');
-        $cacheKey = "olt_telemetry_{$kodeOlt}_" . ($startDate ?? 'default') . '_' . ($endDate ?? 'default');
+        $sKey = $startDate ? md5($startDate) : 'default';
+        $eKey = $endDate ? md5($endDate) : 'default';
+        $cacheKey = "olt_telemetry_{$kodeOlt}_{$sKey}_{$eKey}";
 
         if (Cache::has($cacheKey)) {
             $cached = Cache::get($cacheKey);
@@ -192,7 +194,9 @@ class OltConnectionService
     public function getOltRealTelemetry(object $olt, ?string $startDate = null, ?string $endDate = null, bool $forceFresh = false): array
     {
         $kodeOlt = (string)($olt->kode_olt ?? 'OLT');
-        $cacheKey = "olt_telemetry_{$kodeOlt}_" . ($startDate ?? 'default') . '_' . ($endDate ?? 'default');
+        $sKey = $startDate ? md5($startDate) : 'default';
+        $eKey = $endDate ? md5($endDate) : 'default';
+        $cacheKey = "olt_telemetry_{$kodeOlt}_{$sKey}_{$eKey}";
 
         if (!$forceFresh && Cache::has($cacheKey)) {
             $cached = Cache::get($cacheKey);
@@ -345,7 +349,7 @@ class OltConnectionService
             '0.0 M',
         ];
 
-        // Hitung rentang tanggal (Default: 7 hari terakhir)
+        // Hitung rentang tanggal / waktu jam (Default: 7 hari terakhir)
         $startTs = !empty($startDate) ? strtotime($startDate) : strtotime('-7 days');
         $endTs = !empty($endDate) ? strtotime($endDate) : time();
         if ($endTs < $startTs) {
@@ -354,15 +358,23 @@ class OltConnectionService
             $endTs = $tmp;
         }
 
-        // Generate 9 titik label sumbu X berdasarkan rentang tanggal
+        // Generate 9 titik label sumbu X berdasarkan rentang tanggal/jam
         $xLabels = [];
-        $diffSeconds = max(86400, $endTs - $startTs);
+        $diffSeconds = max(1800, $endTs - $startTs); // Minimal rentang 30 menit
         $stepSeconds = $diffSeconds / 8;
         for ($k = 0; $k <= 8; $k++) {
             $currPointTs = $startTs + ($stepSeconds * $k);
-            if ($diffSeconds <= 86400 * 8) {
+            if ($diffSeconds <= 86400) {
+                // Rentang dalam 24 jam / rentang waktu jam: Tampilkan format Jam:Menit (HH:mm)
+                $xLabels[] = date('H:i', $currPointTs);
+            } elseif ($diffSeconds <= 86400 * 3) {
+                // Rentang 1 sampai 3 hari: Tampilkan format Tanggal Jam (d/m H:i)
+                $xLabels[] = date('d/m H:i', $currPointTs);
+            } elseif ($diffSeconds <= 86400 * 8) {
+                // Rentang mingguan (sampai 8 hari): Tampilkan nama hari (D)
                 $xLabels[] = date('D', $currPointTs);
             } else {
+                // Rentang panjang bulanan: Tampilkan format Tanggal/Bulan (d/m)
                 $xLabels[] = date('d/m', $currPointTs);
             }
         }
@@ -378,13 +390,21 @@ class OltConnectionService
         $sumOut = 0;
         $maxOut = 0;
 
-        $seed = crc32($kodeOlt . date('Y-m-d', $startTs));
+        $seed = crc32($kodeOlt . date('Y-m-d-H', $startTs) . '_' . date('Y-m-d-H', $endTs));
 
         for ($i = 0; $i < $numPoints; $i++) {
-            $phase = ($i / 8) * 2 * M_PI;
-            $diurnal = sin($phase) * 0.35 + 0.55;
+            $currPointTime = $startTs + (($i / ($numPoints - 1)) * $diffSeconds);
+            if ($diffSeconds <= 86400 * 2) {
+                // Kurva diurnal realistis jam 00:00 - 24:00 (peak malam, sepi dini hari)
+                $hourOfDay = (int)date('G', $currPointTime) + ((int)date('i', $currPointTime) / 60);
+                $hourPhase = (($hourOfDay - 4) / 24) * 2 * M_PI;
+                $diurnal = sin($hourPhase - (M_PI / 2)) * 0.35 + 0.55;
+            } else {
+                $phase = ($i / 8) * 2 * M_PI;
+                $diurnal = sin($phase) * 0.35 + 0.55;
+            }
             $noise = ((sin($i * 13.7 + $seed) * 10000) % 100) / 300;
-            $spike = ($i % 7 == 3 || $i == 48 || $i == 12 || $i == 60) ? 0.35 : 0;
+            $spike = ($i % 7 == 3 || $i == 48 || $i == 12 || $i == 60) ? 0.20 : 0;
             $valRatio = max(0.05, min(0.98, $diurnal + $noise + $spike));
 
             if ($i === $numPoints - 1) {
@@ -429,10 +449,10 @@ class OltConnectionService
             'max_val' => $maxVal,
             'y_labels' => $yLabels,
             'x_labels' => $xLabels,
-            'start_date' => date('d-m-Y', $startTs),
-            'end_date' => date('d-m-Y', $endTs),
-            'start_date_input' => date('Y-m-d', $startTs),
-            'end_date_input' => date('Y-m-d', $endTs),
+            'start_date' => date('d-m-Y H:i', $startTs),
+            'end_date' => date('d-m-Y H:i', $endTs),
+            'start_date_input' => date('Y-m-d\TH:i', $startTs),
+            'end_date_input' => date('Y-m-d\TH:i', $endTs),
             'in_polygon' => $inPolygon,
             'out_polyline' => $outPolyline,
             'current_in' => number_format($currentDownMbps, 1) . ' M',

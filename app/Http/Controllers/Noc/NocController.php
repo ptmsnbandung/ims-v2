@@ -4219,6 +4219,21 @@ class NocController extends Controller
                 'total_tickets' => $totalTickets,
                 'total_intentional' => $totalIntentional,
             ],
+            'debug' => [
+                'isForceRefresh' => $isForceRefresh,
+                'cache_store' => config('cache.default'),
+                'olts' => array_map(function($o) use ($oltService) {
+                    $cKey = "olt_live_all_onu_states_{$o->kode_olt}";
+                    $lKey = "olt_last_known_good_onus_{$o->kode_olt}";
+                    return [
+                        'kode' => $o->kode_olt,
+                        'has_cache' => Cache::has($cKey),
+                        'cache_count' => is_array(Cache::get($cKey)) ? count(Cache::get($cKey)) : gettype(Cache::get($cKey)),
+                        'has_last' => Cache::has($lKey),
+                        'last_count' => is_array(Cache::get($lKey)) ? count(Cache::get($lKey)) : gettype(Cache::get($lKey)),
+                    ];
+                }, isset($olts) ? $olts->all() : []),
+            ],
             'updated_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             'timestamp' => now()->timestamp,
         ];

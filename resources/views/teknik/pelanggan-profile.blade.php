@@ -26,6 +26,10 @@
     if (!$mapsUrl && $cleanLonLat) {
         $mapsUrl = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($cleanLonLat);
     }
+
+    $user = auth()->user();
+    $isFinance = request()->routeIs('finance.*') || $user?->hasRole('finance');
+    $isTeknik = $user?->hasRole('teknik') && !$user?->hasRole(['noc', 'admin', 'direktur']);
 @endphp
 
 <div class="space-y-6"
@@ -166,26 +170,36 @@
                         PIC SALES : {{ $customer->nama_sales ?: '-' }}
                     </div>
 
-                    <!-- 1-Click Unified Action Button (MikroTik + Kick + Reboot ONT) -->
+                    <!-- Action Button: Edit Data Pelanggan for Teknik, or Unified Activate/Suspend for NOC/Admin/Direktur -->
                     <div class="pt-2">
-                        @if(in_array($customer->status_reg ?? '', ['21', '21.1']))
-                            <button type="button" 
-                                    onclick="triggerProfileUnifiedAction('{{ $customer->nomor_internet }}', '{{ addslashes($customer->nama_pelanggan) }}', 'activate')"
-                                    class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                        @if($isTeknik)
+                            <a href="{{ route('teknik.pendaftaran', ['edit' => $customer->nomor_internet, 'from' => 'profile']) }}"
+                               class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 transition cursor-pointer">
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                 </svg>
-                                <span>⚡ Aktifkan Layanan (1-Click)</span>
-                            </button>
-                        @elseif(($customer->status_reg ?? '') == '20')
-                            <button type="button" 
-                                    onclick="triggerProfileUnifiedAction('{{ $customer->nomor_internet }}', '{{ addslashes($customer->nama_pelanggan) }}', 'suspend')"
-                                    class="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition cursor-pointer">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                                </svg>
-                                <span>🔒 Suspend / Isolir (1-Click)</span>
-                            </button>
+                                <span>✏️ Edit Data Pelanggan</span>
+                            </a>
+                        @elseif(!$isFinance)
+                            @if(in_array($customer->status_reg ?? '', ['21', '21.1']))
+                                <button type="button" 
+                                        onclick="triggerProfileUnifiedAction('{{ $customer->nomor_internet }}', '{{ addslashes($customer->nama_pelanggan) }}', 'activate')"
+                                        class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                                    </svg>
+                                    <span>⚡ Aktifkan Layanan (1-Click)</span>
+                                </button>
+                            @elseif(($customer->status_reg ?? '') == '20')
+                                <button type="button" 
+                                        onclick="triggerProfileUnifiedAction('{{ $customer->nomor_internet }}', '{{ addslashes($customer->nama_pelanggan) }}', 'suspend')"
+                                        class="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition cursor-pointer">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                    </svg>
+                                    <span>🔒 Suspend / Isolir (1-Click)</span>
+                                </button>
+                            @endif
                         @endif
                     </div>
                 </div>

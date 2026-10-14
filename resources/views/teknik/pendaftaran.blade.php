@@ -1025,8 +1025,9 @@
                       class="p-4 sm:p-5">
                     @csrf
                     
-                    <!-- Hidden input for edit nomor internet -->
+                    <!-- Hidden input for edit nomor internet & return redirect -->
                     <input type="hidden" name="nomor_internet" :value="editNomorInternet">
+                    <input type="hidden" name="return_to" :value="returnTo">
                     
                     <!-- STEP 1: DATA PELANGGAN & KTP -->
                     <div x-show="currentStep === 1" class="space-y-4">
@@ -3337,6 +3338,21 @@ function pendaftaranWorkflowComponent() {
 
         // Validation error message
         stepError: '',
+
+        // Return URL source (e.g. 'pelanggan' or 'profile')
+        returnTo: '',
+
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const editNo = urlParams.get('edit');
+            const from = urlParams.get('from');
+            if (from) {
+                this.returnTo = from;
+            }
+            if (editNo) {
+                this.openEditModal(editNo);
+            }
+        },
 
         openNewModal() {
             this.isEditMode = false;

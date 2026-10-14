@@ -2241,6 +2241,14 @@ class TeknikController extends Controller
                 $instalasiPayload
             );
 
+        if ($request->input('return_to') === 'pelanggan') {
+            return redirect()->route('teknik.pelanggan')->with('success', "Data pelanggan '{$request->nama_pelanggan}' ({$nomorInternet}) berhasil diperbarui!");
+        }
+
+        if ($request->input('return_to') === 'profile') {
+            return redirect()->route('teknik.pelanggan.profile', $nomorInternet)->with('success', "Data pelanggan '{$request->nama_pelanggan}' ({$nomorInternet}) berhasil diperbarui!");
+        }
+
         return redirect()->route('teknik.pendaftaran')->with('success', "Data pendaftaran pelanggan '{$request->nama_pelanggan}' ({$nomorInternet}) berhasil diperbarui!");
     }
 

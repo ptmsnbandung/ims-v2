@@ -2256,8 +2256,21 @@ class NocController extends Controller
      */
     public function unifiedActivate(Request $request, string $nomorInternet, CustomerProvisioningService $provisioning): JsonResponse|RedirectResponse
     {
+        // Proteksi Hak Akses: Role Teknik tidak diizinkan melakukan aktivasi pelanggan
+        if (auth()->user()?->hasRole('teknik') && !auth()->user()?->hasRole(['noc', 'admin', 'direktur'])) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'title' => 'Akses Ditolak',
+                    'summary' => 'Role Teknik tidak memiliki izin untuk mengaktifkan pelanggan.',
+                    'message' => 'Akses ditolak. Role Teknik tidak memiliki izin untuk mengaktifkan pelanggan.'
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Akses ditolak. Role Teknik tidak memiliki izin untuk mengaktifkan pelanggan.');
+        }
+
         $currentUser = auth()->user()->nama ?? 'NOC';
-        $note = $request->input('note', 'Aktivasi langsung dari NOC/Teknik');
+        $note = $request->input('note', 'Aktivasi langsung dari NOC');
 
         $result = $provisioning->activateCustomer($nomorInternet, $currentUser, $note);
 
@@ -2273,8 +2286,21 @@ class NocController extends Controller
      */
     public function unifiedSuspend(Request $request, string $nomorInternet, CustomerProvisioningService $provisioning): JsonResponse|RedirectResponse
     {
+        // Proteksi Hak Akses: Role Teknik tidak diizinkan melakukan suspend pelanggan
+        if (auth()->user()?->hasRole('teknik') && !auth()->user()?->hasRole(['noc', 'admin', 'direktur'])) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'title' => 'Akses Ditolak',
+                    'summary' => 'Role Teknik tidak memiliki izin untuk melakukan suspend pelanggan.',
+                    'message' => 'Akses ditolak. Role Teknik tidak memiliki izin untuk melakukan suspend pelanggan.'
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Akses ditolak. Role Teknik tidak memiliki izin untuk melakukan suspend pelanggan.');
+        }
+
         $currentUser = auth()->user()->nama ?? 'NOC';
-        $reason = $request->input('reason', 'Suspend / Isolir langsung dari NOC/Teknik');
+        $reason = $request->input('reason', 'Suspend / Isolir langsung dari NOC');
 
         $result = $provisioning->suspendCustomer($nomorInternet, $currentUser, $reason);
 

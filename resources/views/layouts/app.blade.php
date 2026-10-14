@@ -2626,6 +2626,7 @@
             ),
             chimeAudio: new Audio('{{ asset("assets/sound/anoun.mp3") }}'),
             audioUnlocked: false,
+            speechUnlocked: false,
             voicesReady: false,
             queue: [],
             isProcessingQueue: false,
@@ -2657,14 +2658,17 @@
             },
 
             init() {
-                // Ensure voices are loaded in browser
+                // Muat daftar suara browser secara proaktif
                 if ('speechSynthesis' in window) {
+                    try {
+                        window.speechSynthesis.getVoices();
+                    } catch(e) {}
                     window.speechSynthesis.onvoiceschanged = () => {
                         this.voicesReady = true;
                     };
                 }
 
-                // Unlock audio autoplay and AudioContext on user interaction
+                // Unlock audio autoplay & Web Speech API saat ada interaksi pengguna pertama kali
                 const unlock = () => {
                     try {
                         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2679,13 +2683,29 @@
                     } catch(e) {}
 
                     if (!this.audioUnlocked) {
-                        this.chimeAudio.muted = true;
-                        this.chimeAudio.play().then(() => {
-                            this.chimeAudio.pause();
-                            this.chimeAudio.currentTime = 0;
-                            this.chimeAudio.muted = false;
-                            this.audioUnlocked = true;
-                        }).catch(() => {});
+                        try {
+                            this.chimeAudio.muted = true;
+                            this.chimeAudio.play().then(() => {
+                                this.chimeAudio.pause();
+                                this.chimeAudio.currentTime = 0;
+                                this.chimeAudio.muted = false;
+                                this.audioUnlocked = true;
+                            }).catch(() => {});
+                        } catch(e) {}
+                    }
+
+                    if (!this.speechUnlocked && 'speechSynthesis' in window) {
+                        try {
+                            // Prime / unlock Web Speech API agar tidak diblokir background timer Chromium
+                            if (window.speechSynthesis.paused) {
+                                window.speechSynthesis.resume();
+                            }
+                            const primeUtterance = new SpeechSynthesisUtterance(' ');
+                            primeUtterance.volume = 0.01;
+                            primeUtterance.rate = 10;
+                            window.speechSynthesis.speak(primeUtterance);
+                            this.speechUnlocked = true;
+                        } catch(e) {}
                     }
                 };
                 document.addEventListener('click', unlock, { passive: true });
@@ -2753,6 +2773,47 @@
                 }
             },
 
+            // Fallback audio jika Web Speech API tidak bersuara / tidak ada voice di OS
+            playFallbackAudio(item) {
+                return new Promise((resolve) => {
+                    try {
+                        const type = (item.type || '').toLowerCase();
+                        const title = (item.title || '').toLowerCase();
+                        const text = (item.speech_text || '').toLowerCase();
+                        let audioFile = null;
+
+                        if (type === 'test' || text.includes('tes notifikasi')) {
+                            audioFile = '{{ asset("assets/sound/notifikasi_tes_ims.mp3") }}';
+                        } else if (type === 'pembayaran' || title.includes('pembayaran') || text.includes('pembayaran tagihan') || text.includes('pembayaran biaya registrasi')) {
+                            audioFile = '{{ asset("assets/sound/notifikasi_pembayaran_masuk.mp3") }}';
+                        } else if (type === 'tiket' || title.includes('tiket') || text.includes('tiket gangguan')) {
+                            audioFile = '{{ asset("assets/sound/notifikasi_tiket_gangguan.mp3") }}';
+                        } else if (type === 'transfer' || text.includes('transfer') || text.includes('konfirmasi')) {
+                            audioFile = '{{ asset("assets/sound/notifikasi_konfirmasi_transfer.mp3") }}';
+                        }
+
+                        if (audioFile) {
+                            const audio = new Audio(audioFile);
+                            let resolved = false;
+                            const finish = () => {
+                                if (!resolved) {
+                                    resolved = true;
+                                    resolve();
+                                }
+                            };
+                            audio.onended = finish;
+                            audio.onerror = finish;
+                            audio.play().catch(finish);
+                            setTimeout(finish, 6000);
+                        } else {
+                            resolve();
+                        }
+                    } catch(e) {
+                        resolve();
+                    }
+                });
+            },
+
             playChimeAndSpeak(item) {
                 return new Promise((resolve) => {
                     const text = item.speech_text || item.title;
@@ -2769,65 +2830,140 @@
                         }
                     };
 
-                    const speakText = () => {
+                    const executeSpeech = () => {
                         if (!('speechSynthesis' in window)) {
-                            done();
+                            // Browser tanpa Web Speech: langsung putar file audio pre-recorded
+                            this.playFallbackAudio(item).finally(done);
                             return;
                         }
+
                         try {
-                            // Fix bug Chromium: Bersihkan antrean speech lama yang macet/beku
-                            try {
+                            // 1. Buka status paused jika Chrome membekukan speech engine
+                            if (window.speechSynthesis.paused) {
+                                window.speechSynthesis.resume();
+                            }
+
+                            // 2. Batalkan antrean lama jika masih berbicara
+                            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
                                 window.speechSynthesis.cancel();
-                            } catch(e) {}
+                            }
 
-                            const utterance = new SpeechSynthesisUtterance(text);
-                            utterance.lang = 'id-ID';
-                            utterance.rate = 1.0;
-                            utterance.pitch = 1.0;
-                            utterance.volume = 1.0;
-
-                            const voices = window.speechSynthesis.getVoices();
-                            const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang === 'id_ID' || (v.lang && v.lang.toLowerCase().startsWith('id')));
-                            if (idVoice) utterance.voice = idVoice;
-
-                            utterance.onend = () => {
-                                window._currentUtterance = null;
-                                done();
-                            };
-                            utterance.onerror = () => {
-                                window._currentUtterance = null;
-                                done();
-                            };
-
-                            // Cegah Garbage Collector browser mematikan utterance di tengah jalan
-                            window._currentUtterance = utterance;
-
-                            // Safety timeout in case utterance onend never fires
+                            // Berikan jeda 80ms agar cancel() selesai di background thread SAPI/Chromium
                             setTimeout(() => {
-                                window._currentUtterance = null;
-                                done();
-                            }, 7000);
+                                try {
+                                    if (window.speechSynthesis.paused) {
+                                        window.speechSynthesis.resume();
+                                    }
 
-                            window.speechSynthesis.speak(utterance);
+                                    const utterance = new SpeechSynthesisUtterance(text);
+                                    utterance.rate = 1.0;
+                                    utterance.pitch = 1.0;
+                                    utterance.volume = 1.0;
+
+                                    // Deteksi suara bahasa Indonesia atau fallback default sistem
+                                    const voices = window.speechSynthesis.getVoices() || [];
+                                    let targetVoice = null;
+                                    if (voices.length > 0) {
+                                        targetVoice = voices.find(v => 
+                                            v.lang === 'id-ID' || 
+                                            v.lang === 'id_ID' || 
+                                            (v.lang && v.lang.toLowerCase().startsWith('id')) || 
+                                            /indonesia/i.test(v.name)
+                                        );
+                                        if (!targetVoice) {
+                                            targetVoice = voices.find(v => v.default) || 
+                                                          voices.find(v => v.lang && v.lang.startsWith('en')) || 
+                                                          voices[0];
+                                        }
+                                    }
+
+                                    if (targetVoice) {
+                                        utterance.voice = targetVoice;
+                                        utterance.lang = targetVoice.lang || 'id-ID';
+                                    } else {
+                                        utterance.lang = 'id-ID';
+                                    }
+
+                                    let hasStarted = false;
+                                    utterance.onstart = () => {
+                                        hasStarted = true;
+                                    };
+
+                                    utterance.onend = () => {
+                                        window._activeUtterance = null;
+                                        done();
+                                    };
+
+                                    utterance.onerror = (err) => {
+                                        console.warn('SpeechSynthesis error:', err?.error || err);
+                                        window._activeUtterance = null;
+                                        if (!hasStarted) {
+                                            this.playFallbackAudio(item).finally(done);
+                                        } else {
+                                            done();
+                                        }
+                                    };
+
+                                    // Cegah Garbage Collection memutus ucapan di tengah jalan
+                                    window._activeUtterance = utterance;
+
+                                    // Heartbeat unpause Chrome
+                                    const hbInterval = setInterval(() => {
+                                        if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
+                                            window.speechSynthesis.resume();
+                                        }
+                                    }, 800);
+
+                                    // Timeout pengaman maksimal 9 detik
+                                    setTimeout(() => {
+                                        clearInterval(hbInterval);
+                                        if (!hasStarted) {
+                                            this.playFallbackAudio(item).finally(done);
+                                        } else {
+                                            done();
+                                        }
+                                    }, 9000);
+
+                                    window.speechSynthesis.speak(utterance);
+                                } catch(errInner) {
+                                    console.warn('Speech speak exception:', errInner);
+                                    this.playFallbackAudio(item).finally(done);
+                                }
+                            }, 80);
                         } catch(e) {
-                            done();
+                            console.warn('SpeechSynthesis setup error:', e);
+                            this.playFallbackAudio(item).finally(done);
                         }
                     };
 
-                    // HILANGKAN SUARA 2 KALI: Jika notifikasi sudah memiliki nada khusus (seperti nada synthesizer recovery atau alarm),
-                    // langsung mulai ucapan suara tanpa memutar chime MP3 lagi agar suara sebelum ucapan TIDAK 2 KALI.
+                    // HILANGKAN SUARA BERTABRAKAN:
+                    // Jika notifikasi recovery atau alarm, nada Web Audio berlangsung ~0.4s
                     if (item.skipChime || item.type === 'noc_recovery' || item.type === 'noc_alarm') {
-                        setTimeout(speakText, 350);
+                        setTimeout(executeSpeech, 450);
                         return;
                     }
 
-                    // Untuk notifikasi umum lainnya, putar Chime MP3 sekali
-                    this.chimeAudio.currentTime = 0;
-                    this.chimeAudio.play().then(() => {
-                        setTimeout(speakText, 550);
-                    }).catch(() => {
-                        speakText();
-                    });
+                    // Untuk notifikasi umum, putar Chime pembuka anoun.mp3:
+                    // Nada pembuka berbunyi ~1.2 detik. Setelah chime berbunyi, kita hentikan chime dan mulai ucapan suara secara jernih
+                    try {
+                        this.chimeAudio.currentTime = 0;
+                        this.chimeAudio.volume = 0.8;
+                        this.chimeAudio.play().then(() => {
+                            setTimeout(() => {
+                                try {
+                                    if (this.chimeAudio && !this.chimeAudio.paused) {
+                                        this.chimeAudio.pause();
+                                        this.chimeAudio.currentTime = 0;
+                                    }
+                                } catch(e) {}
+                                executeSpeech();
+                            }, 1300);
+                        }).catch(() => {
+                            executeSpeech();
+                        });
+                    } catch(e) {
+                        executeSpeech();
+                    }
                 });
             },
 

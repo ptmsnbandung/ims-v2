@@ -2448,7 +2448,8 @@ class TeknikController extends Controller
             });
         }
 
-        $pelanggan = $query->orderBy('nomor_internet', 'desc')
+        $pelanggan = $query->orderBy('date_create', 'desc')
+                           ->orderBy('nomor_internet', 'desc')
                            ->paginate($perPage)
                            ->withQueryString();
 
@@ -2620,7 +2621,7 @@ class TeknikController extends Controller
             ]);
 
             $no = 1;
-            $query->orderBy('nomor_internet', 'desc')->chunk(500, function ($rows) use ($handle, &$no) {
+            $query->orderBy('date_create', 'desc')->orderBy('nomor_internet', 'desc')->chunk(500, function ($rows) use ($handle, &$no) {
                 foreach ($rows as $r) {
                     $gender = $r->jenis_kelamin == 1 ? 'Laki-Laki' : ($r->jenis_kelamin == 2 ? 'Perempuan' : '-');
                     

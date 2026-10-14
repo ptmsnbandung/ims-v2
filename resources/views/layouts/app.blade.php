@@ -1226,7 +1226,7 @@
                          x-data="{ infraOpen: {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit', 'noc.gpon*', 'noc.pop*', 'noc.wilayah*', 'noc.router*', 'noc.activity-log*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Infrastruktur Jaringan', [
                              { label: 'Topologi & GPON Port', url: '{{ route('noc.gpon') }}', active: {{ request()->routeIs('noc.gpon*') ? 'true' : 'false' }} },
-                             { label: 'OLT & Master Node', url: '{{ route('noc.olt') }}', active: {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit') ? 'true' : 'false' }} },
+                             { label: 'Network Monitoring', url: '{{ route('noc.olt') }}', active: {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit') ? 'true' : 'false' }} },
                              { label: 'Router MikroTik', url: '{{ route('noc.router') }}', active: {{ request()->routeIs('noc.router*') ? 'true' : 'false' }} },
                              { label: 'Activity Log Router', url: '{{ route('noc.activity-log') }}', active: {{ request()->routeIs('noc.activity-log*') ? 'true' : 'false' }} },
                              { label: 'POP (Point of Presence)', url: '{{ route('noc.pop') }}', active: {{ request()->routeIs('noc.pop*') ? 'true' : 'false' }} },
@@ -1262,7 +1262,7 @@
                             </a>
                             <a href="{{ route('noc.olt') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.olt*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.olt*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-                                <span>OLT & Master Node</span>
+                                <span>Network Monitoring</span>
                             </a>
                             <a href="{{ route('noc.router') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.router*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.router*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>

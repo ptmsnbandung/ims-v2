@@ -619,7 +619,7 @@ function nocNotifikasiPage() {
             if (!silent) this.isLoading = true;
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const timeoutId = setTimeout(() => controller.abort(), 35000);
 
             try {
                 const url = !silent ? '{{ route("noc.api.notifications") }}?refresh=1' : '{{ route("noc.api.notifications") }}';

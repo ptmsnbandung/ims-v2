@@ -3927,18 +3927,25 @@ class NocController extends Controller
                         Cache::forget($cacheKey);
                     }
 
-                    // 1. Ambil dari cache live jika masih segar (< 90 detik)
+                    // 1. Ambil dari cache live dan lastKnown good state
                     $abnormalOnus = Cache::get($cacheKey);
+                    $lastKnown = Cache::get($lastKnownKey, []);
 
-                    // 2. Jika cache live kosong atau force refresh, lakukan scan dengan atomic lock non-blocking
-                    if ($abnormalOnus === null) {
-                        $lastKnown = Cache::get($lastKnownKey, []);
+                    // Pastikan jika cache live kosong, gunakan lastKnown agar data tidak kosong seketika
+                    if (empty($abnormalOnus) && !empty($lastKnown)) {
+                        $abnormalOnus = $lastKnown;
+                    }
+
+                    // 2. Jika cache live kosong atau force refresh, lakukan scan dengan atomic lock
+                    $shouldScan = $isForceRefresh || !Cache::has($cacheKey);
+
+                    if ($shouldScan) {
                         $lock = Cache::lock($lockKey, 30);
                         $acquired = false;
 
                         if ($isForceRefresh || empty($lastKnown)) {
                             try {
-                                $acquired = $lock->block(2);
+                                $acquired = $lock->block(3);
                             } catch (\Throwable $e) {
                                 $acquired = false;
                             }
@@ -3948,35 +3955,34 @@ class NocController extends Controller
 
                         if ($acquired) {
                             try {
-                                $sess = $oltService->openOltTelnetSession($olt, 2.0);
+                                $sess = $oltService->openOltTelnetSession($olt, 2.5);
                                 if (!$sess) {
-                                    $abnormalOnus = $lastKnown;
-                                    Cache::put($cacheKey, $abnormalOnus, 30);
+                                    if (!empty($lastKnown)) {
+                                        $abnormalOnus = $lastKnown;
+                                        Cache::put($cacheKey, $abnormalOnus, 60);
+                                    }
                                 } else {
                                     $socket = $sess['socket'];
                                     @stream_set_blocking($socket, false);
 
-                                    $readUntilPrompt = function($sock, $timeout = 1.2) {
+                                    $readUntilPrompt = function($sock, $timeout = 4.5) {
                                         $buf = '';
                                         $start = microtime(true);
                                         while ((microtime(true) - $start) < $timeout) {
-                                            $chunk = @fread($sock, 2048);
+                                            $chunk = @fread($sock, 4096);
                                             if ($chunk !== false && strlen($chunk) > 0) {
                                                 $buf .= $chunk;
-                                                if (preg_match('/[#>](\s*)$/', $buf)) break;
+                                                // Hanya stop jika sudah membaca banyak data dan prompt akhir OLT muncul
+                                                if (strlen($buf) > 300 && preg_match('/[#>](\s*)$/', $buf)) break;
                                             }
-                                            usleep(10000); // 10ms sleep
+                                            usleep(15000); // 15ms sleep
                                         }
                                         return $buf;
                                     };
 
-                                    // Bersihkan prompt awal dari banner login sebelum mengirim command
-                                    $readUntilPrompt($socket, 0.8);
-
-                                    fwrite($socket, "terminal length 0\r\n");
-                                    $readUntilPrompt($socket, 0.5);
+                                    // Session OLT sudah diset terminal length 0 saat login
                                     fwrite($socket, "show gpon onu state\r\n");
-                                    $buf = $readUntilPrompt($socket, 2.5);
+                                    $buf = $readUntilPrompt($socket, 5.0);
 
                                     // Langsung logout agar session OLT segera dilepas bebas (< 1 detik)
                                     fwrite($socket, "exit\r\n");
@@ -4031,24 +4037,31 @@ class NocController extends Controller
                                     }
 
                                     // Simpan hasil scan sukses sebagai Last Known Good State & Live Cache
-                                    if (!empty($results) || strlen($buf) > 100) {
+                                    if (!empty($results) && count($results) >= 3) {
                                         Cache::put($lastKnownKey, $results, 86400 * 7);
                                         $abnormalOnus = $results;
-                                    } else {
+                                        Cache::put($cacheKey, $abnormalOnus, 180); // Cache 3 menit
+                                    } elseif (!empty($lastKnown)) {
+                                        // Jangan pernah menimpa lastKnown dengan data kosong jika respon OLT terpotong
                                         $abnormalOnus = $lastKnown;
+                                        Cache::put($cacheKey, $abnormalOnus, 60);
+                                    } else {
+                                        $abnormalOnus = $results;
                                     }
-
-                                    Cache::put($cacheKey, $abnormalOnus, 90);
                                 }
                             } catch (\Throwable $e) {
                                 Log::warning("NOC OLT scan error on {$olt->kode_olt}: " . $e->getMessage());
-                                $abnormalOnus = $lastKnown;
+                                if (!empty($lastKnown)) {
+                                    $abnormalOnus = $lastKnown;
+                                }
                             } finally {
                                 optional($lock)->release();
                             }
                         } else {
-                            // Lock sedang dipegang oleh request lain: kembalikan $lastKnown seketika tanpa menunggu!
-                            $abnormalOnus = $lastKnown;
+                            // Lock sedang dipegang oleh request lain: pastikan data lastKnown tetap ada
+                            if (empty($abnormalOnus) && !empty($lastKnown)) {
+                                $abnormalOnus = $lastKnown;
+                            }
                         }
                     }
 

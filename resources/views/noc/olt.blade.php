@@ -450,11 +450,25 @@
                                         <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800/80">
                                             <span class="block text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">Avg Rx Signal</span>
                                             <div class="flex items-center justify-between mt-0.5">
-                                                <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs" x-text="telemetryMap['{{ $olt->kode_olt }}']?.rx_power ?? '{{ $tData['rx_power'] ?? '-19.80 dBm' }}'">
-                                                    {{ $tData['rx_power'] ?? '-19.80 dBm' }}
+                                                <span class="font-mono font-bold text-xs"
+                                                      :class="{
+                                                          'text-emerald-600 dark:text-emerald-400': (telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'optimal',
+                                                          'text-amber-600 dark:text-amber-400': (telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'normal',
+                                                          'text-rose-600 dark:text-rose-400': (telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'warning',
+                                                          'text-slate-500 dark:text-slate-400': (telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'offline'
+                                                      }"
+                                                      x-text="telemetryMap['{{ $olt->kode_olt }}']?.rx_power ?? '{{ $tData['rx_power'] ?? '-' }}'">
+                                                    {{ $tData['rx_power'] ?? '-' }}
                                                 </span>
-                                                <span class="text-[9px] px-1 py-0.2 rounded font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                                                    Optimal
+                                                <span class="text-[9px] px-1 py-0.2 rounded font-bold uppercase tracking-wider border"
+                                                      :class="{
+                                                          'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20': (telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'optimal',
+                                                          'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20': (telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'normal',
+                                                          'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20': (telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'warning',
+                                                          'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700': (telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'offline'
+                                                      }"
+                                                      x-text="(telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'offline' ? 'Offline' : ((telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'warning' ? 'Degraded' : ((telemetryMap['{{ $olt->kode_olt }}']?.rx_status ?? '{{ $tData['rx_status'] ?? 'optimal' }}') === 'normal' ? 'Normal' : 'Optimal'))">
+                                                    {{ ($tData['rx_status'] ?? 'optimal') === 'offline' ? 'Offline' : (($tData['rx_status'] ?? 'optimal') === 'warning' ? 'Degraded' : (($tData['rx_status'] ?? 'optimal') === 'normal' ? 'Normal' : 'Optimal')) }}
                                                 </span>
                                             </div>
                                         </div>

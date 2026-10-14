@@ -1233,15 +1233,14 @@ class OltConnectionService
             Cache::forget($cacheKey);
         }
 
-        return Cache::remember($cacheKey, 60, function () use ($olt, $kodeOlt, $portIndex) {
-            $session = $this->openOltTelnetSession($olt, 3.5);
+        return Cache::remember($cacheKey, 180, function () use ($olt, $kodeOlt, $portIndex) {
+            $session = $this->openOltTelnetSession($olt, 3.0);
             if (!$session) {
                 return null;
             }
             $socket = $session['socket'];
 
             $slot = $this->getOltGponSlot($olt);
-            $altSlot = ($slot === 1) ? 2 : 1;
 
             fwrite($socket, "show gpon onu baseinfo gpon-olt_1/{$slot}/{$portIndex}\r\n");
             fwrite($socket, "show gpon onu state gpon-olt_1/{$slot}/{$portIndex}\r\n");
@@ -1250,30 +1249,32 @@ class OltConnectionService
             fwrite($socket, "show pon power olt-rx gpon-olt_1/{$slot}/{$portIndex}\r\n");
             fwrite($socket, "show pon power olt-tx gpon-olt_1/{$slot}/{$portIndex}\r\n");
             fwrite($socket, "show interface gpon-olt_1/{$slot}/{$portIndex}\r\n");
-
-            // Slot alternatif jika kartu GPON terpasang di slot lain pada chassis OLT fisik
-            fwrite($socket, "show gpon onu baseinfo gpon-olt_1/{$altSlot}/{$portIndex}\r\n");
-            fwrite($socket, "show gpon onu state gpon-olt_1/{$altSlot}/{$portIndex}\r\n");
-            fwrite($socket, "show pon power onu-rx gpon-olt_1/{$altSlot}/{$portIndex}\r\n");
-            fwrite($socket, "show pon power onu-tx gpon-olt_1/{$altSlot}/{$portIndex}\r\n");
-            fwrite($socket, "show pon power olt-rx gpon-olt_1/{$altSlot}/{$portIndex}\r\n");
-            fwrite($socket, "show pon power olt-tx gpon-olt_1/{$altSlot}/{$portIndex}\r\n");
-            fwrite($socket, "show interface gpon-olt_1/{$altSlot}/{$portIndex}\r\n");
-
             fwrite($socket, "exit\r\n");
             fwrite($socket, "yes\r\n");
 
             $buffer = '';
             $start = microtime(true);
-            while (!feof($socket) && (microtime(true) - $start) < 6.0) {
+            $lastDataTime = microtime(true);
+            while (!feof($socket) && (microtime(true) - $start) < 3.5) {
                 $chunk = fread($socket, 8192);
-                if ($chunk === false) break;
-                $buffer .= $chunk;
-                if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed') || str_contains($buffer, '[yes/no]')) {
-                    break;
+                if ($chunk !== false && strlen($chunk) > 0) {
+                    $buffer .= $chunk;
+                    $lastDataTime = microtime(true);
+                    if (str_contains($buffer, '[yes/no]')) {
+                        @fwrite($socket, "yes\r\n");
+                        break;
+                    }
+                    if (str_contains($buffer, 'logout') || str_contains($buffer, 'closed')) {
+                        break;
+                    }
+                } else {
+                    if (strlen($buffer) > 800 && (microtime(true) - $lastDataTime) > 0.25) {
+                        break;
+                    }
+                    usleep(15000);
                 }
             }
-            fclose($socket);
+            @fclose($socket);
 
             // Bersihkan semua byte IAC/non-printable telnet agar UTF-8 valid
             $buffer = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $buffer);
@@ -1744,7 +1745,7 @@ class OltConnectionService
     /**
      * Ambil data lengkap daftar ONU (Optical Network Unit) yang terhubung ke Port PON tertentu
      */
-    public function getPonOnuList(object $olt, int $ponIndex): array
+    public function getPonOnuList(object $olt, int $ponIndex, bool $force = false): array
     {
         $kodeOlt = $olt->kode_olt ?? 'OLT01';
         $gomsnOltId = $this->resolveGomsnOltId($olt);
@@ -1781,7 +1782,7 @@ class OltConnectionService
             // ===================================================================
             // A. UTAMA: DISCOVERY ONU LANGSUNG DARI PERANGKAT FISIK PORT PON OLT
             // ===================================================================
-            $hwDiscovery = $this->fetchRealOltPhysicalOnus($olt, $portNum);
+            $hwDiscovery = $this->fetchRealOltPhysicalOnus($olt, $portNum, $force);
             if ($hwDiscovery && !empty($hwDiscovery['baseinfo'])) {
                 $baseinfo = $hwDiscovery['baseinfo'];
                 $states = $hwDiscovery['states'];

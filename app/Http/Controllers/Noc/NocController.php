@@ -855,8 +855,16 @@ class NocController extends Controller
 
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
+        $isForce = $request->boolean('refresh') || $request->query('sync') === '1' || $request->query('force') === '1';
 
-        $ponTelemetry = $oltService->getOltPonPortsTelemetry($olt, $startDate, $endDate);
+        $cacheKey = "noc_pon_traffic_view_{$olt->kode_olt}_" . ($startDate ?? 'def') . '_' . ($endDate ?? 'def');
+        if ($isForce) {
+            Cache::forget($cacheKey);
+        }
+
+        $ponTelemetry = Cache::remember($cacheKey, 120, function () use ($oltService, $olt, $startDate, $endDate) {
+            return $oltService->getOltPonPortsTelemetry($olt, $startDate, $endDate);
+        });
 
         if ($request->expectsJson() || $request->query('format') === 'json') {
             return response()->json([
@@ -901,7 +909,15 @@ class NocController extends Controller
             $olt->nama_pop = 'POP Utama MSN';
         }
 
-        $onuData = $oltService->getPonOnuList($olt, $pon_index);
+        $isForce = $request->boolean('refresh') || $request->query('sync') === '1' || $request->query('force') === '1';
+        $cacheKey = "noc_pon_onu_list_view_{$olt->kode_olt}_{$pon_index}";
+        if ($isForce) {
+            Cache::forget($cacheKey);
+        }
+
+        $onuData = Cache::remember($cacheKey, 120, function () use ($oltService, $olt, $pon_index, $isForce) {
+            return $oltService->getPonOnuList($olt, $pon_index, $isForce);
+        });
 
         if ($request->expectsJson() || $request->query('format') === 'json') {
             return response()->json([

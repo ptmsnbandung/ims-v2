@@ -3870,15 +3870,20 @@ class NocController extends Controller
                 $olts = DB::table('m_olt')->where('is_active', 1)->get();
                 foreach ($olts as $olt) {
                     $cacheKey = "olt_live_all_onu_states_{$olt->kode_olt}";
+                    $lastKnownKey = "olt_last_known_good_onus_{$olt->kode_olt}";
                     if ($isForceRefresh) {
                         Cache::forget($cacheKey);
                     }
 
-                    // Ambil status seluruh ONU pada OLT fisik (cache 60 detik untuk performa instan)
-                    $abnormalOnus = Cache::remember($cacheKey, 60, function () use ($olt, $oltService, $regMap) {
+                    // Ambil status seluruh ONU pada OLT fisik (cache 120 detik untuk stabilitas dan performa)
+                    $abnormalOnus = Cache::remember($cacheKey, 120, function () use ($olt, $oltService, $regMap, $lastKnownKey) {
+                        $lastKnown = Cache::get($lastKnownKey, []);
                         try {
                             $sess = $oltService->openOltTelnetSession($olt, 2.5);
-                            if (!$sess) return [];
+                            if (!$sess) {
+                                // Jika telnet sedang sibuk atau timeout, kembalikan state sebelumnya agar jumlah stabil
+                                return $lastKnown;
+                            }
                             $socket = $sess['socket'];
 
                             $readUntilPrompt = function($sock, $timeout = 1.2) {
@@ -3900,6 +3905,11 @@ class NocController extends Controller
                             $readUntilPrompt($socket, 0.8);
                             fwrite($socket, "show gpon onu state\r\n");
                             $buf = $readUntilPrompt($socket, 3.5);
+
+                            // Langsung logout agar session OLT segera dilepas bebas (< 1.5 detik total)
+                            fwrite($socket, "exit\r\n");
+                            fwrite($socket, "yes\r\n");
+                            fclose($socket);
 
                             $clean = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $buf);
                             $lines = explode("\n", $clean);
@@ -3948,91 +3958,15 @@ class NocController extends Controller
                                 }
                             }
 
-                            // Ambil riwayat OfflineTime akurat langsung dari OLT hanya untuk pelanggan aktif yang belum ter-cache
-                            $activeOnusToFetch = [];
-                            foreach ($results as &$res) {
-                                $if = $res['interface'];
-                                $port = $res['port'];
-                                $onuId = $res['onu_id'];
-                                $timeCacheKey = "onu_outage_time_{$olt->kode_olt}_{$if}";
-                                $offTime = Cache::get($timeCacheKey);
-
-                                if ($offTime) {
-                                    $res['offline_time'] = $offTime;
-                                    continue;
-                                }
-
-                                // Cek apakah pelanggan aktif (status_reg === '20') di regMap
-                                $matched = $regMap["{$olt->kode_olt}_{$if}"] 
-                                    ?? ($regMap["{$olt->kode_olt}_gpon-onu_{$if}"]
-                                    ?? ($regMap["{$olt->kode_olt}_{$port}:{$onuId}"]
-                                    ?? ($regMap[$if]
-                                    ?? ($regMap["gpon-onu_{$if}"] ?? null))));
-
-                                $isAktif = $matched && ((string)($matched->status_reg ?? '') === '20');
-
-                                if ($isAktif) {
-                                    $activeOnusToFetch[] = &$res;
-                                } else {
-                                    $res['offline_time'] = null;
-                                }
+                            // Simpan hasil scan sukses sebagai Last Known Good State
+                            if (!empty($results) || strlen($buf) > 100) {
+                                Cache::put($lastKnownKey, $results, 86400 * 7);
                             }
-                            unset($res);
-
-                            // Ambil dari OLT fisik dengan prompt reader cepat (maksimal 10 ONU baru per siklus scan)
-                            $fetchCount = 0;
-                            foreach ($activeOnusToFetch as &$res) {
-                                $if = $res['interface'];
-                                $timeCacheKey = "onu_outage_time_{$olt->kode_olt}_{$if}";
-
-                                if ($fetchCount >= 10 || feof($socket)) {
-                                    $fallbackTime = now()->subMinutes((abs(crc32("{$olt->kode_olt}_{$if}")) % 360) + 8)->toDateTimeString();
-                                    Cache::put($timeCacheKey, $fallbackTime, 86400 * 30);
-                                    $res['offline_time'] = $fallbackTime;
-                                    continue;
-                                }
-
-                                fwrite($socket, "show gpon onu detail-info gpon-onu_{$if}\r\n");
-                                $detailBuf = $readUntilPrompt($socket, 0.8);
-                                $offTime = null;
-
-                                if (preg_match_all('/\d+\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/i', $detailBuf, $matches, PREG_SET_ORDER)) {
-                                    for ($i = count($matches) - 1; $i >= 0; $i--) {
-                                        if ($matches[$i][2] !== '0000-00-00 00:00:00') {
-                                            $candidate = $matches[$i][2];
-                                            try {
-                                                $candCarbon = \Carbon\Carbon::parse($candidate);
-                                                if ($candCarbon->year >= 2020) {
-                                                    if ($candCarbon->isFuture()) {
-                                                        $candCarbon = now();
-                                                    }
-                                                    $offTime = $candCarbon->toDateTimeString();
-                                                    break;
-                                                }
-                                            } catch (\Throwable $t) {}
-                                        }
-                                    }
-                                }
-
-                                if (!$offTime) {
-                                    // Fallback waktu mulai yang konsisten dan bervariasi per ONU
-                                    $offTime = now()->subMinutes((abs(crc32("{$olt->kode_olt}_{$if}")) % 480) + 12)->toDateTimeString();
-                                }
-
-                                Cache::put($timeCacheKey, $offTime, 86400 * 30);
-                                $res['offline_time'] = $offTime;
-                                $fetchCount++;
-                            }
-                            unset($res);
-
-                            fwrite($socket, "exit\r\n");
-                            fwrite($socket, "yes\r\n");
-                            fclose($socket);
 
                             return $results;
                         } catch (\Throwable $e) {
                             Log::warning("NOC OLT scan error on {$olt->kode_olt}: " . $e->getMessage());
-                            return [];
+                            return $lastKnown;
                         }
                     });
 

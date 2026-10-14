@@ -201,10 +201,12 @@
 
                     this.fetchAlerts(true);
 
-                    // Polling data isu NOC setiap 30 detik
+                    // Polling data isu NOC setiap 30 detik (nonaktif jika sedang di halaman notifikasi untuk cegah tabrakan request)
+                    @if(!request()->routeIs('noc.notifikasi'))
                     this.pollTimer = setInterval(() => {
                         this.fetchAlerts(true);
                     }, 30000);
+                    @endif
 
                     // Reaktif terhadap perubahan status intentional / pemulihan dari halaman notifikasi
                     window.addEventListener('noc-notifications-updated', () => {
@@ -265,7 +267,7 @@
                                     this.hasNewAlert = true;
                                 }
 
-                                // NOTIFIKASI SUARA: Bunyikan suara alarm jika ada perangkat berstatus LOS atau DOWN
+                                // NOTIFIKASI SUARA: Bunyikan suara alarm HANYA jika ada insiden baru yang baru terdeteksi
                                 this.checkAndPlaySound(newAlerts);
 
                                 this.alerts = newAlerts;
@@ -302,7 +304,18 @@
                         return st === 'LOS' || st === 'DOWN';
                     });
 
-                    // Cari yang belum pernah dibunyikan
+                    // Inisialisasi awal: Jangan bunyikan alarm untuk gangguan lama yang sudah terjadi saat browser dibuka
+                    if (!localStorage.getItem('ims_noc_sound_initialized')) {
+                        losDownAlerts.forEach(a => {
+                            if (a.id) playedKeys.push(a.id);
+                            if (a.device_key) playedKeys.push(a.device_key);
+                        });
+                        localStorage.setItem('ims_noc_sound_initialized', '1');
+                        localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedKeys.slice(-300)));
+                        return;
+                    }
+
+                    // Cari yang benar-benar BARU muncul
                     const unplayed = losDownAlerts.filter(a => !playedKeys.includes(a.id) && !playedKeys.includes(a.device_key));
 
                     if (unplayed.length > 0) {
@@ -310,12 +323,12 @@
                             window.playNocEmergencySound(unplayed[0]);
                         }
 
-                        // Simpan ke localStorage agar tidak membunyikan spam berulang tiap 30 detik
+                        // Tandai segera agar tidak berulang
                         unplayed.forEach(a => {
                             if (a.id) playedKeys.push(a.id);
                             if (a.device_key) playedKeys.push(a.device_key);
                         });
-                        if (playedKeys.length > 200) playedKeys = playedKeys.slice(-200);
+                        if (playedKeys.length > 300) playedKeys = playedKeys.slice(-300);
                         try {
                             localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedKeys));
                         } catch (e) {}

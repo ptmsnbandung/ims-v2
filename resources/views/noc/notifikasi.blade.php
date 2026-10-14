@@ -46,17 +46,6 @@
                     <span>Live: <span class="text-white" x-text="currentTime">--:--:--</span> WIB</span>
                 </div>
 
-                <!-- Tombol Tes Suara Alarm -->
-                <button @click="testSoundAlert()"
-                        type="button"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 border border-rose-400/40 shadow-xs transition cursor-pointer"
-                        title="Tes notifikasi suara jika ada perangkat LOS atau DOWN">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.757 3.63 8.25 4.51 8.25H6.75Z" />
-                    </svg>
-                    <span>Tes Suara Alarm</span>
-                </button>
-
                 <!-- Tombol Refresh -->
                 <button @click="refreshData()"
                         :disabled="isLoading"
@@ -554,10 +543,27 @@ function nocNotifikasiPage() {
             this.updateClock();
             this.clockTimer = setInterval(() => this.updateClock(), 1000);
 
-            // Auto-refresh setiap 20 detik
+            // Seed alert yang sudah ada saat halaman dibuka agar tidak memicu alarm palsu
+            if (Array.isArray(this.alerts) && this.alerts.length > 0) {
+                let playedKeys = [];
+                try {
+                    playedKeys = JSON.parse(localStorage.getItem('ims_noc_sound_played_keys') || '[]');
+                } catch (e) {
+                    playedKeys = [];
+                }
+                this.alerts.forEach(a => {
+                    if (a.id && !playedKeys.includes(a.id)) playedKeys.push(a.id);
+                    if (a.device_key && !playedKeys.includes(a.device_key)) playedKeys.push(a.device_key);
+                });
+                try {
+                    localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedKeys.slice(-300)));
+                } catch (e) {}
+            }
+
+            // Auto-refresh setiap 25 detik
             this.pollTimer = setInterval(() => {
                 this.refreshData(true);
-            }, 20000);
+            }, 25000);
 
             // Reaktif terhadap event global
             window.addEventListener('noc-notifications-updated', () => {
@@ -674,17 +680,6 @@ function nocNotifikasiPage() {
                 try {
                     localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedKeys));
                 } catch (e) {}
-            }
-        },
-
-        testSoundAlert() {
-            if (typeof window.playNocEmergencySound === 'function') {
-                window.playNocEmergencySound({
-                    status: 'LOS',
-                    title: 'Uji Coba Alarm Suara NOC',
-                    device_name: 'Simulasi Perangkat LOS',
-                    message: 'Tes notifikasi suara deteksi LOS dan DOWN berhasil dibunyikan.'
-                }, true);
             }
         },
 

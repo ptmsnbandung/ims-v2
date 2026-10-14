@@ -3255,7 +3255,7 @@
                 }
             });
 
-            // 2. Global Debounced Auto-Submit for filter search inputs
+            // 2. Global Debounced Auto-Submit for filter search inputs (3 seconds delay)
             let autoSearchTimer = null;
             document.addEventListener('input', function(e) {
                 const target = e.target;
@@ -3280,12 +3280,13 @@
                         }));
                     }
                     form.submit();
-                }, 450);
+                }, 3000); // Tunggu 3 detik setelah ketukan terakhir sebelum auto-refresh
             });
 
-            // 3. Keep focus position if user submits via Enter
+            // 3. Keep focus position if user submits via Enter, or cancel timer on Escape
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
+                    clearTimeout(autoSearchTimer);
                     const target = e.target;
                     if (target && target.tagName === 'INPUT' && target.form && (target.form.method || '').toUpperCase() === 'GET') {
                         const selector = target.id ? '#' + target.id : (target.name ? `input[name="${target.name}"]` : null);
@@ -3296,6 +3297,8 @@
                             }));
                         }
                     }
+                } else if (e.key === 'Escape') {
+                    clearTimeout(autoSearchTimer);
                 }
             });
         })();

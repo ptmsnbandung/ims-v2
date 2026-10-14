@@ -330,8 +330,16 @@
                                     </span>
                                 </template>
 
-                                <!-- Time -->
-                                <span class="text-[11px] text-slate-400 dark:text-slate-500 font-mono" x-text="item.created_at"></span>
+                                <!-- Time Mulai Down/Loss & Durasi -->
+                                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[10.5px]">
+                                    <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    <span>Mulai: <strong class="text-slate-800 dark:text-slate-100 font-bold" x-text="item.created_at"></strong></span>
+                                    <template x-if="item.duration_human">
+                                        <span class="text-slate-400 font-normal" x-text="'(' + item.duration_human + ')'"></span>
+                                    </template>
+                                </div>
                             </div>
 
                             <!-- Device Identifier & Subtitle -->

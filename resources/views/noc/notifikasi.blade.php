@@ -627,10 +627,14 @@ function nocNotifikasiPage() {
                     if (data.status === 'success' && data.data) {
                         const newAlerts = data.data.alerts || [];
 
+                        // NOTIFIKASI PEMULIHAN: Periksa perangkat yang sudah pulih
+                        this.checkAndPlayRecovery(newAlerts);
+
                         // NOTIFIKASI SUARA: Mainkan suara alarm jika ada perangkat berstatus LOS atau DOWN
                         this.checkAndPlaySound(newAlerts);
 
                         this.alerts = newAlerts;
+                        this.hasInitializedBaseline = true;
                         this.intentional = data.data.intentional || [];
                         this.summary = data.data.summary || {
                             total_active: this.alerts.length,
@@ -644,6 +648,44 @@ function nocNotifikasiPage() {
                 console.warn('Gagal memuat notifikasi:', e);
             } finally {
                 if (!silent) this.isLoading = false;
+            }
+        },
+
+        checkAndPlayRecovery(newAlerts) {
+            if (!this.hasInitializedBaseline || !Array.isArray(newAlerts)) return;
+            if (!Array.isArray(this.alerts) || this.alerts.length === 0) return;
+
+            const newKeys = new Set();
+            newAlerts.forEach(a => {
+                if (a.id) newKeys.add(a.id);
+                if (a.device_key) newKeys.add(a.device_key);
+            });
+
+            const recovered = this.alerts.filter(old => {
+                const st = (old.status || "").toUpperCase();
+                if (st !== "LOS" && st !== "DOWN") return false;
+                if (old.is_intentional) return false;
+
+                const hasId = old.id && newKeys.has(old.id);
+                const hasKey = old.device_key && newKeys.has(old.device_key);
+                return !hasId && !hasKey;
+            });
+
+            if (recovered.length > 0) {
+                if (typeof window.playNocRecoverySound === "function") {
+                    window.playNocRecoverySound(recovered[0], recovered.length);
+                }
+
+                try {
+                    let playedKeys = JSON.parse(localStorage.getItem("ims_noc_sound_played_keys") || "[]");
+                    const recKeySet = new Set();
+                    recovered.forEach(r => {
+                        if (r.id) recKeySet.add(r.id);
+                        if (r.device_key) recKeySet.add(r.device_key);
+                    });
+                    playedKeys = playedKeys.filter(k => !recKeySet.has(k));
+                    localStorage.setItem("ims_noc_sound_played_keys", JSON.stringify(playedKeys));
+                } catch (e) {}
             }
         },
 

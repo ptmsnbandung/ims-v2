@@ -183,6 +183,7 @@
                 hasNewAlert: false,
                 alerts: [],
                 intentional: [],
+                hasInitializedBaseline: false,
                 summary: {
                     total_active: 0,
                     total_los_down: 0,
@@ -267,10 +268,14 @@
                                     this.hasNewAlert = true;
                                 }
 
-                                // NOTIFIKASI SUARA: Bunyikan suara alarm HANYA jika ada insiden baru yang baru terdeteksi
+                                // NOTIFIKASI PEMULIHAN: Mainkan notifikasi jika ada perangkat yang sudah pulih (tidak DOWN / tidak LOS lagi)
+                                this.checkAndPlayRecovery(newAlerts);
+
+                                // NOTIFIKASI SUARA ALARM: Bunyikan suara alarm HANYA jika ada insiden baru yang baru terdeteksi
                                 this.checkAndPlaySound(newAlerts);
 
                                 this.alerts = newAlerts;
+                                this.hasInitializedBaseline = true;
                                 this.intentional = resData.data.intentional || [];
                                 this.summary = resData.data.summary || {
                                     total_active: this.alerts.length,
@@ -284,6 +289,47 @@
                         console.warn('Gagal memuat notifikasi NOC:', e);
                     } finally {
                         if (!silent) this.isLoading = false;
+                    }
+                },
+
+                checkAndPlayRecovery(newAlerts) {
+                    if (!this.hasInitializedBaseline || !Array.isArray(newAlerts)) return;
+                    if (!Array.isArray(this.alerts) || this.alerts.length === 0) return;
+
+                    const newKeys = new Set();
+                    newAlerts.forEach(a => {
+                        if (a.id) newKeys.add(a.id);
+                        if (a.device_key) newKeys.add(a.device_key);
+                    });
+
+                    // Cari perangkat berstatus LOS / DOWN di this.alerts yang sekarang sudah pulih (tidak ada di newAlerts)
+                    const recovered = this.alerts.filter(old => {
+                        const st = (old.status || "").toUpperCase();
+                        if (st !== "LOS" && st !== "DOWN") return false;
+                        if (old.is_intentional) return false;
+
+                        const hasId = old.id && newKeys.has(old.id);
+                        const hasKey = old.device_key && newKeys.has(old.device_key);
+                        return !hasId && !hasKey;
+                    });
+
+                    if (recovered.length > 0) {
+                        // Mainkan suara pemulihan dan toast sukses
+                        if (typeof window.playNocRecoverySound === "function") {
+                            window.playNocRecoverySound(recovered[0], recovered.length);
+                        }
+
+                        // Bersihkan dari playedKeys agar di kemudian hari jika padam lagi alarm bisa berbunyi
+                        try {
+                            let playedKeys = JSON.parse(localStorage.getItem("ims_noc_sound_played_keys") || "[]");
+                            const recKeySet = new Set();
+                            recovered.forEach(r => {
+                                if (r.id) recKeySet.add(r.id);
+                                if (r.device_key) recKeySet.add(r.device_key);
+                            });
+                            playedKeys = playedKeys.filter(k => !recKeySet.has(k));
+                            localStorage.setItem("ims_noc_sound_played_keys", JSON.stringify(playedKeys));
+                        } catch (e) {}
                     }
                 },
 
@@ -2164,7 +2210,7 @@
                  :class="{
                      'border-l-4 border-l-rose-500 border border-rose-500/30 shadow-rose-500/10': t.type === 'noc_alarm' || t.status === 'LOS' || t.type === 'tiket',
                      'border-l-4 border-l-amber-500 border border-amber-500/30 shadow-amber-500/10': t.status === 'DOWN' || t.type === 'suspend',
-                     'border-l-4 border-l-emerald-500 border border-emerald-500/30 shadow-emerald-500/10': t.type === 'pendaftaran' || t.type === 'pembayaran',
+                     'border-l-4 border-l-emerald-500 border border-emerald-500/30 shadow-emerald-500/10': t.type === 'pendaftaran' || t.type === 'pembayaran' || t.type === 'noc_recovery',
                      'border-l-4 border-l-cyan-500 border border-cyan-500/30 shadow-cyan-500/10': t.type === 'instalasi' || t.type === 'updown',
                      'border-l-4 border-l-teal-500 border border-slate-200 dark:border-slate-800 shadow-slate-900/15': !['noc_alarm', 'tiket', 'suspend', 'pendaftaran', 'pembayaran', 'instalasi', 'updown'].includes(t.type)
                  }"
@@ -2180,7 +2226,7 @@
                      :class="{
                          'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': t.type === 'noc_alarm' || t.status === 'LOS' || t.type === 'tiket',
                          'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30': t.status === 'DOWN' || t.type === 'suspend',
-                         'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': t.type === 'pendaftaran' || t.type === 'pembayaran',
+                         'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': t.type === 'pendaftaran' || t.type === 'pembayaran' || t.type === 'noc_recovery',
                          'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30': t.type === 'instalasi' || t.type === 'updown',
                          'bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30': !t.type
                      }">
@@ -2197,6 +2243,13 @@
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-600"></span>
                         </span>
+                    </template>
+
+                    <!-- Icon: NOC RECOVERY (Koneksi Pulih) -->
+                    <template x-if="t.type === 'noc_recovery'">
+                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
                     </template>
 
                     <!-- Icon: NOC ALARM / LOS / DOWN -->
@@ -2562,6 +2615,64 @@
         });
 
         // Global NOC Emergency Alert Audio Synthesizer & Voice Chime (LOS & DOWN)
+        // Global NOC Recovery Alert Audio Synthesizer & Voice Chime (Saat perangkat pulih / normal kembali)
+        window.playNocRecoverySound = function(recoveredItem, totalRecoveredCount = 1) {
+            // 1. Web Audio Synthesizer: Nada Harmoni Sukses Naik (C5 -> E5 -> G5 -> C6)
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctx = new AudioCtx();
+                    const now = ctx.currentTime;
+                    const notes = [
+                        { freq: 523.25, start: 0.00, dur: 0.14 }, // C5
+                        { freq: 659.25, start: 0.12, dur: 0.14 }, // E5
+                        { freq: 783.99, start: 0.24, dur: 0.16 }, // G5
+                        { freq: 1046.50, start: 0.38, dur: 0.40 } // C6 (Puncak Sukses)
+                    ];
+
+                    notes.forEach(n => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = "sine";
+                        osc.frequency.setValueAtTime(n.freq, now + n.start);
+                        gain.gain.setValueAtTime(0.25, now + n.start);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + n.start);
+                        osc.stop(now + n.start + n.dur);
+                    });
+                }
+            } catch (e) {
+                console.warn("Web Audio recovery tone error:", e);
+            }
+
+            // 2. Play speech via window.ImsVoice & Toast Banner
+            try {
+                const item = recoveredItem || {};
+                const name = item.device_name || item.title || "Perangkat Jaringan";
+                const speechText = totalRecoveredCount > 1 
+                    ? `Koneksi pulih. ${totalRecoveredCount} perangkat telah normal kembali termasuk ${name}.`
+                    : `Koneksi pulih. Perangkat ${name} telah normal kembali.`;
+
+                if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === "function") {
+                    window.ImsVoice.enqueueNotification({
+                        type: "noc_recovery",
+                        status: "ONLINE",
+                        title: "Koneksi Pulih (Normal)",
+                        message: totalRecoveredCount > 1 
+                            ? `${totalRecoveredCount} perangkat telah pulih dan kembali normal.` 
+                            : `${name} telah kembali online dan normal.`,
+                        speech_text: speechText,
+                        device_name: name,
+                        url: item.url || null
+                    });
+                } else if (typeof window.showToast === "function") {
+                    window.showToast("success", `Koneksi Pulih: ${name} sudah normal kembali.`);
+                }
+            } catch (e) {}
+        };
+
         window.playNocEmergencySound = function(alertItem, force = false) {
             // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
             try {

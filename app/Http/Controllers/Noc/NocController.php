@@ -4091,12 +4091,18 @@ class NocController extends Controller
                         $formattedStarted = $carbonStarted->format('d M Y, H:i');
                         $humanDuration = $carbonStarted->locale('id')->diffForHumans();
 
+                        $speechText = $isLos 
+                            ? "Perhatian! Terdeteksi Loss of Signal pada pelanggan {$custName}."
+                            : "Perhatian! Terdeteksi perangkat Down pada pelanggan {$custName}.";
+
                         $item = [
                             'id' => $devKey,
                             'device_key' => $devKey,
                             'device_type' => 'onu',
                             'title' => $isLos ? 'ONU LOS (Loss of Signal)' : "ONU DOWN ({$phaseLabel})",
+                            'user_name' => $custName,
                             'device_name' => "{$fullInterface} - {$custName}",
+                            'speech_text' => $speechText,
                             'subtitle' => "OLT: {$olt->name_olt} • Port PON {$port} • No: {$custNo}",
                             'message' => $isLos 
                                 ? "Sinyal optik fiber terputus / LOS pada {$fullInterface} ({$custName}). Kabel optik putus atau redaman loss."

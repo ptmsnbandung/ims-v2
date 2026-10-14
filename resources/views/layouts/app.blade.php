@@ -2867,90 +2867,124 @@
                 console.warn("Web Audio recovery tone error:", e);
             }
 
-            // 2. Play speech via window.ImsVoice & Toast Banner
-            try {
-                const item = recoveredItem || {};
-                const name = item.device_name || item.title || "Perangkat Jaringan";
-                const speechText = totalRecoveredCount > 1 
-                    ? `Koneksi pulih. ${totalRecoveredCount} perangkat telah normal kembali termasuk ${name}.`
-                    : `Koneksi pulih. Perangkat ${name} telah normal kembali.`;
-
-                if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === "function") {
-                    window.ImsVoice.enqueueNotification({
-                        type: "noc_recovery",
-                        status: "ONLINE",
-                        title: "Koneksi Pulih (Normal)",
-                        message: totalRecoveredCount > 1 
-                            ? `${totalRecoveredCount} perangkat telah pulih dan kembali normal.` 
-                            : `${name} telah kembali online dan normal.`,
-                        speech_text: speechText,
-                        device_name: name,
-                        skipChime: true, // PENTING: Jangan putar chime MP3 lagi karena Web Audio Synthesizer sudah berbunyi
-                        url: item.url || null
-                    });
-                } else if (typeof window.showToast === "function") {
-                    window.showToast("success", `Koneksi Pulih: ${name} sudah normal kembali.`);
+        // Helper mengekstrak nama pelanggan yang bersih untuk Text-to-Speech (tanpa gpon-onu, slot/port, atau format angka yang terbaca tanggal)
+        window.extractCleanNocUserName = function(item) {
+            if (!item) return 'Pelanggan';
+            if (item.user_name && typeof item.user_name === 'string' && item.user_name.trim()) {
+                return item.user_name.trim();
+            }
+            if (item.nama_pelanggan && typeof item.nama_pelanggan === 'string' && item.nama_pelanggan.trim()) {
+                return item.nama_pelanggan.trim();
+            }
+            let raw = item.device_name || item.title || '';
+            if (typeof raw === 'string') {
+                // Hapus awalan teknis OLT seperti "gpon-onu_1/2/16:2 - ", "gpon-olt_... - ", "1/2/16:2 - ", "Tiket #123 - "
+                let clean = raw.replace(/^(?:gpon[-_]onu|gpon[-_]olt|onu|port)[^\s\-:]*[\s\-:]+/i, '');
+                clean = clean.replace(/^(?:\d+\/\d+\/\d+:\d+)\s*[-:]*\s*/i, '');
+                clean = clean.replace(/^tiket\s*#?\d+\s*[-:]*\s*/i, '');
+                clean = clean.trim();
+                // Jika masih ada sisa pemisah " - ", ambil bagian nama pelanggan
+                if (clean.includes(' - ')) {
+                    const parts = clean.split(' - ');
+                    clean = parts[parts.length - 1].trim();
                 }
-            } catch (e) {}
+                if (clean.length > 0 && !clean.toLowerCase().startsWith('gpon')) {
+                    return clean;
+                }
+            }
+            return 'Pelanggan';
         };
 
-        window.playNocEmergencySound = function(alertItem, force = false) {
-            // CEK MULTI-TAB: Jangan bunyikan jika tab ini di background
-            if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-                return;
+        // 2. Play speech via window.ImsVoice & Toast Banner
+        try {
+            const item = recoveredItem || {};
+            const userName = window.extractCleanNocUserName(item);
+            const displayName = item.device_name || userName;
+            const speechText = totalRecoveredCount > 1 
+                ? `Koneksi pulih. ${totalRecoveredCount} pelanggan telah normal kembali termasuk ${userName}.`
+                : `Koneksi pulih. Pelanggan ${userName} telah kembali online dan normal.`;
+
+            if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === "function") {
+                window.ImsVoice.enqueueNotification({
+                    type: "noc_recovery",
+                    status: "ONLINE",
+                    title: "Koneksi Pulih (Normal)",
+                    message: totalRecoveredCount > 1 
+                        ? `${totalRecoveredCount} perangkat telah pulih dan kembali normal.` 
+                        : `${displayName} telah kembali online dan normal.`,
+                    speech_text: speechText,
+                    device_name: displayName,
+                    user_name: userName,
+                    skipChime: true, // PENTING: Jangan putar chime MP3 lagi karena Web Audio Synthesizer sudah berbunyi
+                    url: item.url || null
+                });
+            } else if (typeof window.showToast === "function") {
+                window.showToast("success", `Koneksi Pulih: ${displayName} sudah normal kembali.`);
             }
+        } catch (e) {}
+    };
 
-            // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
-            try {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    const ctx = new AudioCtx();
-                    const now = ctx.currentTime;
-                    
-                    // High-low alarm beeps: E6 (1318Hz) -> C6 (1046Hz) -> E6 (1318Hz)
-                    const tones = [
-                        { freq: 1318.51, start: 0.00, dur: 0.18, type: 'sawtooth' },
-                        { freq: 1046.50, start: 0.20, dur: 0.18, type: 'sine' },
-                        { freq: 1318.51, start: 0.40, dur: 0.25, type: 'sawtooth' }
-                    ];
+    window.playNocEmergencySound = function(alertItem, force = false) {
+        // CEK MULTI-TAB: Jangan bunyikan jika tab ini di background
+        if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+            return;
+        }
 
-                    tones.forEach(t => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = t.type;
-                        osc.frequency.setValueAtTime(t.freq, now + t.start);
-                        gain.gain.setValueAtTime(0.3, now + t.start);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(now + t.start);
-                        osc.stop(now + t.start + t.dur);
-                    });
-                }
-            } catch (e) {
-                console.warn('Web Audio alarm tone error:', e);
+        // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+                
+                // High-low alarm beeps: E6 (1318Hz) -> C6 (1046Hz) -> E6 (1318Hz)
+                const tones = [
+                    { freq: 1318.51, start: 0.00, dur: 0.18, type: 'sawtooth' },
+                    { freq: 1046.50, start: 0.20, dur: 0.18, type: 'sine' },
+                    { freq: 1318.51, start: 0.40, dur: 0.25, type: 'sawtooth' }
+                ];
+
+                tones.forEach(t => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = t.type;
+                    osc.frequency.setValueAtTime(t.freq, now + t.start);
+                    gain.gain.setValueAtTime(0.3, now + t.start);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now + t.start);
+                    osc.stop(now + t.start + t.dur);
+                });
             }
+        } catch (e) {
+            console.warn('Web Audio alarm tone error:', e);
+        }
 
-            // 2. Play speech via window.ImsVoice if available
-            try {
-                if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === 'function') {
-                    const item = alertItem || {};
-                    const st = (item.status || 'LOS').toUpperCase();
-                    const statusLabel = st === 'LOS' ? 'Loss of Signal' : 'Down';
-                    const name = item.device_name || item.title || 'Perangkat Jaringan';
-                    window.ImsVoice.enqueueNotification({
-                        type: 'noc_alarm',
-                        status: st,
-                        title: item.title || (st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi'),
-                        message: item.message || `${name} mengalami gangguan ${st}`,
-                        speech_text: item.speech_text || `Perhatian! Terdeteksi ${statusLabel} pada ${name}.`,
-                        device_name: name,
-                        skipChime: true, // PENTING: Jangan putar chime MP3 lagi karena nada alarm Synthesizer sudah berbunyi
-                        url: item.url || null
-                    });
-                }
-            } catch (e) {}
-        };
+        // 2. Play speech via window.ImsVoice if available
+        try {
+            if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === 'function') {
+                const item = alertItem || {};
+                const st = (item.status || 'LOS').toUpperCase();
+                const statusLabel = st === 'LOS' ? 'Loss of Signal' : 'Down';
+                const userName = window.extractCleanNocUserName(item);
+                const displayName = item.device_name || userName;
+                const speechText = item.speech_text || `Perhatian! Terdeteksi ${statusLabel} pada pelanggan ${userName}.`;
+
+                window.ImsVoice.enqueueNotification({
+                    type: 'noc_alarm',
+                    status: st,
+                    title: item.title || (st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi'),
+                    message: item.message || `${displayName} mengalami gangguan ${st}`,
+                    speech_text: speechText,
+                    device_name: displayName,
+                    user_name: userName,
+                    skipChime: true, // PENTING: Jangan putar chime MP3 lagi karena nada alarm Synthesizer sudah berbunyi
+                    url: item.url || null
+                });
+            }
+        } catch (e) {}
+    };
     </script>
 
     <!-- SweetAlert2 Global Notification -->

@@ -1830,24 +1830,32 @@ class OltConnectionService
                 }
                 $userOdpMap = [];
                 $userOdpByNameMap = [];
-                if ($gomsnOltId && Schema::hasTable("gomsn.odp{$gomsnOltId}") && Schema::hasTable("gomsn.users{$gomsnOltId}")) {
-                    $odps = DB::table("gomsn.odp{$gomsnOltId}")->get()->keyBy('id');
-                    $gUsers = DB::table("gomsn.users{$gomsnOltId}")->get();
-                    foreach ($gUsers as $gu) {
-                        $odpName = ($gu->odp_id && isset($odps[$gu->odp_id])) ? trim($odps[$gu->odp_id]->nama_odp) : null;
-                        if ($odpName && strtoupper($odpName) !== 'ODP' && strtoupper($odpName) !== 'N/A') {
-                            $gu->odp_name = $odpName;
-                            if (!empty($gu->nomor_internet)) {
-                                $userOdpMap[trim($gu->nomor_internet)] = $odpName;
+                // Load ODP mapping across all GOMSN OLT databases (odp1, odp2, odp3) so cross-OLT / migration data is always resolved
+                $allGomsnIds = array_unique(array_filter([$gomsnOltId, 1, 2, 3]));
+                foreach ($allGomsnIds as $gId) {
+                    if (Schema::hasTable("gomsn.odp{$gId}") && Schema::hasTable("gomsn.users{$gId}")) {
+                        try {
+                            $odps = DB::table("gomsn.odp{$gId}")->get()->keyBy('id');
+                            $gUsers = DB::table("gomsn.users{$gId}")->get();
+                            foreach ($gUsers as $gu) {
+                                $odpName = ($gu->odp_id && isset($odps[$gu->odp_id])) ? trim($odps[$gu->odp_id]->nama_odp) : null;
+                                if ($odpName && strtoupper($odpName) !== 'ODP' && strtoupper($odpName) !== 'N/A' && strtoupper($odpName) !== 'HARDWARE OLT') {
+                                    $gu->odp_name = $odpName;
+                                    $cNo = trim($gu->nomor_internet ?? '');
+                                    $cNm = strtoupper(trim($gu->nama_user ?? ''));
+                                    if (!empty($cNo) && !isset($userOdpMap[$cNo])) {
+                                        $userOdpMap[$cNo] = $odpName;
+                                    }
+                                    if (!empty($cNm) && !isset($userOdpByNameMap[$cNm])) {
+                                        $userOdpByNameMap[$cNm] = $odpName;
+                                    }
+                                }
+                                $sn = strtoupper(trim($gu->keterangan ?? ''));
+                                if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
+                                    $dbBySn[$sn] = $gu;
+                                }
                             }
-                            if (!empty($gu->nama_user)) {
-                                $userOdpByNameMap[strtoupper(trim($gu->nama_user))] = $odpName;
-                            }
-                        }
-                        $sn = strtoupper(trim($gu->keterangan ?? ''));
-                        if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
-                            $dbBySn[$sn] = $gu;
-                        }
+                        } catch (\Throwable $e) {}
                     }
                 }
 

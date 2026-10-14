@@ -459,6 +459,30 @@
                     </div>
                 </div>
 
+                <!-- Filter ODP (Dropdown) -->
+                <div class="relative">
+                    <select x-model="odpFilter"
+                            class="pl-8 pr-7 py-1.5 rounded-lg text-xs font-semibold bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer appearance-none transition"
+                            :class="odpFilter !== 'all' ? 'border-amber-500 bg-amber-50/70 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 font-bold' : ''">
+                        <option value="all">ODP: Semua</option>
+                        <template x-for="odp in availableOdps" :key="odp">
+                            <option :value="odp" x-text="'ODP: ' + odp"></option>
+                        </template>
+                        <option value="none">ODP: Belum Terdata</option>
+                    </select>
+                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400"
+                         :class="odpFilter !== 'all' ? 'text-amber-500' : ''">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+
                 <!-- Sort Dropdown -->
                 <div class="relative">
                     <select x-model="sortBy"
@@ -483,7 +507,7 @@
                 </div>
 
                 <!-- Tombol Reset Filter -->
-                <button x-show="statusFilter !== 'all' || redamanFilter !== 'all' || searchQuery !== ''"
+                <button x-show="statusFilter !== 'all' || redamanFilter !== 'all' || odpFilter !== 'all' || searchQuery !== ''"
                         @click="resetFilters()"
                         class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white border border-rose-200 dark:border-rose-900/50 flex items-center gap-1 transition shadow-2xs"
                         title="Reset Filter ke Default">
@@ -525,7 +549,7 @@
         </div>
 
         <!-- Active Filter Badges Strip (Muncul otomatis saat filter aktif) -->
-        <div x-show="statusFilter !== 'all' || redamanFilter !== 'all' || searchQuery"
+        <div x-show="statusFilter !== 'all' || redamanFilter !== 'all' || odpFilter !== 'all' || searchQuery"
              class="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[11px]">
             <span class="text-slate-400 font-medium">Filter Aktif:</span>
             
@@ -549,6 +573,13 @@
                     <button @click="redamanFilter = 'all'" class="hover:text-amber-900 font-black">&times;</button>
                 </span>
             </template>
+
+            <template x-if="odpFilter !== 'all'">
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-semibold">
+                    <span>ODP: <strong x-text="odpFilter === 'none' ? 'Belum Terdata' : odpFilter"></strong></span>
+                    <button @click="odpFilter = 'all'" class="hover:text-amber-900 font-black">&times;</button>
+                </span>
+            </template>
         </div>
     </div>
 
@@ -565,34 +596,32 @@
 
                     <!-- Bagian Konten Atas Card -->
                     <div class="space-y-3 pt-1">
-                        <!-- 1. Header Card: Nomor Slot, Nama ONU, Identitas Pelanggan & Status Badge -->
+                        <!-- 1. Header Card: Nama ONU, Identitas Pelanggan & Status Badge -->
                         <div class="flex items-start justify-between gap-2.5 pb-2.5 border-b border-slate-100 dark:border-slate-800">
-                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                                <!-- Badge Nomor Slot -->
-                                <div class="w-9 h-9 rounded-xl flex items-center justify-center font-mono font-black text-xs shrink-0 text-white shadow-xs ring-1 ring-black/5"
-                                     :class="getStatusInfo(onu).bgSlot"
-                                     x-text="'#' + onu.onu_id">
+                            <div class="min-w-0 flex-1">
+                                <!-- Nama ONU & Pelanggan -->
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-mono text-[11px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded-md shrink-0" 
+                                          x-text="onu.onu_name || ('ONU ' + onu.onu_id)"></span>
+                                    <h4 class="font-bold text-slate-900 dark:text-white text-xs truncate" 
+                                        x-text="onu.nama_pelanggan" 
+                                        :title="onu.nama_pelanggan"></h4>
                                 </div>
-                                <div class="min-w-0 flex-1">
-                                    <!-- Nama ONU & Pelanggan -->
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="font-mono text-[11px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded-md shrink-0" 
-                                              x-text="onu.onu_name || ('ONU ' + onu.onu_id)"></span>
-                                        <h4 class="font-bold text-slate-900 dark:text-white text-xs truncate" 
-                                            x-text="onu.nama_pelanggan" 
-                                            :title="onu.nama_pelanggan"></h4>
-                                    </div>
-                                    <!-- ID Pelanggan, Interface & ODP -->
-                                    <div class="flex items-center flex-wrap gap-1 text-[10px] text-slate-500 mt-1">
-                                        <span class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="'ID: ' + onu.nomor_internet"></span>
-                                        <span class="text-slate-300 dark:text-slate-700">&bull;</span>
-                                        <span class="font-mono text-slate-500 dark:text-slate-400 truncate" x-text="onu.interface_onu"></span>
-                                        <template x-if="onu.odp_name && onu.odp_name !== '-' && onu.odp_name.toUpperCase() !== 'ODP' && onu.odp_name.toUpperCase() !== 'N/A' && onu.odp_name.toUpperCase() !== 'HARDWARE OLT'">
-                                            <span class="inline-flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.2 rounded text-[9.5px]">
-                                                <span x-text="'ODP: ' + onu.odp_name"></span>
-                                            </span>
-                                        </template>
-                                    </div>
+                                <!-- ID Pelanggan, Interface & ODP -->
+                                <div class="flex items-center flex-wrap gap-1 text-[10px] text-slate-500 mt-1">
+                                    <span class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="'ID: ' + onu.nomor_internet"></span>
+                                    <span class="text-slate-300 dark:text-slate-700">&bull;</span>
+                                    <span class="font-mono text-slate-500 dark:text-slate-400 truncate" x-text="onu.interface_onu"></span>
+                                    <template x-if="onu.odp_name && onu.odp_name !== '-' && onu.odp_name.toUpperCase() !== 'ODP' && onu.odp_name.toUpperCase() !== 'N/A' && onu.odp_name.toUpperCase() !== 'HARDWARE OLT'">
+                                        <span class="inline-flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.2 rounded text-[9.5px]">
+                                            <span x-text="'ODP: ' + onu.odp_name"></span>
+                                        </span>
+                                    </template>
+                                    <template x-if="!onu.odp_name || onu.odp_name === '-' || onu.odp_name.toUpperCase() === 'ODP' || onu.odp_name.toUpperCase() === 'N/A' || onu.odp_name.toUpperCase() === 'HARDWARE OLT'">
+                                        <span class="inline-flex items-center gap-1 font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.2 rounded text-[9.5px]" title="ODP belum ditentukan / terdata di database GIS GOMSN">
+                                            <span>ODP: Belum Terdata</span>
+                                        </span>
+                                    </template>
                                 </div>
                             </div>
 
@@ -887,6 +916,12 @@
                                             <span class="font-semibold text-amber-600 dark:text-amber-400" x-text="'ODP: ' + onu.odp_name"></span>
                                         </span>
                                     </template>
+                                    <template x-if="!onu.odp_name || onu.odp_name === '-' || onu.odp_name.toUpperCase() === 'ODP' || onu.odp_name.toUpperCase() === 'N/A' || onu.odp_name.toUpperCase() === 'HARDWARE OLT'">
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="text-slate-400">&middot;</span>
+                                            <span class="text-slate-400 dark:text-slate-500 text-[10px]">ODP: Belum Terdata</span>
+                                        </span>
+                                    </template>
                                 </div>
                             </td>
 
@@ -1148,6 +1183,7 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
         searchQuery: '',
         statusFilter: 'all',
         redamanFilter: 'all',
+        odpFilter: 'all',
         sortBy: 'onu_id_asc',
         viewMode: 'grid',
 
@@ -1433,7 +1469,16 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                 }
             }
 
-            // 4. Sorting
+            // 4. ODP Filter
+            if (this.odpFilter !== 'all') {
+                if (this.odpFilter === 'none') {
+                    list = list.filter(o => !o.odp_name || o.odp_name === '-' || o.odp_name.toUpperCase() === 'ODP' || o.odp_name.toUpperCase() === 'N/A' || o.odp_name.toUpperCase() === 'HARDWARE OLT');
+                } else {
+                    list = list.filter(o => o.odp_name && o.odp_name.trim().toLowerCase() === this.odpFilter.trim().toLowerCase());
+                }
+            }
+
+            // 5. Sorting
             list.sort((a, b) => {
                 if (this.sortBy === 'onu_id_asc') return a.onu_id - b.onu_id;
                 if (this.sortBy === 'onu_id_desc') return b.onu_id - a.onu_id;
@@ -1509,10 +1554,21 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
             this.selectedOnu = null;
         },
 
+        get availableOdps() {
+            const set = new Set();
+            this.onus.forEach(o => {
+                if (o.odp_name && o.odp_name !== '-' && o.odp_name.toUpperCase() !== 'ODP' && o.odp_name.toUpperCase() !== 'N/A' && o.odp_name.toUpperCase() !== 'HARDWARE OLT') {
+                    set.add(o.odp_name.trim());
+                }
+            });
+            return Array.from(set).sort((a, b) => a.localeCompare(b));
+        },
+
         resetFilters() {
             this.searchQuery = '';
             this.statusFilter = 'all';
             this.redamanFilter = 'all';
+            this.odpFilter = 'all';
             this.sortBy = 'onu_id_asc';
         },
 

@@ -2648,8 +2648,20 @@
                     };
                 }
 
-                // Unlock audio autoplay on first user interaction
+                // Unlock audio autoplay and AudioContext on user interaction
                 const unlock = () => {
+                    try {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) {
+                            if (!window._sharedAudioCtx) {
+                                window._sharedAudioCtx = new AudioCtx();
+                            }
+                            if (window._sharedAudioCtx.state === 'suspended') {
+                                window._sharedAudioCtx.resume().catch(() => {});
+                            }
+                        }
+                    } catch(e) {}
+
                     if (!this.audioUnlocked) {
                         this.chimeAudio.muted = true;
                         this.chimeAudio.play().then(() => {
@@ -2658,12 +2670,11 @@
                             this.chimeAudio.muted = false;
                             this.audioUnlocked = true;
                         }).catch(() => {});
-                        document.removeEventListener('click', unlock);
-                        document.removeEventListener('keydown', unlock);
                     }
                 };
-                document.addEventListener('click', unlock, { once: true });
-                document.addEventListener('keydown', unlock, { once: true });
+                document.addEventListener('click', unlock, { passive: true });
+                document.addEventListener('keydown', unlock, { passive: true });
+                document.addEventListener('touchstart', unlock, { passive: true });
 
                 // Initial check once on load, then periodic background polling
                 setTimeout(() => {
@@ -2748,6 +2759,11 @@
                             return;
                         }
                         try {
+                            // Fix bug Chromium: Bersihkan antrean speech lama yang macet/beku
+                            try {
+                                window.speechSynthesis.cancel();
+                            } catch(e) {}
+
                             const utterance = new SpeechSynthesisUtterance(text);
                             utterance.lang = 'id-ID';
                             utterance.rate = 1.0;
@@ -2758,11 +2774,23 @@
                             const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang === 'id_ID' || (v.lang && v.lang.toLowerCase().startsWith('id')));
                             if (idVoice) utterance.voice = idVoice;
 
-                            utterance.onend = () => done();
-                            utterance.onerror = () => done();
+                            utterance.onend = () => {
+                                window._currentUtterance = null;
+                                done();
+                            };
+                            utterance.onerror = () => {
+                                window._currentUtterance = null;
+                                done();
+                            };
+
+                            // Cegah Garbage Collector browser mematikan utterance di tengah jalan
+                            window._currentUtterance = utterance;
 
                             // Safety timeout in case utterance onend never fires
-                            setTimeout(() => done(), 7000);
+                            setTimeout(() => {
+                                window._currentUtterance = null;
+                                done();
+                            }, 7000);
 
                             window.speechSynthesis.speak(utterance);
                         } catch(e) {
@@ -2841,7 +2869,10 @@
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 if (AudioCtx) {
-                    const ctx = new AudioCtx();
+                    const ctx = window._sharedAudioCtx || new AudioCtx();
+                    if (ctx.state === 'suspended') {
+                        ctx.resume().catch(() => {});
+                    }
                     const now = ctx.currentTime;
                     const notes = [
                         { freq: 523.25, start: 0.00, dur: 0.14 }, // C5
@@ -2934,7 +2965,10 @@
         try {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             if (AudioCtx) {
-                const ctx = new AudioCtx();
+                const ctx = window._sharedAudioCtx || new AudioCtx();
+                if (ctx.state === 'suspended') {
+                    ctx.resume().catch(() => {});
+                }
                 const now = ctx.currentTime;
                 
                 // High-low alarm beeps: E6 (1318Hz) -> C6 (1046Hz) -> E6 (1318Hz)

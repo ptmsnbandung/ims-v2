@@ -4061,7 +4061,8 @@ class NocController extends Controller
                         $startedRaw = Cache::get($timeCacheKey) ?? ($st['offline_time'] ?? null);
 
                         if (!$startedRaw) {
-                            $startedRaw = now()->subMinutes((abs(crc32("{$olt->kode_olt}_{$interface}")) % 480) + 12)->toDateTimeString();
+                            // Catat waktu riil saat perangkat pertama kali terdeteksi offline oleh sistem IMS
+                            $startedRaw = now()->toDateTimeString();
                             Cache::put($timeCacheKey, $startedRaw, 86400 * 30);
                         }
                         

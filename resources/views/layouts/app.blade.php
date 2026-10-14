@@ -180,6 +180,7 @@
             return {
                 open: false,
                 isLoading: false,
+                isFetching: false,
                 hasNewAlert: false,
                 alerts: [],
                 intentional: [],
@@ -250,14 +251,23 @@
                 },
 
                 async fetchAlerts(silent = false) {
+                    if (this.isFetching) return;
+                    this.isFetching = true;
                     if (!silent) this.isLoading = true;
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
                     try {
                         const res = await fetch('{{ route("noc.api.notifications") }}', {
+                            signal: controller.signal,
                             headers: {
                                 'Accept': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest'
                             }
                         });
+                        clearTimeout(timeoutId);
+
                         if (res.ok) {
                             const resData = await res.json();
                             if (resData.status === 'success' && resData.data) {
@@ -286,8 +296,12 @@
                             }
                         }
                     } catch (e) {
-                        console.warn('Gagal memuat notifikasi NOC:', e);
+                        if (e.name !== 'AbortError') {
+                            console.warn('Gagal memuat notifikasi NOC:', e);
+                        }
                     } finally {
+                        clearTimeout(timeoutId);
+                        this.isFetching = false;
                         if (!silent) this.isLoading = false;
                     }
                 },

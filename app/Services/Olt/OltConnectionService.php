@@ -624,15 +624,18 @@ class OltConnectionService
     }
 
     /**
-     * Read stream buffer until any of given prompt delimiters appears
+     * Read stream buffer until any of given prompt delimiters appears (Non-blocking & responsive)
      */
-    private function readUntilPrompt($socket, array $prompts, int $maxWaitSeconds = 4): string
+    private function readUntilPrompt($socket, array $prompts, int|float $maxWaitSeconds = 4): string
     {
         $buffer = '';
         $start = microtime(true);
+        if (is_resource($socket)) {
+            @stream_set_blocking($socket, false);
+        }
 
-        while (!feof($socket) && (microtime(true) - $start) < $maxWaitSeconds) {
-            $chunk = @fread($socket, 256);
+        while (is_resource($socket) && (microtime(true) - $start) < $maxWaitSeconds) {
+            $chunk = @fread($socket, 2048);
             if ($chunk !== false && strlen($chunk) > 0) {
                 // Strip Telnet negotiation IAC bytes (0xFF 0xFB/0xFC/0xFD/0xFE ...)
                 $clean = preg_replace('/\xFF[\xFB-\xFE]./s', '', $chunk);
@@ -645,7 +648,7 @@ class OltConnectionService
                     }
                 }
             }
-            usleep(25000); // 25ms sleep
+            usleep(10000); // 10ms sleep
         }
 
         return $buffer;
@@ -1042,37 +1045,40 @@ class OltConnectionService
             $currentUser = $cred['user'];
             $currentPass = $cred['pass'];
 
-            $socket = @fsockopen($ip, $port, $errno, $errstr, max($timeout, 5.0));
+            $socket = @fsockopen($ip, $port, $errno, $errstr, min(3.0, max($timeout, 2.0)));
             if (!$socket) {
                 $this->lastTelnetError = "TCP tidak bisa terhubung ke {$ip}:{$port} dari server ini ({$errstr} / errno {$errno}). Kemungkinan firewall/NAT/ISP memblokir port ini.";
-                usleep(250000);
+                usleep(100000);
                 continue;
             }
 
-            stream_set_timeout($socket, 5);
+            @stream_set_blocking($socket, false);
 
-            // 1. Tunggu prompt Username (banner ZTE bisa lambat di jaringan WAN)
-            $loginBuf = $this->readUntilPrompt($socket, ['Username:', 'login:', 'User:'], 6);
+            // Kirim CRLF awal untuk memicu OLT langsung menampilkan banner & prompt login tanpa menunggu idle timeout (< 100ms)
+            fwrite($socket, "\r\n");
+
+            // 1. Tunggu prompt Username (instan dengan CRLF awal)
+            $loginBuf = $this->readUntilPrompt($socket, ['Username:', 'login:', 'User:'], 2.5);
             if (!preg_match('/(Username|login|User):\s*$/i', trim(preg_replace('/[^\x20-\x7E\r\n\t]/', '', $loginBuf)))) {
                 $this->lastTelnetError = "Terhubung ke {$ip}:{$port} tetapi OLT tidak menampilkan prompt Username (diterima " . strlen($loginBuf) . " byte). Kemungkinan sesi Telnet OLT penuh atau koneksi dibatasi.";
                 fclose($socket);
-                usleep(300000);
-                continue;
+                // Jika OLT tidak menampilkan prompt Username sama sekali, mengulang kandidat lain tidak ada gunanya karena server belum merespon. Segera break.
+                break;
             }
             fwrite($socket, "{$currentUser}\r\n");
 
             // 2. Tunggu prompt Password
-            $passBuf = $this->readUntilPrompt($socket, ['Password:', 'Pass:'], 6);
+            $passBuf = $this->readUntilPrompt($socket, ['Password:', 'Pass:'], 2.5);
             if (!preg_match('/(Password|Pass):\s*$/i', trim(preg_replace('/[^\x20-\x7E\r\n\t]/', '', $passBuf)))) {
                 $this->lastTelnetError = "OLT tidak merespons prompt Password.";
                 fclose($socket);
-                usleep(300000);
+                usleep(150000);
                 continue;
             }
             fwrite($socket, "{$currentPass}\r\n");
 
             // 3. Tunggu prompt terminal OLT (# atau >)
-            $promptBuf = $this->readUntilPrompt($socket, ['#', '>', 'Error 20209', 'Username:'], 6);
+            $promptBuf = $this->readUntilPrompt($socket, ['#', '>', 'Error 20209', 'Username:'], 3.0);
             $cleanPromptBuf = trim(preg_replace('/[^\x20-\x7E\r\n\t]/', '', $promptBuf));
 
             if (stripos($cleanPromptBuf, 'Error') !== false || stripos($cleanPromptBuf, 'Username:') !== false
@@ -1080,7 +1086,7 @@ class OltConnectionService
                 // Kredensial ditolak oleh OLT -> coba kandidat kredensial berikutnya
                 $this->lastTelnetError = 'Login OLT ditolak: ' . substr($cleanPromptBuf, -120);
                 fclose($socket);
-                usleep(400000);
+                usleep(200000);
                 continue;
             }
 
@@ -1090,6 +1096,7 @@ class OltConnectionService
 
             // Matikan paging terminal
             fwrite($socket, "terminal length 0\r\n");
+            $this->readUntilPrompt($socket, ['#', '>'], 0.8);
             usleep(150000);
 
             // Auto-heal database m_olt jika kredensial fallback yang berhasil (memperbaiki enkripsi beda APP_KEY)

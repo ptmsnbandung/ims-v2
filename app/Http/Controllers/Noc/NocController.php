@@ -3889,13 +3889,21 @@ class NocController extends Controller
                     foreach ($allRegs as $r) {
                         $oltKode = $normalizeOlt($r->olt);
                         $rawIdx = trim($r->index_olt);
-                        $cleanIdx = str_ireplace('gpon-onu_', '', $rawIdx);
+                        $cleanIdx = trim(str_ireplace('gpon-onu_', '', $rawIdx));
 
                         // Key spesifik OLT untuk mencegah tabrakan slot/port antar OLT berbeda
                         $regMap["{$oltKode}_{$rawIdx}"] = $r;
                         $regMap["{$oltKode}_{$cleanIdx}"] = $r;
-                        if (preg_match('/(\d+:\d+)/', $cleanIdx, $m)) {
-                            $regMap["{$oltKode}_{$m[1]}"] = $r;
+                        $regMap["{$oltKode}_gpon-onu_{$cleanIdx}"] = $r;
+
+                        // Ekstrak slot/port:onu dan port:onu
+                        if (preg_match('/(?:gpon-onu_)?(?:1\/)?(?:[12]\/)?(\d+):(\d+)/i', $rawIdx, $m)) {
+                            $portNum = (int)$m[1];
+                            $onuNum = (int)$m[2];
+                            $regMap["{$oltKode}_{$portNum}:{$onuNum}"] = $r;
+                            if (!isset($regMap["{$portNum}:{$onuNum}"])) {
+                                $regMap["{$portNum}:{$onuNum}"] = $r;
+                            }
                         }
 
                         // Key fallback generik
@@ -3913,104 +3921,136 @@ class NocController extends Controller
                 foreach ($olts as $olt) {
                     $cacheKey = "olt_live_all_onu_states_{$olt->kode_olt}";
                     $lastKnownKey = "olt_last_known_good_onus_{$olt->kode_olt}";
+                    $lockKey = "scanning_olt_onus_{$olt->kode_olt}";
+
                     if ($isForceRefresh) {
                         Cache::forget($cacheKey);
                     }
 
-                    // Ambil status seluruh ONU pada OLT fisik (cache 120 detik untuk stabilitas dan performa)
-                    $abnormalOnus = Cache::remember($cacheKey, 120, function () use ($olt, $oltService, $regMap, $lastKnownKey) {
+                    // 1. Ambil dari cache live jika masih segar (< 90 detik)
+                    $abnormalOnus = Cache::get($cacheKey);
+
+                    // 2. Jika cache live kosong atau force refresh, lakukan scan dengan atomic lock non-blocking
+                    if ($abnormalOnus === null) {
                         $lastKnown = Cache::get($lastKnownKey, []);
-                        try {
-                            $sess = $oltService->openOltTelnetSession($olt, 2.5);
-                            if (!$sess) {
-                                // Jika telnet sedang sibuk atau timeout, kembalikan state sebelumnya agar jumlah stabil
-                                return $lastKnown;
+                        $lock = Cache::lock($lockKey, 30);
+                        $acquired = false;
+
+                        if ($isForceRefresh || empty($lastKnown)) {
+                            try {
+                                $acquired = $lock->block(2);
+                            } catch (\Throwable $e) {
+                                $acquired = false;
                             }
-                            $socket = $sess['socket'];
+                        } else {
+                            $acquired = $lock->get();
+                        }
 
-                            $readUntilPrompt = function($sock, $timeout = 1.2) {
-                                $buf = '';
-                                $start = microtime(true);
-                                while (!feof($sock) && (microtime(true) - $start) < $timeout) {
-                                    $chunk = fread($sock, 2048);
-                                    if ($chunk === false) break;
-                                    $buf .= $chunk;
-                                    if (preg_match('/[#>](\s*)$/', $buf)) break;
-                                }
-                                return $buf;
-                            };
+                        if ($acquired) {
+                            try {
+                                $sess = $oltService->openOltTelnetSession($olt, 2.0);
+                                if (!$sess) {
+                                    $abnormalOnus = $lastKnown;
+                                    Cache::put($cacheKey, $abnormalOnus, 30);
+                                } else {
+                                    $socket = $sess['socket'];
+                                    @stream_set_blocking($socket, false);
 
-                            // Bersihkan prompt awal dari banner login sebelum mengirim command
-                            $readUntilPrompt($socket, 1.5);
+                                    $readUntilPrompt = function($sock, $timeout = 1.2) {
+                                        $buf = '';
+                                        $start = microtime(true);
+                                        while ((microtime(true) - $start) < $timeout) {
+                                            $chunk = @fread($sock, 2048);
+                                            if ($chunk !== false && strlen($chunk) > 0) {
+                                                $buf .= $chunk;
+                                                if (preg_match('/[#>](\s*)$/', $buf)) break;
+                                            }
+                                            usleep(10000); // 10ms sleep
+                                        }
+                                        return $buf;
+                                    };
 
-                            fwrite($socket, "terminal length 0\r\n");
-                            $readUntilPrompt($socket, 0.8);
-                            fwrite($socket, "show gpon onu state\r\n");
-                            $buf = $readUntilPrompt($socket, 3.5);
+                                    // Bersihkan prompt awal dari banner login sebelum mengirim command
+                                    $readUntilPrompt($socket, 0.8);
 
-                            // Langsung logout agar session OLT segera dilepas bebas (< 1.5 detik total)
-                            fwrite($socket, "exit\r\n");
-                            fwrite($socket, "yes\r\n");
-                            fclose($socket);
+                                    fwrite($socket, "terminal length 0\r\n");
+                                    $readUntilPrompt($socket, 0.5);
+                                    fwrite($socket, "show gpon onu state\r\n");
+                                    $buf = $readUntilPrompt($socket, 2.5);
 
-                            $clean = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $buf);
-                            $lines = explode("\n", $clean);
-                            $results = [];
+                                    // Langsung logout agar session OLT segera dilepas bebas (< 1 detik)
+                                    fwrite($socket, "exit\r\n");
+                                    fwrite($socket, "yes\r\n");
+                                    fclose($socket);
 
-                            // Parse universal: mendukung OLT 4 kolom (O1, O2) maupun 5 kolom dengan O7 State (O3 Soreang)
-                            $abnormalPhases = ['los', 'lost', 'offline', 'poweroff', 'dyinggasp'];
-                            foreach ($lines as $line) {
-                                $line = trim($line);
-                                if (empty($line) || str_starts_with($line, '-') || str_starts_with($line, 'OnuIndex')) {
-                                    continue;
-                                }
+                                    $clean = preg_replace('/[^\x20-\x7E\r\n\t]/', '', $buf);
+                                    $lines = explode("\n", $clean);
+                                    $results = [];
 
-                                if (preg_match('/(?:gpon-onu_)?(1\/[12]\/(\d+):(\d+))\s+(.+)/i', $line, $m)) {
-                                    $interface = $m[1];
-                                    $port = (int)$m[2];
-                                    $onuId = (int)$m[3];
-                                    $tokens = preg_split('/\s+/', trim($m[4]));
+                                    // Parse universal: mendukung OLT 4 kolom (O1, O2) maupun 5 kolom dengan O7 State (O3 Soreang)
+                                    $abnormalPhases = ['los', 'lost', 'offline', 'poweroff', 'dyinggasp'];
+                                    foreach ($lines as $line) {
+                                        $line = trim($line);
+                                        if (empty($line) || str_starts_with($line, '-') || str_starts_with($line, 'OnuIndex')) {
+                                            continue;
+                                        }
 
-                                    $phase = '';
-                                    foreach (array_reverse($tokens) as $t) {
-                                        $tLower = strtolower($t);
-                                        if (in_array($tLower, $abnormalPhases) || in_array($tLower, ['working', 'up', 'online'])) {
-                                            $phase = $tLower;
-                                            break;
+                                        if (preg_match('/(?:gpon-onu_)?(1\/[12]\/(\d+):(\d+))\s+(.+)/i', $line, $m)) {
+                                            $interface = $m[1];
+                                            $port = (int)$m[2];
+                                            $onuId = (int)$m[3];
+                                            $tokens = preg_split('/\s+/', trim($m[4]));
+
+                                            $phase = '';
+                                            foreach (array_reverse($tokens) as $t) {
+                                                $tLower = strtolower($t);
+                                                if (in_array($tLower, $abnormalPhases) || in_array($tLower, ['working', 'up', 'online'])) {
+                                                    $phase = $tLower;
+                                                    break;
+                                                }
+                                            }
+
+                                            // Jika ONU sudah normal / working kembali, reset cache waktu gangguan
+                                            if (in_array($phase, ['working', 'up', 'online'])) {
+                                                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$interface}");
+                                                continue;
+                                            }
+
+                                            if (in_array($phase, $abnormalPhases)) {
+                                                $results[] = [
+                                                    'interface' => $interface,
+                                                    'port' => $port,
+                                                    'onu_id' => $onuId,
+                                                    'admin' => $tokens[0] ?? 'enable',
+                                                    'omcc' => $tokens[1] ?? 'disable',
+                                                    'phase' => $phase,
+                                                    'is_los' => in_array($phase, ['los', 'lost']),
+                                                ];
+                                            }
                                         }
                                     }
 
-                                    // Jika ONU sudah normal / working kembali, reset cache waktu gangguan
-                                    if (in_array($phase, ['working', 'up', 'online'])) {
-                                        Cache::forget("onu_outage_time_{$olt->kode_olt}_{$interface}");
-                                        continue;
+                                    // Simpan hasil scan sukses sebagai Last Known Good State & Live Cache
+                                    if (!empty($results) || strlen($buf) > 100) {
+                                        Cache::put($lastKnownKey, $results, 86400 * 7);
+                                        $abnormalOnus = $results;
+                                    } else {
+                                        $abnormalOnus = $lastKnown;
                                     }
 
-                                    if (in_array($phase, $abnormalPhases)) {
-                                        $results[] = [
-                                            'interface' => $interface,
-                                            'port' => $port,
-                                            'onu_id' => $onuId,
-                                            'admin' => $tokens[0] ?? 'enable',
-                                            'omcc' => $tokens[1] ?? 'disable',
-                                            'phase' => $phase,
-                                            'is_los' => in_array($phase, ['los', 'lost']),
-                                        ];
-                                    }
+                                    Cache::put($cacheKey, $abnormalOnus, 90);
                                 }
+                            } catch (\Throwable $e) {
+                                Log::warning("NOC OLT scan error on {$olt->kode_olt}: " . $e->getMessage());
+                                $abnormalOnus = $lastKnown;
+                            } finally {
+                                optional($lock)->release();
                             }
-
-                            // Simpan hasil scan sukses sebagai Last Known Good State
-                            if (!empty($results) || strlen($buf) > 100) {
-                                Cache::put($lastKnownKey, $results, 86400 * 7);
-                            }
-
-                            return $results;
-                        } catch (\Throwable $e) {
-                            Log::warning("NOC OLT scan error on {$olt->kode_olt}: " . $e->getMessage());
-                            return $lastKnown;
+                        } else {
+                            // Lock sedang dipegang oleh request lain: kembalikan $lastKnown seketika tanpa menunggu!
+                            $abnormalOnus = $lastKnown;
                         }
-                    });
+                    }
 
                     // Fallback pemeriksaan cache per PON jika full scan kosong
                     if (empty($abnormalOnus)) {
@@ -4057,28 +4097,6 @@ class NocController extends Controller
                             ?? ($regMap[$interface]
                             ?? ($regMap[$fullInterface]
                             ?? ($regMap["{$port}:{$onuId}"] ?? null)))));
-
-                        if (!$matchedUser && Schema::hasTable('trx_batchjob_register')) {
-                            try {
-                                $oltAliases = match($olt->kode_olt) {
-                                    'O1' => ['O1', 'Kayu Agung', 'MSN'],
-                                    'O2' => ['O2', 'Bagong', 'Babakan Tarogong'],
-                                    'O3' => ['O3', 'Soreang', 'BBU'],
-                                    default => [$olt->kode_olt, $olt->name_olt],
-                                };
-                                $matchedUser = DB::table('trx_batchjob_register')
-                                    ->where(function($q) use ($oltAliases) {
-                                        foreach ($oltAliases as $alias) {
-                                            $q->orWhere('olt', 'like', "%{$alias}%");
-                                        }
-                                    })
-                                    ->where(function($q) use ($interface, $port, $onuId) {
-                                        $q->where('index_olt', 'like', "%{$interface}%")
-                                          ->orWhere('index_olt', 'like', "%{$port}:{$onuId}%");
-                                    })
-                                    ->first();
-                            } catch (\Throwable $e) {}
-                        }
 
                         // HANYA tampilkan perangkat yang status internetnya Aktif ('20')
                         $regStatus = (string)($matchedUser->status_reg ?? '');

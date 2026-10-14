@@ -527,6 +527,7 @@ function nocNotifikasiPage() {
         activeTab: 'los', // Default: 'los' (Loss of Signal), 'down', 'all', 'tiket', 'intentional'
         searchKeyword: '',
         isLoading: false,
+        isFetching: false,
         isSubmitting: false,
         currentTime: '--:--:--',
         clockTimer: null,
@@ -613,15 +614,24 @@ function nocNotifikasiPage() {
         },
 
         async refreshData(silent = false) {
+            if (this.isFetching) return;
+            this.isFetching = true;
             if (!silent) this.isLoading = true;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
             try {
                 const url = !silent ? '{{ route("noc.api.notifications") }}?refresh=1' : '{{ route("noc.api.notifications") }}';
                 const res = await fetch(url, {
+                    signal: controller.signal,
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
+                clearTimeout(timeoutId);
+
                 if (res.ok) {
                     const data = await res.json();
                     if (data.status === 'success' && data.data) {
@@ -645,8 +655,12 @@ function nocNotifikasiPage() {
                     }
                 }
             } catch (e) {
-                console.warn('Gagal memuat notifikasi:', e);
+                if (e.name !== 'AbortError') {
+                    console.warn('Gagal memuat notifikasi:', e);
+                }
             } finally {
+                clearTimeout(timeoutId);
+                this.isFetching = false;
                 if (!silent) this.isLoading = false;
             }
         },

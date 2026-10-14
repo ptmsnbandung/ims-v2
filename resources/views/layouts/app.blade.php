@@ -1068,20 +1068,7 @@
                         </div>
                     </div>
 
-                    <!-- 1. Pusat Notifikasi NOC -->
-                    <div class="ims-nav-wrapper">
-                        <a href="{{ route('noc.notifikasi') }}"
-                           class="ims-nav-item {{ request()->routeIs('noc.notifikasi*') ? 'active' : '' }}"
-                           title="Pusat Notifikasi NOC (Radar Outage & Tiket)">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                            </svg>
-                            <span class="ims-nav-text">Pusat Notifikasi</span>
-                        </a>
-                        <div class="ims-tooltip">Pusat Notifikasi NOC</div>
-                    </div>
-
-                    <!-- 2. Tiket -->
+                    <!-- 1. Tiket -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('teknik.tiket') }}"
                            class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
@@ -1094,7 +1081,7 @@
                         <div class="ims-tooltip">Tiket & Permintaan</div>
                     </div>
 
-                    <!-- 3. Permintaan NOC Dropdown -->
+                    <!-- 2. Permintaan NOC Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.monitoring-instalasi-onu*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Permintaan NOC', [
@@ -1151,7 +1138,7 @@
                         </div>
                     </div>
 
-                    <!-- 4. NOC Dashboard -->
+                    <!-- 3. NOC Dashboard -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('noc.dashboard') }}"
                            class="ims-nav-item {{ request()->routeIs('noc.dashboard*') ? 'active' : '' }}"
@@ -1164,7 +1151,7 @@
                         <div class="ims-tooltip">NOC Command Dashboard</div>
                     </div>
 
-                    <!-- 5. Menu OLT (Dropdown Pilihan OLT dari Master OLT) -->
+                    <!-- 4. Menu OLT (Dropdown Pilihan OLT dari Master OLT) -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ oltMenuOpen: {{ request()->routeIs('noc.network-olt*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Menu OLT', [
@@ -1221,7 +1208,7 @@
                         </div>
                     </div>
 
-                    <!-- 6. Infrastruktur Dropdown -->
+                    <!-- 5. Infrastruktur Dropdown -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ infraOpen: {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit', 'noc.gpon*', 'noc.pop*', 'noc.wilayah*', 'noc.router*', 'noc.activity-log*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Infrastruktur Jaringan', [
@@ -1447,6 +1434,21 @@
                             </span>
                         </a>
                         <div class="ims-tooltip">Broadcast WhatsApp (Jatuh Tempo & Pengumuman)</div>
+                    </div>
+                    @endif
+
+                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
+                    <!-- Pusat Notifikasi NOC -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('noc.notifikasi') }}"
+                           class="ims-nav-item {{ request()->routeIs('noc.notifikasi*') ? 'active' : '' }}"
+                           title="Pusat Notifikasi NOC (Radar Outage & Tiket)">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                            </svg>
+                            <span class="ims-nav-text">Pusat Notifikasi</span>
+                        </a>
+                        <div class="ims-tooltip">Pusat Notifikasi NOC</div>
                     </div>
                     @endif
 

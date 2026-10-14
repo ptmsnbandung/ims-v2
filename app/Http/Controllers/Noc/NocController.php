@@ -3543,6 +3543,10 @@ class NocController extends Controller
      */
     public function notifikasi(Request $request, OltConnectionService $oltService): View
     {
+        // Pastikan halaman notifikasi yang dibuka langsung memiliki data segar dan tidak kosong
+        if (!request()->has('refresh')) {
+            request()->merge(['refresh' => '1']);
+        }
         $data = $this->getNocNotificationsData($oltService);
 
         return view('noc.notifikasi', [
@@ -3928,29 +3932,26 @@ class NocController extends Controller
                     }
 
                     // 1. Ambil dari cache live dan lastKnown good state
-                    $abnormalOnus = Cache::get($cacheKey);
+                    $liveCache = Cache::get($cacheKey);
                     $lastKnown = Cache::get($lastKnownKey, []);
 
-                    // Pastikan jika cache live kosong, gunakan lastKnown agar data tidak kosong seketika
-                    if (empty($abnormalOnus) && !empty($lastKnown)) {
-                        $abnormalOnus = $lastKnown;
-                    }
+                    // Data awal: utamakan liveCache, gunakan lastKnown jika liveCache belum ada
+                    $abnormalOnus = !empty($liveCache) ? $liveCache : $lastKnown;
 
-                    // 2. Jika cache live kosong atau force refresh, lakukan scan dengan atomic lock
-                    $shouldScan = $isForceRefresh || !Cache::has($cacheKey);
+                    // 2. Scan OLT jika:
+                    // - Permintaan force refresh ($isForceRefresh)
+                    // - Cache live belum ada atau sudah kadaluarsa (!Cache::has($cacheKey))
+                    // - Data abnormal ONUs masih kosong padahal belum pernah dicache (empty($abnormalOnus))
+                    $shouldScan = $isForceRefresh || !Cache::has($cacheKey) || empty($abnormalOnus);
 
                     if ($shouldScan) {
                         $lock = Cache::lock($lockKey, 30);
                         $acquired = false;
 
-                        if ($isForceRefresh || empty($lastKnown)) {
-                            try {
-                                $acquired = $lock->block(3);
-                            } catch (\Throwable $e) {
-                                $acquired = false;
-                            }
-                        } else {
-                            $acquired = $lock->get();
+                        try {
+                            $acquired = $lock->block(3);
+                        } catch (\Throwable $e) {
+                            $acquired = false;
                         }
 
                         if ($acquired) {
@@ -4037,12 +4038,16 @@ class NocController extends Controller
                                     }
 
                                     // Simpan hasil scan sukses sebagai Last Known Good State & Live Cache
-                                    if (!empty($results) && count($results) >= 3) {
+                                    if (!empty($results)) {
                                         Cache::put($lastKnownKey, $results, 86400 * 7);
                                         $abnormalOnus = $results;
                                         Cache::put($cacheKey, $abnormalOnus, 180); // Cache 3 menit
+                                    } elseif (strlen($buf) > 100) {
+                                        // OLT merespon dan tidak ada perangkat yang down/LOS
+                                        $abnormalOnus = [];
+                                        Cache::put($cacheKey, [], 180);
                                     } elseif (!empty($lastKnown)) {
-                                        // Jangan pernah menimpa lastKnown dengan data kosong jika respon OLT terpotong
+                                        // Jangan pernah menimpa lastKnown jika respon OLT kosong/terputus
                                         $abnormalOnus = $lastKnown;
                                         Cache::put($cacheKey, $abnormalOnus, 60);
                                     } else {
@@ -4058,8 +4063,11 @@ class NocController extends Controller
                                 optional($lock)->release();
                             }
                         } else {
-                            // Lock sedang dipegang oleh request lain: pastikan data lastKnown tetap ada
-                            if (empty($abnormalOnus) && !empty($lastKnown)) {
+                            // Lock sedang dipegang oleh request lain: cek apakah cache sudah selesai diisi oleh proses tersebut
+                            $cachedNow = Cache::get($cacheKey);
+                            if (!empty($cachedNow)) {
+                                $abnormalOnus = $cachedNow;
+                            } elseif (!empty($lastKnown)) {
                                 $abnormalOnus = $lastKnown;
                             }
                         }
@@ -4087,6 +4095,10 @@ class NocController extends Controller
                                     }
                                 }
                             }
+                        }
+                        if (!empty($abnormalOnus)) {
+                            Cache::put($cacheKey, $abnormalOnus, 180);
+                            Cache::put($lastKnownKey, $abnormalOnus, 86400 * 7);
                         }
                     }
 
@@ -4218,21 +4230,6 @@ class NocController extends Controller
                 'total_los_down' => $totalLos + $totalDown,
                 'total_tickets' => $totalTickets,
                 'total_intentional' => $totalIntentional,
-            ],
-            'debug' => [
-                'isForceRefresh' => $isForceRefresh,
-                'cache_store' => config('cache.default'),
-                'olts' => array_map(function($o) use ($oltService) {
-                    $cKey = "olt_live_all_onu_states_{$o->kode_olt}";
-                    $lKey = "olt_last_known_good_onus_{$o->kode_olt}";
-                    return [
-                        'kode' => $o->kode_olt,
-                        'has_cache' => Cache::has($cKey),
-                        'cache_count' => is_array(Cache::get($cKey)) ? count(Cache::get($cKey)) : gettype(Cache::get($cKey)),
-                        'has_last' => Cache::has($lKey),
-                        'last_count' => is_array(Cache::get($lKey)) ? count(Cache::get($lKey)) : gettype(Cache::get($lKey)),
-                    ];
-                }, isset($olts) ? $olts->all() : []),
             ],
             'updated_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             'timestamp' => now()->timestamp,

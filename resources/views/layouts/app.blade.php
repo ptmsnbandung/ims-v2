@@ -259,7 +259,9 @@
                     const timeoutId = setTimeout(() => controller.abort(), 35000);
 
                     try {
-                        const res = await fetch('{{ route("noc.api.notifications") }}', {
+                        const currentOnuCount = Array.isArray(this.alerts) ? this.alerts.filter(a => a.device_type === 'onu').length : 0;
+                        const url = (!silent || currentOnuCount === 0) ? '{{ route("noc.api.notifications") }}?refresh=1' : '{{ route("noc.api.notifications") }}';
+                        const res = await fetch(url, {
                             signal: controller.signal,
                             headers: {
                                 'Accept': 'application/json',

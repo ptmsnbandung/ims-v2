@@ -570,6 +570,12 @@ function nocNotifikasiPage() {
             window.addEventListener('noc-notifications-updated', () => {
                 this.refreshData(true);
             });
+
+            // Jika saat render awal data perangkat ONU masih kosong, langsung picu fetch otomatis!
+            const initialOnuCount = Array.isArray(this.alerts) ? this.alerts.filter(a => a.device_type === 'onu').length : 0;
+            if (initialOnuCount === 0) {
+                this.refreshData(false);
+            }
         },
 
         updateClock() {
@@ -622,7 +628,9 @@ function nocNotifikasiPage() {
             const timeoutId = setTimeout(() => controller.abort(), 35000);
 
             try {
-                const url = !silent ? '{{ route("noc.api.notifications") }}?refresh=1' : '{{ route("noc.api.notifications") }}';
+                const currentOnuCount = Array.isArray(this.alerts) ? this.alerts.filter(a => a.device_type === 'onu').length : 0;
+                const shouldForceRefresh = !silent || (currentOnuCount === 0);
+                const url = shouldForceRefresh ? '{{ route("noc.api.notifications") }}?refresh=1' : '{{ route("noc.api.notifications") }}';
                 const res = await fetch(url, {
                     signal: controller.signal,
                     headers: {

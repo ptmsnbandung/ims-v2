@@ -314,9 +314,15 @@
                     });
 
                     if (recovered.length > 0) {
-                        // Mainkan suara pemulihan dan toast sukses
-                        if (typeof window.playNocRecoverySound === "function") {
-                            window.playNocRecoverySound(recovered[0], recovered.length);
+                        const recKey = 'rec_' + recovered.map(r => r.id || r.device_key).sort().join('_');
+                        const canClaim = !window.ImsTabCoordinator || window.ImsTabCoordinator.claimEvent(recKey, 15000);
+
+                        if (canClaim) {
+                            if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                                window.ImsTabCoordinator.delegateToActive('playNocRecoverySound', [recovered[0], recovered.length]);
+                            } else if (typeof window.playNocRecoverySound === "function") {
+                                window.playNocRecoverySound(recovered[0], recovered.length);
+                            }
                         }
 
                         // Bersihkan dari playedKeys agar di kemudian hari jika padam lagi alarm bisa berbunyi
@@ -365,8 +371,15 @@
                     const unplayed = losDownAlerts.filter(a => !playedKeys.includes(a.id) && !playedKeys.includes(a.device_key));
 
                     if (unplayed.length > 0) {
-                        if (typeof window.playNocEmergencySound === 'function') {
-                            window.playNocEmergencySound(unplayed[0]);
+                        const emergKey = 'emerg_' + unplayed.map(u => u.id || u.device_key).sort().join('_');
+                        const canClaim = !window.ImsTabCoordinator || window.ImsTabCoordinator.claimEvent(emergKey, 15000);
+
+                        if (canClaim) {
+                            if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                                window.ImsTabCoordinator.delegateToActive('playNocEmergencySound', [unplayed[0]]);
+                            } else if (typeof window.playNocEmergencySound === 'function') {
+                                window.playNocEmergencySound(unplayed[0]);
+                            }
                         }
 
                         // Tandai segera agar tidak berulang
@@ -2192,6 +2205,10 @@
     <div x-data="{
              toasts: [],
              addToast(detail) {
+                 // CEK MULTI-TAB: Jangan tampilkan toast banner jika tab ini sedang di background dan ada tab lain yang aktif
+                 if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                     return;
+                 }
                  const id = detail.id || ('t_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
                  const toast = { ...detail, id };
                  this.toasts.unshift(toast);
@@ -2404,6 +2421,185 @@
         </template>
     </div>
 
+    <!-- IMS Multi-Tab Notification Coordinator (Leader Election & Single Active Tab Dispatcher) -->
+    <script>
+        window.ImsTabCoordinator = {
+            tabId: 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
+            channel: null,
+
+            init() {
+                try {
+                    if (typeof BroadcastChannel !== 'undefined') {
+                        this.channel = new BroadcastChannel('ims_multi_tab_notifications');
+                    }
+                } catch (e) {
+                    this.channel = null;
+                }
+
+                try {
+                    sessionStorage.setItem('ims_current_tab_id', this.tabId);
+                } catch (e) {}
+
+                const updateActive = () => {
+                    if (!document.hidden) {
+                        this.claimActive();
+                    }
+                };
+
+                window.addEventListener('focus', updateActive);
+                window.addEventListener('click', updateActive);
+                window.addEventListener('keydown', updateActive);
+                document.addEventListener('visibilitychange', updateActive);
+
+                if (!document.hidden) {
+                    this.claimActive();
+                }
+
+                // Heartbeat periodic checking
+                this.runHeartbeat();
+                setInterval(() => this.runHeartbeat(), 2500);
+
+                // Handle cleanup
+                window.addEventListener('beforeunload', () => {
+                    try {
+                        if (this.isActive()) {
+                            localStorage.removeItem('ims_active_tab_id');
+                            localStorage.removeItem('ims_active_tab_heartbeat');
+                        }
+                        if (this.isLeader()) {
+                            localStorage.removeItem('ims_tab_leader_id');
+                            localStorage.removeItem('ims_tab_leader_heartbeat');
+                        }
+                    } catch (e) {}
+                });
+
+                // Listen to channel messages from background tabs
+                if (this.channel) {
+                    this.channel.onmessage = (event) => {
+                        const data = event.data || {};
+                        if (data.type === 'delegate_notification') {
+                            // Only the active/allowed tab executes the delegated notification
+                            if (this.isAllowedToNotify()) {
+                                if (data.action === 'playNocRecoverySound' && typeof window.playNocRecoverySound === 'function') {
+                                    window.playNocRecoverySound(data.payload?.[0], data.payload?.[1]);
+                                } else if (data.action === 'playNocEmergencySound' && typeof window.playNocEmergencySound === 'function') {
+                                    window.playNocEmergencySound(data.payload?.[0], data.payload?.[1]);
+                                } else if (data.action === 'enqueueNotification' && window.ImsVoice) {
+                                    window.ImsVoice.enqueueNotification(data.payload);
+                                }
+                            }
+                        }
+                    };
+                }
+            },
+
+            claimActive() {
+                try {
+                    localStorage.setItem('ims_active_tab_id', this.tabId);
+                    localStorage.setItem('ims_active_tab_heartbeat', String(Date.now()));
+                } catch (e) {}
+            },
+
+            isActive() {
+                try {
+                    return localStorage.getItem('ims_active_tab_id') === this.tabId;
+                } catch (e) {
+                    return true;
+                }
+            },
+
+            isLeader() {
+                try {
+                    return localStorage.getItem('ims_tab_leader_id') === this.tabId;
+                } catch (e) {
+                    return true;
+                }
+            },
+
+            runHeartbeat() {
+                const now = Date.now();
+                if (!document.hidden && this.isActive()) {
+                    try {
+                        localStorage.setItem('ims_active_tab_heartbeat', String(now));
+                    } catch (e) {}
+                }
+
+                try {
+                    const currentLeader = localStorage.getItem('ims_tab_leader_id');
+                    const leaderHeartbeat = parseInt(localStorage.getItem('ims_tab_leader_heartbeat') || '0', 10);
+                    if (!currentLeader || (now - leaderHeartbeat) > 6000 || currentLeader === this.tabId) {
+                        localStorage.setItem('ims_tab_leader_id', this.tabId);
+                        localStorage.setItem('ims_tab_leader_heartbeat', String(now));
+                    }
+                } catch (e) {}
+            },
+
+            isAllowedToNotify() {
+                const now = Date.now();
+                let activeTabId = null;
+                let activeHeartbeat = 0;
+                try {
+                    activeTabId = localStorage.getItem('ims_active_tab_id');
+                    activeHeartbeat = parseInt(localStorage.getItem('ims_active_tab_heartbeat') || '0', 10);
+                } catch (e) {}
+
+                const isActiveTabAlive = activeTabId && (now - activeHeartbeat) < 5000;
+
+                // 1. Tab ini sedang terlihat dan difokuskan oleh pengguna -> Pasti boleh
+                if (!document.hidden && (document.hasFocus ? document.hasFocus() : true)) {
+                    this.claimActive();
+                    return true;
+                }
+
+                // 2. Ada tab IMS lain yang sedang aktif/terbuka di depan mata pengguna -> Tab background ini DILARANG notif
+                if (isActiveTabAlive && activeTabId !== this.tabId) {
+                    return false;
+                }
+
+                // 3. Tab ini sedang tampak (visible, misal di layar split / multi-monitor) -> Boleh
+                if (!document.hidden) {
+                    this.claimActive();
+                    return true;
+                }
+
+                // 4. Semua tab sedang di background (browser diminimize/buka app lain) -> HANYA 1 tab pemimpin (Leader) yang boleh
+                return this.isLeader();
+            },
+
+            claimEvent(eventId, ttlMs = 15000) {
+                if (!eventId) return false;
+                const now = Date.now();
+                const storageKey = 'ims_evt_lock_' + eventId;
+                let lastClaimed = 0;
+                try {
+                    lastClaimed = parseInt(localStorage.getItem(storageKey) || '0', 10);
+                } catch (e) {}
+
+                if (lastClaimed && (now - lastClaimed) < ttlMs) {
+                    return false; // Sudah diklaim dan diproses oleh tab lain
+                }
+
+                try {
+                    localStorage.setItem(storageKey, String(now));
+                } catch (e) {}
+
+                return true;
+            },
+
+            delegateToActive(action, payload) {
+                if (this.channel) {
+                    try {
+                        this.channel.postMessage({
+                            type: 'delegate_notification',
+                            action: action,
+                            payload: payload
+                        });
+                    } catch (e) {}
+                }
+            }
+        };
+    </script>
+
     <!-- IMS Web Speech Voice Engine & Notification Poller -->
     <script>
         window.ImsVoice = {
@@ -2509,11 +2705,16 @@
                 const item = this.queue.shift();
 
                 try {
-                    // Trigger Toast Banner in UI
-                    window.dispatchEvent(new CustomEvent('ims-new-toast', { detail: item }));
+                    // Hanya tampilkan toast jika tab diizinkan memunculkan notifikasi
+                    if (!window.ImsTabCoordinator || window.ImsTabCoordinator.isAllowedToNotify()) {
+                        window.dispatchEvent(new CustomEvent('ims-new-toast', { detail: item }));
+                    }
 
                     if (this.soundEnabled) {
-                        await this.playChimeAndSpeak(item);
+                        // Hanya bunyikan audio jika tab diizinkan
+                        if (!window.ImsTabCoordinator || window.ImsTabCoordinator.isAllowedToNotify()) {
+                            await this.playChimeAndSpeak(item);
+                        }
                     }
                 } catch (e) {
                     console.warn('Notification play error:', e);
@@ -2569,7 +2770,14 @@
                         }
                     };
 
-                    // Try playing Chime MP3 first
+                    // HILANGKAN SUARA 2 KALI: Jika notifikasi sudah memiliki nada khusus (seperti nada synthesizer recovery atau alarm),
+                    // langsung mulai ucapan suara tanpa memutar chime MP3 lagi agar suara sebelum ucapan TIDAK 2 KALI.
+                    if (item.skipChime || item.type === 'noc_recovery' || item.type === 'noc_alarm') {
+                        setTimeout(speakText, 350);
+                        return;
+                    }
+
+                    // Untuk notifikasi umum lainnya, putar Chime MP3 sekali
                     this.chimeAudio.currentTime = 0;
                     this.chimeAudio.play().then(() => {
                         setTimeout(speakText, 550);
@@ -2599,7 +2807,13 @@
                                 if (notifId && !this.hasPlayed(notifId)) {
                                     // Mark immediately to prevent duplicate runs across tabs
                                     this.markAsPlayed(notifId);
-                                    this.enqueueNotification(notif);
+
+                                    // Jika tab ini di background, delegasikan ke tab aktif
+                                    if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                                        window.ImsTabCoordinator.delegateToActive('enqueueNotification', notif);
+                                    } else {
+                                        this.enqueueNotification(notif);
+                                    }
                                 }
                             });
                         }
@@ -2611,12 +2825,18 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            if (window.ImsTabCoordinator) window.ImsTabCoordinator.init();
             window.ImsVoice.init();
         });
 
         // Global NOC Emergency Alert Audio Synthesizer & Voice Chime (LOS & DOWN)
         // Global NOC Recovery Alert Audio Synthesizer & Voice Chime (Saat perangkat pulih / normal kembali)
         window.playNocRecoverySound = function(recoveredItem, totalRecoveredCount = 1) {
+            // CEK MULTI-TAB: Jangan bunyikan jika tab ini di background
+            if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                return;
+            }
+
             // 1. Web Audio Synthesizer: Nada Harmoni Sukses Naik (C5 -> E5 -> G5 -> C6)
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2665,6 +2885,7 @@
                             : `${name} telah kembali online dan normal.`,
                         speech_text: speechText,
                         device_name: name,
+                        skipChime: true, // PENTING: Jangan putar chime MP3 lagi karena Web Audio Synthesizer sudah berbunyi
                         url: item.url || null
                     });
                 } else if (typeof window.showToast === "function") {
@@ -2674,6 +2895,11 @@
         };
 
         window.playNocEmergencySound = function(alertItem, force = false) {
+            // CEK MULTI-TAB: Jangan bunyikan jika tab ini di background
+            if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                return;
+            }
+
             // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2719,6 +2945,7 @@
                         message: item.message || `${name} mengalami gangguan ${st}`,
                         speech_text: item.speech_text || `Perhatian! Terdeteksi ${statusLabel} pada ${name}.`,
                         device_name: name,
+                        skipChime: true, // PENTING: Jangan putar chime MP3 lagi karena nada alarm Synthesizer sudah berbunyi
                         url: item.url || null
                     });
                 }

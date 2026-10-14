@@ -672,8 +672,15 @@ function nocNotifikasiPage() {
             });
 
             if (recovered.length > 0) {
-                if (typeof window.playNocRecoverySound === "function") {
-                    window.playNocRecoverySound(recovered[0], recovered.length);
+                const recKey = 'rec_' + recovered.map(r => r.id || r.device_key).sort().join('_');
+                const canClaim = !window.ImsTabCoordinator || window.ImsTabCoordinator.claimEvent(recKey, 15000);
+
+                if (canClaim) {
+                    if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                        window.ImsTabCoordinator.delegateToActive('playNocRecoverySound', [recovered[0], recovered.length]);
+                    } else if (typeof window.playNocRecoverySound === "function") {
+                        window.playNocRecoverySound(recovered[0], recovered.length);
+                    }
                 }
 
                 try {
@@ -709,8 +716,15 @@ function nocNotifikasiPage() {
             const unplayed = losDownAlerts.filter(a => !playedKeys.includes(a.id) && !playedKeys.includes(a.device_key));
 
             if (unplayed.length > 0) {
-                if (typeof window.playNocEmergencySound === 'function') {
-                    window.playNocEmergencySound(unplayed[0]);
+                const emergKey = 'emerg_' + unplayed.map(u => u.id || u.device_key).sort().join('_');
+                const canClaim = !window.ImsTabCoordinator || window.ImsTabCoordinator.claimEvent(emergKey, 15000);
+
+                if (canClaim) {
+                    if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                        window.ImsTabCoordinator.delegateToActive('playNocEmergencySound', [unplayed[0]]);
+                    } else if (typeof window.playNocEmergencySound === 'function') {
+                        window.playNocEmergencySound(unplayed[0]);
+                    }
                 }
 
                 // Simpan ke localStorage agar tidak membunyikan spam berulang tiap 20 detik

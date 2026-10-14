@@ -1522,25 +1522,26 @@
                                     </div>
                                 </div>
 
-                                <!-- Mini Bar Stats -->
-                                <div class="px-4 py-2 border-b flex items-center justify-between text-[11px] bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700/80 font-medium">
+                                <!-- Mini Bar Stats (Pemisahan LOS, DOWN, dan Tiket) -->
+                                <div class="px-3.5 py-1.5 border-b flex items-center justify-between text-[11px] bg-slate-50 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-800 font-medium">
                                     <div class="flex items-center gap-3">
                                         <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                                            <span class="w-2 h-2 rounded-full" style="background-color: #ef4444 !important;"></span>
-                                            <span>LOS/DOWN:</span>
-                                            <b class="font-mono" style="color: #dc2626 !important;" x-text="summary.total_los_down || 0"></b>
+                                            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                            <span>LOS:</span>
+                                            <b class="font-mono text-rose-600 dark:text-rose-400 font-bold" x-text="summary.total_los || 0"></b>
                                         </span>
                                         <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                                            <span class="w-2 h-2 rounded-full" style="background-color: #3b82f6 !important;"></span>
+                                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                            <span>DOWN:</span>
+                                            <b class="font-mono text-amber-600 dark:text-amber-400 font-bold" x-text="summary.total_down || 0"></b>
+                                        </span>
+                                        <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                                             <span>Tiket:</span>
-                                            <b class="font-mono" style="color: #2563eb !important;" x-text="summary.total_tickets || 0"></b>
+                                            <b class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="summary.total_tickets || 0"></b>
                                         </span>
                                     </div>
-                                    <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
-                                        <span class="w-2 h-2 rounded-full" style="background-color: #94a3b8 !important;"></span>
-                                        <span>Mute Alert:</span>
-                                        <b class="font-mono text-slate-800 dark:text-slate-200" x-text="summary.total_intentional || 0"></b>
-                                    </span>
+                                    <span class="text-[10px] text-slate-400 font-medium">Insiden Terbaru</span>
                                 </div>
 
                                 <!-- Body Notifikasi List -->
@@ -1570,76 +1571,68 @@
                                         </div>
                                     </template>
 
-                                    <!-- Alert Items (Maksimal 4 notifikasi di dropdown navbar) -->
-                                    <template x-for="item in alerts.slice(0, 4)" :key="item.id">
-                                        <div class="p-3.5 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group relative"
-                                             :class="isUnread(item.id, item.device_key) ? 'bg-rose-50/30 dark:bg-rose-950/20' : ''">
+                                    <!-- Alert Items (Compact & Rapi: Menampilkan 5 insiden terbaru LOS & DOWN) -->
+                                    <template x-for="item in alerts.slice(0, 5)" :key="item.id">
+                                        <a :href="item.url || '{{ route('noc.notifikasi') }}'"
+                                           @click="markRead(item); open = false"
+                                           class="px-3.5 py-2.5 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group cursor-pointer border-b border-slate-100 dark:border-slate-800/60 last:border-b-0"
+                                           :class="isUnread(item.id, item.device_key) ? 'bg-rose-50/40 dark:bg-rose-950/20' : ''">
                                             
-                                            <!-- Status Icon -->
-                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                                                 :class="item.status === 'LOS' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 ring-1 ring-rose-300/60 dark:ring-rose-800/60' : (item.status === 'DOWN' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 ring-1 ring-amber-300/60 dark:ring-amber-800/60' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400 ring-1 ring-blue-300/60 dark:ring-blue-800/60')">
+                                            <!-- Mini Status Icon -->
+                                            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                                 :class="item.status === 'LOS' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400 ring-1 ring-rose-200/80 dark:ring-rose-800/80' : (item.status === 'DOWN' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-400 ring-1 ring-amber-200/80 dark:ring-amber-800/80' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-400 ring-1 ring-blue-200/80 dark:ring-blue-800/80')">
                                                 <template x-if="item.status === 'LOS'">
-                                                    <svg class="w-4 h-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                                    <svg class="w-3.5 h-3.5 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                                                     </svg>
                                                 </template>
                                                 <template x-if="item.status === 'DOWN'">
-                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
                                                     </svg>
                                                 </template>
                                                 <template x-if="item.device_type === 'tiket'">
-                                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                                                     </svg>
                                                 </template>
                                             </div>
 
-                                            <!-- Content Detail -->
+                                            <!-- Content Info -->
                                             <div class="flex-1 min-w-0">
-                                                <div class="flex items-center justify-between gap-1 mb-0.5">
-                                                    <div class="flex items-center gap-1.5 min-w-0">
-                                                        <span class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="item.title"></span>
-                                                        <span x-show="isUnread(item.id, item.device_key)" class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" title="Belum dibaca"></span>
-                                                    </div>
-                                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 flex-shrink-0 whitespace-nowrap" x-text="item.created_at"></span>
-                                                </div>
-
-                                                <p class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate" x-text="item.device_name"></p>
-                                                
-                                                <p class="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5" x-text="item.message"></p>
-
-                                                <!-- Action Buttons Row -->
-                                                <div class="flex items-center justify-between gap-2 mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800">
-                                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
-                                                          :class="item.badge_color"
+                                                <div class="flex items-center gap-1.5 leading-none">
+                                                    <!-- Badge Status Ringkas -->
+                                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider leading-none flex-shrink-0"
+                                                          :class="item.status === 'LOS' ? 'bg-rose-500 text-white' : (item.status === 'DOWN' ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white')"
                                                           x-text="item.status"></span>
-
-                                                    <div class="flex items-center gap-1.5">
-                                                        <!-- Button Mark Intentional (Hanya untuk perangkat OLT/ONU/Port) -->
-                                                        <template x-if="item.device_type !== 'tiket'">
-                                                            <button @click.stop="markIntentionalQuick(item)"
-                                                                    type="button"
-                                                                    title="Tandai pemeliharaan sengaja agar alarm tidak berbunyi"
-                                                                    class="px-2 py-0.5 rounded text-[10px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-300 dark:border-amber-800 transition cursor-pointer">
-                                                                Intentional
-                                                            </button>
-                                                        </template>
-
-                                                        <!-- Tombol Direct Link -->
-                                                        <a :href="item.url"
-                                                           @click="markRead(item); open = false"
-                                                           style="background-color: #0891b2 !important; color: #ffffff !important;"
-                                                           class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition cursor-pointer hover:brightness-110">
-                                                            <span x-text="item.action_label || 'Buka'"></span>
-                                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                                                            </svg>
-                                                        </a>
-                                                    </div>
+                                                    
+                                                    <!-- Nama Pelanggan / Device -->
+                                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition"
+                                                          x-text="item.device_name"></span>
+                                                    
+                                                    <!-- Unread Dot -->
+                                                    <span x-show="isUnread(item.id, item.device_key)" class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0 animate-pulse" title="Belum dibaca"></span>
                                                 </div>
+
+                                                <!-- Subtitle (Port PON & Nomor Pelanggan / OLT) -->
+                                                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-1 leading-tight"
+                                                   x-text="item.subtitle || item.title"></p>
                                             </div>
-                                        </div>
+
+                                            <!-- Right Column: Waktu Kejadian & Chevron -->
+                                            <div class="flex items-center gap-1.5 flex-shrink-0 text-right">
+                                                <div class="flex flex-col items-end">
+                                                    <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap"
+                                                          x-text="item.duration_human || ''"></span>
+                                                    <span class="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap"
+                                                          x-text="item.created_at"></span>
+                                                </div>
+                                                <svg class="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 group-hover:translate-x-0.5 transition flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                                </svg>
+                                            </div>
+
+                                        </a>
                                     </template>
                                 </div>
 

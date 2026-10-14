@@ -4117,10 +4117,8 @@ class NocController extends Controller
             Log::warning('NOC notif ONU scan error: ' . $e->getMessage());
         }
 
-        // Urutkan active alerts berdasarkan tingkat severity (danger duluan) lalu waktu terbaru
+        // Urutkan active alerts berdasarkan waktu mulai gangguan terbaru (insiden paling baru muncul di paling atas, baik LOS maupun DOWN)
         usort($activeAlerts, function ($a, $b) {
-            if ($a['severity'] === 'danger' && $b['severity'] !== 'danger') return -1;
-            if ($b['severity'] === 'danger' && $a['severity'] !== 'danger') return 1;
             return strcmp($b['created_at_raw'] ?? '', $a['created_at_raw'] ?? '');
         });
 

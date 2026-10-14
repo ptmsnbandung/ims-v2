@@ -875,41 +875,59 @@ class OltConnectionService
                 'trx_batchjob_register.olt'
             );
 
-        $query->where(function ($q) use ($kodeOlt, $namaOlt, $kodePop) {
-            // 1. Cocokkan kode OLT langsung pada trx_batchjob_register
-            if (!empty($kodeOlt)) {
-                $q->where('trx_batchjob_register.olt', $kodeOlt);
-            }
-
-            // 2. Cocokkan nama OLT pada trx_batchjob_register
-            if (!empty($namaOlt)) {
-                $q->orWhere('trx_batchjob_register.olt', 'like', "%{$namaOlt}%");
-            }
-
-            // 3. Cocokkan kode POP jika terdaftar di m_olt
-            if (!empty($kodePop)) {
-                $q->orWhere('view_batchjob.kode_pop', $kodePop);
-            }
-
-            // 4. Alias pemetaan sistem IMS (NocController standard)
-            if ($kodeOlt === 'O1' || str_contains($namaOlt, 'kayu agung')) {
-                $q->orWhere('trx_batchjob_register.olt', 'MSN')
-                  ->orWhere('trx_batchjob_register.olt', 'like', '%Kayu Agung%')
+        // Isolasi ketat: Pelanggan tidak boleh masuk ke OLT lain
+        if ($kodeOlt === 'O1' || str_contains($namaOlt, 'kayu agung') || str_contains($namaOlt, 'msn')) {
+            $query->where(function ($exclude) {
+                $exclude->whereNotIn('trx_batchjob_register.olt', ['Bagong', 'Babakan Tarogong', 'Soreang', 'BBU', 'O2', 'O3'])
+                        ->orWhereNull('trx_batchjob_register.olt');
+            });
+            $query->where(function ($slot) {
+                $slot->where('trx_batchjob_register.index_olt', 'not like', '%1/1/%')
+                     ->orWhereNull('trx_batchjob_register.index_olt');
+            });
+            $query->where(function ($q) {
+                $q->whereIn('trx_batchjob_register.olt', ['O1', 'MSN', 'Kayu Agung'])
+                  ->orWhere('trx_batchjob_register.olt', 'like', '%Kayu%')
                   ->orWhere('view_batchjob.kode_pop', 'pop73117')
                   ->orWhere('m_pop.nama_pop', 'like', '%Kayu Agung%');
-            } elseif ($kodeOlt === 'O2' || str_contains($namaOlt, 'babakan tarogong') || str_contains($namaOlt, 'bagong')) {
-                $q->orWhere('trx_batchjob_register.olt', 'Bagong')
-                  ->orWhere('trx_batchjob_register.olt', 'like', '%Babakan Tarogong%')
+            });
+        } elseif ($kodeOlt === 'O2' || str_contains($namaOlt, 'babakan tarogong') || str_contains($namaOlt, 'bagong')) {
+            $query->where(function ($exclude) {
+                $exclude->whereNotIn('trx_batchjob_register.olt', ['MSN', 'Kayu Agung', 'Soreang', 'BBU', 'O1', 'O3'])
+                        ->orWhereNull('trx_batchjob_register.olt');
+            });
+            $query->where(function ($slot) {
+                $slot->where('trx_batchjob_register.index_olt', 'not like', '%1/2/%')
+                     ->orWhereNull('trx_batchjob_register.index_olt');
+            });
+            $query->where(function ($q) {
+                $q->whereIn('trx_batchjob_register.olt', ['O2', 'Bagong', 'Babakan Tarogong'])
+                  ->orWhere('trx_batchjob_register.olt', 'like', '%Babakan%')
+                  ->orWhere('trx_batchjob_register.olt', 'like', '%Tarogong%')
                   ->orWhere('view_batchjob.kode_pop', 'pop9348')
-                  ->orWhere('m_pop.nama_pop', 'like', '%Babakan Tarogong%');
-            } elseif ($kodeOlt === 'O3' || str_contains($namaOlt, 'bbu') || str_contains($namaOlt, 'soreang')) {
-                $q->orWhere('trx_batchjob_register.olt', 'Soreang')
+                  ->orWhere('m_pop.nama_pop', 'like', '%Babakan Tarogong%')
+                  ->orWhere('trx_batchjob_register.index_olt', 'like', '%1/1/%');
+            });
+        } elseif ($kodeOlt === 'O3' || str_contains($namaOlt, 'bbu') || str_contains($namaOlt, 'soreang')) {
+            $query->where(function ($exclude) {
+                $exclude->whereNotIn('trx_batchjob_register.olt', ['MSN', 'Kayu Agung', 'Bagong', 'Babakan Tarogong', 'O1', 'O2'])
+                        ->orWhereNull('trx_batchjob_register.olt');
+            });
+            $query->where(function ($slot) {
+                $slot->where('trx_batchjob_register.index_olt', 'not like', '%1/1/%')
+                     ->orWhereNull('trx_batchjob_register.index_olt');
+            });
+            $query->where(function ($q) {
+                $q->whereIn('trx_batchjob_register.olt', ['O3', 'Soreang', 'BBU'])
+                  ->orWhere('trx_batchjob_register.olt', 'like', '%Soreang%')
                   ->orWhere('trx_batchjob_register.olt', 'like', '%BBU%')
-                  ->orWhere('view_batchjob.kode_pop', 'pop26685')
-                  ->orWhere('m_pop.nama_pop', 'like', '%MediaNet%')
-                  ->orWhere('m_pop.nama_pop', 'like', '%BBU%');
-            }
-        });
+                  ->orWhere('trx_batchjob_register.index_olt', 'like', '%1/2/%')
+                  ->orWhere(function ($sub) {
+                      $sub->whereIn('view_batchjob.kode_pop', ['pop26685'])
+                          ->whereNull('trx_batchjob_register.olt');
+                  });
+            });
+        }
 
         return $query;
     }
@@ -1870,15 +1888,19 @@ class OltConnectionService
                                         $userOdpByNameMap[$cNm] = $odpName;
                                     }
                                 }
-                                $sn = strtoupper(trim($gu->keterangan ?? ''));
-                                if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
-                                    $dbBySn[$sn] = $gu;
+                                // HANYA masukkan ke dbBySn jika user berasal dari database OLT yang sama!
+                                if ($gomsnOltId && $gId === $gomsnOltId) {
+                                    $sn = strtoupper(trim($gu->keterangan ?? ''));
+                                    if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
+                                        $dbBySn[$sn] = $gu;
+                                    }
                                 }
                             }
                         } catch (\Throwable $e) {}
                     }
                 }
 
+                $curSlot = $this->getOltGponSlot($olt);
                 foreach ($regs as $r) {
                     $cNo = trim($r->nomor_internet ?? '');
                     $cName = strtoupper(trim($r->nama_pelanggan ?? ''));
@@ -1893,7 +1915,8 @@ class OltConnectionService
                         $dbBySn[$sn] = $r;
                     }
                     $idx = trim($r->index_olt ?? '');
-                    if (preg_match('/(?:1\/[12]\/' . $portNum . ':|' . $portNum . ':)(\d+)/', $idx, $m)) {
+                    // Cocokkan index_olt HANYA dengan slot fisik OLT ini (1 untuk Bagong, 2 untuk Soreang/MSN)
+                    if (preg_match('/(?:1\/' . $curSlot . '\/' . $portNum . ':|' . $portNum . ':)(\d+)/', $idx, $m)) {
                         $onuSlotNum = (int)$m[1];
                         $dbBySlot[$onuSlotNum] = $r;
                     }
@@ -2481,14 +2504,9 @@ class OltConnectionService
 
         // Query pelanggan aktif pada PON port ini HANYA yang benar-benar milik OLT ini
         $query = $this->getOltCustomerBaseQuery($olt);
-        $query->where(function ($q) use ($ponIndex) {
-            $q->where('view_batchjob.index_olt', 'like', "%1/1/{$ponIndex}:%")
-              ->orWhere('view_batchjob.index_olt', 'like', "%1/2/{$ponIndex}:%")
-              ->orWhere('view_batchjob.index_olt', 'like', "%pon-{$ponIndex}:%")
-              ->orWhere('view_batchjob.index_olt', 'like', "{$ponIndex}:%")
-              ->orWhere('trx_batchjob_register.index_olt', 'like', "%1/1/{$ponIndex}:%")
-              ->orWhere('trx_batchjob_register.index_olt', 'like', "%1/2/{$ponIndex}:%")
-              ->orWhere('trx_batchjob_register.index_olt', 'like', "%pon-{$ponIndex}:%")
+        $query->where(function ($q) use ($ponIndex, $slot) {
+            $q->where('view_batchjob.index_olt', 'like', "%1/{$slot}/{$ponIndex}:%")
+              ->orWhere('trx_batchjob_register.index_olt', 'like', "%1/{$slot}/{$ponIndex}:%")
               ->orWhere('trx_batchjob_register.index_olt', 'like', "{$ponIndex}:%");
         });
 

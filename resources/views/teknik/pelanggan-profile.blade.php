@@ -1836,43 +1836,106 @@
                                 <div>
                                     <div class="flex items-stretch gap-2 h-[155px]">
                                         <!-- Y Axis Labels MRTG -->
-                                        <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-bold text-slate-400 select-none py-1 w-12 shrink-0">
+                                        <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-semibold text-slate-400 select-none py-1 w-12 shrink-0">
                                             <template x-for="(yLbl, yIdx) in (onu.mrtg?.y_labels || [])" :key="yIdx">
                                                 <span x-text="yLbl"></span>
                                             </template>
                                         </div>
 
                                         <!-- Plot Area SVG MRTG -->
-                                        <div class="flex-1 min-w-0 h-full bg-[#060c18] border border-slate-700/80 rounded-xl overflow-hidden relative">
+                                        <div class="flex-1 min-w-0 h-full bg-[#070e1b] border border-slate-800 rounded-xl overflow-hidden relative shadow-inner">
                                             <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
-                                                <line x1="0" y1="0" x2="720" y2="0" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                                <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                                <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                                <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                                <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                                <defs>
+                                                    <linearGradient id="custMrtgInGrad" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.55"/>
+                                                        <stop offset="45%" stop-color="#059669" stop-opacity="0.25"/>
+                                                        <stop offset="90%" stop-color="#047857" stop-opacity="0.05"/>
+                                                        <stop offset="100%" stop-color="#022c22" stop-opacity="0.0"/>
+                                                    </linearGradient>
+                                                    <filter id="custMrtgOutGlow" x="-10%" y="-10%" width="120%" height="120%">
+                                                        <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#38bdf8" flood-opacity="0.45"/>
+                                                    </filter>
+                                                </defs>
 
-                                                <!-- In Traffic Polygon (Solid Green Area) -->
-                                                <polygon :points="onu.mrtg.in_polygon || ''" fill="#00cc00" fill-opacity="0.9"/>
-                                                <!-- Out Traffic Polyline (Solid Blue Line) -->
-                                                <polyline :points="onu.mrtg.out_polyline || ''" fill="none" stroke="#3b82f6" stroke-width="1.8"/>
+                                                <!-- Delicate Grid Lines Horizontal -->
+                                                <line x1="0" y1="0" x2="720" y2="0" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-width="1"/>
+
+                                                <!-- Delicate Grid Lines Vertical -->
+                                                <line x1="90" y1="0" x2="90" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="180" y1="0" x2="180" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="270" y1="0" x2="270" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="360" y1="0" x2="360" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="450" y1="0" x2="450" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="540" y1="0" x2="540" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="630" y1="0" x2="630" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+
+                                                <!-- In Traffic Polygon (Emerald Gradient) -->
+                                                <polygon :points="onu.mrtg.in_polygon || ''" 
+                                                         fill="url(#custMrtgInGrad)" 
+                                                         stroke="#10b981" 
+                                                         stroke-width="1.2" 
+                                                         stroke-linejoin="round"
+                                                         opacity="0.95"/>
+
+                                                <!-- Out Traffic Polyline (Sky Blue with Glow) -->
+                                                <polyline :points="onu.mrtg.out_polyline || ''" 
+                                                          fill="none" 
+                                                          stroke="#38bdf8" 
+                                                          stroke-width="2" 
+                                                          stroke-linecap="round" 
+                                                          stroke-linejoin="round" 
+                                                          filter="url(#custMrtgOutGlow)"/>
                                             </svg>
                                         </div>
                                     </div>
 
                                     <!-- Sumbu X MRTG Labels -->
-                                    <div class="flex items-center mt-1">
+                                    <div class="flex items-center mt-1.5">
                                         <div class="w-12 shrink-0"></div>
-                                        <div class="flex-1 flex justify-between items-center text-[8px] font-mono text-slate-400 px-1 select-none">
+                                        <div class="flex-1 flex justify-between items-center text-[8px] font-semibold font-mono text-slate-400 px-1 select-none">
                                             <template x-for="(xLbl, xIdx) in (onu.mrtg.x_labels || [])" :key="xIdx">
                                                 <span x-text="xLbl"></span>
                                             </template>
                                         </div>
                                     </div>
+
+                                    <!-- Legend Stats In & Out (Modern Chips) -->
+                                    <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 text-[9px] font-mono">
+                                        <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-950/40 border border-emerald-800/40 text-slate-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse"></span>
+                                            <span class="text-emerald-400 font-bold flex items-center gap-0.5">
+                                                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                                                In (Rx):
+                                            </span>
+                                            <span class="text-slate-300">
+                                                Cur: <strong class="text-emerald-300 font-bold" x-text="onu.mrtg?.current_in"></strong>
+                                                &middot; Max: <span class="text-slate-400" x-text="onu.mrtg?.max_in"></span>
+                                                &middot; Avg: <span class="text-slate-400" x-text="onu.mrtg?.avg_in"></span>
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-950/40 border border-sky-800/40 text-slate-200">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)] animate-pulse"></span>
+                                            <span class="text-sky-400 font-bold flex items-center gap-0.5">
+                                                <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                                                Out (Tx):
+                                            </span>
+                                            <span class="text-slate-300">
+                                                Cur: <strong class="text-sky-300 font-bold" x-text="onu.mrtg?.current_out"></strong>
+                                                &middot; Max: <span class="text-slate-400" x-text="onu.mrtg?.max_out"></span>
+                                                &middot; Avg: <span class="text-slate-400" x-text="onu.mrtg?.avg_out"></span>
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </template>
                             <template x-if="!onu || !onu.mrtg">
-                                <div class="py-12 text-center text-slate-500 text-xs">
-                                    Data MRTG belum tersedia untuk perangkat ini.
+                                <div class="py-12 text-center text-slate-500 text-xs font-mono">
+                                    Data MRTG multi-day belum tersedia untuk perangkat ini.
                                 </div>
                             </template>
                         </div>

@@ -463,17 +463,24 @@ class OltConnectionService
         $avgOut = round($sumOut / $numPoints, 1);
 
         $polyPoints = ["0,{$height}"];
+        $inLinePoints = [];
         foreach ($inPoints as $pt) {
             $polyPoints[] = "{$pt[0]},{$pt[1]}";
+            $inLinePoints[] = "{$pt[0]},{$pt[1]}";
         }
         $polyPoints[] = "{$width},{$height}";
         $inPolygon = implode(' ', $polyPoints);
+        $inPolyline = implode(' ', $inLinePoints);
 
         $linePoints = [];
+        $polyOutPoints = ["0,{$height}"];
         foreach ($outPoints as $pt) {
             $linePoints[] = "{$pt[0]},{$pt[1]}";
+            $polyOutPoints[] = "{$pt[0]},{$pt[1]}";
         }
+        $polyOutPoints[] = "{$width},{$height}";
         $outPolyline = implode(' ', $linePoints);
+        $outPolygon = implode(' ', $polyOutPoints);
 
         return [
             'max_val' => $maxVal,
@@ -484,7 +491,9 @@ class OltConnectionService
             'start_date_input' => date('Y-m-d\TH:i', $startTs),
             'end_date_input' => date('Y-m-d\TH:i', $endTs),
             'in_polygon' => $inPolygon,
+            'in_polyline' => $inPolyline,
             'out_polyline' => $outPolyline,
+            'out_polygon' => $outPolygon,
             'current_in' => number_format($currentDownMbps, 1) . ' M',
             'max_in' => number_format($maxIn, 1) . ' M',
             'avg_in' => number_format($avgIn, 1) . ' M',

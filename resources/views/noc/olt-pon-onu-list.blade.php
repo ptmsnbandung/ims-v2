@@ -654,15 +654,15 @@
                                 </div>
                             </div>
 
-                            <!-- Box Frame Grafik MRTG (Sumbu Y, Plot Area SVG & Sumbu X) -->
-                            <div class="p-2 rounded-xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200/90 dark:border-slate-800 shadow-inner">
+                            <!-- Box Frame Grafik MRTG (High-Tech Telemetry Console) -->
+                            <div class="p-2 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
                                 <div class="flex items-stretch gap-1.5 h-[95px] sm:h-[105px]">
                                     <!-- Sumbu Y Kiri -->
                                     <div class="flex items-stretch gap-1 select-none shrink-0 h-full">
-                                        <span class="text-[7px] font-bold text-slate-400 self-center" style="writing-mode: vertical-rl; transform: rotate(180deg);">
-                                            Bits/Sec
+                                        <span class="text-[6.5px] font-mono font-bold tracking-widest text-slate-400 [writing-mode:vertical-lr] rotate-180 self-center uppercase opacity-75">
+                                            Bits/s
                                         </span>
-                                        <div class="flex flex-col justify-between items-end h-full text-[7.5px] font-mono font-bold text-slate-500 dark:text-slate-400 leading-none py-0.5">
+                                        <div class="flex flex-col justify-between items-end h-full text-[7.5px] font-mono font-semibold text-slate-400 leading-none py-0.5 min-w-[28px]">
                                             <span x-text="onu.mrtg?.y_labels?.[0] ?? '20.0 M'"></span>
                                             <span x-text="onu.mrtg?.y_labels?.[1] ?? '15.0 M'"></span>
                                             <span x-text="onu.mrtg?.y_labels?.[2] ?? '10.0 M'"></span>
@@ -672,69 +672,85 @@
                                     </div>
 
                                     <!-- Plot Area SVG MRTG -->
-                                    <div class="flex-1 min-w-0 h-full bg-[#f8fafc] dark:bg-[#060c18] border border-slate-700/80 rounded-xs overflow-hidden relative">
+                                    <div class="flex-1 min-w-0 h-full bg-[#070e1b] border border-slate-800 rounded-lg overflow-hidden relative shadow-inner">
                                         <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
-                                            <!-- Grid Lines Horizontal (5 Baris) -->
-                                            <line x1="0" y1="0" x2="720" y2="0" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="0" y1="105" x2="720" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <defs>
+                                                <linearGradient :id="'onuGradIn_' + onu.onu_index" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stop-color="#10b981" stop-opacity="0.55"/>
+                                                    <stop offset="45%" stop-color="#059669" stop-opacity="0.25"/>
+                                                    <stop offset="90%" stop-color="#047857" stop-opacity="0.05"/>
+                                                    <stop offset="100%" stop-color="#022c22" stop-opacity="0.0"/>
+                                                </linearGradient>
+                                                <filter :id="'onuGlowOut_' + onu.onu_index" x="-10%" y="-10%" width="120%" height="120%">
+                                                    <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#38bdf8" flood-opacity="0.45"/>
+                                                </filter>
+                                            </defs>
 
-                                            <!-- Grid Lines Vertical (8 Pembagi) -->
-                                            <line x1="90" y1="0" x2="90" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="180" y1="0" x2="180" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="270" y1="0" x2="270" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="360" y1="0" x2="360" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="450" y1="0" x2="450" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="540" y1="0" x2="540" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
-                                            <line x1="630" y1="0" x2="630" y2="105" stroke="#94a3b8" stroke-dasharray="2,2" stroke-width="0.8" opacity="0.6"/>
+                                            <!-- Grid Lines Horizontal -->
+                                            <line x1="0" y1="0" x2="720" y2="0" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-width="1"/>
 
-                                            <!-- Red Boundary Markers -->
-                                            <line x1="115.2" y1="0" x2="115.2" y2="105" stroke="#ef4444" stroke-width="1.3"/>
-                                            <line x1="633.6" y1="0" x2="633.6" y2="105" stroke="#ef4444" stroke-width="1.3"/>
+                                            <!-- Grid Lines Vertical -->
+                                            <line x1="90" y1="0" x2="90" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="180" y1="0" x2="180" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="270" y1="0" x2="270" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="360" y1="0" x2="360" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="450" y1="0" x2="450" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="540" y1="0" x2="540" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                            <line x1="630" y1="0" x2="630" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
 
-                                            <!-- In Traffic Polygon (Solid Green Area) -->
-                                            <polygon :points="onu.mrtg?.in_polygon ?? ''" fill="#00cc00" fill-opacity="0.95"/>
+                                            <!-- In Traffic Polygon (Emerald Gradient) -->
+                                            <polygon :points="onu.mrtg?.in_polygon ?? ''" 
+                                                     :fill="'url(#onuGradIn_' + onu.onu_index + ')'" 
+                                                     stroke="#10b981" 
+                                                     stroke-width="1.1" 
+                                                     stroke-linejoin="round"
+                                                     opacity="0.95"/>
 
-                                            <!-- Out Traffic Polyline (Solid Blue Line) -->
-                                            <polyline :points="onu.mrtg?.out_polyline ?? ''" fill="none" stroke="#0000ff" stroke-width="1.6"/>
-
-                                            <!-- Indicator Arrow at 0.0M -->
-                                            <polygon points="0,101 6,105 0,109" fill="#ef4444"/>
+                                            <!-- Out Traffic Polyline (Sky Blue with Glow) -->
+                                            <polyline :points="onu.mrtg?.out_polyline ?? ''" 
+                                                      fill="none" 
+                                                      stroke="#38bdf8" 
+                                                      stroke-width="1.8" 
+                                                      stroke-linecap="round" 
+                                                      stroke-linejoin="round"
+                                                      :filter="'url(#onuGlowOut_' + onu.onu_index + ')'"/>
                                         </svg>
                                     </div>
                                 </div>
 
                                 <!-- Sumbu X (Presisi Sejajar di Bawah SVG) -->
                                 <div class="flex items-center mt-1">
-                                    <div class="w-[38px] shrink-0"></div>
-                                    <div class="flex-1 flex justify-between items-center text-[7px] font-bold font-mono text-slate-400 px-0.5 select-none">
+                                    <div class="w-[36px] shrink-0"></div>
+                                    <div class="flex-1 flex justify-between items-center text-[7px] font-semibold font-mono text-slate-400 px-0.5 select-none">
                                         <template x-for="(xLbl, xIdx) in (onu.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="xIdx">
                                             <span x-text="xLbl"></span>
                                         </template>
                                     </div>
                                 </div>
 
-                                <!-- Legend Stats In & Out (Sama Persis seperti di Card PON) -->
-                                <div class="mt-1.5 pt-1.5 border-t border-slate-200/90 dark:border-slate-800 flex flex-wrap items-center justify-between gap-1 text-[8px] font-mono">
-                                    <div class="flex items-center gap-1 bg-white/70 dark:bg-slate-900/70 px-1.5 py-0.5 rounded border border-slate-200/70 dark:border-slate-800">
-                                        <span class="w-2 h-2 rounded-xs bg-[#00cc00] border border-emerald-600 shrink-0"></span>
-                                        <span class="text-slate-500 font-bold">In:</span>
-                                        <span class="text-slate-700 dark:text-slate-300">
-                                            Cur: <strong class="text-emerald-600 font-bold" x-text="onu.mrtg?.current_in ?? (onu.download_mbps + ' M')"></strong>
-                                            &middot; Max: <span x-text="onu.mrtg?.max_in ?? '20.0 M'"></span>
-                                            &middot; Avg: <span x-text="onu.mrtg?.avg_in ?? '8.5 M'"></span>
+                                <!-- Legend Stats In & Out (Modern Chips) -->
+                                <div class="mt-1.5 pt-1.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1 text-[8px] font-mono">
+                                    <div class="flex items-center gap-1 bg-emerald-950/40 border border-emerald-800/40 text-slate-200 px-1.5 py-0.5 rounded">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)] animate-pulse"></span>
+                                        <span class="text-emerald-400 font-bold">In:</span>
+                                        <span class="text-slate-300">
+                                            Cur: <strong class="text-emerald-300 font-bold" x-text="onu.mrtg?.current_in ?? (onu.download_mbps + ' M')"></strong>
+                                            &middot; Max: <span class="text-slate-400" x-text="onu.mrtg?.max_in ?? '20.0 M'"></span>
+                                            &middot; Avg: <span class="text-slate-400" x-text="onu.mrtg?.avg_in ?? '8.5 M'"></span>
                                         </span>
                                     </div>
 
-                                    <div class="flex items-center gap-1 bg-white/70 dark:bg-slate-900/70 px-1.5 py-0.5 rounded border border-slate-200/70 dark:border-slate-800">
-                                        <span class="w-2 h-1 rounded-xs bg-[#0000ff] shrink-0"></span>
-                                        <span class="text-slate-500 font-bold">Out:</span>
-                                        <span class="text-slate-700 dark:text-slate-300">
-                                            Cur: <strong class="text-blue-600 font-bold" x-text="onu.mrtg?.current_out ?? (onu.upload_mbps + ' M')"></strong>
-                                            &middot; Max: <span x-text="onu.mrtg?.max_out ?? '7.0 M'"></span>
-                                            &middot; Avg: <span x-text="onu.mrtg?.avg_out ?? '3.2 M'"></span>
+                                    <div class="flex items-center gap-1 bg-sky-950/40 border border-sky-800/40 text-slate-200 px-1.5 py-0.5 rounded">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_5px_rgba(56,189,248,0.8)] animate-pulse"></span>
+                                        <span class="text-sky-400 font-bold">Out:</span>
+                                        <span class="text-slate-300">
+                                            Cur: <strong class="text-sky-300 font-bold" x-text="onu.mrtg?.current_out ?? (onu.upload_mbps + ' M')"></strong>
+                                            &middot; Max: <span class="text-slate-400" x-text="onu.mrtg?.max_out ?? '7.0 M'"></span>
+                                            &middot; Avg: <span class="text-slate-400" x-text="onu.mrtg?.avg_out ?? '3.2 M'"></span>
                                         </span>
                                     </div>
                                 </div>

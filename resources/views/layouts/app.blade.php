@@ -252,21 +252,34 @@
                 },
 
                 get displayItems() {
+                    const parseTime = (item) => {
+                        if (!item) return 0;
+                        if (item.timestamp && typeof item.timestamp === 'number') return item.timestamp * 1000;
+                        if (item.created_at_raw) {
+                            const t = Date.parse(String(item.created_at_raw).replace(' ', 'T'));
+                            if (!isNaN(t)) return t;
+                        }
+                        if (item.created_at) {
+                            const t = Date.parse(String(item.created_at));
+                            if (!isNaN(t)) return t;
+                        }
+                        return 0;
+                    };
+
                     if (this.activeTab === 'aktif') {
-                        return this.alerts.slice(0, 5);
+                        const items = [...this.alerts];
+                        items.sort((a, b) => parseTime(b) - parseTime(a));
+                        return items.slice(0, 5);
                     }
                     if (this.activeTab === 'pulih') {
-                        return this.recoveries.slice(0, 5);
+                        const items = [...this.recoveries];
+                        items.sort((a, b) => parseTime(b) - parseTime(a));
+                        return items.slice(0, 5);
                     }
-                    // Tab 'semua': urutkan gabungan atau prioritaskan isu aktif lalu pemulihan terbaru (maksimal 5 notif terbaru)
-                    const items = [];
-                    const maxItems = 5;
-                    let aIdx = 0, rIdx = 0;
-                    while (items.length < maxItems && (aIdx < this.alerts.length || rIdx < this.recoveries.length)) {
-                        if (aIdx < this.alerts.length) items.push(this.alerts[aIdx++]);
-                        if (items.length < maxItems && rIdx < this.recoveries.length) items.push(this.recoveries[rIdx++]);
-                    }
-                    return items;
+                    // Tab 'semua': gabungkan isu aktif dan pemulihan, urutkan murni kronologis terbaru di paling atas (maksimal 5 notif)
+                    const all = [...this.alerts, ...this.recoveries];
+                    all.sort((a, b) => parseTime(b) - parseTime(a));
+                    return all.slice(0, 5);
                 },
 
                 testSound() {

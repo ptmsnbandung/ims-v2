@@ -1741,9 +1741,9 @@
                         </div>
 
                         <!-- VIEW 1: GRAFIK LIVE WAVE REAL-TIME (DYNAMIC SVG) -->
-                        <div x-show="activeView === 'live'" class="p-2.5 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden">
+                        <div x-show="activeView === 'live'" class="p-2 sm:p-2.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden">
                             <!-- Chart Wrapper (H-full w-full with optimal responsive height) -->
-                            <div class="w-full h-[155px] sm:h-[170px] relative">
+                            <div class="w-full h-[110px] sm:h-[120px] relative">
                                 <!-- Empty / Initial Loading Screen -->
                                 <div x-show="loading && !historyPoints.length" class="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs z-10 rounded-lg">
                                     <div class="flex items-center gap-2 text-cyan-400 text-xs font-mono font-bold">
@@ -1831,10 +1831,10 @@
                         </div>
 
                         <!-- VIEW 2: GRAFIK MRTG CACTI MULTI-DAY -->
-                        <div x-show="activeView === 'mrtg'" x-cloak class="p-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl">
+                        <div x-show="activeView === 'mrtg'" x-cloak class="p-2 sm:p-2.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xl">
                             <template x-if="onu && onu.mrtg">
                                 <div>
-                                    <div class="flex items-stretch gap-2" style="height: 155px; min-height: 155px;">
+                                    <div class="flex items-stretch gap-2" style="height: 105px; min-height: 105px;">
                                         <!-- Y Axis Labels MRTG -->
                                         <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-semibold text-slate-400 select-none py-0.5 w-12 shrink-0">
                                             <template x-for="(yLbl, yIdx) in (onu.mrtg?.y_labels || [])" :key="yIdx">
@@ -1904,7 +1904,7 @@
                                     </div>
 
                                     <!-- Legend Stats In & Out (Modern Chips) -->
-                                    <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 text-[9px] font-mono">
+                                    <div class="mt-1.5 pt-1.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 text-[9px] font-mono">
                                         <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-950/40 border border-emerald-800/40 text-slate-200">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse"></span>
                                             <span class="text-emerald-400 font-bold flex items-center gap-0.5">

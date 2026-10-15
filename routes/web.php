@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
     Route::get('/login', [LoginController::class, 'showLoginForm']);
-    Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.submit')->middleware('throttle:6,1');
 });
 
 // Authenticated Routes

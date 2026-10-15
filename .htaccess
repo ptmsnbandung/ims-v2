@@ -4,8 +4,10 @@
     # Prevent directory listing
     Options -Indexes
 
-    # Block access to sensitive files
-    RewriteRule ^(\.env|\.git|composer\.(json|lock)|package(-lock)?\.json) - [F,L,NC]
+    # Block access to sensitive files, dumps, configs, and root test scripts
+    RewriteRule ^(\.env|\.git|\.editorconfig|\.gitignore|\.gitattributes|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|artisan) - [F,L,NC]
+    RewriteRule \.(sql|bak|backup|old|log|ini|sh|bat|cmd|yml|yaml|md)$ - [F,L,NC]
+    RewriteRule ^(check_.*|test_.*|isp_manager|migrate_.*|import_.*|fix_.*)\.(php|sql)$ - [F,L,NC]
 
     # Route all requests to the public folder
     RewriteCond %{REQUEST_URI} !^/public/

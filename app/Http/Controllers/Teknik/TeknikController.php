@@ -1193,12 +1193,17 @@ class TeknikController extends Controller
         // Upload foto mapping jika ada
         $fotoMappingName = null;
         if ($request->hasFile('foto_mapping')) {
-            $uploadDir = public_path('uploads/registrasi');
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+            $file = $request->file('foto_mapping');
+            if ($file && $file->isValid()) {
+                $uploadDir = public_path('uploads/registrasi');
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $ext = $this->getSafeFileExtension($file, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet);
+                $fotoMappingName = 'mapping_' . $cleanNomor . '_' . time() . '.' . $ext;
+                $file->move($uploadDir, $fotoMappingName);
             }
-            $fotoMappingName = 'mapping_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_mapping')->getClientOriginalExtension();
-            $request->file('foto_mapping')->move($uploadDir, $fotoMappingName);
         }
 
         // Get names of selected team
@@ -1322,12 +1327,17 @@ class TeknikController extends Controller
         // Upload foto mapping jika ada
         $fotoMappingName = null;
         if ($request->hasFile('update_foto_mapping')) {
-            $uploadDir = public_path('uploads/registrasi');
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+            $file = $request->file('update_foto_mapping');
+            if ($file && $file->isValid()) {
+                $uploadDir = public_path('uploads/registrasi');
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $ext = $this->getSafeFileExtension($file, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet);
+                $fotoMappingName = 'mapping_' . $cleanNomor . '_' . time() . '.' . $ext;
+                $file->move($uploadDir, $fotoMappingName);
             }
-            $fotoMappingName = 'mapping_' . $nomorInternet . '_' . time() . '.' . $request->file('update_foto_mapping')->getClientOriginalExtension();
-            $request->file('update_foto_mapping')->move($uploadDir, $fotoMappingName);
         }
 
         // Get names of selected team
@@ -1485,12 +1495,17 @@ class TeknikController extends Controller
         // Upload foto mapping jika ada
         $fotoMappingName = null;
         if ($request->hasFile('update_foto_mapping')) {
-            $uploadDir = public_path('uploads/registrasi');
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+            $file = $request->file('update_foto_mapping');
+            if ($file && $file->isValid()) {
+                $uploadDir = public_path('uploads/registrasi');
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $ext = $this->getSafeFileExtension($file, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet);
+                $fotoMappingName = 'mapping_' . $cleanNomor . '_' . time() . '.' . $ext;
+                $file->move($uploadDir, $fotoMappingName);
             }
-            $fotoMappingName = 'mapping_' . $nomorInternet . '_' . time() . '.' . $request->file('update_foto_mapping')->getClientOriginalExtension();
-            $request->file('update_foto_mapping')->move($uploadDir, $fotoMappingName);
         }
 
         // Get names of selected team
@@ -1635,12 +1650,17 @@ class TeknikController extends Controller
         // Upload foto mapping/instalasi jika ada
         $fotoMappingName = null;
         if ($request->hasFile('update_foto_mapping')) {
-            $uploadDir = public_path('uploads/registrasi');
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+            $file = $request->file('update_foto_mapping');
+            if ($file && $file->isValid()) {
+                $uploadDir = public_path('uploads/registrasi');
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $ext = $this->getSafeFileExtension($file, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet);
+                $fotoMappingName = 'instalasi_' . $cleanNomor . '_' . time() . '.' . $ext;
+                $file->move($uploadDir, $fotoMappingName);
             }
-            $fotoMappingName = 'instalasi_' . $nomorInternet . '_' . time() . '.' . $request->file('update_foto_mapping')->getClientOriginalExtension();
-            $request->file('update_foto_mapping')->move($uploadDir, $fotoMappingName);
         }
 
         // Get names of selected team
@@ -1957,13 +1977,23 @@ class TeknikController extends Controller
         $fotoRumahName = null;
 
         if ($request->hasFile('foto_ktp')) {
-            $fotoKtpName = 'ktp_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_ktp')->getClientOriginalExtension();
-            $request->file('foto_ktp')->move($uploadDir, $fotoKtpName);
+            $fileKtp = $request->file('foto_ktp');
+            if ($fileKtp && $fileKtp->isValid()) {
+                $extKtp = $this->getSafeFileExtension($fileKtp, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet);
+                $fotoKtpName = 'ktp_' . $cleanNomor . '_' . time() . '.' . $extKtp;
+                $fileKtp->move($uploadDir, $fotoKtpName);
+            }
         }
 
         if ($request->hasFile('foto_rumah')) {
-            $fotoRumahName = 'rumah_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_rumah')->getClientOriginalExtension();
-            $request->file('foto_rumah')->move($uploadDir, $fotoRumahName);
+            $fileRumah = $request->file('foto_rumah');
+            if ($fileRumah && $fileRumah->isValid()) {
+                $extRumah = $this->getSafeFileExtension($fileRumah, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet);
+                $fotoRumahName = 'rumah_' . $cleanNomor . '_' . time() . '.' . $extRumah;
+                $fileRumah->move($uploadDir, $fotoRumahName);
+            }
         }
 
         $now = now()->format('Y-m-d H:i:s');
@@ -2220,15 +2250,25 @@ class TeknikController extends Controller
         ];
 
         if ($request->hasFile('foto_ktp')) {
-            $fotoKtpName = 'ktp_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_ktp')->getClientOriginalExtension();
-            $request->file('foto_ktp')->move($uploadDir, $fotoKtpName);
-            $instalasiPayload['foto_ktp'] = $fotoKtpName;
+            $fileKtp = $request->file('foto_ktp');
+            if ($fileKtp && $fileKtp->isValid()) {
+                $extKtp = $this->getSafeFileExtension($fileKtp, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet);
+                $fotoKtpName = 'ktp_' . $cleanNomor . '_' . time() . '.' . $extKtp;
+                $fileKtp->move($uploadDir, $fotoKtpName);
+                $instalasiPayload['foto_ktp'] = $fotoKtpName;
+            }
         }
 
         if ($request->hasFile('foto_rumah')) {
-            $fotoRumahName = 'rumah_' . $nomorInternet . '_' . time() . '.' . $request->file('foto_rumah')->getClientOriginalExtension();
-            $request->file('foto_rumah')->move($uploadDir, $fotoRumahName);
-            $instalasiPayload['foto_rumah'] = $fotoRumahName;
+            $fileRumah = $request->file('foto_rumah');
+            if ($fileRumah && $fileRumah->isValid()) {
+                $extRumah = $this->getSafeFileExtension($fileRumah, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet);
+                $fotoRumahName = 'rumah_' . $cleanNomor . '_' . time() . '.' . $extRumah;
+                $fileRumah->move($uploadDir, $fotoRumahName);
+                $instalasiPayload['foto_rumah'] = $fotoRumahName;
+            }
         }
 
         DB::table('trx_batchjob_register')
@@ -2944,6 +2984,7 @@ class TeknikController extends Controller
                 Cache::forget("onu_outage_time_{$olt->kode_olt}_{$iface2}");
                 Cache::forget("onu_outage_time_{$olt->kode_olt}_gpon-onu_{$iface1}");
                 Cache::forget("onu_outage_time_{$olt->kode_olt}_gpon-onu_{$iface2}");
+                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$port}:{$onuSlot}");
 
                 foreach (["olt_live_all_onu_states_{$olt->kode_olt}", "olt_last_known_good_onus_{$olt->kode_olt}"] as $cKey) {
                     $cached = Cache::get($cKey);
@@ -2952,7 +2993,8 @@ class TeknikController extends Controller
                             return !(($item['port'] ?? 0) == $port && ($item['onu_id'] ?? 0) == $onuSlot);
                         }));
                         if (count($filtered) !== count($cached)) {
-                            Cache::put($cKey, $filtered, 90);
+                            $ttl = str_contains($cKey, 'last_known') ? 3600 : 90;
+                            Cache::put($cKey, $filtered, $ttl);
                         }
                     }
                 }
@@ -3846,14 +3888,18 @@ class TeknikController extends Controller
         // Upload Foto Bukti Eksekusi (foto_ss / Screenshot)
         if ($request->hasFile('foto_ss') || $request->hasFile('foto_bukti')) {
             $file = $request->file('foto_ss') ?: $request->file('foto_bukti');
-            $fileName = 'UPDOWN_' . $trx->nomor_internet . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('uploads/up_downgrade');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
-            }
-            $file->move($destinationPath, $fileName);
-            if (Schema::hasColumn('trx_ubah_layanan', 'foto_ss')) {
-                $updateTrx['foto_ss'] = $fileName;
+            if ($file && $file->isValid()) {
+                $ext = $this->getSafeFileExtension($file, ['jpg', 'jpeg', 'png', 'webp', 'pdf']);
+                $cleanNomor = preg_replace('/[^a-zA-Z0-9]/', '_', $trx->nomor_internet);
+                $fileName = 'UPDOWN_' . $cleanNomor . '_' . time() . '.' . $ext;
+                $destinationPath = public_path('uploads/up_downgrade');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                $file->move($destinationPath, $fileName);
+                if (Schema::hasColumn('trx_ubah_layanan', 'foto_ss')) {
+                    $updateTrx['foto_ss'] = $fileName;
+                }
             }
         }
 
@@ -3931,6 +3977,14 @@ class TeknikController extends Controller
     public function apiGetUpDowngradeFoto(string $filename)
     {
         $cleanFilename = basename($filename);
+        $ext = strtolower(pathinfo($cleanFilename, PATHINFO_EXTENSION));
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'pdf'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Format file tidak diizinkan.',
+            ], 403);
+        }
+
         $filePath = public_path('uploads/up_downgrade/' . $cleanFilename);
 
         if (!file_exists($filePath) || !is_file($filePath)) {
@@ -4575,6 +4629,16 @@ class TeknikController extends Controller
         }
 
         return collect();
+    }
+
+    /**
+     * Sanitize and validate file extension for safe file storage
+     */
+    private function getSafeFileExtension($file, array $allowed = ['jpg', 'jpeg', 'png', 'webp', 'pdf']): string
+    {
+        if (!$file) return 'jpg';
+        $rawExt = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        return in_array($rawExt, $allowed) ? $rawExt : 'jpg';
     }
 }
 

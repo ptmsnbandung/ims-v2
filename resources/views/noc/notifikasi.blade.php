@@ -655,6 +655,16 @@ function nocNotifikasiPage() {
                 this.refreshData(true);
             });
 
+            // Reaktif saat tab kembali aktif / teknisi kembali dari profil pelanggan
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    this.refreshData(true);
+                }
+            });
+            window.addEventListener('focus', () => {
+                this.refreshData(true);
+            });
+
             // Jika saat render awal data perangkat ONU masih kosong, langsung picu fetch otomatis!
             const initialOnuCount = Array.isArray(this.alerts) ? this.alerts.filter(a => a.device_type === 'onu').length : 0;
             if (initialOnuCount === 0) {

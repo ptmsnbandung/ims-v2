@@ -183,13 +183,18 @@
                 isFetching: false,
                 hasNewAlert: false,
                 alerts: [],
+                recoveries: [],
                 intentional: [],
+                activeTab: 'semua', // 'semua', 'aktif', 'pulih'
                 hasInitializedBaseline: false,
                 summary: {
                     total_active: 0,
                     total_los_down: 0,
                     total_tickets: 0,
-                    total_intentional: 0
+                    total_intentional: 0,
+                    total_recoveries: 0,
+                    total_up: 0,
+                    total_selesai: 0
                 },
                 readKeys: [],
                 pollTimer: null,
@@ -229,7 +234,7 @@
                         const detail = e.detail || {};
                         const type = (detail.type || '').toLowerCase();
                         const title = (detail.title || '').toLowerCase();
-                        if (type.includes('noc') || type.includes('tiket') || title.includes('los') || title.includes('down') || title.includes('tiket')) {
+                        if (type.includes('noc') || type.includes('tiket') || title.includes('los') || title.includes('down') || title.includes('tiket') || title.includes('pulih')) {
                             this.hasNewAlert = true;
                             this.fetchAlerts(true);
                         }
@@ -241,7 +246,33 @@
                 },
 
                 get unreadCount() {
-                    return this.alerts.filter(a => !this.readKeys.includes(a.id) && !this.readKeys.includes(a.device_key)).length;
+                    const unreadAlerts = this.alerts.filter(a => !this.readKeys.includes(a.id) && !this.readKeys.includes(a.device_key)).length;
+                    const unreadRecs = this.recoveries.filter(r => !this.readKeys.includes(r.id) && !this.readKeys.includes(r.device_key)).length;
+                    return unreadAlerts + unreadRecs;
+                },
+
+                get displayItems() {
+                    if (this.activeTab === 'aktif') {
+                        return this.alerts.slice(0, 8);
+                    }
+                    if (this.activeTab === 'pulih') {
+                        return this.recoveries.slice(0, 8);
+                    }
+                    // Tab 'semua': urutkan gabungan atau prioritaskan isu aktif lalu pemulihan terbaru
+                    const items = [];
+                    const maxItems = 8;
+                    let aIdx = 0, rIdx = 0;
+                    while (items.length < maxItems && (aIdx < this.alerts.length || rIdx < this.recoveries.length)) {
+                        if (aIdx < this.alerts.length) items.push(this.alerts[aIdx++]);
+                        if (items.length < maxItems && rIdx < this.recoveries.length) items.push(this.recoveries[rIdx++]);
+                    }
+                    return items;
+                },
+
+                testSound() {
+                    if (window.ImsVoice && typeof window.ImsVoice.testSound === 'function') {
+                        window.ImsVoice.testSound();
+                    }
                 },
 
                 isUnread(id, key = null) {
@@ -275,25 +306,30 @@
                             if (resData.status === 'success' && resData.data) {
                                 const oldKeys = this.alerts.map(a => a.id);
                                 const newAlerts = resData.data.alerts || [];
+                                const newRecoveries = resData.data.recoveries || [];
                                 const hasNewIncoming = newAlerts.some(a => !oldKeys.includes(a.id));
                                 if (hasNewIncoming && this.alerts.length > 0) {
                                     this.hasNewAlert = true;
                                 }
 
-                                // NOTIFIKASI PEMULIHAN: Mainkan notifikasi jika ada perangkat yang sudah pulih (tidak DOWN / tidak LOS lagi)
-                                this.checkAndPlayRecovery(newAlerts);
+                                // NOTIFIKASI PEMULIHAN: Mainkan suara pemulihan jika ada perangkat pulih atau tiket selesai
+                                this.checkAndPlayRecovery(newRecoveries, newAlerts);
 
                                 // NOTIFIKASI SUARA ALARM: Bunyikan suara alarm HANYA jika ada insiden baru yang baru terdeteksi
                                 this.checkAndPlaySound(newAlerts);
 
                                 this.alerts = newAlerts;
+                                this.recoveries = newRecoveries;
                                 this.hasInitializedBaseline = true;
                                 this.intentional = resData.data.intentional || [];
                                 this.summary = resData.data.summary || {
                                     total_active: this.alerts.length,
                                     total_los_down: 0,
                                     total_tickets: 0,
-                                    total_intentional: 0
+                                    total_intentional: 0,
+                                    total_recoveries: this.recoveries.length,
+                                    total_up: 0,
+                                    total_selesai: 0
                                 };
                             }
                         }
@@ -308,49 +344,55 @@
                     }
                 },
 
-                checkAndPlayRecovery(newAlerts) {
-                    if (!this.hasInitializedBaseline || !Array.isArray(newAlerts)) return;
-                    if (!Array.isArray(this.alerts) || this.alerts.length === 0) return;
+                checkAndPlayRecovery(newRecoveries, newAlerts) {
+                    if (!Array.isArray(newRecoveries) || newRecoveries.length === 0) return;
 
-                    const newKeys = new Set();
-                    newAlerts.forEach(a => {
-                        if (a.id) newKeys.add(a.id);
-                        if (a.device_key) newKeys.add(a.device_key);
-                    });
+                    let playedRecKeys = [];
+                    try {
+                        playedRecKeys = JSON.parse(localStorage.getItem('ims_noc_recovery_played_keys') || '[]');
+                    } catch (e) {
+                        playedRecKeys = [];
+                    }
 
-                    // Cari perangkat berstatus LOS / DOWN di this.alerts yang sekarang sudah pulih (tidak ada di newAlerts)
-                    const recovered = this.alerts.filter(old => {
-                        const st = (old.status || "").toUpperCase();
-                        if (st !== "LOS" && st !== "DOWN") return false;
-                        if (old.is_intentional) return false;
+                    // Inisialisasi awal agar pemulihan lama yang sudah lewat tidak langsung bersuara saat browser baru dibuka
+                    if (!localStorage.getItem('ims_noc_recovery_initialized')) {
+                        newRecoveries.forEach(r => {
+                            if (r.id) playedRecKeys.push(r.id);
+                            if (r.device_key) playedRecKeys.push(r.device_key);
+                        });
+                        localStorage.setItem('ims_noc_recovery_initialized', '1');
+                        localStorage.setItem('ims_noc_recovery_played_keys', JSON.stringify(playedRecKeys.slice(-150)));
+                        return;
+                    }
 
-                        const hasId = old.id && newKeys.has(old.id);
-                        const hasKey = old.device_key && newKeys.has(old.device_key);
-                        return !hasId && !hasKey;
-                    });
-
-                    if (recovered.length > 0) {
-                        const recKey = 'rec_' + recovered.map(r => r.id || r.device_key).sort().join('_');
+                    const unplayed = newRecoveries.filter(r => !playedRecKeys.includes(r.id) && !playedRecKeys.includes(r.device_key));
+                    if (unplayed.length > 0) {
+                        const recKey = 'rec_' + unplayed.map(r => r.id || r.device_key).sort().join('_');
                         const canClaim = !window.ImsTabCoordinator || window.ImsTabCoordinator.claimEvent(recKey, 15000);
 
                         if (canClaim) {
                             if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-                                window.ImsTabCoordinator.delegateToActive('playNocRecoverySound', [recovered[0], recovered.length]);
+                                window.ImsTabCoordinator.delegateToActive('playNocRecoverySound', [unplayed[0], unplayed.length]);
                             } else if (typeof window.playNocRecoverySound === "function") {
-                                window.playNocRecoverySound(recovered[0], recovered.length);
+                                window.playNocRecoverySound(unplayed[0], unplayed.length);
                             }
                         }
 
-                        // Bersihkan dari playedKeys agar di kemudian hari jika padam lagi alarm bisa berbunyi
+                        unplayed.forEach(r => {
+                            if (r.id) playedRecKeys.push(r.id);
+                            if (r.device_key) playedRecKeys.push(r.device_key);
+                        });
+                        if (playedRecKeys.length > 150) playedRecKeys = playedRecKeys.slice(-150);
                         try {
-                            let playedKeys = JSON.parse(localStorage.getItem("ims_noc_sound_played_keys") || "[]");
-                            const recKeySet = new Set();
-                            recovered.forEach(r => {
-                                if (r.id) recKeySet.add(r.id);
-                                if (r.device_key) recKeySet.add(r.device_key);
-                            });
-                            playedKeys = playedKeys.filter(k => !recKeySet.has(k));
-                            localStorage.setItem("ims_noc_sound_played_keys", JSON.stringify(playedKeys));
+                            localStorage.setItem('ims_noc_recovery_played_keys', JSON.stringify(playedRecKeys));
+                        } catch (e) {}
+
+                        // Bersihkan dari playedKeys insiden agar jika di masa depan perangkat down lagi, alarm bisa berbunyi
+                        try {
+                            let playedAlarmKeys = JSON.parse(localStorage.getItem('ims_noc_sound_played_keys') || '[]');
+                            const recDevKeys = new Set(unplayed.map(r => r.device_key).filter(Boolean));
+                            playedAlarmKeys = playedAlarmKeys.filter(k => !recDevKeys.has(k));
+                            localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedAlarmKeys));
                         } catch (e) {}
                     }
                 },
@@ -433,7 +475,8 @@
 
                 markAllAsRead() {
                     let changed = false;
-                    this.alerts.forEach(a => {
+                    const allItems = [...this.alerts, ...this.recoveries];
+                    allItems.forEach(a => {
                         if (a.id && !this.readKeys.includes(a.id)) {
                             this.readKeys.push(a.id);
                             changed = true;
@@ -1574,6 +1617,16 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-1.5 flex-shrink-0">
+                                        <!-- Tombol Tes Suara Notifikasi -->
+                                        <button @click="testSound()" 
+                                                type="button"
+                                                title="Uji Coba Notifikasi Suara"
+                                                style="background-color: rgba(255,255,255,0.12) !important; color: #ffffff !important;"
+                                                class="p-1.5 rounded-lg hover:opacity-90 transition cursor-pointer text-cyan-300">
+                                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                                            </svg>
+                                        </button>
                                         <!-- Tombol Baca Semua -->
                                         <button x-show="unreadCount > 0" x-cloak
                                                 @click="markAllAsRead()"
@@ -1599,32 +1652,65 @@
                                     </div>
                                 </div>
 
-                                <!-- Mini Bar Stats (Pemisahan LOS, DOWN, dan Tiket) -->
+                                <!-- Mini Bar Stats (Pemisahan LOS, DOWN, Tiket, dan Pulih) -->
                                 <div class="px-3.5 py-1.5 border-b flex items-center justify-between text-[11px] bg-slate-50 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-800 font-medium">
-                                    <div class="flex items-center gap-3">
-                                        <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
                                             <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
                                             <span>LOS:</span>
                                             <b class="font-mono text-rose-600 dark:text-rose-400 font-bold" x-text="summary.total_los || 0"></b>
                                         </span>
-                                        <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                        <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
                                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                                             <span>DOWN:</span>
                                             <b class="font-mono text-amber-600 dark:text-amber-400 font-bold" x-text="summary.total_down || 0"></b>
                                         </span>
-                                        <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                        <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
                                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                                             <span>Tiket:</span>
                                             <b class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="summary.total_tickets || 0"></b>
                                         </span>
+                                        <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                            <span>Pulih/UP:</span>
+                                            <b class="font-mono text-emerald-600 dark:text-emerald-400 font-bold" x-text="summary.total_recoveries || 0"></b>
+                                        </span>
                                     </div>
-                                    <span class="text-[10px] text-slate-400 font-medium">Insiden Terbaru</span>
+                                    <span class="text-[10px] text-slate-400 font-medium">Radar NOC</span>
+                                </div>
+
+                                <!-- Filter Tabs (Semua, Isu Aktif, Pulih & Selesai) -->
+                                <div class="px-3.5 py-1 bg-slate-100/70 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-1.5">
+                                    <button type="button" @click="activeTab = 'semua'"
+                                            class="px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
+                                            :class="activeTab === 'semua' ? 'bg-[#0891b2] text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
+                                        <span>Semua</span>
+                                        <span class="px-1 py-0.2 rounded-full text-[9px] font-mono"
+                                              :class="activeTab === 'semua' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'"
+                                              x-text="activeCount + (summary.total_recoveries || 0)"></span>
+                                    </button>
+                                    <button type="button" @click="activeTab = 'aktif'"
+                                            class="px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
+                                            :class="activeTab === 'aktif' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
+                                        <span>Isu Aktif</span>
+                                        <span class="px-1 py-0.2 rounded-full text-[9px] font-mono"
+                                              :class="activeTab === 'aktif' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'"
+                                              x-text="activeCount"></span>
+                                    </button>
+                                    <button type="button" @click="activeTab = 'pulih'"
+                                            class="px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
+                                            :class="activeTab === 'pulih' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
+                                        <span>Pulih &amp; Selesai</span>
+                                        <span class="px-1 py-0.2 rounded-full text-[9px] font-mono"
+                                              :class="activeTab === 'pulih' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'"
+                                              x-text="summary.total_recoveries || 0"></span>
+                                    </button>
                                 </div>
 
                                 <!-- Body Notifikasi List -->
                                 <div class="max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
                                     <!-- Loading State -->
-                                    <template x-if="isLoading && alerts.length === 0">
+                                    <template x-if="isLoading && displayItems.length === 0">
                                         <div class="p-6 text-center">
                                             <svg class="w-6 h-6 mx-auto animate-spin text-teal-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1635,7 +1721,7 @@
                                     </template>
 
                                     <!-- Empty State (Semua Normal) -->
-                                    <template x-if="!isLoading && alerts.length === 0">
+                                    <template x-if="!isLoading && displayItems.length === 0">
                                         <div class="py-9 px-5 text-center">
                                             <div class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-2.5 shadow-xs"
                                                  style="background-color: #ecfdf5 !important; color: #10b981 !important;">
@@ -1644,31 +1730,41 @@
                                                 </svg>
                                             </div>
                                             <p class="text-xs font-bold text-slate-800 dark:text-slate-100">Kondisi Jaringan Prima</p>
-                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[260px] mx-auto leading-relaxed">Tidak ada OLT/ONU yang LOS/DOWN atau tiket gangguan terbuka.</p>
+                                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[260px] mx-auto leading-relaxed">Tidak ada isu jaringan baru pada tab ini.</p>
                                         </div>
                                     </template>
 
-                                    <!-- Alert Items (Compact & Rapi: Menampilkan 5 insiden terbaru LOS & DOWN) -->
-                                    <template x-for="item in alerts.slice(0, 5)" :key="item.id">
+                                    <!-- Notification Items (Menampilkan Isu Aktif & Riwayat Pemulihan / Selesai) -->
+                                    <template x-for="item in displayItems" :key="item.id">
                                         <a :href="item.url || '{{ route('noc.notifikasi') }}'"
                                            @click="markRead(item); open = false"
                                            class="px-3.5 py-2.5 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group cursor-pointer border-b border-slate-100 dark:border-slate-800/60 last:border-b-0"
-                                           :class="isUnread(item.id, item.device_key) ? 'bg-rose-50/40 dark:bg-rose-950/20' : ''">
+                                           :class="isUnread(item.id, item.device_key) ? (item.is_recovery ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : 'bg-rose-50/40 dark:bg-rose-950/20') : ''">
                                             
                                             <!-- Mini Status Icon -->
                                             <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                                 :class="item.status === 'LOS' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400 ring-1 ring-rose-200/80 dark:ring-rose-800/80' : (item.status === 'DOWN' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-400 ring-1 ring-amber-200/80 dark:ring-amber-800/80' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-400 ring-1 ring-blue-200/80 dark:ring-blue-800/80')">
-                                                <template x-if="item.status === 'LOS'">
+                                                 :class="item.is_recovery ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 ring-1 ring-emerald-200/80 dark:ring-emerald-800/80' : (item.status === 'LOS' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400 ring-1 ring-rose-200/80 dark:ring-rose-800/80' : (item.status === 'DOWN' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-400 ring-1 ring-amber-200/80 dark:ring-amber-800/80' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-400 ring-1 ring-blue-200/80 dark:ring-blue-800/80'))">
+                                                <template x-if="item.is_recovery && item.status === 'UP'">
+                                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                                    </svg>
+                                                </template>
+                                                <template x-if="item.is_recovery && item.status === 'SELESAI'">
+                                                    <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                    </svg>
+                                                </template>
+                                                <template x-if="!item.is_recovery && item.status === 'LOS'">
                                                     <svg class="w-3.5 h-3.5 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                                                     </svg>
                                                 </template>
-                                                <template x-if="item.status === 'DOWN'">
+                                                <template x-if="!item.is_recovery && item.status === 'DOWN'">
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
                                                     </svg>
                                                 </template>
-                                                <template x-if="item.device_type === 'tiket'">
+                                                <template x-if="!item.is_recovery && item.device_type === 'tiket'">
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
                                                     </svg>
@@ -1680,7 +1776,7 @@
                                                 <div class="flex items-center gap-1.5 leading-none">
                                                     <!-- Badge Status Ringkas -->
                                                     <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider leading-none flex-shrink-0"
-                                                          :class="item.status === 'LOS' ? 'bg-rose-500 text-white' : (item.status === 'DOWN' ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white')"
+                                                          :class="item.is_recovery ? 'bg-emerald-500 text-white' : (item.status === 'LOS' ? 'bg-rose-500 text-white' : (item.status === 'DOWN' ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white'))"
                                                           x-text="item.status"></span>
                                                     
                                                     <!-- Nama Pelanggan / Device -->
@@ -1688,7 +1784,8 @@
                                                           x-text="item.device_name"></span>
                                                     
                                                     <!-- Unread Dot -->
-                                                    <span x-show="isUnread(item.id, item.device_key)" class="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0 animate-pulse" title="Belum dibaca"></span>
+                                                    <span x-show="isUnread(item.id, item.device_key)" class="w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse"
+                                                          :class="item.is_recovery ? 'bg-emerald-500' : 'bg-rose-500'" title="Belum dibaca"></span>
                                                 </div>
 
                                                 <!-- Subtitle (Port PON & Nomor Pelanggan / OLT) -->
@@ -1699,7 +1796,8 @@
                                             <!-- Right Column: Waktu Kejadian & Chevron -->
                                             <div class="flex items-center gap-1.5 flex-shrink-0 text-right">
                                                 <div class="flex flex-col items-end">
-                                                    <span class="text-[10px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap"
+                                                    <span class="text-[10px] font-semibold whitespace-nowrap"
+                                                          :class="item.is_recovery ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-600 dark:text-slate-300'"
                                                           x-text="item.duration_human || ''"></span>
                                                     <span class="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap"
                                                           x-text="item.created_at"></span>
@@ -2496,14 +2594,13 @@
                     this.channel.onmessage = (event) => {
                         const data = event.data || {};
                         if (data.type === 'delegate_notification') {
-                            // Only the active/allowed tab executes the delegated notification
                             if (this.isAllowedToNotify()) {
                                 if (data.action === 'playNocRecoverySound' && typeof window.playNocRecoverySound === 'function') {
-                                    window.playNocRecoverySound(data.payload?.[0], data.payload?.[1]);
+                                    window.playNocRecoverySound(data.payload?.[0], data.payload?.[1], true);
                                 } else if (data.action === 'playNocEmergencySound' && typeof window.playNocEmergencySound === 'function') {
-                                    window.playNocEmergencySound(data.payload?.[0], data.payload?.[1]);
+                                    window.playNocEmergencySound(data.payload?.[0], true);
                                 } else if (data.action === 'enqueueNotification' && window.ImsVoice) {
-                                    window.ImsVoice.enqueueNotification(data.payload);
+                                    window.ImsVoice.enqueueNotification(data.payload, true);
                                 }
                             }
                         }
@@ -2553,6 +2650,13 @@
             },
 
             isAllowedToNotify() {
+                // 1. Tab ini sedang terlihat di depan mata pengguna -> Pasti boleh
+                if (!document.hidden) {
+                    this.claimActive();
+                    return true;
+                }
+
+                // 2. Tab ini di background. Cek apakah ada tab IMS lain yang aktif terlihat
                 const now = Date.now();
                 let activeTabId = null;
                 let activeHeartbeat = 0;
@@ -2561,26 +2665,13 @@
                     activeHeartbeat = parseInt(localStorage.getItem('ims_active_tab_heartbeat') || '0', 10);
                 } catch (e) {}
 
-                const isActiveTabAlive = activeTabId && (now - activeHeartbeat) < 5000;
-
-                // 1. Tab ini sedang terlihat dan difokuskan oleh pengguna -> Pasti boleh
-                if (!document.hidden && (document.hasFocus ? document.hasFocus() : true)) {
-                    this.claimActive();
-                    return true;
-                }
-
-                // 2. Ada tab IMS lain yang sedang aktif/terbuka di depan mata pengguna -> Tab background ini DILARANG notif
-                if (isActiveTabAlive && activeTabId !== this.tabId) {
+                const isActiveTabAlive = activeTabId && activeTabId !== this.tabId && (now - activeHeartbeat) < 6000;
+                if (isActiveTabAlive) {
+                    // Ada tab lain yang sedang terlihat di depan mata pengguna, biarkan tab tersebut yang bunyi
                     return false;
                 }
 
-                // 3. Tab ini sedang tampak (visible, misal di layar split / multi-monitor) -> Boleh
-                if (!document.hidden) {
-                    this.claimActive();
-                    return true;
-                }
-
-                // 4. Semua tab sedang di background (browser diminimize/buka app lain) -> HANYA 1 tab pemimpin (Leader) yang boleh
+                // 3. Semua tab sedang di background (browser diminimize/buka app lain) -> Tab Leader yang bertugas
                 return this.isLeader();
             },
 
@@ -2663,14 +2754,15 @@
                 // Muat daftar suara browser secara proaktif
                 if ('speechSynthesis' in window) {
                     try {
-                        window.speechSynthesis.getVoices();
+                        const vList = window.speechSynthesis.getVoices();
+                        if (vList && vList.length > 0) this.voicesReady = true;
                     } catch(e) {}
                     window.speechSynthesis.onvoiceschanged = () => {
                         this.voicesReady = true;
                     };
                 }
 
-                // Unlock audio autoplay & Web Speech API saat ada interaksi pengguna pertama kali
+                // Unlock audio autoplay & Web Speech API saat ada interaksi pengguna
                 const unlock = () => {
                     try {
                         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2698,7 +2790,6 @@
 
                     if (!this.speechUnlocked && 'speechSynthesis' in window) {
                         try {
-                            // Prime / unlock Web Speech API agar tidak diblokir background timer Chromium
                             if (window.speechSynthesis.paused) {
                                 window.speechSynthesis.resume();
                             }
@@ -2710,9 +2801,9 @@
                         } catch(e) {}
                     }
                 };
-                document.addEventListener('click', unlock, { passive: true });
-                document.addEventListener('keydown', unlock, { passive: true });
-                document.addEventListener('touchstart', unlock, { passive: true });
+                ['pointerdown', 'mousedown', 'click', 'keydown', 'touchstart', 'focus'].forEach(evt => {
+                    document.addEventListener(evt, unlock, { passive: true });
+                });
 
                 // Initial check once on load, then periodic background polling
                 setTimeout(() => {
@@ -2735,15 +2826,20 @@
             },
 
             testSound() {
+                this.soundEnabled = true;
+                localStorage.setItem('ims_voice_sound_enabled', 'true');
                 this.enqueueNotification({
                     type: 'test',
                     title: 'Uji Coba Suara IMS',
                     message: 'Sistem notifikasi suara Web Speech API & Chime berfungsi dengan baik.',
-                    speech_text: 'Tes notifikasi suara IMS berhasil. Selamat bertugas!',
-                });
+                    speech_text: 'Tes notifikasi suara IMS berhasil. Sistem siap memantau.',
+                }, true);
             },
 
-            enqueueNotification(item) {
+            enqueueNotification(item, force = false) {
+                if (force) {
+                    item._forcePlay = true;
+                }
                 this.queue.push(item);
                 this.processQueue();
             },
@@ -2754,16 +2850,14 @@
                 const item = this.queue.shift();
 
                 try {
-                    // Hanya tampilkan toast jika tab diizinkan memunculkan notifikasi
-                    if (!window.ImsTabCoordinator || window.ImsTabCoordinator.isAllowedToNotify()) {
+                    const allowNotify = item._forcePlay || !window.ImsTabCoordinator || window.ImsTabCoordinator.isAllowedToNotify();
+
+                    if (allowNotify) {
                         window.dispatchEvent(new CustomEvent('ims-new-toast', { detail: item }));
                     }
 
-                    if (this.soundEnabled) {
-                        // Hanya bunyikan audio jika tab diizinkan
-                        if (!window.ImsTabCoordinator || window.ImsTabCoordinator.isAllowedToNotify()) {
-                            await this.playChimeAndSpeak(item);
-                        }
+                    if (this.soundEnabled && allowNotify) {
+                        await this.playChimeAndSpeak(item);
                     }
                 } catch (e) {
                     console.warn('Notification play error:', e);
@@ -2788,10 +2882,14 @@
                             audioFile = '{{ asset("assets/sound/notifikasi_tes_ims.mp3") }}';
                         } else if (type === 'pembayaran' || title.includes('pembayaran') || text.includes('pembayaran tagihan') || text.includes('pembayaran biaya registrasi')) {
                             audioFile = '{{ asset("assets/sound/notifikasi_pembayaran_masuk.mp3") }}';
-                        } else if (type === 'tiket' || title.includes('tiket') || text.includes('tiket gangguan')) {
+                        } else if (type === 'tiket' || title.includes('tiket') || text.includes('tiket gangguan') || type === 'noc_alarm') {
                             audioFile = '{{ asset("assets/sound/notifikasi_tiket_gangguan.mp3") }}';
+                        } else if (type === 'noc_recovery' || text.includes('pulih') || text.includes('kembali online')) {
+                            audioFile = '{{ asset("assets/sound/anoun.mp3") }}';
                         } else if (type === 'transfer' || text.includes('transfer') || text.includes('konfirmasi')) {
                             audioFile = '{{ asset("assets/sound/notifikasi_konfirmasi_transfer.mp3") }}';
+                        } else {
+                            audioFile = '{{ asset("assets/sound/anoun.mp3") }}';
                         }
 
                         if (audioFile) {
@@ -2834,23 +2932,19 @@
 
                     const executeSpeech = () => {
                         if (!('speechSynthesis' in window)) {
-                            // Browser tanpa Web Speech: langsung putar file audio pre-recorded
                             this.playFallbackAudio(item).finally(done);
                             return;
                         }
 
                         try {
-                            // 1. Buka status paused jika Chrome membekukan speech engine
                             if (window.speechSynthesis.paused) {
                                 window.speechSynthesis.resume();
                             }
 
-                            // 2. Batalkan antrean lama jika masih berbicara
                             if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
                                 window.speechSynthesis.cancel();
                             }
 
-                            // Berikan jeda 80ms agar cancel() selesai di background thread SAPI/Chromium
                             setTimeout(() => {
                                 try {
                                     if (window.speechSynthesis.paused) {
@@ -2881,9 +2975,9 @@
 
                                     if (targetVoice) {
                                         utterance.voice = targetVoice;
-                                        utterance.lang = targetVoice.lang || 'id-ID';
-                                    } else {
-                                        utterance.lang = 'id-ID';
+                                        // Jangan paksakan 'id-ID' jika suara yang ada adalah bahasa lain (misal Windows English),
+                                        // agar tidak memicu error voice/language-unavailable pada engine Chromium SAPI
+                                        utterance.lang = targetVoice.lang;
                                     }
 
                                     let hasStarted = false;
@@ -2906,17 +3000,14 @@
                                         }
                                     };
 
-                                    // Cegah Garbage Collection memutus ucapan di tengah jalan
                                     window._activeUtterance = utterance;
 
-                                    // Heartbeat unpause Chrome
                                     const hbInterval = setInterval(() => {
                                         if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
                                             window.speechSynthesis.resume();
                                         }
                                     }, 800);
 
-                                    // Timeout pengaman maksimal 9 detik
                                     setTimeout(() => {
                                         clearInterval(hbInterval);
                                         if (!hasStarted) {
@@ -2938,15 +3029,11 @@
                         }
                     };
 
-                    // HILANGKAN SUARA BERTABRAKAN:
-                    // Jika notifikasi recovery atau alarm, nada Web Audio berlangsung ~0.4s
                     if (item.skipChime || item.type === 'noc_recovery' || item.type === 'noc_alarm') {
                         setTimeout(executeSpeech, 450);
                         return;
                     }
 
-                    // Untuk notifikasi umum, putar Chime pembuka anoun.mp3:
-                    // Nada pembuka berbunyi ~1.2 detik. Setelah chime berbunyi, kita hentikan chime dan mulai ucapan suara secara jernih
                     try {
                         this.chimeAudio.currentTime = 0;
                         this.chimeAudio.volume = 0.8;
@@ -2987,10 +3074,8 @@
                             data.notifications.forEach((notif) => {
                                 const notifId = notif.id;
                                 if (notifId && !this.hasPlayed(notifId)) {
-                                    // Mark immediately to prevent duplicate runs across tabs
                                     this.markAsPlayed(notifId);
 
-                                    // Jika tab ini di background, delegasikan ke tab aktif
                                     if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
                                         window.ImsTabCoordinator.delegateToActive('enqueueNotification', notif);
                                     } else {
@@ -3011,11 +3096,35 @@
             window.ImsVoice.init();
         });
 
-        // Global NOC Emergency Alert Audio Synthesizer & Voice Chime (LOS & DOWN)
-        // Global NOC Recovery Alert Audio Synthesizer & Voice Chime (Saat perangkat pulih / normal kembali)
-        window.playNocRecoverySound = function(recoveredItem, totalRecoveredCount = 1) {
-            // CEK MULTI-TAB: Jangan bunyikan jika tab ini di background
-            if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+        // Helper global mengekstrak nama pelanggan yang bersih untuk Text-to-Speech
+        window.extractCleanNocUserName = function(item) {
+            if (!item) return 'Pelanggan';
+            if (item.user_name && typeof item.user_name === 'string' && item.user_name.trim()) {
+                return item.user_name.trim();
+            }
+            if (item.nama_pelanggan && typeof item.nama_pelanggan === 'string' && item.nama_pelanggan.trim()) {
+                return item.nama_pelanggan.trim();
+            }
+            let raw = item.device_name || item.title || '';
+            if (typeof raw === 'string') {
+                let clean = raw.replace(/^(?:gpon[-_]onu|gpon[-_]olt|onu|port)[^\s\-:]*[\s\-:]+/i, '');
+                clean = clean.replace(/^(?:\d+\/\d+\/\d+:\d+)\s*[-:]*\s*/i, '');
+                clean = clean.replace(/^tiket\s*#?\d+\s*[-:]*\s*/i, '');
+                clean = clean.trim();
+                if (clean.includes(' - ')) {
+                    const parts = clean.split(' - ');
+                    clean = parts[parts.length - 1].trim();
+                }
+                if (clean.length > 0 && !clean.toLowerCase().startsWith('gpon')) {
+                    return clean;
+                }
+            }
+            return 'Pelanggan';
+        };
+
+        // Global NOC Recovery Alert Audio Synthesizer & Voice Chime (Saat perangkat pulih atau tiket selesai)
+        window.playNocRecoverySound = function(recoveredItem, totalRecoveredCount = 1, force = false) {
+            if (!force && window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
                 return;
             }
 
@@ -3023,7 +3132,10 @@
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 if (AudioCtx) {
-                    const ctx = window._sharedAudioCtx || new AudioCtx();
+                    if (!window._sharedAudioCtx) {
+                        window._sharedAudioCtx = new AudioCtx();
+                    }
+                    const ctx = window._sharedAudioCtx;
                     if (ctx.state === 'suspended') {
                         ctx.resume().catch(() => {});
                     }
@@ -3052,127 +3164,115 @@
                 console.warn("Web Audio recovery tone error:", e);
             }
 
-        // Helper mengekstrak nama pelanggan yang bersih untuk Text-to-Speech (tanpa gpon-onu, slot/port, atau format angka yang terbaca tanggal)
-        window.extractCleanNocUserName = function(item) {
-            if (!item) return 'Pelanggan';
-            if (item.user_name && typeof item.user_name === 'string' && item.user_name.trim()) {
-                return item.user_name.trim();
-            }
-            if (item.nama_pelanggan && typeof item.nama_pelanggan === 'string' && item.nama_pelanggan.trim()) {
-                return item.nama_pelanggan.trim();
-            }
-            let raw = item.device_name || item.title || '';
-            if (typeof raw === 'string') {
-                // Hapus awalan teknis OLT seperti "gpon-onu_1/2/16:2 - ", "gpon-olt_... - ", "1/2/16:2 - ", "Tiket #123 - "
-                let clean = raw.replace(/^(?:gpon[-_]onu|gpon[-_]olt|onu|port)[^\s\-:]*[\s\-:]+/i, '');
-                clean = clean.replace(/^(?:\d+\/\d+\/\d+:\d+)\s*[-:]*\s*/i, '');
-                clean = clean.replace(/^tiket\s*#?\d+\s*[-:]*\s*/i, '');
-                clean = clean.trim();
-                // Jika masih ada sisa pemisah " - ", ambil bagian nama pelanggan
-                if (clean.includes(' - ')) {
-                    const parts = clean.split(' - ');
-                    clean = parts[parts.length - 1].trim();
-                }
-                if (clean.length > 0 && !clean.toLowerCase().startsWith('gpon')) {
-                    return clean;
-                }
-            }
-            return 'Pelanggan';
-        };
-
-        // 2. Play speech via window.ImsVoice & Toast Banner
-        try {
-            const item = recoveredItem || {};
-            const userName = window.extractCleanNocUserName(item);
-            const displayName = item.device_name || userName;
-            const speechText = totalRecoveredCount > 1 
-                ? `Koneksi pulih. ${totalRecoveredCount} pelanggan telah normal kembali termasuk ${userName}.`
-                : `Koneksi pulih. Pelanggan ${userName} telah kembali online dan normal.`;
-
-            if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === "function") {
-                window.ImsVoice.enqueueNotification({
-                    type: "noc_recovery",
-                    status: "ONLINE",
-                    title: "Koneksi Pulih (Normal)",
-                    message: totalRecoveredCount > 1 
-                        ? `${totalRecoveredCount} perangkat telah pulih dan kembali normal.` 
-                        : `${displayName} telah kembali online dan normal.`,
-                    speech_text: speechText,
-                    device_name: displayName,
-                    user_name: userName,
-                    skipChime: true, // PENTING: Jangan putar chime MP3 lagi karena Web Audio Synthesizer sudah berbunyi
-                    url: item.url || null
-                });
-            } else if (typeof window.showToast === "function") {
-                window.showToast("success", `Koneksi Pulih: ${displayName} sudah normal kembali.`);
-            }
-        } catch (e) {}
-    };
-
-    window.playNocEmergencySound = function(alertItem, force = false) {
-        // CEK MULTI-TAB: Jangan bunyikan jika tab ini di background
-        if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-            return;
-        }
-
-        // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
-        try {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (AudioCtx) {
-                const ctx = window._sharedAudioCtx || new AudioCtx();
-                if (ctx.state === 'suspended') {
-                    ctx.resume().catch(() => {});
-                }
-                const now = ctx.currentTime;
-                
-                // High-low alarm beeps: E6 (1318Hz) -> C6 (1046Hz) -> E6 (1318Hz)
-                const tones = [
-                    { freq: 1318.51, start: 0.00, dur: 0.18, type: 'sawtooth' },
-                    { freq: 1046.50, start: 0.20, dur: 0.18, type: 'sine' },
-                    { freq: 1318.51, start: 0.40, dur: 0.25, type: 'sawtooth' }
-                ];
-
-                tones.forEach(t => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = t.type;
-                    osc.frequency.setValueAtTime(t.freq, now + t.start);
-                    gain.gain.setValueAtTime(0.3, now + t.start);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(now + t.start);
-                    osc.stop(now + t.start + t.dur);
-                });
-            }
-        } catch (e) {
-            console.warn('Web Audio alarm tone error:', e);
-        }
-
-        // 2. Play speech via window.ImsVoice if available
-        try {
-            if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === 'function') {
-                const item = alertItem || {};
-                const st = (item.status || 'LOS').toUpperCase();
-                const statusLabel = st === 'LOS' ? 'Loss of Signal' : 'Down';
+            // 2. Play speech via window.ImsVoice & Toast Banner
+            try {
+                const item = recoveredItem || {};
                 const userName = window.extractCleanNocUserName(item);
                 const displayName = item.device_name || userName;
-                const speechText = item.speech_text || `Perhatian! Terdeteksi ${statusLabel} pada pelanggan ${userName}.`;
+                const isTicket = item.status === 'SELESAI' || (item.device_key && item.device_key.startsWith('ticket_'));
 
-                window.ImsVoice.enqueueNotification({
-                    type: 'noc_alarm',
-                    status: st,
-                    title: item.title || (st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi'),
-                    message: item.message || `${displayName} mengalami gangguan ${st}`,
-                    speech_text: speechText,
-                    device_name: displayName,
-                    user_name: userName,
-                    skipChime: true, // PENTING: Jangan putar chime MP3 lagi karena nada alarm Synthesizer sudah berbunyi
-                    url: item.url || null
-                });
+                let speechText = '';
+                let title = '';
+                let message = '';
+
+                if (isTicket) {
+                    speechText = `Tiket selesai. Gangguan pelanggan ${userName} telah berhasil diselesaikan.`;
+                    title = 'Tiket Gangguan Selesai';
+                    message = `Tiket gangguan ${displayName} telah diselesaikan.`;
+                } else {
+                    speechText = totalRecoveredCount > 1 
+                        ? `Koneksi pulih. ${totalRecoveredCount} pelanggan telah normal kembali termasuk ${userName}.`
+                        : `Koneksi pulih. Pelanggan ${userName} telah kembali online dan normal.`;
+                    title = 'Koneksi Pulih (Normal)';
+                    message = totalRecoveredCount > 1 
+                        ? `${totalRecoveredCount} perangkat telah pulih dan kembali normal.` 
+                        : `${displayName} telah kembali online dan normal.`;
+                }
+
+                if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === "function") {
+                    window.ImsVoice.enqueueNotification({
+                        type: "noc_recovery",
+                        status: isTicket ? "SELESAI" : "UP",
+                        title: title,
+                        message: message,
+                        speech_text: speechText,
+                        device_name: displayName,
+                        user_name: userName,
+                        skipChime: true,
+                        url: item.url || null
+                    }, force);
+                } else if (typeof window.showToast === "function") {
+                    window.showToast("success", `${title}: ${displayName}`);
+                }
+            } catch (e) {}
+        };
+
+        // Global NOC Emergency Alert Audio Synthesizer & Voice Chime (LOS & DOWN)
+        window.playNocEmergencySound = function(alertItem, force = false) {
+            if (!force && window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
+                return;
             }
-        } catch (e) {}
-    };
+
+            // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    if (!window._sharedAudioCtx) {
+                        window._sharedAudioCtx = new AudioCtx();
+                    }
+                    const ctx = window._sharedAudioCtx;
+                    if (ctx.state === 'suspended') {
+                        ctx.resume().catch(() => {});
+                    }
+                    const now = ctx.currentTime;
+                    
+                    const tones = [
+                        { freq: 1318.51, start: 0.00, dur: 0.18, type: 'sawtooth' },
+                        { freq: 1046.50, start: 0.20, dur: 0.18, type: 'sine' },
+                        { freq: 1318.51, start: 0.40, dur: 0.25, type: 'sawtooth' }
+                    ];
+
+                    tones.forEach(t => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = t.type;
+                        osc.frequency.setValueAtTime(t.freq, now + t.start);
+                        gain.gain.setValueAtTime(0.3, now + t.start);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + t.start);
+                        osc.stop(now + t.start + t.dur);
+                    });
+                }
+            } catch (e) {
+                console.warn('Web Audio alarm tone error:', e);
+            }
+
+            // 2. Play speech via window.ImsVoice if available
+            try {
+                if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === 'function') {
+                    const item = alertItem || {};
+                    const st = (item.status || 'LOS').toUpperCase();
+                    const statusLabel = st === 'LOS' ? 'Loss of Signal' : 'Down';
+                    const userName = window.extractCleanNocUserName(item);
+                    const displayName = item.device_name || userName;
+                    const speechText = item.speech_text || `Perhatian! Terdeteksi ${statusLabel} pada pelanggan ${userName}.`;
+
+                    window.ImsVoice.enqueueNotification({
+                        type: 'noc_alarm',
+                        status: st,
+                        title: item.title || (st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi'),
+                        message: item.message || `${displayName} mengalami gangguan ${st}`,
+                        speech_text: speechText,
+                        device_name: displayName,
+                        user_name: userName,
+                        skipChime: true,
+                        url: item.url || null
+                    }, force);
+                }
+            } catch (e) {}
+        };
     </script>
 
     <!-- SweetAlert2 Global Notification -->

@@ -627,9 +627,9 @@
                                 </div>
 
                                 <!-- Box Frame Grafik MRTG Live Time (Modern NOC Telemetry Console) -->
-                                <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-xl flex-1 flex flex-col justify-between min-h-[220px]">
+                                <div class="p-2.5 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-xl flex-1 flex flex-col justify-between min-h-[160px]">
                                     <!-- Plot Row: Sumbu Y & SVG Plot Area -->
-                                    <div class="flex items-stretch gap-2.5" style="height: 165px; min-height: 165px;">
+                                    <div class="flex items-stretch gap-2.5" style="height: 105px; min-height: 105px;">
                                         <!-- Sumbu Y Kiri: Angka Skala Y -->
                                         <div class="flex flex-col justify-between items-end h-full text-[9px] font-mono font-semibold text-slate-400 select-none leading-none py-0.5 min-w-[38px] shrink-0">
                                             <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[0] ?? '{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}'">{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}</span>
@@ -703,7 +703,7 @@
                                     </div>
 
                                     <!-- Modern Telemetry Stats & Legend Bar -->
-                                    <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[9.5px] font-mono shrink-0">
+                                    <div class="mt-1.5 pt-1.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 text-[9px] font-mono shrink-0">
                                         <!-- Inbound Stats Card -->
                                         <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-slate-200">
                                             <div class="flex items-center gap-1.5">

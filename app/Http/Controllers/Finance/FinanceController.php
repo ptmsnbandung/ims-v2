@@ -702,7 +702,8 @@ class FinanceController extends Controller
                 try {
                     $file = $request->file('foto_bukti');
                     if ($file->isValid()) {
-                        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                        $rawExt = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                        $ext = in_array($rawExt, ['jpg', 'jpeg', 'png', 'webp', 'pdf']) ? $rawExt : 'jpg';
                         $filename = 'proof_' . preg_replace('/[^a-zA-Z0-9]/', '_', $decodedKode) . '_' . time() . '.' . $ext;
                         $uploadPath = public_path('uploads/bukti_transfer');
                         if (!file_exists($uploadPath)) {
@@ -3959,7 +3960,8 @@ class FinanceController extends Controller
         try {
             $file = $request->file('foto_bukti');
             if ($file && $file->isValid()) {
-                $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                $rawExt = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                $ext = in_array($rawExt, ['jpg', 'jpeg', 'png', 'webp', 'pdf']) ? $rawExt : 'jpg';
                 $filename = 'proof_' . preg_replace('/[^a-zA-Z0-9]/', '_', $decodedKode) . '_' . time() . '.' . $ext;
                 $uploadPath = public_path('uploads/bukti_transfer');
                 if (!file_exists($uploadPath)) {
@@ -4397,7 +4399,8 @@ class FinanceController extends Controller
                 try {
                     $file = $request->file('foto_bukti');
                     if ($file->isValid()) {
-                        $ext = $file->getClientOriginalExtension() ?: 'jpg';
+                        $rawExt = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                        $ext = in_array($rawExt, ['jpg', 'jpeg', 'png', 'webp', 'pdf']) ? $rawExt : 'jpg';
                         $cleanKode = preg_replace('/[^a-zA-Z0-9]/', '_', $kodeBilling);
                         $filename = 'proof_' . $cleanKode . '_' . time() . '.' . $ext;
                         $uploadPath = public_path('uploads/bukti_transfer');

@@ -1559,12 +1559,16 @@ class NocController extends Controller
         $fileName = null;
         if ($request->hasFile('foto_aktivasi')) {
             $file = $request->file('foto_aktivasi');
-            $fileName = 'AKTIVASI_' . $nomorInternet . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('uploads/registrasi');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
+            if ($file && $file->isValid()) {
+                $rawExt = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+                $ext = in_array($rawExt, ['jpg', 'jpeg', 'png', 'webp', 'pdf']) ? $rawExt : 'jpg';
+                $fileName = 'AKTIVASI_' . preg_replace('/[^a-zA-Z0-9]/', '_', $nomorInternet) . '_' . time() . '.' . $ext;
+                $destinationPath = public_path('uploads/registrasi');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                $file->move($destinationPath, $fileName);
             }
-            $file->move($destinationPath, $fileName);
         }
 
         // Ambil data pelanggan saat ini untuk kredensial PPPoE
@@ -3545,10 +3549,6 @@ class NocController extends Controller
      */
     public function notifikasi(Request $request, OltConnectionService $oltService): View
     {
-        // Pastikan halaman notifikasi yang dibuka langsung memiliki data segar dan tidak kosong
-        if (!request()->has('refresh')) {
-            request()->merge(['refresh' => '1']);
-        }
         $data = $this->getNocNotificationsData($oltService);
 
         return view('noc.notifikasi', [
@@ -3713,6 +3713,8 @@ class NocController extends Controller
 
         $activeAlerts = [];
         $intentionalAlerts = [];
+        $recentRecoveries = Cache::get('noc_recent_recoveries', []);
+        $currentDownOnuRegistry = [];
 
         // 1. TIKET (GANGGUAN, UBAH PASSWORD, RELOKASI, UBAH LAYANAN, AKTIVASI PASANG BARU)
         // 1.a TIKET GANGGUAN, UBAH PASSWORD, & RELOKASI LAYANAN (trx_tiket_gangguan)
@@ -4178,21 +4180,22 @@ class NocController extends Controller
                     $liveCache = Cache::get($cacheKey);
                     $lastKnown = Cache::get($lastKnownKey, []);
 
-                    // Data awal: utamakan liveCache, gunakan lastKnown jika liveCache belum ada
-                    $abnormalOnus = !empty($liveCache) ? $liveCache : $lastKnown;
+                    // Data awal: utamakan liveCache jika ada
+                    $hasLiveCache = Cache::has($cacheKey) && $liveCache !== null;
+                    $abnormalOnus = $hasLiveCache ? $liveCache : $lastKnown;
 
                     // 2. Scan OLT jika:
                     // - Permintaan force refresh ($isForceRefresh)
                     // - Cache live belum ada atau sudah kadaluarsa (!Cache::has($cacheKey))
-                    // - Data abnormal ONUs masih kosong padahal belum pernah dicache (empty($abnormalOnus))
-                    $shouldScan = $isForceRefresh || !Cache::has($cacheKey) || empty($abnormalOnus);
+                    $shouldScan = $isForceRefresh || !$hasLiveCache;
+                    $scanSucceeded = false;
 
                     if ($shouldScan) {
                         $lock = Cache::lock($lockKey, 30);
                         $acquired = false;
 
                         try {
-                            $acquired = $lock->block(3);
+                            $acquired = $lock->block(8);
                         } catch (\Throwable $e) {
                             $acquired = false;
                         }
@@ -4254,15 +4257,17 @@ class NocController extends Controller
                                             $phase = '';
                                             foreach (array_reverse($tokens) as $t) {
                                                 $tLower = strtolower($t);
-                                                if (in_array($tLower, $abnormalPhases) || in_array($tLower, ['working', 'up', 'online'])) {
+                                                if (in_array($tLower, $abnormalPhases) || in_array($tLower, ['working', 'up', 'online', 'ready', 'operation'])) {
                                                     $phase = $tLower;
                                                     break;
                                                 }
                                             }
 
                                             // Jika ONU sudah normal / working kembali, reset cache waktu gangguan
-                                            if (in_array($phase, ['working', 'up', 'online'])) {
+                                            if (in_array($phase, ['working', 'up', 'online', 'ready', 'operation'])) {
                                                 Cache::forget("onu_outage_time_{$olt->kode_olt}_{$interface}");
+                                                Cache::forget("onu_outage_time_{$olt->kode_olt}_gpon-onu_{$interface}");
+                                                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$port}:{$onuId}");
                                                 continue;
                                             }
 
@@ -4281,15 +4286,11 @@ class NocController extends Controller
                                     }
 
                                     // Simpan hasil scan sukses sebagai Last Known Good State & Live Cache
-                                    if (!empty($results)) {
-                                        Cache::put($lastKnownKey, $results, 7200); // Fallback relevan maks 2 jam
+                                    if (strlen($buf) > 100) {
+                                        $scanSucceeded = true;
                                         $abnormalOnus = $results;
                                         Cache::put($cacheKey, $abnormalOnus, 90); // Cache segar 90 detik
-                                    } elseif (strlen($buf) > 100) {
-                                        // OLT merespon dan tidak ada perangkat yang down/LOS
-                                        $abnormalOnus = [];
-                                        Cache::put($cacheKey, [], 90);
-                                        Cache::put($lastKnownKey, [], 7200);
+                                        Cache::put($lastKnownKey, $abnormalOnus, 3600); // Fallback relevan maks 1 jam
                                     } elseif (!empty($lastKnown)) {
                                         // Jangan pernah menimpa lastKnown jika respon OLT kosong/terputus
                                         $abnormalOnus = $lastKnown;
@@ -4317,8 +4318,8 @@ class NocController extends Controller
                         }
                     }
 
-                    // Fallback pemeriksaan cache per PON jika full scan kosong
-                    if (empty($abnormalOnus)) {
+                    // Fallback pemeriksaan cache per PON HANYA jika telnet benar-benar gagal dan tidak ada data cache
+                    if (!$scanSucceeded && !$hasLiveCache && empty($abnormalOnus)) {
                         $maxPorts = min(8, (int)($olt->capacity_olt ?: 8));
                         for ($p = 1; $p <= $maxPorts; $p++) {
                             $hwDiscovery = Cache::get("olt_live_hw_pon_physical_onus_{$olt->kode_olt}_{$p}");
@@ -4342,18 +4343,91 @@ class NocController extends Controller
                         }
                         if (!empty($abnormalOnus)) {
                             Cache::put($cacheKey, $abnormalOnus, 180);
-                            Cache::put($lastKnownKey, $abnormalOnus, 86400 * 7);
+                            Cache::put($lastKnownKey, $abnormalOnus, 1800);
                         }
                     }
 
                     foreach ($abnormalOnus as $st) {
                         $interface = $st['interface'];
-                        $port = $st['port'];
-                        $onuId = $st['onu_id'];
-                        $isLos = $st['is_los'];
+                        $port = (int)$st['port'];
+                        $onuId = (int)$st['onu_id'];
+                        $isLos = (bool)$st['is_los'];
                         $fullInterface = "gpon-onu_{$interface}";
                         $devKey = "onu_{$fullInterface}";
                         $devKeyWithOlt = "onu_{$olt->kode_olt}_{$fullInterface}";
+
+                        // 3.A REKONSILIASI DENGAN TELEMETRY LIVE PORT PON
+                        // Jika ada data discovery PON terkini untuk port ini, cross-check status fisik riilnya
+                        $hwDiscovery = Cache::get("olt_live_hw_pon_physical_onus_{$olt->kode_olt}_{$port}");
+                        $realPowerDisplay = null;
+                        if ($hwDiscovery && !empty($hwDiscovery['states'][$onuId])) {
+                            $hwPhase = strtolower($hwDiscovery['states'][$onuId]['phase'] ?? '');
+                            $hwRxPower = $hwDiscovery['powers'][$onuId] ?? null;
+                            $hasValidSignal = is_numeric($hwRxPower) && (float)$hwRxPower > -34.0;
+
+                            // Jika di discovery PON perangkat terbukti UP/working atau memiliki sinyal optik normal:
+                            if (in_array($hwPhase, ['working', 'ready', 'online', 'operation', 'up']) || $hasValidSignal) {
+                                // Catat pemulihan jika sebelumnya tercatat mengalami gangguan
+                                $hadOutage = Cache::has("onu_outage_time_{$olt->kode_olt}_{$interface}") ||
+                                             Cache::has("onu_outage_time_{$olt->kode_olt}_{$fullInterface}") ||
+                                             Cache::has("onu_outage_time_{$olt->kode_olt}_{$port}:{$onuId}");
+
+                                if ($hadOutage) {
+                                    $matchedUserRec = $regMap["{$olt->kode_olt}_{$interface}"]
+                                        ?? ($regMap["{$olt->kode_olt}_{$fullInterface}"]
+                                        ?? ($regMap["{$olt->kode_olt}_{$port}:{$onuId}"] ?? null));
+                                    $recCustName = $matchedUserRec->nama_pelanggan ?? 'Pelanggan';
+                                    $recCustNo = $matchedUserRec->nomor_internet ?? null;
+                                    $recActionUrl = $recCustNo ? route('teknik.pelanggan.profile', ['nomor_internet' => $recCustNo]) : route('teknik.pelanggan');
+
+                                    $recId = 'rec_onu_' . md5($devKeyWithOlt . '_' . date('YmdH'));
+                                    $alreadyInRec = false;
+                                    foreach ($recentRecoveries as $rc) {
+                                        if (($rc['device_key'] ?? '') === $devKeyWithOlt && (time() - strtotime($rc['created_at_raw'] ?? '')) < 7200) {
+                                            $alreadyInRec = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!$alreadyInRec) {
+                                        array_unshift($recentRecoveries, [
+                                            'id' => $recId,
+                                            'device_key' => $devKeyWithOlt,
+                                            'device_type' => 'onu',
+                                            'status' => 'UP',
+                                            'severity' => 'success',
+                                            'badge_color' => 'bg-emerald-500 text-white',
+                                            'icon_type' => 'power',
+                                            'title' => 'ONU Pulih (UP)',
+                                            'user_name' => $recCustName,
+                                            'device_name' => "{$fullInterface} - {$recCustName}",
+                                            'subtitle' => "OLT: {$olt->name_olt} • Port PON {$port} • Sinyal Optik Normal",
+                                            'message' => "Perangkat {$fullInterface} ({$recCustName}) telah kembali normal dan terkoneksi (UP).",
+                                            'olt_kode' => $olt->kode_olt,
+                                            'interface_name' => $fullInterface,
+                                            'nomor_internet' => $recCustNo,
+                                            'created_at' => now()->format('d M Y, H:i'),
+                                            'created_at_raw' => now()->toDateTimeString(),
+                                            'duration_human' => 'Baru saja',
+                                            'url' => $recActionUrl,
+                                            'is_recovery' => true,
+                                        ]);
+                                    }
+                                }
+
+                                // ONU sudah normal kembali! Bersihkan riwayat gangguan dan jangan tampilkan di alert
+                                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$interface}");
+                                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$fullInterface}");
+                                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$port}:{$onuId}");
+                                continue;
+                            }
+
+                            if (is_numeric($hwRxPower)) {
+                                $realPowerDisplay = number_format((float)$hwRxPower, 2) . ' dBm';
+                            } elseif ($hwRxPower === 'no signal' || str_contains(strtolower((string)$hwRxPower), 'los')) {
+                                $realPowerDisplay = 'No Signal (LOS)';
+                            }
+                        }
+
                         $isIntentional = $intentionalRecords->has($devKeyWithOlt) || $intentionalRecords->has($devKey);
                         $intentionalData = $isIntentional 
                             ? ($intentionalRecords->get($devKeyWithOlt) ?? $intentionalRecords->get($devKey)) 
@@ -4431,7 +4505,7 @@ class NocController extends Controller
                             'onu_id' => $onuId,
                             'interface_name' => $fullInterface,
                             'nomor_internet' => $custNo,
-                            'rx_power' => $isLos ? 'No Signal (LOS)' : 'Offline / Power Off',
+                            'rx_power' => $realPowerDisplay ?: ($isLos ? 'No Signal (LOS)' : 'Offline / Power Off'),
                             'created_at' => $formattedStarted,
                             'created_at_raw' => $startedRaw,
                             'duration_human' => $humanDuration,
@@ -4446,12 +4520,182 @@ class NocController extends Controller
                         } else {
                             $activeAlerts[] = $item;
                         }
+
+                        // Registrasikan untuk deteksi transisi pemulihan (UP)
+                        $currentDownOnuRegistry[$devKeyWithOlt] = [
+                            'olt_kode' => $olt->kode_olt,
+                            'fullInterface' => $fullInterface,
+                            'custName' => $custName,
+                            'custNo' => $custNo,
+                            'port' => $port,
+                            'oltName' => $olt->name_olt,
+                            'actionUrl' => $actionUrl,
+                        ];
                     }
                 }
             }
         } catch (\Throwable $e) {
             Log::warning('NOC notif ONU scan error: ' . $e->getMessage());
         }
+
+        // 3.B DETEKSI PEMULIHAN ONU SECARA SISTEMIK (Transisi Down -> UP)
+        $prevDownRegistry = Cache::get('noc_active_down_onu_registry', []);
+        if (!empty($prevDownRegistry) && is_array($prevDownRegistry)) {
+            foreach ($prevDownRegistry as $oldKey => $oldData) {
+                if (!isset($currentDownOnuRegistry[$oldKey])) {
+                    $already = false;
+                    foreach ($recentRecoveries as $rc) {
+                        if (($rc['device_key'] ?? '') === $oldKey && (time() - strtotime($rc['created_at_raw'] ?? '')) < 7200) {
+                            $already = true;
+                            break;
+                        }
+                    }
+                    if (!$already) {
+                        array_unshift($recentRecoveries, [
+                            'id' => 'rec_onu_' . md5($oldKey . '_' . date('YmdH')),
+                            'device_key' => $oldKey,
+                            'device_type' => 'onu',
+                            'status' => 'UP',
+                            'severity' => 'success',
+                            'badge_color' => 'bg-emerald-500 text-white',
+                            'icon_type' => 'power',
+                            'title' => 'ONU Pulih (UP)',
+                            'user_name' => $oldData['custName'] ?? 'Pelanggan',
+                            'device_name' => ($oldData['fullInterface'] ?? '') . ' - ' . ($oldData['custName'] ?? 'Pelanggan'),
+                            'subtitle' => "OLT: " . ($oldData['oltName'] ?? '') . " • Port PON " . ($oldData['port'] ?? '') . " • Sinyal Optik Normal",
+                            'message' => "Perangkat " . ($oldData['fullInterface'] ?? '') . " telah kembali online dan normal (UP).",
+                            'olt_kode' => $oldData['olt_kode'] ?? null,
+                            'interface_name' => $oldData['fullInterface'] ?? null,
+                            'nomor_internet' => $oldData['custNo'] ?? null,
+                            'created_at' => now()->format('d M Y, H:i'),
+                            'created_at_raw' => now()->toDateTimeString(),
+                            'duration_human' => 'Baru saja',
+                            'url' => $oldData['actionUrl'] ?? route('teknik.pelanggan'),
+                            'is_recovery' => true,
+                        ]);
+                    }
+                }
+            }
+        }
+        Cache::put('noc_active_down_onu_registry', $currentDownOnuRegistry, 86400);
+
+        // 4. DAFTAR TIKET & AKTIVASI YANG SUDAH SELESAI
+        // 4.a Tiket Gangguan Selesai (status = 13 atau 'Selesai')
+        try {
+            if (Schema::hasTable('trx_tiket_gangguan')) {
+                $completedTikets = DB::table('trx_tiket_gangguan')
+                    ->leftJoin('trx_batchjob_register', 'trx_tiket_gangguan.nomor_internet', '=', 'trx_batchjob_register.nomor_internet')
+                    ->where(function($q) {
+                        $q->where('trx_tiket_gangguan.status', '13')
+                          ->orWhere('trx_tiket_gangguan.status', 'Selesai');
+                    })
+                    ->where(function ($q) {
+                        $q->whereNull('trx_tiket_gangguan.hide')
+                          ->orWhere('trx_tiket_gangguan.hide', '!=', '1');
+                    })
+                    ->orderBy('trx_tiket_gangguan.date_update', 'desc')
+                    ->orderBy('trx_tiket_gangguan.date_create', 'desc')
+                    ->limit(5)
+                    ->get([
+                        'trx_tiket_gangguan.tiket',
+                        'trx_tiket_gangguan.nomor_internet',
+                        'trx_tiket_gangguan.penanganan',
+                        'trx_tiket_gangguan.keluhan',
+                        'trx_tiket_gangguan.date_update',
+                        'trx_tiket_gangguan.date_create',
+                        'trx_batchjob_register.nama_pelanggan'
+                    ]);
+
+                foreach ($completedTikets as $ct) {
+                    $tgl = $ct->date_update ?: $ct->date_create;
+                    $namaPel = $ct->nama_pelanggan ?: ($ct->nomor_internet ?: 'Pelanggan');
+                    $already = false;
+                    foreach ($recentRecoveries as $rc) {
+                        if (($rc['device_key'] ?? '') === 'tiket_' . $ct->tiket) {
+                            $already = true;
+                            break;
+                        }
+                    }
+                    if (!$already) {
+                        $recentRecoveries[] = [
+                            'id' => 'selesai_tiket_' . $ct->tiket,
+                            'device_key' => 'tiket_' . $ct->tiket,
+                            'device_type' => 'tiket',
+                            'status' => 'SELESAI',
+                            'severity' => 'success',
+                            'badge_color' => 'bg-emerald-500 text-white',
+                            'icon_type' => 'check',
+                            'title' => 'Tiket Gangguan Selesai',
+                            'user_name' => $namaPel,
+                            'device_name' => "Tiket #{$ct->tiket} - {$namaPel}",
+                            'subtitle' => ($ct->penanganan ?: 'Penanganan gangguan selesai') . ' • No: ' . ($ct->nomor_internet ?: '-'),
+                            'message' => 'Tiket gangguan telah diselesaikan oleh teknisi/NOC.',
+                            'olt_kode' => null,
+                            'interface_name' => null,
+                            'nomor_internet' => $ct->nomor_internet,
+                            'created_at' => $tgl ? Carbon::parse($tgl)->format('d M Y, H:i') : '-',
+                            'created_at_raw' => $tgl ?: now()->toDateTimeString(),
+                            'duration_human' => $tgl ? Carbon::parse($tgl)->locale('id')->diffForHumans() : 'Selesai',
+                            'url' => route('teknik.tiket.gangguan', ['kategori' => 'gangguan']),
+                            'is_recovery' => true,
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // 4.b Aktivasi Baru Selesai (status_reg = 20)
+        try {
+            if (Schema::hasTable('trx_batchjob_register')) {
+                $recentAktif = DB::table('trx_batchjob_register')
+                    ->where('status_reg', '20')
+                    ->whereNotNull('date_update')
+                    ->orderBy('date_update', 'desc')
+                    ->limit(4)
+                    ->get(['nomor_internet', 'nama_pelanggan', 'olt', 'index_olt', 'date_update']);
+
+                foreach ($recentAktif as $ra) {
+                    $already = false;
+                    foreach ($recentRecoveries as $rc) {
+                        if (($rc['device_key'] ?? '') === 'aktivasi_' . $ra->nomor_internet) {
+                            $already = true;
+                            break;
+                        }
+                    }
+                    if (!$already) {
+                        $recentRecoveries[] = [
+                            'id' => 'selesai_aktif_' . $ra->nomor_internet,
+                            'device_key' => 'aktivasi_' . $ra->nomor_internet,
+                            'device_type' => 'tiket',
+                            'status' => 'SELESAI',
+                            'severity' => 'success',
+                            'badge_color' => 'bg-emerald-500 text-white',
+                            'icon_type' => 'check',
+                            'title' => 'Aktivasi Baru Selesai',
+                            'user_name' => $ra->nama_pelanggan ?: $ra->nomor_internet,
+                            'device_name' => "Aktivasi #{$ra->nomor_internet} - {$ra->nama_pelanggan}",
+                            'subtitle' => "Layanan aktif online" . ($ra->olt ? " • OLT {$ra->olt}" : '') . ($ra->index_olt ? " • {$ra->index_olt}" : ''),
+                            'message' => "Pelanggan baru {$ra->nama_pelanggan} telah aktif dan terkoneksi ke OLT.",
+                            'olt_kode' => $ra->olt,
+                            'interface_name' => $ra->index_olt,
+                            'nomor_internet' => $ra->nomor_internet,
+                            'created_at' => Carbon::parse($ra->date_update)->format('d M Y, H:i'),
+                            'created_at_raw' => $ra->date_update,
+                            'duration_human' => Carbon::parse($ra->date_update)->locale('id')->diffForHumans(),
+                            'url' => route('teknik.pelanggan.profile', ['nomor_internet' => $ra->nomor_internet]),
+                            'is_recovery' => true,
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // Urutkan riwayat pemulihan (recoveries) paling baru di atas
+        usort($recentRecoveries, function ($a, $b) {
+            return strcmp($b['created_at_raw'] ?? '', $a['created_at_raw'] ?? '');
+        });
+        $recentRecoveries = array_values(array_slice($recentRecoveries, 0, 15));
+        Cache::put('noc_recent_recoveries', $recentRecoveries, 86400 * 2);
 
         // Urutkan active alerts berdasarkan waktu mulai gangguan terbaru (insiden paling baru muncul di paling atas, baik LOS maupun DOWN)
         usort($activeAlerts, function ($a, $b) {
@@ -4470,8 +4714,13 @@ class NocController extends Controller
         $totalRelokasi = count(array_filter($activeAlerts, fn($a) => ($a['ticket_category'] ?? '') === 'relokasi'));
         $totalAktivasi = count(array_filter($activeAlerts, fn($a) => ($a['ticket_category'] ?? '') === 'aktivasi_baru'));
 
+        $totalRecoveries = count($recentRecoveries);
+        $totalUp = count(array_filter($recentRecoveries, fn($r) => ($r['status'] ?? '') === 'UP'));
+        $totalSelesai = count(array_filter($recentRecoveries, fn($r) => ($r['status'] ?? '') === 'SELESAI'));
+
         return [
             'alerts' => $activeAlerts,
+            'recoveries' => $recentRecoveries,
             'intentional' => $intentionalAlerts,
             'summary' => [
                 'total_active' => $totalActive,
@@ -4485,6 +4734,9 @@ class NocController extends Controller
                 'total_relokasi' => $totalRelokasi,
                 'total_aktivasi' => $totalAktivasi,
                 'total_intentional' => $totalIntentional,
+                'total_recoveries' => $totalRecoveries,
+                'total_up' => $totalUp,
+                'total_selesai' => $totalSelesai,
             ],
             'updated_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
             'timestamp' => now()->timestamp,

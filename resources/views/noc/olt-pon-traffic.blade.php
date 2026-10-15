@@ -200,9 +200,9 @@
                     </div>
 
                     <!-- 3. Box Frame Grafik MRTG (High-Tech Telemetry Console) -->
-                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xl">
+                    <div class="p-2 sm:p-2.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xl">
                         <!-- Plot Row: Sumbu Y & SVG Plot Area -->
-                        <div class="flex items-stretch gap-2" style="height: 165px; min-height: 165px;">
+                        <div class="flex items-stretch gap-2" style="height: 105px; min-height: 105px;">
                             <!-- Sumbu Y Kiri: Angka Skala Y -->
                             <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-semibold text-slate-400 select-none leading-none py-0.5 min-w-[34px] shrink-0">
                                 <span x-text="port.mrtg?.y_labels?.[0] ?? '13.2 M'"></span>
@@ -274,7 +274,7 @@
                         </div>
 
                         <!-- 4. Legend Stats In & Out (Modern Glass Chips) -->
-                        <div class="mt-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 text-[9px] font-mono">
+                        <div class="mt-1.5 pt-1.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 text-[9px] font-mono">
                             <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-950/40 border border-emerald-800/40 text-slate-200">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse"></span>
                                 <span class="text-emerald-400 font-bold flex items-center gap-0.5">

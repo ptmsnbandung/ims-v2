@@ -161,8 +161,8 @@ class FinanceController extends Controller
             $query->orderByRaw("CASE WHEN status_bill_lay != '15' AND kode_billing_layanan IN ({$escapedPendingList}) THEN 0 ELSE 1 END ASC");
         }
 
-        // Fetch Paginated Invoices (Efficient Indexed Pagination)
-        $invoices = $query->orderBy('date_create', 'desc')
+        // Fetch Paginated Invoices (Data teratas adalah yang paling baru bayar atau approve)
+        $invoices = $query->orderByDesc(DB::raw("COALESCE(NULLIF(payment_paid, ''), date_update, date_create)"))
             ->paginate($perPage)
             ->withQueryString();
 
@@ -1261,7 +1261,7 @@ class FinanceController extends Controller
             });
         }
 
-        $invoices = $query->orderBy('date_create', 'desc')->get();
+        $invoices = $query->orderByDesc(DB::raw("COALESCE(NULLIF(payment_paid, ''), date_update, date_create)"))->get();
         $filename = 'rekap_billing_layanan_' . date('Ymd_His') . '.csv';
 
         return response()->stream(function () use ($invoices) {

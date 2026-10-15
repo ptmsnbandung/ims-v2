@@ -144,8 +144,11 @@
                 <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 text-center space-y-2">
                     
                     <!-- Avatar Initials -->
-                    <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#032b35] via-[#065b70] to-[#009aa9] text-white flex items-center justify-center font-bold text-base shadow-md shadow-[#043f4e]/20 mx-auto">
-                        {{ strtoupper(substr(trim($customer->nama_pelanggan ?? 'PL'), 0, 2)) }}
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg mx-auto"
+                         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%) !important; box-shadow: 0 4px 14px rgba(4, 63, 78, 0.35) !important;">
+                        <span style="color: #ffffff !important; font-size: 1.15rem; font-weight: 800; letter-spacing: 0.05em;">
+                            {{ strtoupper(substr(trim($customer->nama_pelanggan ?? 'PL'), 0, 2)) }}
+                        </span>
                     </div>
 
                     <!-- Nomor Internet / Customer ID -->

@@ -28,3 +28,4 @@ Thumbs.db
 /ims-router
 check_*.php
 *.sql
+/public/uploads/.htaccess

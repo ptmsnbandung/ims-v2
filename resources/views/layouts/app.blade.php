@@ -1677,6 +1677,12 @@
                                 </span>
                             </button>
 
+                            <!-- Mobile Backdrop Overlay -->
+                            <div x-show="open"
+                                 x-cloak
+                                 @click="open = false"
+                                 class="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs z-40 sm:hidden"></div>
+
                             <!-- Dropdown Menu Notifikasi NOC -->
                             <div x-show="open"
                                  x-cloak
@@ -1687,15 +1693,15 @@
                                  x-transition:leave="transition ease-in duration-100"
                                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                                  x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-                                 class="absolute right-0 mt-2 w-[350px] sm:w-[410px] max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
+                                 class="fixed inset-x-2.5 top-[58px] sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[410px] sm:max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/20 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
                                 
                                 <!-- Header Dropdown -->
-                                <div class="px-4 py-3 border-b flex items-center justify-between gap-2 text-white"
+                                <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 border-b flex items-center justify-between gap-2 text-white"
                                      style="background-color: #0b192c !important; color: #ffffff !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important;">
-                                    <div class="flex items-center gap-2.5 min-w-0">
-                                        <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                                              style="background-color: rgba(8, 145, 178, 0.2) !important; color: #22d3ee !important; border: 1px solid rgba(34, 211, 238, 0.3) !important;">
-                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.122a6.75 6.75 0 0 1 0-9.548m9.546 0a6.75 6.75 0 0 1 0 9.548M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                             </svg>
                                         </div>
@@ -1712,10 +1718,10 @@
                                                     Normal
                                                 </span>
                                             </div>
-                                            <p class="text-[10px] truncate mt-1" style="color: #cbd5e1 !important;">Deteksi LOS/DOWN &amp; Tiket Gangguan</p>
+                                            <p class="text-[9.5px] sm:text-[10px] truncate mt-1" style="color: #cbd5e1 !important;">Deteksi LOS/DOWN &amp; Tiket Gangguan</p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    <div class="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
                                         <!-- Tombol Tes Suara Notifikasi -->
                                         <button @click="testSound()" 
                                                 type="button"
@@ -1732,7 +1738,7 @@
                                                 type="button"
                                                 title="Tandai Semua Dibaca"
                                                 style="background-color: rgba(255,255,255,0.12) !important; color: #ffffff !important;"
-                                                class="px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:opacity-90 transition flex items-center gap-1 cursor-pointer">
+                                                class="px-2 sm:px-2.5 py-1 rounded-lg text-[9.5px] sm:text-[10px] font-semibold hover:opacity-90 transition flex items-center gap-1 cursor-pointer">
                                             <svg class="w-3 h-3 text-cyan-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                             </svg>
@@ -1752,8 +1758,8 @@
                                 </div>
 
                                 <!-- Mini Bar Stats (Pemisahan LOS, DOWN, Tiket, dan Pulih) -->
-                                <div class="px-3.5 py-1.5 border-b flex items-center justify-between text-[11px] bg-slate-50 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-800 font-medium">
-                                    <div class="flex items-center gap-2.5">
+                                <div class="px-3.5 py-1.5 border-b flex items-center justify-between text-[10.5px] sm:text-[11px] bg-slate-50 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-800 font-medium overflow-x-auto">
+                                    <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
                                         <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
                                             <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
                                             <span>LOS:</span>
@@ -1771,11 +1777,11 @@
                                         </span>
                                         <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
                                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                            <span>Pulih/UP:</span>
+                                            <span>Pulih:</span>
                                             <b class="font-mono text-emerald-600 dark:text-emerald-400 font-bold" x-text="summary.total_recoveries || 0"></b>
                                         </span>
                                     </div>
-                                    <span class="text-[10px] text-slate-400 font-medium">Radar NOC</span>
+                                    <span class="text-[10px] text-slate-400 font-medium shrink-0 ml-2">Radar NOC</span>
                                 </div>
 
                                 <!-- Filter Tabs (Semua, Isu Aktif, Pulih & Selesai) -->
@@ -1807,7 +1813,7 @@
                                 </div>
 
                                 <!-- Body Notifikasi List -->
-                                <div class="max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
+                                <div class="max-h-[calc(100dvh-210px)] sm:max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
                                     <!-- Loading State -->
                                     <template x-if="isLoading && displayItems.length === 0">
                                         <div class="p-6 text-center">
@@ -1956,6 +1962,12 @@
                                 </span>
                             </button>
 
+                            <!-- Mobile Backdrop Overlay -->
+                            <div x-show="open"
+                                 x-cloak
+                                 @click="open = false"
+                                 class="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs z-40 sm:hidden"></div>
+
                             <!-- Dropdown Menu Notifikasi -->
                             <div x-show="open"
                                  x-cloak
@@ -1966,7 +1978,7 @@
                                  x-transition:leave="transition ease-in duration-100"
                                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                                  x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-                                 class="absolute right-0 mt-2 w-[340px] sm:w-[390px] max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/15 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
+                                 class="fixed inset-x-2.5 top-[58px] sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[390px] sm:max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/20 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
                                 
                                 <!-- Header Dropdown -->
                                 <div class="px-3.5 py-2.5 bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
@@ -2011,7 +2023,7 @@
                                 </div>
 
                                 <!-- Body Notifikasi List -->
-                                <div class="max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
+                                <div class="max-h-[calc(100dvh-210px)] sm:max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
                                     <!-- Loading State -->
                                     <template x-if="isLoading && payments.length === 0">
                                         <div class="p-6 text-center">

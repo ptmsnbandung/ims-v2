@@ -2936,6 +2936,28 @@ class TeknikController extends Controller
             $maxTx = !empty($onuResult['mrtg']['max_out']) ? (float)$onuResult['mrtg']['max_out'] : round(max($curTx * 1.35, $maxRx * 0.35), 1);
             $avgTx = !empty($onuResult['mrtg']['avg_out']) ? (float)$onuResult['mrtg']['avg_out'] : round(max($curTx * 0.65, $avgRx * 0.35), 1);
 
+            // Sinkronisasi pemulihan instan ke Pusat Notifikasi NOC jika ONU terbukti UP
+            if (($onuResult['status'] ?? '') === 'UP' && $olt && $port && $onuSlot) {
+                $iface1 = "1/1/{$port}:{$onuSlot}";
+                $iface2 = "1/2/{$port}:{$onuSlot}";
+                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$iface1}");
+                Cache::forget("onu_outage_time_{$olt->kode_olt}_{$iface2}");
+                Cache::forget("onu_outage_time_{$olt->kode_olt}_gpon-onu_{$iface1}");
+                Cache::forget("onu_outage_time_{$olt->kode_olt}_gpon-onu_{$iface2}");
+
+                foreach (["olt_live_all_onu_states_{$olt->kode_olt}", "olt_last_known_good_onus_{$olt->kode_olt}"] as $cKey) {
+                    $cached = Cache::get($cKey);
+                    if (is_array($cached)) {
+                        $filtered = array_values(array_filter($cached, function($item) use ($port, $onuSlot) {
+                            return !(($item['port'] ?? 0) == $port && ($item['onu_id'] ?? 0) == $onuSlot);
+                        }));
+                        if (count($filtered) !== count($cached)) {
+                            Cache::put($cKey, $filtered, 90);
+                        }
+                    }
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'has_onu' => true,

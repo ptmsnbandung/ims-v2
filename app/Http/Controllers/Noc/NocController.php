@@ -4199,7 +4199,7 @@ class NocController extends Controller
 
                         if ($acquired) {
                             try {
-                                $sess = $oltService->openOltTelnetSession($olt, 2.5);
+                                $sess = $oltService->openOltTelnetSession($olt, 4.0);
                                 if (!$sess) {
                                     if (!empty($lastKnown)) {
                                         $abnormalOnus = $lastKnown;
@@ -4209,7 +4209,7 @@ class NocController extends Controller
                                     $socket = $sess['socket'];
                                     @stream_set_blocking($socket, false);
 
-                                    $readUntilPrompt = function($sock, $timeout = 4.5) {
+                                    $readUntilPrompt = function($sock, $timeout = 6.5) {
                                         $buf = '';
                                         $start = microtime(true);
                                         while ((microtime(true) - $start) < $timeout) {
@@ -4226,7 +4226,7 @@ class NocController extends Controller
 
                                     // Session OLT sudah diset terminal length 0 saat login
                                     fwrite($socket, "show gpon onu state\r\n");
-                                    $buf = $readUntilPrompt($socket, 5.0);
+                                    $buf = $readUntilPrompt($socket, 6.5);
 
                                     // Langsung logout agar session OLT segera dilepas bebas (< 1 detik)
                                     fwrite($socket, "exit\r\n");
@@ -4282,13 +4282,14 @@ class NocController extends Controller
 
                                     // Simpan hasil scan sukses sebagai Last Known Good State & Live Cache
                                     if (!empty($results)) {
-                                        Cache::put($lastKnownKey, $results, 86400 * 7);
+                                        Cache::put($lastKnownKey, $results, 7200); // Fallback relevan maks 2 jam
                                         $abnormalOnus = $results;
-                                        Cache::put($cacheKey, $abnormalOnus, 180); // Cache 3 menit
+                                        Cache::put($cacheKey, $abnormalOnus, 90); // Cache segar 90 detik
                                     } elseif (strlen($buf) > 100) {
                                         // OLT merespon dan tidak ada perangkat yang down/LOS
                                         $abnormalOnus = [];
-                                        Cache::put($cacheKey, [], 180);
+                                        Cache::put($cacheKey, [], 90);
+                                        Cache::put($lastKnownKey, [], 7200);
                                     } elseif (!empty($lastKnown)) {
                                         // Jangan pernah menimpa lastKnown jika respon OLT kosong/terputus
                                         $abnormalOnus = $lastKnown;

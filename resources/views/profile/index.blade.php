@@ -6,21 +6,22 @@
 <div class="w-full max-w-5xl mx-auto space-y-6" style="width: 100%; max-width: 1060px; margin-left: auto; margin-right: auto;">
 
     <!-- Top Breadcrumb & Action -->
-    <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <a href="{{ route('dashboard') }}" class="hover:text-blue-600 dark:hover:text-cyan-400 transition font-medium flex items-center gap-1.5">
+    <div class="flex items-center justify-between gap-2 sm:gap-3">
+        <div class="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500 dark:text-slate-400 truncate">
+            <a href="{{ route('dashboard') }}" class="hover:text-blue-600 dark:hover:text-cyan-400 transition font-medium flex items-center gap-1">
                 <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                 </svg>
-                <span>Dashboard</span>
+                <span class="hidden xs:inline">Dashboard</span>
             </a>
             <span>&rsaquo;</span>
-            <span class="text-slate-800 dark:text-slate-200 font-bold">Profil Pengguna</span>
+            <span class="text-slate-800 dark:text-slate-200 font-bold truncate">Profil Pengguna</span>
         </div>
 
-        <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-xs transition cursor-pointer">
+        <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-xs transition cursor-pointer shrink-0">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            <span>Kembali ke Dashboard</span>
+            <span class="hidden sm:inline">Kembali ke Dashboard</span>
+            <span class="inline sm:hidden">Dashboard</span>
         </a>
     </div>
 
@@ -51,13 +52,13 @@
     <div class="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm overflow-hidden">
         
         <!-- Top Oceanic Gradient Banner (No overlapping elements on bottom-left) -->
-        <div class="h-28 sm:h-32 relative overflow-hidden bg-gradient-to-r from-[#032838] via-[#05445e] to-[#087f9c] flex items-start justify-end p-4 sm:p-5">
+        <div class="h-24 sm:h-32 relative overflow-hidden bg-gradient-to-r from-[#032838] via-[#05445e] to-[#087f9c] flex items-start justify-end p-3.5 sm:p-5">
             <!-- Background Decorative Circles -->
             <div class="absolute -right-8 -top-8 w-48 h-48 rounded-full bg-cyan-400/15 blur-2xl pointer-events-none"></div>
             <div class="absolute left-1/4 -bottom-10 w-40 h-40 rounded-full bg-blue-500/15 blur-xl pointer-events-none"></div>
             
             <div class="relative z-10 flex items-center gap-2">
-                <span class="px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-bold tracking-wide uppercase bg-black/30 backdrop-blur-md text-cyan-200 border border-white/15 shadow-xs flex items-center gap-1.5">
+                <span class="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[11px] font-bold tracking-wide uppercase bg-black/30 backdrop-blur-md text-cyan-200 border border-white/15 shadow-xs flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     PT Media Solusi Network &middot; IMS v2
                 </span>
@@ -65,11 +66,11 @@
         </div>
 
         <!-- User Information Row with Cleanly Placed Avatar -->
-        <div class="px-6 pb-6 pt-0 relative">
-            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800/80">
+        <div class="px-4 sm:px-6 pb-6 pt-0 relative">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-12 sm:-mt-14 mb-5 sm:mb-6 pb-5 sm:pb-6 border-b border-slate-100 dark:border-slate-800/80">
                 
                 <!-- Avatar & Identity Info -->
-                <div class="flex flex-col sm:flex-row items-center sm:items-end gap-4 text-center sm:text-left">
+                <div class="flex flex-col sm:flex-row items-center sm:items-end gap-3 sm:gap-4 text-center sm:text-left">
                     <!-- Photo Frame -->
                     <div class="relative flex-shrink-0">
                         @if($user->foto_url)
@@ -93,7 +94,7 @@
 
                     <!-- Name & Role Tags -->
                     <div class="space-y-1.5 pb-1">
-                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
                             <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">{{ $user->nama }}</h1>
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
@@ -101,18 +102,18 @@
                             </span>
                         </div>
 
-                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs">
+                        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-xs">
                             <span class="px-2.5 py-0.5 rounded-md font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-cyan-300 border border-blue-200 dark:border-blue-800/60">
                                 {{ $user->nama_level }}
                             </span>
                             <span class="text-slate-300 dark:text-slate-600">&bull;</span>
-                            <span class="font-mono text-slate-600 dark:text-slate-400 font-medium">{{ $user->username }}</span>
+                            <span class="font-mono text-slate-600 dark:text-slate-400 font-medium break-all">{{ $user->username }}</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Quick Meta Badges -->
-                <div class="flex flex-wrap items-center justify-center sm:justify-end gap-2 text-xs font-mono pb-1">
+                <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center sm:justify-end gap-2 text-xs font-mono pb-1 w-full sm:w-auto">
                     <div class="px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 text-center">
                         <span class="block text-[10px] text-slate-400 uppercase font-sans font-bold">ID User</span>
                         <span class="font-bold text-slate-900 dark:text-white">{{ $user->kode_pengguna }}</span>
@@ -128,12 +129,12 @@
             </div>
 
             <!-- Two Columns: Account Details & Change Password Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start" style="display: grid; gap: 1.5rem;">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
 
                 <!-- Column 1: Account Specifications (5 Cols) -->
-                <div class="lg:col-span-5 space-y-4" style="grid-column: span 5 / span 5;">
+                <div class="col-span-1 lg:col-span-5 space-y-4">
                     
-                    <div class="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-4">
+                    <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-200/70 dark:border-slate-700/60">
                             <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                                 <svg class="w-4 h-4 text-blue-600 dark:text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -146,23 +147,23 @@
 
                         <!-- Info Rows -->
                         <div class="space-y-2.5 text-xs">
-                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                                <span class="text-slate-500 dark:text-slate-400">Nama Lengkap</span>
-                                <span class="font-bold text-slate-900 dark:text-white text-right">{{ $user->nama }}</span>
+                            <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                                <span class="text-slate-500 dark:text-slate-400 shrink-0">Nama Lengkap</span>
+                                <span class="font-bold text-slate-900 dark:text-white text-right truncate">{{ $user->nama }}</span>
                             </div>
 
-                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                                <span class="text-slate-500 dark:text-slate-400">Jabatan / Role</span>
+                            <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                                <span class="text-slate-500 dark:text-slate-400 shrink-0">Jabatan / Role</span>
                                 <span class="font-bold text-blue-600 dark:text-cyan-400 text-right">{{ $user->nama_level }}</span>
                             </div>
 
-                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                                <span class="text-slate-500 dark:text-slate-400">Username / Email</span>
-                                <span class="font-mono font-semibold text-slate-900 dark:text-white text-right">{{ $user->username }}</span>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                                <span class="text-slate-500 dark:text-slate-400 shrink-0">Username / Email</span>
+                                <span class="font-mono font-semibold text-slate-900 dark:text-white text-left sm:text-right break-all text-[11px] sm:text-xs">{{ $user->username }}</span>
                             </div>
 
-                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                                <span class="text-slate-500 dark:text-slate-400">Status Keaktifan</span>
+                            <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                                <span class="text-slate-500 dark:text-slate-400 shrink-0">Status Keaktifan</span>
                                 <span class="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
                                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                                     Aktif
@@ -170,16 +171,16 @@
                             </div>
 
                             @if($user->las_login)
-                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                                <span class="text-slate-500 dark:text-slate-400">Sesi Terakhir</span>
-                                <span class="font-mono text-[11px] text-slate-700 dark:text-slate-300 text-right">{{ $user->las_login }}</span>
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                                <span class="text-slate-500 dark:text-slate-400 shrink-0">Sesi Terakhir</span>
+                                <span class="font-mono text-[11px] text-slate-700 dark:text-slate-300 text-left sm:text-right">{{ $user->las_login }}</span>
                             </div>
                             @endif
                         </div>
                     </div>
 
                     <!-- Policy Info Badge -->
-                    <div class="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 text-slate-600 dark:text-slate-400 text-xs flex items-start gap-3">
+                    <div class="p-3.5 sm:p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 text-slate-600 dark:text-slate-400 text-xs flex items-start gap-3">
                         <div class="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 dark:text-cyan-400 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zm-9-3.75h.008v.008H12V8.25z" />
@@ -196,8 +197,8 @@
                 </div>
 
                 <!-- Column 2: Form Ganti Password (7 Cols) -->
-                <div class="lg:col-span-7" style="grid-column: span 7 / span 7;">
-                    <div class="p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800">
+                <div class="col-span-1 lg:col-span-7">
+                    <div class="p-4 sm:p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800">
                         
                         <div class="border-b border-slate-200/70 dark:border-slate-700/60 pb-4 mb-5">
                             <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">

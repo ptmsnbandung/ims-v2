@@ -348,7 +348,8 @@
     <!-- Main Table Container -->
     <div class="rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
         @if($notifications->count() > 0)
-            <div class="w-full overflow-x-auto">
+            <!-- Desktop Table View (Muncul hanya di Tablet & Desktop >= md) -->
+            <div class="hidden md:block w-full overflow-x-auto">
                 <table class="w-full text-left border-collapse table-fixed min-w-[700px] xl:min-w-full">
                     <thead>
                         <tr class="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -569,6 +570,204 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Mobile Card View (Muncul hanya di Mobile < md) -->
+            <div class="block md:hidden p-2.5 sm:p-3 space-y-2.5 bg-slate-50/50 dark:bg-slate-950/40">
+                @foreach($notifications as $item)
+                    @php
+                        $rawBank = $item->bank_tujuan ?? 'Transfer';
+                        $cleanBank = preg_replace('/\s*\(\s*(?:a\.?n\.?|a\/n|atas\s+nama)\b[^)]*\)/i', '', $rawBank);
+                        $cleanBank = preg_replace('/\s*\b(?:a\.?n\.?|a\/n|atas\s+nama)\b.*$/i', '', $cleanBank);
+                        $cleanBank = trim($cleanBank);
+                        $cleanBank = preg_replace('/\s*-\s*$/', '', $cleanBank);
+
+                        $bankShort = Str::before($cleanBank, ' - ');
+                        $bankDetail = Str::contains($cleanBank, ' - ') ? trim(Str::after($cleanBank, ' - ')) : null;
+                        if ($bankDetail !== null && ($bankDetail === '' || $bankDetail === '-')) {
+                            $bankDetail = null;
+                        }
+                    @endphp
+                    <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-2.5 transition {{ !$item->is_approved ? 'border-l-4 border-l-amber-500 bg-amber-50/15 dark:bg-amber-950/10' : 'border-l-4 border-l-emerald-500' }}"
+                         :class="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}') ? 'ring-1 ring-cyan-400/30' : ''">
+
+                        <!-- Card Header: Status & Time & Unread Badge -->
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                @if($item->is_approved)
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                        <svg class="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                        <span>Lunas / Disetujui</span>
+                                    </span>
+                                @elseif($item->status === 'rejected')
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                                        <svg class="w-2.5 h-2.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                        </svg>
+                                        <span>Ditolak</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 animate-pulse">
+                                        <svg class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                        <span>Menunggu Approval</span>
+                                    </span>
+                                @endif
+
+                                <button type="button"
+                                        @click.stop="toggleRead('{{ $item->id }}', '{{ $item->kode_billing }}')"
+                                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold transition cursor-pointer"
+                                        :class="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')
+                                            ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300 ring-1 ring-cyan-400/40'
+                                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800/80 dark:text-slate-400'">
+                                    <template x-if="isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')">
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                                            <span>Baru</span>
+                                        </span>
+                                    </template>
+                                    <template x-if="!isUnread('{{ $item->id }}', '{{ $item->kode_billing }}')">
+                                        <span class="inline-flex items-center gap-1">
+                                            <svg class="w-2.5 h-2.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5m-15 0 6 6 9-13.5" />
+                                            </svg>
+                                            <span>Dibaca</span>
+                                        </span>
+                                    </template>
+                                </button>
+                            </div>
+
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono whitespace-nowrap">
+                                {{ $item->time_ago }}
+                            </span>
+                        </div>
+
+                        <!-- Card Main Info: Invoice & Nominal -->
+                        <div class="flex items-start justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/60">
+                            <div class="min-w-0">
+                                <span class="text-[9.5px] text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider">Invoice / Tagihan</span>
+                                <a href="{{ route('finance.billing-layanan', ['search' => $item->kode_billing]) }}"
+                                   target="_blank"
+                                   class="font-mono text-xs font-bold text-[#0891b2] dark:text-cyan-400 hover:underline inline-flex items-center gap-1 mt-0.5">
+                                    <span>{{ $item->kode_billing }}</span>
+                                    <svg class="w-3 h-3 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                    </svg>
+                                </a>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="text-[9.5px] text-slate-400 dark:text-slate-500 block uppercase font-bold tracking-wider">Nominal</span>
+                                <span class="font-bold text-sm font-mono mt-0.5 block {{ $item->is_approved ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white' }}">
+                                    {{ $item->nominal_formatted }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Pelanggan & Metode Info -->
+                        <div class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200 truncate">
+                                    {{ $item->nama_pelanggan }}
+                                </div>
+                                <div class="font-mono text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                                    <svg class="w-3 h-3 text-[#0891b2] shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                    </svg>
+                                    <span>{{ $item->nomor_internet }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Metode / Bank -->
+                            <div class="text-right shrink-0">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-semibold text-[10px] border border-slate-200 dark:border-slate-700">
+                                    <svg class="w-3 h-3 text-[#0891b2] shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                                    </svg>
+                                    <span>{{ $bankShort }}</span>
+                                </span>
+                                @if($bankDetail)
+                                    <div class="text-[9px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
+                                        {{ $bankDetail }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        @if($item->notes)
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 italic px-1">
+                                "{{ $item->notes }}"
+                            </p>
+                        @endif
+
+                        <!-- Card Action Footer: Bukti & Approval Buttons -->
+                        <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800/60">
+                            <!-- Bukti Button -->
+                            <div>
+                                @if($item->proof_file)
+                                    @php
+                                        $rawPf = (string)$item->proof_file;
+                                        $pfUrl = (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:'))
+                                            ? $rawPf
+                                            : asset(ltrim($rawPf, '/'));
+                                    @endphp
+                                    <button type="button"
+                                            @click="openPreviewModal('{{ $pfUrl }}', 'Bukti: {{ $item->kode_billing }}', '{{ $item->id }}', '{{ $item->kode_billing }}')"
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-[#0891b2] dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200/60 dark:border-cyan-800/60 transition cursor-pointer">
+                                        <svg class="w-3.5 h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                        </svg>
+                                        <span>Lihat Bukti</span>
+                                    </button>
+                                @else
+                                    <span class="text-slate-400 dark:text-slate-500 text-[10px] italic">Tanpa bukti</span>
+                                @endif
+                            </div>
+
+                            <!-- Approval Buttons -->
+                            <div class="flex items-center gap-1.5">
+                                @if(!$item->is_approved)
+                                    <button type="button"
+                                            @click="openApproveModal({
+                                                kode_billing: '{{ $item->kode_billing }}',
+                                                nama_pelanggan: '{{ addslashes($item->nama_pelanggan) }}',
+                                                nomor_internet: '{{ $item->nomor_internet }}',
+                                                nominal: {{ $item->nominal }},
+                                                nominal_formatted: '{{ $item->nominal_formatted }}',
+                                                bank_tujuan: '{{ $bankShort }}'
+                                            })"
+                                            class="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs transition flex items-center gap-1 cursor-pointer">
+                                        <svg class="w-3.5 h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                        <span>Approve</span>
+                                    </button>
+
+                                    <button type="button"
+                                            @click="openRejectModal({
+                                                kode_billing: '{{ $item->kode_billing }}',
+                                                nama_pelanggan: '{{ addslashes($item->nama_pelanggan) }}'
+                                            })"
+                                            class="px-2.5 py-1 rounded-lg text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 transition flex items-center gap-1 cursor-pointer">
+                                        <svg class="w-3 h-3 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                        </svg>
+                                        <span>Tolak</span>
+                                    </button>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span>Terverifikasi</span>
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
 
             <!-- Pagination -->

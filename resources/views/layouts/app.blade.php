@@ -105,6 +105,29 @@
                 background: #334155 !important;
             }
         }
+
+        /* Notifikasi Modal Dropdown Responsif Mobile & Desktop */
+        @media (max-width: 639.98px) {
+            .ims-notif-dropdown {
+                position: fixed !important;
+                top: 58px !important;
+                left: 10px !important;
+                right: 10px !important;
+                width: auto !important;
+                max-width: calc(100vw - 20px) !important;
+            }
+        }
+        @media (min-width: 640px) {
+            .ims-notif-dropdown {
+                position: absolute !important;
+                top: 100% !important;
+                right: 0 !important;
+                left: auto !important;
+                margin-top: 0.5rem !important;
+                width: 410px !important;
+                max-width: calc(100vw - 1.5rem) !important;
+            }
+        }
     </style>
 
     <!-- Anti-flicker Theme Initialization (Default to Light Mode) -->
@@ -1155,7 +1178,12 @@
                         <!-- Expanded Accordion -->
                         <div x-show="permintaanOpen"
                              x-cloak
-                             x-collapse
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-1"
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
                             
                             @if(auth()->user()?->hasRole(['noc', 'direktur']))
@@ -1257,7 +1285,12 @@
                         <!-- Submenu -->
                         <div x-show="permintaanNocOpen"
                              x-cloak
-                             x-collapse
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-1"
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
                             <a href="{{ route('noc.monitoring-instalasi-onu') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.monitoring-instalasi-onu*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.monitoring-instalasi-onu*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
@@ -1282,18 +1315,6 @@
                         </div>
                     </div>
 
-                    <!-- 3. NOC Dashboard -->
-                    <div class="ims-nav-wrapper">
-                        <a href="{{ route('noc.dashboard') }}"
-                           class="ims-nav-item {{ request()->routeIs('noc.dashboard*') ? 'active' : '' }}"
-                           title="NOC Command Dashboard">
-                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.dashboard*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
-                            </svg>
-                            <span class="ims-nav-text">NOC Command</span>
-                        </a>
-                        <div class="ims-tooltip">NOC Command Dashboard</div>
-                    </div>
 
                     <!-- 4. Menu OLT (Dropdown Pilihan OLT dari Master OLT) -->
                     <div class="ims-nav-wrapper ims-has-flyout"
@@ -1331,7 +1352,12 @@
                         <!-- Submenu Pilihan OLT -->
                         <div x-show="oltMenuOpen"
                              x-cloak
-                             x-collapse
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-1"
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
                             @if(isset($sidebarOlts) && (is_countable($sidebarOlts) ? count($sidebarOlts) > 0 : !empty($sidebarOlts)))
                                 @foreach($sidebarOlts as $sOlt)
@@ -1385,7 +1411,12 @@
                         <!-- Submenu -->
                         <div x-show="infraOpen"
                              x-cloak
-                             x-collapse
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-1"
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
                             <a href="{{ route('noc.gpon') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.gpon*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.gpon*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
@@ -1509,7 +1540,12 @@
                         <!-- Submenu -->
                         <div x-show="permintaanFinanceOpen"
                              x-cloak
-                             x-collapse
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 -translate-y-1"
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
                             <a href="{{ route('finance.permintaan.up-downgrade') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('finance.permintaan.up-downgrade*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('finance.permintaan.up-downgrade*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
@@ -1693,7 +1729,7 @@
                                  x-transition:leave="transition ease-in duration-100"
                                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                                  x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-                                 class="fixed inset-x-2.5 top-[58px] sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[410px] sm:max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/20 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
+                                 class="ims-notif-dropdown fixed inset-x-2.5 top-[58px] sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[410px] sm:max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/20 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
                                 
                                 <!-- Header Dropdown -->
                                 <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 border-b flex items-center justify-between gap-2 text-white"
@@ -1917,16 +1953,11 @@
                                 </div>
 
                                 <!-- Footer Dropdown Terpadu -->
-                                <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
-                                    <a href="{{ route('noc.dashboard') }}"
-                                       @click="open = false"
-                                       class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition">
-                                        NOC Command
-                                    </a>
+                                <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
                                     <a href="{{ route('noc.notifikasi') }}"
                                        @click="open = false"
                                        style="background: #0891b2 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(8, 145, 178, 0.25) !important;"
-                                       class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition cursor-pointer">
+                                       class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition cursor-pointer">
                                         <span style="color: #ffffff !important;">Buka Pusat Notifikasi</span>
                                         <svg class="w-3.5 h-3.5" style="color: #ffffff !important;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -1978,7 +2009,7 @@
                                  x-transition:leave="transition ease-in duration-100"
                                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                                  x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-                                 class="fixed inset-x-2.5 top-[58px] sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[390px] sm:max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/20 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
+                                 class="ims-notif-dropdown fixed inset-x-2.5 top-[58px] sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[390px] sm:max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/20 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
                                 
                                 <!-- Header Dropdown -->
                                 <div class="px-3.5 py-2.5 bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
@@ -2876,15 +2907,17 @@
                     };
                 }
 
-                // Unlock audio autoplay & Web Speech API saat ada interaksi pengguna
+                // Unlock audio autoplay & Web Speech API saat ada interaksi pengguna nyata
+                const unlockEvents = ['click', 'touchstart', 'keydown'];
                 const unlock = () => {
+                    window._hasUserGesture = true;
                     try {
                         const AudioCtx = window.AudioContext || window.webkitAudioContext;
                         if (AudioCtx) {
                             if (!window._sharedAudioCtx) {
                                 window._sharedAudioCtx = new AudioCtx();
                             }
-                            if (window._sharedAudioCtx.state === 'suspended') {
+                            if (window._sharedAudioCtx && window._sharedAudioCtx.state === 'suspended') {
                                 window._sharedAudioCtx.resume().catch(() => {});
                             }
                         }
@@ -2914,8 +2947,12 @@
                             this.speechUnlocked = true;
                         } catch(e) {}
                     }
+
+                    if (this.audioUnlocked && this.speechUnlocked && window._sharedAudioCtx?.state === 'running') {
+                        unlockEvents.forEach(evt => document.removeEventListener(evt, unlock));
+                    }
                 };
-                ['pointerdown', 'mousedown', 'click', 'keydown', 'touchstart', 'focus'].forEach(evt => {
+                unlockEvents.forEach(evt => {
                     document.addEventListener(evt, unlock, { passive: true });
                 });
 
@@ -3244,38 +3281,43 @@
 
             // 1. Web Audio Synthesizer: Nada Harmoni Sukses Naik (C5 -> E5 -> G5 -> C6)
             try {
+                const hasActivation = !!((navigator.userActivation && navigator.userActivation.hasBeenActive) || window._hasUserGesture);
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    if (!window._sharedAudioCtx) {
+                if (AudioCtx && (hasActivation || (window._sharedAudioCtx && window._sharedAudioCtx.state === 'running'))) {
+                    if (!window._sharedAudioCtx && hasActivation) {
                         window._sharedAudioCtx = new AudioCtx();
                     }
                     const ctx = window._sharedAudioCtx;
-                    if (ctx.state === 'suspended') {
-                        ctx.resume().catch(() => {});
-                    }
-                    const now = ctx.currentTime;
-                    const notes = [
-                        { freq: 523.25, start: 0.00, dur: 0.14 }, // C5
-                        { freq: 659.25, start: 0.12, dur: 0.14 }, // E5
-                        { freq: 783.99, start: 0.24, dur: 0.16 }, // G5
-                        { freq: 1046.50, start: 0.38, dur: 0.40 } // C6 (Puncak Sukses)
-                    ];
+                    if (ctx) {
+                        if (ctx.state === 'suspended' && hasActivation) {
+                            ctx.resume().catch(() => {});
+                        }
+                        if (ctx.state === 'running') {
+                            const now = ctx.currentTime;
+                            const notes = [
+                                { freq: 523.25, start: 0.00, dur: 0.14 }, // C5
+                                { freq: 659.25, start: 0.12, dur: 0.14 }, // E5
+                                { freq: 783.99, start: 0.24, dur: 0.16 }, // G5
+                                { freq: 1046.50, start: 0.38, dur: 0.40 } // C6 (Puncak Sukses)
+                            ];
 
-                    notes.forEach(n => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = "sine";
-                        osc.frequency.setValueAtTime(n.freq, now + n.start);
-                        gain.gain.setValueAtTime(0.25, now + n.start);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(now + n.start);
-                        osc.stop(now + n.start + n.dur);
-                    });
+                            notes.forEach(n => {
+                                const osc = ctx.createOscillator();
+                                const gain = ctx.createGain();
+                                osc.type = "sine";
+                                osc.frequency.setValueAtTime(n.freq, now + n.start);
+                                gain.gain.setValueAtTime(0.25, now + n.start);
+                                gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+                                osc.connect(gain);
+                                gain.connect(ctx.destination);
+                                osc.start(now + n.start);
+                                osc.stop(now + n.start + n.dur);
+                            });
+                        }
+                    }
                 }
             } catch (e) {
-                console.warn("Web Audio recovery tone error:", e);
+                // Silently skip if audio context is not allowed to run
             }
 
             // 2. Play speech via window.ImsVoice & Toast Banner
@@ -3329,38 +3371,43 @@
 
             // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
             try {
+                const hasActivation = !!((navigator.userActivation && navigator.userActivation.hasBeenActive) || window._hasUserGesture);
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    if (!window._sharedAudioCtx) {
+                if (AudioCtx && (hasActivation || (window._sharedAudioCtx && window._sharedAudioCtx.state === 'running'))) {
+                    if (!window._sharedAudioCtx && hasActivation) {
                         window._sharedAudioCtx = new AudioCtx();
                     }
                     const ctx = window._sharedAudioCtx;
-                    if (ctx.state === 'suspended') {
-                        ctx.resume().catch(() => {});
-                    }
-                    const now = ctx.currentTime;
-                    
-                    const tones = [
-                        { freq: 1318.51, start: 0.00, dur: 0.18, type: 'sawtooth' },
-                        { freq: 1046.50, start: 0.20, dur: 0.18, type: 'sine' },
-                        { freq: 1318.51, start: 0.40, dur: 0.25, type: 'sawtooth' }
-                    ];
+                    if (ctx) {
+                        if (ctx.state === 'suspended' && hasActivation) {
+                            ctx.resume().catch(() => {});
+                        }
+                        if (ctx.state === 'running') {
+                            const now = ctx.currentTime;
+                            
+                            const tones = [
+                                { freq: 1318.51, start: 0.00, dur: 0.18, type: 'sawtooth' },
+                                { freq: 1046.50, start: 0.20, dur: 0.18, type: 'sine' },
+                                { freq: 1318.51, start: 0.40, dur: 0.25, type: 'sawtooth' }
+                            ];
 
-                    tones.forEach(t => {
-                        const osc = ctx.createOscillator();
-                        const gain = ctx.createGain();
-                        osc.type = t.type;
-                        osc.frequency.setValueAtTime(t.freq, now + t.start);
-                        gain.gain.setValueAtTime(0.3, now + t.start);
-                        gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
-                        osc.connect(gain);
-                        gain.connect(ctx.destination);
-                        osc.start(now + t.start);
-                        osc.stop(now + t.start + t.dur);
-                    });
+                            tones.forEach(t => {
+                                const osc = ctx.createOscillator();
+                                const gain = ctx.createGain();
+                                osc.type = t.type;
+                                osc.frequency.setValueAtTime(t.freq, now + t.start);
+                                gain.gain.setValueAtTime(0.3, now + t.start);
+                                gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
+                                osc.connect(gain);
+                                gain.connect(ctx.destination);
+                                osc.start(now + t.start);
+                                osc.stop(now + t.start + t.dur);
+                            });
+                        }
+                    }
                 }
             } catch (e) {
-                console.warn('Web Audio alarm tone error:', e);
+                // Silently skip if audio context is not allowed to run
             }
 
             // 2. Play speech via window.ImsVoice if available

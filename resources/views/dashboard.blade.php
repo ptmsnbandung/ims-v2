@@ -33,30 +33,34 @@
                             Online
                         </span>
                     </div>
-                    <p class="text-[10px] sm:text-[9.5px] text-[#c6edf3] line-clamp-2 sm:line-clamp-none mt-1 leading-relaxed" style="color: #c6edf3 !important;">
-                        {{ $user->role_description }} &middot; Pantau pertumbuhan user baru, tren bandwidth, dan sebaran wilayah real-time.
+                    <p class="text-[10.5px] sm:text-xs text-[#c6edf3] line-clamp-1 sm:line-clamp-none mt-1 leading-snug" style="color: #c6edf3 !important;">
+                        {{ $user->role_description }}
                     </p>
                 </div>
             </div>
 
             <!-- Right: View Tabs, Year Filter & Status Layanan (Unified Responsive Pill System) -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0 mt-1 sm:mt-0">
                 <!-- View Tabs Switcher Pill Container -->
                 <div class="w-full sm:w-auto flex items-center justify-between sm:justify-start"
-                     style="height: 34px; padding: 3px; border-radius: 9999px; background: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.2); box-sizing: border-box;">
+                     style="height: 34px; padding: 3px; border-radius: 9999px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.22); box-sizing: border-box;">
                     <button type="button" 
                             @click="activeTab = 'charts'" 
-                            :class="activeTab === 'charts' ? 'bg-white text-[#032b35] font-bold shadow-xs' : 'bg-transparent text-white/85 hover:text-white font-semibold'"
-                            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-7 px-3 rounded-full text-[11px] border-0 cursor-pointer transition-all">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                        <span>Grafik Utama</span>
+                            :style="activeTab === 'charts' 
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #032b35 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #ffffff !important; opacity: 0.85; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                            class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:opacity-100">
+                        <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'charts' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <span :style="activeTab === 'charts' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'">Grafik Utama</span>
                     </button>
                     <button type="button" 
                             @click="activeTab = 'tables'" 
-                            :class="activeTab === 'tables' ? 'bg-white text-[#032b35] font-bold shadow-xs' : 'bg-transparent text-white/85 hover:text-white font-semibold'"
-                            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 h-7 px-3 rounded-full text-[11px] border-0 cursor-pointer transition-all">
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <span>Data Pendaftaran</span>
+                            :style="activeTab === 'tables' 
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #032b35 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #ffffff !important; opacity: 0.85; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                            class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:opacity-100">
+                        <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'tables' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <span :style="activeTab === 'tables' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'">Data Pendaftaran</span>
                     </button>
                 </div>
 
@@ -66,9 +70,10 @@
                     <form action="{{ route('dashboard') }}" method="GET" class="m-0 p-0 w-full sm:w-auto flex">
                         <div class="relative w-full sm:w-auto flex items-center h-[34px]">
                             <select name="tahun" onchange="this.form.submit()" 
-                                    class="w-full sm:w-auto h-[34px] pl-3.5 pr-8 rounded-full bg-black/25 text-white text-[11px] font-bold border border-white/20 appearance-none cursor-pointer outline-none focus:ring-1 focus:ring-white/40">
+                                    style="height: 34px; padding-left: 14px; padding-right: 28px; border-radius: 9999px; background: rgba(0, 0, 0, 0.3) !important; border: 1px solid rgba(255, 255, 255, 0.22) !important; color: #ffffff !important; font-size: 11px; font-weight: 700; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; cursor: pointer; outline: none; width: 100%; text-align: center; text-align-last: center;"
+                                    class="focus:ring-1 focus:ring-white/40">
                                 @foreach($availableYears as $year)
-                                    <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} class="text-slate-900 bg-white">
+                                    <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} style="color: #0f172a; background: #ffffff;">
                                         Tahun {{ $year }}
                                     </option>
                                 @endforeach
@@ -83,9 +88,10 @@
 
                     <!-- Status Layanan Button (Vibrant Emerald Pill) -->
                     <a href="{{ route('teknik.tiket') }}" 
-                       class="h-[34px] px-3.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold flex items-center justify-center gap-1.5 border border-white/25 shadow-xs transition no-underline">
+                       style="height: 34px; border-radius: 9999px; background: #10b981 !important; border: 1px solid rgba(255, 255, 255, 0.25) !important; color: #ffffff !important; font-size: 11px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.18);"
+                       class="px-3.5 hover:bg-emerald-600 flex items-center justify-center gap-1.5 transition no-underline">
                         <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                        <span class="truncate">Status Layanan</span>
+                        <span class="truncate" style="color: #ffffff !important;">Status Layanan</span>
                     </a>
                 </div>
             </div>

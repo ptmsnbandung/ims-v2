@@ -359,7 +359,14 @@
             </div>
 
             <!-- Row 2: Secondary / Advanced Filters (Collapsible) -->
-            <div x-show="showAdvancedFilters" x-cloak x-collapse class="pt-2.5 border-t border-slate-200 dark:border-slate-800/80">
+            <div x-show="showAdvancedFilters" x-cloak
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 -translate-y-1"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-1"
+                 class="pt-2.5 border-t border-slate-200 dark:border-slate-800/80">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <!-- Wilayah / Kota -->
                     <div>

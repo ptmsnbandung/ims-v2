@@ -139,6 +139,8 @@
 
          playNotificationSound() {
              try {
+                 const hasActivation = !!((navigator.userActivation && navigator.userActivation.hasBeenActive) || window._hasUserGesture);
+                 if (!hasActivation) return;
                  const AudioContext = window.AudioContext || window.webkitAudioContext;
                  if (!AudioContext) return;
                  const ctx = new AudioContext();

@@ -1527,21 +1527,21 @@
 
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0 overflow-y-auto ims-main-scroll">
-                <!-- Top Navbar (Dual Light & Dark Mode) -->
-                <header class="min-h-14 sm:min-h-16 shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 flex items-center justify-between px-3 sm:px-6 lg:px-8 sticky top-0 z-50 py-2 shadow-xs transition-colors duration-200">
+                <!-- Top Navbar (Mobile Dashboard Green Gradient, Desktop Dual Mode) -->
+                <header class="min-h-14 sm:min-h-16 shrink-0 bg-gradient-to-r from-[#032b35] via-[#043f4e] to-[#009aa9] md:bg-white md:dark:bg-slate-900 border-b border-[#087d94]/40 md:border-slate-200/90 md:dark:border-slate-800 flex items-center justify-between px-3 sm:px-6 lg:px-8 sticky top-0 z-50 py-2 shadow-xs transition-colors duration-200">
                     <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                         <!-- Sidebar Toggle Button in Navbar (Tombol Hamburger) -->
                         <button @click="toggleSidebar()" 
                                 :title="sidebarCollapsed ? 'Buka Sidebar Penuh' : 'Tutup Sidebar ke Mode Ikon'"
-                                class="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer">
+                                class="p-2 text-white md:text-slate-600 md:dark:text-slate-300 hover:opacity-90 md:hover:text-slate-900 md:dark:hover:text-white rounded-xl bg-white/15 md:bg-slate-50 md:dark:bg-slate-800 hover:bg-white/25 md:hover:bg-slate-100 md:dark:hover:bg-slate-700 border border-white/20 md:border-slate-200 md:dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer">
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                             </svg>
                         </button>
 
                         <div class="min-w-0">
-                            <h1 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">@yield('page_title', 'Dashboard')</h1>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Integrated Management System &middot; Portal</p>
+                            <h1 class="text-sm sm:text-base font-bold text-white md:text-slate-900 md:dark:text-white leading-tight truncate">@yield('page_title', 'Dashboard')</h1>
+                            <p class="text-xs text-cyan-200 md:text-slate-500 md:dark:text-slate-400 hidden sm:block">Integrated Management System &middot; Portal</p>
                         </div>
                     </div>
 
@@ -1556,10 +1556,10 @@
                             <button @click="toggleOpen()"
                                     type="button"
                                     :title="activeCount > 0 ? (activeCount + ' Isu Jaringan / Tiket Perlu Atensi NOC') : 'Radar Alarm NOC (Normal)'"
-                                    class="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs relative group"
+                                    class="p-2 text-white md:text-slate-600 md:dark:text-slate-300 hover:opacity-90 md:hover:text-slate-900 md:dark:hover:text-white rounded-xl bg-white/15 md:bg-slate-50 md:dark:bg-slate-800 hover:bg-white/25 md:hover:bg-slate-100 md:dark:hover:bg-slate-700 border border-white/20 md:border-slate-200 md:dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs relative group"
                                     aria-label="Notifikasi NOC">
                                 <!-- Bell SVG Icon -->
-                                <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <svg class="w-4 h-4 text-white md:text-slate-600 md:dark:text-slate-300 group-hover:scale-110 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                                 </svg>
                                 
@@ -1839,10 +1839,10 @@
                             <button @click="toggleOpen()"
                                     type="button"
                                     :title="unreadCount > 0 ? (unreadCount + ' Pembayaran Masuk Belum Dibaca') : 'Notifikasi Pembayaran Masuk'"
-                                    class="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs relative group"
+                                    class="p-2 text-white md:text-slate-600 md:dark:text-slate-300 hover:opacity-90 md:hover:text-slate-900 md:dark:hover:text-white rounded-xl bg-white/15 md:bg-slate-50 md:dark:bg-slate-800 hover:bg-white/25 md:hover:bg-slate-100 md:dark:hover:bg-slate-700 border border-white/20 md:border-slate-200 md:dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs relative group"
                                     aria-label="Notifikasi Pembayaran">
                                 <!-- Bell SVG Icon -->
-                                <svg class="w-4 h-4 text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <svg class="w-4 h-4 text-white md:text-slate-600 md:dark:text-slate-300 group-hover:scale-110 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                                 </svg>
                                 
@@ -2022,14 +2022,14 @@
                         <button @click="toggleTheme()" 
                                 type="button"
                                 :title="isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'"
-                                class="p-2 text-slate-600 dark:text-amber-400 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs group"
+                                class="p-2 text-white md:text-slate-600 md:dark:text-amber-400 rounded-xl bg-white/15 md:bg-slate-50 md:dark:bg-slate-800 hover:bg-white/25 md:hover:bg-slate-100 md:dark:hover:bg-slate-700 border border-white/20 md:border-slate-200 md:dark:border-slate-700 transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs group"
                                 aria-label="Toggle Theme">
                             <!-- Sun Icon (Active in Dark Mode) -->
-                            <svg x-show="isDarkMode" x-cloak class="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <svg x-show="isDarkMode" x-cloak class="w-4 h-4 text-amber-300 md:text-amber-400 group-hover:rotate-45 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
                             </svg>
                             <!-- Moon Icon (Active in Light Mode) -->
-                            <svg x-show="!isDarkMode" class="w-4 h-4 text-slate-600 group-hover:-rotate-12 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <svg x-show="!isDarkMode" class="w-4 h-4 text-white md:text-slate-600 group-hover:-rotate-12 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
                             </svg>
                         </button>
@@ -2086,16 +2086,16 @@
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open"
                                     type="button"
-                                    class="flex items-center gap-2.5 p-1 sm:p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition cursor-pointer">
+                                    class="flex items-center gap-2 p-1 sm:p-1.5 rounded-xl hover:bg-white/15 md:hover:bg-slate-100 md:dark:hover:bg-slate-800 border border-white/20 md:border-transparent md:hover:border-slate-200 md:dark:hover:border-slate-700 transition cursor-pointer text-white md:text-slate-900 md:dark:text-white">
                                 @if(auth()->user()?->foto_url)
-                                    <div class="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-slate-200 dark:ring-slate-700 flex-shrink-0 shadow-xs bg-slate-100 dark:bg-slate-800">
+                                    <div class="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-white/30 md:ring-slate-200 md:dark:ring-slate-700 flex-shrink-0 shadow-xs bg-slate-100 dark:bg-slate-800">
                                         <img src="{{ auth()->user()->foto_url }}" alt="{{ auth()->user()->nama }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <div class="w-full h-full hidden items-center justify-center font-bold text-xs text-white bg-gradient-to-tr from-[#05404f] to-[#0891b2]">
                                             {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
                                         </div>
                                     </div>
                                 @else
-                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs ring-1 ring-white/20 md:ring-0">
                                         {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
                                     </div>
                                 @endif
@@ -2103,7 +2103,7 @@
                                     <span class="block text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[140px]">{{ auth()->user()?->nama }}</span>
                                     <span class="block text-[10px] text-[#0891b2] dark:text-cyan-400 font-semibold">{{ auth()->user()?->nama_level }}</span>
                                 </div>
-                                <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200" :class="open ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <svg class="w-4 h-4 text-white/80 md:text-slate-400 md:dark:text-slate-500 transition-transform duration-200" :class="open ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </button>

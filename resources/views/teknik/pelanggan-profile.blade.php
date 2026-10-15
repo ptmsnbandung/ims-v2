@@ -130,213 +130,233 @@
         <!-- =============================================================== -->
         <div class="lg:col-span-4 space-y-4 min-w-0 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto pr-0.5">
             
-            <!-- Profile Title Header -->
-            <div class="text-center">
+            <!-- Profile Title Header (Hidden on mobile since navbar already displays page title) -->
+            <div class="hidden sm:block text-center">
                 <h2 class="text-base font-bold text-slate-800 dark:text-white tracking-wide">
                     Profile Pelanggan
                 </h2>
             </div>
 
             <!-- Profile Info Main Card -->
-            <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-5 shadow-xl shadow-black/10 dark:shadow-black/30 space-y-6 overflow-hidden min-w-0">
+            <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/10 dark:shadow-black/30 space-y-5 overflow-hidden min-w-0">
                 
                 <!-- Center Hero Box -->
-                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 text-center space-y-1.5">
+                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 text-center space-y-2">
+                    
+                    <!-- Avatar Initials -->
+                    <div class="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#032b35] via-[#065b70] to-[#009aa9] text-white flex items-center justify-center font-bold text-base shadow-md shadow-[#043f4e]/20 mx-auto">
+                        {{ strtoupper(substr(trim($customer->nama_pelanggan ?? 'PL'), 0, 2)) }}
+                    </div>
+
                     <!-- Nomor Internet / Customer ID -->
                     <div class="text-xl font-black tracking-wider text-slate-900 dark:text-white font-mono">
                         {{ $customer->nomor_internet }}
                     </div>
 
                     <!-- Nama Pelanggan -->
-                    <div class="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">
                         {{ $customer->nama_pelanggan }}
-                    </div>
+                    </h3>
 
-                    <!-- Jenis Kelamin -->
-                    <div class="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                        ( {{ ($customer->jenis_kelamin ?? null) == 1 ? 'L' : (($customer->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )
-                    </div>
-
-                    <!-- Bandwidth & Package -->
-                    <div class="text-xs text-slate-600 dark:text-slate-400 font-medium uppercase pt-1">
-                        {{ $customer->nama_kategori_bandwith ?: ($customer->alias_nama_kategori ?: 'LAYANAN INTERNET') }}
-                        @if($customer->nominal_bandwith)
-                            <span>{{ $customer->nominal_bandwith }} Mbps</span>
+                    <!-- Badges Row: Gender, Bandwidth, Status, Sales -->
+                    <div class="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+                        @php
+                            $jkVal = $customer->jenis_kelamin ?? null;
+                            $jkText = $jkVal == 1 ? 'Laki-laki' : ($jkVal == 2 ? 'Perempuan' : null);
+                        @endphp
+                        @if($jkText)
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                @if($jkVal == 1)
+                                    <svg class="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+                                @else
+                                    <svg class="w-3 h-3 text-pink-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+                                @endif
+                                {{ $jkText }}
+                            </span>
                         @endif
-                    </div>
 
-                    <!-- Sales / PIC -->
-                    <div class="text-[11px] text-cyan-500 dark:text-cyan-400 font-semibold uppercase">
-                        PIC SALES : {{ $customer->nama_sales ?: '-' }}
+                        <!-- Bandwidth & Package -->
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/80 dark:border-cyan-800/80">
+                            <svg class="w-3 h-3 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            {{ $customer->nama_kategori_bandwith ?: ($customer->alias_nama_kategori ?: 'INTERNET') }}
+                            @if($customer->nominal_bandwith)
+                                <span>• {{ $customer->nominal_bandwith }} Mbps</span>
+                            @endif
+                        </span>
+
+                        <!-- Status Reg Badge -->
+                        @if(in_array($customer->status_reg ?? '', ['21', '21.1']))
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                Terisolir
+                            </span>
+                        @elseif(($customer->status_reg ?? '') == '20')
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Aktif
+                            </span>
+                        @endif
+
+                        <!-- Sales PIC -->
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
+                            <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            Sales: {{ $customer->nama_sales ?: '-' }}
+                        </span>
                     </div>
 
                     <!-- Action Button: Edit Data Pelanggan for Teknik, or Unified Activate/Suspend for NOC/Admin/Direktur -->
                     <div class="pt-2">
                         @if($isTeknik)
                             <a href="{{ route('teknik.pendaftaran', ['edit' => $customer->nomor_internet, 'from' => 'profile']) }}"
-                               class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 transition cursor-pointer">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                               class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-[0.98] transition cursor-pointer">
+                                <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                 </svg>
-                                <span>✏️ Edit Data Pelanggan</span>
+                                <span>Edit Data Pelanggan</span>
                             </a>
                         @elseif(!$isFinance)
                             @if(in_array($customer->status_reg ?? '', ['21', '21.1']))
                                 <button type="button" 
                                         onclick="triggerProfileUnifiedAction('{{ $customer->nomor_internet }}', '{{ addslashes($customer->nama_pelanggan) }}', 'activate')"
-                                        class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 transition cursor-pointer">
-                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 active:scale-[0.98] transition cursor-pointer">
+                                    <svg class="w-4 h-4 text-emerald-100" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                                     </svg>
-                                    <span>⚡ Aktifkan Layanan (1-Click)</span>
+                                    <span>Aktifkan Layanan (1-Click)</span>
                                 </button>
                             @elseif(($customer->status_reg ?? '') == '20')
                                 <button type="button" 
                                         onclick="triggerProfileUnifiedAction('{{ $customer->nomor_internet }}', '{{ addslashes($customer->nama_pelanggan) }}', 'suspend')"
-                                        class="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition cursor-pointer">
-                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 active:scale-[0.98] transition cursor-pointer">
+                                    <svg class="w-4 h-4 text-amber-100" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                                     </svg>
-                                    <span>🔒 Suspend / Isolir (1-Click)</span>
+                                    <span>Suspend / Isolir (1-Click)</span>
                                 </button>
                             @endif
                         @endif
                     </div>
                 </div>
 
-                <!-- Field Detail Rows with Stylish Underlines -->
-                <div class="space-y-4 text-xs">
+                <!-- Personal & Contact Information List -->
+                <div class="space-y-2 text-xs">
                     
                     <!-- 1. Tanggal Lahir -->
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                            <span>Tanggal lahir</span>
-                            <span class="font-semibold text-slate-800 dark:text-slate-200">
-                                {{ !empty($customer->tanggal_lahir) && $customer->tanggal_lahir != '0000-00-00' ? \Carbon\Carbon::parse($customer->tanggal_lahir)->translatedFormat('d F Y') : '-' }}
-                            </span>
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80">
+                        <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                            <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span class="font-medium">Tanggal Lahir</span>
                         </div>
-                        <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-cyan-400 w-1/3"></div>
-                        </div>
+                        <span class="font-semibold text-slate-800 dark:text-slate-200">
+                            {{ !empty($customer->tanggal_lahir) && $customer->tanggal_lahir != '0000-00-00' ? \Carbon\Carbon::parse($customer->tanggal_lahir)->translatedFormat('d F Y') : '-' }}
+                        </span>
                     </div>
 
                     <!-- 2. Nomor HP (Klik Langsung ke WhatsApp) -->
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                            <span>Nomor HP</span>
-                            @if($waHp1)
-                                <a href="https://wa.me/{{ $waHp1 }}" 
-                                   target="_blank" 
-                                   class="inline-flex items-center gap-1.5 font-bold text-cyan-400 hover:text-cyan-300 font-mono hover:underline transition"
-                                   title="Klik untuk Chat via WhatsApp">
-                                    <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                                    </svg>
-                                    <span>{{ $customer->nomor_hp }}</span>
-                                </a>
-                            @else
-                                <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">-</span>
-                            @endif
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 gap-2">
+                        <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 min-w-0">
+                            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            <span class="font-medium truncate">Nomor HP</span>
                         </div>
-                        <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-cyan-400 w-full"></div>
-                        </div>
+                        @if($waHp1)
+                            <a href="https://wa.me/{{ $waHp1 }}" 
+                               target="_blank" 
+                               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-mono font-bold transition flex-shrink-0"
+                               title="Chat via WhatsApp">
+                                <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                </svg>
+                                <span>{{ $customer->nomor_hp }}</span>
+                            </a>
+                        @else
+                            <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">-</span>
+                        @endif
                     </div>
 
                     <!-- 3. Nomor HP Keluarga (Klik Langsung ke WhatsApp) -->
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                            <span>Nomor HP keluarga</span>
-                            @if($waHp2)
-                                <a href="https://wa.me/{{ $waHp2 }}" 
-                                   target="_blank" 
-                                   class="inline-flex items-center gap-1.5 font-bold text-cyan-400 hover:text-cyan-300 font-mono hover:underline transition"
-                                   title="Klik untuk Chat via WhatsApp">
-                                    <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                                    </svg>
-                                    <span>{{ $customer->nomor_hp_2 }}</span>
-                                </a>
-                            @else
-                                <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">-</span>
-                            @endif
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 gap-2">
+                        <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 min-w-0">
+                            <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            <span class="font-medium truncate">HP Keluarga</span>
                         </div>
-                        <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-cyan-400 w-2/3"></div>
-                        </div>
+                        @if($waHp2)
+                            <a href="https://wa.me/{{ $waHp2 }}" 
+                               target="_blank" 
+                               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-mono font-bold transition flex-shrink-0"
+                               title="Chat via WhatsApp">
+                                <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                </svg>
+                                <span>{{ $customer->nomor_hp_2 }}</span>
+                            </a>
+                        @else
+                            <span class="font-semibold text-slate-800 dark:text-slate-200 font-mono">-</span>
+                        @endif
                     </div>
 
                     <!-- 4. Email (Klik Langsung ke Mailto) -->
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
-                            <span>Email</span>
-                            @if($customer->email && $customer->email != '-')
-                                <a href="mailto:{{ $customer->email }}" 
-                                   class="font-semibold text-cyan-400 hover:text-cyan-300 hover:underline truncate max-w-[200px]"
-                                   title="Klik untuk kirim Email">
-                                    {{ $customer->email }}
-                                </a>
-                            @else
-                                <span class="font-semibold text-slate-800 dark:text-slate-200">-</span>
-                            @endif
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 gap-2">
+                        <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 min-w-0">
+                            <svg class="w-4 h-4 text-cyan-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            <span class="font-medium truncate">Email</span>
                         </div>
-                        <div class="h-0.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-cyan-400 w-full"></div>
-                        </div>
+                        @if($customer->email && $customer->email != '-')
+                            <a href="mailto:{{ $customer->email }}" 
+                               class="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline truncate max-w-[170px]"
+                               title="Klik untuk kirim Email">
+                                {{ $customer->email }}
+                            </a>
+                        @else
+                            <span class="font-semibold text-slate-800 dark:text-slate-200">-</span>
+                        @endif
                     </div>
                 </div>
 
-                <!-- Address Sections -->
-                <div class="space-y-4 pt-2 text-xs border-t border-slate-200 dark:border-slate-800">
+                <!-- Address & Location Cards -->
+                <div class="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                     
                     <!-- ALAMAT KTP -->
-                    <div>
-                        <span class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                            ALAMAT KTP
-                        </span>
-                        <p class="text-slate-700 dark:text-slate-300 uppercase leading-relaxed font-medium">
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                        <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            <svg class="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+                            <span>Alamat KTP</span>
+                        </div>
+                        <p class="text-xs text-slate-700 dark:text-slate-300 uppercase leading-relaxed font-medium">
                             {{ trim(str_replace(['Â', 'â', '€', '™'], '', (string)($customer->alamat_k ?? ($customer->alamat_ktp ?? '-')))) }}
                         </p>
                     </div>
 
                     <!-- ALAMAT PEMASANGAN -->
-                    <div>
-                        <span class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                            ALAMAT PEMASANGAN
-                        </span>
-                        <p class="text-slate-700 dark:text-slate-300 uppercase leading-relaxed font-medium">
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 space-y-1">
+                        <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                            <span>Alamat Pemasangan</span>
+                        </div>
+                        <p class="text-xs text-slate-700 dark:text-slate-300 uppercase leading-relaxed font-medium">
                             {{ trim(str_replace(['Â', 'â', '€', '™'], '', (string)($customer->alamat_p ?? ($customer->alamat_pasang ?? '-')))) }}
                         </p>
                     </div>
 
                     <!-- LOKASI / KOORDINAT / MAPS -->
-                    <div class="min-w-0 overflow-hidden">
-                        <span class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                            LOKASI
-                        </span>
-                        <div class="space-y-1.5 text-xs min-w-0">
-                            @if($cleanLonLat)
-                                <div class="font-mono text-[11px] text-slate-600 dark:text-slate-400 break-all leading-relaxed bg-slate-50 dark:bg-slate-950/40 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                                    {{ $cleanLonLat }}
-                                </div>
-                            @endif
-                            @if($mapsUrl)
-                                <div class="pt-0.5 min-w-0">
-                                    <a href="{{ $mapsUrl }}" 
-                                       target="_blank" 
-                                       class="inline-flex items-center gap-1.5 text-cyan-500 hover:text-cyan-400 hover:underline max-w-full font-medium"
-                                       title="Buka Lokasi di Google Maps">
-                                        <svg class="w-3.5 h-3.5 text-rose-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                                        </svg>
-                                        <span class="truncate block">Buka di Google Maps</span>
-                                    </a>
-                                </div>
-                            @else
-                                <div class="text-slate-500">-</div>
-                            @endif
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/80 space-y-2">
+                        <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            <svg class="w-3.5 h-3.5 text-rose-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span>Lokasi / Koordinat GPS</span>
                         </div>
+                        @if($cleanLonLat)
+                            <div class="font-mono text-[11px] text-slate-700 dark:text-slate-300 break-all leading-relaxed bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                                {{ $cleanLonLat }}
+                            </div>
+                        @endif
+                        @if($mapsUrl)
+                            <a href="{{ $mapsUrl }}" 
+                               target="_blank" 
+                               class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-[0.99] cursor-pointer"
+                               title="Buka Lokasi di Google Maps">
+                                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                <span>Buka di Google Maps</span>
+                            </a>
+                        @endif
                     </div>
 
                 </div>

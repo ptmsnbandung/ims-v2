@@ -18,11 +18,22 @@
             }
         }
 
-        /* Top Navbar - Mobile: Deep Oceanic Teal Gradient persis Header Dashboard */
+        /* Top Navbar - Mobile: Fixed di atas (diam tidak bergerak saat scroll) */
         @media (max-width: 767.98px) {
             header.ims-top-navbar {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                z-index: 45 !important;
                 background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%) !important;
                 border-bottom: 1px solid rgba(8, 125, 148, 0.45) !important;
+            }
+            .ims-top-nav-spacer {
+                display: block !important;
+                height: 3.5rem !important; /* 56px */
+                flex-shrink: 0 !important;
             }
             header.ims-top-navbar .ims-nav-title {
                 color: #ffffff !important;
@@ -45,7 +56,13 @@
 
         /* Top Navbar - Desktop: Bersih, Tajam, Dual Mode (Light & Dark) */
         @media (min-width: 768px) {
+            .ims-top-nav-spacer {
+                display: none !important;
+            }
             header.ims-top-navbar {
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 45 !important;
                 background: #ffffff !important;
                 border-bottom: 1px solid #e2e8f0 !important;
             }
@@ -2267,6 +2284,9 @@
                         </div>
                     </div>
                 </header>
+
+                <!-- Spacer for Fixed Mobile Navbar (Locks Navbar at the Top Without Overlapping Content) -->
+                <div class="ims-top-nav-spacer" aria-hidden="true"></div>
 
                 <!-- Page Content (Dual Light & Dark Mode Container) -->
                 <main class="flex-1 {{ request()->routeIs('dashboard') ? 'px-3 pt-1.5 pb-2 sm:px-4 sm:pt-2 sm:pb-2.5 lg:px-5 lg:pt-2 lg:pb-2.5' : 'p-3.5 sm:p-6 lg:p-8' }} bg-[#F8FAFC] dark:bg-[#071520] transition-colors duration-200">

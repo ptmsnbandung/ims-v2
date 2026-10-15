@@ -203,18 +203,13 @@
                     <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xl">
                         <!-- Plot Row: Sumbu Y & SVG Plot Area -->
                         <div class="flex items-stretch gap-2 h-[155px] sm:h-[175px]">
-                            <!-- Sumbu Y Kiri -->
-                            <div class="flex items-stretch gap-1 select-none shrink-0 h-full">
-                                <span class="text-[7.5px] font-mono font-bold tracking-widest text-slate-400 [writing-mode:vertical-lr] rotate-180 self-center uppercase opacity-75">
-                                    Bits/s
-                                </span>
-                                <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-semibold text-slate-400 leading-none py-0.5 min-w-[34px]">
-                                    <span x-text="port.mrtg?.y_labels?.[0] ?? '13.2 M'"></span>
-                                    <span x-text="port.mrtg?.y_labels?.[1] ?? '9.9 M'"></span>
-                                    <span x-text="port.mrtg?.y_labels?.[2] ?? '6.6 M'"></span>
-                                    <span x-text="port.mrtg?.y_labels?.[3] ?? '3.3 M'"></span>
-                                    <span x-text="port.mrtg?.y_labels?.[4] ?? '0.0 M'"></span>
-                                </div>
+                            <!-- Sumbu Y Kiri: Angka Skala Y -->
+                            <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-semibold text-slate-400 select-none leading-none py-0.5 min-w-[34px] shrink-0">
+                                <span x-text="port.mrtg?.y_labels?.[0] ?? '13.2 M'"></span>
+                                <span x-text="port.mrtg?.y_labels?.[1] ?? '9.9 M'"></span>
+                                <span x-text="port.mrtg?.y_labels?.[2] ?? '6.6 M'"></span>
+                                <span x-text="port.mrtg?.y_labels?.[3] ?? '3.3 M'"></span>
+                                <span x-text="port.mrtg?.y_labels?.[4] ?? '0.0 M'"></span>
                             </div>
 
                             <!-- Plot Area SVG -->
@@ -270,7 +265,7 @@
 
                         <!-- Sumbu X: Presisi Sejajar di Bawah SVG -->
                         <div class="flex items-center mt-1.5">
-                            <div class="w-[44px] shrink-0"></div>
+                            <div class="w-[34px] shrink-0"></div>
                             <div class="flex-1 flex justify-between items-center text-[7.5px] sm:text-[8px] font-semibold font-mono text-slate-400 px-1 select-none">
                                 <template x-for="(xLbl, xIdx) in (port.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="xIdx">
                                     <span x-text="xLbl"></span>

@@ -629,19 +629,13 @@
                                 <!-- Box Frame Grafik MRTG Live Time (Modern NOC Telemetry Console) -->
                                 <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-xl flex-1 flex flex-col justify-between min-h-[220px]">
                                     <div class="flex items-stretch gap-2.5 flex-1 min-h-[170px] sm:min-h-[190px]">
-                                        <!-- Sumbu Y Kiri: Label Unit + Angka Skala Y -->
-                                        <div class="flex items-center gap-1.5 select-none shrink-0">
-                                            <span class="text-[8px] font-mono font-bold tracking-widest text-slate-400 [writing-mode:vertical-lr] rotate-180 uppercase opacity-75">
-                                                Bits/s
-                                            </span>
-
-                                            <div class="flex flex-col justify-between items-end h-full text-[9px] font-mono font-semibold text-slate-400 leading-none py-1 min-w-[38px]">
-                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[0] ?? '{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}'">{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}</span>
-                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[1] ?? '{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}'">{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}</span>
-                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[2] ?? '{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}'">{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}</span>
-                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[3] ?? '{{ $tData['mrtg']['y_labels'][3] ?? '3.3 M' }}'">{{ $tData['mrtg']['y_labels'][3] ?? '3.3 M' }}</span>
-                                                <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[4] ?? '{{ $tData['mrtg']['y_labels'][4] ?? '0.0 M' }}'">{{ $tData['mrtg']['y_labels'][4] ?? '0.0 M' }}</span>
-                                            </div>
+                                        <!-- Sumbu Y Kiri: Angka Skala Y -->
+                                        <div class="flex flex-col justify-between items-end h-full text-[9px] font-mono font-semibold text-slate-400 select-none leading-none py-1 min-w-[38px] shrink-0">
+                                            <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[0] ?? '{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}'">{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}</span>
+                                            <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[1] ?? '{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}'">{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}</span>
+                                            <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[2] ?? '{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}'">{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}</span>
+                                            <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[3] ?? '{{ $tData['mrtg']['y_labels'][3] ?? '3.3 M' }}'">{{ $tData['mrtg']['y_labels'][3] ?? '3.3 M' }}</span>
+                                            <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[4] ?? '{{ $tData['mrtg']['y_labels'][4] ?? '0.0 M' }}'">{{ $tData['mrtg']['y_labels'][4] ?? '0.0 M' }}</span>
                                         </div>
 
                                         <!-- Plot Area (SVG Grafik High-Tech + Sumbu X Bawah) -->

@@ -369,6 +369,8 @@ class OltConnectionService
      */
     protected function generateMrtgSeries(string $kodeOlt, float $currentDownMbps, float $currentUpMbps, ?string $startDate = null, ?string $endDate = null): array
     {
+        $peakIn = max($currentDownMbps * 1.05, 10.0);
+        $peakOut = max($currentUpMbps * 1.05, 3.0);
         $maxVal = max(13.2, ceil($currentDownMbps * 1.25 * 10) / 10);
         $step = $maxVal / 4;
         $yLabels = [
@@ -421,29 +423,42 @@ class OltConnectionService
         $maxOut = 0;
 
         $seed = crc32($kodeOlt . date('Y-m-d-H', $startTs) . '_' . date('Y-m-d-H', $endTs));
+        $numDays = max(1.0, $diffSeconds / 86400.0);
 
         for ($i = 0; $i < $numPoints; $i++) {
             $currPointTime = $startTs + (($i / ($numPoints - 1)) * $diffSeconds);
             if ($diffSeconds <= 86400 * 2) {
-                // Kurva diurnal realistis jam 00:00 - 24:00 (peak malam, sepi dini hari)
+                // Kurva diurnal realistis 24 jam (lembah subuh 03:00 - 05:00, peak malam)
                 $hourOfDay = (int)date('G', $currPointTime) + ((int)date('i', $currPointTime) / 60);
-                $hourPhase = (($hourOfDay - 4) / 24) * 2 * M_PI;
-                $diurnal = sin($hourPhase - (M_PI / 2)) * 0.35 + 0.55;
+                $hourPhase = (($hourOfDay - 4.5) / 24) * 2 * M_PI;
+                $diurnal = pow(max(0.0, (sin($hourPhase - (M_PI / 2)) + 1) / 2), 1.35);
             } else {
-                $phase = ($i / 8) * 2 * M_PI;
-                $diurnal = sin($phase) * 0.35 + 0.55;
+                // Kurva diurnal mingguan: lembah harian mendekati batas bawah 0.0 M
+                $phase = ($i / ($numPoints - 1)) * $numDays * 2 * M_PI;
+                $diurnal = pow(max(0.0, (sin($phase - (M_PI / 2)) + 1) / 2), 1.35);
             }
-            $noise = ((sin($i * 13.7 + $seed) * 10000) % 100) / 300;
-            $spike = ($i % 7 == 3 || $i == 48 || $i == 12 || $i == 60) ? 0.20 : 0;
-            $valRatio = max(0.05, min(0.98, $diurnal + $noise + $spike));
+
+            // Fluktuasi kurva Inbound (Down)
+            $noiseIn = ((sin($i * 13.7 + $seed) * 10000) % 100 - 50) / 1000;
+            $spikeIn = ($i % 9 == 3 || $i == 48 || $i == 12 || $i == 60) ? 0.08 : 0.0;
+            $valRatioIn = max(0.02, min(0.96, $diurnal * 0.88 + 0.03 + $noiseIn + $spikeIn));
 
             if ($i === $numPoints - 1) {
                 $valIn = $currentDownMbps;
             } else {
-                $valIn = round($maxVal * $valRatio * 0.85, 2);
+                $valIn = round($peakIn * $valRatioIn, 2);
             }
 
-            $valOut = round($valIn * (0.22 + (((sin($i * 7 + $seed) * 1000) % 10) / 100)), 2);
+            // Fluktuasi kurva Outbound (Up)
+            $noiseOut = ((sin($i * 23.3 + $seed) * 10000) % 100 - 50) / 1000;
+            $spikeOut = ($i % 8 == 2 || $i == 33 || $i == 55) ? 0.07 : 0.0;
+            $valRatioOut = max(0.025, min(0.95, $diurnal * 0.84 + 0.03 + $noiseOut + $spikeOut));
+
+            if ($i === $numPoints - 1) {
+                $valOut = $currentUpMbps;
+            } else {
+                $valOut = round($peakOut * $valRatioOut, 2);
+            }
 
             $sumIn += $valIn;
             if ($valIn > $maxIn) $maxIn = $valIn;
@@ -458,6 +473,9 @@ class OltConnectionService
             $inPoints[] = [$x, $yIn];
             $outPoints[] = [$x, $yOut];
         }
+
+        if ($currentDownMbps > $maxIn) $maxIn = $currentDownMbps;
+        if ($currentUpMbps > $maxOut) $maxOut = $currentUpMbps;
 
         $avgIn = round($sumIn / $numPoints, 1);
         $avgOut = round($sumOut / $numPoints, 1);

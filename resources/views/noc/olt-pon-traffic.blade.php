@@ -202,7 +202,7 @@
                     <!-- 3. Box Frame Grafik MRTG (High-Tech Telemetry Console) -->
                     <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xl">
                         <!-- Plot Row: Sumbu Y & SVG Plot Area -->
-                        <div class="flex items-stretch gap-2 h-[155px] sm:h-[175px]">
+                        <div class="flex items-stretch gap-2" style="height: 165px; min-height: 165px;">
                             <!-- Sumbu Y Kiri: Angka Skala Y -->
                             <div class="flex flex-col justify-between items-end h-full text-[8.5px] font-mono font-semibold text-slate-400 select-none leading-none py-0.5 min-w-[34px] shrink-0">
                                 <span x-text="port.mrtg?.y_labels?.[0] ?? '13.2 M'"></span>
@@ -213,8 +213,8 @@
                             </div>
 
                             <!-- Plot Area SVG -->
-                            <div class="flex-1 min-w-0 h-full bg-[#070e1b] border border-slate-800 rounded-lg overflow-hidden relative shadow-inner">
-                                <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
+                            <div class="flex-1 min-w-0 h-full relative bg-[#070e1b] border border-slate-800 rounded-lg overflow-hidden shadow-inner">
+                                <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block absolute inset-0">
                                     <defs>
                                         <linearGradient :id="'ponGradIn_' + port.port_key" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stop-color="#10b981" stop-opacity="0.55"/>
@@ -257,14 +257,14 @@
                                               stroke="#38bdf8" 
                                               stroke-width="2" 
                                               stroke-linecap="round" 
-                                              stroke-linejoin="round"
+                                              stroke-linejoin="round" 
                                               :filter="'url(#ponGlowOut_' + port.port_key + ')'"/>
                                 </svg>
                             </div>
                         </div>
 
                         <!-- Sumbu X: Presisi Sejajar di Bawah SVG -->
-                        <div class="flex items-center mt-1.5">
+                        <div class="flex items-center gap-2 mt-1.5">
                             <div class="w-[34px] shrink-0"></div>
                             <div class="flex-1 flex justify-between items-center text-[7.5px] sm:text-[8px] font-semibold font-mono text-slate-400 px-1 select-none">
                                 <template x-for="(xLbl, xIdx) in (port.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="xIdx">

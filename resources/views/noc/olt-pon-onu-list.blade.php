@@ -656,9 +656,9 @@
 
                             <!-- Box Frame Grafik MRTG (High-Tech Telemetry Console - Full Width & Spacious) -->
                             <div class="w-full p-2.5 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
-                                <div class="flex items-stretch gap-2 h-[115px] sm:h-[130px]">
+                                <div class="flex items-stretch gap-2" style="height: 125px; min-height: 125px;">
                                     <!-- Sumbu Y Kiri: Angka Skala Y Rapi & Jelas -->
-                                    <div class="flex flex-col justify-between items-end h-full text-[8px] sm:text-[8.5px] font-mono font-semibold text-slate-400 select-none py-1 w-[38px] shrink-0">
+                                    <div class="flex flex-col justify-between items-end h-full text-[8px] sm:text-[8.5px] font-mono font-semibold text-slate-400 select-none py-0.5 w-[38px] shrink-0">
                                         <span x-text="onu.mrtg?.y_labels?.[0] ?? '20.0 M'"></span>
                                         <span x-text="onu.mrtg?.y_labels?.[1] ?? '15.0 M'"></span>
                                         <span x-text="onu.mrtg?.y_labels?.[2] ?? '10.0 M'"></span>
@@ -667,8 +667,8 @@
                                     </div>
 
                                     <!-- Plot Area SVG MRTG -->
-                                    <div class="flex-1 min-w-0 h-full bg-[#070e1b] border border-slate-800 rounded-lg overflow-hidden relative shadow-inner">
-                                        <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
+                                    <div class="flex-1 min-w-0 h-full relative bg-[#070e1b] border border-slate-800 rounded-lg overflow-hidden shadow-inner">
+                                        <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block absolute inset-0">
                                             <defs>
                                                 <linearGradient :id="'onuGradIn_' + onu.onu_index" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="0%" stop-color="#10b981" stop-opacity="0.55"/>
@@ -718,7 +718,7 @@
                                 </div>
 
                                 <!-- Sumbu X (Presisi Sejajar di Bawah SVG) -->
-                                <div class="flex items-center mt-1.5">
+                                <div class="flex items-center gap-2 mt-1.5">
                                     <div class="w-[38px] shrink-0"></div>
                                     <div class="flex-1 flex justify-between items-center text-[7.5px] sm:text-[8px] font-semibold font-mono text-slate-400 px-0.5 select-none">
                                         <template x-for="(xLbl, xIdx) in (onu.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="xIdx">

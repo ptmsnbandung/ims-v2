@@ -628,9 +628,10 @@
 
                                 <!-- Box Frame Grafik MRTG Live Time (Modern NOC Telemetry Console) -->
                                 <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-xl flex-1 flex flex-col justify-between min-h-[220px]">
-                                    <div class="flex items-stretch gap-2.5 flex-1 min-h-[170px] sm:min-h-[190px]">
+                                    <!-- Plot Row: Sumbu Y & SVG Plot Area -->
+                                    <div class="flex items-stretch gap-2.5" style="height: 165px; min-height: 165px;">
                                         <!-- Sumbu Y Kiri: Angka Skala Y -->
-                                        <div class="flex flex-col justify-between items-end h-full text-[9px] font-mono font-semibold text-slate-400 select-none leading-none py-1 min-w-[38px] shrink-0">
+                                        <div class="flex flex-col justify-between items-end h-full text-[9px] font-mono font-semibold text-slate-400 select-none leading-none py-0.5 min-w-[38px] shrink-0">
                                             <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[0] ?? '{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}'">{{ $tData['mrtg']['y_labels'][0] ?? '13.2 M' }}</span>
                                             <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[1] ?? '{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}'">{{ $tData['mrtg']['y_labels'][1] ?? '9.9 M' }}</span>
                                             <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[2] ?? '{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}'">{{ $tData['mrtg']['y_labels'][2] ?? '6.6 M' }}</span>
@@ -638,65 +639,66 @@
                                             <span x-text="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.y_labels?.[4] ?? '{{ $tData['mrtg']['y_labels'][4] ?? '0.0 M' }}'">{{ $tData['mrtg']['y_labels'][4] ?? '0.0 M' }}</span>
                                         </div>
 
-                                        <!-- Plot Area (SVG Grafik High-Tech + Sumbu X Bawah) -->
-                                        <div class="flex-1 min-w-0 flex flex-col h-full">
-                                            <div class="relative w-full flex-1 min-h-[145px] sm:min-h-[165px] bg-[#070e1b] border border-slate-800 rounded-lg overflow-hidden shadow-inner">
-                                                <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block">
-                                                    <defs>
-                                                        <!-- Gradient Inbound (Emerald Glow Area) -->
-                                                        <linearGradient id="oltMrtgInGrad_{{ $olt->kode_olt }}" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.55"/>
-                                                            <stop offset="45%" stop-color="#059669" stop-opacity="0.25"/>
-                                                            <stop offset="90%" stop-color="#047857" stop-opacity="0.05"/>
-                                                            <stop offset="100%" stop-color="#022c22" stop-opacity="0.0"/>
-                                                        </linearGradient>
-                                                        <!-- Glow Filter for Outbound Polyline -->
-                                                        <filter id="oltGlowOut_{{ $olt->kode_olt }}" x="-10%" y="-10%" width="120%" height="120%">
-                                                            <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#38bdf8" flood-opacity="0.45"/>
-                                                        </filter>
-                                                    </defs>
+                                        <!-- Plot Area (SVG Grafik High-Tech) -->
+                                        <div class="relative flex-1 min-w-0 h-full bg-[#070e1b] border border-slate-800 rounded-lg overflow-hidden shadow-inner">
+                                            <svg viewBox="0 0 720 105" preserveAspectRatio="none" class="w-full h-full block absolute inset-0">
+                                                <defs>
+                                                    <!-- Gradient Inbound (Emerald Glow Area) -->
+                                                    <linearGradient id="oltMrtgInGrad_{{ $olt->kode_olt }}" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.55"/>
+                                                        <stop offset="45%" stop-color="#059669" stop-opacity="0.25"/>
+                                                        <stop offset="90%" stop-color="#047857" stop-opacity="0.05"/>
+                                                        <stop offset="100%" stop-color="#022c22" stop-opacity="0.0"/>
+                                                    </linearGradient>
+                                                    <!-- Glow Filter for Outbound Polyline -->
+                                                    <filter id="oltGlowOut_{{ $olt->kode_olt }}" x="-10%" y="-10%" width="120%" height="120%">
+                                                        <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#38bdf8" flood-opacity="0.45"/>
+                                                    </filter>
+                                                </defs>
 
-                                                    <!-- Delicate Grid Lines Horizontal -->
-                                                    <line x1="0" y1="0" x2="720" y2="0" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-width="1"/>
+                                                <!-- Delicate Grid Lines Horizontal -->
+                                                <line x1="0" y1="0" x2="720" y2="0" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="0" y1="26.25" x2="720" y2="26.25" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="0" y1="52.5" x2="720" y2="52.5" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="0" y1="78.75" x2="720" y2="78.75" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="0" y1="105" x2="720" y2="105" stroke="#334155" stroke-width="1"/>
 
-                                                    <!-- Delicate Grid Lines Vertical (Day Intervals) -->
-                                                    <line x1="90" y1="0" x2="90" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="180" y1="0" x2="180" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="270" y1="0" x2="270" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="360" y1="0" x2="360" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="450" y1="0" x2="450" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="540" y1="0" x2="540" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
-                                                    <line x1="630" y1="0" x2="630" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <!-- Delicate Grid Lines Vertical (Day Intervals) -->
+                                                <line x1="90" y1="0" x2="90" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="180" y1="0" x2="180" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="270" y1="0" x2="270" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="360" y1="0" x2="360" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="450" y1="0" x2="450" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="540" y1="0" x2="540" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
+                                                <line x1="630" y1="0" x2="630" y2="105" stroke="#1e293b" stroke-dasharray="3,3" stroke-width="0.8"/>
 
-                                                    <!-- Inbound Traffic: Elegant Emerald Gradient Area -->
-                                                    <polygon :points="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.in_polygon ?? '{{ $tData['mrtg']['in_polygon'] ?? '' }}'" 
-                                                             fill="url(#oltMrtgInGrad_{{ $olt->kode_olt }})" 
-                                                             stroke="#10b981" 
-                                                             stroke-width="1.2"
-                                                             stroke-linejoin="round"
-                                                             opacity="0.95"/>
+                                                <!-- Inbound Traffic: Elegant Emerald Gradient Area -->
+                                                <polygon :points="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.in_polygon ?? '{{ $tData['mrtg']['in_polygon'] ?? '' }}'" 
+                                                         fill="url(#oltMrtgInGrad_{{ $olt->kode_olt }})" 
+                                                         stroke="#10b981" 
+                                                         stroke-width="1.2" 
+                                                         stroke-linejoin="round"
+                                                         opacity="0.95"/>
 
-                                                    <!-- Outbound Traffic: Vibrant Sky Blue Line with Glow -->
-                                                    <polyline :points="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.out_polyline ?? '{{ $tData['mrtg']['out_polyline'] ?? '' }}'" 
-                                                              fill="none" 
-                                                              stroke="#38bdf8" 
-                                                              stroke-width="2" 
-                                                              stroke-linecap="round" 
-                                                              stroke-linejoin="round"
-                                                              filter="url(#oltGlowOut_{{ $olt->kode_olt }})"/>
-                                                </svg>
-                                            </div>
+                                                <!-- Outbound Traffic: Vibrant Sky Blue Line with Glow -->
+                                                <polyline :points="telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.out_polyline ?? '{{ $tData['mrtg']['out_polyline'] ?? '' }}'" 
+                                                          fill="none" 
+                                                          stroke="#38bdf8" 
+                                                          stroke-width="2" 
+                                                          stroke-linecap="round" 
+                                                          stroke-linejoin="round"
+                                                          filter="url(#oltGlowOut_{{ $olt->kode_olt }})"/>
+                                            </svg>
+                                        </div>
+                                    </div>
 
-                                            <!-- Sumbu X: Timeline Hari Dinamis -->
-                                            <div class="flex justify-between items-center text-[8px] sm:text-[8.5px] font-semibold font-mono text-slate-400 mt-1.5 px-1 select-none shrink-0">
-                                                <template x-for="(lbl, idx) in (telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="idx">
-                                                    <span x-text="lbl"></span>
-                                                </template>
-                                            </div>
+                                    <!-- Sumbu X: Timeline Hari Dinamis Presisi Sejajar di Bawah SVG -->
+                                    <div class="flex items-center gap-2.5 mt-1.5 shrink-0">
+                                        <div class="w-[38px] shrink-0"></div>
+                                        <div class="flex-1 flex justify-between items-center text-[8px] sm:text-[8.5px] font-semibold font-mono text-slate-400 px-1 select-none">
+                                            <template x-for="(lbl, idx) in (telemetryMap['{{ $olt->kode_olt }}']?.mrtg?.x_labels ?? ['Mon','Sun','Sat','Fri','Thu','Wed','Tue','Mon','Sun'])" :key="idx">
+                                                <span x-text="lbl"></span>
+                                            </template>
                                         </div>
                                     </div>
 

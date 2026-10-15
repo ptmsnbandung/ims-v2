@@ -253,14 +253,14 @@
 
                 get displayItems() {
                     if (this.activeTab === 'aktif') {
-                        return this.alerts.slice(0, 8);
+                        return this.alerts.slice(0, 5);
                     }
                     if (this.activeTab === 'pulih') {
-                        return this.recoveries.slice(0, 8);
+                        return this.recoveries.slice(0, 5);
                     }
-                    // Tab 'semua': urutkan gabungan atau prioritaskan isu aktif lalu pemulihan terbaru
+                    // Tab 'semua': urutkan gabungan atau prioritaskan isu aktif lalu pemulihan terbaru (maksimal 5 notif terbaru)
                     const items = [];
-                    const maxItems = 8;
+                    const maxItems = 5;
                     let aIdx = 0, rIdx = 0;
                     while (items.length < maxItems && (aIdx < this.alerts.length || rIdx < this.recoveries.length)) {
                         if (aIdx < this.alerts.length) items.push(this.alerts[aIdx++]);

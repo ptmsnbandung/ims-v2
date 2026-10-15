@@ -651,11 +651,12 @@
                                         <span>Upload (Tx):</span>
                                     </div>
                                     <span class="font-mono font-black text-xs text-emerald-700 dark:text-emerald-300" x-text="onu.upload_formatted"></span>
+                                </div>
                             </div>
 
-                            <!-- Box Frame Grafik MRTG (High-Tech Telemetry Console - Spacious & Neat) -->
-                            <div class="p-2.5 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
-                                <div class="flex items-stretch gap-2 h-[140px] sm:h-[155px]">
+                            <!-- Box Frame Grafik MRTG (High-Tech Telemetry Console - Full Width & Spacious) -->
+                            <div class="w-full p-2.5 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 shadow-md">
+                                <div class="flex items-stretch gap-2 h-[115px] sm:h-[130px]">
                                     <!-- Sumbu Y Kiri: Angka Skala Y Rapi & Jelas -->
                                     <div class="flex flex-col justify-between items-end h-full text-[8px] sm:text-[8.5px] font-mono font-semibold text-slate-400 select-none py-1 w-[38px] shrink-0">
                                         <span x-text="onu.mrtg?.y_labels?.[0] ?? '20.0 M'"></span>
@@ -727,32 +728,32 @@
                                 </div>
 
                                 <!-- Legend Stats In & Out (Modern 2-Column Responsive Cards) -->
-                                <div class="mt-2.5 pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-1.5 sm:gap-2 text-[8.5px] font-mono">
+                                <div class="mt-2.5 pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-[9px] font-mono">
                                     <!-- Inbound (Download) Card -->
-                                    <div class="px-2 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-slate-200 flex flex-col gap-1">
+                                    <div class="px-2.5 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-slate-200 flex flex-col gap-1">
                                         <div class="flex items-center justify-between gap-1">
-                                            <span class="text-emerald-400 font-bold flex items-center gap-1 truncate">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)] animate-pulse shrink-0"></span>
+                                            <span class="text-emerald-400 font-bold flex items-center gap-1.5 truncate">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse shrink-0"></span>
                                                 In (Down)
                                             </span>
-                                            <strong class="text-emerald-300 font-bold shrink-0" x-text="onu.mrtg?.current_in ?? (onu.download_mbps + ' M')"></strong>
+                                            <strong class="text-emerald-300 font-bold shrink-0 text-[9.5px]" x-text="onu.mrtg?.current_in ?? (onu.download_mbps + ' M')"></strong>
                                         </div>
-                                        <div class="flex items-center justify-between text-[7.5px] text-slate-400 pt-1 border-t border-emerald-900/40">
+                                        <div class="flex items-center justify-between text-[8px] sm:text-[8.5px] text-slate-400 pt-1 border-t border-emerald-900/40">
                                             <span>Max: <span class="text-slate-300 font-medium" x-text="onu.mrtg?.max_in ?? '0.0 M'"></span></span>
                                             <span>Avg: <span class="text-slate-300 font-medium" x-text="onu.mrtg?.avg_in ?? '0.0 M'"></span></span>
                                         </div>
                                     </div>
 
                                     <!-- Outbound (Upload) Card -->
-                                    <div class="px-2 py-1.5 rounded-lg bg-sky-950/40 border border-sky-800/40 text-slate-200 flex flex-col gap-1">
+                                    <div class="px-2.5 py-1.5 rounded-lg bg-sky-950/40 border border-sky-800/40 text-slate-200 flex flex-col gap-1">
                                         <div class="flex items-center justify-between gap-1">
-                                            <span class="text-sky-400 font-bold flex items-center gap-1 truncate">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_5px_rgba(56,189,248,0.8)] animate-pulse shrink-0"></span>
+                                            <span class="text-sky-400 font-bold flex items-center gap-1.5 truncate">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_6px_rgba(56,189,248,0.8)] animate-pulse shrink-0"></span>
                                                 Out (Up)
                                             </span>
-                                            <strong class="text-sky-300 font-bold shrink-0" x-text="onu.mrtg?.current_out ?? (onu.upload_mbps + ' M')"></strong>
+                                            <strong class="text-sky-300 font-bold shrink-0 text-[9.5px]" x-text="onu.mrtg?.current_out ?? (onu.upload_mbps + ' M')"></strong>
                                         </div>
-                                        <div class="flex items-center justify-between text-[7.5px] text-slate-400 pt-1 border-t border-sky-900/40">
+                                        <div class="flex items-center justify-between text-[8px] sm:text-[8.5px] text-slate-400 pt-1 border-t border-sky-900/40">
                                             <span>Max: <span class="text-slate-300 font-medium" x-text="onu.mrtg?.max_out ?? '0.0 M'"></span></span>
                                             <span>Avg: <span class="text-slate-300 font-medium" x-text="onu.mrtg?.avg_out ?? '0.0 M'"></span></span>
                                         </div>

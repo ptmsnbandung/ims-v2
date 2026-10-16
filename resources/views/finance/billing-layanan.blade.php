@@ -919,6 +919,23 @@
                                         </svg>
                                     </button>
 
+                                    <!-- Adjustment / Prorate -->
+                                    <button type="button"
+                                            @click="openAdjustModalFromEl($el)"
+                                            data-kode="{{ $inv->kode_billing_layanan }}"
+                                            data-internet="{{ $inv->nomor_internet }}"
+                                            data-nama="{{ $inv->nama_pelanggan }}"
+                                            data-subtotal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) + (float)($inv->potongan ?? 0) }}"
+                                            data-potongan="{{ (float)($inv->potongan ?? 0) }}"
+                                            data-desc-potongan="{{ $inv->desc_potongan ?? '' }}"
+                                            data-denda="{{ (float)($inv->denda ?? 0) }}"
+                                            title="Penyesuaian (Adjustment / Prorate)"
+                                            class="h-6 flex-1 inline-flex items-center justify-center rounded-md bg-amber-50 hover:bg-amber-600 text-amber-700 hover:text-white border border-amber-200 dark:bg-amber-500/15 dark:hover:bg-amber-600 dark:text-amber-400 dark:hover:text-white dark:border-amber-500/30 transition shadow-2xs cursor-pointer">
+                                        <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                                        </svg>
+                                    </button>
+
                                     <!-- Hapus -->
                                     <form action="{{ route('finance.billing-layanan.delete.post') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tagihan {{ $inv->kode_billing_layanan }} ({{ $inv->nama_pelanggan }})?')" class="flex-1 m-0 p-0">
                                         @csrf
@@ -1291,6 +1308,20 @@
                                 class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition shadow-2xs cursor-pointer">
                             <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                             <span>Rincian</span>
+                        </button>
+
+                        <button type="button"
+                                @click="openAdjustModalFromEl($el)"
+                                data-kode="{{ $inv->kode_billing_layanan }}"
+                                data-internet="{{ $inv->nomor_internet }}"
+                                data-nama="{{ $inv->nama_pelanggan }}"
+                                data-subtotal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) + (float)($inv->potongan ?? 0) }}"
+                                data-potongan="{{ (float)($inv->potongan ?? 0) }}"
+                                data-desc-potongan="{{ $inv->desc_potongan ?? '' }}"
+                                data-denda="{{ (float)($inv->denda ?? 0) }}"
+                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/15 hover:bg-amber-100 text-amber-700 dark:text-amber-400 text-xs font-bold border border-amber-200 dark:border-amber-500/30 transition shadow-2xs cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" /></svg>
+                            <span>Prorate / Diskon</span>
                         </button>
 
                         <form action="{{ route('finance.billing-layanan.delete.post') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tagihan {{ $inv->kode_billing_layanan }} ({{ $inv->nama_pelanggan }})?')" class="w-full m-0 p-0">
@@ -2111,7 +2142,14 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Potongan / Diskon Kompensasi (Rp)</label>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">Potongan / Diskon Kompensasi (Rp)</label>
+                            <button type="button" 
+                                    @click="calculateProrateToday()" 
+                                    class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition cursor-pointer underline">
+                                <span>⚡ Hitung Prorate Hari Ini</span>
+                            </button>
+                        </div>
                         <input type="number" name="potongan" x-model="adjustPotongan" min="0" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                     </div>
 
@@ -3565,6 +3603,20 @@ function billingLayananPage() {
             this.adjustDenda = parseFloat(el.dataset.denda) || 0;
             this.adjustNote = 'Penyesuaian tagihan pelanggan';
             this.adjustModalOpen = true;
+        },
+        calculateProrateToday() {
+            const today = new Date();
+            const currentDay = today.getDate();
+            const totalDays = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const activeDays = Math.max(1, totalDays - currentDay + 1);
+            const subtotal = parseFloat(this.adjustSubtotal) || 0;
+            if (subtotal > 0 && activeDays < totalDays) {
+                const prorateAmount = Math.round((activeDays / totalDays) * subtotal);
+                const discount = Math.max(0, subtotal - prorateAmount);
+                this.adjustPotongan = discount;
+                this.adjustDescPotongan = `Prorate Suspend: Aktif tgl ${currentDay}-${totalDays} (${activeDays}/${totalDays} hari)`;
+                this.adjustNote = `Penyesuaian Prorate otomatis (${activeDays}/${totalDays} hari)`;
+            }
         },
         get adjustTotalBaru() {
             return Math.max(0, this.adjustSubtotal - (parseFloat(this.adjustPotongan) || 0) + (parseFloat(this.adjustDenda) || 0));

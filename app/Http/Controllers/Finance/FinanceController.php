@@ -4368,6 +4368,7 @@ class FinanceController extends Controller
                 'nominal' => $nominal,
                 'nominal_formatted' => $nominal > 0 ? ('Rp ' . number_format($nominal, 0, ',', '.')) : 'Menunggu Pengecekan',
                 'bank_tujuan' => $bankTujuan,
+                'payment_type' => $relatedBill?->payment_type ?? (stripos($bankTujuan, 'cash') !== false || stripos($bankTujuan, 'kolektor') !== false ? '3' : '2'),
                 'proof_file' => $proofFile,
                 'notes' => $c->notes ?? ($c->keterangan ?? null),
                 'admin_notes' => $c->admin_notes ?? null,
@@ -4408,6 +4409,7 @@ class FinanceController extends Controller
                 'nominal' => $nominal,
                 'nominal_formatted' => 'Rp ' . number_format($nominal, 0, ',', '.'),
                 'bank_tujuan' => ($conf->destination_bank ?? null) ?: ($b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : 'Online / Snap')),
+                'payment_type' => $b->payment_type ?? (stripos($conf->destination_bank ?? $b->merchant_type ?? '', 'cash') !== false || stripos($conf->destination_bank ?? $b->merchant_type ?? '', 'kolektor') !== false ? '3' : '2'),
                 'proof_file' => $proofFile,
                 'notes' => $conf->notes ?? null,
                 'admin_notes' => $conf->admin_notes ?? null,
@@ -4465,23 +4467,38 @@ class FinanceController extends Controller
             'nominal_bayar' => 'nullable|numeric|min:0',
             'metode_bayar' => 'nullable|string',
             'bank_tujuan' => 'nullable|string',
+            'nama_kolektor' => 'nullable|string',
+            'no_kwitansi' => 'nullable|string',
             'catatan' => 'nullable|string',
             'foto_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ]);
 
-        $user = Auth::user()?->nama ?? Auth::user()?->username ?? 'FINANCE';
+        $user = Auth::user()?->nama ?? Auth::user()?->username ?? Auth::user()?->name ?? 'FINANCE';
         $userUpdate = mb_substr($user, 0, 50);
         $kodeBilling = trim($request->input('kode_billing'));
-        $bankTujuan = $request->input('bank_tujuan') ?: 'Transfer Bank';
+        $nominal = $request->input('nominal_bayar');
         $metodeBayar = $request->input('metode_bayar', 'transfer');
-        $catatan = $request->input('catatan', 'Disetujui via Halaman Notifikasi Finance');
+        $namaKolektor = trim((string) $request->input('nama_kolektor', ''));
+        $noKwitansi = trim((string) $request->input('no_kwitansi', ''));
+
+        if ($metodeBayar === 'cash' || $metodeBayar === '3') {
+            $paymentType = '3';
+            $penerima = $request->input('bank_tujuan') ?: 'Cash To Collector';
+            $bank = $namaKolektor !== '' ? "{$penerima} ({$namaKolektor})" : $penerima;
+            $catatanDefault = "Pembayaran Cash to Collector Terverifikasi" . ($noKwitansi !== '' ? " [Kwitansi: {$noKwitansi}]" : "");
+        } else {
+            $paymentType = '2';
+            $bank = $request->input('bank_tujuan') ?: 'BCA';
+            $catatanDefault = "Pembayaran Transfer Bank Terverifikasi" . ($noKwitansi !== '' ? " [Ref: {$noKwitansi}]" : "");
+        }
+
+        $catatan = $request->input('catatan') ?: $catatanDefault;
 
         try {
             $inv = DB::table('trx_billing_layanan')
                 ->where('kode_billing_layanan', $kodeBilling)
                 ->first();
 
-            $nominal = $request->input('nominal_bayar');
             if (empty($nominal) || (float)$nominal <= 0) {
                 $nominal = (float) ($inv?->total_layanan ?: 0);
             }
@@ -4510,24 +4527,29 @@ class FinanceController extends Controller
 
             if ($inv) {
                 // Update trx_billing_layanan menjadi LUNAS (15)
+                $updateData = [
+                    'status_bill_lay' => '15',
+                    'payment_paid' => Carbon::now()->toDateTimeString(),
+                    'amount_paid' => (string) $nominal,
+                    'merchant_type' => $bank,
+                    'payment_type' => $paymentType,
+                    'date_update' => Carbon::now()->toDateTimeString(),
+                    'user_update' => $userUpdate,
+                ];
+                if (Schema::hasColumn('trx_billing_layanan', 'destination_bank')) {
+                    $updateData['destination_bank'] = $bank;
+                }
+
                 DB::table('trx_billing_layanan')
                     ->where('kode_billing_layanan', $kodeBilling)
-                    ->update([
-                        'status_bill_lay' => '15',
-                        'payment_paid' => Carbon::now()->toDateTimeString(),
-                        'amount_paid' => (string) $nominal,
-                        'merchant_type' => $bankTujuan,
-                        'payment_type' => ($metodeBayar === 'cash' ? '3' : '2'),
-                        'date_update' => Carbon::now()->toDateTimeString(),
-                        'user_update' => $userUpdate,
-                    ]);
+                    ->update($updateData);
 
                 // Insert log billing
                 DB::table('trx_billing_layanan_log')->insert([
                     'kode_billing_lay_log' => 'LOG-' . uniqid(),
                     'kode_billing_layanan' => $kodeBilling,
                     'status_bill_lay' => '15',
-                    'note_billing_lay' => "Pembayaran disetujui ({$bankTujuan} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} oleh {$userUpdate}" . ($proofUrl ? ' (disertai bukti transfer)' : ''),
+                    'note_billing_lay' => "Payment verified ({$bank} - Rp " . number_format($nominal, 0, ',', '.') . "): {$catatan} by {$userUpdate}" . ($proofUrl ? ' (disertai bukti transfer)' : ''),
                     'date_create' => Carbon::now()->toDateTimeString(),
                     'user_create' => $userUpdate,
                     'hide' => '0',
@@ -4542,34 +4564,34 @@ class FinanceController extends Controller
                     ->orWhere('kode_billing_layanan', str_replace('-', '/', $kodeBilling))
                     ->first();
 
+                $pcData = [
+                    'status' => 'approved',
+                    'verified_at' => Carbon::now()->toDateTimeString(),
+                    'admin_notes' => "Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}",
+                    'updated_at' => Carbon::now()->toDateTimeString(),
+                ];
+                if (Schema::hasColumn('payment_confirmations', 'destination_bank')) {
+                    $pcData['destination_bank'] = $bank;
+                }
+                if ($proofUrl) {
+                    $pcData['proof_file'] = $proofUrl;
+                }
+
                 if ($existPc) {
-                    $updateData = [
-                        'status' => 'approved',
-                        'verified_at' => Carbon::now()->toDateTimeString(),
-                        'admin_notes' => "Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}",
-                        'updated_at' => Carbon::now()->toDateTimeString(),
-                    ];
-                    if ($proofUrl) {
-                        $updateData['proof_file'] = $proofUrl;
-                    }
                     DB::table('payment_confirmations')
                         ->where('id', $existPc->id)
-                        ->update($updateData);
-                } elseif ($proofUrl) {
-                    // Buat row baru di payment_confirmations dengan proof_file
-                    DB::table('payment_confirmations')->insert([
+                        ->update($pcData);
+                } else {
+                    $newPcData = array_merge($pcData, [
                         'kode_billing_layanan' => $kodeBilling,
                         'customer_id' => $inv?->nomor_internet ?? '-',
                         'customer_name' => 'Pelanggan',
-                        'destination_bank' => $bankTujuan,
+                        'destination_bank' => $bank,
                         'proof_file' => $proofUrl,
-                        'status' => 'approved',
-                        'verified_at' => Carbon::now()->toDateTimeString(),
                         'notes' => $catatan,
-                        'admin_notes' => "Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}",
                         'created_at' => Carbon::now()->toDateTimeString(),
-                        'updated_at' => Carbon::now()->toDateTimeString(),
                     ]);
+                    DB::table('payment_confirmations')->insert($newPcData);
                 }
             }
 
@@ -4580,9 +4602,12 @@ class FinanceController extends Controller
                 $escapedAlt2 = addslashes(str_replace('-', '/', $kodeBilling));
                 $nowStr = Carbon::now()->toDateTimeString();
                 $adminNoteStr = addslashes("Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}");
+                $escapedBank = addslashes($bank);
+
                 DB::statement("
                     UPDATE ptmsn.payment_confirmations 
                     SET status = 'approved',
+                        destination_bank = '{$escapedBank}',
                         verified_at = '{$nowStr}',
                         admin_notes = '{$adminNoteStr}',
                         updated_at = '{$nowStr}'
@@ -4593,10 +4618,10 @@ class FinanceController extends Controller
             $unsuspendInfo = '';
             $nomorInternet = $inv?->nomor_internet;
             if ($nomorInternet) {
-                $unsuspendInfo = $this->handleAutoUnsuspendAndProrate($nomorInternet, $userUpdate, $kodeBilling, $bankTujuan);
+                $unsuspendInfo = $this->handleAutoUnsuspendAndProrate($nomorInternet, $userUpdate, $kodeBilling, $bank);
             }
 
-            $msg = "Pembayaran untuk {$kodeBilling} berhasil disetujui! Invoice telah ditandai LUNAS.{$unsuspendInfo}";
+            $msg = "Pembayaran untuk {$kodeBilling} sebesar Rp " . number_format($nominal, 0, ',', '.') . " berhasil disetujui! Invoice telah ditandai LUNAS.{$unsuspendInfo}";
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => true, 'message' => $msg]);
             }

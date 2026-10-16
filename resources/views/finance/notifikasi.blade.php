@@ -116,6 +116,8 @@
         }
     },
     
+    previewItem: null,
+
     // Data form approval
     approveData: {
         kode_billing: '',
@@ -123,9 +125,12 @@
         nomor_internet: '',
         nominal_bayar: 0,
         nominal_display: '',
-        bank_tujuan: 'BCA',
         metode_bayar: 'transfer',
-        catatan: ''
+        bank_tujuan: 'BCA',
+        nama_kolektor: '',
+        no_kwitansi: '',
+        catatan: '',
+        destination_bank: ''
     },
     
     // Data form reject
@@ -137,14 +142,28 @@
 
     openApproveModal(item) {
         this.markRead(item.id || item.kode_billing, item.kode_billing);
-        this.approveData.kode_billing = item.kode_billing;
-        this.approveData.nama_pelanggan = item.nama_pelanggan;
-        this.approveData.nomor_internet = item.nomor_internet;
+        this.approveData.kode_billing = item.kode_billing || '';
+        this.approveData.nama_pelanggan = item.nama_pelanggan || '';
+        this.approveData.nomor_internet = item.nomor_internet || '';
         this.approveData.nominal_bayar = item.nominal > 0 ? item.nominal : '';
-        this.approveData.nominal_display = item.nominal_formatted;
-        this.approveData.bank_tujuan = (item.bank_tujuan && item.bank_tujuan !== 'Transfer Manual') ? item.bank_tujuan : 'BCA';
-        this.approveData.metode_bayar = 'transfer';
-        this.approveData.catatan = 'Diverifikasi & disetujui via Halaman Notifikasi';
+        this.approveData.nominal_display = item.nominal_formatted || '';
+        this.approveData.nama_kolektor = '';
+        this.approveData.no_kwitansi = '';
+
+        const pType = String(item.payment_type || '2');
+        const bankStr = String(item.bank_tujuan || '').trim();
+        this.approveData.destination_bank = (bankStr && bankStr !== 'Transfer' && bankStr !== 'Transfer Manual') ? bankStr : '';
+
+        if (pType === '3' || pType === 'cash' || bankStr.toLowerCase().includes('cash') || bankStr.toLowerCase().includes('kolektor') || bankStr.toLowerCase().includes('kasir')) {
+            this.approveData.metode_bayar = 'cash';
+            this.approveData.bank_tujuan = this.approveData.destination_bank || 'Cash To Collector';
+            this.approveData.catatan = 'Pembayaran Cash to Collector Terverifikasi';
+        } else {
+            this.approveData.metode_bayar = 'transfer';
+            this.approveData.bank_tujuan = this.approveData.destination_bank || 'BCA';
+            this.approveData.catatan = 'Pembayaran Transfer Terverifikasi';
+        }
+
         this.approveModalOpen = true;
     },
 
@@ -156,12 +175,13 @@
         this.rejectModalOpen = true;
     },
 
-    openPreviewModal(url, title, id = null, kode = null) {
+    openPreviewModal(url, title, id = null, kode = null, item = null) {
         if (id || kode) {
             this.markRead(id, kode);
         }
         this.previewImageUrl = url;
         this.previewTitle = title;
+        this.previewItem = item;
         this.previewModalOpen = true;
     }
 }">
@@ -506,7 +526,16 @@
                                             : asset(ltrim($rawPf, '/'));
                                     @endphp
                                     <button type="button"
-                                            @click="openPreviewModal('{{ $pfUrl }}', 'Bukti Transfer: {{ $item->kode_billing }}', '{{ $item->id }}', '{{ $item->kode_billing }}')"
+                                            @click="openPreviewModal('{{ $pfUrl }}', 'Bukti Transfer: {{ $item->kode_billing }}', '{{ $item->id }}', '{{ $item->kode_billing }}', {
+                                                kode_billing: '{{ $item->kode_billing }}',
+                                                nama_pelanggan: '{{ addslashes($item->nama_pelanggan) }}',
+                                                nomor_internet: '{{ $item->nomor_internet }}',
+                                                nominal: {{ $item->nominal }},
+                                                nominal_formatted: '{{ $item->nominal_formatted }}',
+                                                bank_tujuan: '{{ $bankShort }}',
+                                                payment_type: '{{ $item->payment_type ?? '2' }}',
+                                                is_approved: {{ $item->is_approved ? 'true' : 'false' }}
+                                            })"
                                             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold text-[#0891b2] dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200/60 dark:border-cyan-800/60 transition cursor-pointer shrink-0">
                                         <svg class="w-3 h-3 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
@@ -530,7 +559,8 @@
                                                     nomor_internet: '{{ $item->nomor_internet }}',
                                                     nominal: {{ $item->nominal }},
                                                     nominal_formatted: '{{ $item->nominal_formatted }}',
-                                                    bank_tujuan: '{{ $bankShort }}'
+                                                    bank_tujuan: '{{ $bankShort }}',
+                                                    payment_type: '{{ $item->payment_type ?? '2' }}'
                                                 })"
                                                 class="px-2 py-0.5 rounded-md text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-2xs transition flex items-center gap-0.5 cursor-pointer shrink-0"
                                                 title="Setujui Pembayaran">
@@ -714,7 +744,16 @@
                                             : asset(ltrim($rawPf, '/'));
                                     @endphp
                                     <button type="button"
-                                            @click="openPreviewModal('{{ $pfUrl }}', 'Bukti: {{ $item->kode_billing }}', '{{ $item->id }}', '{{ $item->kode_billing }}')"
+                                            @click="openPreviewModal('{{ $pfUrl }}', 'Bukti: {{ $item->kode_billing }}', '{{ $item->id }}', '{{ $item->kode_billing }}', {
+                                                kode_billing: '{{ $item->kode_billing }}',
+                                                nama_pelanggan: '{{ addslashes($item->nama_pelanggan) }}',
+                                                nomor_internet: '{{ $item->nomor_internet }}',
+                                                nominal: {{ $item->nominal }},
+                                                nominal_formatted: '{{ $item->nominal_formatted }}',
+                                                bank_tujuan: '{{ $bankShort }}',
+                                                payment_type: '{{ $item->payment_type ?? '2' }}',
+                                                is_approved: {{ $item->is_approved ? 'true' : 'false' }}
+                                            })"
                                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-[#0891b2] dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200/60 dark:border-cyan-800/60 transition cursor-pointer">
                                         <svg class="w-3.5 h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
@@ -736,7 +775,8 @@
                                                 nomor_internet: '{{ $item->nomor_internet }}',
                                                 nominal: {{ $item->nominal }},
                                                 nominal_formatted: '{{ $item->nominal_formatted }}',
-                                                bank_tujuan: '{{ $bankShort }}'
+                                                bank_tujuan: '{{ $bankShort }}',
+                                                payment_type: '{{ $item->payment_type ?? '2' }}'
                                             })"
                                             class="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs transition flex items-center gap-1 cursor-pointer">
                                         <svg class="w-3.5 h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -794,127 +834,155 @@
         @endif
     </div>
 
-    <!-- MODAL 1: APPROVE PEMBAYARAN -->
+    <!-- MODAL 1: APPROVE PEMBAYARAN (MIRROR BILLING LAYANAN) -->
     <div x-show="approveModalOpen"
          x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
-         aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Backdrop -->
-            <div x-show="approveModalOpen"
-                 x-transition:enter="ease-out duration-200"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="ease-in duration-150"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 @click="approveModalOpen = false"
-                 class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity"></div>
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+        <div @click.away="approveModalOpen = false"
+             class="relative w-full max-w-lg md:max-w-2xl lg:max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto transition-all duration-200">
+            
+            <form action="{{ route('finance.notifikasi.approve') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="kode_billing" :value="approveData.kode_billing">
 
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <!-- Modal Body -->
-            <div x-show="approveModalOpen"
-                 x-transition:enter="ease-out duration-200"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave="ease-in duration-150"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-slate-200 dark:border-slate-800">
-                
-                <form action="{{ route('finance.notifikasi.approve') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <input type="hidden" name="kode_billing" :value="approveData.kode_billing">
-
-                    <!-- Header Modal -->
-                    <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-50 via-emerald-50/50 to-white dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900 border-b border-slate-100 dark:border-slate-800">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center ring-1 ring-emerald-500/20">
-                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Approve Pembayaran</h3>
-                                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Verifikasi penerimaan dana invoice bulanan</p>
-                                </div>
-                            </div>
-                            <button type="button"
-                                    @click="approveModalOpen = false"
-                                    class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                <!-- Modal Header (Sidebar Blue Theme) -->
+                <div class="px-6 py-4 bg-[#061d28] border-b border-[#0d2a38] flex items-center justify-between text-white">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2.5 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+                            <template x-if="approveData.metode_bayar === 'cash'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                                 </svg>
-                            </button>
+                            </template>
+                            <template x-if="approveData.metode_bayar !== 'cash'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </template>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white tracking-wide" x-text="approveData.metode_bayar === 'cash' ? 'Konfirmasi Bayar: Cash To Collector' : 'Konfirmasi Bayar: Manual Transfer'"></h3>
+                            <p class="text-xs text-slate-300">Verifikasi pelunasan tagihan invoice pelanggan</p>
                         </div>
                     </div>
+                    <button type="button" @click="approveModalOpen = false" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer text-2xl leading-none">&times;</button>
+                </div>
 
-                    <!-- Content Fields -->
-                    <div class="p-4 sm:p-5 space-y-3">
-                        <!-- Info Tagihan Card -->
-                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
-                            <div class="min-w-0">
-                                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Kode Invoice</span>
-                                <p class="font-mono text-xs font-bold text-[#0891b2] dark:text-cyan-400 truncate" x-text="approveData.kode_billing"></p>
-                                <p class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate mt-0.5" x-text="approveData.nama_pelanggan + ' (' + approveData.nomor_internet + ')'"></p>
+                <div class="p-6 md:p-7 space-y-4">
+                    <!-- Info Ringkasan & Nominal Diterima (2-Column Grid on Desktop) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <!-- Info Ringkasan Invoice -->
+                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-2 flex flex-col justify-center">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">No. Invoice:</span>
+                                <span class="font-bold text-slate-900 dark:text-white font-mono text-sm" x-text="approveData.kode_billing"></span>
                             </div>
-                            <div class="text-right flex-shrink-0">
-                                <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Nominal Tagihan</span>
-                                <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400" x-text="approveData.nominal_display"></p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Pelanggan:</span>
+                                <span class="font-semibold text-blue-600 dark:text-blue-400 text-xs truncate max-w-[180px]" x-text="approveData.nama_pelanggan + (approveData.nomor_internet ? ' (' + approveData.nomor_internet + ')' : '')"></span>
                             </div>
                         </div>
 
                         <!-- Nominal Diterima -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                Nominal Pembayaran Diterima (Rp) <span class="text-rose-500">*</span>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nominal Diterima (Rp) <span class="text-rose-500">*</span></label>
+                            <input type="number" name="nominal_bayar" x-model="approveData.nominal_bayar" required min="1" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 font-bold text-lg rounded-xl px-3.5 py-2.5 focus:border-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Metode Bayar (Radio Tabs) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">Metode Pembayaran</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
+                                   :class="approveData.metode_bayar === 'cash' ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/50 text-amber-700 dark:text-amber-300' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'">
+                                <input type="radio" name="metode_bayar" value="cash" x-model="approveData.metode_bayar"
+                                       @change="approveData.bank_tujuan = 'Cash To Collector'; approveData.catatan = 'Pembayaran Cash to Collector Terverifikasi'"
+                                       class="w-4 h-4 text-amber-500 focus:ring-amber-400">
+                                <div>
+                                    <div class="text-xs font-bold text-slate-900 dark:text-white">Cash To Collector</div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Tunai / Kasir Lapangan</div>
+                                </div>
                             </label>
-                            <input type="number"
-                                   name="nominal_bayar"
-                                   x-model="approveData.nominal_bayar"
-                                   required
-                                   class="w-full px-3 py-1.5 text-xs font-bold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0891b2]">
-                            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Pastikan nominal sesuai dengan mutasi rekening bank.</p>
-                        </div>
 
-                        <!-- Bank Tujuan / Metode Pembayaran -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <label class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
+                                   :class="approveData.metode_bayar === 'transfer' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-300' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'">
+                                <input type="radio" name="metode_bayar" value="transfer" x-model="approveData.metode_bayar"
+                                       @change="approveData.bank_tujuan = (approveData.destination_bank || 'BCA'); approveData.catatan = 'Pembayaran Transfer Terverifikasi'"
+                                       class="w-4 h-4 text-emerald-500 focus:ring-emerald-400">
+                                <div>
+                                    <div class="text-xs font-bold text-slate-900 dark:text-white">Manual Transfer</div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Transfer Bank Perusahaan</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Fields: Jika CASH TO COLLECT -->
+                    <div x-show="approveData.metode_bayar === 'cash'" class="space-y-3 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/15">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Bank / Penerima
-                                </label>
-                                <select name="bank_tujuan"
-                                        x-model="approveData.bank_tujuan"
-                                        class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0891b2]">
-                                    <option value="BCA">BCA (Bank Central Asia)</option>
-                                    <option value="Mandiri">Mandiri</option>
-                                    <option value="BRI">BRI</option>
-                                    <option value="BNI">BNI</option>
-                                    <option value="BSI">BSI (Bank Syariah)</option>
-                                    <option value="QRIS">QRIS / Online</option>
-                                    <option value="Cash To Collector">Cash to Collector</option>
-                                    <option value="Transfer Bank">Transfer Bank Lainnya</option>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tipe Kasir / Kolektor</label>
+                                <select name="bank_tujuan" x-model="approveData.bank_tujuan" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                                    <option value="Cash To Collector">Cash To Collector</option>
+                                    <option value="Kasir Kantor Pusat">Kasir Kantor Pusat</option>
+                                    <option value="Kasir Cabang">Kasir Cabang</option>
+                                    <option value="Kolektor Lapangan">Kolektor Lapangan</option>
+                                    <option value="Kasir / Tunai">Kasir / Tunai</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                    Metode Pembayaran
-                                </label>
-                                <select name="metode_bayar"
-                                        x-model="approveData.metode_bayar"
-                                        class="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0891b2]">
-                                    <option value="transfer">Transfer Bank (Tipe 2)</option>
-                                    <option value="cash">Tunai / Cash (Tipe 3)</option>
-                                </select>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nama Petugas Kolektor <span class="text-slate-500 font-normal">(Opsional)</span></label>
+                                <input type="text" name="nama_kolektor" x-model="approveData.nama_kolektor" placeholder="Nama Petugas..." class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">No. Kwitansi / Tanda Terima <span class="text-slate-500 font-normal">(Opsional)</span></label>
+                                <input type="text" name="no_kwitansi" x-model="approveData.no_kwitansi" placeholder="Contoh: KWT-00123" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Upload Foto Bukti Transfer dengan Drag & Drop -->
+                    <!-- Dynamic Fields: Jika MANUAL TRANSFER -->
+                    <div x-show="approveData.metode_bayar === 'transfer'" class="space-y-3 p-3.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 border border-blue-200 dark:border-blue-500/15">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                                    <span>Rekening Bank Tujuan</span>
+                                    <template x-if="approveData.destination_bank">
+                                        <span class="text-[10px] text-blue-600 dark:text-cyan-400 font-normal">(Terisi Otomatis)</span>
+                                    </template>
+                                </label>
+                                <select name="bank_tujuan" x-model="approveData.bank_tujuan" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                                    <template x-if="approveData.bank_tujuan && !['BCA', 'Mandiri', 'BRI', 'BNI', 'BSI', 'Permata', 'Cash To Collector', ''].includes(approveData.bank_tujuan)">
+                                        <option :value="approveData.bank_tujuan" x-text="approveData.bank_tujuan" selected></option>
+                                    </template>
+                                    <option value="BCA">BCA (PT Medianet)</option>
+                                    <option value="Mandiri">Bank Mandiri</option>
+                                    <option value="BRI">Bank BRI</option>
+                                    <option value="BNI">Bank BNI</option>
+                                    <option value="BSI">Bank Syariah Indonesia (BSI)</option>
+                                    <option value="Permata">Bank Permata</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">No. Ref Transfer / Rek Pengirim <span class="text-slate-500 font-normal">(Opsional)</span></label>
+                                <input type="text" name="no_kwitansi" x-model="approveData.no_kwitansi" placeholder="Contoh: REF123456 / A.N Budi" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Catatan Verifikasi & Foto Bukti Transfer (2-Column Grid on Desktop) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <!-- Catatan Verifikasi -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Verifikasi</label>
+                            <input type="text" name="catatan" x-model="approveData.catatan" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3.5 py-2.5 focus:border-emerald-500">
+                        </div>
+
+                        <!-- Foto Bukti Transfer (Upload Bukti Transfer) -->
                         <div class="space-y-1.5" x-data="{
                             isDragging: false,
-                            previewUrl: null,
+                            fotoBuktiPreview: null,
                             fileName: '',
                             fileSize: '',
 
@@ -930,9 +998,9 @@
                                     : Math.round(file.size / 1024) + ' KB';
 
                                 if (file.type.match('image.*')) {
-                                    this.previewUrl = URL.createObjectURL(file);
+                                    this.fotoBuktiPreview = URL.createObjectURL(file);
                                 } else {
-                                    this.previewUrl = 'pdf';
+                                    this.fotoBuktiPreview = 'pdf';
                                 }
                             },
 
@@ -941,7 +1009,7 @@
                                 const files = e.dataTransfer.files;
                                 if (files && files.length > 0) {
                                     const file = files[0];
-                                    const input = $refs.notifApproveFileInput;
+                                    const input = this.$refs.notifApproveFileInput;
                                     const dataTransfer = new DataTransfer();
                                     dataTransfer.items.add(file);
                                     input.files = dataTransfer.files;
@@ -950,19 +1018,19 @@
                             },
 
                             clearFile() {
-                                this.previewUrl = null;
+                                this.fotoBuktiPreview = null;
                                 this.fileName = '';
                                 this.fileSize = '';
-                                if ($refs.notifApproveFileInput) {
-                                    $refs.notifApproveFileInput.value = '';
+                                if (this.$refs.notifApproveFileInput) {
+                                    this.$refs.notifApproveFileInput.value = '';
                                 }
                             }
                         }">
                             <div class="flex items-center justify-between">
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                                    Foto Bukti Transfer <span class="text-slate-400 font-normal text-[11px]">(Drag &amp; Drop / Pilih File)</span>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                    Upload Bukti Transfer <span class="text-slate-400 font-normal text-[11px]">(Drag &amp; Drop / Pilih File)</span>
                                 </label>
-                                <template x-if="previewUrl">
+                                <template x-if="fotoBuktiPreview">
                                     <button type="button" @click="clearFile()" class="text-[11px] text-rose-500 hover:text-rose-600 font-semibold flex items-center gap-0.5 cursor-pointer">
                                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         <span>Hapus File</span>
@@ -970,11 +1038,10 @@
                                 </template>
                             </div>
 
-                            <!-- Drop Zone Area -->
-                            <div class="relative border-2 border-dashed rounded-xl p-3 text-center transition-all duration-200 cursor-pointer overflow-hidden"
+                            <div class="relative border-2 border-dashed rounded-xl p-2.5 text-center transition-all duration-200 cursor-pointer overflow-hidden min-h-[58px] flex items-center justify-center"
                                  :class="isDragging 
                                      ? 'border-[#0891b2] bg-cyan-50/80 dark:bg-cyan-950/40 ring-2 ring-cyan-400/30 scale-[1.01]' 
-                                     : (previewUrl ? 'border-emerald-400 bg-emerald-50/20 dark:bg-emerald-950/20' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-[#0891b2] dark:hover:border-cyan-400')"
+                                     : (fotoBuktiPreview ? 'border-emerald-400 bg-emerald-50/20 dark:bg-emerald-950/20' : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/40 hover:border-[#0891b2] dark:hover:border-cyan-400')"
                                  @dragover.prevent="isDragging = true"
                                  @dragenter.prevent="isDragging = true"
                                  @dragleave.prevent="isDragging = false"
@@ -984,84 +1051,68 @@
                                        x-ref="notifApproveFileInput"
                                        name="foto_bukti"
                                        accept="image/*,application/pdf"
+                                       capture="environment"
                                        @change="handleFile($event.target.files[0])"
                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
 
                                 <!-- State Tanpa File -->
-                                <template x-if="!previewUrl">
-                                    <div class="py-1.5 flex flex-col items-center justify-center gap-1.5 pointer-events-none">
-                                        <div class="w-9 h-9 rounded-full flex items-center justify-center transition-transform duration-200"
+                                <template x-if="!fotoBuktiPreview">
+                                    <div class="flex items-center justify-center gap-2 pointer-events-none text-slate-500 dark:text-slate-400 py-1">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-200 flex-shrink-0"
                                              :class="isDragging ? 'bg-[#0891b2] text-white scale-110' : 'bg-cyan-500/10 text-[#0891b2] dark:text-cyan-400'">
                                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                                             </svg>
                                         </div>
-                                        <div>
+                                        <div class="text-left">
                                             <p class="text-xs font-semibold text-slate-700 dark:text-slate-200"
-                                               x-text="isDragging ? 'Lepaskan file foto di sini...' : 'Tarik & lepas file foto di sini'"></p>
-                                            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">atau <span class="text-[#0891b2] dark:text-cyan-400 font-semibold underline">klik untuk browse</span> (JPG, PNG, WebP, PDF max 10MB)</p>
+                                               x-text="isDragging ? 'Lepaskan file foto di sini...' : 'Tarik & lepas foto di sini'"></p>
+                                            <p class="text-[10px] text-slate-400 dark:text-slate-500">atau <span class="text-[#0891b2] dark:text-cyan-400 font-semibold underline">klik browse file</span></p>
                                         </div>
                                     </div>
                                 </template>
 
-                                <!-- State Ada File (Preview) -->
-                                <template x-if="previewUrl">
-                                    <div class="py-1 flex items-center justify-center gap-3">
-                                        <template x-if="previewUrl !== 'pdf'">
-                                            <div class="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 max-h-20 max-w-[100px] bg-slate-900/5 flex items-center justify-center">
-                                                <img :src="previewUrl" class="object-contain max-h-20 rounded">
+                                <!-- State Ada File -->
+                                <template x-if="fotoBuktiPreview">
+                                    <div class="py-0.5 flex items-center justify-center gap-2.5 w-full">
+                                        <template x-if="fotoBuktiPreview !== 'pdf'">
+                                            <div class="relative rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 max-h-16 max-w-[80px] bg-slate-900/5 flex items-center justify-center flex-shrink-0">
+                                                <img :src="fotoBuktiPreview" class="object-contain max-h-16 rounded shadow-xs">
                                             </div>
                                         </template>
-                                        <template x-if="previewUrl === 'pdf'">
-                                            <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-200">
-                                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                        <template x-if="fotoBuktiPreview === 'pdf'">
+                                            <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-200 flex-shrink-0">
+                                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                                                 </svg>
                                             </div>
                                         </template>
-                                        <div class="text-left min-w-0">
+                                        <div class="text-left min-w-0 flex-1">
                                             <div class="flex items-center gap-1">
-                                                <svg class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block max-w-[180px]" x-text="fileName"></span>
+                                                <svg class="w-3 h-3 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block max-w-[170px]" x-text="fileName"></span>
                                             </div>
                                             <p class="text-[10px] text-slate-400 font-mono mt-0.5" x-text="fileSize"></p>
-                                            <p class="text-[10px] text-[#0891b2] dark:text-cyan-400 mt-0.5">Tarik & lepas file lain untuk mengganti</p>
                                         </div>
                                     </div>
                                 </template>
                             </div>
                         </div>
-
-                        <!-- Catatan Verifikasi -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                Catatan Verifikasi (Opsional)
-                            </label>
-                            <input type="text"
-                                   name="catatan"
-                                   x-model="approveData.catatan"
-                                   placeholder="Contoh: Mutasi BCA tgl 12/10 jam 14.05 verified"
-                                   class="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0891b2]">
-                        </div>
                     </div>
+                </div>
 
-                    <!-- Footer Action -->
-                    <div class="px-4 sm:px-5 py-3 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
-                        <button type="button"
-                                @click="approveModalOpen = false"
-                                class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition cursor-pointer">
-                            Batal
-                        </button>
-                        <button type="submit"
-                                class="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-2xs transition flex items-center gap-1 cursor-pointer">
-                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                            </svg>
-                            <span>Setujui (LUNAS)</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="bg-slate-50 dark:bg-slate-950/80 px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                    <button type="button" @click="approveModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-500/25 flex items-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        <span>Konfirmasi & Approve Lunas</span>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1203,6 +1254,23 @@
 
                 <div class="p-3 flex items-center justify-center bg-slate-950 max-h-[70vh] overflow-auto">
                     <img :src="previewImageUrl" alt="Bukti Transfer" class="max-w-full max-h-[65vh] object-contain rounded-lg">
+                </div>
+
+                <!-- Footer with direct Approve button if not yet approved -->
+                <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <button type="button" @click="previewModalOpen = false" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer transition">
+                        Tutup
+                    </button>
+                    <template x-if="previewItem && !previewItem.is_approved">
+                        <button type="button"
+                                @click="const itm = previewItem; previewModalOpen = false; openApproveModal(itm)"
+                                class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition cursor-pointer">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            <span>Konfirmasi & Approve Pembayaran</span>
+                        </button>
+                    </template>
                 </div>
             </div>
         </div>

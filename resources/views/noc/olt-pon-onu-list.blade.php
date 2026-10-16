@@ -1464,6 +1464,7 @@ function onuListManager(initialData, kodeOlt, ponIndex) {
                 list = list.filter(o => 
                     (o.nama_pelanggan && o.nama_pelanggan.toLowerCase().includes(q)) ||
                     (o.nomor_internet && o.nomor_internet.toLowerCase().includes(q)) ||
+                    (o.address && o.address.toLowerCase().includes(q)) ||
                     (o.sn && o.sn.toLowerCase().includes(q)) ||
                     (o.interface_onu && o.interface_onu.toLowerCase().includes(q)) ||
                     (o.onu_name && o.onu_name.toLowerCase().includes(q)) ||

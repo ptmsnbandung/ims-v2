@@ -2072,6 +2072,36 @@ class OltConnectionService
                     } catch (\Throwable $e) {}
                 }
 
+                // Map alamat pemasangan (alamat_pasang) dari data registrasi / view_batchjob
+                $alamatPasangMap = [];
+                $alamatPasangByNameMap = [];
+                foreach ($regs as $r) {
+                    $al = !empty($r->alamat_pasang) ? trim((string)$r->alamat_pasang) : null;
+                    if ($al) {
+                        $cNo = trim((string)($r->nomor_internet ?? ''));
+                        $cNm = strtoupper(trim((string)($r->nama_pelanggan ?? '')));
+                        if (!empty($cNo)) $alamatPasangMap[$cNo] = $al;
+                        if (!empty($cNm)) $alamatPasangByNameMap[$cNm] = $al;
+                    }
+                }
+                if (!empty($allCustNos)) {
+                    try {
+                        $batchAlamat = DB::table('view_batchjob')
+                            ->select('nomor_internet', 'nama_pelanggan', 'alamat_pasang')
+                            ->whereIn('nomor_internet', $allCustNos)
+                            ->whereNotNull('alamat_pasang')
+                            ->where('alamat_pasang', '!=', '')
+                            ->get();
+                        foreach ($batchAlamat as $ba) {
+                            $al = trim((string)$ba->alamat_pasang);
+                            if ($al) {
+                                if (!empty($ba->nomor_internet)) $alamatPasangMap[trim((string)$ba->nomor_internet)] = $al;
+                                if (!empty($ba->nama_pelanggan)) $alamatPasangByNameMap[strtoupper(trim((string)$ba->nama_pelanggan))] = $al;
+                            }
+                        }
+                    } catch (\Throwable $e) {}
+                }
+
                 // 2. Hitung total BW pelanggan yang UP untuk distribusi proporsional counter byte real OLT
                 $totalUpBw = 0;
                 $upUsersCount = 0;
@@ -2105,7 +2135,12 @@ class OltConnectionService
                         $odpRaw = $matched->odp_name ?? ($userOdpMap[$custNo] ?? ($userOdpByNameMap[strtoupper(trim($custName))] ?? null));
                         $odpName = (!empty($odpRaw) && strtoupper(trim($odpRaw)) !== 'ODP' && strtoupper(trim($odpRaw)) !== 'N/A' && strtoupper(trim($odpRaw)) !== 'HARDWARE OLT') ? trim($odpRaw) : '-';
                         $pel = $pelanggansMap[strtoupper(trim($custName))] ?? null;
-                        $address = $pel['alamat'] ?? 'Bandung, Jawa Barat';
+
+                        // Alamat: Prioritaskan alamat pemasangan (alamat_pasang), fallback ke KTP jika kosong
+                        $address = (!empty($matched->alamat_pasang) && trim((string)$matched->alamat_pasang) !== '')
+                            ? trim((string)$matched->alamat_pasang)
+                            : ($alamatPasangMap[$custNo] ?? ($alamatPasangByNameMap[strtoupper(trim($custName))] ?? ($pel['alamat'] ?? 'Bandung, Jawa Barat')));
+
                         $phone = $pel['hp'] ?? '-';
                         $speedVal = (float)($billingsMap[$custNo] ?? ($matched->nominal_bandwith ?? 20));
                         if ($speedVal <= 0) $speedVal = 20;
@@ -2309,7 +2344,7 @@ class OltConnectionService
             if (!empty($nomorInternets)) {
                 try {
                     $batchjobMap = DB::table('view_batchjob')
-                        ->select('nomor_internet', 'index_olt', 'status_reg', 'ont_us', 'note_request', 'nama_kategori_bandwith', 'alias_nama_kategori', 'nama_bandwith')
+                        ->select('nomor_internet', 'index_olt', 'status_reg', 'ont_us', 'note_request', 'nama_kategori_bandwith', 'alias_nama_kategori', 'nama_bandwith', 'alamat_pasang', 'alamat_p')
                         ->whereIn('nomor_internet', $nomorInternets)
                         ->get()
                         ->keyBy('nomor_internet')
@@ -2373,7 +2408,9 @@ class OltConnectionService
 
                 $reg = $batchjobMap[$u->nomor_internet] ?? null;
                 $pel = $pelanggansMap[strtoupper(trim($u->nama_user))] ?? null;
-                $address = $pel['alamat'] ?? 'Bandung, Jawa Barat';
+                $address = (!empty($reg->alamat_pasang) && trim((string)$reg->alamat_pasang) !== '')
+                    ? trim((string)$reg->alamat_pasang)
+                    : ($pel['alamat'] ?? 'Bandung, Jawa Barat');
                 $phone = $pel['hp'] ?? '-';
                 $odpRaw = isset($odpMap[$u->odp_id]) ? trim($odpMap[$u->odp_id]->nama_odp) : null;
                 $odpName = (!empty($odpRaw) && strtoupper(trim($odpRaw)) !== 'ODP' && strtoupper(trim($odpRaw)) !== 'N/A' && strtoupper(trim($odpRaw)) !== 'HARDWARE OLT') ? $odpRaw : '-';

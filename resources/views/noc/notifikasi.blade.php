@@ -64,7 +64,26 @@
     <!-- 2. KPI STATS SUMMARY CARDS                                          -->
     <!-- =================================================================== -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        <!-- 1. Perangkat LOS (DEFAULT AKTIF) -->
+        <!-- 1. Total Isu Aktif (DEFAULT AKTIF) -->
+        <div @click="activeTab = 'all'"
+             class="p-4 rounded-2xl border transition cursor-pointer relative overflow-hidden group"
+             :class="activeTab === 'all' ? 'bg-slate-100 dark:bg-slate-800 border-slate-700 shadow-md ring-2 ring-slate-500/20' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs'">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Semua Isu Aktif</span>
+                <div class="w-8 h-8 rounded-xl bg-slate-500/10 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white" x-text="summary.total_active"></span>
+                <span class="text-xs font-semibold text-slate-400">Kejadian</span>
+            </div>
+            <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Total insiden aktif & tiket</p>
+        </div>
+
+        <!-- 2. Perangkat LOS -->
         <div @click="activeTab = 'los'"
              class="p-4 rounded-2xl border transition cursor-pointer relative overflow-hidden group"
              :class="activeTab === 'los' ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-500 shadow-md ring-2 ring-rose-500/20' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs'">
@@ -86,7 +105,7 @@
             <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Kabel putus / redaman loss</p>
         </div>
 
-        <!-- 2. Perangkat DOWN (Offline) -->
+        <!-- 3. Perangkat DOWN (Offline) -->
         <div @click="activeTab = 'down'"
              class="p-4 rounded-2xl border transition cursor-pointer relative overflow-hidden group"
              :class="activeTab === 'down' ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-500 shadow-md ring-2 ring-amber-500/20' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs'">
@@ -103,25 +122,6 @@
                 <span class="text-xs font-semibold text-slate-400">Node</span>
             </div>
             <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Modem padam / power off</p>
-        </div>
-
-        <!-- 3. Total Isu Aktif -->
-        <div @click="activeTab = 'all'"
-             class="p-4 rounded-2xl border transition cursor-pointer relative overflow-hidden group"
-             :class="activeTab === 'all' ? 'bg-slate-100 dark:bg-slate-800 border-slate-700 shadow-md ring-2 ring-slate-500/20' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs'">
-            <div class="flex items-center justify-between">
-                <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Semua Isu Aktif</span>
-                <div class="w-8 h-8 rounded-xl bg-slate-500/10 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                    </svg>
-                </div>
-            </div>
-            <div class="mt-2 flex items-baseline gap-2">
-                <span class="text-2xl sm:text-3xl font-black font-mono text-slate-800 dark:text-slate-200" x-text="summary.total_active"></span>
-                <span class="text-xs font-semibold text-slate-400">Kejadian</span>
-            </div>
-            <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 truncate">Memerlukan atensi teknis</p>
         </div>
 
         <!-- 4. Tiket (Gangguan, Ubah Layanan, Ubah Password, Relokasi, Aktivasi Baru) -->
@@ -169,7 +169,18 @@
     <div class="space-y-2">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <div class="flex items-center flex-wrap gap-1">
-                <!-- 1. Perangkat LOS (DEFAULT AKTIF) -->
+                <!-- 1. Semua Isu Aktif (DEFAULT AKTIF) -->
+                <button @click="activeTab = 'all'"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                        :class="activeTab === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs ring-2 ring-slate-500/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white dark:bg-slate-900 animate-pulse" x-show="activeTab === 'all'"></span>
+                    <span>Semua Isu Aktif</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                          :class="activeTab === 'all' ? 'bg-white/20 dark:bg-black/20 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
+                          x-text="alerts.length"></span>
+                </button>
+
+                <!-- 2. Perangkat LOS -->
                 <button @click="activeTab = 'los'"
                         class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                         :class="activeTab === 'los' ? 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-500/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
@@ -180,24 +191,15 @@
                           x-text="summary.total_los || 0"></span>
                 </button>
 
-                <!-- 2. Perangkat DOWN -->
+                <!-- 3. Perangkat DOWN -->
                 <button @click="activeTab = 'down'"
                         class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                         :class="activeTab === 'down' ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-500/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse" x-show="activeTab === 'down'"></span>
                     <span>Perangkat DOWN</span>
                     <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
                           :class="activeTab === 'down' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300'"
                           x-text="summary.total_down || 0"></span>
-                </button>
-
-                <!-- 3. Semua Isu Aktif -->
-                <button @click="activeTab = 'all'"
-                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-                        :class="activeTab === 'all' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'">
-                    <span>Semua Isu Aktif</span>
-                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
-                          :class="activeTab === 'all' ? 'bg-white/20 dark:bg-black/20 text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
-                          x-text="alerts.length"></span>
                 </button>
 
                 <!-- 4. Tiket -->
@@ -408,9 +410,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                     </svg>
                                     <span>Mulai: <strong class="text-slate-800 dark:text-slate-100 font-bold" x-text="item.created_at"></strong></span>
-                                    <template x-if="item.duration_human">
-                                        <span class="text-slate-400 font-normal" x-text="'(' + item.duration_human + ')'"></span>
-                                    </template>
+                                    <span class="text-slate-400 font-normal" x-show="formatDuration(item)" x-text="'(' + formatDuration(item) + ')'"></span>
                                 </div>
                             </div>
 
@@ -607,7 +607,7 @@
 <script>
 function nocNotifikasiPage() {
     return {
-        activeTab: 'los', // Default: 'los' (Loss of Signal), 'down', 'all', 'tiket', 'intentional'
+        activeTab: 'all', // Default: 'all' (Semua Isu Aktif), 'los', 'down', 'tiket', 'intentional'
         ticketFilter: 'all', // Sub-filter tiket: 'all', 'gangguan', 'ubah_layanan', 'ubah_password', 'relokasi', 'aktivasi_baru'
         searchKeyword: '',
         isLoading: false,
@@ -670,6 +670,24 @@ function nocNotifikasiPage() {
             if (initialOnuCount === 0) {
                 this.refreshData(false);
             }
+        },
+
+        formatDuration(item) {
+            if (!item) return '';
+            const raw = item.created_at_raw || item.created_at;
+            if (!raw) return item.duration_human || '';
+
+            const t = Date.parse(String(raw).replace(' ', 'T'));
+            if (isNaN(t)) return item.duration_human || '';
+
+            const diffSec = Math.floor((Date.now() - t) / 1000);
+            if (diffSec < 45) return 'Baru saja';
+            if (diffSec < 90) return '1 menit yang lalu';
+            if (diffSec < 3600) return Math.floor(diffSec / 60) + ' menit yang lalu';
+            if (diffSec < 7200) return '1 jam yang lalu';
+            if (diffSec < 86400) return Math.floor(diffSec / 3600) + ' jam yang lalu';
+            if (diffSec < 172800) return '1 hari yang lalu';
+            return Math.floor(diffSec / 86400) + ' hari yang lalu';
         },
 
         updateClock() {

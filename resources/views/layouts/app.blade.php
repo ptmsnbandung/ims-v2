@@ -393,6 +393,24 @@
                     return all.slice(0, 5);
                 },
 
+                formatDuration(item) {
+                    if (!item) return '';
+                    const raw = item.created_at_raw || item.created_at;
+                    if (!raw) return item.duration_human || '';
+
+                    const t = Date.parse(String(raw).replace(' ', 'T'));
+                    if (isNaN(t)) return item.duration_human || '';
+
+                    const diffSec = Math.floor((Date.now() - t) / 1000);
+                    if (diffSec < 45) return 'Baru saja';
+                    if (diffSec < 90) return '1 menit yang lalu';
+                    if (diffSec < 3600) return Math.floor(diffSec / 60) + ' menit yang lalu';
+                    if (diffSec < 7200) return '1 jam yang lalu';
+                    if (diffSec < 86400) return Math.floor(diffSec / 3600) + ' jam yang lalu';
+                    if (diffSec < 172800) return '1 hari yang lalu';
+                    return Math.floor(diffSec / 86400) + ' hari yang lalu';
+                },
+
                 testSound() {
                     if (window.ImsVoice && typeof window.ImsVoice.testSound === 'function') {
                         window.ImsVoice.testSound();
@@ -1939,7 +1957,7 @@
                                                 <div class="flex flex-col items-end">
                                                     <span class="text-[10px] font-semibold whitespace-nowrap"
                                                           :class="item.is_recovery ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-600 dark:text-slate-300'"
-                                                          x-text="item.duration_human || ''"></span>
+                                                          x-text="formatDuration(item)"></span>
                                                     <span class="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap"
                                                           x-text="item.created_at"></span>
                                                 </div>

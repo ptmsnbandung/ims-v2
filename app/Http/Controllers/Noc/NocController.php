@@ -4448,8 +4448,12 @@ class NocController extends Controller
                         }
 
                         $custName = $matchedUser->nama_pelanggan ?? "ONU #{$onuId}";
-                        $custNo = $matchedUser->nomor_internet ?? '-';
-                        $phaseLabel = strtoupper($st['phase'] ?? ($isLos ? 'LOS' : 'DOWN'));
+                        $rawPhase = strtolower($st['phase'] ?? ($isLos ? 'los' : 'down'));
+                        if (in_array($rawPhase, ['dyinggasp', 'offline', 'poweroff'])) {
+                            $phaseLabel = 'OFFLINE';
+                        } else {
+                            $phaseLabel = strtoupper($rawPhase);
+                        }
 
                         $actionUrl = (!empty($custNo) && $custNo !== '-' && (Route::has('teknik.pelanggan.profile') || Route::has('pelanggan.profile')))
                             ? (Route::has('teknik.pelanggan.profile') ? route('teknik.pelanggan.profile', ['nomor_internet' => $custNo]) : route('pelanggan.profile', ['nomor_internet' => $custNo]))
@@ -4493,7 +4497,9 @@ class NocController extends Controller
                             'subtitle' => "OLT: {$olt->name_olt} • Port PON {$port} • No: {$custNo}",
                             'message' => $isLos 
                                 ? "Sinyal optik fiber terputus / LOS pada {$fullInterface} ({$custName}). Kabel optik putus atau redaman loss."
-                                : "Perangkat modem padam / offline ({$phaseLabel}) pada {$fullInterface} ({$custName}).",
+                                : ($phaseLabel === 'OFFLINE'
+                                    ? "Perangkat modem padam / offline pada {$fullInterface} ({$custName})."
+                                    : "Perangkat modem padam / offline ({$phaseLabel}) pada {$fullInterface} ({$custName})."),
                             'status' => $isLos ? 'LOS' : 'DOWN',
                             'severity' => $isLos ? 'danger' : 'warning',
                             'badge_color' => $isLos ? 'bg-rose-500 text-white' : 'bg-amber-600 text-white',
@@ -4573,6 +4579,13 @@ class NocController extends Controller
                             'url' => $oldData['actionUrl'] ?? route('teknik.pelanggan'),
                             'is_recovery' => true,
                         ]);
+                    }
+
+                    // Reset waktu gangguan perangkat yang pulih agar jika nanti down kembali, waktu insiden baru tercatat akurat
+                    if (!empty($oldData['olt_kode']) && !empty($oldData['fullInterface'])) {
+                        $cleanIface = str_ireplace('gpon-onu_', '', $oldData['fullInterface']);
+                        Cache::forget("onu_outage_time_{$oldData['olt_kode']}_{$cleanIface}");
+                        Cache::forget("onu_outage_time_{$oldData['olt_kode']}_{$oldData['fullInterface']}");
                     }
                 }
             }
@@ -4695,12 +4708,59 @@ class NocController extends Controller
             return strcmp($b['created_at_raw'] ?? '', $a['created_at_raw'] ?? '');
         });
         $recentRecoveries = array_values(array_slice($recentRecoveries, 0, 15));
+
+        // Segarkan duration_human untuk seluruh riwayat pemulihan secara real-time dari created_at_raw
+        $now = now();
+        foreach ($recentRecoveries as &$rc) {
+            if (!empty($rc['created_at_raw'])) {
+                try {
+                    $c = Carbon::parse($rc['created_at_raw']);
+                    $diffSec = $now->diffInSeconds($c, false);
+                    if ($diffSec > 0) {
+                        // Jika timestamp sedikit di masa depan (beda clock), set 'Baru saja'
+                        $rc['duration_human'] = 'Baru saja';
+                    } else {
+                        $diffSec = abs($diffSec);
+                        if ($diffSec < 45) {
+                            $rc['duration_human'] = 'Baru saja';
+                        } else {
+                            $rc['duration_human'] = $c->locale('id')->diffForHumans();
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $rc['duration_human'] = 'Baru saja';
+                }
+            }
+        }
+        unset($rc);
+
         Cache::put('noc_recent_recoveries', $recentRecoveries, 86400 * 2);
 
         // Urutkan active alerts berdasarkan waktu mulai gangguan terbaru (insiden paling baru muncul di paling atas, baik LOS maupun DOWN)
         usort($activeAlerts, function ($a, $b) {
             return strcmp($b['created_at_raw'] ?? '', $a['created_at_raw'] ?? '');
         });
+
+        // Segarkan duration_human untuk seluruh alert aktif secara real-time
+        foreach ($activeAlerts as &$al) {
+            if (!empty($al['created_at_raw'])) {
+                try {
+                    $c = Carbon::parse($al['created_at_raw']);
+                    $diffSec = $now->diffInSeconds($c, false);
+                    if ($diffSec > 0) {
+                        $al['duration_human'] = 'Baru saja';
+                    } else {
+                        $diffSec = abs($diffSec);
+                        if ($diffSec < 45) {
+                            $al['duration_human'] = 'Baru saja';
+                        } else {
+                            $al['duration_human'] = $c->locale('id')->diffForHumans();
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+        unset($al);
 
         $totalActive = count($activeAlerts);
         $totalLos = count(array_filter($activeAlerts, fn($a) => $a['status'] === 'LOS'));

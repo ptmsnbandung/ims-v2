@@ -4448,6 +4448,7 @@ class NocController extends Controller
                         }
 
                         $custName = $matchedUser->nama_pelanggan ?? "ONU #{$onuId}";
+                        $custNo = $matchedUser->nomor_internet ?? '-';
                         $rawPhase = strtolower($st['phase'] ?? ($isLos ? 'los' : 'down'));
                         if (in_array($rawPhase, ['dyinggasp', 'offline', 'poweroff'])) {
                             $phaseLabel = 'OFFLINE';

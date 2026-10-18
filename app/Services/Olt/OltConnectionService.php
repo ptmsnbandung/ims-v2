@@ -853,6 +853,15 @@ class OltConnectionService
             $cleanIndex = 'gpon-onu_' . ltrim($cleanIndex, '_');
         }
 
+        // Validasi format index OLT (Cegah CR/LF command injection ke OLT telnet CLI)
+        if (!preg_match('/^gpon-onu_\d+\/\d+\/\d+:\d+$/', $cleanIndex)) {
+            Log::warning("Potential OLT command injection blocked in rebootOnu: " . addcslashes($indexOlt, "\r\n\t"));
+            return [
+                'success' => false,
+                'message' => 'Format index ONU tidak valid (harus sesuai format gpon-onu_x/x/x:x).',
+            ];
+        }
+
         // Cari konfigurasi OLT di database atau default
         $olt = null;
         if ($kodeOlt && Schema::hasTable('m_olt')) {
@@ -2894,6 +2903,29 @@ class OltConnectionService
             } else {
                 $clean = 'gpon-onu_1/' . ltrim($clean, '/');
             }
+        }
+
+        // Validasi format interface ONU (Cegah CR/LF command injection ke OLT telnet CLI)
+        if (!preg_match('/^gpon-onu_\d+\/\d+\/\d+:\d+$/', $clean)) {
+            Log::warning("Potential OLT command injection blocked for interface: " . addcslashes($interfaceOnu, "\r\n\t"));
+            return [
+                'success' => false,
+                'message' => 'Format interface ONU tidak valid (harus sesuai format gpon-onu_x/x/x:x).',
+                'command' => '',
+                'interface' => $interfaceOnu,
+                'down_rx' => null,
+                'down_rx_formatted' => 'N/A',
+                'up_tx' => null,
+                'up_tx_formatted' => 'N/A',
+                'down_tx' => null,
+                'down_tx_formatted' => 'N/A',
+                'up_rx' => null,
+                'up_rx_formatted' => 'N/A',
+                'attenuation_db' => null,
+                'attenuation_formatted' => 'N/A',
+                'raw_output' => 'Format interface tidak valid.',
+                'checked_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
+            ];
         }
 
         // Tentukan interface alternatif (jika query di Slot 1 gagal/berbeda kartu GPON di chassis OLT)

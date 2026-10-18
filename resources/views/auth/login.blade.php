@@ -132,28 +132,31 @@
                 </div>
             </div>
 
-            <!-- Submit Button (Arrow Glow Pill) -->
+            <!-- Submit Button (Oceanic Teal & Cyan Gradient with "Login" text) -->
             <div class="pt-1.5">
                 <button type="submit"
                         :disabled="isSubmitting"
-                        class="w-full h-12 rounded-2xl text-white font-medium flex items-center justify-center transition-all duration-200 cursor-pointer shadow-lg active:scale-[0.98] group"
-                        style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
-                               box-shadow: 0 10px 25px -4px rgba(99, 102, 241, 0.55),
+                        class="w-full h-12 rounded-2xl text-white font-medium flex items-center justify-center transition-all duration-200 cursor-pointer shadow-lg active:scale-[0.98] hover:brightness-105 border border-teal-400/30 group"
+                        style="background: linear-gradient(108deg, #032b35 0%, #043f4e 25%, #065b70 55%, #087d94 80%, #009aa9 100%);
+                               box-shadow: 0 10px 25px -4px rgba(6, 91, 112, 0.6),
                                            inset 0 1px 1px 0 rgba(255, 255, 255, 0.35);">
                     
-                    <!-- Loading Spinner -->
+                    <!-- Loading State -->
                     <template x-if="isSubmitting">
-                        <svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                        <div class="flex items-center gap-2">
+                            <svg class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-xs font-semibold tracking-wider text-white">Memproses...</span>
+                        </div>
                     </template>
 
-                    <!-- Right Arrow Icon '→' -->
+                    <!-- Login Text Label -->
                     <template x-if="!isSubmitting">
-                        <svg class="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                        </svg>
+                        <span class="text-sm font-bold tracking-wider uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                            Login
+                        </span>
                     </template>
                 </button>
             </div>

@@ -26,11 +26,18 @@ class LoginController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function login(LoginRequest $request): RedirectResponse
+    public function login(LoginRequest $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'redirect' => redirect()->intended(route('dashboard'))->getTargetUrl(),
+            ]);
+        }
 
         return redirect()->intended(route('dashboard'));
     }

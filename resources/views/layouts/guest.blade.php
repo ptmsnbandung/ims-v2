@@ -39,13 +39,23 @@
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full w-full font-sans antialiased text-slate-100 bg-[#061d28] relative selection:bg-cyan-500 selection:text-white overflow-hidden">
+<body class="h-full w-full font-sans antialiased text-slate-100 bg-[#061d28] relative selection:bg-cyan-500 selection:text-white overflow-hidden"
+      x-data="{
+          isEntering: false,
+          triggerEnter(redirectUrl) {
+              if (this.isEntering) return;
+              this.isEntering = true;
+              setTimeout(() => {
+                  window.location.href = redirectUrl || '{{ route('dashboard') }}';
+              }, 750);
+          }
+      }">
 
     <!-- ======================================================== -->
     <!-- BACKGROUND: REAL IMS-V2 DASHBOARD (Gambar 2) DIBLUR     -->
     <!-- ======================================================== -->
-    <div class="fixed inset-0 w-full h-full flex pointer-events-none select-none z-0 overflow-hidden"
-         style="filter: blur(6px) brightness(0.75) saturate(1.15); transform: scale(1.02);">
+    <div class="fixed inset-0 w-full h-full flex pointer-events-none select-none z-0 overflow-hidden transition-all duration-700 ease-out"
+         :style="isEntering ? 'filter: blur(0px) brightness(1) saturate(1); transform: scale(1);' : 'filter: blur(6px) brightness(0.75) saturate(1.15); transform: scale(1.02);'">
         
         <!-- Sidebar Kiri (Persis Gambar 2 IMS-V2) -->
         <aside class="w-60 h-full bg-[#061d28] border-r border-[#0d2a38] flex flex-col shrink-0 text-slate-300">
@@ -365,10 +375,12 @@
     </div>
 
     <!-- Dark Translucent Overlay to ensure perfect contrast for the Glass Login Card -->
-    <div class="fixed inset-0 bg-[#061d28]/40 pointer-events-none z-[1]"></div>
+    <div class="fixed inset-0 bg-[#061d28]/40 pointer-events-none z-[1] transition-opacity duration-700 ease-out"
+         :class="isEntering ? 'opacity-0' : 'opacity-100'"></div>
 
     <!-- Soft Ambient Halo behind Login Card -->
-    <div class="fixed inset-0 flex items-center justify-center pointer-events-none z-[2]">
+    <div class="fixed inset-0 flex items-center justify-center pointer-events-none z-[2] transition-opacity duration-500 ease-out"
+         :class="isEntering ? 'opacity-0' : 'opacity-100'">
         <div class="w-[500px] h-[500px] bg-gradient-to-tr from-cyan-500/25 via-teal-400/20 to-sky-600/20 rounded-full blur-[110px]"></div>
     </div>
 

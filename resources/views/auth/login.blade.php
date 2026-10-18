@@ -1,16 +1,72 @@
 @extends('layouts.guest', ['title' => 'Masuk ke Sistem'])
 
 @section('content')
-<div class="w-full max-w-[400px] sm:max-w-[420px] relative"
+<style>
+    @keyframes cardShake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-7px); }
+        40%, 80% { transform: translateX(7px); }
+    }
+    .anim-shake {
+        animation: cardShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+</style>
+
+<div class="w-full max-w-[400px] sm:max-w-[420px] relative transition-all duration-700 ease-out"
+     :class="isEntering ? 'opacity-0 scale-105 -translate-y-8 pointer-events-none blur-md' : 'opacity-100 scale-100 translate-y-0'"
      x-data="{
         username: '{{ old('username', '') }}',
         password: '',
         showPassword: false,
-        isSubmitting: false
+        isSubmitting: false,
+        errorMessage: '',
+        isShaking: false,
+
+        async submitLogin() {
+            if (this.isSubmitting || isEntering) return;
+            this.isSubmitting = true;
+            this.errorMessage = '';
+
+            try {
+                const form = this.$refs.loginForm;
+                const formData = new FormData(form);
+
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Jalankan animasi card login menghilang dan masuk ke dashboard
+                    triggerEnter(data.redirect || '{{ route('dashboard') }}');
+                } else if (response.status === 422) {
+                    const data = await response.json();
+                    this.isSubmitting = false;
+                    this.errorMessage = data.message || (data.errors ? Object.values(data.errors)[0][0] : 'Username atau password salah.');
+                    this.triggerShake();
+                } else {
+                    form.submit();
+                }
+            } catch (e) {
+                this.$refs.loginForm.submit();
+            }
+        },
+
+        triggerShake() {
+            this.isShaking = true;
+            setTimeout(() => { this.isShaking = false; }, 600);
+        }
      }">
 
     <!-- Frosted Glass Login Card -->
     <div class="relative rounded-[32px] p-7 sm:p-8 backdrop-blur-2xl border border-white/[0.18] transition-all duration-300 overflow-hidden"
+         :class="isShaking ? 'anim-shake' : ''"
          style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.03) 100%);
                 box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8),
                             inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.35),
@@ -23,7 +79,7 @@
         <div class="flex flex-col items-center text-center mb-6 relative z-10">
             <div class="relative group cursor-pointer mb-3">
                 <!-- Ambient Glow behind MSN Logo -->
-                <div class="absolute -inset-2 bg-gradient-to-r from-cyan-400 via-sky-500 to-purple-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-80 transition-opacity"></div>
+                <div class="absolute -inset-2 bg-gradient-to-r from-cyan-400 via-sky-500 to-teal-400 rounded-2xl blur-lg opacity-50 group-hover:opacity-80 transition-opacity"></div>
                 
                 <!-- MSN Logo Container (Glass Squircle) -->
                 <div class="relative w-16 h-16 rounded-2xl bg-white/95 border border-white/90 p-2.5 flex items-center justify-center shadow-xl shadow-cyan-950/40 ring-4 ring-white/10 transition-transform duration-300 group-hover:scale-105">
@@ -40,7 +96,15 @@
             </p>
         </div>
 
-        <!-- Alert Notifications (Errors / Success) -->
+        <!-- Dynamic AJAX Error Message Banner -->
+        <div x-show="errorMessage" x-cloak class="mb-4 p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-[11px] flex items-center gap-2 backdrop-blur-md">
+            <svg class="w-4 h-4 flex-shrink-0 text-rose-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/>
+            </svg>
+            <span x-text="errorMessage"></span>
+        </div>
+
+        <!-- Static Session Notifications -->
         @if(session('success'))
             <div class="mb-4 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] flex items-center gap-2 backdrop-blur-md">
                 <svg class="w-3.5 h-3.5 flex-shrink-0 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
@@ -70,20 +134,21 @@
         @endif
 
         <!-- Login Form -->
-        <form action="{{ route('login.submit') }}" method="POST" class="space-y-3.5" @submit="isSubmitting = true">
+        <form x-ref="loginForm"
+              action="{{ route('login.submit') }}"
+              method="POST"
+              class="space-y-3.5"
+              @submit.prevent="submitLogin">
             @csrf
 
-            <!-- Username Input (Clean Dark Glass Pill) -->
+            <!-- Username Input -->
             <div class="relative group">
                 <div class="flex items-center h-12 rounded-2xl bg-[#0b1322]/85 hover:bg-[#0e192c]/95 focus-within:bg-[#0e192c] border border-white/[0.14] focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-400/25 transition-all shadow-inner overflow-hidden">
-                    <!-- Icon -->
                     <div class="pl-4 pr-2 text-slate-400 group-focus-within:text-cyan-400 transition-colors shrink-0">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                         </svg>
                     </div>
-
-                    <!-- Input -->
                     <input id="username"
                            type="text"
                            name="username"
@@ -95,17 +160,14 @@
                 </div>
             </div>
 
-            <!-- Password Input (Clean Dark Glass Pill + Eye Toggle) -->
+            <!-- Password Input -->
             <div class="relative group">
                 <div class="flex items-center h-12 rounded-2xl bg-[#0b1322]/85 hover:bg-[#0e192c]/95 focus-within:bg-[#0e192c] border border-white/[0.14] focus-within:border-cyan-400 focus-within:ring-2 focus-within:ring-cyan-400/25 transition-all shadow-inner overflow-hidden">
-                    <!-- Icon -->
                     <div class="pl-4 pr-2 text-slate-400 group-focus-within:text-cyan-400 transition-colors shrink-0">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                         </svg>
                     </div>
-
-                    <!-- Input -->
                     <input id="password"
                            :type="showPassword ? 'text' : 'password'"
                            name="password"
@@ -119,11 +181,9 @@
                             @click="showPassword = !showPassword"
                             tabindex="-1"
                             class="pr-4 pl-1 text-slate-400 hover:text-white transition-colors focus:outline-none shrink-0 cursor-pointer">
-                        <!-- Eye Slash -->
                         <svg x-show="!showPassword" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
                         </svg>
-                        <!-- Eye Open -->
                         <svg x-show="showPassword" x-cloak class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -132,7 +192,7 @@
                 </div>
             </div>
 
-            <!-- Submit Button (Oceanic Teal & Cyan Gradient with "Login" text) -->
+            <!-- Submit Button (Oceanic Teal & Cyan Gradient with "LOGIN" text) -->
             <div class="pt-1.5">
                 <button type="submit"
                         :disabled="isSubmitting"
@@ -164,9 +224,17 @@
 
     </div>
 
-    <!-- Subtle Footer Note -->
-    <div class="mt-3.5 text-center">
+    <!-- Footer Note & Instant Preview Action -->
+    <div class="mt-3.5 text-center flex flex-col items-center gap-1.5">
         <span class="text-[11px] font-mono text-slate-400/80">&copy; {{ date('Y') }} PT Media Solusi Network &bull; IMS-V2</span>
+        
+        <!-- Tombol Uji Langsung Animasi Masuk ke Dashboard -->
+        <button type="button"
+                @click="triggerEnter('{{ route('dashboard') }}')"
+                class="inline-flex items-center gap-1 text-[10.5px] font-semibold text-cyan-300/80 hover:text-cyan-200 transition-colors cursor-pointer py-1 px-2 rounded-lg hover:bg-white/5">
+            <span>Uji Animasi Masuk Dashboard</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </button>
     </div>
 
 </div>

@@ -14,19 +14,7 @@
             max-height: 100vh !important;
             overflow: hidden !important;
         }
-        html {
-            font-size: 13px !important;
-        }
-        @media (min-width: 1280px) {
-            html {
-                font-size: 13.5px !important;
-            }
-        }
-        @media (max-width: 639.98px) {
-            html {
-                font-size: 13px !important;
-            }
-        }
+        [x-cloak] { display: none !important; }
     </style>
 
     <!-- Favicon -->
@@ -34,127 +22,252 @@
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ asset('assets/images/logo.png') }}">
 
-    <!-- Always reset/default theme to Light Mode on login / guest pages -->
-    <script>
-        (function() {
-            try {
-                localStorage.removeItem('theme');
-                document.documentElement.classList.remove('dark');
-            } catch (e) {}
-        })();
-    </script>
-
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        [x-cloak] { display: none !important; }
-        @keyframes pulseGlow {
-            0%, 100% { opacity: 0.35; transform: scale(1); }
-            50% { opacity: 0.65; transform: scale(1.08); }
-        }
-        @keyframes floatMesh {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(1deg); }
-        }
-        .anim-glow {
-            animation: pulseGlow 7s ease-in-out infinite;
-        }
-        .anim-float {
-            animation: floatMesh 12s ease-in-out infinite;
-        }
-    </style>
 </head>
-<body class="h-full w-full font-sans text-slate-800 antialiased selection:bg-cyan-500 selection:text-white relative overflow-hidden flex flex-col justify-center items-center bg-[#072d42]">
-    
-    <!-- Vibrant Teal & Cyan Network Gradient Background -->
+<body class="h-full w-full font-sans antialiased text-slate-100 bg-[#06080f] flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8 relative selection:bg-purple-500 selection:text-white overflow-hidden">
+
+    <!-- Ambient Glowing Light Sources (Bleeds into edges like the photo) -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <!-- Base Multi-stop Vibrant Gradient -->
-        <div class="absolute inset-0 bg-gradient-to-br from-[#062638] via-[#085a75] via-[#0284c7] to-[#04334c]"></div>
-
-        <!-- Ambient Glow Orbs -->
-        <div class="absolute -top-40 -left-40 w-[38rem] h-[38rem] bg-cyan-400/25 rounded-full blur-3xl anim-glow"></div>
-        <div class="absolute top-1/3 -right-40 w-[36rem] h-[36rem] bg-teal-300/20 rounded-full blur-3xl anim-glow" style="animation-delay: 2.5s;"></div>
-        <div class="absolute -bottom-40 left-1/4 w-[42rem] h-[42rem] bg-sky-400/25 rounded-full blur-3xl anim-glow" style="animation-delay: 4.5s;"></div>
-
-        <!-- SVG Network Constellation Mesh & Fiber Optics Accents -->
-        <svg class="absolute inset-0 w-full h-full opacity-35 mix-blend-screen anim-float" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" viewBox="0 0 1440 900">
-            <defs>
-                <linearGradient id="netGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8"/>
-                    <stop offset="50%" stop-color="#2dd4bf" stop-opacity="0.6"/>
-                    <stop offset="100%" stop-color="#0284c7" stop-opacity="0.2"/>
-                </linearGradient>
-                <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#67e8f9" stop-opacity="1"/>
-                    <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
-                </radialGradient>
-            </defs>
-            
-            <!-- Connection Lines -->
-            <path d="M 120,180 L 320,120 L 520,240 L 740,160 L 980,220 L 1220,140 L 1380,260" stroke="url(#netGrad1)" stroke-width="1.5" fill="none" stroke-dasharray="6,4"/>
-            <path d="M 80,480 L 260,420 L 480,560 L 720,440 L 960,540 L 1200,430 L 1400,520" stroke="url(#netGrad1)" stroke-width="1.5" fill="none"/>
-            <path d="M 160,780 L 380,720 L 620,810 L 860,700 L 1100,790 L 1340,680" stroke="url(#netGrad1)" stroke-width="1.5" fill="none" stroke-dasharray="8,5"/>
-            
-            <!-- Diagonal Interlinks -->
-            <line x1="320" y1="120" x2="480" y2="560" stroke="url(#netGrad1)" stroke-width="1" stroke-opacity="0.5"/>
-            <line x1="740" y1="160" x2="720" y2="440" stroke="url(#netGrad1)" stroke-width="1.2" stroke-opacity="0.6"/>
-            <line x1="980" y1="220" x2="960" y2="540" stroke="url(#netGrad1)" stroke-width="1" stroke-opacity="0.5"/>
-            <line x1="260" y1="420" x2="380" y2="720" stroke="url(#netGrad1)" stroke-width="1" stroke-opacity="0.4"/>
-            <line x1="720" y1="440" x2="860" y2="700" stroke="url(#netGrad1)" stroke-width="1.2" stroke-opacity="0.6"/>
-            <line x1="1200" y1="430" x2="1100" y2="790" stroke="url(#netGrad1)" stroke-width="1" stroke-opacity="0.4"/>
-
-            <!-- Glowing Nodes (Circles) -->
-            <circle cx="120" cy="180" r="5" fill="#38bdf8" filter="drop-shadow(0 0 8px #38bdf8)"/>
-            <circle cx="320" cy="120" r="7" fill="#2dd4bf" filter="drop-shadow(0 0 10px #2dd4bf)"/>
-            <circle cx="520" cy="240" r="4" fill="#67e8f9"/>
-            <circle cx="740" cy="160" r="8" fill="#38bdf8" filter="drop-shadow(0 0 12px #38bdf8)"/>
-            <circle cx="980" cy="220" r="6" fill="#2dd4bf"/>
-            <circle cx="1220" cy="140" r="7" fill="#67e8f9" filter="drop-shadow(0 0 10px #67e8f9)"/>
-            
-            <circle cx="260" cy="420" r="6" fill="#38bdf8"/>
-            <circle cx="480" cy="560" r="8" fill="#2dd4bf" filter="drop-shadow(0 0 12px #2dd4bf)"/>
-            <circle cx="720" cy="440" r="9" fill="#a5f3fc" filter="drop-shadow(0 0 14px #38bdf8)"/>
-            <circle cx="960" cy="540" r="7" fill="#38bdf8"/>
-            <circle cx="1200" cy="430" r="8" fill="#2dd4bf" filter="drop-shadow(0 0 10px #2dd4bf)"/>
-            
-            <circle cx="380" cy="720" r="7" fill="#67e8f9"/>
-            <circle cx="620" cy="810" r="5" fill="#2dd4bf"/>
-            <circle cx="860" cy="700" r="8" fill="#38bdf8" filter="drop-shadow(0 0 12px #38bdf8)"/>
-            <circle cx="1100" cy="790" r="6" fill="#2dd4bf"/>
-        </svg>
-
-        <!-- Subtle Geometric Dot Matrix -->
-        <div class="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:28px_28px] opacity-40"></div>
+        <!-- Deep Purple Ambient Glow at Bottom -->
+        <div class="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[700px] sm:w-[900px] h-[350px] bg-gradient-to-t from-purple-600/35 via-indigo-600/20 to-transparent rounded-full blur-[90px]"></div>
+        <!-- Soft Cyan Glow at Top Right -->
+        <div class="absolute -top-32 -right-20 w-[450px] h-[450px] bg-cyan-500/15 rounded-full blur-[100px]"></div>
+        <!-- Violet Glow at Top Left -->
+        <div class="absolute -top-24 -left-20 w-[400px] h-[400px] bg-purple-700/15 rounded-full blur-[90px]"></div>
     </div>
 
-    <!-- Main Container (Fits Exactly In 1 Screen) -->
-    <div class="w-full max-w-[440px] px-4 sm:px-0 flex flex-col items-center justify-center relative z-10 my-auto">
-        <!-- Brand Logo / Header -->
-        <div class="flex flex-col items-center text-center mb-2.5">
-            <div class="w-14 h-14 rounded-2xl bg-white/95 backdrop-blur-xl p-1.5 shadow-xl shadow-cyan-950/40 border border-white/90 mb-1.5 flex items-center justify-center ring-4 ring-white/10 transition-transform duration-300 hover:scale-105">
-                <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
+    <!-- Application / Browser Window Mockup Frame -->
+    <div class="w-full max-w-[1240px] h-[96vh] sm:h-[92vh] max-h-[820px] rounded-2xl sm:rounded-3xl border border-white/10 bg-[#0a0d16] shadow-[0_25px_80px_-15px_rgba(0,0,0,0.85)] overflow-hidden relative z-10 flex flex-col ring-1 ring-white/5">
+        
+        <!-- Window Chrome / Titlebar (macOS Style: Red, Yellow, Green Dots) -->
+        <div class="h-9 sm:h-10 bg-[#0d121f]/95 border-b border-white/[0.08] px-3.5 sm:px-4 flex items-center justify-between shrink-0 select-none backdrop-blur-md">
+            <!-- Window Traffic Light Buttons -->
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#ff5f56] shadow-[0_0_6px_rgba(255,95,86,0.6)] border border-[#e0443e]"></span>
+                <span class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-[0_0_6px_rgba(255,189,46,0.6)] border border-[#dea123]"></span>
+                <span class="w-3 h-3 rounded-full bg-[#27c93f] shadow-[0_0_6px_rgba(39,201,63,0.6)] border border-[#1aab29]"></span>
+
+                <!-- Window Actions Minimalist Icons -->
+                <div class="hidden sm:flex items-center gap-2.5 ml-3 pl-3 border-l border-white/10 text-slate-400">
+                    <svg class="w-3.5 h-3.5 hover:text-slate-200 transition-colors cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    <svg class="w-3.5 h-3.5 hover:text-slate-200 transition-colors cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    <svg class="w-3 h-3 hover:text-slate-200 transition-colors cursor-pointer ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </div>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] leading-tight">
-                IMS<span class="bg-gradient-to-r from-cyan-300 via-teal-200 to-sky-300 bg-clip-text text-transparent font-black">-V2</span>
-            </h1>
-            <p class="mt-0.5 text-[11px] font-semibold text-cyan-100/90 tracking-wide drop-shadow-md">
-                Internet System Management Portal
-            </p>
+
+            <!-- Central Mockup URL / App Pill -->
+            <div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-[11px] font-mono text-slate-400">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-slate-400 font-medium">ims-network.datacenter.internal</span>
+            </div>
+
+            <!-- Right Window Indicators -->
+            <div class="flex items-center gap-2.5 text-slate-400 text-xs">
+                <span class="hidden sm:inline-block text-[10px] font-mono uppercase tracking-wider text-slate-400/80">IMS Core v2.4</span>
+                <div class="w-2 h-2 rounded-full bg-purple-400/70 shadow-[0_0_8px_rgba(168,85,247,0.7)]"></div>
+            </div>
         </div>
 
-        <!-- Elevated Glassmorphism White Card -->
-        <div class="w-full relative bg-white/95 backdrop-blur-2xl border border-white/90 shadow-[0_20px_50px_rgba(3,43,67,0.35)] rounded-2xl p-5 sm:p-6 text-slate-800 transition duration-200 overflow-hidden ring-1 ring-black/[0.04]">
-            <!-- Top Accent Gradient Line -->
-            <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-500 via-teal-400 to-sky-500"></div>
-            @yield('content')
+        <!-- Window Body: Contains Blurred NOC Dashboard Background + Centered Glass Card -->
+        <div class="relative flex-1 w-full overflow-hidden flex">
+
+            <!-- ======================================================== -->
+            <!-- BLURRED DASHBOARD BACKGROUND LAYER (Exact Reference Layout) -->
+            <!-- ======================================================== -->
+            <div class="absolute inset-0 w-full h-full flex pointer-events-none select-none z-0 overflow-hidden"
+                 style="filter: blur(13px) brightness(0.68) saturate(1.3); transform: scale(1.05);">
+                
+                <!-- Left Dark Sidebar Mockup -->
+                <div class="w-14 sm:w-16 h-full bg-[#080c16]/95 border-r border-white/[0.06] flex flex-col items-center py-4 gap-5 shrink-0">
+                    <!-- Logo Circle in Sidebar -->
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 p-0.5 flex items-center justify-center shadow-lg shadow-purple-900/40">
+                        <div class="w-full h-full bg-[#0a0d17] rounded-[10px] flex items-center justify-center">
+                            <span class="font-black text-[10px] text-cyan-300">IMS</span>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar Nav Icons -->
+                    <div class="flex flex-col items-center gap-4 mt-2 text-slate-400">
+                        <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center border border-purple-500/30">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        </div>
+                        <div class="w-8 h-8 rounded-xl hover:bg-white/5 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        <div class="w-8 h-8 rounded-xl hover:bg-white/5 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                        </div>
+                        <div class="w-8 h-8 rounded-xl hover:bg-white/5 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        </div>
+                        <div class="w-8 h-8 rounded-xl hover:bg-white/5 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Area Mockup (Cards, Wave Chart, Donut & Telemetry) -->
+                <div class="flex-1 h-full p-6 flex flex-col gap-5 overflow-hidden bg-[#090d18]">
+                    
+                    <!-- Top Metric Cards Row (Purple, Emerald, Orange/Amber, Cyan) -->
+                    <div class="grid grid-cols-4 gap-4">
+                        <!-- Card 1: Purple Glowing Metric -->
+                        <div class="h-24 rounded-2xl bg-[#111728] border border-purple-500/30 p-3.5 flex flex-col justify-between relative overflow-hidden shadow-lg shadow-purple-950/20">
+                            <div class="w-14 h-6 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 opacity-90 shadow-[0_0_12px_rgba(168,85,247,0.8)]"></div>
+                            <div class="flex items-baseline justify-between mt-2">
+                                <div class="w-24 h-4 bg-purple-200/20 rounded"></div>
+                                <div class="w-12 h-3 bg-purple-400/40 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Emerald Glowing Metric -->
+                        <div class="h-24 rounded-2xl bg-[#111728] border border-emerald-500/30 p-3.5 flex flex-col justify-between relative overflow-hidden shadow-lg shadow-emerald-950/20">
+                            <div class="w-14 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 opacity-90 shadow-[0_0_12px_rgba(16,185,129,0.8)]"></div>
+                            <div class="flex items-baseline justify-between mt-2">
+                                <div class="w-20 h-4 bg-emerald-200/20 rounded"></div>
+                                <div class="w-10 h-3 bg-emerald-400/40 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Orange Glowing Metric -->
+                        <div class="h-24 rounded-2xl bg-[#111728] border border-amber-500/30 p-3.5 flex flex-col justify-between relative overflow-hidden shadow-lg shadow-amber-950/20">
+                            <div class="w-14 h-6 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 opacity-90 shadow-[0_0_12px_rgba(245,158,11,0.8)]"></div>
+                            <div class="flex items-baseline justify-between mt-2">
+                                <div class="w-22 h-4 bg-amber-200/20 rounded"></div>
+                                <div class="w-12 h-3 bg-amber-400/40 rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Cyan Glowing Metric -->
+                        <div class="h-24 rounded-2xl bg-[#111728] border border-cyan-500/30 p-3.5 flex flex-col justify-between relative overflow-hidden shadow-lg shadow-cyan-950/20">
+                            <div class="w-14 h-6 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 opacity-90 shadow-[0_0_12px_rgba(6,182,212,0.8)]"></div>
+                            <div class="flex items-baseline justify-between mt-2">
+                                <div class="w-20 h-4 bg-cyan-200/20 rounded"></div>
+                                <div class="w-10 h-3 bg-cyan-400/40 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Middle Row: Wave Chart (Left) + Donut Ring & Bar Equalizer (Right) -->
+                    <div class="grid grid-cols-12 gap-5 flex-1 min-h-0">
+                        
+                        <!-- Left: Purple Wave Chart Area (Matches Reference exactly) -->
+                        <div class="col-span-8 rounded-2xl bg-[#111728] border border-white/[0.08] p-4 flex flex-col justify-between relative overflow-hidden">
+                            <div class="flex items-center justify-between">
+                                <div class="w-28 h-4 bg-white/10 rounded"></div>
+                                <div class="w-16 h-3 bg-white/10 rounded-full"></div>
+                            </div>
+
+                            <!-- SVG Smooth Purple Glowing Spline Wave -->
+                            <div class="w-full h-44 relative my-auto">
+                                <svg class="w-full h-full" viewBox="0 0 600 200" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#a855f7" stop-opacity="0.6"/>
+                                            <stop offset="50%" stop-color="#6366f1" stop-opacity="0.25"/>
+                                            <stop offset="100%" stop-color="#111728" stop-opacity="0"/>
+                                        </linearGradient>
+                                        <filter id="glowWave">
+                                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                                            <feMerge>
+                                                <feMergeNode in="coloredBlur"/>
+                                                <feMergeNode in="SourceGraphic"/>
+                                            </feMerge>
+                                        </filter>
+                                    </defs>
+                                    <!-- Wave Fill -->
+                                    <path d="M 0,160 Q 60,60 140,110 T 280,70 T 420,130 T 540,50 L 600,80 L 600,200 L 0,200 Z" fill="url(#purpleGrad)"/>
+                                    <!-- Wave Neon Stroke -->
+                                    <path d="M 0,160 Q 60,60 140,110 T 280,70 T 420,130 T 540,50 L 600,80" fill="none" stroke="#c084fc" stroke-width="4" filter="url(#glowWave)"/>
+                                </svg>
+                            </div>
+
+                            <!-- Bottom Grid Matrix Mock -->
+                            <div class="h-10 border-t border-white/[0.06] flex items-center justify-between text-slate-500 font-mono text-[10px]">
+                                <span>00:00</span>
+                                <span>04:00</span>
+                                <span>08:00</span>
+                                <span>12:00</span>
+                                <span>16:00</span>
+                                <span>20:00</span>
+                            </div>
+                        </div>
+
+                        <!-- Right: Circular Donut Gauge & Equalizer Bar Chart -->
+                        <div class="col-span-4 rounded-2xl bg-[#111728] border border-white/[0.08] p-4 flex flex-col items-center justify-center gap-4 relative overflow-hidden">
+                            <!-- Circular Donut Chart SVG (Glowing Cyan & Purple) -->
+                            <div class="w-32 h-32 relative flex items-center justify-center">
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="38" stroke="#1f293d" stroke-width="12" fill="none"/>
+                                    <!-- Cyan Segment -->
+                                    <circle cx="50" cy="50" r="38" stroke="#06b6d4" stroke-width="12" stroke-dasharray="160 240" stroke-linecap="round" fill="none" style="filter: drop-shadow(0 0 8px #06b6d4);"/>
+                                    <!-- Purple Segment -->
+                                    <circle cx="50" cy="50" r="38" stroke="#a855f7" stroke-width="12" stroke-dasharray="70 240" stroke-dashoffset="-165" stroke-linecap="round" fill="none" style="filter: drop-shadow(0 0 8px #a855f7);"/>
+                                </svg>
+                                <!-- Center Pill -->
+                                <div class="absolute inset-0 m-auto w-12 h-12 rounded-full bg-[#0a0e1a] border border-white/10 flex items-center justify-center">
+                                    <span class="w-3 h-3 rounded-full bg-cyan-400 animate-ping opacity-60"></span>
+                                </div>
+                            </div>
+
+                            <!-- Glowing Vertical Bar Equalizer Metrics -->
+                            <div class="flex items-end justify-center gap-2 h-14 w-full px-4">
+                                <div class="w-2.5 h-6 rounded-full bg-gradient-to-t from-blue-600 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"></div>
+                                <div class="w-2.5 h-10 rounded-full bg-gradient-to-t from-blue-600 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"></div>
+                                <div class="w-2.5 h-14 rounded-full bg-gradient-to-t from-purple-600 to-indigo-400 shadow-[0_0_8px_rgba(168,85,247,0.6)]"></div>
+                                <div class="w-2.5 h-8 rounded-full bg-gradient-to-t from-blue-600 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"></div>
+                                <div class="w-2.5 h-12 rounded-full bg-gradient-to-t from-purple-600 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"></div>
+                                <div class="w-2.5 h-7 rounded-full bg-gradient-to-t from-blue-600 to-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Bottom Row: Telemetry World Map / Data Matrix (Bottom left in screenshot) -->
+                    <div class="grid grid-cols-12 gap-5 h-32 shrink-0">
+                        <!-- Dark Telemetry Map -->
+                        <div class="col-span-8 rounded-2xl bg-[#111728] border border-white/[0.08] p-3 flex items-center justify-between relative overflow-hidden">
+                            <div class="flex items-center gap-3">
+                                <div class="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"></div>
+                                <div class="w-32 h-3 bg-white/10 rounded"></div>
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="w-20 h-4 bg-white/5 rounded"></div>
+                                <div class="w-16 h-4 bg-purple-500/20 rounded"></div>
+                            </div>
+                        </div>
+
+                        <!-- Data List Table -->
+                        <div class="col-span-4 rounded-2xl bg-[#111728] border border-white/[0.08] p-3 flex flex-col justify-around">
+                            <div class="w-full h-3 bg-white/5 rounded"></div>
+                            <div class="w-3/4 h-3 bg-white/5 rounded"></div>
+                            <div class="w-1/2 h-3 bg-white/5 rounded"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Soft Dark Tint Overlay (Enhances readability of front login card) -->
+            <div class="absolute inset-0 bg-slate-950/30 backdrop-blur-[2px] pointer-events-none z-[1]"></div>
+
+            <!-- Ambient Glow directly behind Login Card for that glowing halo effect -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-[2]">
+                <div class="w-96 h-96 bg-gradient-to-tr from-purple-600/25 via-indigo-600/20 to-cyan-400/20 rounded-full blur-[80px]"></div>
+            </div>
+
+            <!-- ======================================================== -->
+            <!-- FOREFRONT LAYER: CENTERED FROSTED GLASS LOGIN CARD       -->
+            <!-- ======================================================== -->
+            <div class="relative z-10 w-full h-full flex items-center justify-center p-4">
+                @yield('content')
+            </div>
+
         </div>
 
-        <!-- Footer -->
-        <div class="mt-2.5 text-center text-[11px] font-semibold text-cyan-100/80 drop-shadow flex items-center justify-center gap-1.5">
-            <span>&copy; {{ date('Y') }} PT. Media Solusi Network</span>
-            <span class="inline-block w-1 h-1 rounded-full bg-cyan-300/70"></span>
-            <span class="text-white/95">IMS-V2</span>
-        </div>
     </div>
+
 </body>
 </html>

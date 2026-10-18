@@ -459,7 +459,8 @@ class FinanceController extends Controller
             ])->with('success', "Invoice {$kodeBilling} berhasil dibuat.");
         }
 
-        $result = BillingService::generateMonthlyInvoices($bulan, $tahun, $userCreator);
+        $includeSuspend = $request->boolean('include_suspend') || $request->input('status_pelanggan') === 'all';
+        $result = BillingService::generateMonthlyInvoices($bulan, $tahun, $userCreator, !$includeSuspend);
 
         if ($result['success']) {
             return redirect()->route('finance.billing-layanan', [

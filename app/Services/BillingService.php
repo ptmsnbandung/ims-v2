@@ -17,7 +17,7 @@ class BillingService
      * @param string $userCreator Nama user atau sistem pembuat
      * @return array
      */
-    public static function generateMonthlyInvoices($bulan, $tahun, string $userCreator = 'System Auto Billing'): array
+    public static function generateMonthlyInvoices($bulan, $tahun, string $userCreator = 'System Auto Billing', bool $activeOnly = true): array
     {
         $bulan = str_pad((string) $bulan, 2, '0', STR_PAD_LEFT);
         $tahun = (string) $tahun;
@@ -38,9 +38,11 @@ class BillingService
 
         DB::beginTransaction();
         try {
-            // Ambil semua pelanggan aktif dan suspend (20: Aktif, 21 & 21.1: Suspend, 22: Req Suspend)
+            // Ambil pelanggan: hanya aktif ('20') jika $activeOnly = true, atau sertakan suspend jika false
+            $allowedStatus = $activeOnly ? ['20'] : ['20', '21', '21.1', '22'];
+
             $pelanggans = DB::table('view_batchjob')
-                ->whereIn('status_reg', ['20', '21', '21.1', '22'])
+                ->whereIn('status_reg', $allowedStatus)
                 ->where('hide', '0')
                 ->whereNotNull('nomor_internet')
                 ->where('nomor_internet', '!=', '')

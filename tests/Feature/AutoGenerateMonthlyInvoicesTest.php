@@ -172,7 +172,7 @@ class AutoGenerateMonthlyInvoicesTest extends TestCase
             ],
         ]);
 
-        // Run artisan command
+        // Run artisan command secara otomatis (default: hanya pelanggan aktif '20')
         $exitCode = Artisan::call('finance:auto-generate-invoices', [
             '--bulan' => '10',
             '--tahun' => '2026',
@@ -181,9 +181,9 @@ class AutoGenerateMonthlyInvoicesTest extends TestCase
 
         $this->assertEquals(0, $exitCode);
 
-        // Hanya 3 pelanggan (1001, 1002, 1003) yang harus terbit
+        // Hanya pelanggan aktif (1001) yang otomatis terbit; suspend (1002, 1003) di-skip
         $invoices = DB::table('trx_billing_layanan')->get();
-        $this->assertCount(3, $invoices);
+        $this->assertCount(1, $invoices);
 
         $inv1001 = DB::table('trx_billing_layanan')->where('nomor_internet', '1001')->first();
         $this->assertNotNull($inv1001);
@@ -191,19 +191,9 @@ class AutoGenerateMonthlyInvoicesTest extends TestCase
         $this->assertEquals('200000', $inv1001->total_layanan);
         $this->assertEquals('12', $inv1001->status_bill_lay);
 
-        $inv1002 = DB::table('trx_billing_layanan')->where('nomor_internet', '1002')->first();
-        $this->assertNotNull($inv1002);
-        $this->assertEquals('INV/1002/10/2026', $inv1002->kode_billing_layanan);
-        // 500.000 - 50.000 = 450.000
-        $this->assertEquals('450000', $inv1002->total_layanan);
-
-        // Detail items must be 3
-        $details = DB::table('trx_billing_layanan_detail')->get();
-        $this->assertCount(3, $details);
-
-        // Logs must be 3
-        $logs = DB::table('trx_billing_layanan_log')->get();
-        $this->assertCount(3, $logs);
+        // Pastikan pelanggan suspend (1002, 1003) TIDAK terbit di auto-generate
+        $this->assertNull(DB::table('trx_billing_layanan')->where('nomor_internet', '1002')->first());
+        $this->assertNull(DB::table('trx_billing_layanan')->where('nomor_internet', '1003')->first());
 
         // Test idempotency / no duplicates on 2nd run
         $exitCode2 = Artisan::call('finance:auto-generate-invoices', [
@@ -212,8 +202,28 @@ class AutoGenerateMonthlyInvoicesTest extends TestCase
         ]);
         $this->assertEquals(0, $exitCode2);
 
-        // Jumlah invoice tetap 3 (tidak ada duplikasi)
+        // Jumlah invoice tetap 1 (tidak ada duplikasi)
         $invoicesAfterSecondRun = DB::table('trx_billing_layanan')->get();
-        $this->assertCount(3, $invoicesAfterSecondRun);
+        $this->assertCount(1, $invoicesAfterSecondRun);
+
+        // Test manual generate untuk suspend menggunakan opsi --include-suspend
+        $exitCodeManual = Artisan::call('finance:auto-generate-invoices', [
+            '--bulan' => '10',
+            '--tahun' => '2026',
+            '--include-suspend' => true,
+        ]);
+        $this->assertEquals(0, $exitCodeManual);
+
+        // Sekarang pelanggan suspend (1002, 1003) berhasil digenerate
+        $inv1002 = DB::table('trx_billing_layanan')->where('nomor_internet', '1002')->first();
+        $this->assertNotNull($inv1002);
+        $this->assertEquals('INV/1002/10/2026', $inv1002->kode_billing_layanan);
+        $this->assertEquals('450000', $inv1002->total_layanan);
+
+        $inv1003 = DB::table('trx_billing_layanan')->where('nomor_internet', '1003')->first();
+        $this->assertNotNull($inv1003);
+
+        $allInvoices = DB::table('trx_billing_layanan')->get();
+        $this->assertCount(3, $allInvoices);
     }
 }

@@ -3704,46 +3704,100 @@ class FinanceController extends Controller
         $payload = $request->all();
         Log::info('Midtrans Webhook Received: ' . json_encode($payload));
 
-        $orderId = $payload['order_id'] ?? null;
-        $statusCode = $payload['status_code'] ?? null;
-        $grossAmount = $payload['gross_amount'] ?? null;
-        $signatureKey = $payload['signature_key'] ?? null;
+        $orderId = isset($payload['order_id']) ? (string) $payload['order_id'] : null;
+        $statusCode = isset($payload['status_code']) ? (string) $payload['status_code'] : null;
+        $grossAmount = isset($payload['gross_amount']) ? (string) $payload['gross_amount'] : null;
+        $signatureKey = isset($payload['signature_key']) ? (string) $payload['signature_key'] : null;
         $transactionStatus = $payload['transaction_status'] ?? null;
         $paymentType = $payload['payment_type'] ?? 'midtrans';
         $fraudStatus = $payload['fraud_status'] ?? 'accept';
 
-        if (!$orderId || !$transactionStatus) {
-            return response()->json(['status' => 'error', 'message' => 'Invalid payload'], 400);
+        // 1. Validasi Kelengkapan Payload Wajib
+        if (empty($orderId) || empty($transactionStatus) || empty($statusCode) || empty($grossAmount) || empty($signatureKey)) {
+            Log::warning('Midtrans Webhook Rejected: Missing required verification parameters in payload', [
+                'order_id' => $orderId,
+                'has_status_code' => !empty($statusCode),
+                'has_gross_amount' => !empty($grossAmount),
+                'has_signature' => !empty($signatureKey),
+                'has_tx_status' => !empty($transactionStatus),
+            ]);
+            return response()->json(['status' => 'error', 'message' => 'Invalid or incomplete payload'], 400);
         }
 
-        // Verifikasi Signature jika Server Key tersedia
+        // 2. Verifikasi Signature SHA-512 (Fail-Closed & Timing-Safe)
         $serverKey = config('services.midtrans.server_key', env('MIDTRANS_SERVER_KEY', ''));
-        if (!empty($serverKey) && !empty($signatureKey)) {
-            $expectedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
-            if ($signatureKey !== $expectedSignature) {
-                Log::warning("Midtrans Webhook Signature Mismatch for Order {$orderId}");
-                return response()->json(['status' => 'error', 'message' => 'Signature mismatch'], 403);
-            }
+        if (empty($serverKey)) {
+            Log::error("Midtrans Webhook Rejected: MIDTRANS_SERVER_KEY is not configured on this server.");
+            return response()->json(['status' => 'error', 'message' => 'Server payment configuration missing'], 500);
         }
 
-        // Filter status sukses: settlement atau capture (accept)
+        $expectedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+        if (!hash_equals($expectedSignature, $signatureKey)) {
+            Log::warning("Midtrans Webhook Signature Mismatch for Order {$orderId}");
+            return response()->json(['status' => 'error', 'message' => 'Signature mismatch'], 403);
+        }
+
+        // 3. Filter status sukses: settlement atau capture (accept)
         $isSuccessPayment = ($transactionStatus === 'settlement') || ($transactionStatus === 'capture' && $fraudStatus === 'accept');
 
-        // Extract base kode billing jika order_id memiliki suffix renew (e.g. INV-123-R123456)
-        $baseKode = explode('-R', $orderId)[0];
-        $settlementTime = $payload['settlement_time'] ?? now()->toDateTimeString();
-        $merchantName = 'Midtrans (' . strtoupper($paymentType) . ')';
-
         if ($isSuccessPayment) {
-            $nomorInternet = null;
+            // Optional/Defense-in-depth: Double-check langsung ke API status gateway jika tersedia
+            $midtransService = app(MidtransService::class);
+            $remoteStatus = $midtransService->getTransactionStatus($orderId);
+            if ($remoteStatus) {
+                $remoteTxStatus = $remoteStatus['transaction_status'] ?? null;
+                $remoteFraud = $remoteStatus['fraud_status'] ?? 'accept';
+                $isRemoteValid = ($remoteTxStatus === 'settlement') || ($remoteTxStatus === 'capture' && $remoteFraud === 'accept');
 
-            // 1. Cek pada trx_billing_layanan
+                if (!$isRemoteValid) {
+                    Log::warning("Midtrans Webhook Rejected: Remote gateway status is not successful for Order {$orderId}. Gateway status: {$remoteTxStatus}");
+                    return response()->json(['status' => 'error', 'message' => 'Transaction not confirmed by payment gateway'], 422);
+                }
+            }
+
+            // Extract base kode billing jika order_id memiliki suffix renew (-R...) atau midtrans token (-M...)
+            $baseParts = preg_split('/-[RM]/i', $orderId);
+            $baseKode = $baseParts[0] ?? $orderId;
+            $settlementTime = $payload['settlement_time'] ?? now()->toDateTimeString();
+            $merchantName = 'Midtrans (' . strtoupper($paymentType) . ')';
+            $paidAmountFloat = (float) $grossAmount;
+
+            $possibleCodes = array_values(array_unique(array_filter([
+                $orderId,
+                $baseKode,
+                str_replace('-', '/', $baseKode),
+                str_replace('/', '-', $baseKode),
+            ])));
+
+            $nomorInternet = null;
+            $invoiceMatched = false;
+
+            // 4. Cek pada trx_billing_layanan
             $billingLayanan = DB::table('trx_billing_layanan')
-                ->where('kode_billing_layanan', $orderId)
-                ->orWhere('kode_billing_layanan', $baseKode)
+                ->whereIn('kode_billing_layanan', $possibleCodes)
                 ->first();
 
             if ($billingLayanan) {
+                $invoiceMatched = true;
+
+                // Idempotency: Jika invoice sudah lunas, langsung kembalikan 200 OK
+                if ((string)$billingLayanan->status_bill_lay === '15') {
+                    return response()->json([
+                        'status' => 'success',
+                        'message' => 'Invoice already paid (idempotent).',
+                    ]);
+                }
+
+                // Validasi Nominal: Gross amount harus sesuai nilai tagihan asli
+                $expectedAmount = (float) ($billingLayanan->total_layanan ?? $billingLayanan->nominal_bandwith ?? 0);
+                if ($expectedAmount > 0 && abs($expectedAmount - $paidAmountFloat) >= 1.0) {
+                    Log::warning("Midtrans Webhook Rejected: Amount mismatch for {$billingLayanan->kode_billing_layanan}. Expected: {$expectedAmount}, Received: {$paidAmountFloat}");
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Gross amount does not match invoice total',
+                    ], 422);
+                }
+
                 $nomorInternet = $billingLayanan->nomor_internet;
 
                 DB::table('trx_billing_layanan')
@@ -3758,25 +3812,46 @@ class FinanceController extends Controller
                         'user_update' => 'MIDTRANS_WEBHOOK',
                     ]);
 
-                DB::table('trx_billing_layanan_log')->insert([
-                    'kode_billing_lay_log' => 'LOG-' . uniqid(),
-                    'kode_billing_layanan' => $billingLayanan->kode_billing_layanan,
-                    'status_bill_lay' => '15',
-                    'note_billing_lay' => "Pembayaran otomatis diverifikasi via Midtrans ({$merchantName} - Rp " . number_format((float)$grossAmount, 0, ',', '.') . ")",
-                    'date_create' => now()->toDateTimeString(),
-                    'user_create' => 'MIDTRANS_WEBHOOK',
-                    'hide' => '0',
-                ]);
+                if (Schema::hasTable('trx_billing_layanan_log')) {
+                    DB::table('trx_billing_layanan_log')->insert([
+                        'kode_billing_lay_log' => 'LOG-' . uniqid(),
+                        'kode_billing_layanan' => $billingLayanan->kode_billing_layanan,
+                        'status_bill_lay' => '15',
+                        'note_billing_lay' => "Pembayaran otomatis diverifikasi via Midtrans ({$merchantName} - Rp " . number_format((float)$grossAmount, 0, ',', '.') . ")",
+                        'date_create' => now()->toDateTimeString(),
+                        'user_create' => 'MIDTRANS_WEBHOOK',
+                        'hide' => '0',
+                    ]);
+                }
             }
 
-            // 2. Cek pada trx_billing_registrasi jika belum ditemukan
-            if (!$billingLayanan) {
+            // 5. Cek pada trx_billing_registrasi jika belum ditemukan di billing layanan
+            if (!$billingLayanan && Schema::hasTable('trx_billing_registrasi')) {
                 $billingRegis = DB::table('trx_billing_registrasi')
-                    ->where('kode_billing_registrasi', $orderId)
-                    ->orWhere('kode_billing_registrasi', $baseKode)
+                    ->whereIn('kode_billing_registrasi', $possibleCodes)
                     ->first();
 
                 if ($billingRegis) {
+                    $invoiceMatched = true;
+
+                    // Idempotency: Jika billing registrasi sudah lunas
+                    if ((string)$billingRegis->status_bill_reg === '14') {
+                        return response()->json([
+                            'status' => 'success',
+                            'message' => 'Registration billing already paid (idempotent).',
+                        ]);
+                    }
+
+                    // Validasi Nominal Registrasi
+                    $expectedRegAmount = (float) ($billingRegis->total_reg ?? 0);
+                    if ($expectedRegAmount > 0 && abs($expectedRegAmount - $paidAmountFloat) >= 1.0) {
+                        Log::warning("Midtrans Webhook Rejected: Registration amount mismatch for {$billingRegis->kode_billing_registrasi}. Expected: {$expectedRegAmount}, Received: {$paidAmountFloat}");
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Gross amount does not match registration invoice total',
+                        ], 422);
+                    }
+
                     $nomorInternet = $billingRegis->nomor_internet;
 
                     DB::table('trx_billing_registrasi')
@@ -3791,19 +3866,30 @@ class FinanceController extends Controller
                             'user_update' => 'MIDTRANS_WEBHOOK',
                         ]);
 
-                    DB::table('trx_billing_registrasi_log')->insert([
-                        'kode_billing_regis_log' => 'LOG-' . uniqid(),
-                        'kode_billing_registrasi' => $billingRegis->kode_billing_registrasi,
-                        'status_bill_reg' => '14',
-                        'note_billing_reg' => "Pembayaran Registrasi otomatis diverifikasi via Midtrans ({$merchantName} - Rp " . number_format((float)$grossAmount, 0, ',', '.') . ")",
-                        'date_create' => now()->toDateTimeString(),
-                        'user_create' => 'MIDTRANS_WEBHOOK',
-                        'hide' => '0',
-                    ]);
+                    if (Schema::hasTable('trx_billing_registrasi_log')) {
+                        DB::table('trx_billing_registrasi_log')->insert([
+                            'kode_billing_regis_log' => 'LOG-' . uniqid(),
+                            'kode_billing_registrasi' => $billingRegis->kode_billing_registrasi,
+                            'status_bill_reg' => '14',
+                            'note_billing_reg' => "Pembayaran Registrasi otomatis diverifikasi via Midtrans ({$merchantName} - Rp " . number_format((float)$grossAmount, 0, ',', '.') . ")",
+                            'date_create' => now()->toDateTimeString(),
+                            'user_create' => 'MIDTRANS_WEBHOOK',
+                            'hide' => '0',
+                        ]);
+                    }
                 }
             }
 
-            // 3. EKSEKUSI AUTO UNSUSPEND & PRORATE BULAN BERJALAN JIKA TUNGGAKAN LUNAS
+            // Jika invoice tidak ditemukan di sistem
+            if (!$invoiceMatched) {
+                Log::warning("Midtrans Webhook Rejected: No invoice record matched for Order ID {$orderId}");
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invoice not found in system',
+                ], 404);
+            }
+
+            // 6. EKSEKUSI AUTO UNSUSPEND & PRORATE BULAN BERJALAN JIKA TUNGGAKAN LUNAS
             if ($nomorInternet) {
                 $this->handleAutoUnsuspendAndProrate($nomorInternet, 'MIDTRANS_WEBHOOK', $orderId, $merchantName);
             }

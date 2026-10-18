@@ -145,4 +145,53 @@ class MidtransService
 
         return $this->generateSnapLink($orderId, $grossAmount, $customerDetails, $itemDetails, $durationDays);
     }
+
+    /**
+     * Get configured Server Key
+     */
+    public function getServerKey(): string
+    {
+        return $this->serverKey;
+    }
+
+    /**
+     * Validate Midtrans SHA-512 Signature Key (Timing-Safe)
+     */
+    public function isValidSignature(string $orderId, string $statusCode, string $grossAmount, string $signatureKey): bool
+    {
+        if (empty($this->serverKey) || empty($signatureKey)) {
+            return false;
+        }
+
+        $expectedSignature = hash('sha512', $orderId . $statusCode . $grossAmount . $this->serverKey);
+        return hash_equals($expectedSignature, $signatureKey);
+    }
+
+    /**
+     * Query Transaction Status directly from Midtrans API (Defense-in-depth)
+     */
+    public function getTransactionStatus(string $orderId): ?array
+    {
+        if (empty($this->serverKey)) {
+            return null;
+        }
+
+        $baseUrl = $this->isProduction ? 'https://api.midtrans.com/v2' : 'https://api.sandbox.midtrans.com/v2';
+        try {
+            $response = Http::withBasicAuth($this->serverKey, '')
+                ->timeout(10)
+                ->get("{$baseUrl}/" . urlencode($orderId) . "/status");
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::warning("Midtrans getTransactionStatus non-success for {$orderId}: " . $response->body());
+            return null;
+        } catch (\Throwable $e) {
+            Log::error("Midtrans getTransactionStatus exception for {$orderId}: " . $e->getMessage());
+            return null;
+        }
+    }
 }
+

@@ -45,7 +45,7 @@
     <!-- BACKGROUND: REAL IMS-V2 DASHBOARD (Gambar 2) DIBLUR     -->
     <!-- ======================================================== -->
     <div class="fixed inset-0 w-full h-full flex pointer-events-none select-none z-0 overflow-hidden"
-         style="filter: blur(14px) brightness(0.68) saturate(1.2); transform: scale(1.04);">
+         style="filter: blur(6px) brightness(0.75) saturate(1.15); transform: scale(1.02);">
         
         <!-- Sidebar Kiri (Persis Gambar 2 IMS-V2) -->
         <aside class="w-60 h-full bg-[#061d28] border-r border-[#0d2a38] flex flex-col shrink-0 text-slate-300">
@@ -365,7 +365,7 @@
     </div>
 
     <!-- Dark Translucent Overlay to ensure perfect contrast for the Glass Login Card -->
-    <div class="fixed inset-0 bg-[#061d28]/55 backdrop-blur-[2px] pointer-events-none z-[1]"></div>
+    <div class="fixed inset-0 bg-[#061d28]/40 pointer-events-none z-[1]"></div>
 
     <!-- Soft Ambient Halo behind Login Card -->
     <div class="fixed inset-0 flex items-center justify-center pointer-events-none z-[2]">

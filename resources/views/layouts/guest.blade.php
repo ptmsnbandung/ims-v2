@@ -39,7 +39,8 @@
     <!-- Scripts & Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full w-full font-sans antialiased text-slate-100 bg-[#061d28] relative selection:bg-cyan-500 selection:text-white overflow-hidden"
+<body class="h-full w-full font-sans antialiased text-slate-100 relative selection:bg-cyan-500 selection:text-white overflow-hidden transition-colors duration-700 ease-out"
+      :class="isEntering ? 'bg-[#f8fafc]' : 'bg-[#061d28]'"
       x-data="{
           isEntering: false,
           triggerEnter(redirectUrl) {
@@ -47,15 +48,15 @@
               this.isEntering = true;
               setTimeout(() => {
                   window.location.href = redirectUrl || '{{ route('dashboard') }}';
-              }, 750);
+              }, 600);
           }
       }">
 
     <!-- ======================================================== -->
-    <!-- BACKGROUND: REAL IMS-V2 DASHBOARD (Gambar 2) DIBLUR     -->
+    <!-- BACKGROUND: REAL IMS-V2 DASHBOARD (Gambar 2)             -->
     <!-- ======================================================== -->
-    <div class="fixed inset-0 w-full h-full flex pointer-events-none select-none z-0 overflow-hidden transition-all duration-700 ease-out"
-         :style="isEntering ? 'filter: blur(0px) brightness(1) saturate(1); transform: scale(1);' : 'filter: blur(6px) brightness(0.75) saturate(1.15); transform: scale(1.02);'">
+    <div class="fixed inset-0 w-full h-full flex pointer-events-none select-none z-0 overflow-hidden transform-gpu transition-transform duration-700 ease-out"
+         :class="isEntering ? 'scale-100' : 'scale-[1.01]'">
         
         <!-- Sidebar Kiri (Persis Gambar 2 IMS-V2) -->
         <aside class="w-60 h-full bg-[#061d28] border-r border-[#0d2a38] flex flex-col shrink-0 text-slate-300">
@@ -374,12 +375,12 @@
 
     </div>
 
-    <!-- Dark Translucent Overlay to ensure perfect contrast for the Glass Login Card -->
-    <div class="fixed inset-0 bg-[#061d28]/40 pointer-events-none z-[1] transition-opacity duration-700 ease-out"
-         :class="isEntering ? 'opacity-0' : 'opacity-100'"></div>
+    <!-- Hardware-Accelerated Frosted Glass Layer & Dark Tint (Fades out seamlessly at 60-120fps) -->
+    <div class="fixed inset-0 pointer-events-none z-[1] backdrop-blur-[7px] bg-[#061d28]/40 transition-all duration-600 ease-out will-change-[opacity]"
+         :class="isEntering ? 'opacity-0 backdrop-blur-none' : 'opacity-100 backdrop-blur-[7px]'"></div>
 
     <!-- Soft Ambient Halo behind Login Card -->
-    <div class="fixed inset-0 flex items-center justify-center pointer-events-none z-[2] transition-opacity duration-500 ease-out"
+    <div class="fixed inset-0 flex items-center justify-center pointer-events-none z-[2] transition-opacity duration-400 ease-out will-change-[opacity]"
          :class="isEntering ? 'opacity-0' : 'opacity-100'">
         <div class="w-[500px] h-[500px] bg-gradient-to-tr from-cyan-500/25 via-teal-400/20 to-sky-600/20 rounded-full blur-[110px]"></div>
     </div>

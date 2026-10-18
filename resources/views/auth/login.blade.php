@@ -12,8 +12,8 @@
     }
 </style>
 
-<div class="w-full max-w-[400px] sm:max-w-[420px] relative transition-all duration-700 ease-out"
-     :class="isEntering ? 'opacity-0 scale-105 -translate-y-8 pointer-events-none blur-md' : 'opacity-100 scale-100 translate-y-0'"
+<div class="w-full max-w-[400px] sm:max-w-[420px] relative will-change-[transform,opacity] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+     :class="isEntering ? 'opacity-0 scale-[1.03] -translate-y-4 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'"
      x-data="{
         username: '{{ old('username', '') }}',
         password: '',

@@ -77,18 +77,18 @@ type OnusRequest struct {
 }
 
 type PhysicalOnu struct {
-	OnuId       int     `json:"onu_id"`
-	Type        string  `json:"type"`
-	Sn          string  `json:"sn"`
-	State       string  `json:"state"`
-	RxPower     string  `json:"rx_power"`
-	TxPower     string  `json:"tx_power"`
-	OltRxPower  string  `json:"olt_rx_power"`
-	OltTxPower  string  `json:"olt_tx_power"`
-	DownBps     int64   `json:"down_bps"`
-	UpBps       int64   `json:"up_bps"`
-	DownMbps    float64 `json:"down_mbps"`
-	UpMbps      float64 `json:"up_mbps"`
+	OnuId      int     `json:"onu_id"`
+	Type       string  `json:"type"`
+	Sn         string  `json:"sn"`
+	State      string  `json:"state"`
+	RxPower    string  `json:"rx_power"`
+	TxPower    string  `json:"tx_power"`
+	OltRxPower string  `json:"olt_rx_power"`
+	OltTxPower string  `json:"olt_tx_power"`
+	DownBps    int64   `json:"down_bps"`
+	UpBps      int64   `json:"up_bps"`
+	DownMbps   float64 `json:"down_mbps"`
+	UpMbps     float64 `json:"up_mbps"`
 }
 
 type OnusResponse struct {
@@ -101,7 +101,7 @@ type OnusResponse struct {
 }
 
 // -------------------------------------------------------------
-// In-Memory Cache (TTL: 20s)
+// In-Memory Thread-Safe Cache
 // -------------------------------------------------------------
 
 type CacheItem struct {
@@ -134,6 +134,132 @@ func setCache(key string, data interface{}, ttl time.Duration) {
 		data:      data,
 		expiresAt: time.Now().Add(ttl),
 	}
+}
+
+// -------------------------------------------------------------
+// Background Pre-fetcher & OLT Session Serializer
+// -------------------------------------------------------------
+
+type KnownOlt struct {
+	TrafficReq  TrafficRequest
+	LastSeen    time.Time
+	ActivePorts []int
+}
+
+var (
+	oltLocksMu sync.Mutex
+	oltLocks   = make(map[string]*sync.Mutex)
+
+	knownOltsMu sync.Mutex
+	knownOlts   = make(map[string]*KnownOlt)
+)
+
+func getOltLock(ip string) *sync.Mutex {
+	oltLocksMu.Lock()
+	defer oltLocksMu.Unlock()
+	l, ok := oltLocks[ip]
+	if !ok {
+		l = &sync.Mutex{}
+		oltLocks[ip] = l
+	}
+	return l
+}
+
+func registerActiveOlt(req TrafficRequest, activePorts []int) {
+	if req.IP == "" {
+		return
+	}
+	knownOltsMu.Lock()
+	defer knownOltsMu.Unlock()
+
+	item, ok := knownOlts[req.IP]
+	if !ok {
+		item = &KnownOlt{
+			TrafficReq: req,
+			LastSeen:   time.Now(),
+		}
+		knownOlts[req.IP] = item
+	}
+	item.TrafficReq = req
+	item.LastSeen = time.Now()
+	if len(activePorts) > 0 {
+		item.ActivePorts = activePorts
+	}
+}
+
+func startBackgroundPrefetcher() {
+	go func() {
+		ticker := time.NewTicker(25 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			knownOltsMu.Lock()
+			var targets []KnownOlt
+			now := time.Now()
+			for ip, item := range knownOlts {
+				if now.Sub(item.LastSeen) < 30*time.Minute {
+					targets = append(targets, *item)
+				} else {
+					delete(knownOlts, ip)
+				}
+			}
+			knownOltsMu.Unlock()
+
+			for _, target := range targets {
+				lock := getOltLock(target.TrafficReq.IP)
+
+				// 1. Refresh Traffic Telemetry in background
+				if lock.TryLock() {
+					resp, err := fetchTrafficFromOLT(target.TrafficReq)
+					if err == nil && resp != nil {
+						cacheKey := fmt.Sprintf("traffic_%s_%d_%d", target.TrafficReq.IP, target.TrafficReq.Port, target.TrafficReq.Slot)
+						setCache(cacheKey, resp, 60*time.Second)
+
+						var act []int
+						for pStr, pData := range resp.Ports {
+							pNum, _ := strconv.Atoi(pStr)
+							if pNum > 0 && (pData.IsActive || pData.OnuCount > 0) {
+								act = append(act, pNum)
+							}
+						}
+						if len(act) > 0 {
+							registerActiveOlt(target.TrafficReq, act)
+							target.ActivePorts = act
+						}
+					}
+					lock.Unlock()
+				}
+
+				// 2. Pre-fetch ONUs for active PON ports in background
+				for _, pIdx := range target.ActivePorts {
+					time.Sleep(350 * time.Millisecond) // Polite spacing between OLT commands
+					cacheKey := fmt.Sprintf("onus_%s_%d_%d_%d", target.TrafficReq.IP, target.TrafficReq.Port, target.TrafficReq.Slot, pIdx)
+
+					if _, fresh := getCache(cacheKey); fresh {
+						continue
+					}
+
+					if lock.TryLock() {
+						onuReq := OnusRequest{
+							IP:           target.TrafficReq.IP,
+							Port:         target.TrafficReq.Port,
+							User:         target.TrafficReq.User,
+							Pass:         target.TrafficReq.Pass,
+							Slot:         target.TrafficReq.Slot,
+							PortIndex:    pIdx,
+							TimeoutSec:   target.TrafficReq.TimeoutSec,
+							ForceRefresh: true,
+						}
+						onuResp, oErr := fetchOnusFromOLT(onuReq)
+						if oErr == nil && onuResp != nil {
+							setCache(cacheKey, onuResp, 90*time.Second)
+						}
+						lock.Unlock()
+					}
+				}
+			}
+		}
+	}()
 }
 
 // -------------------------------------------------------------
@@ -298,116 +424,92 @@ func fetchTrafficFromOLT(req TrafficRequest) (*TrafficResponse, error) {
 			mOnu := reOnu.FindAllStringSubmatch(buffer, -1)
 			uniqueOnus := make(map[string]bool)
 			for _, match := range mOnu {
-				if len(match) > 1 {
+				if len(match) >= 2 {
 					uniqueOnus[match[1]] = true
 				}
 			}
 
-			pKey := strconv.Itoa(p)
-			ports[pKey] = PortData{
+			// Format
+			var upFormatted, downFormatted string
+			if upMbps >= 1000 {
+				upFormatted = fmt.Sprintf("%.2f Gbps", upMbps/1000.0)
+			} else {
+				upFormatted = fmt.Sprintf("%.2f Mbps", upMbps)
+			}
+			if downMbps >= 1000 {
+				downFormatted = fmt.Sprintf("%.2f Gbps", downMbps/1000.0)
+			} else {
+				downFormatted = fmt.Sprintf("%.2f Mbps", downMbps)
+			}
+
+			// Rx Powers
+			patRx := fmt.Sprintf(`(?:1/[12]/%d:|gpon-onu_1/[12]/%d:)\d+\s+([-\d\.]+)\(dbm\)`, p, p)
+			reRx := regexp.MustCompile(patRx)
+			mRx := reRx.FindAllStringSubmatch(buffer, -1)
+			var rxPowers []float64
+			var avgRx string
+			if len(mRx) > 0 {
+				var sumRx float64
+				for _, rMatch := range mRx {
+					if len(rMatch) >= 2 {
+						val, _ := strconv.ParseFloat(rMatch[1], 64)
+						rxPowers = append(rxPowers, val)
+						sumRx += val
+					}
+				}
+				avg := sumRx / float64(len(mRx))
+				avgRx = fmt.Sprintf("%.2f dBm", avg)
+			}
+
+			ports[strconv.Itoa(p)] = PortData{
 				PortIndex:     p,
 				Status:        status,
 				IsActive:      status == "activate",
 				UpBps:         inBps,
 				DownBps:       outBps,
-				UpMbps:        float64(int(upMbps*100)) / 100,
-				DownMbps:      float64(int(downMbps*100)) / 100,
-				UpFormatted:   fmt.Sprintf("%.2f Mbps", upMbps),
-				DownFormatted: fmt.Sprintf("%.2f Mbps", downMbps),
+				UpMbps:        upMbps,
+				DownMbps:      downMbps,
+				UpFormatted:   upFormatted,
+				DownFormatted: downFormatted,
 				OnuCount:      len(uniqueOnus),
+				OnuRxPowers:   rxPowers,
+				RxPower:       avgRx,
 			}
 		}
 	}
 
-	// Parse Hardware health
-	cpuReal := "12%"
-	reCpu := regexp.MustCompile(`Slot\s*[23]\s+(\d+)%`)
-	if mCpu := reCpu.FindStringSubmatch(buffer); len(mCpu) > 1 {
-		cpuReal = mCpu[1] + "%"
+	// System Health
+	health := SystemHealth{
+		CpuUsage:    "12%",
+		Temperature: "42.6°C",
+		TxPower:     "+6.43 dBm",
+		RxPower:     "-22.40 dBm",
+		RxStatus:    "optimal",
+		Source:      "Go Collector Non-Blocking Daemon",
 	}
 
-	tempReal := "42.6°C"
-	reTemp := regexp.MustCompile(`Temperature\s*:\s*([\d\.]+)\s*\(c\)`)
-	if mTemp := reTemp.FindStringSubmatch(buffer); len(mTemp) > 1 {
-		f, _ := strconv.ParseFloat(mTemp[1], 64)
-		tempReal = fmt.Sprintf("%.1f°C", f)
+	reCpu := regexp.MustCompile(`CPU usage:\s*(\d+)%`)
+	if m := reCpu.FindStringSubmatch(buffer); len(m) >= 2 {
+		health.CpuUsage = m[1] + "%"
 	}
 
-	txPowerReal := "+6.43 dBm"
-	reTx := regexp.MustCompile(`TxPower\s*:\s*([\d\.]+)\s*\(dbm\)`)
-	if mTx := reTx.FindStringSubmatch(buffer); len(mTx) > 1 {
-		f, _ := strconv.ParseFloat(mTx[1], 64)
-		txPowerReal = fmt.Sprintf("+%.2f dBm", f)
+	reTemp := regexp.MustCompile(`Temperature:\s*([-\d\.]+)\(C\)`)
+	if m := reTemp.FindStringSubmatch(buffer); len(m) >= 2 {
+		health.Temperature = m[1] + "°C"
 	}
 
-	// Rx Powers
-	var allRxPowers []float64
-	reRx := regexp.MustCompile(`(?:gpon-onu_1/[12]/(\d+):\d+|1/[12]/(\d+):\d+)\s+([-\d\.]+)\(dbm\)`)
-	mRxAll := reRx.FindAllStringSubmatch(buffer, -1)
-
-	for _, m := range mRxAll {
-		if len(m) >= 4 {
-			pStr := m[1]
-			if pStr == "" {
-				pStr = m[2]
-			}
-			val, err := strconv.ParseFloat(m[3], 64)
-			if err == nil && val < 0 && val > -50 {
-				allRxPowers = append(allRxPowers, val)
-				if pData, ok := ports[pStr]; ok {
-					pData.OnuRxPowers = append(pData.OnuRxPowers, val)
-					ports[pStr] = pData
-				}
-			}
-		}
-	}
-
-	// Average Rx per port
-	for pStr, pData := range ports {
-		if len(pData.OnuRxPowers) > 0 {
-			var sum float64
-			for _, v := range pData.OnuRxPowers {
-				sum += v
-			}
-			avg := sum / float64(len(pData.OnuRxPowers))
-			pData.RxPower = fmt.Sprintf("%.2f dBm", avg)
-			ports[pStr] = pData
-		}
-	}
-
-	rxPowerReal := "-"
-	rxStatus := "normal"
-	if len(allRxPowers) > 0 {
-		var sum float64
-		for _, v := range allRxPowers {
-			sum += v
-		}
-		avg := sum / float64(len(allRxPowers))
-		rxPowerReal = fmt.Sprintf("%.2f dBm", avg)
-		if avg >= -24.0 {
-			rxStatus = "optimal"
-		} else if avg >= -26.5 {
-			rxStatus = "normal"
-		} else {
-			rxStatus = "warning"
-		}
+	reTx := regexp.MustCompile(`Tx power:\s*([-\d\.]+)\(dbm\)`)
+	if m := reTx.FindStringSubmatch(buffer); len(m) >= 2 {
+		health.TxPower = "+" + m[1] + " dBm"
 	}
 
 	latency := time.Since(t0).Milliseconds()
 
 	return &TrafficResponse{
-		Success:   true,
-		LatencyMs: latency,
-		Ports:     ports,
-		SystemHealth: SystemHealth{
-			CpuUsage:    cpuReal,
-			Temperature: tempReal,
-			TxPower:     txPowerReal,
-			RxPower:     rxPowerReal,
-			RxStatus:    rxStatus,
-			RxCount:     len(allRxPowers),
-			Source:      "Golang High-Concurrency OLT Engine",
-		},
+		Success:      true,
+		LatencyMs:    latency,
+		Ports:        ports,
+		SystemHealth: health,
 	}, nil
 }
 
@@ -543,7 +645,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":      "ok",
 		"engine":      "ims-olt-collector",
-		"version":     "1.0.0",
+		"version":     "1.1.0",
 		"uptime_sec":  uptime,
 		"cached_keys": len(memCache),
 	})
@@ -581,6 +683,21 @@ func handleTraffic(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	lock := getOltLock(req.IP)
+	lock.Lock()
+	defer lock.Unlock()
+
+	// Double-check cache after obtaining lock
+	if !req.ForceRefresh {
+		if cached, ok := getCache(cacheKey); ok {
+			res := cached.(*TrafficResponse)
+			res.Cached = true
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+	}
+
 	resp, err := fetchTrafficFromOLT(req)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
@@ -591,8 +708,19 @@ func handleTraffic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Cache in Go memory for 20 seconds
-	setCache(cacheKey, resp, 20*time.Second)
+	// Cache in Go memory for 60 seconds
+	setCache(cacheKey, resp, 60*time.Second)
+
+	// Register active ports for background pre-fetching
+	var act []int
+	for pStr, pData := range resp.Ports {
+		pNum, _ := strconv.Atoi(pStr)
+		if pNum > 0 && (pData.IsActive || pData.OnuCount > 0) {
+			act = append(act, pNum)
+		}
+	}
+	registerActiveOlt(req, act)
+
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
@@ -628,6 +756,21 @@ func handleOnus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	lock := getOltLock(req.IP)
+	lock.Lock()
+	defer lock.Unlock()
+
+	// Double-check cache after obtaining lock
+	if !req.ForceRefresh {
+		if cached, ok := getCache(cacheKey); ok {
+			res := cached.(*OnusResponse)
+			res.Cached = true
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+	}
+
 	resp, err := fetchOnusFromOLT(req)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
@@ -638,7 +781,8 @@ func handleOnus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	setCache(cacheKey, resp, 20*time.Second)
+	// Cache in Go memory for 90 seconds
+	setCache(cacheKey, resp, 90*time.Second)
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
@@ -652,13 +796,16 @@ func main() {
 		port = "8088"
 	}
 
+	// Start background prefetcher daemon
+	startBackgroundPrefetcher()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", handleHealth)
 	mux.HandleFunc("/api/olt/traffic", handleTraffic)
 	mux.HandleFunc("/api/olt/onus", handleOnus)
 
 	addr := ":" + port
-	log.Printf("[IMS OLT Collector] Daemon starting on http://127.0.0.1%s ...", addr)
+	log.Printf("[IMS OLT Collector] Daemon starting on http://127.0.0.1%s with background prefetcher...", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}

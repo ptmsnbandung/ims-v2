@@ -18,8 +18,101 @@
          // Tab Status Active: 'aktif', 'terminasi', 'suspend', 'all'
          activeTab: '{{ ($filters['status'] ?? '') == '23' ? 'terminasi' : (($filters['status'] ?? '') == '21' ? 'suspend' : 'aktif') }}',
          
-         // Quick Search
+         // Filter & Search states
+         layananFilter: '{{ $filters['layanan'] ?? '' }}',
          searchQuery: '{{ $filters['search'] ?? '' }}',
+         alamatQuery: '{{ $filters['alamat'] ?? '' }}',
+         statusFilter: '{{ $filters['status'] ?? '20' }}',
+         wilayahFilter: '{{ $filters['wilayah'] ?? '' }}',
+         perPageFilter: '{{ $filters['per_page'] ?? '10' }}',
+         isLoading: false,
+         filterDebounceTimer: null,
+
+         init() {
+             window.addEventListener('popstate', () => {
+                 this.fetchData(window.location.href, false);
+             });
+         },
+
+         applyFilter(delay = 300) {
+             clearTimeout(this.filterDebounceTimer);
+             this.filterDebounceTimer = setTimeout(() => {
+                 this.fetchData();
+             }, delay);
+         },
+
+         async fetchData(targetUrl = null, pushHistory = true) {
+             this.isLoading = true;
+             let url = targetUrl;
+             if (!url) {
+                 const params = new URLSearchParams();
+                 if (this.layananFilter) params.append('layanan', this.layananFilter);
+                 if (this.searchQuery) params.append('search', this.searchQuery);
+                 if (this.alamatQuery) params.append('alamat', this.alamatQuery);
+                 if (this.statusFilter) params.append('status', this.statusFilter);
+                 if (this.wilayahFilter) params.append('wilayah', this.wilayahFilter);
+                 if (this.perPageFilter) params.append('per_page', this.perPageFilter);
+                 url = '{{ route($pelangganRoute) }}?' + params.toString();
+             }
+
+             try {
+                 const res = await fetch(url, {
+                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                 });
+                 const html = await res.text();
+                 const parser = new DOMParser();
+                 const doc = parser.parseFromString(html, 'text/html');
+
+                 const newTable = doc.getElementById('customerTableContainer');
+                 const currentTable = document.getElementById('customerTableContainer');
+                 if (newTable && currentTable) {
+                     currentTable.innerHTML = newTable.innerHTML;
+                     this.$nextTick(() => {
+                         if (window.Alpine) {
+                             Alpine.initTree(currentTable);
+                         }
+                     });
+                 }
+
+                 const newExport = doc.getElementById('btnExportExcel');
+                 const currentExport = document.getElementById('btnExportExcel');
+                 if (newExport && currentExport) {
+                     currentExport.href = newExport.href;
+                 }
+
+                 if (pushHistory) {
+                     window.history.pushState(null, '', url);
+                 }
+             } catch (e) {
+                 console.error('Gagal memuat data pelanggan:', e);
+             } finally {
+                 this.isLoading = false;
+             }
+         },
+
+         resetFilters() {
+             this.searchQuery = '';
+             this.alamatQuery = '';
+             this.layananFilter = '';
+             this.statusFilter = '20';
+             this.wilayahFilter = '';
+             this.perPageFilter = '10';
+             this.fetchData('{{ route($pelangganRoute) }}?status=20&per_page=10');
+         },
+
+         setQuickFilter(status, layanan = '') {
+             this.statusFilter = status;
+             this.layananFilter = layanan;
+             this.fetchData();
+         },
+
+         handleTableClick(e) {
+             const paginationLink = e.target.closest('.ims-pagination-link');
+             if (paginationLink && paginationLink.href) {
+                 e.preventDefault();
+                 this.fetchData(paginationLink.href);
+             }
+         },
 
          // Modal states for Permintaan ke NOC (Finance)
          upDowngradeModalOpen: false,
@@ -269,7 +362,8 @@
                         $isActiveFilter = ($filters['status'] ?? '') == '20' && ($filters['layanan'] ?? '') == $lKode;
                     @endphp
                     <a href="{{ route($pelangganRoute, ['status' => '20', 'layanan' => $lKode]) }}" 
-                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-blue-50/90 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700' }} flex flex-col justify-between min-h-[58px]">
+                       @click.prevent="setQuickFilter('20', '{{ $lKode }}')"
+                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-blue-50/90 dark:bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700' }} flex flex-col justify-between min-h-[58px] cursor-pointer">
                         <div class="flex items-center justify-between gap-1">
                             <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-blue-300 dark:group-hover:border-blue-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition truncate" title="{{ $lNama }}">
                                 {{ $lNama }}
@@ -287,7 +381,8 @@
 
                 <!-- Card Total Aktif (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route($pelangganRoute, ['status' => '20']) }}" 
-                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-blue-600 hover:bg-blue-700 text-white border-blue-600 flex flex-col justify-between min-h-[58px]">
+                   @click.prevent="setQuickFilter('20')"
+                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-blue-600 hover:bg-blue-700 text-white border-blue-600 flex flex-col justify-between min-h-[58px] cursor-pointer">
                     <div class="flex items-center justify-between gap-1">
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-blue-800/70 text-white border border-blue-400/30 truncate">
                             TOTAL AKTIF
@@ -324,7 +419,8 @@
                         $isActiveFilter = ($filters['status'] ?? '') == '23' && ($filters['layanan'] ?? '') == $lKode;
                     @endphp
                     <a href="{{ route($pelangganRoute, ['status' => '23', 'layanan' => $lKode]) }}" 
-                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-rose-50/90 dark:bg-rose-500/15 border-rose-500 ring-2 ring-rose-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700' }} flex flex-col justify-between min-h-[58px]">
+                       @click.prevent="setQuickFilter('23', '{{ $lKode }}')"
+                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-rose-50/90 dark:bg-rose-500/15 border-rose-500 ring-2 ring-rose-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700' }} flex flex-col justify-between min-h-[58px] cursor-pointer">
                         <div class="flex items-center justify-between gap-1">
                             <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-rose-300 dark:group-hover:border-rose-600 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition truncate" title="{{ $lNama }}">
                                 {{ $lNama }}
@@ -342,7 +438,8 @@
 
                 <!-- Card Total Terminasi (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route($pelangganRoute, ['status' => '23']) }}" 
-                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-rose-600 hover:bg-rose-700 text-white border-rose-600 flex flex-col justify-between min-h-[58px]">
+                   @click.prevent="setQuickFilter('23')"
+                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-rose-600 hover:bg-rose-700 text-white border-rose-600 flex flex-col justify-between min-h-[58px] cursor-pointer">
                     <div class="flex items-center justify-between gap-1">
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-800/70 text-white border border-rose-400/30 truncate">
                             TOTAL TERMINASI
@@ -379,7 +476,8 @@
                         $isActiveFilter = ($filters['status'] ?? '') == '21' && ($filters['layanan'] ?? '') == $lKode;
                     @endphp
                     <a href="{{ route($pelangganRoute, ['status' => '21', 'layanan' => $lKode]) }}" 
-                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700' }} flex flex-col justify-between min-h-[58px]">
+                       @click.prevent="setQuickFilter('21', '{{ $lKode }}')"
+                       class="group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs {{ $isActiveFilter ? 'bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/30' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/70 border-slate-200 dark:border-slate-800 hover:border-amber-300 dark:hover:border-amber-700' }} flex flex-col justify-between min-h-[58px] cursor-pointer">
                         <div class="flex items-center justify-between gap-1">
                             <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 group-hover:border-amber-300 dark:group-hover:border-amber-600 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate" title="{{ $lNama }}">
                                 {{ $lNama }}
@@ -397,7 +495,8 @@
 
                 <!-- Card Total Suspend (Solid Clean Color, No Gradient/Fog) -->
                 <a href="{{ route($pelangganRoute, ['status' => '21']) }}" 
-                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-amber-500 hover:bg-amber-600 text-white border-amber-500 flex flex-col justify-between min-h-[58px]">
+                   @click.prevent="setQuickFilter('21')"
+                   class="col-span-2 sm:col-span-2 lg:col-span-1 group p-2 rounded-lg border transition-all duration-150 shadow-2xs hover:shadow-xs bg-amber-500 hover:bg-amber-600 text-white border-amber-500 flex flex-col justify-between min-h-[58px] cursor-pointer">
                     <div class="flex items-center justify-between gap-1">
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-700/70 text-white border border-amber-300/30 truncate">
                             TOTAL SUSPEND
@@ -422,7 +521,7 @@
     <!-- FILTER BAR CONTAINER                                                -->
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
-        <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm">
+        <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm" @submit.prevent="fetchData()">
             <!-- 5 Kolom Filter Responsif -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
                 
@@ -430,7 +529,8 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Layanan</label>
                     <select name="layanan" 
-                            onchange="this.form.submit()"
+                            x-model="layananFilter"
+                            @change="fetchData()"
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition cursor-pointer">
                         <option value="">SEMUA LAYANAN</option>
                         @foreach($layananList as $layanan)
@@ -456,6 +556,8 @@
                         </div>
                         <input type="text" 
                                name="search" 
+                               x-model="searchQuery"
+                               @input="applyFilter(300)"
                                value="{{ $filters['search'] ?? '' }}" 
                                placeholder="No Internet, Nama, NIK..." 
                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
@@ -474,6 +576,8 @@
                         </div>
                         <input type="text" 
                                name="alamat" 
+                               x-model="alamatQuery"
+                               @input="applyFilter(300)"
                                value="{{ $filters['alamat'] ?? '' }}" 
                                placeholder="Cari Alamat..." 
                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
@@ -484,7 +588,8 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
                     <select name="status" 
-                            onchange="this.form.submit()"
+                            x-model="statusFilter"
+                            @change="fetchData()"
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition cursor-pointer">
                         <option value="20" {{ ($filters['status'] ?? '20') == '20' ? 'selected' : '' }}>Aktif (Default)</option>
                         <option value="21" {{ in_array(($filters['status'] ?? ''), ['21', '21.1']) ? 'selected' : '' }}>Suspend</option>
@@ -497,7 +602,8 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Wilayah</label>
                     <select name="wilayah" 
-                            onchange="this.form.submit()"
+                            x-model="wilayahFilter"
+                            @change="fetchData()"
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition cursor-pointer">
                         <option value="">SEMUA WILAYAH</option>
                         @foreach($wilayahList as $wilayah)
@@ -515,7 +621,8 @@
                 <div class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium">
                     <span>Show</span>
                     <select name="per_page" 
-                            onchange="document.getElementById('filterForm').submit()"
+                            x-model="perPageFilter"
+                            @change="fetchData()"
                             class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-xs text-slate-800 dark:text-slate-200 font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer">
                         <option value="10" {{ ($filters['per_page'] ?? '10') == '10' ? 'selected' : '' }}>10</option>
                         <option value="25" {{ ($filters['per_page'] ?? '') == '25' ? 'selected' : '' }}>25</option>
@@ -527,16 +634,18 @@
 
                 <!-- Kanan: Group Tombol Aksi (Reset & Export Excel) -->
                 <div class="flex flex-wrap items-center gap-1.5">
-                    <a href="{{ route($pelangganRoute) }}" 
-                       class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition duration-150"
-                       title="Reset seluruh filter pencarian">
+                    <button type="button" 
+                            @click="resetFilters()"
+                            class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition duration-150 cursor-pointer"
+                            title="Reset seluruh filter pencarian">
                         <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                         </svg>
                         <span>Reset Filter</span>
-                    </a>
+                    </button>
                     
-                    <a href="{{ route($exportRoute, request()->query()) }}" 
+                    <a id="btnExportExcel"
+                       href="{{ route($exportRoute, request()->query()) }}" 
                        class="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#00a65a] hover:bg-[#008d4c] text-white text-xs font-semibold transition duration-150 shadow-2xs cursor-pointer"
                        title="Download data pelanggan ke format Excel">
                         <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -552,7 +661,15 @@
     <!-- =================================================================== -->
     <!-- CUSTOMER DATA TABLE CONTAINER                                       -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
+    <div id="customerTableContainer"
+         @click="handleTableClick($event)"
+         class="relative bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden transition-opacity duration-150"
+         :class="isLoading ? 'opacity-60 pointer-events-none' : 'opacity-100'">
+        
+        <!-- Live Loading Indicator Bar -->
+        <div x-show="isLoading" x-cloak class="absolute top-0 left-0 right-0 h-1 bg-blue-100 dark:bg-blue-950 overflow-hidden z-30">
+            <div class="h-full bg-blue-600 animate-pulse w-full"></div>
+        </div>
         <!-- Desktop Table View (Hidden on Mobile) -->
         <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -1027,11 +1144,11 @@
             </div>
 
             <div class="flex items-center gap-1">
-                <a href="{{ $pelanggan->url(1) }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}">First</a>
-                <a href="{{ $pelanggan->previousPageUrl() }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}">Previous</a>
+                <a href="{{ $pelanggan->url(1) }}" class="ims-pagination-link px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}">First</a>
+                <a href="{{ $pelanggan->previousPageUrl() }}" class="ims-pagination-link px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->onFirstPage() ? 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}">Previous</a>
                 <span class="px-2.5 py-1 rounded-md bg-blue-600 text-white text-[11px] font-bold shadow-2xs">{{ $pelanggan->currentPage() }}</span>
-                <a href="{{ $pelanggan->nextPageUrl() }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Next</a>
-                <a href="{{ $pelanggan->url($pelanggan->lastPage()) }}" class="px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
+                <a href="{{ $pelanggan->nextPageUrl() }}" class="ims-pagination-link px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Next</a>
+                <a href="{{ $pelanggan->url($pelanggan->lastPage()) }}" class="ims-pagination-link px-2 py-1 rounded-md border text-[11px] font-medium transition {{ $pelanggan->hasMorePages() ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' : 'border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 pointer-events-none' }}">Last</a>
             </div>
         </div>
     </div>

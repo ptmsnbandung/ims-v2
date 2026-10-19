@@ -309,7 +309,7 @@
 
         <!-- Filter Toolbar -->
         <form id="filterBroadcastForm" method="GET" action="{{ route('admin.broadcast') }}" class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700/60 space-y-2.5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2.5">
                 
                 <!-- Filter Status Tagihan -->
                 <div>
@@ -329,6 +329,20 @@
                         <option value="all" {{ ($selectedStatusKirim ?? 'all') == 'all' ? 'selected' : '' }}>Semua Status Kirim</option>
                         <option value="sent" {{ ($selectedStatusKirim ?? '') == 'sent' ? 'selected' : '' }}>✅ Sudah Terkirim</option>
                         <option value="unsent" {{ ($selectedStatusKirim ?? '') == 'unsent' ? 'selected' : '' }}>⏳ Belum Terkirim</option>
+                    </select>
+                </div>
+
+                <!-- Filter Jumlah Kirim Notifikasi WA -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Jumlah Kirim Notif:</label>
+                    <select name="jumlah_kirim" onchange="submitBroadcastFilter(this.form)" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                        <option value="all" {{ ($selectedJumlahKirim ?? 'all') == 'all' ? 'selected' : '' }}>Semua Frekuensi</option>
+                        <option value="0" {{ ($selectedJumlahKirim ?? '') === '0' ? 'selected' : '' }}>Belum Pernah (0x)</option>
+                        <option value="1" {{ ($selectedJumlahKirim ?? '') === '1' ? 'selected' : '' }}>1x Kirim</option>
+                        <option value="2" {{ ($selectedJumlahKirim ?? '') === '2' ? 'selected' : '' }}>2x Kirim</option>
+                        <option value="3" {{ ($selectedJumlahKirim ?? '') === '3' ? 'selected' : '' }}>3x Kirim</option>
+                        <option value="4" {{ ($selectedJumlahKirim ?? '') === '4' ? 'selected' : '' }}>4x Kirim</option>
+                        <option value="5plus" {{ ($selectedJumlahKirim ?? '') === '5plus' ? 'selected' : '' }}>≥ 5x Kirim (5x ke atas)</option>
                     </select>
                 </div>
 

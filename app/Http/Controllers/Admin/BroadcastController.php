@@ -150,6 +150,26 @@ class BroadcastController extends Controller
     }
 
     /**
+     * Get SQL expression for total WhatsApp notifications sent
+     */
+    protected function getWaSentCountCol(string $baseTable, array $cols, array $invCols): string
+    {
+        $hasLogTable = $this->hasTableCached('tb_broadcast_wa_log');
+        $hasInv = !empty($invCols);
+        $hasInvNotif = ($hasInv && in_array('notif_wa', $invCols)) || in_array('notif_wa', $cols);
+        $notifCol = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('notif_wa', $cols)) ? 'c.notif_wa' : 'inv.notif_wa';
+
+        if ($hasLogTable && $hasInvNotif) {
+            return "GREATEST(COALESCE(log_sent.total_sent_count, 0), COALESCE({$notifCol}, 0))";
+        } elseif ($hasLogTable) {
+            return "COALESCE(log_sent.total_sent_count, 0)";
+        } elseif ($hasInvNotif) {
+            return "COALESCE({$notifCol}, 0)";
+        }
+        return "0";
+    }
+
+    /**
      * Dynamically select customer fields and determine safe order column.
      */
     protected function selectCustomerFields($query, string $baseTable): string
@@ -336,19 +356,8 @@ class BroadcastController extends Controller
             $speedCol = "''";
         }
 
-        $hasLogTable = Schema::hasTable('tb_broadcast_wa_log');
-        $hasInvNotif = $hasInv && in_array('notif_wa', $invCols);
-
-        if ($hasLogTable && $hasInvNotif) {
-            $waSentCountCol = "GREATEST(COALESCE(log_sent.total_sent_count, 0), COALESCE(inv.notif_wa, 0))";
-        } elseif ($hasLogTable) {
-            $waSentCountCol = "COALESCE(log_sent.total_sent_count, 0)";
-        } elseif ($hasInvNotif) {
-            $waSentCountCol = "COALESCE(inv.notif_wa, 0)";
-        } else {
-            $waSentCountCol = "0";
-        }
-
+        $hasLogTable = $this->hasTableCached('tb_broadcast_wa_log');
+        $waSentCountCol = $this->getWaSentCountCol($baseTable, $cols, $invCols);
         $lastSentAtCol = $hasLogTable ? "log_sent.last_sent_at" : "NULL";
 
         $selects = [
@@ -679,6 +688,7 @@ class BroadcastController extends Controller
         $search = trim($request->input('search', ''));
         $selectedStatusTagihan = $request->input('status_tagihan', 'all');
         $selectedStatusKirim = $request->input('status_kirim', 'all');
+        $selectedJumlahKirim = $request->input('jumlah_kirim', 'all');
 
         $currentMonth = date('m');
         $selectedBulan = $request->filled('bulan') ? str_pad((string)(int)$request->input('bulan'), 2, '0', STR_PAD_LEFT) : $currentMonth;
@@ -761,6 +771,18 @@ class BroadcastController extends Controller
                     });
                 }
             });
+        }
+
+        // Filter Frekuensi / Jumlah Kali Notifikasi Terkirim (0x, 1x, 2x, 3x, 4x, >= 5x)
+        if ($selectedJumlahKirim !== 'all' && $selectedJumlahKirim !== '' && $selectedJumlahKirim !== null) {
+            $invCols = $this->hasTableCached('trx_billing_layanan') ? $this->getColumnsCached('trx_billing_layanan') : [];
+            $countExpr = $this->getWaSentCountCol($baseTable, $cols, $invCols);
+            if ($selectedJumlahKirim === '5plus' || $selectedJumlahKirim === '>=5') {
+                $query->whereRaw("{$countExpr} >= 5");
+            } elseif (is_numeric($selectedJumlahKirim)) {
+                $val = (int) $selectedJumlahKirim;
+                $query->whereRaw("{$countExpr} = {$val}");
+            }
         }
 
         if ($selectedWilayah !== 'all' && !empty($selectedWilayah)) {
@@ -921,6 +943,7 @@ class BroadcastController extends Controller
             'sentTodayCount',
             'selectedStatusTagihan',
             'selectedStatusKirim',
+            'selectedJumlahKirim',
             'selectedBulan',
             'selectedTahun',
             'selectedWilayah',

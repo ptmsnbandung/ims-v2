@@ -497,7 +497,7 @@ class DashboardController extends Controller
 
         if ($canSeeFinanceTraffic) {
             try {
-                $financeStats = Cache::remember("dashboard_finance_traffic_v2_{$selectedBulan}_{$selectedTahun}", 60, function () use ($selectedBulan, $selectedTahun, $monthsList) {
+                $financeStats = Cache::remember("dashboard_finance_traffic_v3_{$selectedBulan}_{$selectedTahun}", 60, function () use ($selectedBulan, $selectedTahun, $monthsList) {
                     $res = [
                         'canSee' => true,
                         'currentMonth' => $selectedBulan,
@@ -634,24 +634,28 @@ class DashboardController extends Controller
                         $res['monthlyInvoiced'] = $monthlyInvoiced;
                         $res['monthlyBreakdown'] = array_values($monthlyBreakdown);
 
-                        // Invoices terkini (6 tagihan terbaru)
+                        // Invoices terkini (6 tagihan terbaru disimpan sebagai array asosiatif murni)
                         $viewTable = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
                         $recentInvoices = DB::table($viewTable)
                             ->where('tahun_tagihan', $selectedTahun)
                             ->orderBy('date_create', 'desc')
                             ->limit(6)
-                            ->get();
+                            ->get()
+                            ->map(fn($r) => (array)$r)
+                            ->all();
 
-                        if ($recentInvoices->isEmpty()) {
+                        if (empty($recentInvoices)) {
                             $recentInvoices = DB::table($viewTable)
                                 ->orderBy('date_create', 'desc')
                                 ->limit(6)
-                                ->get();
+                                ->get()
+                                ->map(fn($r) => (array)$r)
+                                ->all();
                         }
 
                         $regTable = Schema::hasTable('view_billing_reg') ? 'view_billing_reg' : (Schema::hasTable('trx_billing_reg') ? 'trx_billing_reg' : null);
                         $res['totalRegPending'] = $regTable ? DB::table($regTable)->whereIn('status_bill_reg', ['11', '12', '13'])->count() : 0;
-                        $res['recentInvoices'] = $recentInvoices->all();
+                        $res['recentInvoices'] = $recentInvoices;
                     }
 
                     return $res;
@@ -712,20 +716,21 @@ class DashboardController extends Controller
 
         $financeTrafficData = [];
         if ($canSeeFinanceTraffic) {
-            $normalizedInvoices = collect($financeStats['recentInvoices'] ?? [])->map(function ($inv) {
-                $invObj = (object)$inv;
-                $kode = $invObj->kode_billing_layanan ?? $invObj->kode_billing ?? '-';
-                $nominal = (float)($invObj->total_layanan ?? $invObj->total_biaya ?? 0);
-                $bulan = $invObj->bulan_tagihan ?? $invObj->bulan_ke ?? '';
-                $tahun = $invObj->tahun_tagihan ?? $invObj->tahun_ke ?? '';
-                $periode = $invObj->periode_tagihan ?? ($bulan && $tahun ? "{$bulan}/{$tahun}" : '-');
-                $pelanggan = $invObj->nama_pelanggan ?? $invObj->nama_lengkap ?? $invObj->nama_penduduk ?? $invObj->nomor_internet ?? '-';
-                $status = (string)($invObj->status_bill_lay ?? '13');
+            $normalizedInvoices = [];
+            foreach ($financeStats['recentInvoices'] ?? [] as $inv) {
+                $arr = is_array($inv) ? $inv : (array)$inv;
+                $kode = $arr['kode_billing_layanan'] ?? $arr['kode_billing'] ?? '-';
+                $nominal = (float)($arr['total_layanan'] ?? $arr['total_biaya'] ?? 0);
+                $bulan = $arr['bulan_tagihan'] ?? $arr['bulan_ke'] ?? '';
+                $tahun = $arr['tahun_tagihan'] ?? $arr['tahun_ke'] ?? '';
+                $periode = $arr['periode_tagihan'] ?? ($bulan && $tahun ? "{$bulan}/{$tahun}" : '-');
+                $pelanggan = $arr['nama_pelanggan'] ?? $arr['nama_lengkap'] ?? $arr['nama_penduduk'] ?? $arr['nomor_internet'] ?? '-';
+                $status = (string)($arr['status_bill_lay'] ?? '13');
 
-                return (object)[
+                $normalizedInvoices[] = [
                     'kode_billing' => $kode,
                     'kode_billing_layanan' => $kode,
-                    'nomor_internet' => $invObj->nomor_internet ?? '',
+                    'nomor_internet' => $arr['nomor_internet'] ?? '',
                     'nama_pelanggan' => $pelanggan,
                     'bulan_tagihan' => $bulan,
                     'tahun_tagihan' => $tahun,
@@ -734,7 +739,7 @@ class DashboardController extends Controller
                     'total_layanan' => $nominal,
                     'status_bill_lay' => $status,
                 ];
-            })->all();
+            }
 
             $financeTrafficData = [
                 'monthlyLabels' => $financeStats['monthlyLabels'] ?? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],

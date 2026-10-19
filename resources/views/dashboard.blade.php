@@ -702,11 +702,12 @@
                     <div class="divide-y divide-slate-100 dark:divide-slate-800 mt-1">
                         @forelse($financeTrafficData['recentInvoices'] ?? [] as $inv)
                             @php
-                                $kodeInv = $inv->kode_billing_layanan ?? $inv->kode_billing ?? '-';
-                                $nominalInv = (float)($inv->total_layanan ?? $inv->total_biaya ?? 0);
-                                $periodeInv = $inv->periode_tagihan ?? (($inv->bulan_tagihan ?? $inv->bulan_ke ?? '') . '/' . ($inv->tahun_tagihan ?? $inv->tahun_ke ?? ''));
-                                $pelangganInv = $inv->nama_pelanggan ?? $inv->nama_lengkap ?? $inv->nomor_internet ?? '-';
-                                $statusInv = (string)($inv->status_bill_lay ?? '13');
+                                $invArr = is_array($inv) ? $inv : (array)$inv;
+                                $kodeInv = $invArr['kode_billing_layanan'] ?? $invArr['kode_billing'] ?? '-';
+                                $nominalInv = (float)($invArr['total_layanan'] ?? $invArr['total_biaya'] ?? 0);
+                                $periodeInv = $invArr['periode_tagihan'] ?? (($invArr['bulan_tagihan'] ?? $invArr['bulan_ke'] ?? '') . '/' . ($invArr['tahun_tagihan'] ?? $invArr['tahun_ke'] ?? ''));
+                                $pelangganInv = $invArr['nama_pelanggan'] ?? $invArr['nama_lengkap'] ?? $invArr['nomor_internet'] ?? '-';
+                                $statusInv = (string)($invArr['status_bill_lay'] ?? '13');
                             @endphp
                             <div class="py-2.5 flex items-center justify-between gap-2">
                                 <div class="min-w-0">

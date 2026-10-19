@@ -14,13 +14,37 @@
             navigation: auto;
         }
         html {
-            scrollbar-gutter: stable;
             font-size: 13px !important;
         }
         @media (max-width: 639.98px) {
             html {
                 font-size: 14.5px !important;
             }
+        }
+
+        /* Custom Elegant Blue Scrollbar menempel di ujung kanan */
+        .ims-main-scroll::-webkit-scrollbar,
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        .ims-main-scroll::-webkit-scrollbar-track,
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .ims-main-scroll::-webkit-scrollbar-thumb,
+        ::-webkit-scrollbar-thumb {
+            background: #0284c7;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .ims-main-scroll::-webkit-scrollbar-thumb:hover,
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0369a1;
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #0284c7 transparent;
         }
         html, body {
             height: 100% !important;

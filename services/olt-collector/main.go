@@ -102,6 +102,25 @@ type OnusResponse struct {
 	Error        string        `json:"error,omitempty"`
 }
 
+type AbnormalOnu struct {
+	Interface string `json:"interface"`
+	Port      int    `json:"port"`
+	OnuId     int    `json:"onu_id"`
+	Admin     string `json:"admin"`
+	Omcc      string `json:"omcc"`
+	Phase     string `json:"phase"`
+	IsLos     bool   `json:"is_los"`
+}
+
+type AbnormalOnusResponse struct {
+	Success   bool          `json:"success"`
+	LatencyMs int64         `json:"latency_ms"`
+	Count     int           `json:"count"`
+	Onus      []AbnormalOnu `json:"onus"`
+	Cached    bool          `json:"cached"`
+	Error     string        `json:"error,omitempty"`
+}
+
 // -------------------------------------------------------------
 // In-Memory Thread-Safe Cache
 // -------------------------------------------------------------
@@ -191,7 +210,7 @@ func registerActiveOlt(req TrafficRequest, activePorts []int) {
 
 func startBackgroundPrefetcher() {
 	go func() {
-		ticker := time.NewTicker(25 * time.Second)
+		ticker := time.NewTicker(40 * time.Second)
 		defer ticker.Stop()
 
 		for range ticker.C {
@@ -232,32 +251,16 @@ func startBackgroundPrefetcher() {
 					lock.Unlock()
 				}
 
-				// 2. Pre-fetch ONUs for active PON ports in background
-				for _, pIdx := range target.ActivePorts {
-					time.Sleep(350 * time.Millisecond) // Polite spacing between OLT commands
-					cacheKey := fmt.Sprintf("onus_%s_%d_%d_%d", target.TrafficReq.IP, target.TrafficReq.Port, target.TrafficReq.Slot, pIdx)
+				time.Sleep(500 * time.Millisecond)
 
-					if _, fresh := getCache(cacheKey); fresh {
-						continue
+				// 2. Refresh Abnormal ONUs in background (single fast command for whole OLT)
+				if lock.TryLock() {
+					abnResp, err := fetchAbnormalOnusFromOLT(target.TrafficReq)
+					if err == nil && abnResp != nil {
+						cacheKey := fmt.Sprintf("abnormal_onus_%s_%d", target.TrafficReq.IP, target.TrafficReq.Port)
+						setCache(cacheKey, abnResp, 60*time.Second)
 					}
-
-					if lock.TryLock() {
-						onuReq := OnusRequest{
-							IP:           target.TrafficReq.IP,
-							Port:         target.TrafficReq.Port,
-							User:         target.TrafficReq.User,
-							Pass:         target.TrafficReq.Pass,
-							Slot:         target.TrafficReq.Slot,
-							PortIndex:    pIdx,
-							TimeoutSec:   target.TrafficReq.TimeoutSec,
-							ForceRefresh: true,
-						}
-						onuResp, oErr := fetchOnusFromOLT(onuReq)
-						if oErr == nil && onuResp != nil {
-							setCache(cacheKey, onuResp, 90*time.Second)
-						}
-						lock.Unlock()
-					}
+					lock.Unlock()
 				}
 			}
 		}
@@ -663,6 +666,117 @@ func fetchOnusFromOLT(req OnusRequest) (*OnusResponse, error) {
 	}, nil
 }
 
+func fetchAbnormalOnusFromOLT(req TrafficRequest) (*AbnormalOnusResponse, error) {
+	timeout := time.Duration(req.TimeoutSec * float64(time.Second))
+	if timeout <= 0 {
+		timeout = 4 * time.Second
+	}
+
+	t0 := time.Now()
+	conn, err := openOltSession(req.IP, req.Port, req.User, req.Pass, timeout)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	var cmdBuf bytes.Buffer
+	cmdBuf.WriteString("terminal length 0\r\n")
+	cmdBuf.WriteString("show gpon onu state\r\n")
+	cmdBuf.WriteString("exit\r\n")
+	cmdBuf.WriteString("yes\r\n")
+
+	_, _ = conn.Write(cmdBuf.Bytes())
+
+	_ = conn.SetReadDeadline(time.Now().Add(5000 * time.Millisecond))
+	var outBuf bytes.Buffer
+	tmp := make([]byte, 8192)
+	deadline := time.Now().Add(5000 * time.Millisecond)
+
+	for time.Now().Before(deadline) {
+		n, rErr := conn.Read(tmp)
+		if n > 0 {
+			outBuf.Write(tmp[:n])
+			str := outBuf.String()
+			if strings.Contains(str, "[yes/no]") {
+				_, _ = conn.Write([]byte("yes\r\n"))
+				break
+			}
+			if strings.Contains(str, "logout") || strings.Contains(str, "closed") {
+				break
+			}
+		}
+		if rErr != nil {
+			break
+		}
+	}
+
+	clean := cleanTelnetString(outBuf.String())
+	lines := strings.Split(clean, "\n")
+	var results []AbnormalOnu
+
+	abnormalPhases := map[string]bool{
+		"los":       true,
+		"lost":      true,
+		"offline":   true,
+		"poweroff":  true,
+		"dyinggasp": true,
+	}
+
+	reLine := regexp.MustCompile(`(?:gpon-onu_)?(1/[12]/(\d+):(\d+))\s+(.+)`)
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "-") || strings.HasPrefix(line, "OnuIndex") {
+			continue
+		}
+
+		m := reLine.FindStringSubmatch(line)
+		if len(m) >= 5 {
+			iface := m[1]
+			port, _ := strconv.Atoi(m[2])
+			onuId, _ := strconv.Atoi(m[3])
+			tokens := strings.Fields(m[4])
+
+			phase := ""
+			for i := len(tokens) - 1; i >= 0; i-- {
+				tLower := strings.ToLower(tokens[i])
+				if abnormalPhases[tLower] || tLower == "working" || tLower == "up" || tLower == "online" || tLower == "ready" || tLower == "operation" {
+					phase = tLower
+					break
+				}
+			}
+
+			if abnormalPhases[phase] {
+				admin := "enable"
+				if len(tokens) > 0 {
+					admin = tokens[0]
+				}
+				omcc := "disable"
+				if len(tokens) > 1 {
+					omcc = tokens[1]
+				}
+
+				results = append(results, AbnormalOnu{
+					Interface: iface,
+					Port:      port,
+					OnuId:     onuId,
+					Admin:     admin,
+					Omcc:      omcc,
+					Phase:     phase,
+					IsLos:     phase == "los" || phase == "lost",
+				})
+			}
+		}
+	}
+
+	latency := time.Since(t0).Milliseconds()
+	return &AbnormalOnusResponse{
+		Success:   true,
+		LatencyMs: latency,
+		Count:     len(results),
+		Onus:      results,
+	}, nil
+}
+
 // -------------------------------------------------------------
 // HTTP Handlers
 // -------------------------------------------------------------
@@ -814,6 +928,66 @@ func handleOnus(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+func handleAbnormalOnus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req TrafficRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(AbnormalOnusResponse{Success: false, Error: "Invalid JSON: " + err.Error()})
+		return
+	}
+
+	if req.IP == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(AbnormalOnusResponse{Success: false, Error: "IP Address is required"})
+		return
+	}
+
+	cacheKey := fmt.Sprintf("abnormal_onus_%s_%d", req.IP, req.Port)
+	if !req.ForceRefresh {
+		if cached, ok := getCache(cacheKey); ok {
+			res := cached.(*AbnormalOnusResponse)
+			res.Cached = true
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+	}
+
+	lock := getOltLock(req.IP)
+	lock.Lock()
+	defer lock.Unlock()
+
+	if !req.ForceRefresh {
+		if cached, ok := getCache(cacheKey); ok {
+			res := cached.(*AbnormalOnusResponse)
+			res.Cached = true
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(res)
+			return
+		}
+	}
+
+	resp, err := fetchAbnormalOnusFromOLT(req)
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		_ = json.NewEncoder(w).Encode(AbnormalOnusResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	setCache(cacheKey, resp, 45*time.Second)
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
 // -------------------------------------------------------------
 // Main Entrypoint
 // -------------------------------------------------------------
@@ -831,6 +1005,7 @@ func main() {
 	mux.HandleFunc("/health", handleHealth)
 	mux.HandleFunc("/api/olt/traffic", handleTraffic)
 	mux.HandleFunc("/api/olt/onus", handleOnus)
+	mux.HandleFunc("/api/olt/abnormal-onus", handleAbnormalOnus)
 
 	addr := ":" + port
 	log.Printf("[IMS OLT Collector] Daemon starting on http://127.0.0.1%s with background prefetcher...", addr)

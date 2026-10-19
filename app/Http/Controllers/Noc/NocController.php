@@ -4191,19 +4191,27 @@ class NocController extends Controller
                     $scanSucceeded = false;
 
                     if ($shouldScan) {
-                        $lock = Cache::lock($lockKey, 30);
-                        $acquired = false;
-
-                        try {
-                            $acquired = $lock->block(8);
-                        } catch (\Throwable $e) {
+                        // Prioritas 1: Ambil data status seluruh ONU dari daemon Golang (ultra cepat, tidak blokir telnet)
+                        $goAbnormal = $oltService->fetchAbnormalOnusFromGoCollector($olt, $isForceRefresh);
+                        if ($goAbnormal !== null && is_array($goAbnormal)) {
+                            $scanSucceeded = true;
+                            $abnormalOnus = $goAbnormal;
+                            Cache::put($cacheKey, $abnormalOnus, 90);
+                            Cache::put($lastKnownKey, $abnormalOnus, 3600);
+                        } else {
+                            $lock = Cache::lock($lockKey, 30);
                             $acquired = false;
-                        }
 
-                        if ($acquired) {
                             try {
-                                $sess = $oltService->openOltTelnetSession($olt, 4.0);
-                                if (!$sess) {
+                                $acquired = $lock->block(8);
+                            } catch (\Throwable $e) {
+                                $acquired = false;
+                            }
+
+                            if ($acquired) {
+                                try {
+                                    $sess = $oltService->openOltTelnetSession($olt, 4.0);
+                                    if (!$sess) {
                                     if (!empty($lastKnown)) {
                                         $abnormalOnus = $lastKnown;
                                         Cache::put($cacheKey, $abnormalOnus, 60);
@@ -4317,6 +4325,7 @@ class NocController extends Controller
                             }
                         }
                     }
+                }
 
                     // Fallback pemeriksaan cache per PON HANYA jika telnet benar-benar gagal dan tidak ada data cache
                     if (!$scanSucceeded && !$hasLiveCache && empty($abnormalOnus)) {

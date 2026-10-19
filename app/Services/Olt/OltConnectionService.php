@@ -3297,5 +3297,37 @@ class OltConnectionService
         }
         return null;
     }
+
+    /**
+     * Panggil microservice Golang untuk mengambil seluruh ONU LOS / DOWN abnormal secara instan.
+     */
+    public function fetchAbnormalOnusFromGoCollector(object $olt, bool $force = false): ?array
+    {
+        try {
+            $goUrl = env('OLT_COLLECTOR_ABNORMAL_URL', 'http://127.0.0.1:8088/api/olt/abnormal-onus');
+            $params = $this->resolveOltConnectionParams($olt);
+            $slot = $this->getOltGponSlot($olt);
+
+            $response = Http::timeout(6.0)->post($goUrl, [
+                'ip' => $params['ip'],
+                'port' => (int)$params['port'],
+                'user' => $params['user'],
+                'pass' => $params['pass'],
+                'slot' => (int)$slot,
+                'timeout_sec' => 4.0,
+                'force_refresh' => $force,
+            ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                if (!empty($json['success']) && isset($json['onus']) && is_array($json['onus'])) {
+                    return $json['onus'];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Service Go tidak berjalan atau timeout; fallback ke native PHP Telnet
+        }
+        return null;
+    }
 }
 

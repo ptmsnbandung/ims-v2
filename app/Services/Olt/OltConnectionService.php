@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
@@ -1232,6 +1233,13 @@ class OltConnectionService
         $kodeOlt = $olt->kode_olt ?? 'O1';
         $cacheKey = "olt_live_hw_traffic_{$kodeOlt}";
 
+        // Prioritas 1: Ambil data live via Go collector daemon (ultra-cepat, non-blocking)
+        $goRes = $this->fetchTrafficFromGoCollector($olt);
+        if ($goRes !== null) {
+            Cache::put($cacheKey, $goRes, 180);
+            return $goRes;
+        }
+
         return Cache::remember($cacheKey, 180, function () use ($olt, $kodeOlt) {
             $session = $this->openOltTelnetSession($olt, 3.0);
             if (!$session) {
@@ -1388,6 +1396,13 @@ class OltConnectionService
 
         if ($force) {
             Cache::forget($cacheKey);
+        }
+
+        // Prioritas 1: Ambil data live via Go collector daemon (ultra-cepat, non-blocking)
+        $goRes = $this->fetchOnusFromGoCollector($olt, $portIndex, $force);
+        if ($goRes !== null) {
+            Cache::put($cacheKey, $goRes, 180);
+            return $goRes;
         }
 
         return Cache::remember($cacheKey, 180, function () use ($olt, $kodeOlt, $portIndex) {
@@ -3115,6 +3130,94 @@ class OltConnectionService
             'raw_output' => $rawTerminal,
             'checked_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
         ];
+    }
+
+    /**
+     * Panggil microservice Golang untuk pengambilan data traffic OLT & PON port ultra-cepat.
+     * Mengembalikan null jika service Go tidak berjalan (otomatis fallback ke native PHP).
+     */
+    protected function fetchTrafficFromGoCollector(object $olt, bool $force = false): ?array
+    {
+        try {
+            $goUrl = env('OLT_COLLECTOR_URL', 'http://127.0.0.1:8088/api/olt/traffic');
+            $params = $this->resolveOltConnectionParams($olt);
+            $slot = $this->getOltGponSlot($olt);
+
+            $response = Http::timeout(3.5)->post($goUrl, [
+                'ip' => $params['ip'],
+                'port' => (int)$params['port'],
+                'user' => $params['user'],
+                'pass' => $params['pass'],
+                'slot' => (int)$slot,
+                'max_ports' => 16,
+                'timeout_sec' => 3.0,
+                'force_refresh' => $force,
+            ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                if (!empty($json['success']) && isset($json['ports']) && is_array($json['ports']) && !empty($json['ports'])) {
+                    $ports = [];
+                    foreach ($json['ports'] as $k => $p) {
+                        $pIdx = is_numeric($k) ? (int)$k : (int)($p['port_index'] ?? $k);
+                        $ports[$pIdx] = [
+                            'port_index' => $pIdx,
+                            'status' => $p['status'] ?? 'deactivate',
+                            'is_active' => !empty($p['is_active']),
+                            'up_bps' => (int)($p['up_bps'] ?? 0),
+                            'down_bps' => (int)($p['down_bps'] ?? 0),
+                            'up_mbps' => (float)($p['up_mbps'] ?? 0),
+                            'down_mbps' => (float)($p['down_mbps'] ?? 0),
+                            'up_formatted' => $p['up_formatted'] ?? '0 Mbps',
+                            'down_formatted' => $p['down_formatted'] ?? '0 Mbps',
+                            'onu_count' => (int)($p['onu_count'] ?? 0),
+                            'rx_power' => $p['rx_power'] ?? null,
+                            'onu_rx_powers' => $p['onu_rx_powers'] ?? [],
+                        ];
+                    }
+                    if (isset($json['system_health'])) {
+                        $ports['_system_health'] = $json['system_health'];
+                    }
+                    return $ports;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Service Go tidak berjalan atau timeout; fallback ke native PHP
+        }
+        return null;
+    }
+
+    /**
+     * Panggil microservice Golang untuk pengambilan data seluruh ONU fisik port GPON OLT.
+     */
+    protected function fetchOnusFromGoCollector(object $olt, int $portIndex, bool $force = false): ?array
+    {
+        try {
+            $goUrl = env('OLT_COLLECTOR_ONUS_URL', 'http://127.0.0.1:8088/api/olt/onus');
+            $params = $this->resolveOltConnectionParams($olt);
+            $slot = $this->getOltGponSlot($olt);
+
+            $response = Http::timeout(3.5)->post($goUrl, [
+                'ip' => $params['ip'],
+                'port' => (int)$params['port'],
+                'user' => $params['user'],
+                'pass' => $params['pass'],
+                'slot' => (int)$slot,
+                'port_index' => (int)$portIndex,
+                'timeout_sec' => 3.0,
+                'force_refresh' => $force,
+            ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                if (!empty($json['success']) && isset($json['onus']) && is_array($json['onus'])) {
+                    return $json['onus'];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Service Go tidak berjalan atau timeout; fallback ke native PHP
+        }
+        return null;
     }
 }
 

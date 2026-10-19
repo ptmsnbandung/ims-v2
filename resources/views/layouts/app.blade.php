@@ -4,12 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="view-transition" content="same-origin">
 
     <title>{{ isset($title) && $title ? ($title . ' | IMSv2 | PT MEDIA SOLUSI NETWORK') : 'IMSv2 | PT MEDIA SOLUSI NETWORK' }}</title>
 
     <!-- Compact Density Base Scale (~80% Browser Zoom Scale) -->
     <style>
+        @view-transition {
+            navigation: auto;
+        }
         html {
+            scrollbar-gutter: stable;
             font-size: 13px !important;
         }
         @media (max-width: 639.98px) {

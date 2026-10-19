@@ -464,208 +464,225 @@
     <!-- ========================================================================= -->
     <div x-show="activeTab === 'finance'" x-cloak class="space-y-3 sm:space-y-3.5">
         
-        <!-- Row 1: 4 KPI Cards (High Impact, Polished UI) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
+        <!-- Row 1: 4 KPI Cards (High Impact, Premium FinTech Console) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-3.5">
             <!-- 1. Total Tagihan Terbit -->
-            <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between hover:border-sky-500/40 transition">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Tagihan {{ $selectedTahun }}</span>
-                    <div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                    <div class="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5L19 7.5V19a2 2 0 01-2 2z"/></svg>
                     </div>
                 </div>
-                <div class="mt-2">
-                    <div class="text-base sm:text-lg font-black font-mono tracking-tight text-slate-900 dark:text-white">
+                <div class="mt-3">
+                    <div class="text-lg sm:text-xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
                         Rp {{ number_format($financeTrafficData['totalYearInvoiced'] ?? 0, 0, ',', '.') }}
                     </div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                        {{ number_format(($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0)) }} invoice terbit di {{ $selectedTahun }}
-                    </p>
+                    <div class="flex items-center gap-1.5 mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">
+                        <span class="font-bold text-slate-700 dark:text-slate-300 font-mono">{{ number_format(($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0)) }}</span>
+                        <span>invoice billing terbit</span>
+                    </div>
                 </div>
             </div>
 
             <!-- 2. Realisasi Pembayaran Lunas (Cash In) -->
-            <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-500/30 dark:border-emerald-500/20 shadow-xs flex flex-col justify-between">
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-500/30 dark:border-emerald-500/20 shadow-xs flex flex-col justify-between hover:border-emerald-500/50 transition">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Realisasi Lunas (Cash In)</span>
-                    <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                 </div>
-                <div class="mt-2">
-                    <div class="text-base sm:text-lg font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
+                <div class="mt-3">
+                    <div class="text-lg sm:text-xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
                         Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}
                     </div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                        {{ number_format($financeTrafficData['paidCountYear'] ?? 0) }} invoice telah lunas terverifikasi
-                    </p>
+                    <div class="flex items-center gap-1.5 mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400 font-mono">{{ number_format($financeTrafficData['paidCountYear'] ?? 0) }}</span>
+                        <span>invoice lunas terverifikasi</span>
+                    </div>
                 </div>
             </div>
 
             <!-- 3. Piutang Berjalan (Belum Lunas) -->
-            <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-500/30 dark:border-amber-500/20 shadow-xs flex flex-col justify-between">
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-500/30 dark:border-amber-500/20 shadow-xs flex flex-col justify-between hover:border-amber-500/50 transition">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Piutang Berjalan</span>
-                    <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                 </div>
-                <div class="mt-2">
-                    <div class="text-base sm:text-lg font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
+                <div class="mt-3">
+                    <div class="text-lg sm:text-xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
                         Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}
                     </div>
-                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                        {{ number_format($financeTrafficData['unpaidCountYear'] ?? 0) }} invoice belum terselesaikan
-                    </p>
+                    <div class="flex items-center gap-1.5 mt-1 text-[10.5px] text-slate-500 dark:text-slate-400">
+                        <span class="font-bold text-amber-600 dark:text-amber-400 font-mono">{{ number_format($financeTrafficData['unpaidCountYear'] ?? 0) }}</span>
+                        <span>invoice belum diselesaikan</span>
+                    </div>
                 </div>
             </div>
 
             <!-- 4. Efektivitas Collection Rate -->
-            <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-500/30 dark:border-indigo-500/20 shadow-xs flex flex-col justify-between">
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-500/30 dark:border-indigo-500/20 shadow-xs flex flex-col justify-between hover:border-indigo-500/50 transition">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Collection Rate</span>
-                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full {{ ($financeTrafficData['collectionRateYear'] ?? 0) >= 80 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400' }}">
+                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full {{ ($financeTrafficData['collectionRateYear'] ?? 0) >= 80 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' }}">
                         {{ ($financeTrafficData['collectionRateYear'] ?? 0) >= 80 ? 'Optimal' : 'Perhatian' }}
                     </span>
                 </div>
-                <div class="mt-2">
-                    <div class="text-base sm:text-lg font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400">
-                        {{ $financeTrafficData['collectionRateYear'] ?? 0 }}%
+                <div class="mt-3">
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-lg sm:text-xl font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400">
+                            {{ $financeTrafficData['collectionRateYear'] ?? 0 }}%
+                        </span>
+                        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">Target: 85%</span>
                     </div>
                     <!-- Progress Bar -->
-                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
-                        <div class="bg-gradient-to-r from-emerald-500 to-indigo-500 h-1.5 rounded-full" style="width: {{ min(100, $financeTrafficData['collectionRateYear'] ?? 0) }}%"></div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                        <div class="bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 h-1.5 rounded-full transition-all duration-500" style="width: {{ min(100, $financeTrafficData['collectionRateYear'] ?? 0) }}%"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Row 2: Charts (Traffic Arus Kas Bulanan 8 Cols & Status Donut 4 Cols) -->
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
-            <!-- 1. Grafik Tren Tagihan & Realisasi Bulanan -->
-            <div class="md:col-span-8 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+        <!-- Row 2: Charts (Flex Container - 67% Monthly Trend & 33% Donut Status) -->
+        <div class="flex flex-col lg:flex-row gap-3 sm:gap-3.5 items-stretch w-full">
+            <!-- 1. Grafik Tren Tagihan & Realisasi Bulanan (67% Width) -->
+            <div class="w-full lg:w-[67%] min-w-0 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+                 style="flex: 2 1 0%; min-width: 0;">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <div>
                             <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0" style="display: inline-block;"></span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
                                 <span>Traffic Arus Kas Keuangan Bulanan</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
                                 Perbandingan realisasi kas masuk (lunas) vs tagihan terbit & piutang per bulan {{ $selectedTahun }}.
                             </p>
                         </div>
 
                         <!-- Mini Legend Indicators -->
-                        <div class="flex items-center gap-2 text-[9px] font-semibold text-slate-600 dark:text-slate-300">
-                            <span class="inline-flex items-center gap-1">
-                                <span class="w-2 h-2 rounded-full bg-[#10b981]"></span> Lunas
+                        <div class="flex items-center gap-2.5 text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-[#10b981]"></span> Realisasi Lunas
                             </span>
-                            <span class="inline-flex items-center gap-1">
+                            <span class="inline-flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span> Piutang
                             </span>
-                            <span class="inline-flex items-center gap-1">
+                            <span class="inline-flex items-center gap-1.5">
                                 <span class="w-2 h-2 rounded-full bg-[#0284c7]"></span> Invoiced
                             </span>
                         </div>
                     </div>
 
                     <!-- ApexChart Container -->
-                    <div class="pt-2">
-                        <div id="chart-finance-monthly-traffic" class="w-full" style="min-height: 240px;"></div>
+                    <div class="pt-2 w-full overflow-hidden">
+                        <div id="chart-finance-monthly-traffic" class="w-full" style="min-height: 250px;"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. Donut Rasio Koleksi & Ringkasan -->
-            <div class="md:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 2. Donut Rasio Koleksi & Ringkasan (33% Width) -->
+            <div class="w-full lg:w-[33%] min-w-0 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+                 style="flex: 1 1 0%; min-width: 0;">
                 <div>
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
-                            <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" style="display: inline-block;"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0"></span>
                             <span>Rasio Status Penagihan</span>
                         </h4>
-                        <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
-                            Proporsi pelunasan billing {{ $selectedTahun }}.
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                            Proporsi pelunasan billing tahun {{ $selectedTahun }}.
                         </p>
                     </div>
 
                     <!-- Donut ApexChart -->
-                    <div class="pt-1">
-                        <div id="chart-finance-collection-donut" class="w-full" style="min-height: 240px;"></div>
+                    <div class="pt-1 flex items-center justify-center">
+                        <div id="chart-finance-collection-donut" class="w-full" style="min-height: 195px;"></div>
                     </div>
                 </div>
 
-                <!-- Mini KPI Stats Strip -->
-                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2 text-center">
-                    <div class="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                        <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">Total Transaksi</span>
-                        <span class="text-xs font-black font-mono text-slate-800 dark:text-white">
-                            {{ number_format(($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0)) }}
+                <!-- Structured Mini KPI Stats Breakdown -->
+                <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                    <div class="flex items-center justify-between text-[11px] p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                        <span class="text-slate-500 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Realisasi Lunas
+                        </span>
+                        <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                            Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}
                         </span>
                     </div>
-                    <div class="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                        <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">Rata-rata / Invoice</span>
-                        <span class="text-xs font-black font-mono text-slate-800 dark:text-white">
-                            @php
-                                $totalInvCount = ($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0);
-                                $avgNominal = $totalInvCount > 0 ? round(($financeTrafficData['totalYearInvoiced'] ?? 0) / $totalInvCount) : 0;
-                            @endphp
-                            Rp {{ number_format($avgNominal, 0, ',', '.') }}
+                    <div class="flex items-center justify-between text-[11px] p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                        <span class="text-slate-500 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Piutang Berjalan
                         </span>
+                        <span class="font-mono font-bold text-amber-600 dark:text-amber-400">
+                            Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between text-[10px] pt-1 px-1 text-slate-400">
+                        <span>Total: {{ number_format(($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0)) }} Transaksi</span>
+                        @php
+                            $totalInvCount = ($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0);
+                            $avgNominal = $totalInvCount > 0 ? round(($financeTrafficData['totalYearInvoiced'] ?? 0) / $totalInvCount) : 0;
+                        @endphp
+                        <span>Rata-rata: <b class="font-mono text-slate-600 dark:text-slate-300">Rp {{ number_format($avgNominal, 0, ',', '.') }}</b></span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Row 3: Monthly Breakdown Table (8 Cols) & 6 Recent Invoices (4 Cols) -->
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
+        <!-- Row 3: Monthly Breakdown Table (67% Width) & Recent Invoices (33% Width) -->
+        <div class="flex flex-col lg:flex-row gap-3 sm:gap-3.5 items-stretch w-full">
             <!-- 1. Tabel Rincian Traffic Keuangan per Bulan -->
-            <div class="md:col-span-8 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div class="w-full lg:w-[67%] min-w-0 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+                 style="flex: 2 1 0%; min-width: 0;">
                 <div>
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <div>
                             <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <span>Rincian Traffic Tagihan Bulanan (12 Bulan)</span>
                             </h4>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Ringkasan transaksi billing per bulan kalender {{ $selectedTahun }}.</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Arus kas billing per bulan kalender tahun {{ $selectedTahun }}.</p>
                         </div>
-                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300">
-                            {{ $selectedTahun }}
+                        <span class="text-[9.5px] px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold font-mono text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            Tahun {{ $selectedTahun }}
                         </span>
                     </div>
 
-                    <div class="overflow-x-auto mt-2">
+                    <div class="overflow-x-auto mt-2.5">
                         <table class="w-full text-left text-[11px] whitespace-nowrap">
                             <thead>
                                 <tr class="text-[9.5px] uppercase font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                                    <th class="py-1.5 px-2">Bulan</th>
-                                    <th class="py-1.5 px-2 text-right">Tagihan Terbit</th>
-                                    <th class="py-1.5 px-2 text-right">Realisasi Lunas</th>
-                                    <th class="py-1.5 px-2 text-right">Piutang</th>
-                                    <th class="py-1.5 px-2 text-center">Collection Rate</th>
+                                    <th class="py-2 px-2.5">Bulan</th>
+                                    <th class="py-2 px-2.5 text-right">Tagihan Terbit</th>
+                                    <th class="py-2 px-2.5 text-right">Realisasi Lunas</th>
+                                    <th class="py-2 px-2.5 text-right">Piutang</th>
+                                    <th class="py-2 px-2.5 text-center">Collection Rate</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100/70 dark:divide-slate-800/60 font-mono">
                                 @forelse($financeTrafficData['monthlyBreakdown'] ?? [] as $mb)
                                     <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
-                                        <td class="py-2 px-2 font-sans font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                        <td class="py-2 px-2.5 font-sans font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                             <span class="w-1.5 h-1.5 rounded-full {{ $mb['total_nominal'] > 0 ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
                                             <span>{{ $mb['month_name'] }}</span>
                                         </td>
-                                        <td class="py-2 px-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                                        <td class="py-2 px-2.5 text-right font-semibold text-slate-700 dark:text-slate-300">
                                             Rp {{ number_format($mb['total_nominal'], 0, ',', '.') }}
                                         </td>
-                                        <td class="py-2 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                                        <td class="py-2 px-2.5 text-right font-bold text-emerald-600 dark:text-emerald-400">
                                             Rp {{ number_format($mb['paid_nominal'], 0, ',', '.') }}
                                         </td>
-                                        <td class="py-2 px-2 text-right font-medium {{ $mb['unpaid_nominal'] > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400' }}">
+                                        <td class="py-2 px-2.5 text-right font-medium {{ $mb['unpaid_nominal'] > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400' }}">
                                             Rp {{ number_format($mb['unpaid_nominal'], 0, ',', '.') }}
                                         </td>
-                                        <td class="py-2 px-2 text-center">
+                                        <td class="py-2 px-2.5 text-center">
                                             @if($mb['total_nominal'] > 0)
-                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-bold {{ $mb['collection_rate'] >= 80 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800' }}">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold {{ $mb['collection_rate'] >= 80 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800' }}">
                                                     {{ $mb['collection_rate'] }}%
                                                 </span>
                                             @else
@@ -681,21 +698,41 @@
                                     </tr>
                                 @endforelse
                             </tbody>
+                            <tfoot class="border-t-2 border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-900 dark:text-white bg-slate-50/60 dark:bg-slate-800/40">
+                                <tr>
+                                    <td class="py-2.5 px-2.5 font-sans uppercase text-[10px] tracking-wider">Total {{ $selectedTahun }}</td>
+                                    <td class="py-2.5 px-2.5 text-right text-sky-600 dark:text-sky-400">
+                                        Rp {{ number_format($financeTrafficData['totalYearInvoiced'] ?? 0, 0, ',', '.') }}
+                                    </td>
+                                    <td class="py-2.5 px-2.5 text-right text-emerald-600 dark:text-emerald-400">
+                                        Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}
+                                    </td>
+                                    <td class="py-2.5 px-2.5 text-right text-amber-600 dark:text-amber-400">
+                                        Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}
+                                    </td>
+                                    <td class="py-2.5 px-2.5 text-center">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                                            {{ $financeTrafficData['collectionRateYear'] ?? 0 }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
             </div>
 
             <!-- 2. Recent Invoices List -->
-            <div class="md:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div class="w-full lg:w-[33%] min-w-0 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+                 style="flex: 1 1 0%; min-width: 0;">
                 <div>
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
                         <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 shrink-0"></span>
                             <span>Invoice Billing Terbaru</span>
                         </h4>
-                        <a href="{{ route('finance.billing-layanan') }}" class="text-[9px] font-bold text-blue-600 dark:text-cyan-400 hover:underline">
-                            Semua &rarr;
+                        <a href="{{ route('finance.billing-layanan') }}" class="text-[10px] font-bold text-blue-600 dark:text-cyan-400 hover:underline">
+                            Semua Data &rarr;
                         </a>
                     </div>
 
@@ -709,9 +746,9 @@
                                 $pelangganInv = $invArr['nama_pelanggan'] ?? $invArr['nama_lengkap'] ?? $invArr['nomor_internet'] ?? '-';
                                 $statusInv = (string)($invArr['status_bill_lay'] ?? '13');
                             @endphp
-                            <div class="py-2.5 flex items-center justify-between gap-2">
+                            <div class="py-2.5 flex items-center justify-between gap-2.5">
                                 <div class="min-w-0">
-                                    <div class="flex items-center gap-1.5">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
                                         <span class="text-[10.5px] font-bold font-mono text-slate-900 dark:text-white truncate">
                                             {{ $kodeInv }}
                                         </span>
@@ -731,8 +768,8 @@
                                     <div class="text-[11px] font-extrabold font-mono text-slate-900 dark:text-white">
                                         Rp {{ number_format($nominalInv, 0, ',', '.') }}
                                     </div>
-                                    <a href="{{ route('finance.dokumen.invoice', $kodeInv) }}" target="_blank" class="text-[9px] text-blue-600 dark:text-cyan-400 hover:underline">
-                                        Lihat &rarr;
+                                    <a href="{{ route('finance.dokumen.invoice', $kodeInv) }}" target="_blank" class="text-[9px] font-bold text-blue-600 dark:text-cyan-400 hover:underline">
+                                        Lihat Invoice &rarr;
                                     </a>
                                 </div>
                             </div>
@@ -744,7 +781,7 @@
                     </div>
                 </div>
 
-                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-500">
+                <div class="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9.5px] text-slate-500">
                     <span>Modul Keuangan Terintegrasi</span>
                     <a href="{{ route('finance.billing-layanan') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline">
                         Buka Billing Layanan &rarr;
@@ -1411,7 +1448,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ],
             chart: {
                 type: 'area',
-                height: 240,
+                height: 250,
                 fontFamily: 'inherit',
                 toolbar: { show: false },
                 animations: {
@@ -1508,7 +1545,7 @@ document.addEventListener('DOMContentLoaded', function () {
             labels: hasData ? ['Realisasi Lunas', 'Piutang Berjalan'] : ['Belum Ada Tagihan'],
             chart: {
                 type: 'donut',
-                height: 240,
+                height: 195,
                 fontFamily: 'inherit',
                 background: 'transparent'
             },
@@ -1520,7 +1557,7 @@ document.addEventListener('DOMContentLoaded', function () {
             plotOptions: {
                 pie: {
                     donut: {
-                        size: '68%',
+                        size: '72%',
                         labels: {
                             show: true,
                             name: {
@@ -1532,12 +1569,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             },
                             value: {
                                 show: true,
-                                fontSize: '13px',
+                                fontSize: '18px',
                                 fontWeight: 900,
                                 fontFamily: 'monospace',
                                 color: isDark ? '#ffffff' : '#0f172a',
                                 offsetY: 4,
-                                formatter: (val) => hasData ? formatRupiah(val) : '0'
+                                formatter: () => '{{ $financeTrafficData['collectionRateYear'] ?? 0 }}%'
                             },
                             total: {
                                 show: true,
@@ -1553,11 +1590,7 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             dataLabels: { enabled: false },
             legend: {
-                show: true,
-                position: 'bottom',
-                fontSize: '10px',
-                fontWeight: 600,
-                labels: { colors: isDark ? '#cbd5e1' : '#475569' }
+                show: false
             },
             tooltip: {
                 theme: tooltipTheme,

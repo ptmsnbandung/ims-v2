@@ -28,8 +28,9 @@
     }
 
     $user = auth()->user();
-    $isFinance = request()->routeIs('finance.*') || $user?->hasRole('finance');
-    $isTeknik = $user?->hasRole('teknik') && !$user?->hasRole(['noc', 'admin', 'direktur']);
+    $isCeo = $user?->isCeo() ?? false;
+    $isFinance = !$isCeo && (request()->routeIs('finance.*') || $user?->hasRole('finance'));
+    $isTeknik = !$isCeo && ($user?->hasRole('teknik') && !$user?->hasRole(['noc', 'admin', 'direktur']));
 @endphp
 
 <div class="space-y-6"
@@ -1340,6 +1341,7 @@
                             Perangkat .dsb
                         </h2>
 
+                        @if(!$isCeo)
                         <button type="button" 
                                 @click="tambahPerangkatModalOpen = true"
                                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0d6efd] hover:bg-[#0b5ed7] text-white text-xs font-bold shadow-md shadow-blue-500/20 transition cursor-pointer">
@@ -1348,6 +1350,7 @@
                             </svg>
                             <span>Tambah</span>
                         </button>
+                        @endif
                     </div>
 
                     <!-- Main Grid: Left Config Column & Right Perangkat Table Column -->
@@ -1362,11 +1365,13 @@
                                     <h4 class="text-sm font-bold text-slate-900 dark:text-white">
                                         ID PPOE
                                     </h4>
+                                    @if(!$isCeo)
                                     <button type="button" 
                                             @click="openPppoeModal()"
                                             class="px-3 py-1 rounded-lg bg-[#0d6efd] hover:bg-[#0b5ed7] text-white text-xs font-bold shadow-sm transition cursor-pointer">
                                         Ubah
                                     </button>
+                                    @endif
                                 </div>
                                 <ul class="space-y-1 text-slate-600 dark:text-slate-400 font-sans">
                                     <li>&mdash; Username : <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold">{{ $customer->ont_us ?: $customer->nomor_internet }}</span></li>
@@ -1456,7 +1461,9 @@
                                         <th class="py-3 px-3 font-bold">Nama Perangkat</th>
                                         <th class="py-3 px-3 font-bold">Quantity</th>
                                         <th class="py-3 px-3 font-bold">Status</th>
+                                        @if(!$isCeo)
                                         <th class="py-3 px-3 font-bold text-center">Action</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1485,6 +1492,7 @@
                                                 {{ $p->user_create ?: ($instalasi->aktivasi_team ?? 'NUNU NUGRAHA') }}
                                             </td>
 
+                                            @if(!$isCeo)
                                             <!-- Action: Hapus -->
                                             <td class="py-3 px-3 align-middle text-center">
                                                 <form action="{{ route('teknik.pelanggan.perangkat.delete', [$customer->nomor_internet, $p->kode_inst_barang]) }}" 
@@ -1501,6 +1509,7 @@
                                                     </button>
                                                 </form>
                                             </td>
+                                            @endif
 
                                         </tr>
                                     @empty

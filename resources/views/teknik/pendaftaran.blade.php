@@ -33,6 +33,7 @@
             </div>
 
             <!-- Button + Registrasi Baru (Buka Modal Form) -->
+            @if(!auth()->user()?->isCeo())
             <div>
                 <button type="button" 
                         @click="openNewModal()"
@@ -43,6 +44,7 @@
                     <span>Registrasi Baru</span>
                 </button>
             </div>
+            @endif
         </div>
     </div>
 

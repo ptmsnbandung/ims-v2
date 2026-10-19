@@ -221,6 +221,7 @@
                 Pelaksana Utama: Tim NOC
             </span>
 
+            @if(!auth()->user()?->isCeo())
             <button type="button"
                     @click="openCreateModal()"
                     class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/25 transition cursor-pointer">
@@ -229,6 +230,7 @@
                 </svg>
                 <span>Buat Tiket</span>
             </button>
+            @endif
         </div>
     </div>
 

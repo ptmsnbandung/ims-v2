@@ -42,6 +42,20 @@ class CheckRole
             abort(403, 'Anda tidak memiliki hak akses untuk halaman ini.');
         }
 
+        // Strict read-only guard for CEO: prevent any state mutation
+        if ($user->isCeo() && !in_array($request->method(), ['GET', 'HEAD', 'OPTIONS'])) {
+            if (!$request->routeIs('logout') && !$request->routeIs('profile.password')) {
+                if ($request->expectsJson() || $request->isXmlHttpRequest()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Akses Ditolak: Akun CEO hanya memiliki hak akses pemantauan (Read-Only) dan tidak dapat melakukan perubahan data.',
+                    ], 403);
+                }
+
+                abort(403, 'Akses Ditolak: Akun CEO hanya memiliki hak akses pemantauan (Read-Only) dan tidak dapat melakukan perubahan data.');
+            }
+        }
+
         return $next($request);
     }
 }

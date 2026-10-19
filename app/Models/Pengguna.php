@@ -213,6 +213,17 @@ class Pengguna extends Model implements AuthenticatableContract
     }
 
     /**
+     * Check if user is CEO / Executive Monitoring (Read-Only)
+     */
+    public function isCeo(): bool
+    {
+        $namaLevel = strtolower($this->level?->nama_level ?? '');
+        $kodeLevel = strtolower($this->kode_level ?? '');
+
+        return str_contains($namaLevel, 'ceo') || $kodeLevel === 'lv_ceo' || $kodeLevel === 'ceo';
+    }
+
+    /**
      * Check if user is Admin / Master Admin
      */
     public function isAdmin(): bool
@@ -243,6 +254,9 @@ class Pengguna extends Model implements AuthenticatableContract
             if (($roleLower === 'direktur' || $roleLower === 'admin' || $roleLower === 'administrator') && $this->isAdmin()) {
                 return true;
             }
+            if ($roleLower === 'ceo' && $this->isCeo()) {
+                return true;
+            }
         }
 
         return false;
@@ -255,6 +269,9 @@ class Pengguna extends Model implements AuthenticatableContract
     {
         if ($this->isAdmin()) {
             return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
+        }
+        if ($this->isCeo()) {
+            return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
         }
         if ($this->isFinance()) {
             return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
@@ -284,6 +301,9 @@ class Pengguna extends Model implements AuthenticatableContract
     {
         if ($this->isAdmin()) {
             return 'Master Admin & Akses Penuh Sistem';
+        }
+        if ($this->isCeo()) {
+            return 'Chief Executive Officer (Monitoring Read-Only)';
         }
         if ($this->isFinance()) {
             return 'Manajemen Keuangan, Billing Tagihan, & Invoicing';

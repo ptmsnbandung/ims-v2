@@ -86,6 +86,7 @@
                      class="absolute left-0 lg:left-auto lg:right-0 mt-2 w-52 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl shadow-black/40 py-1 z-50 divide-y divide-slate-100 dark:divide-slate-800/60 focus:outline-none">
                     
                     <div class="py-1">
+                        @if(!auth()->user()?->isCeo())
                         <!-- Generate Invoice Item -->
                         <button type="button"
                                 @click="openGenerateModal(); actionDropdownOpen = false"
@@ -100,6 +101,7 @@
                                 <span class="text-[9px] text-slate-400 whitespace-nowrap">Terbitkan tagihan baru</span>
                             </div>
                         </button>
+                        @endif
 
                         <!-- Cetak Massal (Print Invoices) -->
                         <button type="button"
@@ -808,7 +810,7 @@
                                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                             <span>Link Expired</span>
                                         </button>
-                                        @elseif($inv->status_bill_lay != '15')
+                                        @elseif($inv->status_bill_lay != '15' && !auth()->user()?->isCeo())
                                         <form method="POST" action="{{ route('finance.billing-layanan.generate-midtrans.post') }}" class="m-0 p-0 inline">
                                             @csrf
                                             <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
@@ -866,7 +868,12 @@
                                     </div>
                                     @endif
                                 @else
-                                    @if($inv->status_bill_lay != '15')
+                                    @if(auth()->user()?->isCeo())
+                                    <div class="h-6 w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30 text-[10px] font-bold select-none" title="Tagihan Belum Dibayar">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                                        <span>Belum Bayar</span>
+                                    </div>
+                                    @elseif($inv->status_bill_lay != '15')
                                     <button type="button"
                                             @click="openPayModalFromEl($el)"
                                             data-kode="{{ $inv->kode_billing_layanan }}"
@@ -893,6 +900,22 @@
                                 @endif
 
                                 <!-- Bottom Tier: 3 Compact Icon Buttons (Metode, Detail, Hapus) -->
+                                @if(auth()->user()?->isCeo())
+                                <div class="flex items-center justify-center w-full">
+                                    <!-- Detail Only for CEO -->
+                                    <button type="button"
+                                            @click="openDetailModalFromEl($el)"
+                                            data-kode="{{ $inv->kode_billing_layanan }}"
+                                            title="Lihat Detail Tagihan"
+                                            class="h-6 w-full inline-flex items-center justify-center gap-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white border border-slate-200 dark:border-slate-700 text-[10px] font-bold transition shadow-2xs cursor-pointer">
+                                        <svg class="w-3 h-3 flex-shrink-0 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        </svg>
+                                        <span>Detail</span>
+                                    </button>
+                                </div>
+                                @else
                                 <div class="flex items-center justify-center gap-1 w-full">
                                     <!-- Change Payment Method -->
                                     <button type="button"
@@ -949,6 +972,7 @@
                                         </button>
                                     </form>
                                 </div>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -1256,6 +1280,17 @@
                     </div>
 
                     <!-- Action Buttons in Mobile Card -->
+                    @if(auth()->user()?->isCeo())
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button"
+                                @click="openDetailModalFromEl($el)"
+                                data-kode="{{ $inv->kode_billing_layanan }}"
+                                class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition shadow-2xs cursor-pointer">
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                            <span>Rincian Tagihan</span>
+                        </button>
+                    </div>
+                    @else
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                         @if($isMidtrans)
                             @if($inv->status_bill_lay == '15')
@@ -1334,6 +1369,7 @@
                             </button>
                         </form>
                     </div>
+                    @endif
                 </div>
             @empty
                 <div class="py-8 text-center text-slate-500 dark:text-slate-400">

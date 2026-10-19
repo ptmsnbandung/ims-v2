@@ -65,8 +65,8 @@ Route::middleware('auth')->group(function () {
     // Midtrans Payment Gateway Webhook (Auto Unsuspend Callback)
     Route::post('/webhook/midtrans', [FinanceController::class, 'handleMidtransWebhook'])->name('webhook.midtrans');
 
-    // Routes Shared Ticket Hub & Tiket Gangguan (Teknik, NOC, Direktur, Admin, Finance)
-    Route::middleware('role:teknik,noc,direktur,admin,finance')->prefix('teknik')->name('teknik.')->group(function () {
+    // Routes Shared Ticket Hub & Tiket Gangguan (Teknik, NOC, Direktur, Admin, Finance, CEO)
+    Route::middleware('role:teknik,noc,direktur,admin,finance,ceo')->prefix('teknik')->name('teknik.')->group(function () {
         Route::get('/tiket', [TeknikController::class, 'tiket'])->name('tiket');
         Route::get('/tiket/gangguan', [TeknikController::class, 'tiketGangguan'])->name('tiket.gangguan');
         Route::get('/tiket/gangguan/check-customer', [TeknikController::class, 'checkCustomerForTiket'])->name('tiket.gangguan.check-customer');
@@ -77,8 +77,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/tiket/gangguan/{id}/cancel', [TeknikController::class, 'cancelTiketGangguan'])->name('tiket.gangguan.cancel');
     });
 
-    // Routes Role Teknik, NOC, Direktur, Admin, & Finance
-    Route::middleware('role:teknik,noc,direktur,admin,finance')->prefix('teknik')->name('teknik.')->group(function () {
+    // Routes Role Teknik, NOC, Direktur, Admin, Finance, & CEO
+    Route::middleware('role:teknik,noc,direktur,admin,finance,ceo')->prefix('teknik')->name('teknik.')->group(function () {
         
         // Pendaftaran Pelanggan Baru & Edit Pendaftaran
         Route::get('/pendaftaran', [TeknikController::class, 'pendaftaran'])->name('pendaftaran');
@@ -148,7 +148,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/coverage/update-ticket-status', [TeknikController::class, 'updateCoverageTicketStatus'])->name('coverage.update-status');
     });
 
-    Route::middleware('role:noc,direktur,admin')->prefix('noc')->name('noc.')->group(function () {
+    Route::middleware('role:noc,direktur,admin,ceo')->prefix('noc')->name('noc.')->group(function () {
         // 1. Dashboard NOC Command Center
         Route::get('/', [NocController::class, 'dashboard'])->name('dashboard');
         Route::get('/dashboard', [NocController::class, 'dashboard'])->name('dashboard.index');
@@ -233,8 +233,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/api/notifications/unmark-intentional', [NocController::class, 'unmarkIntentional'])->name('api.notifications.unmark-intentional');
     });
 
-    // Routes Role Finance & Direktur & Admin
-    Route::middleware('role:finance,direktur,admin')->prefix('finance')->name('finance.')->group(function () {
+    // Routes Role Finance & Direktur & Admin & CEO
+    Route::middleware('role:finance,direktur,admin,ceo')->prefix('finance')->name('finance.')->group(function () {
         // 1. Billing Layanan (Recurring Monthly Invoicing)
         Route::get('/', [FinanceController::class, 'billingLayanan'])->name('index');
         Route::get('/billing-layanan', [FinanceController::class, 'billingLayanan'])->name('billing-layanan');

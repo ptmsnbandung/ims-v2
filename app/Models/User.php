@@ -83,6 +83,11 @@ class User extends Authenticatable
         return $this->role === UserRole::FINANCE;
     }
 
+    public function isCeo(): bool
+    {
+        return $this->role === UserRole::CEO || (is_string($this->role) && strtolower($this->role) === 'ceo');
+    }
+
     public function isDirektur(): bool
     {
         return false;

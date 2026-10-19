@@ -550,7 +550,13 @@
                             <!-- 7. Aksi Approval -->
                             <td class="py-2.5 px-2.5 sm:px-3 pr-3.5 sm:pr-4 align-middle text-right overflow-hidden whitespace-nowrap">
                                 <div class="inline-flex items-center justify-end gap-1.5 max-w-full">
-                                    @if(!$item->is_approved)
+                                    @if(auth()->user()?->isCeo())
+                                        @if(!$item->is_approved && $item->status !== 'rejected')
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                                                Menunggu Approval
+                                            </span>
+                                        @endif
+                                    @elseif(!$item->is_approved)
                                         <!-- Tombol Approve -->
                                         <button type="button"
                                                 @click="openApproveModal({
@@ -767,7 +773,13 @@
 
                             <!-- Approval Buttons -->
                             <div class="flex items-center gap-1.5">
-                                @if(!$item->is_approved)
+                                @if(auth()->user()?->isCeo())
+                                    @if(!$item->is_approved && $item->status !== 'rejected')
+                                        <span class="px-2 py-1 rounded-lg text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                                            Menunggu Approval
+                                        </span>
+                                    @endif
+                                @elseif(!$item->is_approved)
                                     <button type="button"
                                             @click="openApproveModal({
                                                 kode_billing: '{{ $item->kode_billing }}',

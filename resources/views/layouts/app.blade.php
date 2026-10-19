@@ -1156,7 +1156,7 @@
                         <div class="ims-tooltip">Dashboard</div>
                     </div>
 
-                    @if(auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin']))
+                    @if(auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin', 'ceo']))
                     <!-- 2. Data Pelanggan -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('teknik.pelanggan') }}"
@@ -1171,7 +1171,7 @@
                     </div>
                     @endif
 
-                    @if(auth()->user()?->hasRole(['teknik', 'direktur', 'admin']))
+                    @if(auth()->user()?->hasRole(['teknik', 'direktur', 'admin', 'ceo']))
                     <!-- ============================================== -->
                     <!-- TEKNIK SECTION                                 -->
                     <!-- ============================================== -->
@@ -1213,7 +1213,7 @@
                     <!-- 5. Permintaan -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          @mouseenter="openFlyout($el, 'Permintaan Layanan', [
-                             @if(auth()->user()?->hasRole(['noc', 'direktur']))
+                             @if(auth()->user()?->hasRole(['noc', 'direktur', 'ceo']))
                              { label: 'Aktivasi Jaringan', url: '{{ route('noc.aktivasi') }}', active: {{ request()->routeIs('noc.aktivasi*') ? 'true' : 'false' }} },
                              @endif
                              { label: 'UP / Downgrade', url: '{{ route('teknik.permintaan.up-downgrade') }}', active: {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'true' : 'false' }} },
@@ -1250,7 +1250,7 @@
                              x-transition:leave-end="opacity-0 -translate-y-1"
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
                             
-                            @if(auth()->user()?->hasRole(['noc', 'direktur']))
+                            @if(auth()->user()?->hasRole(['noc', 'direktur', 'ceo']))
                             <a href="{{ route('noc.aktivasi') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.aktivasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.aktivasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
@@ -1293,7 +1293,7 @@
                     </div>
                     @endif
 
-                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
+                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin', 'ceo']))
                     <!-- ============================================== -->
                     <!-- NOC SECTION                                    -->
                     <!-- ============================================== -->
@@ -1511,7 +1511,7 @@
 
                     @endif
 
-                    @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin']))
+                    @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin', 'ceo']))
                     <!-- ============================================== -->
                     <!-- FINANCE SECTION                                -->
                     <!-- ============================================== -->
@@ -1681,7 +1681,7 @@
                     </div>
                     @endif
 
-                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
+                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin', 'ceo']))
                     <!-- Pusat Notifikasi NOC -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('noc.notifikasi') }}"

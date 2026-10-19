@@ -6,8 +6,9 @@
 @section('content')
 @php
     $user = auth()->user();
-    $isFinance = request()->routeIs('finance.*') || $user?->hasRole(['finance', 'admin', 'direktur']);
-    $isTeknik = $user?->hasRole('teknik') && !$user?->hasRole(['noc', 'admin', 'direktur']);
+    $isCeo = $user?->isCeo() ?? false;
+    $isFinance = !$isCeo && (request()->routeIs('finance.*') || $user?->hasRole(['finance', 'admin', 'direktur']));
+    $isTeknik = !$isCeo && ($user?->hasRole('teknik') && !$user?->hasRole(['noc', 'admin', 'direktur']));
     $pelangganRoute = request()->routeIs('finance.*') ? 'finance.pelanggan' : 'teknik.pelanggan';
     $profileRoute = request()->routeIs('finance.*') ? 'finance.pelanggan.profile' : 'teknik.pelanggan.profile';
     $exportRoute = request()->routeIs('finance.*') ? 'finance.pelanggan.export' : 'teknik.pelanggan.export';
@@ -783,7 +784,11 @@
                             <!-- 6. Aksi -->
                             <td class="py-2.5 px-3 align-top text-center text-xs">
                                 <div class="flex items-center justify-center gap-1 flex-wrap">
-                                    @if($isTeknik)
+                                    @if($isCeo)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-bold font-mono">
+                                            MONITORING
+                                        </span>
+                                    @elseif($isTeknik)
                                         <!-- Tombol Edit Data Pelanggan Khusus Role Teknik (Tanpa Akses Aktifkan / Suspend) -->
                                         <a href="{{ route('teknik.pendaftaran', ['edit' => $item->nomor_internet, 'from' => 'pelanggan']) }}"
                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 text-[10px] font-bold shadow-2xs transition cursor-pointer whitespace-nowrap"
@@ -1052,7 +1057,11 @@
 
                     <!-- Action Buttons -->
                     <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
-                        @if($isTeknik)
+                        @if($isCeo)
+                            <div class="w-full text-center py-1.5 px-3 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 text-xs font-mono font-bold">
+                                Executive Monitoring (Read-Only)
+                            </div>
+                        @elseif($isTeknik)
                             <a href="{{ route('teknik.pendaftaran', ['edit' => $item->nomor_internet, 'from' => 'pelanggan']) }}"
                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition cursor-pointer">
                                 <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

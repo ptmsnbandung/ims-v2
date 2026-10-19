@@ -178,6 +178,9 @@
                             if (str_contains($namaLvl, 'direktur') || str_contains($namaLvl, 'admin')) {
                                 $roleBadge = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30';
                                 $roleLabel = 'Admin';
+                            } elseif (str_contains($namaLvl, 'ceo')) {
+                                $roleBadge = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/30';
+                                $roleLabel = 'CEO (Monitoring)';
                             } elseif (str_contains($namaLvl, 'finance')) {
                                 $roleBadge = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30';
                                 $roleLabel = 'Finance';

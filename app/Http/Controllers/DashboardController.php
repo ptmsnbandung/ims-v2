@@ -467,8 +467,11 @@ class DashboardController extends Controller
             Log::error('Dashboard New User Stats Error: ' . $e->getMessage());
         }
 
-        // 2. STATISTIK FINANCE (SINKRON DENGAN BULAN & TAHUN TERPILIH)
+        // 2. STATISTIK & TRAFFIC KEUANGAN (UNTUK CEO, DIREKTUR, & FINANCE)
+        $canSeeFinanceTraffic = $user && ($user->isFinance() || $user->isDirektur() || $user->isCeo());
+
         $financeStats = [
+            'canSee' => $canSeeFinanceTraffic,
             'currentMonth' => $selectedBulan,
             'currentYear' => $selectedTahun,
             'draftCount' => 0,
@@ -479,12 +482,49 @@ class DashboardController extends Controller
             'paidAmount' => 0,
             'totalRegPending' => 0,
             'recentInvoices' => collect([]),
+            'totalYearPaid' => 0,
+            'totalYearUnpaid' => 0,
+            'totalYearInvoiced' => 0,
+            'collectionRateYear' => 0,
+            'totalPaidCountYear' => 0,
+            'totalUnpaidCountYear' => 0,
+            'monthlyLabels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+            'monthlyPaid' => array_fill(0, 12, 0),
+            'monthlyUnpaid' => array_fill(0, 12, 0),
+            'monthlyInvoiced' => array_fill(0, 12, 0),
+            'monthlyBreakdown' => [],
         ];
 
-        if ($user->isFinance() || $user->isDirektur()) {
+        if ($canSeeFinanceTraffic) {
             try {
-                $financeStats = Cache::remember("dashboard_finance_kpi_{$selectedBulan}_{$selectedTahun}", 60, function () use ($selectedBulan, $selectedTahun) {
+                $financeStats = Cache::remember("dashboard_finance_traffic_v2_{$selectedBulan}_{$selectedTahun}", 60, function () use ($selectedBulan, $selectedTahun, $monthsList) {
+                    $res = [
+                        'canSee' => true,
+                        'currentMonth' => $selectedBulan,
+                        'currentYear' => $selectedTahun,
+                        'draftCount' => 0,
+                        'draftAmount' => 0,
+                        'publishCount' => 0,
+                        'publishAmount' => 0,
+                        'paidCount' => 0,
+                        'paidAmount' => 0,
+                        'totalRegPending' => 0,
+                        'recentInvoices' => [],
+                        'totalYearPaid' => 0,
+                        'totalYearUnpaid' => 0,
+                        'totalYearInvoiced' => 0,
+                        'collectionRateYear' => 0,
+                        'totalPaidCountYear' => 0,
+                        'totalUnpaidCountYear' => 0,
+                        'monthlyLabels' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                        'monthlyPaid' => array_fill(0, 12, 0),
+                        'monthlyUnpaid' => array_fill(0, 12, 0),
+                        'monthlyInvoiced' => array_fill(0, 12, 0),
+                        'monthlyBreakdown' => [],
+                    ];
+
                     if (Schema::hasTable('trx_billing_layanan')) {
+                        // 1. KPI Bulan Terpilih
                         $kpi = DB::table('trx_billing_layanan')
                             ->where('bulan_tagihan', $selectedBulan)
                             ->where('tahun_tagihan', $selectedTahun)
@@ -498,57 +538,123 @@ class DashboardController extends Controller
                             ")
                             ->first();
 
-                        $draftCount = (int) ($kpi->draft_count ?? 0);
-                        $draftAmount = (float) ($kpi->draft_amount ?? 0);
-                        $publishCount = (int) ($kpi->publish_count ?? 0);
-                        $publishAmount = (float) ($kpi->publish_amount ?? 0);
-                        $paidCount = (int) ($kpi->paid_count ?? 0);
-                        $paidAmount = (float) ($kpi->paid_amount ?? 0);
+                        $res['draftCount'] = (int) ($kpi->draft_count ?? 0);
+                        $res['draftAmount'] = (float) ($kpi->draft_amount ?? 0);
+                        $res['publishCount'] = (int) ($kpi->publish_count ?? 0);
+                        $res['publishAmount'] = (float) ($kpi->publish_amount ?? 0);
+                        $res['paidCount'] = (int) ($kpi->paid_count ?? 0);
+                        $res['paidAmount'] = (float) ($kpi->paid_amount ?? 0);
 
+                        // 2. Traffic Keuangan 12 Bulan (Jan - Des) Sepanjang Tahun Terpilih
+                        $monthlyPaid = array_fill(0, 12, 0);
+                        $monthlyUnpaid = array_fill(0, 12, 0);
+                        $monthlyInvoiced = array_fill(0, 12, 0);
+                        $monthlyBreakdown = [];
+
+                        for ($m = 1; $m <= 12; $m++) {
+                            $mCode = str_pad((string)$m, 2, '0', STR_PAD_LEFT);
+                            $monthlyBreakdown[$mCode] = [
+                                'kode' => $mCode,
+                                'nama' => $monthsList[$mCode] ?? "Bulan $m",
+                                'singkat' => $res['monthlyLabels'][$m - 1],
+                                'invoiced' => 0,
+                                'paid' => 0,
+                                'unpaid' => 0,
+                                'paid_count' => 0,
+                                'unpaid_count' => 0,
+                                'total_count' => 0,
+                                'rate' => 0,
+                            ];
+                        }
+
+                        $yearlyRows = DB::table('trx_billing_layanan')
+                            ->where('tahun_tagihan', $selectedTahun)
+                            ->select(
+                                'bulan_tagihan',
+                                DB::raw("COALESCE(SUM(CASE WHEN status_bill_lay = '15' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as paid_nominal"),
+                                DB::raw("COALESCE(SUM(CASE WHEN status_bill_lay != '15' THEN CAST(total_layanan AS DECIMAL(15,2)) ELSE 0 END), 0) as unpaid_nominal"),
+                                DB::raw("COALESCE(SUM(CAST(total_layanan AS DECIMAL(15,2))), 0) as total_nominal"),
+                                DB::raw("COUNT(CASE WHEN status_bill_lay = '15' THEN 1 END) as paid_count"),
+                                DB::raw("COUNT(CASE WHEN status_bill_lay != '15' THEN 1 END) as unpaid_count"),
+                                DB::raw("COUNT(*) as total_count")
+                            )
+                            ->groupBy('bulan_tagihan')
+                            ->orderBy('bulan_tagihan')
+                            ->get();
+
+                        $totalYearPaid = 0;
+                        $totalYearUnpaid = 0;
+                        $totalYearInvoiced = 0;
+                        $totalPaidCountYear = 0;
+                        $totalUnpaidCountYear = 0;
+
+                        foreach ($yearlyRows as $row) {
+                            $mInt = (int)$row->bulan_tagihan;
+                            if ($mInt >= 1 && $mInt <= 12) {
+                                $idx = $mInt - 1;
+                                $paidNom = (float)$row->paid_nominal;
+                                $unpaidNom = (float)$row->unpaid_nominal;
+                                $totalNom = (float)$row->total_nominal;
+                                $paidCnt = (int)$row->paid_count;
+                                $unpaidCnt = (int)$row->unpaid_count;
+                                $totCnt = (int)$row->total_count;
+
+                                $monthlyPaid[$idx] = $paidNom;
+                                $monthlyUnpaid[$idx] = $unpaidNom;
+                                $monthlyInvoiced[$idx] = $totalNom;
+
+                                $totalYearPaid += $paidNom;
+                                $totalYearUnpaid += $unpaidNom;
+                                $totalYearInvoiced += $totalNom;
+                                $totalPaidCountYear += $paidCnt;
+                                $totalUnpaidCountYear += $unpaidCnt;
+
+                                $rate = $totalNom > 0 ? round(($paidNom / $totalNom) * 100, 1) : 0;
+                                $mCode = str_pad((string)$mInt, 2, '0', STR_PAD_LEFT);
+                                if (isset($monthlyBreakdown[$mCode])) {
+                                    $monthlyBreakdown[$mCode]['invoiced'] = $totalNom;
+                                    $monthlyBreakdown[$mCode]['paid'] = $paidNom;
+                                    $monthlyBreakdown[$mCode]['unpaid'] = $unpaidNom;
+                                    $monthlyBreakdown[$mCode]['paid_count'] = $paidCnt;
+                                    $monthlyBreakdown[$mCode]['unpaid_count'] = $unpaidCnt;
+                                    $monthlyBreakdown[$mCode]['total_count'] = $totCnt;
+                                    $monthlyBreakdown[$mCode]['rate'] = $rate;
+                                }
+                            }
+                        }
+
+                        $res['totalYearPaid'] = $totalYearPaid;
+                        $res['totalYearUnpaid'] = $totalYearUnpaid;
+                        $res['totalYearInvoiced'] = $totalYearInvoiced;
+                        $res['totalPaidCountYear'] = $totalPaidCountYear;
+                        $res['totalUnpaidCountYear'] = $totalUnpaidCountYear;
+                        $res['collectionRateYear'] = $totalYearInvoiced > 0 ? round(($totalYearPaid / $totalYearInvoiced) * 100, 1) : 0;
+                        $res['monthlyPaid'] = $monthlyPaid;
+                        $res['monthlyUnpaid'] = $monthlyUnpaid;
+                        $res['monthlyInvoiced'] = $monthlyInvoiced;
+                        $res['monthlyBreakdown'] = array_values($monthlyBreakdown);
+
+                        // Invoices terkini (6 tagihan terbaru)
                         $viewTable = Schema::hasTable('view_billing_layanan') ? 'view_billing_layanan' : 'trx_billing_layanan';
                         $recentInvoices = DB::table($viewTable)
-                            ->where('bulan_tagihan', $selectedBulan)
                             ->where('tahun_tagihan', $selectedTahun)
                             ->orderBy('date_create', 'desc')
-                            ->limit(5)
+                            ->limit(6)
                             ->get();
 
                         if ($recentInvoices->isEmpty()) {
                             $recentInvoices = DB::table($viewTable)
                                 ->orderBy('date_create', 'desc')
-                                ->limit(5)
+                                ->limit(6)
                                 ->get();
                         }
 
                         $regTable = Schema::hasTable('view_billing_reg') ? 'view_billing_reg' : (Schema::hasTable('trx_billing_reg') ? 'trx_billing_reg' : null);
-                        $totalRegPending = $regTable ? DB::table($regTable)->whereIn('status_bill_reg', ['11', '12', '13'])->count() : 0;
-
-                        return [
-                            'currentMonth' => $selectedBulan,
-                            'currentYear' => $selectedTahun,
-                            'draftCount' => $draftCount,
-                            'draftAmount' => $draftAmount,
-                            'publishCount' => $publishCount,
-                            'publishAmount' => $publishAmount,
-                            'paidCount' => $paidCount,
-                            'paidAmount' => $paidAmount,
-                            'totalRegPending' => $totalRegPending,
-                            'recentInvoices' => $recentInvoices->all(),
-                        ];
+                        $res['totalRegPending'] = $regTable ? DB::table($regTable)->whereIn('status_bill_reg', ['11', '12', '13'])->count() : 0;
+                        $res['recentInvoices'] = $recentInvoices->all();
                     }
 
-                    return [
-                        'currentMonth' => $selectedBulan,
-                        'currentYear' => $selectedTahun,
-                        'draftCount' => 0,
-                        'draftAmount' => 0,
-                        'publishCount' => 0,
-                        'publishAmount' => 0,
-                        'paidCount' => 0,
-                        'paidAmount' => 0,
-                        'totalRegPending' => 0,
-                        'recentInvoices' => [],
-                    ];
+                    return $res;
                 });
 
                 if (isset($financeStats['recentInvoices']) && is_array($financeStats['recentInvoices'])) {
@@ -604,10 +710,40 @@ class DashboardController extends Controller
             }
         });
 
+        $financeTrafficData = [];
+        if ($canSeeFinanceTraffic) {
+            $financeTrafficData = [
+                'monthlyLabels' => $financeStats['monthlyLabels'] ?? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                'paidNominals' => $financeStats['monthlyPaid'] ?? array_fill(0, 12, 0),
+                'unpaidNominals' => $financeStats['monthlyUnpaid'] ?? array_fill(0, 12, 0),
+                'totalNominals' => $financeStats['monthlyInvoiced'] ?? array_fill(0, 12, 0),
+                'totalYearPaid' => $financeStats['totalYearPaid'] ?? 0,
+                'totalYearUnpaid' => $financeStats['totalYearUnpaid'] ?? 0,
+                'totalYearInvoiced' => $financeStats['totalYearInvoiced'] ?? 0,
+                'paidCountYear' => $financeStats['totalPaidCountYear'] ?? 0,
+                'unpaidCountYear' => $financeStats['totalUnpaidCountYear'] ?? 0,
+                'collectionRateYear' => $financeStats['collectionRateYear'] ?? 0,
+                'monthlyBreakdown' => array_map(function ($mb) {
+                    return [
+                        'month_name' => $mb['nama'] ?? $mb['singkat'] ?? '',
+                        'total_nominal' => $mb['invoiced'] ?? 0,
+                        'paid_nominal' => $mb['paid'] ?? 0,
+                        'unpaid_nominal' => $mb['unpaid'] ?? 0,
+                        'paid_count' => $mb['paid_count'] ?? 0,
+                        'unpaid_count' => $mb['unpaid_count'] ?? 0,
+                        'collection_rate' => $mb['rate'] ?? 0,
+                    ];
+                }, $financeStats['monthlyBreakdown'] ?? []),
+                'recentInvoices' => $financeStats['recentInvoices'] ?? [],
+            ];
+        }
+
         return view('dashboard', [
             'user' => $user,
             'newUserStats' => $newUserStats,
             'financeStats' => $financeStats,
+            'financeTrafficData' => $financeTrafficData,
+            'canSeeFinanceTraffic' => $canSeeFinanceTraffic,
             'chartData' => $chartData,
             'monthsList' => $monthsList,
             'availableYears' => $availableYears,

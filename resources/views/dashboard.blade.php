@@ -3,7 +3,9 @@
 @section('page_title', 'Dashboard Utama')
 
 @section('content')
-<div x-data="{ activeTab: 'charts' }" class="space-y-3 sm:space-y-3.5">
+<div x-data="{ activeTab: '{{ ($canSeeFinanceTraffic ?? false) && ($user->isCeo() || $user->isFinance()) ? 'finance' : 'charts' }}' }" 
+     x-effect="if (activeTab === 'finance') { $nextTick(() => window.dispatchEvent(new Event('resize'))); }"
+     class="space-y-3 sm:space-y-3.5">
     <!-- Role Welcome Banner (Deep Oceanic Teal & Cyan Gradient - Serasi dengan Gambar 2) -->
     <div class="ims-banner relative overflow-hidden rounded-2xl py-3 px-3.5 sm:py-3 sm:px-5 shadow-sm text-white border border-teal-500/20"
          style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
@@ -44,6 +46,17 @@
                 <!-- View Tabs Switcher Pill Container -->
                 <div class="w-full sm:w-auto flex items-center justify-between sm:justify-start"
                      style="height: 34px; padding: 3px; border-radius: 9999px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.22); box-sizing: border-box;">
+                    @if($canSeeFinanceTraffic ?? false)
+                        <button type="button" 
+                                @click="activeTab = 'finance'" 
+                                :style="activeTab === 'finance' 
+                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #032b35 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: all 0.15s ease;' 
+                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #ffffff !important; opacity: 0.85; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                                class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:opacity-100">
+                            <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'finance' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span :style="activeTab === 'finance' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'">Traffic Keuangan</span>
+                        </button>
+                    @endif
                     <button type="button" 
                             @click="activeTab = 'charts'" 
                             :style="activeTab === 'charts' 
@@ -100,6 +113,33 @@
 
     <!-- Section Charts Container (Gambar 1 & Gambar 2 - 1 Layar Penuh) -->
     <div x-show="activeTab === 'charts' || activeTab === 'all'" class="space-y-3 sm:space-y-3.5">
+        @if($canSeeFinanceTraffic ?? false)
+        <!-- Mini Financial Traffic Quick-Strip (Direktur, CEO, Finance) -->
+        <div class="p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-slate-900 via-[#042f3d] to-slate-900 border border-teal-500/30 shadow-xs text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Ringkasan Traffic Keuangan {{ $selectedTahun }}</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold font-mono bg-emerald-400/20 text-emerald-200 border border-emerald-400/30">
+                            {{ $financeTrafficData['collectionRateYear'] ?? 0 }}% Terkumpul
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-300 truncate mt-0.5">
+                        Realisasi <span class="font-mono font-bold text-emerald-300">Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}</span> dari total tagihan <span class="font-mono font-bold text-white">Rp {{ number_format($financeTrafficData['totalYearInvoiced'] ?? 0, 0, ',', '.') }}</span> &middot; Piutang: <span class="font-mono font-bold text-amber-300">Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                <button type="button" @click="activeTab = 'finance'" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10.5px] font-bold bg-white text-[#032b35] hover:bg-teal-50 transition shadow-xs cursor-pointer">
+                    <span>Lihat Rincian & Grafik</span>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+        @endif
         <!-- Row 1: Tren Bulanan (7 Cols) & Donut Bandwidth (5 Cols) -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
             <!-- 1. Grafik Tren User Baru per Bulan -->
@@ -417,6 +457,296 @@
             </div>
         </div>
     </div>
+
+    @if($canSeeFinanceTraffic ?? false)
+    <!-- ========================================================================= -->
+    <!-- SECTION: TRAFFIC KEUANGAN & CASHFLOW (CEO, DIREKTUR & FINANCE)           -->
+    <!-- ========================================================================= -->
+    <div x-show="activeTab === 'finance'" x-cloak class="space-y-3 sm:space-y-3.5">
+        
+        <!-- Row 1: 4 KPI Cards (High Impact, Polished UI) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
+            <!-- 1. Total Tagihan Terbit -->
+            <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Tagihan {{ $selectedTahun }}</span>
+                    <div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5L19 7.5V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <div class="text-base sm:text-lg font-black font-mono tracking-tight text-slate-900 dark:text-white">
+                        Rp {{ number_format($financeTrafficData['totalYearInvoiced'] ?? 0, 0, ',', '.') }}
+                    </div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        {{ number_format(($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0)) }} invoice terbit di {{ $selectedTahun }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- 2. Realisasi Pembayaran Lunas (Cash In) -->
+            <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-500/30 dark:border-emerald-500/20 shadow-xs flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Realisasi Lunas (Cash In)</span>
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <div class="text-base sm:text-lg font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
+                        Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}
+                    </div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        {{ number_format($financeTrafficData['paidCountYear'] ?? 0) }} invoice telah lunas terverifikasi
+                    </p>
+                </div>
+            </div>
+
+            <!-- 3. Piutang Berjalan (Belum Lunas) -->
+            <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-amber-500/30 dark:border-amber-500/20 shadow-xs flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Piutang Berjalan</span>
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <div class="text-base sm:text-lg font-black font-mono tracking-tight text-amber-600 dark:text-amber-400">
+                        Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}
+                    </div>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        {{ number_format($financeTrafficData['unpaidCountYear'] ?? 0) }} invoice belum terselesaikan
+                    </p>
+                </div>
+            </div>
+
+            <!-- 4. Efektivitas Collection Rate -->
+            <div class="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-500/30 dark:border-indigo-500/20 shadow-xs flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Collection Rate</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full {{ ($financeTrafficData['collectionRateYear'] ?? 0) >= 80 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400' }}">
+                        {{ ($financeTrafficData['collectionRateYear'] ?? 0) >= 80 ? 'Optimal' : 'Perhatian' }}
+                    </span>
+                </div>
+                <div class="mt-2">
+                    <div class="text-base sm:text-lg font-black font-mono tracking-tight text-indigo-600 dark:text-indigo-400">
+                        {{ $financeTrafficData['collectionRateYear'] ?? 0 }}%
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
+                        <div class="bg-gradient-to-r from-emerald-500 to-indigo-500 h-1.5 rounded-full" style="width: {{ min(100, $financeTrafficData['collectionRateYear'] ?? 0) }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Charts (Traffic Arus Kas Bulanan 8 Cols & Status Donut 4 Cols) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
+            <!-- 1. Grafik Tren Tagihan & Realisasi Bulanan -->
+            <div class="md:col-span-8 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
+                        <div>
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0" style="display: inline-block;"></span>
+                                <span>Traffic Arus Kas Keuangan Bulanan</span>
+                            </h4>
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                                Perbandingan realisasi kas masuk (lunas) vs tagihan terbit & piutang per bulan {{ $selectedTahun }}.
+                            </p>
+                        </div>
+
+                        <!-- Mini Legend Indicators -->
+                        <div class="flex items-center gap-2 text-[9px] font-semibold text-slate-600 dark:text-slate-300">
+                            <span class="inline-flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-[#10b981]"></span> Lunas
+                            </span>
+                            <span class="inline-flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span> Piutang
+                            </span>
+                            <span class="inline-flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-[#0284c7]"></span> Invoiced
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ApexChart Container -->
+                    <div class="pt-2">
+                        <div id="chart-finance-monthly-traffic" class="w-full" style="min-height: 240px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Donut Rasio Koleksi & Ringkasan -->
+            <div class="md:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" style="display: inline-block;"></span>
+                            <span>Rasio Status Penagihan</span>
+                        </h4>
+                        <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                            Proporsi pelunasan billing {{ $selectedTahun }}.
+                        </p>
+                    </div>
+
+                    <!-- Donut ApexChart -->
+                    <div class="pt-1">
+                        <div id="chart-finance-collection-donut" class="w-full" style="min-height: 240px;"></div>
+                    </div>
+                </div>
+
+                <!-- Mini KPI Stats Strip -->
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2 text-center">
+                    <div class="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                        <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">Total Transaksi</span>
+                        <span class="text-xs font-black font-mono text-slate-800 dark:text-white">
+                            {{ number_format(($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0)) }}
+                        </span>
+                    </div>
+                    <div class="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                        <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">Rata-rata / Invoice</span>
+                        <span class="text-xs font-black font-mono text-slate-800 dark:text-white">
+                            @php
+                                $totalInvCount = ($financeTrafficData['paidCountYear'] ?? 0) + ($financeTrafficData['unpaidCountYear'] ?? 0);
+                                $avgNominal = $totalInvCount > 0 ? round(($financeTrafficData['totalYearInvoiced'] ?? 0) / $totalInvCount) : 0;
+                            @endphp
+                            Rp {{ number_format($avgNominal, 0, ',', '.') }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Monthly Breakdown Table (8 Cols) & 6 Recent Invoices (4 Cols) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
+            <!-- 1. Tabel Rincian Traffic Keuangan per Bulan -->
+            <div class="md:col-span-8 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <div>
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span>Rincian Traffic Tagihan Bulanan (12 Bulan)</span>
+                            </h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Ringkasan transaksi billing per bulan kalender {{ $selectedTahun }}.</p>
+                        </div>
+                        <span class="text-[9px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-slate-600 dark:text-slate-300">
+                            {{ $selectedTahun }}
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto mt-2">
+                        <table class="w-full text-left text-[11px] whitespace-nowrap">
+                            <thead>
+                                <tr class="text-[9.5px] uppercase font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                                    <th class="py-1.5 px-2">Bulan</th>
+                                    <th class="py-1.5 px-2 text-right">Tagihan Terbit</th>
+                                    <th class="py-1.5 px-2 text-right">Realisasi Lunas</th>
+                                    <th class="py-1.5 px-2 text-right">Piutang</th>
+                                    <th class="py-1.5 px-2 text-center">Collection Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100/70 dark:divide-slate-800/60 font-mono">
+                                @forelse($financeTrafficData['monthlyBreakdown'] ?? [] as $mb)
+                                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                                        <td class="py-2 px-2 font-sans font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                            <span class="w-1.5 h-1.5 rounded-full {{ $mb['total_nominal'] > 0 ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700' }}"></span>
+                                            <span>{{ $mb['month_name'] }}</span>
+                                        </td>
+                                        <td class="py-2 px-2 text-right font-semibold text-slate-700 dark:text-slate-300">
+                                            Rp {{ number_format($mb['total_nominal'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="py-2 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                                            Rp {{ number_format($mb['paid_nominal'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="py-2 px-2 text-right font-medium {{ $mb['unpaid_nominal'] > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400' }}">
+                                            Rp {{ number_format($mb['unpaid_nominal'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="py-2 px-2 text-center">
+                                            @if($mb['total_nominal'] > 0)
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-bold {{ $mb['collection_rate'] >= 80 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800' }}">
+                                                    {{ $mb['collection_rate'] }}%
+                                                </span>
+                                            @else
+                                                <span class="text-slate-400 text-[10px] font-sans">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="py-4 text-center text-slate-400 font-sans">
+                                            Belum ada data traffic keuangan di tahun {{ $selectedTahun }}.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Recent Invoices List -->
+            <div class="md:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></span>
+                            <span>Invoice Billing Terbaru</span>
+                        </h4>
+                        <a href="{{ route('finance.billing-layanan') }}" class="text-[9px] font-bold text-blue-600 dark:text-cyan-400 hover:underline">
+                            Semua &rarr;
+                        </a>
+                    </div>
+
+                    <div class="divide-y divide-slate-100 dark:divide-slate-800 mt-1">
+                        @forelse($financeTrafficData['recentInvoices'] ?? [] as $inv)
+                            <div class="py-2.5 flex items-center justify-between gap-2">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[10.5px] font-bold font-mono text-slate-900 dark:text-white truncate">
+                                            {{ $inv->kode_billing }}
+                                        </span>
+                                        @if($inv->status_bill_lay == '15')
+                                            <span class="text-[8px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">Lunas</span>
+                                        @elseif(in_array($inv->status_bill_lay, ['13', '14']))
+                                            <span class="text-[8px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">Menunggu</span>
+                                        @else
+                                            <span class="text-[8px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Draft</span>
+                                        @endif
+                                    </div>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                        {{ $inv->nama_pelanggan ?? $inv->nomor_internet }} &middot; Periode {{ $inv->bulan_ke }}/{{ $inv->tahun_ke }}
+                                    </p>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <div class="text-[11px] font-extrabold font-mono text-slate-900 dark:text-white">
+                                        Rp {{ number_format($inv->total_biaya ?? 0, 0, ',', '.') }}
+                                    </div>
+                                    <a href="{{ route('finance.dokumen.invoice', $inv->kode_billing) }}" target="_blank" class="text-[9px] text-blue-600 dark:text-cyan-400 hover:underline">
+                                        Lihat &rarr;
+                                    </a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-6 text-center text-slate-400 text-xs">
+                                Belum ada riwayat transaksi billing.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] text-slate-500">
+                    <span>Modul Keuangan Terintegrasi</span>
+                    <a href="{{ route('finance.billing-layanan') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline">
+                        Buka Billing Layanan &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    @endif
 
     <!-- ========================================================================= -->
     <!-- SECTION: STATISTIK USER & PELANGGAN BARU (DENGAN FILTER BULAN & TAHUN)   -->
@@ -1040,6 +1370,200 @@ document.addEventListener('DOMContentLoaded', function () {
         const chartCity = new ApexCharts(cityEl, optionsCity);
         chartCity.render();
     }
+
+    @if($canSeeFinanceTraffic ?? false)
+    // -------------------------------------------------------------
+    // 5. CHART: TRAFFIC & ARUS KAS KEUANGAN BULANAN
+    // -------------------------------------------------------------
+    const financeMonthlyLabels = @json($financeTrafficData['monthlyLabels'] ?? []);
+    const financePaidNominals = @json($financeTrafficData['paidNominals'] ?? []);
+    const financeUnpaidNominals = @json($financeTrafficData['unpaidNominals'] ?? []);
+    const financeTotalNominals = @json($financeTrafficData['totalNominals'] ?? []);
+
+    const formatRupiah = (val) => {
+        return 'Rp ' + Number(val || 0).toLocaleString('id-ID');
+    };
+
+    const finTrendEl = document.querySelector('#chart-finance-monthly-traffic');
+    if (finTrendEl) {
+        const optionsFinTrend = {
+            series: [
+                {
+                    name: 'Realisasi Lunas',
+                    data: financePaidNominals
+                },
+                {
+                    name: 'Piutang Berjalan',
+                    data: financeUnpaidNominals
+                },
+                {
+                    name: 'Total Tagihan',
+                    data: financeTotalNominals
+                }
+            ],
+            chart: {
+                type: 'area',
+                height: 240,
+                fontFamily: 'inherit',
+                toolbar: { show: false },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 600
+                },
+                background: 'transparent'
+            },
+            colors: ['#10b981', '#f59e0b', '#0284c7'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: isDark ? 0.35 : 0.45,
+                    opacityTo: 0.05,
+                    stops: [0, 95, 100]
+                }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: [2.5, 2, 1.5],
+                dashArray: [0, 0, 4]
+            },
+            markers: {
+                size: 3,
+                strokeWidth: 1.5,
+                hover: { size: 5 }
+            },
+            dataLabels: { enabled: false },
+            xaxis: {
+                categories: financeMonthlyLabels,
+                labels: {
+                    style: {
+                        colors: textColor,
+                        fontSize: '9.5px',
+                        fontWeight: 600
+                    }
+                },
+                axisBorder: { show: false },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: textColor,
+                        fontSize: '9.5px',
+                        fontWeight: 500
+                    },
+                    formatter: (val) => {
+                        if (val >= 1000000000) return (val / 1000000000).toFixed(1) + ' M';
+                        if (val >= 1000000) return (val / 1000000).toFixed(0) + ' Jt';
+                        if (val >= 1000) return (val / 1000).toFixed(0) + ' Rb';
+                        return val;
+                    }
+                },
+                min: 0,
+                forceNiceScale: true
+            },
+            grid: {
+                borderColor: gridColor,
+                strokeDashArray: 4,
+                padding: { top: 6, right: 12, bottom: -6, left: 6 }
+            },
+            legend: {
+                show: false
+            },
+            tooltip: {
+                theme: tooltipTheme,
+                y: {
+                    formatter: function (val) {
+                        return formatRupiah(val);
+                    }
+                }
+            }
+        };
+
+        const chartFinTrend = new ApexCharts(finTrendEl, optionsFinTrend);
+        chartFinTrend.render();
+        window.chartFinTrend = chartFinTrend;
+    }
+
+    // -------------------------------------------------------------
+    // 6. CHART: STATUS KOLEKSI / DONUT (LUNAS VS PIUTANG)
+    // -------------------------------------------------------------
+    const finDonutEl = document.querySelector('#chart-finance-collection-donut');
+    if (finDonutEl) {
+        const totalPaid = {{ (float) ($financeTrafficData['totalYearPaid'] ?? 0) }};
+        const totalUnpaid = {{ (float) ($financeTrafficData['totalYearUnpaid'] ?? 0) }};
+        const hasData = (totalPaid + totalUnpaid) > 0;
+
+        const optionsFinDonut = {
+            series: hasData ? [totalPaid, totalUnpaid] : [1],
+            labels: hasData ? ['Realisasi Lunas', 'Piutang Berjalan'] : ['Belum Ada Tagihan'],
+            chart: {
+                type: 'donut',
+                height: 240,
+                fontFamily: 'inherit',
+                background: 'transparent'
+            },
+            colors: hasData ? ['#10b981', '#f59e0b'] : ['#64748b'],
+            stroke: {
+                width: 2.5,
+                colors: isDark ? ['#0f172a'] : ['#ffffff']
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '68%',
+                        labels: {
+                            show: true,
+                            name: {
+                                show: true,
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                color: textColor,
+                                offsetY: -4
+                            },
+                            value: {
+                                show: true,
+                                fontSize: '13px',
+                                fontWeight: 900,
+                                fontFamily: 'monospace',
+                                color: isDark ? '#ffffff' : '#0f172a',
+                                offsetY: 4,
+                                formatter: (val) => hasData ? formatRupiah(val) : '0'
+                            },
+                            total: {
+                                show: true,
+                                label: 'Terkumpul',
+                                fontSize: '9px',
+                                fontWeight: 700,
+                                color: textColor,
+                                formatter: () => '{{ $financeTrafficData['collectionRateYear'] ?? 0 }}%'
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: { enabled: false },
+            legend: {
+                show: true,
+                position: 'bottom',
+                fontSize: '10px',
+                fontWeight: 600,
+                labels: { colors: isDark ? '#cbd5e1' : '#475569' }
+            },
+            tooltip: {
+                theme: tooltipTheme,
+                y: {
+                    formatter: (val) => formatRupiah(val)
+                }
+            }
+        };
+
+        const chartFinDonut = new ApexCharts(finDonutEl, optionsFinDonut);
+        chartFinDonut.render();
+        window.chartFinDonut = chartFinDonut;
+    }
+    @endif
 });
 </script>
 @endpush

@@ -53,14 +53,14 @@
             scrollbar-color: #0284c7 transparent;
         }
 
-        /* Custom Ultra-Thin Scrollbar for Sidebar */
+        /* Custom Ultra-Thin Scrollbar for Sidebar (1px) */
         .ims-sidebar-nav {
             scrollbar-width: thin !important;
             scrollbar-color: rgba(56, 189, 248, 0.4) transparent !important;
         }
         .ims-sidebar-nav::-webkit-scrollbar {
-            width: 3px !important;
-            height: 3px !important;
+            width: 1px !important;
+            height: 1px !important;
         }
         .ims-sidebar-nav::-webkit-scrollbar-button {
             display: none !important;
@@ -71,12 +71,12 @@
             background: transparent !important;
         }
         .ims-sidebar-nav::-webkit-scrollbar-thumb {
-            background: rgba(56, 189, 248, 0.4) !important;
+            background: rgba(56, 189, 248, 0.45) !important;
             border-radius: 9999px !important;
             border: none !important;
         }
         .ims-sidebar-nav::-webkit-scrollbar-thumb:hover {
-            background: rgba(56, 189, 248, 0.85) !important;
+            background: rgba(56, 189, 248, 0.9) !important;
         }
         html, body {
             height: 100% !important;

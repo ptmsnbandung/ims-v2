@@ -701,29 +701,36 @@
 
                     <div class="divide-y divide-slate-100 dark:divide-slate-800 mt-1">
                         @forelse($financeTrafficData['recentInvoices'] ?? [] as $inv)
+                            @php
+                                $kodeInv = $inv->kode_billing_layanan ?? $inv->kode_billing ?? '-';
+                                $nominalInv = (float)($inv->total_layanan ?? $inv->total_biaya ?? 0);
+                                $periodeInv = $inv->periode_tagihan ?? (($inv->bulan_tagihan ?? $inv->bulan_ke ?? '') . '/' . ($inv->tahun_tagihan ?? $inv->tahun_ke ?? ''));
+                                $pelangganInv = $inv->nama_pelanggan ?? $inv->nama_lengkap ?? $inv->nomor_internet ?? '-';
+                                $statusInv = (string)($inv->status_bill_lay ?? '13');
+                            @endphp
                             <div class="py-2.5 flex items-center justify-between gap-2">
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-[10.5px] font-bold font-mono text-slate-900 dark:text-white truncate">
-                                            {{ $inv->kode_billing }}
+                                            {{ $kodeInv }}
                                         </span>
-                                        @if($inv->status_bill_lay == '15')
+                                        @if($statusInv === '15')
                                             <span class="text-[8px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">Lunas</span>
-                                        @elseif(in_array($inv->status_bill_lay, ['13', '14']))
+                                        @elseif(in_array($statusInv, ['13', '14']))
                                             <span class="text-[8px] font-bold px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">Menunggu</span>
                                         @else
                                             <span class="text-[8px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Draft</span>
                                         @endif
                                     </div>
                                     <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                                        {{ $inv->nama_pelanggan ?? $inv->nomor_internet }} &middot; Periode {{ $inv->bulan_ke }}/{{ $inv->tahun_ke }}
+                                        {{ $pelangganInv }} &middot; Periode {{ $periodeInv }}
                                     </p>
                                 </div>
                                 <div class="text-right shrink-0">
                                     <div class="text-[11px] font-extrabold font-mono text-slate-900 dark:text-white">
-                                        Rp {{ number_format($inv->total_biaya ?? 0, 0, ',', '.') }}
+                                        Rp {{ number_format($nominalInv, 0, ',', '.') }}
                                     </div>
-                                    <a href="{{ route('finance.dokumen.invoice', $inv->kode_billing) }}" target="_blank" class="text-[9px] text-blue-600 dark:text-cyan-400 hover:underline">
+                                    <a href="{{ route('finance.dokumen.invoice', $kodeInv) }}" target="_blank" class="text-[9px] text-blue-600 dark:text-cyan-400 hover:underline">
                                         Lihat &rarr;
                                     </a>
                                 </div>

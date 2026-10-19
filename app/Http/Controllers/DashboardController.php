@@ -712,6 +712,30 @@ class DashboardController extends Controller
 
         $financeTrafficData = [];
         if ($canSeeFinanceTraffic) {
+            $normalizedInvoices = collect($financeStats['recentInvoices'] ?? [])->map(function ($inv) {
+                $invObj = (object)$inv;
+                $kode = $invObj->kode_billing_layanan ?? $invObj->kode_billing ?? '-';
+                $nominal = (float)($invObj->total_layanan ?? $invObj->total_biaya ?? 0);
+                $bulan = $invObj->bulan_tagihan ?? $invObj->bulan_ke ?? '';
+                $tahun = $invObj->tahun_tagihan ?? $invObj->tahun_ke ?? '';
+                $periode = $invObj->periode_tagihan ?? ($bulan && $tahun ? "{$bulan}/{$tahun}" : '-');
+                $pelanggan = $invObj->nama_pelanggan ?? $invObj->nama_lengkap ?? $invObj->nama_penduduk ?? $invObj->nomor_internet ?? '-';
+                $status = (string)($invObj->status_bill_lay ?? '13');
+
+                return (object)[
+                    'kode_billing' => $kode,
+                    'kode_billing_layanan' => $kode,
+                    'nomor_internet' => $invObj->nomor_internet ?? '',
+                    'nama_pelanggan' => $pelanggan,
+                    'bulan_tagihan' => $bulan,
+                    'tahun_tagihan' => $tahun,
+                    'periode_tagihan' => $periode,
+                    'total_biaya' => $nominal,
+                    'total_layanan' => $nominal,
+                    'status_bill_lay' => $status,
+                ];
+            })->all();
+
             $financeTrafficData = [
                 'monthlyLabels' => $financeStats['monthlyLabels'] ?? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
                 'paidNominals' => $financeStats['monthlyPaid'] ?? array_fill(0, 12, 0),
@@ -734,7 +758,7 @@ class DashboardController extends Controller
                         'collection_rate' => $mb['rate'] ?? 0,
                     ];
                 }, $financeStats['monthlyBreakdown'] ?? []),
-                'recentInvoices' => $financeStats['recentInvoices'] ?? [],
+                'recentInvoices' => $normalizedInvoices,
             ];
         }
 

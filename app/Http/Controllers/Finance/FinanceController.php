@@ -651,12 +651,16 @@ class FinanceController extends Controller
         $decodedKode = $request->input('kode_billing') ? trim($request->input('kode_billing')) : urldecode($kodeBilling ?? '');
         $nominal = $request->input('nominal_bayar');
         $metodeBayar = $request->input('metode_bayar');
-        $namaKolektor = trim((string) $request->input('nama_kolektor', ''));
+        $namaKolektor = ucwords(strtolower(trim((string) $request->input('nama_kolektor', ''))));
         $noKwitansi = trim((string) $request->input('no_kwitansi', ''));
 
         if ($metodeBayar === 'cash' || $metodeBayar === '3') {
             $paymentType = '3';
-            $penerima = $request->input('bank_tujuan') ?: 'Cash To Collector';
+            $penerima = trim((string) $request->input('bank_tujuan', ''));
+            $bankList = ['cash to collector', 'cash', 'kasir / tunai', 'tunai', 'bca', 'mandiri', 'bri', 'bni', 'bsi', 'permata', 'cimb', 'bjb', 'danamon', 'transfer', 'transfer manual'];
+            if ($penerima === '' || in_array(strtolower($penerima), $bankList)) {
+                $penerima = 'CASH';
+            }
             $bank = $namaKolektor !== '' ? "{$penerima} ({$namaKolektor})" : $penerima;
             $catatanDefault = "Pembayaran Cash to Collector Terverifikasi" . ($noKwitansi !== '' ? " [Kwitansi: {$noKwitansi}]" : "");
         } else {
@@ -721,27 +725,39 @@ class FinanceController extends Controller
                                 ->first();
 
                             if ($existPc) {
+                                $pcUpdate = [
+                                    'status' => 'approved',
+                                    'verified_at' => Carbon::now()->toDateTimeString(),
+                                    'admin_notes' => "Diverifikasi oleh {$userUpdate} via Approval Billing Layanan",
+                                    'updated_at' => Carbon::now()->toDateTimeString(),
+                                ];
+                                if ($proofUrl) {
+                                    $pcUpdate['proof_file'] = $proofUrl;
+                                }
+                                if (Schema::hasColumn('payment_confirmations', 'destination_bank')) {
+                                    $pcUpdate['destination_bank'] = $bank;
+                                }
                                 DB::table('payment_confirmations')
                                     ->where('id', $existPc->id)
-                                    ->update([
-                                        'proof_file' => $proofUrl,
-                                        'status' => 'approved',
-                                        'verified_at' => Carbon::now()->toDateTimeString(),
-                                        'admin_notes' => "Diverifikasi oleh {$userUpdate} via Approval Billing Layanan",
-                                        'updated_at' => Carbon::now()->toDateTimeString(),
-                                    ]);
+                                    ->update($pcUpdate);
                             } else {
-                                DB::table('payment_confirmations')->insert([
+                                $pcInsert = [
                                     'kode_billing_layanan' => $decodedKode,
                                     'customer_id' => $nomorInternet,
-                                    'proof_file' => $proofUrl,
                                     'status' => 'approved',
                                     'verified_at' => Carbon::now()->toDateTimeString(),
                                     'notes' => $catatan,
                                     'admin_notes' => "Diupload & diverifikasi oleh {$userUpdate}",
                                     'created_at' => Carbon::now()->toDateTimeString(),
                                     'updated_at' => Carbon::now()->toDateTimeString(),
-                                ]);
+                                ];
+                                if ($proofUrl) {
+                                    $pcInsert['proof_file'] = $proofUrl;
+                                }
+                                if (Schema::hasColumn('payment_confirmations', 'destination_bank')) {
+                                    $pcInsert['destination_bank'] = $bank;
+                                }
+                                DB::table('payment_confirmations')->insert($pcInsert);
                             }
                         }
                     }
@@ -1578,12 +1594,16 @@ class FinanceController extends Controller
         $decodedKode = $request->input('kode_billing') ? trim($request->input('kode_billing')) : urldecode($kodeBilling ?? '');
         $nominal = $request->input('nominal_bayar');
         $metodeBayar = $request->input('metode_bayar');
-        $namaKolektor = trim((string) $request->input('nama_kolektor', ''));
+        $namaKolektor = ucwords(strtolower(trim((string) $request->input('nama_kolektor', ''))));
         $noKwitansi = trim((string) $request->input('no_kwitansi', ''));
 
         if ($metodeBayar === 'cash' || $metodeBayar === '3') {
             $paymentType = '3';
-            $penerima = $request->input('bank_tujuan') ?: 'Cash To Collector';
+            $penerima = trim((string) $request->input('bank_tujuan', ''));
+            $bankList = ['cash to collector', 'cash', 'kasir / tunai', 'tunai', 'bca', 'mandiri', 'bri', 'bni', 'bsi', 'permata', 'cimb', 'bjb', 'danamon', 'transfer', 'transfer manual'];
+            if ($penerima === '' || in_array(strtolower($penerima), $bankList)) {
+                $penerima = 'CASH';
+            }
             $bank = $namaKolektor !== '' ? "{$penerima} ({$namaKolektor})" : $penerima;
             $catatanDefault = "Pembayaran Registrasi Cash to Collector Terverifikasi" . ($noKwitansi !== '' ? " [Kwitansi: {$noKwitansi}]" : "");
         } else {
@@ -4495,7 +4515,16 @@ class FinanceController extends Controller
                 'nama_pelanggan' => $b->nama_pelanggan ?? ($b->nomor_internet ?: 'Pelanggan'),
                 'nominal' => $nominal,
                 'nominal_formatted' => 'Rp ' . number_format($nominal, 0, ',', '.'),
-                'bank_tujuan' => ($conf->destination_bank ?? null) ?: ($b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : 'Online / Snap')),
+                'bank_tujuan' => (function() use ($conf, $b) {
+                    $raw = ($conf->destination_bank ?? null) ?: ($b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : ($b->payment_type == '3' ? 'CASH' : 'Online / Snap')));
+                    if (($b->payment_type ?? '') == '3' || stripos($raw, 'collector') !== false || stripos($raw, 'kasir') !== false) {
+                        $raw = preg_replace('/^(?:bca|mandiri|bri|bni|bsi|permata|cimb|bjb|danamon|cash\s+to\s+collector)\s*\(/i', 'CASH (', $raw);
+                        if (in_array(strtolower($raw), ['cash to collector', 'kasir / tunai', 'tunai'])) {
+                            $raw = 'CASH';
+                        }
+                    }
+                    return $raw;
+                })(),
                 'payment_type' => $b->payment_type ?? (stripos($conf->destination_bank ?? $b->merchant_type ?? '', 'cash') !== false || stripos($conf->destination_bank ?? $b->merchant_type ?? '', 'kolektor') !== false ? '3' : '2'),
                 'proof_file' => $proofFile,
                 'notes' => $conf->notes ?? null,
@@ -4565,12 +4594,16 @@ class FinanceController extends Controller
         $kodeBilling = trim($request->input('kode_billing'));
         $nominal = $request->input('nominal_bayar');
         $metodeBayar = $request->input('metode_bayar', 'transfer');
-        $namaKolektor = trim((string) $request->input('nama_kolektor', ''));
+        $namaKolektor = ucwords(strtolower(trim((string) $request->input('nama_kolektor', ''))));
         $noKwitansi = trim((string) $request->input('no_kwitansi', ''));
 
         if ($metodeBayar === 'cash' || $metodeBayar === '3') {
             $paymentType = '3';
-            $penerima = $request->input('bank_tujuan') ?: 'Cash To Collector';
+            $penerima = trim((string) $request->input('bank_tujuan', ''));
+            $bankList = ['cash to collector', 'cash', 'kasir / tunai', 'tunai', 'bca', 'mandiri', 'bri', 'bni', 'bsi', 'permata', 'cimb', 'bjb', 'danamon', 'transfer', 'transfer manual'];
+            if ($penerima === '' || in_array(strtolower($penerima), $bankList)) {
+                $penerima = 'CASH';
+            }
             $bank = $namaKolektor !== '' ? "{$penerima} ({$namaKolektor})" : $penerima;
             $catatanDefault = "Pembayaran Cash to Collector Terverifikasi" . ($noKwitansi !== '' ? " [Kwitansi: {$noKwitansi}]" : "");
         } else {

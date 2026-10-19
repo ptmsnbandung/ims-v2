@@ -156,7 +156,7 @@
 
         if (pType === '3' || pType === 'cash' || bankStr.toLowerCase().includes('cash') || bankStr.toLowerCase().includes('kolektor') || bankStr.toLowerCase().includes('kasir')) {
             this.approveData.metode_bayar = 'cash';
-            this.approveData.bank_tujuan = this.approveData.destination_bank || 'Cash To Collector';
+            this.approveData.bank_tujuan = (this.approveData.destination_bank && !['cash to collector', 'transfer', 'transfer manual'].includes(this.approveData.destination_bank.toLowerCase())) ? this.approveData.destination_bank : 'CASH';
             this.approveData.catatan = 'Pembayaran Cash to Collector Terverifikasi';
         } else {
             this.approveData.metode_bayar = 'transfer';
@@ -495,6 +495,14 @@
                                         $cleanBank = preg_replace('/\s*\b(?:a\.?n\.?|a\/n|atas\s+nama)\b.*$/i', '', $cleanBank);
                                         $cleanBank = trim($cleanBank);
                                         $cleanBank = preg_replace('/\s*-\s*$/', '', $cleanBank);
+
+                                        // Normalisasi jika tipe bayar cash atau terdapat keterangan kolektor
+                                        if (($item->payment_type ?? '') == '3' || stripos($cleanBank, 'collector') !== false || stripos($cleanBank, 'kasir') !== false) {
+                                            $cleanBank = preg_replace('/^(?:bca|mandiri|bri|bni|bsi|permata|cimb|bjb|danamon|cash\s+to\s+collector)\s*\(/i', 'CASH (', $cleanBank);
+                                            if (in_array(strtolower($cleanBank), ['cash to collector', 'kasir / tunai', 'tunai'])) {
+                                                $cleanBank = 'CASH';
+                                            }
+                                        }
 
                                         $bankShort = Str::before($cleanBank, ' - ');
                                         $bankDetail = Str::contains($cleanBank, ' - ') ? trim(Str::after($cleanBank, ' - ')) : null;
@@ -908,9 +916,9 @@
                         <div class="grid grid-cols-2 gap-3">
                             <label class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
                                    :class="approveData.metode_bayar === 'cash' ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/50 text-amber-700 dark:text-amber-300' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'">
-                                <input type="radio" name="metode_bayar" value="cash" x-model="approveData.metode_bayar"
-                                       @change="approveData.bank_tujuan = 'Cash To Collector'; approveData.catatan = 'Pembayaran Cash to Collector Terverifikasi'"
-                                       class="w-4 h-4 text-amber-500 focus:ring-amber-400">
+                                 <input type="radio" name="metode_bayar" value="cash" x-model="approveData.metode_bayar"
+                                        @change="approveData.bank_tujuan = 'CASH'; approveData.catatan = 'Pembayaran Cash to Collector Terverifikasi'"
+                                        class="w-4 h-4 text-amber-500 focus:ring-amber-400">
                                 <div>
                                     <div class="text-xs font-bold text-slate-900 dark:text-white">Cash To Collector</div>
                                     <div class="text-[11px] text-slate-500 dark:text-slate-400">Tunai / Kasir Lapangan</div>
@@ -920,8 +928,8 @@
                             <label class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
                                    :class="approveData.metode_bayar === 'transfer' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-300' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'">
                                 <input type="radio" name="metode_bayar" value="transfer" x-model="approveData.metode_bayar"
-                                       @change="approveData.bank_tujuan = (approveData.destination_bank || 'BCA'); approveData.catatan = 'Pembayaran Transfer Terverifikasi'"
-                                       class="w-4 h-4 text-emerald-500 focus:ring-emerald-400">
+                                        @change="approveData.bank_tujuan = (approveData.destination_bank || 'BCA'); approveData.catatan = 'Pembayaran Transfer Terverifikasi'"
+                                        class="w-4 h-4 text-emerald-500 focus:ring-emerald-400">
                                 <div>
                                     <div class="text-xs font-bold text-slate-900 dark:text-white">Manual Transfer</div>
                                     <div class="text-[11px] text-slate-500 dark:text-slate-400">Transfer Bank Perusahaan</div>
@@ -935,8 +943,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tipe Kasir / Kolektor</label>
-                                <select name="bank_tujuan" x-model="approveData.bank_tujuan" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
-                                    <option value="Cash To Collector">Cash To Collector</option>
+                                <select name="bank_tujuan" :disabled="approveData.metode_bayar !== 'cash'" x-model="approveData.bank_tujuan" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                                    <option value="CASH">Cash To Collector</option>
                                     <option value="Kasir Kantor Pusat">Kasir Kantor Pusat</option>
                                     <option value="Kasir Cabang">Kasir Cabang</option>
                                     <option value="Kolektor Lapangan">Kolektor Lapangan</option>
@@ -945,11 +953,11 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nama Petugas Kolektor <span class="text-slate-500 font-normal">(Opsional)</span></label>
-                                <input type="text" name="nama_kolektor" x-model="approveData.nama_kolektor" placeholder="Nama Petugas..." class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                                <input type="text" name="nama_kolektor" :disabled="approveData.metode_bayar !== 'cash'" x-model="approveData.nama_kolektor" placeholder="Nama Petugas..." class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">No. Kwitansi / Tanda Terima <span class="text-slate-500 font-normal">(Opsional)</span></label>
-                                <input type="text" name="no_kwitansi" x-model="approveData.no_kwitansi" placeholder="Contoh: KWT-00123" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                                <input type="text" name="no_kwitansi" :disabled="approveData.metode_bayar !== 'cash'" x-model="approveData.no_kwitansi" placeholder="Contoh: KWT-00123" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                             </div>
                         </div>
                     </div>
@@ -964,8 +972,8 @@
                                         <span class="text-[10px] text-blue-600 dark:text-cyan-400 font-normal">(Terisi Otomatis)</span>
                                     </template>
                                 </label>
-                                <select name="bank_tujuan" x-model="approveData.bank_tujuan" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
-                                    <template x-if="approveData.bank_tujuan && !['BCA', 'Mandiri', 'BRI', 'BNI', 'BSI', 'Permata', 'Cash To Collector', ''].includes(approveData.bank_tujuan)">
+                                <select name="bank_tujuan" :disabled="approveData.metode_bayar !== 'transfer'" x-model="approveData.bank_tujuan" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                                    <template x-if="approveData.bank_tujuan && !['BCA', 'Mandiri', 'BRI', 'BNI', 'BSI', 'Permata', 'Cash To Collector', 'CASH', ''].includes(approveData.bank_tujuan)">
                                         <option :value="approveData.bank_tujuan" x-text="approveData.bank_tujuan" selected></option>
                                     </template>
                                     <option value="BCA">BCA (PT Medianet)</option>
@@ -978,7 +986,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">No. Ref Transfer / Rek Pengirim <span class="text-slate-500 font-normal">(Opsional)</span></label>
-                                <input type="text" name="no_kwitansi" x-model="approveData.no_kwitansi" placeholder="Contoh: REF123456 / A.N Budi" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                                <input type="text" name="no_kwitansi" :disabled="approveData.metode_bayar !== 'transfer'" x-model="approveData.no_kwitansi" placeholder="Contoh: REF123456 / A.N Budi" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
                             </div>
                         </div>
                     </div>

@@ -684,7 +684,7 @@ class NotificationController extends Controller
                         'nominal_formatted' => 'Rp ' . number_format($nominal, 0, ',', '.'),
                         'status' => $isPaid ? 'paid' : 'waiting',
                         'status_label' => $isPaid ? 'LUNAS' : 'MENUNGGU VERIFIKASI',
-                        'merchant' => $b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : 'Online / Snap'),
+                        'merchant' => $b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : ($b->payment_type == '3' ? 'CASH' : 'Online / Snap')),
                         'date' => $carbonDate->format('d M Y H:i'),
                         'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
                         'timestamp' => $carbonDate->timestamp,

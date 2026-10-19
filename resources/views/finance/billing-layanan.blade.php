@@ -652,7 +652,19 @@
                                     $merchantLower = strtolower($merchantRaw);
                                     $pType = (string)($inv->payment_type ?? '');
 
-                                    $isTransfer = ($pType === '2')
+                                    $isCash = ($pType === '3')
+                                        || (
+                                            $merchantRaw !== '' && (
+                                                str_contains($merchantLower, 'cash') ||
+                                                str_contains($merchantLower, 'kolektor') ||
+                                                str_contains($merchantLower, 'collector') ||
+                                                str_contains($merchantLower, 'kasir') ||
+                                                str_contains($merchantLower, 'tunai')
+                                            )
+                                        );
+
+                                    $isTransfer = !$isCash && (
+                                        ($pType === '2')
                                         || !empty($inv->has_manual_transfer_proof)
                                         || !empty($confirmation)
                                         || (
@@ -667,18 +679,8 @@
                                                 str_contains($merchantLower, 'transfer') ||
                                                 str_contains($merchantLower, 'bank')
                                             )
-                                        );
-
-                                    $isCash = ($pType === '3')
-                                        || (
-                                            $merchantRaw !== '' && (
-                                                str_contains($merchantLower, 'cash') ||
-                                                str_contains($merchantLower, 'kolektor') ||
-                                                str_contains($merchantLower, 'collector') ||
-                                                str_contains($merchantLower, 'kasir') ||
-                                                str_contains($merchantLower, 'tunai')
-                                            )
-                                        );
+                                        )
+                                    );
 
                                     $isMidtrans = !$isTransfer && !$isCash;
 
@@ -702,7 +704,11 @@
                                         } elseif (str_contains($merchantLower, 'danamon')) {
                                             $methodLabel = 'Bank Danamon';
                                         } elseif ($isCash) {
-                                            $methodLabel = 'Cash To Collector';
+                                            $normCash = preg_replace('/^(?:bca|mandiri|bri|bni|bsi|permata|cimb|bjb|danamon|cash\s+to\s+collector)\s*\(/i', 'CASH (', $merchantRaw);
+                                            if (in_array(strtolower($normCash), ['cash to collector', 'kasir / tunai', 'tunai'])) {
+                                                $normCash = 'CASH';
+                                            }
+                                            $methodLabel = $normCash;
                                         } elseif (str_contains($merchantLower, 'midtrans')) {
                                             $methodLabel = 'Midtrans';
                                         } else {
@@ -714,7 +720,7 @@
                                     } elseif ($isTransfer) {
                                         $methodLabel = 'Manual Transfer';
                                     } elseif ($isCash) {
-                                        $methodLabel = 'Cash To Collector';
+                                        $methodLabel = 'CASH';
                                     } else {
                                         $methodLabel = 'Midtrans';
                                     }
@@ -1077,7 +1083,11 @@
                         } elseif (str_contains($merchantLower, 'danamon')) {
                             $methodLabel = 'Bank Danamon';
                         } elseif ($isCash) {
-                            $methodLabel = 'Cash To Collector';
+                            $normCash = preg_replace('/^(?:bca|mandiri|bri|bni|bsi|permata|cimb|bjb|danamon|cash\s+to\s+collector)\s*\(/i', 'CASH (', $merchantRaw);
+                            if (in_array(strtolower($normCash), ['cash to collector', 'kasir / tunai', 'tunai'])) {
+                                $normCash = 'CASH';
+                            }
+                            $methodLabel = $normCash;
                         } elseif (str_contains($merchantLower, 'midtrans')) {
                             $methodLabel = 'Midtrans';
                         } else {
@@ -1089,7 +1099,7 @@
                     } elseif ($isTransfer) {
                         $methodLabel = 'Manual Transfer';
                     } elseif ($isCash) {
-                        $methodLabel = 'Cash To Collector';
+                        $methodLabel = 'CASH';
                     } else {
                         $methodLabel = 'Midtrans';
                     }
@@ -1917,7 +1927,7 @@
                             <label class="relative flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition"
                                    :class="payMetode === 'cash' ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/50 text-amber-700 dark:text-amber-300' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'">
                                 <input type="radio" name="metode_bayar" value="cash" x-model="payMetode"
-                                       @change="payBank = 'Cash To Collector'; payCatatan = 'Pembayaran Cash to Collector Terverifikasi'"
+                                       @change="payBank = 'CASH'; payCatatan = 'Pembayaran Cash to Collector Terverifikasi'"
                                        class="w-4 h-4 text-amber-500 focus:ring-amber-400">
                                 <div>
                                     <div class="text-xs font-bold text-slate-900 dark:text-white">Cash To Collector</div>
@@ -1943,8 +1953,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tipe Kasir / Kolektor</label>
-                                <select name="bank_tujuan" x-model="payBank" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
-                                    <option value="Cash To Collector">Cash To Collector</option>
+                                <select name="bank_tujuan" :disabled="payMetode !== 'cash'" x-model="payBank" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                                    <option value="CASH">Cash To Collector</option>
                                     <option value="Kasir Kantor Pusat">Kasir Kantor Pusat</option>
                                     <option value="Kasir Cabang">Kasir Cabang</option>
                                     <option value="Kolektor Lapangan">Kolektor Lapangan</option>
@@ -1953,11 +1963,11 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nama Petugas Kolektor <span class="text-slate-500 font-normal">(Opsional)</span></label>
-                                <input type="text" name="nama_kolektor" x-model="payNamaKolektor" placeholder="Nama Petugas..." class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                                <input type="text" name="nama_kolektor" :disabled="payMetode !== 'cash'" x-model="payNamaKolektor" placeholder="Nama Petugas..." class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">No. Kwitansi / Tanda Terima <span class="text-slate-500 font-normal">(Opsional)</span></label>
-                                <input type="text" name="no_kwitansi" x-model="payNoKwitansi" placeholder="Contoh: KWT-00123" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
+                                <input type="text" name="no_kwitansi" :disabled="payMetode !== 'cash'" x-model="payNoKwitansi" placeholder="Contoh: KWT-00123" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-amber-500">
                             </div>
                         </div>
                     </div>
@@ -1972,8 +1982,8 @@
                                         <span class="text-[10px] text-blue-600 dark:text-cyan-400 font-normal">(Terisi Otomatis)</span>
                                     </template>
                                 </label>
-                                <select name="bank_tujuan" x-model="payBank" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
-                                    <template x-if="payBank && !['BCA', 'Mandiri', 'BRI', 'BNI', 'BSI', 'Permata', 'Cash To Collector', ''].includes(payBank)">
+                                <select name="bank_tujuan" :disabled="payMetode !== 'transfer'" x-model="payBank" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                                    <template x-if="payBank && !['BCA', 'Mandiri', 'BRI', 'BNI', 'BSI', 'Permata', 'Cash To Collector', 'CASH', ''].includes(payBank)">
                                         <option :value="payBank" x-text="payBank" selected></option>
                                     </template>
                                     <option value="BCA">BCA (PT Medianet)</option>
@@ -1986,7 +1996,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">No. Ref Transfer / Rek Pengirim <span class="text-slate-500 font-normal">(Opsional)</span></label>
-                                <input type="text" name="no_kwitansi" x-model="payNoKwitansi" placeholder="Contoh: REF123456 / A.N Budi" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
+                                <input type="text" name="no_kwitansi" :disabled="payMetode !== 'transfer'" x-model="payNoKwitansi" placeholder="Contoh: REF123456 / A.N Budi" class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-blue-500">
                             </div>
                         </div>
                     </div>
@@ -3588,7 +3598,7 @@ function billingLayananPage() {
             const pType = String(paymentType || '2');
             if (pType === '3' || pType === 'cash') {
                 this.payMetode = 'cash';
-                this.payBank = this.payDestinationBank || 'Cash To Collector';
+                this.payBank = (this.payDestinationBank && !['cash to collector', 'transfer', 'transfer manual'].includes(this.payDestinationBank.toLowerCase())) ? this.payDestinationBank : 'CASH';
                 this.payCatatan = 'Pembayaran Cash to Collector Terverifikasi';
             } else {
                 this.payMetode = 'transfer';

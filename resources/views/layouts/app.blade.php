@@ -2530,217 +2530,376 @@
     <div x-data="{
              toasts: [],
              addToast(detail) {
-                 // CEK MULTI-TAB: Jangan tampilkan toast banner jika tab ini sedang di background dan ada tab lain yang aktif
                  if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
                      return;
                  }
                  const id = detail.id || ('t_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
-                 const toast = { ...detail, id };
+                 const now = new Date();
+                 const formattedTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                 const toast = { ...detail, id, formattedTime };
                  this.toasts.unshift(toast);
                  if (this.toasts.length > 5) this.toasts.pop();
                  setTimeout(() => this.removeToast(id), 8000);
              },
              removeToast(id) {
                  this.toasts = this.toasts.filter(t => t.id !== id);
+             },
+             getTypeConfig(t) {
+                 const type = (t.type || '').toLowerCase();
+                 const status = (t.status || '').toUpperCase();
+                 const title = (t.title || '').toLowerCase();
+
+                 // 1. Critical Alarm / LOS / Down / Danger
+                 if (type === 'noc_alarm' || status === 'LOS' || type === 'danger' || type === 'error') {
+                     return {
+                         bar: 'bg-rose-500',
+                         badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
+                         iconBox: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
+                         progressBar: 'bg-rose-500',
+                         label: t.badge_label || (status === 'LOS' ? 'Radar LOS Alert' : 'Alarm Gangguan'),
+                         icon: 'alarm',
+                         ping: true,
+                         pingColor: 'bg-rose-500'
+                     };
+                 }
+                 if (status === 'DOWN' || type === 'down') {
+                     return {
+                         bar: 'bg-amber-500',
+                         badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
+                         iconBox: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
+                         progressBar: 'bg-amber-500',
+                         label: t.badge_label || 'Device Down',
+                         icon: 'down',
+                         ping: true,
+                         pingColor: 'bg-amber-500'
+                     };
+                 }
+
+                 // 2. Tiket
+                 if (type === 'tiket' || title.includes('tiket')) {
+                     return {
+                         bar: 'bg-rose-500',
+                         badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
+                         iconBox: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
+                         progressBar: 'bg-rose-500',
+                         label: t.badge_label || 'Tiket Gangguan',
+                         icon: 'tiket',
+                         ping: false
+                     };
+                 }
+
+                 // 3. Recovery / Selesai
+                 if (type === 'noc_recovery' || title.includes('pulih') || type === 'success') {
+                     return {
+                         bar: 'bg-emerald-500',
+                         badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
+                         iconBox: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
+                         progressBar: 'bg-emerald-500',
+                         label: t.badge_label || 'Koneksi Pulih',
+                         icon: 'recovery',
+                         ping: false
+                     };
+                 }
+
+                 // 4. Pembayaran
+                 if (type === 'pembayaran' || title.includes('pembayaran') || title.includes('lunas') || title.includes('bayar')) {
+                     return {
+                         bar: 'bg-emerald-500',
+                         badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
+                         iconBox: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
+                         progressBar: 'bg-emerald-500',
+                         label: t.badge_label || 'Pembayaran Masuk',
+                         icon: 'pembayaran',
+                         ping: false
+                     };
+                 }
+
+                 // 5. Pendaftaran Pelanggan Baru
+                 if (type === 'pendaftaran' || title.includes('pendaftaran')) {
+                     return {
+                         bar: 'bg-blue-600',
+                         badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
+                         iconBox: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
+                         progressBar: 'bg-blue-600',
+                         label: t.badge_label || 'Pelanggan Baru',
+                         icon: 'pendaftaran',
+                         ping: false
+                     };
+                 }
+
+                 // 6. Instalasi Selesai
+                 if (type === 'instalasi' || title.includes('instalasi')) {
+                     return {
+                         bar: 'bg-cyan-500',
+                         badge: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25',
+                         iconBox: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25',
+                         progressBar: 'bg-cyan-500',
+                         label: t.badge_label || 'Instalasi Selesai',
+                         icon: 'instalasi',
+                         ping: false
+                     };
+                 }
+
+                 // 7. Ubah Bandwidth (UpDown)
+                 if (type === 'updown' || title.includes('bandwidth') || title.includes('layanan')) {
+                     return {
+                         bar: 'bg-cyan-500',
+                         badge: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25',
+                         iconBox: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25',
+                         progressBar: 'bg-cyan-500',
+                         label: t.badge_label || 'Ubah Layanan',
+                         icon: 'updown',
+                         ping: false
+                     };
+                 }
+
+                 // 8. Suspend (Isolir)
+                 if (type === 'suspend' || title.includes('isolir')) {
+                     return {
+                         bar: 'bg-amber-500',
+                         badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
+                         iconBox: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
+                         progressBar: 'bg-amber-500',
+                         label: t.badge_label || 'Isolir Jaringan',
+                         icon: 'suspend',
+                         ping: false
+                     };
+                 }
+
+                 // 9. Terminasi
+                 if (type === 'terminasi' || title.includes('terminasi')) {
+                     return {
+                         bar: 'bg-rose-500',
+                         badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
+                         iconBox: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
+                         progressBar: 'bg-rose-500',
+                         label: t.badge_label || 'Terminasi',
+                         icon: 'terminasi',
+                         ping: false
+                     };
+                 }
+
+                 // 10. Request Invoice
+                 if (type === 'request_invoice' || title.includes('invoice')) {
+                     return {
+                         bar: 'bg-indigo-500',
+                         badge: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25',
+                         iconBox: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25',
+                         progressBar: 'bg-indigo-500',
+                         label: t.badge_label || 'Invoice Tagihan',
+                         icon: 'invoice',
+                         ping: false
+                     };
+                 }
+
+                 // 11. Test Sound / Voice
+                 if (type === 'test') {
+                     return {
+                         bar: 'bg-blue-600',
+                         badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
+                         iconBox: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
+                         progressBar: 'bg-blue-600',
+                         label: t.badge_label || 'Uji Coba Suara',
+                         icon: 'sound',
+                         ping: false
+                     };
+                 }
+
+                 // 12. Warning
+                 if (type === 'warning') {
+                     return {
+                         bar: 'bg-amber-500',
+                         badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
+                         iconBox: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
+                         progressBar: 'bg-amber-500',
+                         label: t.badge_label || 'Perhatian',
+                         icon: 'warning',
+                         ping: false
+                     };
+                 }
+
+                 // Default / Info
+                 return {
+                     bar: 'bg-blue-500',
+                     badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
+                     iconBox: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
+                     progressBar: 'bg-blue-500',
+                     label: t.badge_label || 'Notifikasi IMS',
+                     icon: 'bell',
+                     ping: false
+                 };
              }
          }"
          @ims-new-toast.window="addToast($event.detail)"
-          class="fixed top-6 right-6 z-[999999] flex flex-col gap-3 max-w-sm sm:max-w-md w-full pointer-events-none px-4 sm:px-0">
+         class="fixed top-4 sm:top-6 inset-x-3 sm:inset-x-auto sm:right-6 sm:w-[410px] max-w-full sm:max-w-md z-[999999] flex flex-col gap-2.5 pointer-events-none select-none">
         
         <template x-for="t in toasts" :key="t.id">
-            <div class="pointer-events-auto relative overflow-hidden w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-3.5 sm:p-4 shadow-2xl flex items-start gap-3.5 transition-all duration-300 transform translate-y-0"
-                 :class="{
-                     'border-l-4 border-l-rose-500 border border-rose-500/30 shadow-rose-500/10': t.type === 'noc_alarm' || t.status === 'LOS' || t.type === 'tiket',
-                     'border-l-4 border-l-amber-500 border border-amber-500/30 shadow-amber-500/10': t.status === 'DOWN' || t.type === 'suspend',
-                     'border-l-4 border-l-emerald-500 border border-emerald-500/30 shadow-emerald-500/10': t.type === 'pendaftaran' || t.type === 'pembayaran' || t.type === 'noc_recovery',
-                     'border-l-4 border-l-cyan-500 border border-cyan-500/30 shadow-cyan-500/10': t.type === 'instalasi' || t.type === 'updown',
-                     'border-l-4 border-l-teal-500 border border-slate-200 dark:border-slate-800 shadow-slate-900/15': !['noc_alarm', 'tiket', 'suspend', 'pendaftaran', 'pembayaran', 'instalasi', 'updown'].includes(t.type)
-                 }"
+            <div x-data="{ cfg: getTypeConfig(t) }"
+                 class="pointer-events-auto relative overflow-hidden w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/50 transition-all duration-300 transform"
                  x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+                 x-transition:enter-start="opacity-0 translate-y-2 sm:-translate-y-2 scale-95"
                  x-transition:enter-end="opacity-100 translate-y-0 scale-100"
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-90">
-                
-                <!-- Toast Icon Box with Pulse Beacon -->
-                <div class="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                     :class="{
-                         'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30': t.type === 'noc_alarm' || t.status === 'LOS' || t.type === 'tiket',
-                         'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30': t.status === 'DOWN' || t.type === 'suspend',
-                         'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30': t.type === 'pendaftaran' || t.type === 'pembayaran' || t.type === 'noc_recovery',
-                         'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30': t.type === 'instalasi' || t.type === 'updown',
-                         'bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30': !t.type
-                     }">
+                 x-transition:leave-end="opacity-0 scale-95">
 
-                    <!-- Pulsing Alert Beacon on Top Right of Icon -->
-                    <template x-if="t.type === 'noc_alarm' || t.status === 'LOS'">
-                        <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-600"></span>
-                        </span>
-                    </template>
-                    <template x-if="t.status === 'DOWN'">
-                        <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-600"></span>
-                        </span>
-                    </template>
+                <!-- Crisp Left Accent Strip (Conforms to container's rounded-2xl) -->
+                <div class="absolute left-0 top-0 bottom-0 w-1.5" :class="cfg.bar"></div>
 
-                    <!-- Icon: NOC RECOVERY (Koneksi Pulih) -->
-                    <template x-if="t.type === 'noc_recovery'">
-                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                    </template>
+                <!-- Card Body -->
+                <div class="p-3.5 sm:p-4 pl-4 sm:pl-4.5">
+                    <div class="flex items-start gap-3">
 
-                    <!-- Icon: NOC ALARM / LOS / DOWN -->
-                    <template x-if="t.type === 'noc_alarm' || t.status === 'LOS' || t.status === 'DOWN'">
-                        <svg class="w-5 h-5 text-rose-600 dark:text-rose-400 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                        </svg>
-                    </template>
+                        <!-- Icon Container with Glow Accent -->
+                        <div class="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-2xs"
+                             :class="cfg.iconBox">
 
-                    <!-- Icon: Instalasi -->
-                    <template x-if="t.type === 'instalasi'">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                    </template>
+                            <!-- Pulsing Alert Beacon on Top Right of Icon (for urgent alerts) -->
+                            <template x-if="cfg.ping">
+                                <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" :class="cfg.pingColor"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5" :class="cfg.pingColor"></span>
+                                </span>
+                            </template>
 
-                    <!-- Icon: Pendaftaran -->
-                    <template x-if="t.type === 'pendaftaran'">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
-                        </svg>
-                    </template>
+                            <!-- Icon: Alarm / LOS / Down -->
+                            <template x-if="cfg.icon === 'alarm' || cfg.icon === 'down'">
+                                <svg class="w-5 h-5 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                </svg>
+                            </template>
 
-                    <!-- Icon: Pembayaran -->
-                    <template x-if="t.type === 'pembayaran'">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v8.25m0-8.25h16.5m0 0v8.25m0-8.25h1.5a.75.75 0 0 1 .75.75v.75m-2.25 0h2.25m-2.25 0a60.07 60.07 0 0 0-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V8.25m2.25 0H21M9 12.75a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" />
-                        </svg>
-                    </template>
+                            <!-- Icon: Recovery / Success -->
+                            <template x-if="cfg.icon === 'recovery'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </template>
 
-                    <!-- Icon: Request Invoice -->
-                    <template x-if="t.type === 'request_invoice'">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                        </svg>
-                    </template>
+                            <!-- Icon: Tiket -->
+                            <template x-if="cfg.icon === 'tiket'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                                </svg>
+                            </template>
 
-                    <!-- Icon: Tiket -->
-                    <template x-if="t.type === 'tiket'">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-                        </svg>
-                    </template>
+                            <!-- Icon: Pembayaran -->
+                            <template x-if="cfg.icon === 'pembayaran'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v8.25m0-8.25h16.5m0 0v8.25m0-8.25h1.5a.75.75 0 0 1 .75.75v.75m-2.25 0h2.25m-2.25 0a60.07 60.07 0 0 0-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V8.25m2.25 0H21M9 12.75a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" />
+                                </svg>
+                            </template>
 
-                    <!-- Icon: UpDown -->
-                    <template x-if="t.type === 'updown'">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-                        </svg>
-                    </template>
+                            <!-- Icon: Pendaftaran -->
+                            <template x-if="cfg.icon === 'pendaftaran'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
+                                </svg>
+                            </template>
 
-                    <!-- Icon: Suspend -->
-                    <template x-if="t.type === 'suspend'">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
-                        </svg>
-                    </template>
+                            <!-- Icon: Instalasi -->
+                            <template x-if="cfg.icon === 'instalasi'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.07a4.5 4.5 0 0 0 4.486-6.32l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.32 4.486c.118.58.094 1.193-.07 1.743" />
+                                </svg>
+                            </template>
 
-                    <!-- Icon: Terminasi -->
-                    <template x-if="t.type === 'terminasi'">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                        </svg>
-                    </template>
+                            <!-- Icon: UpDown -->
+                            <template x-if="cfg.icon === 'updown'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                                </svg>
+                            </template>
 
-                    <!-- Icon Default / Fallback -->
-                    <template x-if="!['noc_alarm', 'instalasi', 'pendaftaran', 'pembayaran', 'request_invoice', 'tiket', 'updown', 'suspend', 'terminasi'].includes(t.type)">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                        </svg>
-                    </template>
-                </div>
+                            <!-- Icon: Suspend -->
+                            <template x-if="cfg.icon === 'suspend'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                            </template>
 
-                <!-- Toast Content Body -->
-                <div class="flex-1 min-w-0 pr-1">
-                    <!-- Top Pill Category & Close Button -->
-                    <div class="flex items-center justify-between gap-2 mb-1">
-                        <template x-if="t.type === 'noc_alarm' || t.status === 'LOS'">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-mono">
-                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
-                                <span>Radar LOS Alert</span>
-                            </span>
-                        </template>
-                        <template x-if="t.status === 'DOWN'">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                <span>Device Down</span>
-                            </span>
-                        </template>
-                        <template x-if="t.type === 'tiket'">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 font-mono">
-                                <span>Tiket Gangguan</span>
-                            </span>
-                        </template>
-                        <template x-if="t.type === 'pendaftaran'">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono">
-                                <span>Pendaftaran Baru</span>
-                            </span>
-                        </template>
-                        <template x-if="t.type === 'pembayaran'">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono">
-                                <span>Pembayaran Masuk</span>
-                            </span>
-                        </template>
-                        <template x-if="!['noc_alarm', 'tiket', 'pendaftaran', 'pembayaran'].includes(t.type) && !t.status">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/30 font-mono">
-                                <span>Notifikasi IMS</span>
-                            </span>
-                        </template>
+                            <!-- Icon: Terminasi -->
+                            <template x-if="cfg.icon === 'terminasi'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                </svg>
+                            </template>
 
-                        <!-- Close Button -->
-                        <button type="button" 
-                                @click="removeToast(t.id)" 
-                                class="w-5 h-5 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                                title="Tutup Notifikasi">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                            <!-- Icon: Invoice -->
+                            <template x-if="cfg.icon === 'invoice'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                </svg>
+                            </template>
 
-                    <!-- Title -->
-                    <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight" x-text="t.title"></h5>
+                            <!-- Icon: Sound Test -->
+                            <template x-if="cfg.icon === 'sound'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
+                                </svg>
+                            </template>
 
-                    <!-- Message Body -->
-                    <p class="text-[11.5px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed" x-text="t.message"></p>
+                            <!-- Icon: Warning -->
+                            <template x-if="cfg.icon === 'warning'">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                </svg>
+                            </template>
 
-                    <!-- Link Action Button -->
-                    <template x-if="t.url">
-                        <div class="mt-2 pt-1 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                            <a :href="t.url" class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-cyan-400 hover:underline">
-                                <span>Lihat Rincian</span>
-                                <span>&rarr;</span>
-                            </a>
+                            <!-- Icon Default / Fallback: Bell -->
+                            <template x-if="!['alarm', 'down', 'recovery', 'tiket', 'pembayaran', 'pendaftaran', 'instalasi', 'updown', 'suspend', 'terminasi', 'invoice', 'sound', 'warning'].includes(cfg.icon)">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                                </svg>
+                            </template>
                         </div>
-                    </template>
+
+                        <!-- Toast Content Body -->
+                        <div class="flex-1 min-w-0">
+                            <!-- Top Pill Category & Close Button -->
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider font-mono border"
+                                          :class="cfg.badge"
+                                          x-text="cfg.label"></span>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono" x-text="t.formattedTime || ''"></span>
+                                </div>
+
+                                <!-- Close Button -->
+                                <button type="button" 
+                                        @click="removeToast(t.id)" 
+                                        class="w-6 h-6 -mr-1 -mt-1 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition cursor-pointer flex-shrink-0"
+                                        title="Tutup Notifikasi">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Title -->
+                            <h5 class="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-slate-100 leading-snug break-words" x-text="t.title"></h5>
+
+                            <!-- Message Body -->
+                            <p class="text-[11.5px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed break-words line-clamp-3" x-text="t.message"></p>
+
+                            <!-- Link Action Button -->
+                            <template x-if="t.url">
+                                <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                    <a :href="t.url" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition">
+                                        <span>Lihat Detail</span>
+                                        <svg class="w-3 h-3 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Animated Auto-Close Bottom Progress Bar -->
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div class="h-full ims-toast-progress-bar"
-                         :class="{
-                             'bg-rose-500': t.type === 'noc_alarm' || t.status === 'LOS' || t.type === 'tiket',
-                             'bg-amber-500': t.status === 'DOWN' || t.type === 'suspend',
-                             'bg-emerald-500': t.type === 'pendaftaran' || t.type === 'pembayaran',
-                             'bg-cyan-500': t.type === 'instalasi' || t.type === 'updown',
-                             'bg-teal-500': !t.type
-                         }">
-                    </div>
+                <div class="absolute bottom-0 left-0 right-0 h-[2.5px] bg-slate-100 dark:bg-slate-800/80 overflow-hidden">
+                    <div class="h-full ims-toast-progress-bar" :class="cfg.progressBar"></div>
                 </div>
             </div>
         </template>

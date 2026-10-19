@@ -1156,7 +1156,111 @@
                         <div class="ims-tooltip">Dashboard</div>
                     </div>
 
-                    @if(auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin', 'ceo']))
+                    @if(auth()->user()?->isCeo())
+                    <!-- ============================================== -->
+                    <!-- MENU EKSEKUTIF (KHUSUS CEO MONITORING)         -->
+                    <!-- ============================================== -->
+
+                    <!-- 1. Data Pelanggan -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('teknik.pelanggan') }}"
+                           class="ims-nav-item {{ request()->routeIs('teknik.pelanggan*', 'finance.pelanggan*') ? 'active' : '' }}"
+                           title="Data Pelanggan">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pelanggan*', 'finance.pelanggan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                            </svg>
+                            <span class="ims-nav-text">Data Pelanggan</span>
+                        </a>
+                        <div class="ims-tooltip">Data Pelanggan</div>
+                    </div>
+
+                    <!-- Section Keuangan & Billing -->
+                    <div class="pt-2.5 pb-1">
+                        <div class="ims-section-header px-3 text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
+                            <span class="ims-section-title">Keuangan & Billing</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        </div>
+                    </div>
+
+                    <!-- Billing Layanan -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('finance.billing-layanan') }}"
+                           class="ims-nav-item {{ request()->routeIs('finance.billing-layanan*') ? 'active' : '' }}"
+                           title="Billing Layanan">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.billing-layanan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                            </svg>
+                            <span class="ims-nav-text">Billing Layanan</span>
+                        </a>
+                        <div class="ims-tooltip">Billing Layanan (Tagihan Bulanan)</div>
+                    </div>
+
+                    <!-- Billing Registrasi -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('finance.billing-registrasi') }}"
+                           class="ims-nav-item {{ request()->routeIs('finance.billing-registrasi*') ? 'active' : '' }}"
+                           title="Billing Registrasi">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.billing-registrasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                            <span class="ims-nav-text">Billing Registrasi</span>
+                        </a>
+                        <div class="ims-tooltip">Billing Registrasi</div>
+                    </div>
+
+                    <!-- Notifikasi & Approval (Finance) -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('finance.notifikasi') }}"
+                           class="ims-nav-item {{ request()->routeIs('finance.notifikasi*') ? 'active' : '' }}"
+                           title="Konfirmasi Pembayaran">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                            </svg>
+                            <span class="ims-nav-text">Konfirmasi Pembayaran</span>
+                        </a>
+                        <div class="ims-tooltip">Konfirmasi Pembayaran</div>
+                    </div>
+
+                    <!-- Section Layanan & Gangguan -->
+                    <div class="pt-2.5 pb-1">
+                        <div class="ims-section-header px-3 text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between">
+                            <span class="ims-section-title">Layanan & Gangguan</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        </div>
+                    </div>
+
+                    <!-- Tiket Gangguan & Keluhan -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('teknik.tiket.gangguan') }}"
+                           class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
+                           title="Tiket Gangguan & Keluhan">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#94A3B8]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                            </svg>
+                            <span class="ims-nav-text">Tiket Gangguan</span>
+                        </a>
+                        <div class="ims-tooltip">Tiket Gangguan & Keluhan</div>
+                    </div>
+
+                    <!-- Pusat Notifikasi / Radar Outage -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('noc.notifikasi') }}"
+                           class="ims-nav-item {{ request()->routeIs('noc.notifikasi*') ? 'active' : '' }}"
+                           title="Pusat Notifikasi Jaringan (Radar Outage)">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                            </svg>
+                            <span class="ims-nav-text">Radar Notifikasi</span>
+                        </a>
+                        <div class="ims-tooltip">Radar Notifikasi Jaringan</div>
+                    </div>
+
+                    @else
+                    <!-- ============================================== -->
+                    <!-- MENU OPERASIONAL (STAFF NON-CEO)               -->
+                    <!-- ============================================== -->
+
+                    @if(auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin']))
                     <!-- 2. Data Pelanggan -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('teknik.pelanggan') }}"
@@ -1171,7 +1275,7 @@
                     </div>
                     @endif
 
-                    @if(auth()->user()?->hasRole(['teknik', 'direktur', 'admin', 'ceo']))
+                    @if(auth()->user()?->hasRole(['teknik', 'direktur', 'admin']))
                     <!-- ============================================== -->
                     <!-- TEKNIK SECTION                                 -->
                     <!-- ============================================== -->
@@ -1213,7 +1317,7 @@
                     <!-- 5. Permintaan -->
                     <div class="ims-nav-wrapper ims-has-flyout"
                          @mouseenter="openFlyout($el, 'Permintaan Layanan', [
-                             @if(auth()->user()?->hasRole(['noc', 'direktur', 'ceo']))
+                             @if(auth()->user()?->hasRole(['noc', 'direktur']))
                              { label: 'Aktivasi Jaringan', url: '{{ route('noc.aktivasi') }}', active: {{ request()->routeIs('noc.aktivasi*') ? 'true' : 'false' }} },
                              @endif
                              { label: 'UP / Downgrade', url: '{{ route('teknik.permintaan.up-downgrade') }}', active: {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'true' : 'false' }} },
@@ -1250,7 +1354,7 @@
                              x-transition:leave-end="opacity-0 -translate-y-1"
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
                             
-                            @if(auth()->user()?->hasRole(['noc', 'direktur', 'ceo']))
+                            @if(auth()->user()?->hasRole(['noc', 'direktur']))
                             <a href="{{ route('noc.aktivasi') }}"
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.aktivasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.aktivasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
@@ -1293,7 +1397,7 @@
                     </div>
                     @endif
 
-                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin', 'ceo']))
+                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
                     <!-- ============================================== -->
                     <!-- NOC SECTION                                    -->
                     <!-- ============================================== -->
@@ -1511,7 +1615,7 @@
 
                     @endif
 
-                    @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin', 'ceo']))
+                    @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin']))
                     <!-- ============================================== -->
                     <!-- FINANCE SECTION                                -->
                     <!-- ============================================== -->
@@ -1681,7 +1785,7 @@
                     </div>
                     @endif
 
-                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin', 'ceo']))
+                    @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
                     <!-- Pusat Notifikasi NOC -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('noc.notifikasi') }}"
@@ -1694,6 +1798,8 @@
                         </a>
                         <div class="ims-tooltip">Pusat Notifikasi NOC</div>
                     </div>
+                    @endif
+
                     @endif
 
                     <!-- Logout / Keluar -->

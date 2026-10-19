@@ -59,6 +59,7 @@ type SystemHealth struct {
 type TrafficResponse struct {
 	Success      bool                `json:"success"`
 	LatencyMs    int64               `json:"latency_ms"`
+	PingMs       int64               `json:"ping_ms"`
 	Ports        map[string]PortData `json:"ports"`
 	SystemHealth SystemHealth        `json:"system_health"`
 	Cached       bool                `json:"cached"`
@@ -94,6 +95,7 @@ type PhysicalOnu struct {
 type OnusResponse struct {
 	Success      bool          `json:"success"`
 	LatencyMs    int64         `json:"latency_ms"`
+	PingMs       int64         `json:"ping_ms"`
 	Count        int           `json:"count"`
 	PortDownMbps float64       `json:"port_down_mbps"`
 	PortUpMbps   float64       `json:"port_up_mbps"`
@@ -115,10 +117,22 @@ type AbnormalOnu struct {
 type AbnormalOnusResponse struct {
 	Success   bool          `json:"success"`
 	LatencyMs int64         `json:"latency_ms"`
+	PingMs    int64         `json:"ping_ms"`
 	Count     int           `json:"count"`
 	Onus      []AbnormalOnu `json:"onus"`
 	Cached    bool          `json:"cached"`
 	Error     string        `json:"error,omitempty"`
+}
+
+type PingRequest struct {
+	IP   string `json:"ip"`
+	Port int    `json:"port"`
+}
+
+type PingResponse struct {
+	Success bool   `json:"success"`
+	PingMs  int64  `json:"ping_ms"`
+	Error   string `json:"error,omitempty"`
 }
 
 // -------------------------------------------------------------
@@ -305,11 +319,16 @@ func readUntilPrompt(conn net.Conn, prompts []string, timeout time.Duration) (st
 	}
 }
 
-func openOltSession(ip string, port int, user, pass string, timeout time.Duration) (net.Conn, error) {
+func openOltSession(ip string, port int, user, pass string, timeout time.Duration) (net.Conn, int64, error) {
 	addr := fmt.Sprintf("%s:%d", ip, port)
+	tPing := time.Now()
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
-		return nil, fmt.Errorf("TCP connect failed to %s: %w", addr, err)
+		return nil, 0, fmt.Errorf("TCP connect failed to %s: %w", addr, err)
+	}
+	pingMs := time.Since(tPing).Milliseconds()
+	if pingMs <= 0 {
+		pingMs = 1
 	}
 
 	// Kirim CRLF awal untuk memicu OLT langsung menampilkan prompt Username
@@ -319,7 +338,7 @@ func openOltSession(ip string, port int, user, pass string, timeout time.Duratio
 	_, err = readUntilPrompt(conn, []string{"Username:", "login:", "User:"}, 2500*time.Millisecond)
 	if err != nil {
 		_ = conn.Close()
-		return nil, fmt.Errorf("did not receive username prompt: %w", err)
+		return nil, pingMs, fmt.Errorf("did not receive username prompt: %w", err)
 	}
 	_, _ = conn.Write([]byte(user + "\r\n"))
 
@@ -327,7 +346,7 @@ func openOltSession(ip string, port int, user, pass string, timeout time.Duratio
 	_, err = readUntilPrompt(conn, []string{"Password:", "Pass:"}, 2500*time.Millisecond)
 	if err != nil {
 		_ = conn.Close()
-		return nil, fmt.Errorf("did not receive password prompt: %w", err)
+		return nil, pingMs, fmt.Errorf("did not receive password prompt: %w", err)
 	}
 	_, _ = conn.Write([]byte(pass + "\r\n"))
 
@@ -335,10 +354,10 @@ func openOltSession(ip string, port int, user, pass string, timeout time.Duratio
 	pBuf, err := readUntilPrompt(conn, []string{"#", ">", "Error"}, 3000*time.Millisecond)
 	if err != nil && !strings.Contains(pBuf, "#") && !strings.Contains(pBuf, ">") {
 		_ = conn.Close()
-		return nil, fmt.Errorf("login failed or terminal prompt not reached: %w", err)
+		return nil, pingMs, fmt.Errorf("login failed or terminal prompt not reached: %w", err)
 	}
 
-	return conn, nil
+	return conn, pingMs, nil
 }
 
 // -------------------------------------------------------------
@@ -360,7 +379,7 @@ func fetchTrafficFromOLT(req TrafficRequest) (*TrafficResponse, error) {
 	}
 
 	t0 := time.Now()
-	conn, err := openOltSession(req.IP, req.Port, req.User, req.Pass, timeout)
+	conn, pingMs, err := openOltSession(req.IP, req.Port, req.User, req.Pass, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -513,6 +532,7 @@ func fetchTrafficFromOLT(req TrafficRequest) (*TrafficResponse, error) {
 	return &TrafficResponse{
 		Success:      true,
 		LatencyMs:    latency,
+		PingMs:       pingMs,
 		Ports:        ports,
 		SystemHealth: health,
 	}, nil
@@ -533,7 +553,7 @@ func fetchOnusFromOLT(req OnusRequest) (*OnusResponse, error) {
 	}
 
 	t0 := time.Now()
-	conn, err := openOltSession(req.IP, req.Port, req.User, req.Pass, timeout)
+	conn, pingMs, err := openOltSession(req.IP, req.Port, req.User, req.Pass, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -659,6 +679,7 @@ func fetchOnusFromOLT(req OnusRequest) (*OnusResponse, error) {
 	return &OnusResponse{
 		Success:      true,
 		LatencyMs:    latency,
+		PingMs:       pingMs,
 		Count:        len(resultList),
 		PortDownMbps: portDownMbps,
 		PortUpMbps:   portUpMbps,
@@ -673,7 +694,7 @@ func fetchAbnormalOnusFromOLT(req TrafficRequest) (*AbnormalOnusResponse, error)
 	}
 
 	t0 := time.Now()
-	conn, err := openOltSession(req.IP, req.Port, req.User, req.Pass, timeout)
+	conn, pingMs, err := openOltSession(req.IP, req.Port, req.User, req.Pass, timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -772,6 +793,7 @@ func fetchAbnormalOnusFromOLT(req TrafficRequest) (*AbnormalOnusResponse, error)
 	return &AbnormalOnusResponse{
 		Success:   true,
 		LatencyMs: latency,
+		PingMs:    pingMs,
 		Count:     len(results),
 		Onus:      results,
 	}, nil
@@ -790,6 +812,50 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 		"version":     "1.1.0",
 		"uptime_sec":  uptime,
 		"cached_keys": len(memCache),
+	})
+}
+
+func handlePing(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req PingRequest
+	_ = json.NewDecoder(r.Body).Decode(&req)
+	if req.IP == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(PingResponse{Success: false, Error: "IP Address is required"})
+		return
+	}
+
+	port := req.Port
+	if port <= 0 {
+		port = 23
+	}
+
+	addr := fmt.Sprintf("%s:%d", req.IP, port)
+	t0 := time.Now()
+	conn, err := net.DialTimeout("tcp", addr, 1500*time.Millisecond)
+	w.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		_ = json.NewEncoder(w).Encode(PingResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+	defer conn.Close()
+
+	pingMs := time.Since(t0).Milliseconds()
+	if pingMs <= 0 {
+		pingMs = 1
+	}
+
+	_ = json.NewEncoder(w).Encode(PingResponse{
+		Success: true,
+		PingMs:  pingMs,
 	})
 }
 
@@ -1003,6 +1069,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", handleHealth)
+	mux.HandleFunc("/api/olt/ping", handlePing)
 	mux.HandleFunc("/api/olt/traffic", handleTraffic)
 	mux.HandleFunc("/api/olt/onus", handleOnus)
 	mux.HandleFunc("/api/olt/abnormal-onus", handleAbnormalOnus)

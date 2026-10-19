@@ -28,6 +28,12 @@
             width: 7px;
             height: 7px;
         }
+        .ims-main-scroll::-webkit-scrollbar-button,
+        ::-webkit-scrollbar-button {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
         .ims-main-scroll::-webkit-scrollbar-track,
         ::-webkit-scrollbar-track {
             background: transparent;
@@ -746,19 +752,30 @@
             }
         }
 
-        /* Custom scrollbar for sidebar */
+        /* Custom Ultra-Thin Scrollbar for Sidebar */
+        .ims-sidebar-nav {
+            scrollbar-width: thin !important;
+            scrollbar-color: rgba(56, 189, 248, 0.4) transparent !important;
+        }
         .ims-sidebar-nav::-webkit-scrollbar {
-            width: 4px;
+            width: 3px !important;
+            height: 3px !important;
+        }
+        .ims-sidebar-nav::-webkit-scrollbar-button {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
         }
         .ims-sidebar-nav::-webkit-scrollbar-track {
-            background: transparent;
+            background: transparent !important;
         }
         .ims-sidebar-nav::-webkit-scrollbar-thumb {
-            background: rgba(156, 163, 175, 0.2);
-            border-radius: 4px;
+            background: rgba(56, 189, 248, 0.4) !important;
+            border-radius: 9999px !important;
+            border: none !important;
         }
         .ims-sidebar-nav::-webkit-scrollbar-thumb:hover {
-            background: rgba(156, 163, 175, 0.4);
+            background: rgba(56, 189, 248, 0.85) !important;
         }
 
         /* Sidebar Styling & Animation */

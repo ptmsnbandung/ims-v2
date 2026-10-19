@@ -30,4 +30,3 @@ check_*.php
 *.sql
 /public/uploads/.htaccess
 *.exe
-services/olt-collector/olt-collector

@@ -92,12 +92,14 @@ type PhysicalOnu struct {
 }
 
 type OnusResponse struct {
-	Success   bool          `json:"success"`
-	LatencyMs int64         `json:"latency_ms"`
-	Count     int           `json:"count"`
-	Onus      []PhysicalOnu `json:"onus"`
-	Cached    bool          `json:"cached"`
-	Error     string        `json:"error,omitempty"`
+	Success      bool          `json:"success"`
+	LatencyMs    int64         `json:"latency_ms"`
+	Count        int           `json:"count"`
+	PortDownMbps float64       `json:"port_down_mbps"`
+	PortUpMbps   float64       `json:"port_up_mbps"`
+	Onus         []PhysicalOnu `json:"onus"`
+	Cached       bool          `json:"cached"`
+	Error        string        `json:"error,omitempty"`
 }
 
 // -------------------------------------------------------------
@@ -619,6 +621,30 @@ func fetchOnusFromOLT(req OnusRequest) (*OnusResponse, error) {
 		}
 	}
 
+	// 4. ONU Tx Power
+	reTx := regexp.MustCompile(fmt.Sprintf(`(?:1/[12]/%d:|gpon-onu_1/[12]/%d:)(\d+)\s+([-\d\.]+)`, portIndex, portIndex))
+	if idxTx := strings.Index(buffer, "show pon power onu-tx"); idxTx != -1 {
+		sub := buffer[idxTx:]
+		for _, m := range reTx.FindAllStringSubmatch(sub, -1) {
+			if len(m) >= 3 {
+				onuId, _ := strconv.Atoi(m[1])
+				if onu, ok := onusMap[onuId]; ok {
+					onu.TxPower = "+" + m[2] + " dBm"
+				}
+			}
+		}
+	}
+
+	// 5. Port traffic rate
+	reRate := regexp.MustCompile(`Input rate\s*:\s*(\d+)\s*Bps.*?Output rate\s*:\s*(\d+)\s*Bps`)
+	var portDownMbps, portUpMbps float64
+	if mRate := reRate.FindStringSubmatch(buffer); len(mRate) >= 3 {
+		inBps, _ := strconv.ParseInt(mRate[1], 10, 64)
+		outBps, _ := strconv.ParseInt(mRate[2], 10, 64)
+		portUpMbps = float64(inBps*8) / 1000000.0
+		portDownMbps = float64(outBps*8) / 1000000.0
+	}
+
 	// Convert map to slice
 	var resultList []PhysicalOnu
 	for _, onu := range onusMap {
@@ -628,10 +654,12 @@ func fetchOnusFromOLT(req OnusRequest) (*OnusResponse, error) {
 	latency := time.Since(t0).Milliseconds()
 
 	return &OnusResponse{
-		Success:   true,
-		LatencyMs: latency,
-		Count:     len(resultList),
-		Onus:      resultList,
+		Success:      true,
+		LatencyMs:    latency,
+		Count:        len(resultList),
+		PortDownMbps: portDownMbps,
+		PortUpMbps:   portUpMbps,
+		Onus:         resultList,
 	}, nil
 }
 

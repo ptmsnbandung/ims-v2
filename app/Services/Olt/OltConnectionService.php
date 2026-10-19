@@ -222,16 +222,22 @@ class OltConnectionService
         $brand = strtolower($olt->brand ?? 'zte');
         $capacity = (int)($olt->capacity_olt ?? 8);
 
-        // 1. Direct Ping / Socket Test to OLT
-        $socketRes = $this->testConnection([
-            'ip_address' => $ip,
-            'port' => $port,
-            'protocol' => $protocol,
-            'username' => $username,
-        ]);
-
-        $isOnline = $socketRes['success'] ?? false;
-        $latency = $socketRes['latency'] ?? 0;
+        // 1. Ambil counter byte dan status hardware asli dari OLT (via Go Daemon ultra-cepat)
+        $hwTraffic = $this->fetchRealOltTrafficCounters($olt);
+        if ($hwTraffic && is_array($hwTraffic) && count($hwTraffic) > 0) {
+            $isOnline = true;
+            $latency = 8;
+        } else {
+            // Fallback: Ping / Socket Test hanya jika telemetry hardware belum tersedia
+            $socketRes = $this->testConnection([
+                'ip_address' => $ip,
+                'port' => $port,
+                'protocol' => $protocol,
+                'username' => $username,
+            ]);
+            $isOnline = $socketRes['success'] ?? false;
+            $latency = $socketRes['latency'] ?? 0;
+        }
 
         // 2. Query aggregate real users & capacity from database for this OLT
         $registeredUsers = 0;
@@ -252,9 +258,6 @@ class OltConnectionService
         } catch (\Throwable $e) {
             $registeredUsers = 0;
         }
-
-        // 3. Ambil counter byte dan status hardware asli dari OLT fisik ZTE
-        $hwTraffic = $this->fetchRealOltTrafficCounters($olt);
         $totalDownMbps = 0.0;
         $totalUpMbps = 0.0;
         $totalHwOnuCount = 0;
@@ -1233,6 +1236,13 @@ class OltConnectionService
         $kodeOlt = $olt->kode_olt ?? 'O1';
         $cacheKey = "olt_live_hw_traffic_{$kodeOlt}";
 
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached) && !empty($cached)) {
+                return $cached;
+            }
+        }
+
         // Prioritas 1: Ambil data live via Go collector daemon (ultra-cepat, non-blocking)
         $goRes = $this->fetchTrafficFromGoCollector($olt);
         if ($goRes !== null) {
@@ -1396,11 +1406,16 @@ class OltConnectionService
 
         if ($force) {
             Cache::forget($cacheKey);
+        } elseif (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached) && !empty($cached['baseinfo'])) {
+                return $cached;
+            }
         }
 
         // Prioritas 1: Ambil data live via Go collector daemon (ultra-cepat, non-blocking)
         $goRes = $this->fetchOnusFromGoCollector($olt, $portIndex, $force);
-        if ($goRes !== null) {
+        if ($goRes !== null && !empty($goRes['baseinfo'])) {
             Cache::put($cacheKey, $goRes, 180);
             return $goRes;
         }
@@ -1967,87 +1982,89 @@ class OltConnectionService
                 $portUp = $hwDiscovery['port_up_mbps'];
 
                 // 1. Preload data database untuk enrichment (Nama, Nomor Internet, ODP, Paket BW)
-                $dbBySlot = [];
-                $dbBySn = [];
-                try {
-                    $regs = $this->getOltCustomerBaseQuery($olt)->get();
-                } catch (\Throwable $e) {
-                    try {
-                        $name = strtolower($olt->name_olt ?? ($olt->nama_olt ?? ''));
-                        $regs = DB::table('trx_batchjob_register')
-                            ->where(function($q) use ($kodeOlt, $name) {
-                                $q->where('olt', $kodeOlt);
-                                if (!empty($name)) {
-                                    $q->orWhere('olt', 'like', "%{$name}%");
-                                }
-                                if ($kodeOlt === 'O1' || str_contains($name, 'kayu agung') || str_contains($name, 'msn')) {
-                                    $q->orWhere('olt', 'MSN')->orWhere('olt', 'like', '%Kayu%');
-                                } elseif ($kodeOlt === 'O2' || str_contains($name, 'babakan tarogong') || str_contains($name, 'bagong')) {
-                                    $q->orWhere('olt', 'Bagong')->orWhere('olt', 'like', '%Babakan%')->orWhere('olt', 'like', '%Tarogong%');
-                                } elseif ($kodeOlt === 'O3' || str_contains($name, 'soreang') || str_contains($name, 'bbu')) {
-                                    $q->orWhere('olt', 'Soreang')->orWhere('olt', 'like', '%Soreang%')->orWhere('olt', 'like', '%BBU%');
-                                }
-                            })
-                            ->get();
-                    } catch (\Throwable $e2) {
-                        $regs = collect();
-                    }
-                }
-                $userOdpMap = [];
-                $userOdpByNameMap = [];
-                // Load ODP mapping across all GOMSN OLT databases (odp1, odp2, odp3) so cross-OLT / migration data is always resolved
-                $allGomsnIds = array_unique(array_filter([$gomsnOltId, 1, 2, 3]));
-                foreach ($allGomsnIds as $gId) {
-                    if (Schema::hasTable("gomsn.odp{$gId}") && Schema::hasTable("gomsn.users{$gId}")) {
-                        try {
-                            $odps = DB::table("gomsn.odp{$gId}")->get()->keyBy('id');
-                            $gUsers = DB::table("gomsn.users{$gId}")->get();
-                            foreach ($gUsers as $gu) {
-                                $odpName = ($gu->odp_id && isset($odps[$gu->odp_id])) ? trim($odps[$gu->odp_id]->nama_odp) : null;
-                                if ($odpName && strtoupper($odpName) !== 'ODP' && strtoupper($odpName) !== 'N/A' && strtoupper($odpName) !== 'HARDWARE OLT') {
-                                    $gu->odp_name = $odpName;
-                                    $cNo = trim($gu->nomor_internet ?? '');
-                                    $cNm = strtoupper(trim($gu->nama_user ?? ''));
-                                    if (!empty($cNo) && !isset($userOdpMap[$cNo])) {
-                                        $userOdpMap[$cNo] = $odpName;
-                                    }
-                                    if (!empty($cNm) && !isset($userOdpByNameMap[$cNm])) {
-                                        $userOdpByNameMap[$cNm] = $odpName;
-                                    }
-                                }
-                                // HANYA masukkan ke dbBySn jika user berasal dari database OLT yang sama!
-                                if ($gomsnOltId && $gId === $gomsnOltId) {
-                                    $sn = strtoupper(trim($gu->keterangan ?? ''));
-                                    if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
-                                        $dbBySn[$sn] = $gu;
-                                    }
-                                }
-                            }
-                        } catch (\Throwable $e) {}
-                    }
-                }
-
                 $curSlot = $this->getOltGponSlot($olt);
-                foreach ($regs as $r) {
-                    $cNo = trim($r->nomor_internet ?? '');
-                    $cName = strtoupper(trim($r->nama_pelanggan ?? ''));
-                    if (!empty($cNo) && isset($userOdpMap[$cNo])) {
-                        $r->odp_name = $userOdpMap[$cNo];
-                    } elseif (!empty($cName) && isset($userOdpByNameMap[$cName])) {
-                        $r->odp_name = $userOdpByNameMap[$cName];
+                $enrichKey = "olt_enrich_maps_{$kodeOlt}_{$curSlot}_{$portNum}";
+                [$dbBySlot, $dbBySn] = Cache::remember($enrichKey, 300, function () use ($olt, $kodeOlt, $curSlot, $portNum, $gomsnOltId) {
+                    $dbBySlot = [];
+                    $dbBySn = [];
+                    try {
+                        $regs = $this->getOltCustomerBaseQuery($olt)->get();
+                    } catch (\Throwable $e) {
+                        try {
+                            $name = strtolower($olt->name_olt ?? ($olt->nama_olt ?? ''));
+                            $regs = DB::table('trx_batchjob_register')
+                                ->where(function($q) use ($kodeOlt, $name) {
+                                    $q->where('olt', $kodeOlt);
+                                    if (!empty($name)) {
+                                        $q->orWhere('olt', 'like', "%{$name}%");
+                                    }
+                                    if ($kodeOlt === 'O1' || str_contains($name, 'kayu agung') || str_contains($name, 'msn')) {
+                                        $q->orWhere('olt', 'MSN')->orWhere('olt', 'like', '%Kayu%');
+                                    } elseif ($kodeOlt === 'O2' || str_contains($name, 'babakan tarogong') || str_contains($name, 'bagong')) {
+                                        $q->orWhere('olt', 'Bagong')->orWhere('olt', 'like', '%Babakan%')->orWhere('olt', 'like', '%Tarogong%');
+                                    } elseif ($kodeOlt === 'O3' || str_contains($name, 'soreang') || str_contains($name, 'bbu')) {
+                                        $q->orWhere('olt', 'Soreang')->orWhere('olt', 'like', '%Soreang%')->orWhere('olt', 'like', '%BBU%');
+                                    }
+                                })
+                                ->get();
+                        } catch (\Throwable $e2) {
+                            $regs = collect();
+                        }
+                    }
+                    $userOdpMap = [];
+                    $userOdpByNameMap = [];
+                    $allGomsnIds = array_unique(array_filter([$gomsnOltId, 1, 2, 3]));
+                    foreach ($allGomsnIds as $gId) {
+                        if (Schema::hasTable("gomsn.odp{$gId}") && Schema::hasTable("gomsn.users{$gId}")) {
+                            try {
+                                $odps = DB::table("gomsn.odp{$gId}")->get()->keyBy('id');
+                                $gUsers = DB::table("gomsn.users{$gId}")->get();
+                                foreach ($gUsers as $gu) {
+                                    $odpName = ($gu->odp_id && isset($odps[$gu->odp_id])) ? trim($odps[$gu->odp_id]->nama_odp) : null;
+                                    if ($odpName && strtoupper($odpName) !== 'ODP' && strtoupper($odpName) !== 'N/A' && strtoupper($odpName) !== 'HARDWARE OLT') {
+                                        $gu->odp_name = $odpName;
+                                        $cNo = trim($gu->nomor_internet ?? '');
+                                        $cNm = strtoupper(trim($gu->nama_user ?? ''));
+                                        if (!empty($cNo) && !isset($userOdpMap[$cNo])) {
+                                            $userOdpMap[$cNo] = $odpName;
+                                        }
+                                        if (!empty($cNm) && !isset($userOdpByNameMap[$cNm])) {
+                                            $userOdpByNameMap[$cNm] = $odpName;
+                                        }
+                                    }
+                                    if ($gomsnOltId && $gId === $gomsnOltId) {
+                                        $sn = strtoupper(trim($gu->keterangan ?? ''));
+                                        if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
+                                            $dbBySn[$sn] = $gu;
+                                        }
+                                    }
+                                }
+                            } catch (\Throwable $e) {}
+                        }
                     }
 
-                    $sn = strtoupper(trim($r->note_request ?? ''));
-                    if (!empty($sn) && strlen($sn) >= 6) {
-                        $dbBySn[$sn] = $r;
+                    foreach ($regs as $r) {
+                        $cNo = trim($r->nomor_internet ?? '');
+                        $cName = strtoupper(trim($r->nama_pelanggan ?? ''));
+                        if (!empty($cNo) && isset($userOdpMap[$cNo])) {
+                            $r->odp_name = $userOdpMap[$cNo];
+                        } elseif (!empty($cName) && isset($userOdpByNameMap[$cName])) {
+                            $r->odp_name = $userOdpByNameMap[$cName];
+                        }
+
+                        $sn = strtoupper(trim($r->note_request ?? ''));
+                        if (!empty($sn) && strlen($sn) >= 6) {
+                            $dbBySn[$sn] = $r;
+                        }
+                        $idx = trim($r->index_olt ?? '');
+                        if (preg_match('/(?:1\/' . $curSlot . '\/' . $portNum . ':|' . $portNum . ':)(\d+)/', $idx, $m)) {
+                            $onuSlotNum = (int)$m[1];
+                            $dbBySlot[$onuSlotNum] = $r;
+                        }
                     }
-                    $idx = trim($r->index_olt ?? '');
-                    // Cocokkan index_olt HANYA dengan slot fisik OLT ini (1 untuk Bagong, 2 untuk Soreang/MSN)
-                    if (preg_match('/(?:1\/' . $curSlot . '\/' . $portNum . ':|' . $portNum . ':)(\d+)/', $idx, $m)) {
-                        $onuSlotNum = (int)$m[1];
-                        $dbBySlot[$onuSlotNum] = $r;
-                    }
-                }
+
+                    return [$dbBySlot, $dbBySn];
+                });
 
                 $allCustNos = [];
                 foreach ($dbBySlot as $item) { if (!empty($item->nomor_internet)) $allCustNos[] = $item->nomor_internet; }
@@ -3143,14 +3160,14 @@ class OltConnectionService
             $params = $this->resolveOltConnectionParams($olt);
             $slot = $this->getOltGponSlot($olt);
 
-            $response = Http::timeout(3.5)->post($goUrl, [
+            $response = Http::timeout(6.0)->post($goUrl, [
                 'ip' => $params['ip'],
                 'port' => (int)$params['port'],
                 'user' => $params['user'],
                 'pass' => $params['pass'],
                 'slot' => (int)$slot,
                 'max_ports' => 16,
-                'timeout_sec' => 3.0,
+                'timeout_sec' => 3.5,
                 'force_refresh' => $force,
             ]);
 
@@ -3197,21 +3214,82 @@ class OltConnectionService
             $params = $this->resolveOltConnectionParams($olt);
             $slot = $this->getOltGponSlot($olt);
 
-            $response = Http::timeout(3.5)->post($goUrl, [
+            $response = Http::timeout(6.0)->post($goUrl, [
                 'ip' => $params['ip'],
                 'port' => (int)$params['port'],
                 'user' => $params['user'],
                 'pass' => $params['pass'],
                 'slot' => (int)$slot,
                 'port_index' => (int)$portIndex,
-                'timeout_sec' => 3.0,
+                'timeout_sec' => 3.5,
                 'force_refresh' => $force,
             ]);
 
             if ($response->successful()) {
                 $json = $response->json();
                 if (!empty($json['success']) && isset($json['onus']) && is_array($json['onus'])) {
-                    return $json['onus'];
+                    $baseinfo = [];
+                    $states = [];
+                    $powers = [];
+                    $laserTxPowers = [];
+                    $oltTxPowers = [];
+                    $oltRxPowers = [];
+                    $attenuations = [];
+                    $oltTxVal = 6.55;
+
+                    foreach ($json['onus'] as $onu) {
+                        $oId = (int)$onu['onu_id'];
+                        $baseinfo[$oId] = [
+                            'onu_id' => $oId,
+                            'type' => $onu['type'] ?? 'ONU',
+                            'sn' => strtoupper(trim($onu['sn'] ?? '')),
+                            'state_base' => '',
+                        ];
+                        $st = strtolower(trim($onu['state'] ?? 'working'));
+                        $phase = 'working';
+                        if (str_contains($st, 'los') || str_contains($st, 'lost')) {
+                            $phase = 'los';
+                        } elseif (str_contains($st, 'off') || str_contains($st, 'poweroff')) {
+                            $phase = 'offline';
+                        } elseif (str_contains($st, 'dying')) {
+                            $phase = 'dyinggasp';
+                        }
+                        $states[$oId] = [
+                            'admin' => 'enable',
+                            'omcc' => 'enable',
+                            'phase' => $phase,
+                        ];
+
+                        $rawRx = trim(str_replace(['dBm', 'dbm', ' '], '', (string)($onu['rx_power'] ?? '')));
+                        if (is_numeric($rawRx)) {
+                            $powers[$oId] = $rawRx;
+                            $attenuations[$oId] = round(abs($oltTxVal - (float)$rawRx), 2);
+                        } else {
+                            $powers[$oId] = 'N/A';
+                        }
+
+                        $rawTx = trim(str_replace(['dBm', 'dbm', '+', ' '], '', (string)($onu['tx_power'] ?? '')));
+                        $laserTxPowers[$oId] = is_numeric($rawTx) ? (float)$rawTx : 2.50;
+                        $oltTxPowers[$oId] = $oltTxVal;
+
+                        $rawOltRx = trim(str_replace(['dBm', 'dbm', ' '], '', (string)($onu['olt_rx_power'] ?? '')));
+                        if (is_numeric($rawOltRx)) {
+                            $oltRxPowers[$oId] = (float)$rawOltRx;
+                        }
+                    }
+
+                    return [
+                        'baseinfo' => $baseinfo,
+                        'states' => $states,
+                        'powers' => $powers,
+                        'laser_tx_powers' => $laserTxPowers,
+                        'olt_tx_powers' => $oltTxPowers,
+                        'olt_rx_powers' => $oltRxPowers,
+                        'attenuations' => $attenuations,
+                        'port_down_mbps' => (float)($json['port_down_mbps'] ?? 0.0),
+                        'port_up_mbps' => (float)($json['port_up_mbps'] ?? 0.0),
+                        'fetched_at' => now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB',
+                    ];
                 }
             }
         } catch (\Throwable $e) {

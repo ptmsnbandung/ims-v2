@@ -468,10 +468,8 @@ window.imsAiCopilot = function() {
                 <span style="position:relative; width:10px; height:10px; border-radius:9999px; background:#34d399; border:2px solid #0f172a;"></span>
             </span>
 
-            <!-- Sparkle / Robot Icon -->
-            <svg style="width:18px; height:18px; color:#e0f2fe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+            <!-- MSN AI Custom Logo Icon -->
+            <img src="{{ asset('assets/images/msnai.png') }}" alt="MSN AI" style="width:22px; height:22px; border-radius:9999px; object-fit:contain;">
 
             <span>IMS AI</span>
             <span style="font-size:10px; font-family:monospace; text-transform:uppercase; padding:1px 6px; border-radius:4px; background:rgba(0,0,0,0.35); color:#67e8f9; border:1px solid rgba(103,232,249,0.25);">Beta</span>
@@ -495,10 +493,8 @@ window.imsAiCopilot = function() {
         <!-- Header -->
         <div class="ims-ai-header">
             <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #0891b2, #0d9488); display:flex; align-items:center; justify-content:center; color:#fff; box-shadow:0 4px 12px rgba(6, 182, 212, 0.35);">
-                    <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
+                <div style="width:36px; height:36px; border-radius:10px; background:rgba(15,23,42,0.8); border:1px solid rgba(6,182,212,0.35); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(6, 182, 212, 0.3); padding:2px;">
+                    <img src="{{ asset('assets/images/msnai.png') }}" alt="MSN AI" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">
                 </div>
                 <div>
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -545,8 +541,8 @@ window.imsAiCopilot = function() {
                         
                         <!-- Role Icon / Header for AI -->
                         <div x-show="msg.role === 'assistant'" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid rgba(51,65,85,0.5); font-size:10px; color:#38bdf8; font-family:monospace;">
-                            <span style="display:flex; align-items:center; gap:4px; font-weight:600;">
-                                <span style="width:6px; height:6px; border-radius:9999px; background:#38bdf8; display:inline-block;"></span>
+                            <span style="display:flex; align-items:center; gap:6px; font-weight:600;">
+                                <img src="{{ asset('assets/images/msnai.png') }}" alt="MSN AI" style="width:15px; height:15px; border-radius:9999px; object-fit:contain;">
                                 IMS Copilot
                             </span>
                             <button 

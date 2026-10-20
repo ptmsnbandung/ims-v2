@@ -32,7 +32,7 @@ class AiAssistantController extends Controller
 
         // 2. Check if Gemini API Key is configured
         $geminiKey = trim((string)(config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '')));
-        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-1.5-flash')));
+        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
 
         if (!empty($geminiKey)) {
             try {
@@ -74,7 +74,7 @@ class AiAssistantController extends Controller
         $geminiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
         return response()->json([
             'configured' => !empty($geminiKey),
-            'model' => config('services.gemini.model', 'gemini-1.5-flash'),
+            'model' => config('services.gemini.model', 'gemini-2.0-flash'),
             'user' => [
                 'name' => auth()->user()?->nama_lengkap ?? auth()->user()?->username ?? 'Staff',
                 'role' => auth()->user()?->role ?? 'staff',
@@ -502,7 +502,7 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
         ];
 
         // 1. Dynamically query Google ListModels API to discover exact supported models for this API key
-        $modelsToTry = array_filter([$model, 'gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro']);
+        $modelsToTry = array_filter([$model, 'gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash']);
         
         try {
             $listRes = Http::timeout(8)->get("https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}");

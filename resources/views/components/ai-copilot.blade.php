@@ -115,6 +115,11 @@
     color: #fca5a5 !important;
 }
 
+.ims-ai-msg-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 .ims-ai-chat-area {
     flex: 1 1 auto !important;
     min-height: 0 !important;
@@ -574,7 +579,7 @@ window.imsAiCopilot = function() {
                         style="position:relative;">
                         
                         <!-- Role Icon / Header for AI -->
-                        <div x-show="msg.role === 'assistant'" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid rgba(51,65,85,0.5); font-size:10px; color:#38bdf8; font-family:monospace;">
+                        <div class="ims-ai-msg-head" x-show="msg.role === 'assistant'" style="margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid rgba(51,65,85,0.5); font-size:10px; color:#38bdf8; font-family:monospace;">
                             <span style="display:flex; align-items:center; gap:6px; font-weight:600;">
                                 <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:16px; height:16px; object-fit:contain;">
                                 IMS Copilot

@@ -3883,8 +3883,10 @@
         })();
     </script>
 
-    {{-- Floating IMS AI Copilot Widget --}}
-    @include('components.ai-copilot')
+    @auth
+        {{-- Floating IMS AI Copilot Widget --}}
+        @include('components.ai-copilot')
+    @endauth
 
     @stack('scripts')
 </body>

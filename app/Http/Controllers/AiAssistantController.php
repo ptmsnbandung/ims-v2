@@ -279,64 +279,63 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             'parts' => [['text' => $currentUserPrompt]],
         ];
 
-        $candidates = [
-            // 1. v1beta with gemini-1.5-flash-latest
-            [
-                'url' => "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={$apiKey}",
-                'payload' => [
-                    'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
-                    'contents' => $contents,
-                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
-                ],
-            ],
-            // 2. v1beta with configured model
-            [
-                'url' => "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}",
-                'payload' => [
-                    'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
-                    'contents' => $contents,
-                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
-                ],
-            ],
-            // 3. v1 stable endpoint (compatible without systemInstruction root)
-            [
-                'url' => "https://generativelanguage.googleapis.com/v1/models/{$model}:generateContent?key={$apiKey}",
-                'payload' => [
-                    'contents' => [
-                        [
-                            'role' => 'user',
-                            'parts' => [
-                                ['text' => "[Instruksi Sistem]:\n{$systemInstruction}\n\n[Konteks Database IMS2]:\n{$contextPrompt}\n\nPertanyaan User: {$userMessage}"]
-                            ]
-                        ]
-                    ],
-                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
-                ],
-            ],
-            // 4. v1beta with gemini-2.0-flash-exp
-            [
-                'url' => "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={$apiKey}",
-                'payload' => [
-                    'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
-                    'contents' => $contents,
-                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
-                ],
-            ],
-            // 5. v1beta with gemini-1.5-pro
-            [
-                'url' => "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={$apiKey}",
-                'payload' => [
-                    'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
-                    'contents' => $contents,
-                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
-                ],
-            ],
-        ];
+        // 1. Dynamically query Google ListModels API to discover exact supported models for this API key
+        $modelsToTry = array_filter([$model, 'gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro']);
+        
+        try {
+            $listRes = Http::timeout(8)->get("https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}");
+            if ($listRes->successful()) {
+                $remoteModels = $listRes->json('models', []);
+                $validModels = [];
+                foreach ($remoteModels as $rm) {
+                    $methods = $rm['supportedGenerationMethods'] ?? [];
+                    if (in_array('generateContent', $methods)) {
+                        $validModels[] = str_replace('models/', '', $rm['name'] ?? '');
+                    }
+                }
 
-        $lastError = 'Semua model Gemini gagal merespon.';
-        foreach ($candidates as $cand) {
+                if (!empty($validModels)) {
+                    // Sort: prioritize flash, then 2.0, then pro
+                    usort($validModels, function ($a, $b) {
+                        $scoreA = str_contains($a, 'flash') ? 3 : (str_contains($a, '2.0') ? 2 : 1);
+                        $scoreB = str_contains($b, 'flash') ? 3 : (str_contains($b, '2.0') ? 2 : 1);
+                        return $scoreB <=> $scoreA;
+                    });
+                    $modelsToTry = array_values(array_unique(array_merge($validModels, $modelsToTry)));
+                } else {
+                    $availableNames = array_map(fn($m) => str_replace('models/', '', $m['name'] ?? ''), $remoteModels);
+                    $preview = implode(', ', array_slice($availableNames, 0, 4));
+                    throw new \Exception("Akun Google Anda hanya memiliki model: [{$preview}], namun tidak ada yang mendukung generateContent.");
+                }
+            } else {
+                $errBody = $listRes->json();
+                $listError = $errBody['error']['message'] ?? ('HTTP ' . $listRes->status());
+                throw new \Exception("Akses Google API ditolak: " . $listError);
+            }
+        } catch (\Throwable $e) {
+            if (str_contains($e->getMessage(), 'Google API') || str_contains($e->getMessage(), 'Akun Google Anda')) {
+                throw $e;
+            }
+            // Timeout or network glitch during ListModels: proceed with default candidates
+        }
+
+        // 2. Iterate through discovered valid models
+        $lastError = 'Semua model Gemini yang dicoba gagal merespon.';
+        foreach ($modelsToTry as $mName) {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$mName}:generateContent?key={$apiKey}";
+            $payload = [
+                'systemInstruction' => [
+                    'parts' => [['text' => $systemInstruction]],
+                ],
+                'contents' => $contents,
+                'generationConfig' => [
+                    'temperature' => 0.4,
+                    'maxOutputTokens' => 1200,
+                ],
+            ];
+
             try {
-                $response = Http::timeout(12)->post($cand['url'], $cand['payload']);
+                $response = Http::timeout(15)->post($url, $payload);
                 if ($response->successful()) {
                     $resJson = $response->json();
                     $replyText = $resJson['candidates'][0]['content']['parts'][0]['text'] ?? null;
@@ -345,7 +344,7 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
                     }
                 } else {
                     $errBody = $response->json();
-                    $lastError = $errBody['error']['message'] ?? ('HTTP ' . $response->status() . ': ' . $response->body());
+                    $lastError = $errBody['error']['message'] ?? ('HTTP ' . $response->status());
                 }
             } catch (\Throwable $e) {
                 $lastError = $e->getMessage();

@@ -4684,34 +4684,47 @@ class FinanceController extends Controller
                     ->orWhere('kode_billing_layanan', str_replace('-', '/', $kodeBilling))
                     ->first();
 
+                $pcCols = Schema::getColumnListing('payment_confirmations');
+                $hasCol = fn($col) => in_array($col, $pcCols);
+
                 $pcData = [
                     'status' => 'approved',
                     'verified_at' => Carbon::now()->toDateTimeString(),
                     'admin_notes' => "Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}",
                     'updated_at' => Carbon::now()->toDateTimeString(),
                 ];
-                if (Schema::hasColumn('payment_confirmations', 'destination_bank')) {
+                if ($hasCol('destination_bank')) {
                     $pcData['destination_bank'] = $bank;
+                } elseif ($hasCol('bank_name')) {
+                    $pcData['bank_name'] = $bank;
+                } elseif ($hasCol('bank')) {
+                    $pcData['bank'] = $bank;
                 }
-                if ($proofUrl) {
+                if ($proofUrl && $hasCol('proof_file')) {
                     $pcData['proof_file'] = $proofUrl;
                 }
 
                 if ($existPc) {
+                    $updateData = array_intersect_key($pcData, array_flip($pcCols));
                     DB::table('payment_confirmations')
                         ->where('id', $existPc->id)
-                        ->update($pcData);
+                        ->update($updateData);
                 } else {
                     $newPcData = array_merge($pcData, [
                         'kode_billing_layanan' => $kodeBilling,
                         'customer_id' => $inv?->nomor_internet ?? '-',
                         'customer_name' => 'Pelanggan',
-                        'destination_bank' => $bank,
-                        'proof_file' => $proofUrl,
                         'notes' => $catatan,
                         'created_at' => Carbon::now()->toDateTimeString(),
                     ]);
-                    DB::table('payment_confirmations')->insert($newPcData);
+                    if ($proofUrl && $hasCol('proof_file')) {
+                        $newPcData['proof_file'] = $proofUrl;
+                    } elseif ($hasCol('proof_file') && !isset($newPcData['proof_file'])) {
+                        $newPcData['proof_file'] = '';
+                    }
+
+                    $insertData = array_intersect_key($newPcData, array_flip($pcCols));
+                    DB::table('payment_confirmations')->insert($insertData);
                 }
             }
 
@@ -4724,15 +4737,27 @@ class FinanceController extends Controller
                 $adminNoteStr = addslashes("Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}");
                 $escapedBank = addslashes($bank);
 
-                DB::statement("
-                    UPDATE ptmsn.payment_confirmations 
-                    SET status = 'approved',
-                        destination_bank = '{$escapedBank}',
-                        verified_at = '{$nowStr}',
-                        admin_notes = '{$adminNoteStr}',
-                        updated_at = '{$nowStr}'
-                    WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
-                ");
+                try {
+                    DB::statement("
+                        UPDATE ptmsn.payment_confirmations 
+                        SET status = 'approved',
+                            destination_bank = '{$escapedBank}',
+                            verified_at = '{$nowStr}',
+                            admin_notes = '{$adminNoteStr}',
+                            updated_at = '{$nowStr}'
+                        WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                    ");
+                } catch (\Throwable $ptEx) {
+                    // Fallback jika destination_bank tidak ada di ptmsn.payment_confirmations
+                    DB::statement("
+                        UPDATE ptmsn.payment_confirmations 
+                        SET status = 'approved',
+                            verified_at = '{$nowStr}',
+                            admin_notes = '{$adminNoteStr}',
+                            updated_at = '{$nowStr}'
+                        WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                    ");
+                }
             } catch (\Throwable $e) {}
 
             $unsuspendInfo = '';

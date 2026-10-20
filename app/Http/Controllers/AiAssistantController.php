@@ -101,16 +101,7 @@ class AiAssistantController extends Controller
         preg_match('/\b\d{5,14}\b/', $query, $idMatches);
         $extractedId = $idMatches[0] ?? null;
 
-        // 1. Try to extract explicit name pattern like 'nama [xxx]', 'pelanggan [xxx]', 'atas nama [xxx]'
-        $explicitName = null;
-        if (preg_match('/(?:atas\s+nama|bernama|nama\s+pelanggan|nama|pelanggan|user|cust)\s+(?:adalah\s+|yaitu\s+|:\s*)?["\']?([a-zA-Z0-9\s]{3,35})["\']?/i', $query, $m)) {
-            $candidate = trim(preg_replace('/\b(aktif|keaktifan|nonaktif|masih|ya|dong|kah|apakah|terisolir|suspend|normal|lunas|belum|hari ini|bulan ini)\b/i', '', $m[1]));
-            if (strlen($candidate) >= 3) {
-                $explicitName = $candidate;
-            }
-        }
-
-        // 2. Comprehensive stopword removal for Indonesian natural language queries
+        // 1. Comprehensive stopword removal for Indonesian natural language queries
         $stopwords = [
             'cari', 'cek', 'lihat', 'info', 'data', 'detail', 'status', 'keaktifan', 'aktif', 'nonaktif', 'masih',
             'pelanggan', 'nama', 'user', 'client', 'cust', 'customer', 'member',
@@ -119,18 +110,51 @@ class AiAssistantController extends Controller
             'tolong', 'mohon', 'bantu', 'bisa', 'dong', 'ya', 'min', 'kak', 'admin', 'halo', 'hai', 'selamat', 'pagi', 'siang', 'sore', 'malam',
             'apakah', 'ada', 'berapa', 'siapa', 'kapan', 'kenapa', 'bagaimana', 'apa', 'tentang',
             'terisolir', 'isolir', 'suspend', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
-            'adalah', 'itu', 'ini', 'kah'
+            'adalah', 'itu', 'ini', 'kah', 'dengan', 'bernama', 'si', 'dari', 'pada', 'yang'
         ];
         $pattern = '/\b(' . implode('|', $stopwords) . ')\b/i';
+
         $cleanSearch = trim(preg_replace($pattern, '', $query));
         $cleanSearch = trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $cleanSearch));
         $cleanSearch = preg_replace('/\s+/', ' ', $cleanSearch);
 
-        $searchTerm = $explicitName ?: $cleanSearch;
-        $nameTokens = array_values(array_filter(explode(' ', $searchTerm), fn($t) => strlen($t) >= 3));
+        // Build list of high-priority search candidates
+        $searchCandidates = [];
+        if (!empty($cleanSearch) && strlen($cleanSearch) >= 3) {
+            $searchCandidates[] = $cleanSearch;
+        }
 
-        // Context 1: Customer lookup (by ID, username, or name)
-        if ($extractedId || !empty($searchTerm) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
+        // Pattern A: Match 'atas nama [Name]' or 'nama [Name]' or 'pelanggan [Name]'
+        if (preg_match('/(?:atas\s+nama|nama\s+pelanggan|nama|pelanggan|user)\s+([A-Za-z\s]{3,35}?)(?=\s+(?:tidak|belum|bukan|adalah|yaitu|di|pada|ke|yang|dari|dengan|\.|\,|\n|\r|$))/i', $query, $nm)) {
+            $extractedName = trim(preg_replace($pattern, '', $nm[1]));
+            if (!empty($extractedName) && strlen($extractedName) >= 3) {
+                array_unshift($searchCandidates, $extractedName);
+            }
+        }
+
+        // Pattern B: Match consecutive UPPERCASE words (e.g. 'MUHAMMAD RAMA PUTRA')
+        if (preg_match_all('/\b([A-Z]{3,}(?:\s+[A-Z]{2,}){1,4})\b/', $query, $capsMatches)) {
+            foreach ($capsMatches[1] as $capName) {
+                $capClean = trim(preg_replace($pattern, '', $capName));
+                if (!empty($capClean) && strlen($capClean) >= 3 && !in_array(strtoupper($capClean), ['IMS2', 'IMS', 'NOC', 'OLT', 'GPON', 'NULL'])) {
+                    array_unshift($searchCandidates, $capClean);
+                }
+            }
+        }
+
+        // Pattern C: Quoted name string e.g. "MUHAMMAD RAMA PUTRA"
+        if (preg_match('/["\']([a-zA-Z0-9\s]{3,35})["\']/i', $query, $qm)) {
+            $qClean = trim(preg_replace($pattern, '', $qm[1]));
+            if (!empty($qClean) && strlen($qClean) >= 3) {
+                array_unshift($searchCandidates, $qClean);
+            }
+        }
+
+        $searchCandidates = array_values(array_unique($searchCandidates));
+        $nameTokens = array_values(array_filter(explode(' ', $cleanSearch), fn($t) => strlen($t) >= 3));
+
+        // Context 1: Customer lookup (by ID, username, or name candidates)
+        if ($extractedId || !empty($searchCandidates) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
             try {
                 $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
                 $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
@@ -163,18 +187,26 @@ class AiAssistantController extends Controller
                         ->get();
                 }
 
-                // Tier 1: Try full phrase match on nama_pelanggan or userCol
-                if ($matchedCustomers->isEmpty() && !empty($searchTerm) && strlen($searchTerm) >= 3) {
-                    $matchedCustomers = DB::table('trx_batchjob_register')
-                        ->where('hide', 0)
-                        ->where(function ($q) use ($searchTerm, $userCol) {
-                            $q->where('nama_pelanggan', 'like', "%{$searchTerm}%")
-                              ->orWhere($userCol, 'like', "%{$searchTerm}%")
-                              ->orWhere('nomor_internet', 'like', "%{$searchTerm}%");
-                        })
-                        ->select($selectCols)
-                        ->limit(5)
-                        ->get();
+                // Tier 1: Try full phrase match on nama_pelanggan or userCol for all candidates
+                if ($matchedCustomers->isEmpty()) {
+                    foreach ($searchCandidates as $term) {
+                        if (strlen($term) >= 3) {
+                            $res = DB::table('trx_batchjob_register')
+                                ->where('hide', 0)
+                                ->where(function ($q) use ($term, $userCol) {
+                                    $q->where('nama_pelanggan', 'like', "%{$term}%")
+                                      ->orWhere($userCol, 'like', "%{$term}%")
+                                      ->orWhere('nomor_internet', 'like', "%{$term}%");
+                                })
+                                ->select($selectCols)
+                                ->limit(5)
+                                ->get();
+                            if ($res->isNotEmpty()) {
+                                $matchedCustomers = $res;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 // Tier 2: If multi-word, match ALL tokens with AND (e.g. 'rama' AND 'putra')
@@ -562,26 +594,28 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
 
         // Case 0: Explicit check if user asks why OLT / ONU status cannot be checked
         $isAskingWhyOlt = (str_contains($lower, 'kenapa') || str_contains($lower, 'mengapa') || str_contains($lower, 'tidak bisa') || str_contains($lower, 'gagal') || str_contains($lower, 'alasan'))
-            && (str_contains($lower, 'olt') || str_contains($lower, 'cek') || str_contains($lower, 'status') || str_contains($lower, 'redaman') || str_contains($lower, 'ini'));
+            && (str_contains($lower, 'olt') || str_contains($lower, 'redaman'));
 
         if ($isAskingWhyOlt && !empty($context['customers'])) {
             $c = $context['customers'][0];
-            $oltName = $c->olt_name ?? ($c->olt ?: 'OLT');
-            $oltIp = $c->olt_ip ?? '103.161.206.214';
-            $oltStatus = $c->olt_status ?? 'Aktif';
+            if (!$c->has_onu_port) {
+                $oltName = $c->olt_name ?? ($c->olt ?: 'OLT');
+                $oltIp = $c->olt_ip ?? '103.161.206.214';
+                $oltStatus = $c->olt_status ?? 'Aktif';
 
-            $output[] = "### 🔍 Penjelasan: Mengapa Status Live OLT / ONU Belum Bisa Dicek";
-            $output[] = "Pengecekan fisik/telemetri *real-time* perangkat OLT untuk user `{$c->nomor_internet}` (**{$c->nama_pelanggan}**) belum dapat dilakukan secara otomatis karena:\n";
-            $output[] = "1. **Index Port GPON Kosong (`index_olt = NULL`)**";
-            $output[] = "   - Di arsitektur jaringan GPON (ZTE/Huawei), OLT memerlukan identitas port fisik dalam format `gpon-onu_1/{slot}/{port}:{onu_id}` (misalnya `gpon-onu_1/1/2:8`) untuk menembakkan laser telemetri dan membaca redaman sinyal optik (Rx/Tx dBm) ONU pelanggan.";
-            $output[] = "   - Pada data registrasi pelanggan ini di tabel `trx_batchjob_register`, kolom **Index OLT** masih kosong (`NULL`), sehingga sistem belum mengetahui di port splitter mana kabel serat optik pelanggan ini terpasang.";
-            $output[] = "2. **Status Perangkat OLT Induk**";
-            $output[] = "   - Pelanggan ini terdaftar pada OLT **{$oltName}** (Host IP: `{$oltIp}`).";
-            $output[] = "   - Server OLT induk terpantau **{$oltStatus}**, namun tanpa port `index_olt`, perintah telnet/SNMP pembacaan optik belum memiliki target port yang valid.\n";
-            $output[] = "🛠️ **Langkah Solusi / Rekomendasi:**";
-            $output[] = "- Tim Teknisi / NOC dapat melengkapi data **Index OLT** pelanggan melalui menu **Data Pelanggan > Edit Registrasi** sesuai port GPON tempat pelanggan teraktivasi di lapangan.";
-            $output[] = "- Setelah `index_olt` terisi, sistem dan AI Copilot dapat menampilkan status redaman laser (optical power) dan link connection secara real-time.";
-            return implode("\n", $output);
+                $output[] = "### 🔍 Penjelasan: Mengapa Status Live OLT / ONU Belum Bisa Dicek";
+                $output[] = "Pengecekan fisik/telemetri *real-time* perangkat OLT untuk user `{$c->nomor_internet}` (**{$c->nama_pelanggan}**) belum dapat dilakukan secara otomatis karena:\n";
+                $output[] = "1. **Index Port GPON Kosong (`index_olt = NULL`)**";
+                $output[] = "   - Di arsitektur jaringan GPON (ZTE/Huawei), OLT memerlukan identitas port fisik dalam format `gpon-onu_1/{slot}/{port}:{onu_id}` (misalnya `gpon-onu_1/1/2:8`) untuk menembakkan laser telemetri dan membaca redaman sinyal optik (Rx/Tx dBm) ONU pelanggan.";
+                $output[] = "   - Pada data registrasi pelanggan ini di tabel `trx_batchjob_register`, kolom **Index OLT** masih kosong (`NULL`), sehingga sistem belum mengetahui di port splitter mana kabel serat optik pelanggan ini terpasang.";
+                $output[] = "2. **Status Perangkat OLT Induk**";
+                $output[] = "   - Pelanggan ini terdaftar pada OLT **{$oltName}** (Host IP: `{$oltIp}`).";
+                $output[] = "   - Server OLT induk terpantau **{$oltStatus}**, namun tanpa port `index_olt`, perintah telnet/SNMP pembacaan optik belum memiliki target port yang valid.\n";
+                $output[] = "🛠️ **Langkah Solusi / Rekomendasi:**";
+                $output[] = "- Tim Teknisi / NOC dapat melengkapi data **Index OLT** pelanggan melalui menu **Data Pelanggan > Edit Registrasi** sesuai port GPON tempat pelanggan teraktivasi di lapangan.";
+                $output[] = "- Setelah `index_olt` terisi, sistem dan AI Copilot dapat menampilkan status redaman laser (optical power) dan link connection secara real-time.";
+                return implode("\n", $output);
+            }
         }
 
         // Case 1: Customer details found

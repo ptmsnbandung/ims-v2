@@ -279,33 +279,80 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             'parts' => [['text' => $currentUserPrompt]],
         ];
 
-        $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-
-        $response = Http::timeout(20)->post($endpoint, [
-            'systemInstruction' => [
-                'parts' => [['text' => $systemInstruction]],
+        $candidates = [
+            // 1. v1beta with gemini-1.5-flash-latest
+            [
+                'url' => "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={$apiKey}",
+                'payload' => [
+                    'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
+                    'contents' => $contents,
+                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
+                ],
             ],
-            'contents' => $contents,
-            'generationConfig' => [
-                'temperature' => 0.4,
-                'maxOutputTokens' => 1200,
+            // 2. v1beta with configured model
+            [
+                'url' => "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}",
+                'payload' => [
+                    'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
+                    'contents' => $contents,
+                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
+                ],
             ],
-        ]);
+            // 3. v1 stable endpoint (compatible without systemInstruction root)
+            [
+                'url' => "https://generativelanguage.googleapis.com/v1/models/{$model}:generateContent?key={$apiKey}",
+                'payload' => [
+                    'contents' => [
+                        [
+                            'role' => 'user',
+                            'parts' => [
+                                ['text' => "[Instruksi Sistem]:\n{$systemInstruction}\n\n[Konteks Database IMS2]:\n{$contextPrompt}\n\nPertanyaan User: {$userMessage}"]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
+                ],
+            ],
+            // 4. v1beta with gemini-2.0-flash-exp
+            [
+                'url' => "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={$apiKey}",
+                'payload' => [
+                    'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
+                    'contents' => $contents,
+                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
+                ],
+            ],
+            // 5. v1beta with gemini-1.5-pro
+            [
+                'url' => "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={$apiKey}",
+                'payload' => [
+                    'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
+                    'contents' => $contents,
+                    'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 1200],
+                ],
+            ],
+        ];
 
-        if (!$response->successful()) {
-            $errBody = $response->json();
-            $msg = $errBody['error']['message'] ?? ('HTTP ' . $response->status() . ': ' . $response->body());
-            throw new \Exception($msg);
+        $lastError = 'Semua model Gemini gagal merespon.';
+        foreach ($candidates as $cand) {
+            try {
+                $response = Http::timeout(12)->post($cand['url'], $cand['payload']);
+                if ($response->successful()) {
+                    $resJson = $response->json();
+                    $replyText = $resJson['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    if (!empty($replyText)) {
+                        return trim($replyText);
+                    }
+                } else {
+                    $errBody = $response->json();
+                    $lastError = $errBody['error']['message'] ?? ('HTTP ' . $response->status() . ': ' . $response->body());
+                }
+            } catch (\Throwable $e) {
+                $lastError = $e->getMessage();
+            }
         }
 
-        $resJson = $response->json();
-        $replyText = $resJson['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
-        if (empty($replyText)) {
-            throw new \Exception('Gemini API returned empty response');
-        }
-
-        return trim($replyText);
+        throw new \Exception($lastError);
     }
 
     /**

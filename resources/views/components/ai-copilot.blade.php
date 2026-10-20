@@ -375,7 +375,8 @@ window.imsAiCopilot = function() {
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken || ''
+                        'X-CSRF-TOKEN': csrfToken || '',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
                         message: text,
@@ -383,9 +384,32 @@ window.imsAiCopilot = function() {
                     })
                 });
 
-                const data = await response.json();
+                if (response.status === 419) {
+                    this.messages.push({
+                        role: 'assistant',
+                        text: '⚠️ Sesi aplikasi telah kedaluwarsa. Silakan muat ulang (refresh) halaman untuk melanjutkan percakapan.',
+                        time: this.currentTime()
+                    });
+                    return;
+                }
 
-                if (response.ok && data.status === 'success') {
+                if (response.status === 504 || response.status === 502) {
+                    this.messages.push({
+                        role: 'assistant',
+                        text: '⚠️ Waktu permintaan habis (Gateway Timeout). Server atau AI memerlukan waktu lebih lama untuk memproses query. Silakan coba ajukan pertanyaan yang lebih ringkas/spesifik.',
+                        time: this.currentTime()
+                    });
+                    return;
+                }
+
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch (jsonErr) {
+                    throw new Error('Server mengembalikan respons non-JSON (HTTP ' + response.status + '). Kemungkinan terjadi batas waktu (timeout) pada web server.');
+                }
+
+                if (response.ok && data && data.status === 'success') {
                     if (data.mode === 'gemini') {
                         this.engineMode = 'Gemini Flash';
                     } else if (data.mode === 'local_fallback') {
@@ -400,14 +424,18 @@ window.imsAiCopilot = function() {
                 } else {
                     this.messages.push({
                         role: 'assistant',
-                        text: '⚠️ Maaf, terjadi kendala: ' + (data.message || 'Server error'),
+                        text: '⚠️ Maaf, terjadi kendala: ' + (data?.message || ('HTTP ' + response.status)),
                         time: this.currentTime()
                     });
                 }
             } catch (err) {
+                let friendlyMsg = err.message || 'Koneksi terputus';
+                if (friendlyMsg.includes('Failed to fetch') || friendlyMsg.includes('NetworkError')) {
+                    friendlyMsg = 'Koneksi ke server terputus atau waktu permintaan habis (timeout). Silakan periksa jaringan server atau coba kirim ulang pertanyaan.';
+                }
                 this.messages.push({
                     role: 'assistant',
-                    text: '⚠️ Gagal terhubung ke server IMS: ' + err.message,
+                    text: '⚠️ ' + friendlyMsg,
                     time: this.currentTime()
                 });
             } finally {

@@ -18,6 +18,8 @@ class AiAssistantController extends Controller
      */
     public function chat(Request $request): JsonResponse
     {
+        @set_time_limit(60);
+
         $request->validate([
             'message' => 'required|string|max:1000',
             'history' => 'nullable|array',
@@ -503,47 +505,41 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             'parts' => [['text' => $currentUserPrompt]],
         ];
 
-        // 1. Dynamically query Google ListModels API to discover exact supported models for this API key
-        $modelsToTry = array_filter([$model, 'gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-1.5-flash']);
-        
-        try {
-            $listRes = Http::timeout(8)->get("https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}");
-            if ($listRes->successful()) {
-                $remoteModels = $listRes->json('models', []);
-                $validModels = [];
-                foreach ($remoteModels as $rm) {
-                    $methods = $rm['supportedGenerationMethods'] ?? [];
-                    if (in_array('generateContent', $methods)) {
-                        $validModels[] = str_replace('models/', '', $rm['name'] ?? '');
+        // 1. Discover or use cached valid models for this API key
+        $cacheKey = 'gemini_valid_models_' . substr(md5($apiKey), 0, 8);
+        $discovered = Cache::get($cacheKey);
+        if (!$discovered) {
+            try {
+                $listRes = Http::timeout(5)->get("https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}");
+                if ($listRes->successful()) {
+                    $remoteModels = $listRes->json('models', []);
+                    $validModels = [];
+                    foreach ($remoteModels as $rm) {
+                        $methods = $rm['supportedGenerationMethods'] ?? [];
+                        if (in_array('generateContent', $methods)) {
+                            $validModels[] = str_replace('models/', '', $rm['name'] ?? '');
+                        }
+                    }
+                    if (!empty($validModels)) {
+                        usort($validModels, function ($a, $b) {
+                            $scoreA = str_contains($a, '2.0-flash') ? 4 : (str_contains($a, 'flash') ? 3 : (str_contains($a, '2.0') ? 2 : 1));
+                            $scoreB = str_contains($b, '2.0-flash') ? 4 : (str_contains($b, 'flash') ? 3 : (str_contains($b, '2.0') ? 2 : 1));
+                            return $scoreB <=> $scoreA;
+                        });
+                        $discovered = $validModels;
+                        Cache::put($cacheKey, $discovered, 3600);
                     }
                 }
-
-                if (!empty($validModels)) {
-                    // Sort: prioritize flash, then 2.0, then pro
-                    usort($validModels, function ($a, $b) {
-                        $scoreA = str_contains($a, 'flash') ? 3 : (str_contains($a, '2.0') ? 2 : 1);
-                        $scoreB = str_contains($b, 'flash') ? 3 : (str_contains($b, '2.0') ? 2 : 1);
-                        return $scoreB <=> $scoreA;
-                    });
-                    $modelsToTry = array_values(array_unique(array_merge($validModels, $modelsToTry)));
-                } else {
-                    $availableNames = array_map(fn($m) => str_replace('models/', '', $m['name'] ?? ''), $remoteModels);
-                    $preview = implode(', ', array_slice($availableNames, 0, 4));
-                    throw new \Exception("Akun Google Anda hanya memiliki model: [{$preview}], namun tidak ada yang mendukung generateContent.");
-                }
-            } else {
-                $errBody = $listRes->json();
-                $listError = $errBody['error']['message'] ?? ('HTTP ' . $listRes->status());
-                throw new \Exception("Akses Google API ditolak: " . $listError);
+            } catch (\Throwable $e) {
+                // Fallback silently if Google ListModels endpoint is slow or unreachable
             }
-        } catch (\Throwable $e) {
-            if (str_contains($e->getMessage(), 'Google API') || str_contains($e->getMessage(), 'Akun Google Anda')) {
-                throw $e;
-            }
-            // Timeout or network glitch during ListModels: proceed with default candidates
         }
 
-        // 2. Iterate through discovered valid models; each may call DB tools for several rounds
+        $modelsToTry = array_filter(array_unique(array_merge([$model], (array)($discovered ?: ['gemini-2.0-flash', 'gemini-2.5-flash']))));
+        // Limit to max 2 candidates to prevent request from exceeding web server timeout
+        $modelsToTry = array_slice($modelsToTry, 0, 2);
+
+        // 2. Iterate through candidate models with fast per-step timeout
         $lastError = 'Semua model Gemini yang dicoba gagal merespon.';
         $tools = [['functionDeclarations' => [
             [
@@ -563,8 +559,8 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             $convo = $contents;
 
             try {
-                for ($step = 0; $step < 6; $step++) {
-                    $response = Http::timeout(30)->post($url, [
+                for ($step = 0; $step < 4; $step++) {
+                    $response = Http::timeout(15)->post($url, [
                         'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
                         'contents' => $convo,
                         'tools' => $tools,

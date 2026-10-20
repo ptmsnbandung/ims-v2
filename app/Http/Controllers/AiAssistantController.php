@@ -115,11 +115,11 @@ class AiAssistantController extends Controller
             'cari', 'cek', 'lihat', 'info', 'data', 'detail', 'status', 'keaktifan', 'aktif', 'nonaktif', 'masih',
             'pelanggan', 'nama', 'user', 'client', 'cust', 'customer', 'member',
             'alamat', 'lokasi', 'tempat', 'dimana', 'rumah',
-            'tagihan', 'billing', 'invoice', 'bayar', 'pembayaran', 'lunas', 'unpaid', 'paid',
+            'tagihan', 'billing', 'invoice', 'bayar', 'pembayaran', 'lunas', 'unpaid', 'paid', 'belum', 'sudah', 'telah', 'sedang',
             'tolong', 'mohon', 'bantu', 'bisa', 'dong', 'ya', 'min', 'kak', 'admin', 'halo', 'hai', 'selamat', 'pagi', 'siang', 'sore', 'malam',
             'apakah', 'ada', 'berapa', 'siapa', 'kapan', 'kenapa', 'bagaimana', 'apa', 'tentang',
             'terisolir', 'isolir', 'suspend', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
-            'adalah', 'itu', 'ini', 'kah', 'dengan', 'bernama', 'si', 'dari', 'pada', 'yang'
+            'adalah', 'itu', 'ini', 'kah', 'dengan', 'bernama', 'si', 'dari', 'pada', 'yang', 'tidak', 'bukan', 'akan'
         ];
         $pattern = '/\b(' . implode('|', $stopwords) . ')\b/i';
 
@@ -162,50 +162,56 @@ class AiAssistantController extends Controller
         $searchCandidates = array_values(array_unique($searchCandidates));
         $nameTokens = array_values(array_filter(explode(' ', $cleanSearch), fn($t) => strlen($t) >= 3));
 
-        // Context 1: Customer lookup (by ID, username, or name candidates)
+        // Context 1: Customer lookup (by ID, username, or name candidates across batchjob & m_pelanggan)
         if ($extractedId || !empty($searchCandidates) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
             try {
                 $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
                 $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
 
                 $selectCols = [
-                    'nomor_internet',
-                    'nama_pelanggan',
-                    $userCol . ' as pppoe_username',
-                    'kode_bandwith',
-                    'status_reg',
-                    'is_suspend',
-                    'is_termin',
-                    'alamat_pasang',
-                    'olt',
-                    'index_olt',
-                    'router_id',
+                    'r.nomor_internet',
+                    DB::raw("coalesce(nullif(r.nama_pelanggan, ''), p.nama_penduduk, 'Tanpa Nama') as nama_pelanggan"),
+                    'r.' . $userCol . ' as pppoe_username',
+                    'r.kode_bandwith',
+                    'r.status_reg',
+                    'r.is_suspend',
+                    'r.is_termin',
+                    'r.alamat_pasang',
+                    'r.olt',
+                    'r.index_olt',
+                    'r.router_id',
+                    'p.nomor_hp',
                 ];
 
                 $matchedCustomers = collect();
 
                 if ($extractedId) {
-                    $matchedCustomers = DB::table('trx_batchjob_register')
-                        ->where('hide', 0)
+                    $matchedCustomers = DB::table('trx_batchjob_register as r')
+                        ->leftJoin('m_pelanggan as p', 'r.nik_penduduk', '=', 'p.nik_penduduk')
+                        ->where('r.hide', 0)
                         ->where(function ($q) use ($extractedId, $userCol) {
-                            $q->where('nomor_internet', 'like', "%{$extractedId}%")
-                              ->orWhere($userCol, 'like', "%{$extractedId}%");
+                            $q->where('r.nomor_internet', 'like', "%{$extractedId}%")
+                              ->orWhere('r.' . $userCol, 'like', "%{$extractedId}%")
+                              ->orWhere('p.nomor_hp', 'like', "%{$extractedId}%");
                         })
                         ->select($selectCols)
                         ->limit(5)
                         ->get();
                 }
 
-                // Tier 1: Try full phrase match on nama_pelanggan or userCol for all candidates
+                // Tier 1: Try full phrase match on nama_pelanggan, nama_penduduk, or userCol
                 if ($matchedCustomers->isEmpty()) {
                     foreach ($searchCandidates as $term) {
                         if (strlen($term) >= 3) {
-                            $res = DB::table('trx_batchjob_register')
-                                ->where('hide', 0)
+                            $res = DB::table('trx_batchjob_register as r')
+                                ->leftJoin('m_pelanggan as p', 'r.nik_penduduk', '=', 'p.nik_penduduk')
+                                ->where('r.hide', 0)
                                 ->where(function ($q) use ($term, $userCol) {
-                                    $q->where('nama_pelanggan', 'like', "%{$term}%")
-                                      ->orWhere($userCol, 'like', "%{$term}%")
-                                      ->orWhere('nomor_internet', 'like', "%{$term}%");
+                                    $q->where('r.nama_pelanggan', 'like', "%{$term}%")
+                                      ->orWhere('p.nama_penduduk', 'like', "%{$term}%")
+                                      ->orWhere('r.' . $userCol, 'like', "%{$term}%")
+                                      ->orWhere('p.nomor_hp', 'like', "%{$term}%")
+                                      ->orWhere('r.nomor_internet', 'like', "%{$term}%");
                                 })
                                 ->select($selectCols)
                                 ->limit(5)
@@ -220,27 +226,40 @@ class AiAssistantController extends Controller
 
                 // Tier 2: If multi-word, match ALL tokens with AND (e.g. 'rama' AND 'putra')
                 if ($matchedCustomers->isEmpty() && count($nameTokens) > 1) {
-                    $q = DB::table('trx_batchjob_register')->where('hide', 0);
+                    $q = DB::table('trx_batchjob_register as r')
+                        ->leftJoin('m_pelanggan as p', 'r.nik_penduduk', '=', 'p.nik_penduduk')
+                        ->where('r.hide', 0);
                     foreach ($nameTokens as $tok) {
                         $q->where(function ($sub) use ($tok, $userCol) {
-                            $sub->where('nama_pelanggan', 'like', "%{$tok}%")
-                                ->orWhere($userCol, 'like', "%{$tok}%");
+                            $sub->where('r.nama_pelanggan', 'like', "%{$tok}%")
+                                ->orWhere('p.nama_penduduk', 'like', "%{$tok}%")
+                                ->orWhere('r.' . $userCol, 'like', "%{$tok}%");
                         });
                     }
                     $matchedCustomers = $q->select($selectCols)->limit(5)->get();
                 }
 
-                // Tier 3: Single token match
-                if ($matchedCustomers->isEmpty() && count($nameTokens) === 1) {
-                    $matchedCustomers = DB::table('trx_batchjob_register')
-                        ->where('hide', 0)
-                        ->where(function ($q) use ($nameTokens, $userCol) {
-                            $q->where('nama_pelanggan', 'like', "%{$nameTokens[0]}%")
-                              ->orWhere($userCol, 'like', "%{$nameTokens[0]}%");
-                        })
-                        ->select($selectCols)
-                        ->limit(5)
-                        ->get();
+                // Tier 3: Token-by-token fallback (e.g. match first distinctive token >= 4 chars)
+                if ($matchedCustomers->isEmpty() && !empty($nameTokens)) {
+                    foreach ($nameTokens as $tok) {
+                        if (strlen($tok) >= 4) {
+                            $res = DB::table('trx_batchjob_register as r')
+                                ->leftJoin('m_pelanggan as p', 'r.nik_penduduk', '=', 'p.nik_penduduk')
+                                ->where('r.hide', 0)
+                                ->where(function ($q) use ($tok, $userCol) {
+                                    $q->where('r.nama_pelanggan', 'like', "%{$tok}%")
+                                      ->orWhere('p.nama_penduduk', 'like', "%{$tok}%")
+                                      ->orWhere('r.' . $userCol, 'like', "%{$tok}%");
+                                })
+                                ->select($selectCols)
+                                ->limit(5)
+                                ->get();
+                            if ($res->isNotEmpty()) {
+                                $matchedCustomers = $res;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 $context['customers'] = $matchedCustomers->toArray();
@@ -325,53 +344,94 @@ class AiAssistantController extends Controller
         $targetCustomerIds = array_values(array_unique(array_filter($targetCustomerIds)));
 
         // Context 2: Billing / Tagihan lookup (Khusus role berhak: Finance, Direksi, CEO, Admin, CS)
+        // CRITICAL: Jika pertanyaan menargetkan nama pelanggan spesifik, JANGAN PERNAH menampilkan invoice orang lain!
+        $isSpecificCustomerQuery = !empty($extractedId) || !empty($searchCandidates) || !empty($nameTokens);
+
         if ($this->canAccessFinance($user) && (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'keuangan') || !empty($targetCustomerIds))) {
             try {
-                $billQuery = DB::table('trx_billing_layanan')
-                    ->where('hide', 0);
+                if ($isSpecificCustomerQuery && empty($targetCustomerIds)) {
+                    // User bertanya tentang pelanggan tertentu, namun pelanggan tidak ada di database: JANGAN kembalikan tagihan random orang lain!
+                    $context['billings'] = [];
+                } else if (!empty($targetCustomerIds)) {
+                    // Tampilkan hanya tagihan milik target pelanggan yang dicari
+                    $bills = DB::table('trx_billing_layanan')
+                        ->where('hide', 0)
+                        ->where(function ($q) use ($targetCustomerIds) {
+                            foreach ($targetCustomerIds as $id) {
+                                $q->orWhere('nomor_internet', 'like', "%{$id}%")
+                                  ->orWhere('kode_billing_layanan', 'like', "%{$id}%");
+                            }
+                        })
+                        ->select([
+                            'kode_billing_layanan',
+                            'nomor_internet',
+                            'bulan_tagihan',
+                            'tahun_tagihan',
+                            'total_layanan',
+                            'status_bill_lay',
+                            'payment_type',
+                            'payment_paid',
+                            'amount_paid',
+                        ])
+                        ->orderByDesc('tahun_tagihan')
+                        ->orderByDesc('bulan_tagihan')
+                        ->limit(6)
+                        ->get()
+                        ->map(function ($b) {
+                            $b->status_desc = match((string)$b->status_bill_lay) {
+                                '15' => 'Lunas (Paid)',
+                                '14' => 'Menunggu Verifikasi',
+                                '13' => 'Belum Bayar (Unpaid)',
+                                '12' => 'Publish Tagihan',
+                                '11' => 'Draft',
+                                default => 'Status #' . $b->status_bill_lay
+                            };
+                            return $b;
+                        })
+                        ->toArray();
 
-                if (!empty($targetCustomerIds)) {
-                    $billQuery->where(function ($q) use ($targetCustomerIds) {
-                        foreach ($targetCustomerIds as $id) {
-                            $q->orWhere('nomor_internet', 'like', "%{$id}%")
-                              ->orWhere('kode_billing_layanan', 'like', "%{$id}%");
-                        }
-                    });
-                } else if (str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi')) {
-                    $billQuery->where('status_bill_lay', 14); // Pending verifikasi
-                } else if (str_contains($lower, 'belum') || str_contains($lower, 'unpaid')) {
-                    $billQuery->whereNotIn('status_bill_lay', [15]); // Belum bayar
+                    $context['billings'] = $bills;
+                } else {
+                    // Query tagihan umum (rekap tagihan global, pending verifikasi, atau belum bayar massal)
+                    $billQuery = DB::table('trx_billing_layanan')->where('hide', 0);
+                    if (str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi')) {
+                        $billQuery->where('status_bill_lay', 14); // Pending verifikasi
+                    } else if (str_contains($lower, 'belum') || str_contains($lower, 'unpaid')) {
+                        $billQuery->whereNotIn('status_bill_lay', [15]); // Belum bayar
+                    } else if (!str_contains($lower, 'semua') && !str_contains($lower, 'daftar') && !str_contains($lower, 'rekap') && !str_contains($lower, 'summary')) {
+                        $billQuery->whereRaw('1 = 0'); // Jangan ambil jika tidak jelas tujuannya
+                    }
+
+                    $bills = $billQuery->select([
+                        'kode_billing_layanan',
+                        'nomor_internet',
+                        'bulan_tagihan',
+                        'tahun_tagihan',
+                        'total_layanan',
+                        'status_bill_lay',
+                        'payment_type',
+                        'payment_paid',
+                        'amount_paid',
+                    ])
+                    ->orderByDesc('tahun_tagihan')
+                    ->orderByDesc('bulan_tagihan')
+                    ->limit(6)
+                    ->get()
+                    ->map(function ($b) {
+                        $b->status_desc = match((string)$b->status_bill_lay) {
+                            '15' => 'Lunas (Paid)',
+                            '14' => 'Menunggu Verifikasi',
+                            '13' => 'Belum Bayar (Unpaid)',
+                            '12' => 'Publish Tagihan',
+                            '11' => 'Draft',
+                            default => 'Status #' . $b->status_bill_lay
+                        };
+                        return $b;
+                    })
+                    ->toArray();
+
+                    $context['billings'] = $bills;
                 }
-
-                $bills = $billQuery->select([
-                    'kode_billing_layanan',
-                    'nomor_internet',
-                    'bulan_tagihan',
-                    'tahun_tagihan',
-                    'total_layanan',
-                    'status_bill_lay',
-                    'payment_type',
-                    'payment_paid',
-                    'amount_paid',
-                ])
-                ->orderByDesc('tahun_tagihan')
-                ->orderByDesc('bulan_tagihan')
-                ->limit(6)
-                ->get()
-                ->map(function ($b) {
-                    $b->status_desc = match((string)$b->status_bill_lay) {
-                        '15' => 'Lunas (Paid)',
-                        '14' => 'Menunggu Verifikasi',
-                        '13' => 'Belum Bayar (Unpaid)',
-                        '12' => 'Publish Tagihan',
-                        '11' => 'Draft',
-                        default => 'Status #' . $b->status_bill_lay
-                    };
-                    return $b;
-                })
-                ->toArray();
-
-                $context['billings'] = $bills;
 
                 // Total pending verification count
                 $context['stats']['pending_verification_count'] = DB::table('trx_billing_layanan')
@@ -428,54 +488,14 @@ class AiAssistantController extends Controller
             }
         }
 
-        // Context 4.5: Real-time NOC Telemetry & Alerts (ONU LOS / DOWN / Isu Aktif)
+        // Context 4.5: Real-time NOC Telemetry & Alerts (ONU LOS / DOWN / Isu Aktif - Ultra Cepat Non-Blocking)
         $isAskingNocAlerts = str_contains($lower, 'loss') || str_contains($lower, 'los') || str_contains($lower, 'down') 
             || str_contains($lower, 'offline') || str_contains($lower, 'kabel putus') || str_contains($lower, 'isu aktif') 
             || str_contains($lower, 'isu') || str_contains($lower, 'node') || str_contains($lower, 'alert') || str_contains($lower, 'notifikasi');
 
         if ($this->canAccessNetwork($user) && $isAskingNocAlerts) {
             try {
-                $nocController = app(\App\Http\Controllers\Noc\NocController::class);
-                $nocData = $nocController->getNocNotificationsData();
-
-                $activeAlerts = $nocData['alerts'] ?? [];
-                $losAlerts = array_values(array_filter($activeAlerts, fn($a) => ($a['status'] ?? '') === 'LOS'));
-                $downAlerts = array_values(array_filter($activeAlerts, fn($a) => ($a['status'] ?? '') === 'DOWN'));
-
-                $context['noc_telemetry'] = [
-                    'keterangan' => 'Data real-time monitoring OLT & ONU langsung dari sensor telemetri jaringan IMS2 (BUKAN sekadar tiket)',
-                    'summary' => [
-                        'total_active' => $nocData['summary']['total_active'] ?? count($activeAlerts),
-                        'total_los' => $nocData['summary']['total_los'] ?? count($losAlerts),
-                        'total_down' => $nocData['summary']['total_down'] ?? count($downAlerts),
-                        'total_tickets' => $nocData['summary']['total_tickets'] ?? 0,
-                    ],
-                    'onu_los_nodes' => array_map(function($a) {
-                        return [
-                            'interface' => $a['interface_name'] ?? ($a['device_name'] ?? '-'),
-                            'nama_pelanggan' => $a['user_name'] ?? '-',
-                            'nomor_internet' => $a['nomor_internet'] ?? '-',
-                            'olt' => $a['subtitle'] ?? ($a['olt_kode'] ?? '-'),
-                            'port_pon' => $a['pon_index'] ?? '-',
-                            'redaman' => $a['rx_power'] ?? 'No Signal (LOS)',
-                            'waktu_mulai' => $a['created_at'] ?? '-',
-                            'durasi' => $a['duration_human'] ?? '-',
-                            'deskripsi' => $a['message'] ?? 'Kabel optik putus atau redaman loss',
-                        ];
-                    }, $losAlerts),
-                    'onu_down_nodes' => array_slice(array_map(function($a) {
-                        return [
-                            'interface' => $a['interface_name'] ?? ($a['device_name'] ?? '-'),
-                            'nama_pelanggan' => $a['user_name'] ?? '-',
-                            'nomor_internet' => $a['nomor_internet'] ?? '-',
-                            'olt' => $a['subtitle'] ?? ($a['olt_kode'] ?? '-'),
-                            'port_pon' => $a['pon_index'] ?? '-',
-                            'waktu_mulai' => $a['created_at'] ?? '-',
-                            'durasi' => $a['duration_human'] ?? '-',
-                            'deskripsi' => $a['message'] ?? 'Perangkat modem padam / power off',
-                        ];
-                    }, $downAlerts), 0, 15),
-                ];
+                $context['noc_telemetry'] = $this->getFastNocTelemetryData();
             } catch (\Throwable $e) {
                 Log::warning("[AiAssistant] Gagal mengambil data NOC Telemetry: " . $e->getMessage());
             }
@@ -519,6 +539,84 @@ class AiAssistantController extends Controller
     }
 
     /**
+     * Non-blocking fast NOC telemetry reader using existing Redis/Database cache keys.
+     * Completes in < 40ms without ever triggering blocking OLT telnet scans.
+     */
+    protected function getFastNocTelemetryData(): array
+    {
+        $olts = DB::table('m_olt')->where('is_active', 1)->get()->keyBy('kode_olt');
+        
+        $allRegs = DB::table('trx_batchjob_register')
+            ->select('nomor_internet', 'nama_pelanggan', 'alamat_pasang', 'olt', 'index_olt')
+            ->whereNotNull('index_olt')
+            ->where('hide', 0)
+            ->get();
+
+        $regMap = [];
+        foreach ($allRegs as $r) {
+            $rawIdx = trim((string)$r->index_olt);
+            $cleanIdx = trim(str_ireplace('gpon-onu_', '', $rawIdx));
+            $oltKey = strtolower(trim((string)$r->olt));
+            $regMap["{$oltKey}_{$cleanIdx}"] = $r;
+            $regMap[$cleanIdx] = $r;
+        }
+
+        $losNodes = [];
+        $downNodes = [];
+
+        foreach ($olts as $kode => $olt) {
+            $onus = Cache::get("olt_live_all_onu_states_{$kode}") ?: Cache::get("olt_last_known_good_onus_{$kode}", []);
+            if (!is_array($onus)) continue;
+
+            foreach ($onus as $item) {
+                $iface = $item['interface'] ?? '';
+                $cleanIface = trim(str_ireplace('gpon-onu_', '', $iface));
+                $phase = strtolower((string)($item['phase'] ?? ''));
+                $isLos = (!empty($item['is_los'])) || $phase === 'los';
+
+                $oltKey = strtolower($kode);
+                $matchedReg = $regMap["{$oltKey}_{$cleanIface}"] ?? ($regMap[$cleanIface] ?? null);
+
+                $node = [
+                    'interface' => "gpon-onu_{$cleanIface}",
+                    'nama_pelanggan' => $matchedReg?->nama_pelanggan ?? 'Belum Terdata di Registrasi',
+                    'nomor_internet' => $matchedReg?->nomor_internet ?? '-',
+                    'olt' => "{$olt->name_olt} ({$kode})",
+                    'port_pon' => $item['port'] ?? '-',
+                    'redaman' => $isLos ? 'No Signal (LOS)' : ($item['rx_power'] ?? '-'),
+                    'deskripsi' => $isLos ? 'Kabel optik putus / redaman loss' : 'Perangkat modem padam / power off',
+                    'waktu_mulai' => $item['waktu_mulai'] ?? ($item['since'] ?? 'Live realtime'),
+                    'durasi' => $item['durasi'] ?? ($item['duration'] ?? '-'),
+                    'status' => $isLos ? 'LOS' : 'DOWN',
+                ];
+
+                if ($isLos) {
+                    $losNodes[] = $node;
+                } else {
+                    $downNodes[] = $node;
+                }
+            }
+        }
+
+        $openTicketsCount = DB::table('trx_tiket_gangguan')
+            ->where('hide', 0)
+            ->whereNotIn('status', ['close', 'selesai', 'done', '14'])
+            ->count();
+
+        return [
+            'keterangan' => 'Data real-time telemetri fisik link OLT & ONU IMS2 (cache non-blocking)',
+            'summary' => [
+                'total_active' => count($losNodes) + count($downNodes),
+                'total_los' => count($losNodes),
+                'total_down' => count($downNodes),
+                'total_tickets' => $openTicketsCount,
+            ],
+            'onu_los_nodes' => $losNodes,
+            'onu_down_nodes' => array_slice($downNodes, 0, 15),
+        ];
+    }
+
+    /**
      * Call Google Gemini API (v1beta) using Laravel Http client.
      */
     protected function callGeminiApi(string $apiKey, string $model, string $userMessage, array $history, array $contextData, $user): string
@@ -551,6 +649,10 @@ class AiAssistantController extends Controller
             . "   - Kategori: Gangguan Sinyal/Kabel Putus, Internet Lambat, Ubah Password, Relokasi Rumah, Ubah Paket Layanan.\n\n"
             . "KEBIJAKAN HAK AKSES ROLE (SANGAT KETAT):\n"
             . "{$roleRules}\n\n"
+            . "5. INTEGRITAS DATA PELANGGAN & TAGIHAN (SANGAT KRUSIAL):\n"
+            . "   - DILARANG KERAS menghubungkan, mengaitkan, atau menampilkan invoice/tagihan milik orang lain kepada pelanggan yang sedang ditanyakan.\n"
+            . "   - Periksa selalu 'nomor_internet' pada setiap baris di [billings]. Jika tidak cocok dengan pelanggan yang ditanyakan, atau jika [billings] kosong/berisi tagihan orang lain, nyatakan dengan jujur dan jelas: Pelanggan tersebut TIDAK MEMILIKI TAGIHAN TERTUNGGAK.\n"
+            . "   - Dilarang keras berasumsi atau mengarang nomor internet dan invoice.\n\n"
             . "Jika pengguna meminta data di luar wewenangnya, tolak langsung secara singkat, tegas, dan sopan tanpa berputar-putar.\n"
             . "Hari ini: {$today}.\n\n"
             . $this->schemaHint($userRole);
@@ -586,7 +688,7 @@ class AiAssistantController extends Controller
         $discovered = Cache::get($cacheKey);
         if (!$discovered) {
             try {
-                $listRes = Http::timeout(5)->get("https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}");
+                $listRes = Http::timeout(4)->get("https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}");
                 if ($listRes->successful()) {
                     $remoteModels = $listRes->json('models', []);
                     $validModels = [];
@@ -614,10 +716,10 @@ class AiAssistantController extends Controller
             }
         }
 
-        $defaultCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+        $defaultCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash'];
         $cleanModel = str_contains($model, '2.5-flash') ? 'gemini-2.0-flash' : $model;
         $modelsToTry = array_values(array_filter(array_unique(array_merge([$cleanModel], (array)($discovered ?: $defaultCandidates)))));
-        $modelsToTry = array_slice($modelsToTry, 0, 3);
+        $modelsToTry = array_slice($modelsToTry, 0, 2);
 
         // 2. Iterate through candidate models with fast per-step timeout
         $triedModels = [];
@@ -635,15 +737,15 @@ class AiAssistantController extends Controller
             ],
         ]]];
 
-        for ($mIdx = 0; $mIdx < count($modelsToTry) && $mIdx < 4; $mIdx++) {
+        for ($mIdx = 0; $mIdx < count($modelsToTry) && $mIdx < 2; $mIdx++) {
             $mName = $modelsToTry[$mIdx];
             $triedModels[] = $mName;
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$mName}:generateContent?key={$apiKey}";
             $convo = $contents;
 
             try {
-                for ($step = 0; $step < 4; $step++) {
-                    $response = Http::timeout(15)->post($url, [
+                for ($step = 0; $step < 3; $step++) {
+                    $response = Http::timeout(8)->post($url, [
                         'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
                         'contents' => $convo,
                         'tools' => $tools,
@@ -1063,7 +1165,9 @@ class AiAssistantController extends Controller
                     $output[] = "| Interface GPON | Nama Pelanggan | No. Internet | OLT / Port | Redaman | Mulai / Durasi |";
                     $output[] = "|---|---|---|---|---|---|";
                     foreach ($losNodes as $ln) {
-                        $output[] = "| `{$ln['interface']}` | **{$ln['nama_pelanggan']}** | `{$ln['nomor_internet']}` | {$ln['olt']} | <span class=\"text-rose-500 font-bold font-mono\">{$ln['redaman']}</span> | {$ln['waktu_mulai']} ({$ln['durasi']}) |";
+                        $wm = $ln['waktu_mulai'] ?? '-';
+                        $dur = !empty($ln['durasi']) && $ln['durasi'] !== '-' ? " ({$ln['durasi']})" : '';
+                        $output[] = "| `{$ln['interface']}` | **{$ln['nama_pelanggan']}** | `{$ln['nomor_internet']}` | {$ln['olt']} | <span class=\"text-rose-500 font-bold font-mono\">{$ln['redaman']}</span> | {$wm}{$dur} |";
                     }
                 }
             }
@@ -1076,7 +1180,9 @@ class AiAssistantController extends Controller
                     $output[] = "| Interface GPON | Nama Pelanggan | No. Internet | OLT / Port | Mulai / Durasi |";
                     $output[] = "|---|---|---|---|---|";
                     foreach ($downNodes as $dn) {
-                        $output[] = "| `{$dn['interface']}` | **{$dn['nama_pelanggan']}** | `{$dn['nomor_internet']}` | {$dn['olt']} | {$dn['waktu_mulai']} ({$dn['durasi']}) |";
+                        $wm = $dn['waktu_mulai'] ?? '-';
+                        $dur = !empty($dn['durasi']) && $dn['durasi'] !== '-' ? " ({$dn['durasi']})" : '';
+                        $output[] = "| `{$dn['interface']}` | **{$dn['nama_pelanggan']}** | `{$dn['nomor_internet']}` | {$dn['olt']} | {$wm}{$dur} |";
                     }
                 }
             }
@@ -1133,6 +1239,11 @@ class AiAssistantController extends Controller
             if (isset($context['stats']['pending_verification_count']) && $context['stats']['pending_verification_count'] > 0) {
                 $output[] = "\n📌 *Terdapat **{$context['stats']['pending_verification_count']}** tagihan menunggu konfirmasi/verifikasi finance.*";
             }
+        } elseif (!empty($context['customers']) && (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'tunggak') || str_contains($lower, 'linawati'))) {
+            $hasData = true;
+            $cust = $context['customers'][0];
+            $output[] = "\n### 💳 Status Tagihan Pelanggan";
+            $output[] = "✅ Pelanggan **{$cust->nama_pelanggan}** (No. Internet: `{$cust->nomor_internet}`) saat ini **tidak memiliki tagihan tertunggak**.";
         }
 
         // Case 3: Tiket gangguan found

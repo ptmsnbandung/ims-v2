@@ -4495,6 +4495,14 @@ class FinanceController extends Controller
 
             $proofFile = ($c->proof_file ?? null) ?: (($c->bukti_transfer ?? null) ?: ($c->file ?? null));
 
+            // Deteksi apakah pembayaran melalui Portal Pelanggan atau Bukan
+            $isPortal = true;
+            $adminNotes = (string)($c->admin_notes ?? '');
+            $notes = (string)($c->notes ?? ($c->keterangan ?? ''));
+            if (stripos($adminNotes, 'manual oleh admin') !== false || stripos($adminNotes, 'Diupload oleh') !== false || stripos($notes, 'manual oleh admin') !== false) {
+                $isPortal = false;
+            }
+
             $items->push((object)[
                 'type' => 'confirmation',
                 'id' => $c->id ?? $kodeBillingConf,
@@ -4505,6 +4513,8 @@ class FinanceController extends Controller
                 'nominal_formatted' => $nominal > 0 ? ('Rp ' . number_format($nominal, 0, ',', '.')) : 'Menunggu Pengecekan',
                 'bank_tujuan' => $bankTujuan,
                 'payment_type' => $relatedBill?->payment_type ?? (stripos($bankTujuan, 'cash') !== false || stripos($bankTujuan, 'kolektor') !== false ? '3' : '2'),
+                'is_portal' => $isPortal,
+                'portal_source' => $isPortal ? 'Portal Pelanggan' : 'Bukan Portal',
                 'proof_file' => $proofFile,
                 'notes' => $c->notes ?? ($c->keterangan ?? null),
                 'admin_notes' => $c->admin_notes ?? null,
@@ -4536,6 +4546,22 @@ class FinanceController extends Controller
             $proofFile = $conf ? (($conf->proof_file ?? null) ?: (($conf->bukti_transfer ?? null) ?: ($conf->file ?? null))) : null;
             $isPendingVerif = (!$isPaid && ($b->status_bill_lay === '14' || !empty($proofFile) || ($conf && ($conf->status ?? '') !== 'approved')));
 
+            // Deteksi apakah pembayaran melalui Portal Pelanggan atau Bukan
+            $isPortal = false;
+            if ($conf) {
+                $isPortal = true;
+                $confAdminNotes = (string)($conf->admin_notes ?? '');
+                $confNotes = (string)($conf->notes ?? '');
+                if (stripos($confAdminNotes, 'manual oleh admin') !== false || stripos($confAdminNotes, 'Diupload oleh') !== false || stripos($confNotes, 'manual oleh admin') !== false) {
+                    $isPortal = false;
+                }
+            } elseif ((string)$b->payment_type === '1' || in_array(strtolower($b->merchant_type ?? ''), ['qris', 'gopay', 'shopeepay', 'midtrans', 'snap', 'bank_transfer']) || stripos($b->user_update ?? '', 'midtrans') !== false) {
+                // Pembayaran online payment gateway (Midtrans/QRIS) dari portal pelanggan
+                $isPortal = true;
+            } elseif (!empty($proofFile)) {
+                $isPortal = true;
+            }
+
             $items->push((object)[
                 'type' => 'billing',
                 'id' => $b->kode_billing_layanan,
@@ -4555,6 +4581,8 @@ class FinanceController extends Controller
                     return $raw;
                 })(),
                 'payment_type' => $b->payment_type ?? (stripos($conf->destination_bank ?? $b->merchant_type ?? '', 'cash') !== false || stripos($conf->destination_bank ?? $b->merchant_type ?? '', 'kolektor') !== false ? '3' : '2'),
+                'is_portal' => $isPortal,
+                'portal_source' => $isPortal ? 'Portal Pelanggan' : 'Bukan Portal',
                 'proof_file' => $proofFile,
                 'notes' => $conf->notes ?? null,
                 'admin_notes' => $conf->admin_notes ?? null,
@@ -4564,6 +4592,15 @@ class FinanceController extends Controller
                 'time_ago' => $carbonDate->locale('id')->diffForHumans($nowJkt),
                 'timestamp' => $carbonDate->timestamp,
             ]);
+        }
+
+        if ($search !== '') {
+            $sLower = strtolower($search);
+            if (in_array($sLower, ['portal', 'portal pelanggan', 'portal-pelanggan'])) {
+                $items = $items->filter(fn($item) => $item->is_portal === true);
+            } elseif (in_array($sLower, ['bukan portal', 'non portal', 'non-portal', 'manual', 'kolektor'])) {
+                $items = $items->filter(fn($item) => $item->is_portal === false);
+            }
         }
 
         // Urutkan item:

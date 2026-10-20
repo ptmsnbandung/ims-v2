@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -470,7 +471,9 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
 - Memberikan jawaban yang ringkas, profesional, to the point, dan langsung dapat ditindaklanjuti.
 - Gunakan format markdown yang rapi: gunakan tabel untuk data tabular, bullet points, dan kode mono `font-mono` untuk ID internet, IP, kode billing, dan nominal rupiah.
 - Pengguna yang sedang berbicara bernama {$userName} dengan hak akses / role: {$userRole}.
-- Jangan mengarang data sensitif. Jika data tidak ditemukan di konteks yang disediakan, sampaikan dengan sopan dan sarankan parameter pencarian yang tepat (misal: 'Silakan masukkan nomor internet pelanggan atau nama lengkap').";
+- Jangan mengarang data sensitif. Jika data tidak ditemukan di konteks yang disediakan, sampaikan dengan sopan dan sarankan parameter pencarian yang tepat (misal: 'Silakan masukkan nomor internet pelanggan atau nama lengkap').
+
+" . $this->schemaHint();
 
         // Build contents array for Gemini
         $contents = [];
@@ -538,39 +541,146 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             // Timeout or network glitch during ListModels: proceed with default candidates
         }
 
-        // 2. Iterate through discovered valid models
+        // 2. Iterate through discovered valid models; each may call DB tools for several rounds
         $lastError = 'Semua model Gemini yang dicoba gagal merespon.';
+        $tools = [['functionDeclarations' => [
+            [
+                'name' => 'describe_table',
+                'description' => 'Lihat daftar kolom sebuah tabel database IMS2 beserta 1 contoh baris. Panggil sebelum menulis query pada tabel yang belum dikenal.',
+                'parameters' => ['type' => 'OBJECT', 'properties' => ['table' => ['type' => 'STRING', 'description' => 'Nama tabel']], 'required' => ['table']],
+            ],
+            [
+                'name' => 'run_select_query',
+                'description' => 'Jalankan SATU query SELECT read-only (MySQL) ke database IMS2 dan kembalikan barisnya (maks 50). Gunakan LIKE untuk pencarian nama, JOIN bila perlu, COUNT/SUM untuk agregasi.',
+                'parameters' => ['type' => 'OBJECT', 'properties' => ['sql' => ['type' => 'STRING', 'description' => 'Query SELECT tunggal tanpa titik koma']], 'required' => ['sql']],
+            ],
+        ]]];
+
         foreach ($modelsToTry as $mName) {
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$mName}:generateContent?key={$apiKey}";
-            $payload = [
-                'systemInstruction' => [
-                    'parts' => [['text' => $systemInstruction]],
-                ],
-                'contents' => $contents,
-                'generationConfig' => [
-                    'temperature' => 0.4,
-                    'maxOutputTokens' => 1200,
-                ],
-            ];
+            $convo = $contents;
 
             try {
-                $response = Http::timeout(15)->post($url, $payload);
-                if ($response->successful()) {
-                    $resJson = $response->json();
-                    $replyText = $resJson['candidates'][0]['content']['parts'][0]['text'] ?? null;
-                    if (!empty($replyText)) {
-                        return trim($replyText);
+                for ($step = 0; $step < 6; $step++) {
+                    $response = Http::timeout(30)->post($url, [
+                        'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
+                        'contents' => $convo,
+                        'tools' => $tools,
+                        'generationConfig' => ['temperature' => 0.3, 'maxOutputTokens' => 2048],
+                    ]);
+
+                    if (!$response->successful()) {
+                        $lastError = $response->json('error.message') ?? ('HTTP ' . $response->status());
+                        continue 2;
                     }
-                } else {
-                    $errBody = $response->json();
-                    $lastError = $errBody['error']['message'] ?? ('HTTP ' . $response->status());
+
+                    $parts = $response->json('candidates.0.content.parts') ?? [];
+                    $calls = array_values(array_filter($parts, fn($p) => isset($p['functionCall'])));
+
+                    if (empty($calls)) {
+                        $text = trim(implode('', array_map(fn($p) => empty($p['thought']) ? ($p['text'] ?? '') : '', $parts)));
+                        if ($text !== '') {
+                            return $text;
+                        }
+                        $lastError = 'Model mengembalikan respons kosong.';
+                        continue 2;
+                    }
+
+                    $convo[] = ['role' => 'model', 'parts' => $parts];
+                    $results = [];
+                    foreach ($calls as $p) {
+                        $results[] = ['functionResponse' => [
+                            'name' => $p['functionCall']['name'],
+                            'response' => ['result' => $this->runAiTool($p['functionCall']['name'], $p['functionCall']['args'] ?? [])],
+                        ]];
+                    }
+                    $convo[] = ['role' => 'user', 'parts' => $results];
                 }
+                $lastError = 'Terlalu banyak langkah query database.';
             } catch (\Throwable $e) {
                 $lastError = $e->getMessage();
             }
         }
 
         throw new \Exception($lastError);
+    }
+
+    protected function schemaHint(): string
+    {
+        $tables = Cache::remember('ai_copilot_tables', 3600, function () {
+            try {
+                return array_map(fn($r) => array_values((array)$r)[0], DB::select('SHOW TABLES'));
+            } catch (\Throwable $e) {
+                return [];
+            }
+        });
+
+        return "KEMAMPUAN DATABASE: Anda punya tool `describe_table` dan `run_select_query` (read-only) untuk menjawab APA SAJA yang ada di database IMS2. Konteks di atas hanya ringkasan awal; jika kurang, atau pertanyaan menyangkut data lain (mitra, router, barang/inventori, penjualan, user, jadwal, dsb), WAJIB gunakan tool, jangan menebak atau menjawab 'tidak ada data' sebelum benar-benar query.\n"
+            . "- Pelanggan: `trx_batchjob_register` (hide=0, kunci nomor_internet, status_reg 20=aktif, is_suspend=1 terisolir). Tagihan: `trx_billing_layanan` (status_bill_lay 15=lunas, 14=verifikasi). Tiket: `trx_tiket_gangguan`. OLT: `m_olt`.\n"
+            . "- Pencarian nama pakai LIKE '%kata%' per kata; jika 0 hasil coba kata lebih pendek. Gabungkan beberapa query bila perlu, lalu simpulkan dalam bahasa Indonesia.\n"
+            . "- Jangan pernah menampilkan password/token/kredensial. Hanya SELECT.\n"
+            . "Daftar tabel: " . implode(', ', $tables);
+    }
+
+    protected function runAiTool(string $name, array $args): array
+    {
+        try {
+            if ($name === 'describe_table') {
+                $table = (string)($args['table'] ?? '');
+                if (!preg_match('/^[A-Za-z0-9_]+$/', $table) || !Schema::hasTable($table)) {
+                    return ['error' => "Tabel '{$table}' tidak ditemukan."];
+                }
+                $sample = DB::table($table)->limit(1)->get()->map(fn($r) => $this->maskSensitive((array)$r))->first();
+                return [
+                    'columns' => array_values(array_filter(Schema::getColumnListing($table), fn($c) => !$this->isSensitive($c))),
+                    'sample_row' => $sample,
+                ];
+            }
+
+            if ($name === 'run_select_query') {
+                $sql = trim(rtrim(trim((string)($args['sql'] ?? '')), ';'));
+                $bare = preg_replace("/'(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\"/", "''", $sql);
+
+                if (!preg_match('/^select\b/i', $sql)
+                    || preg_match('/;|--|#|\/\*/', $bare)
+                    || preg_match('/\b(insert|update|delete|drop|alter|truncate|create|grant|revoke|replace|call|exec|handler|load_file|outfile|dumpfile|sleep|benchmark|information_schema|mysql\.|for\s+update)\b/i', $bare)) {
+                    return ['error' => 'Hanya satu query SELECT read-only yang diizinkan.'];
+                }
+                if (preg_match('/' . $this->sensitivePattern() . '/i', $bare)) {
+                    return ['error' => 'Query menyentuh kolom sensitif (password/token/kredensial) dan ditolak.'];
+                }
+                if (!preg_match('/\blimit\s+\d+/i', $bare)) {
+                    $sql .= ' LIMIT 50';
+                }
+
+                $rows = array_slice(DB::select($sql), 0, 50);
+                $rows = array_map(fn($r) => $this->maskSensitive((array)$r), $rows);
+                $json = json_encode($rows, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+                if (strlen($json) > 15000) {
+                    return ['row_count' => count($rows), 'note' => 'Hasil terlalu besar, dipotong. Persempit kolom/filter.', 'rows' => array_slice($rows, 0, 10)];
+                }
+                return ['row_count' => count($rows), 'rows' => $rows];
+            }
+
+            return ['error' => "Tool '{$name}' tidak dikenal."];
+        } catch (\Throwable $e) {
+            return ['error' => 'Query gagal: ' . $e->getMessage()];
+        }
+    }
+
+    protected function sensitivePattern(): string
+    {
+        return '\b\w*(pass|passwd|secret|token|api_key|ont_ps|pppoe_password|enable_password|remember)\w*\b';
+    }
+
+    protected function isSensitive(string $column): bool
+    {
+        return (bool)preg_match('/' . $this->sensitivePattern() . '/i', $column);
+    }
+
+    protected function maskSensitive(array $row): array
+    {
+        return array_filter($row, fn($v, $k) => !$this->isSensitive((string)$k), ARRAY_FILTER_USE_BOTH);
     }
 
     /**

@@ -281,7 +281,16 @@ window.imsAiCopilot = function() {
             try {
                 const saved = sessionStorage.getItem('ims_ai_chat_messages');
                 if (saved) {
-                    this.messages = JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    this.messages = parsed.map(m => {
+                        if (m.text) {
+                            m.text = m.text.replace(/^>\s*(🤖|🏷️)\s*\*Mode:\s*(AI|Offline)\*\s*\n\n?/i, '');
+                        }
+                        if (typeof m.isAi === 'undefined') {
+                            m.isAi = this.engineMode === 'AI';
+                        }
+                        return m;
+                    });
                 } else {
                     this.addWelcomeMessage();
                 }
@@ -302,6 +311,7 @@ window.imsAiCopilot = function() {
             this.messages = [{
                 role: 'assistant',
                 text: "Halo! 👋 Saya adalah **IMS AI Copilot**.\n\nSaya siap membantu pekerjaan Anda sesuai wewenang divisi/role Anda di IMS2. Tanyakan seputar data pelanggan, tiket gangguan, OLT/jaringan, atau tagihan.\n\nAda yang bisa saya bantu sekarang?",
+                isAi: this.engineMode === 'AI',
                 time: this.currentTime()
             }];
             this.saveMessages();
@@ -469,21 +479,22 @@ window.imsAiCopilot = function() {
                 }
 
                 if (response.ok && data && data.status === 'success') {
-                    if (data.mode === 'gemini') {
-                        this.engineMode = 'AI';
-                    } else {
-                        this.engineMode = 'Offline';
-                    }
+                    const isAi = data.mode === 'gemini';
+                    this.engineMode = isAi ? 'AI' : 'Offline';
+
+                    let cleanText = (data.reply || 'Data berhasil diproses.').replace(/^>\s*(🤖|🏷️)\s*\*Mode:\s*(AI|Offline)\*\s*\n\n?/i, '');
 
                     this.messages.push({
                         role: 'assistant',
-                        text: data.reply || 'Data berhasil diproses.',
+                        text: cleanText,
+                        isAi: isAi,
                         time: this.currentTime()
                     });
                 } else {
                     this.messages.push({
                         role: 'assistant',
                         text: '⚠️ Maaf, terjadi kendala: ' + (data?.message || ('HTTP ' + response.status)),
+                        isAi: false,
                         time: this.currentTime()
                     });
                 }
@@ -623,7 +634,11 @@ window.imsAiCopilot = function() {
                 <div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <h3 style="font-size:14px; font-weight:700; color:#ffffff; margin:0; line-height:1.2;">IMS AI Copilot</h3>
-                        <span style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:#082f49; color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.35);" x-text="engineMode"></span>
+                        <!-- Indikator Warna Mesin: Hijau = AI, Kuning = Offline -->
+                        <span 
+                            :style="engineMode === 'AI' ? 'background:#10b981; box-shadow:0 0 10px rgba(16,185,129,0.9);' : 'background:#eab308; box-shadow:0 0 10px rgba(234,179,8,0.9);'"
+                            :title="engineMode === 'AI' ? 'Mode: AI Online (Google Gemini)' : 'Mode: Offline'"
+                            style="width:9px; height:9px; border-radius:9999px; display:inline-block; flex-shrink:0;"></span>
                         <span x-show="userRole" style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:rgba(30,27,75,0.7); color:#a5b4fc; border:1px solid rgba(165,180,252,0.35);" x-text="userRole"></span>
                     </div>
                     <p style="font-size:11px; color:#94a3b8; margin:2px 0 0 0;">Asisten Pintar NOC, Finance & Operasional</p>
@@ -669,6 +684,11 @@ window.imsAiCopilot = function() {
                             <span style="display:flex; align-items:center; gap:6px; font-weight:600;">
                                 <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:16px; height:16px; object-fit:contain;">
                                 IMS Copilot
+                                <!-- Indikator Warna: Hijau = AI, Kuning = Offline -->
+                                <span 
+                                    :style="msg.isAi !== false ? 'background:#10b981; box-shadow:0 0 8px rgba(16,185,129,0.9);' : 'background:#eab308; box-shadow:0 0 8px rgba(234,179,8,0.9);'"
+                                    :title="msg.isAi !== false ? 'Mode: AI Online' : 'Mode: Offline'"
+                                    style="width:7px; height:7px; border-radius:9999px; display:inline-block; margin-left:3px; flex-shrink:0;"></span>
                             </span>
                             <button 
                                 type="button" 

@@ -44,7 +44,7 @@ class AiAssistantController extends Controller
                 $reply = $this->callGeminiApi($geminiKey, $geminiModel, $userMessage, $history, $contextData, $currentUser);
                 return response()->json([
                     'status' => 'success',
-                    'reply' => "> 🤖 *Mode: AI*\n\n" . $reply,
+                    'reply' => $reply,
                     'mode' => 'gemini',
                     'model' => $geminiModel,
                 ]);
@@ -963,8 +963,6 @@ class AiAssistantController extends Controller
         $userRole = $this->getUserRole($user);
         $lower = strtolower($query);
         $output = [];
-
-        $output[] = "> 🏷️ *Mode: Offline*\n";
 
         // Pre-check 1: Restrict Finance data
         $isAskingFinance = str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') 

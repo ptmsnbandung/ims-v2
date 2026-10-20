@@ -13,13 +13,14 @@
 .ims-ai-trigger-btn {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 8px !important;
-    padding: 10px 18px !important;
+    gap: 10px !important;
+    padding: 8px 18px 8px 12px !important;
     border-radius: 9999px !important;
     background: linear-gradient(135deg, #0891b2 0%, #0d9488 100%) !important;
     color: #ffffff !important;
-    font-weight: 600 !important;
-    font-size: 13px !important;
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    letter-spacing: 0.02em !important;
     box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
     border: 1px solid rgba(103, 232, 249, 0.4) !important;
     cursor: pointer !important;
@@ -108,20 +109,48 @@
     gap: 12px !important;
     font-size: 12px !important;
     line-height: 1.6 !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(56, 189, 248, 0.3) transparent !important;
+}
+
+.ims-ai-chat-area::-webkit-scrollbar {
+    width: 5px !important;
+}
+.ims-ai-chat-area::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+.ims-ai-chat-area::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.3) !important;
+    border-radius: 9999px !important;
+}
+.ims-ai-chat-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.6) !important;
 }
 
 .ims-ai-chips-container {
     flex-shrink: 0 !important;
-    height: 48px !important;
-    max-height: 48px !important;
+    height: 46px !important;
+    max-height: 46px !important;
     padding: 8px 12px !important;
-    background: rgba(2, 6, 23, 0.7) !important;
+    background: rgba(2, 6, 23, 0.8) !important;
     border-top: 1px solid rgba(51, 65, 85, 0.6) !important;
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
     overflow-x: auto !important;
+    overflow-y: hidden !important;
     white-space: nowrap !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.ims-ai-chips-container::-webkit-scrollbar,
+.ims-ai-chips-container::-webkit-scrollbar-button,
+.ims-ai-chips-container::-webkit-scrollbar-track,
+.ims-ai-chips-container::-webkit-scrollbar-thumb {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 .ims-ai-chip {
@@ -462,17 +491,8 @@ window.imsAiCopilot = function() {
             class="ims-ai-trigger-btn"
             title="Buka / Tutup IMS AI Copilot"
             aria-label="IMS AI Assistant">
-            <!-- Pulsing indicator glow -->
-            <span style="position:relative; display:inline-flex; width:10px; height:10px; margin-right:2px;">
-                <span style="position:absolute; width:100%; height:100%; border-radius:9999px; background:#22d3ee; opacity:0.75; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
-                <span style="position:relative; width:10px; height:10px; border-radius:9999px; background:#34d399; border:2px solid #0f172a;"></span>
-            </span>
-
-            <!-- MSN AI Custom Logo Icon -->
-            <img src="{{ asset('assets/images/msnai.png') }}" alt="MSN AI" style="width:22px; height:22px; border-radius:9999px; object-fit:contain;">
-
+            <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:26px; height:26px; object-fit:contain; display:block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
             <span>IMS AI</span>
-            <span style="font-size:10px; font-family:monospace; text-transform:uppercase; padding:1px 6px; border-radius:4px; background:rgba(0,0,0,0.35); color:#67e8f9; border:1px solid rgba(103,232,249,0.25);">Beta</span>
         </button>
     </div>
 
@@ -492,10 +512,8 @@ window.imsAiCopilot = function() {
         
         <!-- Header -->
         <div class="ims-ai-header">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; border-radius:10px; background:rgba(15,23,42,0.8); border:1px solid rgba(6,182,212,0.35); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(6, 182, 212, 0.3); padding:2px;">
-                    <img src="{{ asset('assets/images/msnai.png') }}" alt="MSN AI" style="width:100%; height:100%; object-fit:contain; border-radius:8px;">
-                </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:36px; height:36px; object-fit:contain; display:block; filter: drop-shadow(0 2px 8px rgba(6, 182, 212, 0.4));">
                 <div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <h3 style="font-size:14px; font-weight:700; color:#ffffff; margin:0; line-height:1.2;">IMS AI Copilot</h3>
@@ -530,7 +548,7 @@ window.imsAiCopilot = function() {
         </div>
 
         <!-- Chat Message Area -->
-        <div x-ref="chatBox" class="ims-ai-chat-area ims-main-scroll">
+        <div x-ref="chatBox" class="ims-ai-chat-area">
             <template x-for="(msg, index) in messages" :key="index">
                 <div :style="msg.role === 'user' ? 'display:flex; justify-content:flex-end;' : 'display:flex; justify-content:flex-start;'">
                     <div 
@@ -542,7 +560,7 @@ window.imsAiCopilot = function() {
                         <!-- Role Icon / Header for AI -->
                         <div x-show="msg.role === 'assistant'" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid rgba(51,65,85,0.5); font-size:10px; color:#38bdf8; font-family:monospace;">
                             <span style="display:flex; align-items:center; gap:6px; font-weight:600;">
-                                <img src="{{ asset('assets/images/msnai.png') }}" alt="MSN AI" style="width:15px; height:15px; border-radius:9999px; object-fit:contain;">
+                                <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:16px; height:16px; object-fit:contain;">
                                 IMS Copilot
                             </span>
                             <button 
@@ -579,7 +597,7 @@ window.imsAiCopilot = function() {
         </div>
 
         <!-- Quick Suggestions Chips (Terkontrol & Horizontal) -->
-        <div class="ims-ai-chips-container ims-main-scroll">
+        <div class="ims-ai-chips-container">
             <template x-for="chip in quickChips" :key="chip.label">
                 <button 
                     type="button" 

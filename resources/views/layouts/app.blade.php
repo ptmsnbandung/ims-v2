@@ -2619,6 +2619,11 @@
         </div>
     </div>
 
+    @auth
+        {{-- Floating IMS AI Copilot Widget Portal --}}
+        @include('components.ai-copilot')
+    @endauth
+
     <!-- Toast Notification Portal Container (Fixed Top Right) -->
     <div x-data="{
              toasts: [],
@@ -3882,11 +3887,6 @@
             });
         })();
     </script>
-
-    @auth
-        {{-- Floating IMS AI Copilot Widget --}}
-        @include('components.ai-copilot')
-    @endauth
 
     @stack('scripts')
 </body>

@@ -459,6 +459,7 @@ class AiAssistantController extends Controller
     {
         $userName = $user?->nama_lengkap ?? $user?->username ?? 'Staff IMS';
         $userRole = $user?->role ?? 'staff';
+        $today = now()->format('d-m-Y');
 
         $systemInstruction = "Anda adalah IMS AI Copilot, asisten kecerdasan buatan cerdas untuk sistem internal ISP (PT Media Solusi Network / MSN Bandung).
 Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operasional harian:
@@ -471,6 +472,7 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
 - Memberikan jawaban yang ringkas, profesional, to the point, dan langsung dapat ditindaklanjuti.
 - Gunakan format markdown yang rapi: gunakan tabel untuk data tabular, bullet points, dan kode mono `font-mono` untuk ID internet, IP, kode billing, dan nominal rupiah.
 - Pengguna yang sedang berbicara bernama {$userName} dengan hak akses / role: {$userRole}.
+- Hari ini: {$today}. Data tagihan mungkin belum ada untuk bulan berjalan; untuk 'bulan ini/terakhir' cek dulu periode terbaru (MAX tahun_tagihan, bulan_tagihan) dan sebutkan periode yang dipakai pada jawaban. Jangan menyebut angka yang tidak berasal dari hasil query.
 - Jangan mengarang data sensitif. Jika data tidak ditemukan di konteks yang disediakan, sampaikan dengan sopan dan sarankan parameter pencarian yang tepat (misal: 'Silakan masukkan nomor internet pelanggan atau nama lengkap').
 
 " . $this->schemaHint();

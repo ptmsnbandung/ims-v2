@@ -352,10 +352,8 @@ window.imsAiCopilot = function() {
         },
 
         clearHistory() {
-            if (confirm('Bersihkan riwayat percakapan AI?')) {
-                this.addWelcomeMessage();
-                this.scrollToBottom();
-            }
+            this.addWelcomeMessage();
+            this.scrollToBottom();
         },
 
         async checkStatus() {

@@ -251,6 +251,83 @@
     margin: 0.25rem 0;
     font-style: italic;
 }
+
+/* Animations for AI Processing / Loading State */
+.ims-ai-loading-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(8, 25, 45, 0.95) 100%) !important;
+    border: 1px solid rgba(6, 182, 212, 0.5) !important;
+    border-radius: 16px 16px 16px 4px !important;
+    padding: 10px 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.6), 0 0 20px rgba(6, 182, 212, 0.25) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.ims-ai-loading-shimmer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 2px !important;
+    background: linear-gradient(90deg, transparent 0%, #38bdf8 50%, transparent 100%) !important;
+    animation: ims-scanline 1.8s infinite linear !important;
+}
+
+@keyframes ims-scanline {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.ims-ai-dot {
+    width: 6.5px !important;
+    height: 6.5px !important;
+    border-radius: 9999px !important;
+    display: inline-block !important;
+    animation: ims-ai-wave 1.4s infinite ease-in-out both !important;
+}
+
+.ims-ai-dot:nth-child(1) {
+    background: #06b6d4 !important;
+    animation-delay: -0.32s !important;
+}
+.ims-ai-dot:nth-child(2) {
+    background: #14b8a6 !important;
+    animation-delay: -0.16s !important;
+}
+.ims-ai-dot:nth-child(3) {
+    background: #10b981 !important;
+    animation-delay: 0s !important;
+}
+
+@keyframes ims-ai-wave {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.3;
+    }
+    40% {
+        transform: scale(1.25);
+        opacity: 1;
+        box-shadow: 0 0 10px #06b6d4;
+    }
+}
+
+.ims-ai-spinner {
+    width: 14px !important;
+    height: 14px !important;
+    border: 2px solid rgba(56, 189, 248, 0.25) !important;
+    border-top-color: #38bdf8 !important;
+    border-radius: 50% !important;
+    animation: ims-spin 0.8s linear infinite !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+}
+
+@keyframes ims-spin {
+    to { transform: rotate(360deg); }
+}
 </style>
 
 <script>
@@ -264,6 +341,8 @@ window.imsAiCopilot = function() {
             }
         })(),
         isLoading: false,
+        loadingText: 'Sedang memeriksa database IMS...',
+        loadingInterval: null,
         userInput: '',
         engineMode: 'AI',
         userRole: '',
@@ -426,6 +505,21 @@ window.imsAiCopilot = function() {
 
             this.userInput = '';
             this.isLoading = true;
+
+            const steps = [
+                'Sedang memeriksa database IMS...',
+                'Menganalisis parameter & telemetri...',
+                'Menghubungkan data operasional...',
+                'Menyusun jawaban akurat...'
+            ];
+            let stepIndex = 0;
+            this.loadingText = steps[0];
+            if (this.loadingInterval) clearInterval(this.loadingInterval);
+            this.loadingInterval = setInterval(() => {
+                stepIndex = (stepIndex + 1) % steps.length;
+                this.loadingText = steps[stepIndex];
+            }, 1800);
+
             this.saveMessages();
             this.$nextTick(() => this.scrollToBottom());
 
@@ -507,6 +601,10 @@ window.imsAiCopilot = function() {
                     time: this.currentTime()
                 });
             } finally {
+                if (this.loadingInterval) {
+                    clearInterval(this.loadingInterval);
+                    this.loadingInterval = null;
+                }
                 this.isLoading = false;
                 this.saveMessages();
                 this.$nextTick(() => this.scrollToBottom());
@@ -708,15 +806,26 @@ window.imsAiCopilot = function() {
                 </div>
             </template>
 
-            <!-- Loading Indicator -->
+            <!-- Loading Indicator (Cyber Wave & Scanning Radar) -->
             <div x-show="isLoading" style="display:flex; justify-content:flex-start;">
-                <div style="background:rgba(15,23,42,0.95); border:1px solid rgba(6,182,212,0.35); border-radius:16px 16px 16px 2px; padding:10px 14px; display:flex; align-items:center; gap:8px;">
-                    <span style="display:inline-flex; gap:4px;">
-                        <span style="width:6px; height:6px; border-radius:9999px; background:#22d3ee;"></span>
-                        <span style="width:6px; height:6px; border-radius:9999px; background:#2dd4bf;"></span>
-                        <span style="width:6px; height:6px; border-radius:9999px; background:#34d399;"></span>
+                <div class="ims-ai-loading-card">
+                    <div class="ims-ai-loading-shimmer"></div>
+                    
+                    <!-- Spinning Cyber Ring -->
+                    <span class="ims-ai-spinner"></span>
+
+                    <!-- Pulsing Wave Dots -->
+                    <div style="display:inline-flex; align-items:center; gap:4px; flex-shrink:0;">
+                        <span class="ims-ai-dot"></span>
+                        <span class="ims-ai-dot"></span>
+                        <span class="ims-ai-dot"></span>
+                    </div>
+
+                    <!-- Dynamic Progression Text -->
+                    <span 
+                        style="font-size:11px; font-family:monospace; color:#38bdf8; font-weight:500; letter-spacing:0.02em; display:inline-block;"
+                        x-text="loadingText">
                     </span>
-                    <span style="font-size:11px; font-family:monospace; color:#38bdf8;">Sedang menganalisis database IMS...</span>
                 </div>
             </div>
         </div>

@@ -101,8 +101,12 @@ class AiAssistantController extends Controller
         preg_match('/\b\d{5,14}\b/', $query, $idMatches);
         $extractedId = $idMatches[0] ?? null;
 
+        // Extract clean search term (strip common verbs/keywords)
+        $searchTerm = trim(preg_replace('/\b(cari|cek|lihat|info|data|pelanggan|nama|user|client|cust|tagihan|billing|invoice|status|tolong|mohon|berapa|siapa|tentang|apakah|ada)\b/i', '', $query));
+        $searchTerm = trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $searchTerm));
+
         // Context 1: Customer lookup (by ID, username, or name)
-        if (str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user') || str_contains($lower, 'client') || $extractedId) {
+        if ($extractedId || (strlen($searchTerm) >= 3 && !in_array($searchTerm, ['hari ini', 'bulan ini', 'open', 'close', 'lunas', 'pending'])) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
             try {
                 $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
                 $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
@@ -115,16 +119,12 @@ class AiAssistantController extends Controller
                         $q->where('nomor_internet', 'like', "%{$extractedId}%")
                           ->orWhere($userCol, 'like', "%{$extractedId}%");
                     });
-                } else {
-                    // Extract search terms (strip common keywords)
-                    $searchTerm = trim(preg_replace('/\b(cari|cek|lihat|info|data|pelanggan|nama|user|status)\b/i', '', $query));
-                    if (strlen($searchTerm) >= 3) {
-                        $custQuery->where(function ($q) use ($searchTerm, $userCol) {
-                            $q->where('nama_pelanggan', 'like', "%{$searchTerm}%")
-                              ->orWhere($userCol, 'like', "%{$searchTerm}%")
-                              ->orWhere('nomor_internet', 'like', "%{$searchTerm}%");
-                        });
-                    }
+                } else if (strlen($searchTerm) >= 3) {
+                    $custQuery->where(function ($q) use ($searchTerm, $userCol) {
+                        $q->where('nama_pelanggan', 'like', "%{$searchTerm}%")
+                          ->orWhere($userCol, 'like', "%{$searchTerm}%")
+                          ->orWhere('nomor_internet', 'like', "%{$searchTerm}%");
+                    });
                 }
 
                 $context['customers'] = $custQuery->select([
@@ -144,16 +144,35 @@ class AiAssistantController extends Controller
             }
         }
 
+        // Context 1.5: Collect target customer IDs from extractedId or discovered customer records
+        $targetCustomerIds = [];
+        if ($extractedId) {
+            $targetCustomerIds[] = (string)$extractedId;
+        }
+        if (!empty($context['customers'])) {
+            foreach ($context['customers'] as $cust) {
+                if (!empty($cust->nomor_internet)) {
+                    $targetCustomerIds[] = (string)$cust->nomor_internet;
+                }
+                if (!empty($cust->pppoe_username)) {
+                    $targetCustomerIds[] = (string)$cust->pppoe_username;
+                }
+            }
+        }
+        $targetCustomerIds = array_values(array_unique(array_filter($targetCustomerIds)));
+
         // Context 2: Billing / Tagihan lookup
-        if (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'keuangan') || $extractedId) {
+        if (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'keuangan') || !empty($targetCustomerIds)) {
             try {
                 $billQuery = DB::table('trx_billing_layanan')
                     ->where('hide', 0);
 
-                if ($extractedId) {
-                    $billQuery->where(function ($q) use ($extractedId) {
-                        $q->where('kode_billing_layanan', 'like', "%{$extractedId}%")
-                          ->orWhere('nomor_internet', 'like', "%{$extractedId}%");
+                if (!empty($targetCustomerIds)) {
+                    $billQuery->where(function ($q) use ($targetCustomerIds) {
+                        foreach ($targetCustomerIds as $id) {
+                            $q->orWhere('nomor_internet', 'like', "%{$id}%")
+                              ->orWhere('kode_billing_layanan', 'like', "%{$id}%");
+                        }
                     });
                 } else if (str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi')) {
                     $billQuery->where('status_bill_lay', 14); // Pending verifikasi
@@ -161,7 +180,7 @@ class AiAssistantController extends Controller
                     $billQuery->whereNotIn('status_bill_lay', [15]); // Belum bayar
                 }
 
-                $context['billings'] = $billQuery->select([
+                $bills = $billQuery->select([
                     'kode_billing_layanan',
                     'nomor_internet',
                     'bulan_tagihan',
@@ -171,7 +190,25 @@ class AiAssistantController extends Controller
                     'payment_type',
                     'payment_paid',
                     'amount_paid',
-                ])->orderByDesc('kode_billing_layanan')->limit(5)->get()->toArray();
+                ])
+                ->orderByDesc('tahun_tagihan')
+                ->orderByDesc('bulan_tagihan')
+                ->limit(6)
+                ->get()
+                ->map(function ($b) {
+                    $b->status_desc = match((string)$b->status_bill_lay) {
+                        '15' => 'Lunas (Paid)',
+                        '14' => 'Menunggu Verifikasi',
+                        '13' => 'Belum Bayar (Unpaid)',
+                        '12' => 'Publish Tagihan',
+                        '11' => 'Draft',
+                        default => 'Status #' . $b->status_bill_lay
+                    };
+                    return $b;
+                })
+                ->toArray();
+
+                $context['billings'] = $bills;
 
                 // Total pending verification count
                 $context['stats']['pending_verification_count'] = DB::table('trx_billing_layanan')
@@ -184,17 +221,19 @@ class AiAssistantController extends Controller
         }
 
         // Context 3: Tiket Gangguan
-        if (str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') || str_contains($lower, 'keluhan') || str_contains($lower, 'los') || str_contains($lower, 'komplain')) {
+        if (str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') || str_contains($lower, 'keluhan') || str_contains($lower, 'los') || str_contains($lower, 'komplain') || (!empty($targetCustomerIds) && (str_contains($lower, 'kendala') || str_contains($lower, 'masalah') || str_contains($lower, 'rusak')))) {
             try {
                 $context['tickets'] = DB::table('trx_tiket_gangguan')
                     ->where('hide', 0)
-                    ->when($extractedId, function ($q) use ($extractedId) {
-                        $q->where(function ($sub) use ($extractedId) {
-                            $sub->where('tiket', 'like', "%{$extractedId}%")
-                                ->orWhere('nomor_internet', 'like', "%{$extractedId}%");
+                    ->when(!empty($targetCustomerIds), function ($q) use ($targetCustomerIds) {
+                        $q->where(function ($sub) use ($targetCustomerIds) {
+                            foreach ($targetCustomerIds as $id) {
+                                $sub->orWhere('tiket', 'like', "%{$id}%")
+                                    ->orWhere('nomor_internet', 'like', "%{$id}%");
+                            }
                         });
                     })
-                    ->when(!$extractedId, function ($q) {
+                    ->when(empty($targetCustomerIds), function ($q) {
                         $q->whereNotIn('status', ['close', 'selesai', 'done']);
                     })
                     ->select(['tiket', 'nomor_internet', 'keluhan', 'status', 'kat_tiket', 'penanganan', 'date_create'])
@@ -389,14 +428,16 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
         if ($isFallback) {
             $output[] = "> ⚠️ *Catatan: Menampilkan data internal langsung via Offline Database Heuristic Engine.*";
             if (!empty($errorMessage)) {
-                // Shorten if too long
                 $cleanErr = strlen($errorMessage) > 160 ? substr($errorMessage, 0, 160) . '...' : $errorMessage;
                 $output[] = "> 🔍 *Status Google API: " . htmlspecialchars($cleanErr) . "*";
             }
         }
 
-        // Case 1: Customer details found or searched
+        $hasData = false;
+
+        // Case 1: Customer details found
         if (!empty($context['customers'])) {
+            $hasData = true;
             $output[] = "### 👤 Data Pelanggan Ditemukan (" . count($context['customers']) . "):";
             foreach ($context['customers'] as $c) {
                 $statusText = match((string)$c->status_reg) {
@@ -413,75 +454,56 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
                 $output[] = "  - PPPoE: `{$c->pppoe_username}` | OLT: `{$c->olt}`";
                 $output[] = "  - Alamat: *{$c->alamat_pasang}*";
             }
-            return implode("\n", $output);
-        } else if (str_contains($lower, 'pelanggan') || str_contains($lower, 'cust')) {
-            $output[] = "### 👤 Pencarian Pelanggan";
-            $output[] = "🔍 Tidak ditemukan pelanggan dengan kata kunci pencarian tersebut.";
-            $output[] = "👉 *Tips: Masukkan nomor internet (contoh: `102938`) atau nama pelanggan lengkap.*";
-            return implode("\n", $output);
         }
 
-        // Case 2: Billing details found or searched
+        // Case 2: Billing details found
         if (!empty($context['billings'])) {
-            $output[] = "### 💳 Data Tagihan & Pembayaran (" . count($context['billings']) . "):";
+            $hasData = true;
+            $output[] = "\n### 💳 Data Tagihan & Pembayaran (" . count($context['billings']) . "):";
             $output[] = "| No. Billing | No. Internet | Periode | Total | Status |";
             $output[] = "|---|---|---|---|---|";
             foreach ($context['billings'] as $b) {
-                $st = match((int)$b->status_bill_lay) {
-                    15 => '🟢 Lunas',
-                    14 => '🟡 Menunggu Verifikasi',
+                $st = match((string)$b->status_bill_lay) {
+                    '15' => '🟢 Lunas',
+                    '14' => '🟡 Menunggu Verifikasi',
                     default => '🔴 Belum Bayar'
                 };
-                $totalRp = 'Rp ' . number_format($b->total_layanan ?? 0, 0, ',', '.');
+                $totalRp = 'Rp ' . number_format((float)($b->total_layanan ?? 0), 0, ',', '.');
                 $output[] = "| `{$b->kode_billing_layanan}` | `{$b->nomor_internet}` | {$b->bulan_tagihan}/{$b->tahun_tagihan} | {$totalRp} | {$st} |";
             }
 
-            if (isset($context['stats']['pending_verification_count'])) {
+            if (isset($context['stats']['pending_verification_count']) && $context['stats']['pending_verification_count'] > 0) {
                 $output[] = "\n📌 *Terdapat **{$context['stats']['pending_verification_count']}** tagihan menunggu konfirmasi/verifikasi finance.*";
             }
-            return implode("\n", $output);
-        } else if (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'pending') || str_contains($lower, 'verif')) {
-            $output[] = "### 💳 Informasi Tagihan & Verifikasi";
-            if (isset($context['stats']['pending_verification_count']) && $context['stats']['pending_verification_count'] === 0) {
-                $output[] = "✅ **Tidak ada tagihan yang menunggu verifikasi saat ini.**";
-                $output[] = "Seluruh konfirmasi pembayaran dari pelanggan maupun portal sudah diproses oleh tim finance.";
-            } else {
-                $output[] = "🔍 Data tagihan spesifik tidak ditemukan. Silakan masukkan nomor billing atau nomor internet pelanggan.";
-            }
-            return implode("\n", $output);
         }
 
-        // Case 3: Tiket gangguan found or searched
+        // Case 3: Tiket gangguan found
         if (!empty($context['tickets'])) {
-            $output[] = "### 🎫 Tiket Gangguan Ditemukan (" . count($context['tickets']) . "):";
+            $hasData = true;
+            $output[] = "\n### 🎫 Tiket Gangguan Ditemukan (" . count($context['tickets']) . "):";
             foreach ($context['tickets'] as $t) {
                 $output[] = "- **Tiket `{$t->tiket}`** (Internet: `{$t->nomor_internet}`)";
                 $output[] = "  - Keluhan: *{$t->keluhan}*";
                 $output[] = "  - Status: **" . strtoupper($t->status) . "** | Penanganan: " . ($t->penanganan ?: 'Menunggu Teknisi');
             }
-            return implode("\n", $output);
-        } else if (str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') || str_contains($lower, 'keluhan')) {
-            $output[] = "### 🎫 Status Tiket Gangguan";
-            $output[] = "🎉 **Tidak ada tiket gangguan yang berstatus open / aktif saat ini.**";
-            $output[] = "Layanan internet pelanggan terpantau aman tanpa laporan kendala.";
-            return implode("\n", $output);
         }
 
         // Case 4: OLTs found
         if (!empty($context['olts'])) {
-            $output[] = "### 🌐 Status OLT / Jaringan Utama:";
+            $hasData = true;
+            $output[] = "\n### 🌐 Status OLT / Jaringan Utama:";
             $output[] = "| Nama OLT | Brand / Model | IP Address | Status |";
             $output[] = "|---|---|---|---|";
             foreach ($context['olts'] as $o) {
                 $st = ($o->is_active == 1) ? '🟢 Aktif' : '🔴 Non-Aktif';
                 $output[] = "| **{$o->name_olt}** | {$o->brand} {$o->model} | `{$o->ip_address}` | {$st} |";
             }
-            return implode("\n", $output);
         }
 
         // Case 5: Summary stats
         if (!empty($context['stats']) && (isset($context['stats']['active_customers']) || isset($context['stats']['isolated_customers']))) {
-            $output[] = "### 📊 Ringkasan Operasional IMS2:";
+            $hasData = true;
+            $output[] = "\n### 📊 Ringkasan Operasional IMS2:";
             if (isset($context['stats']['active_customers'])) {
                 $output[] = "- 👥 **Total Pelanggan Aktif Online (#20):** `{$context['stats']['active_customers']}` pelanggan";
             }
@@ -497,6 +519,31 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             if (isset($context['stats']['open_tickets'])) {
                 $output[] = "- 🛠️ **Tiket Gangguan Open:** `{$context['stats']['open_tickets']}` tiket";
             }
+        }
+
+        if ($hasData) {
+            return implode("\n", $output);
+        }
+
+        // If specific keyword was used but no data returned
+        if (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'pending') || str_contains($lower, 'verif')) {
+            $output[] = "### 💳 Informasi Tagihan & Verifikasi";
+            if (isset($context['stats']['pending_verification_count']) && $context['stats']['pending_verification_count'] === 0) {
+                $output[] = "✅ **Tidak ada tagihan yang menunggu verifikasi saat ini.**\nSeluruh konfirmasi pembayaran dari pelanggan maupun portal sudah diproses oleh tim finance.";
+            } else {
+                $output[] = "🔍 Data tagihan spesifik tidak ditemukan. Silakan masukkan nomor billing atau nomor internet pelanggan.";
+            }
+            return implode("\n", $output);
+        }
+
+        if (str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
+            $output[] = "### 👤 Pencarian Pelanggan\n🔍 Tidak ditemukan pelanggan dengan kata kunci pencarian tersebut.\n👉 *Tips: Masukkan nomor internet (contoh: `102938`) atau nama pelanggan lengkap.*";
+            return implode("\n", $output);
+        }
+
+        if (str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') || str_contains($lower, 'keluhan')) {
+            $output[] = "### 🎫 Status Tiket Gangguan";
+            $output[] = "🎉 **Tidak ada tiket gangguan yang berstatus open / aktif saat ini.**\nLayanan internet pelanggan terpantau aman tanpa laporan kendala.";
             return implode("\n", $output);
         }
 

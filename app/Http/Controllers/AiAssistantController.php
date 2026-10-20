@@ -103,133 +103,156 @@ class AiAssistantController extends Controller
 
         // Context 1: Customer lookup (by ID, username, or name)
         if (str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user') || str_contains($lower, 'client') || $extractedId) {
-            $custQuery = DB::table('trx_batchjob_register')
-                ->where('hide', 0);
+            try {
+                $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
+                $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
 
-            if ($extractedId) {
-                $custQuery->where(function ($q) use ($extractedId) {
-                    $q->where('nomor_internet', 'like', "%{$extractedId}%")
-                      ->orWhere('pppoe_username', 'like', "%{$extractedId}%");
-                });
-            } else {
-                // Extract search terms (strip common keywords)
-                $searchTerm = trim(preg_replace('/\b(cari|cek|lihat|info|data|pelanggan|nama|user|status)\b/i', '', $query));
-                if (strlen($searchTerm) >= 3) {
-                    $custQuery->where(function ($q) use ($searchTerm) {
-                        $q->where('nama_pelanggan', 'like', "%{$searchTerm}%")
-                          ->orWhere('pppoe_username', 'like', "%{$searchTerm}%")
-                          ->orWhere('nomor_internet', 'like', "%{$searchTerm}%");
+                $custQuery = DB::table('trx_batchjob_register')
+                    ->where('hide', 0);
+
+                if ($extractedId) {
+                    $custQuery->where(function ($q) use ($extractedId, $userCol) {
+                        $q->where('nomor_internet', 'like', "%{$extractedId}%")
+                          ->orWhere($userCol, 'like', "%{$extractedId}%");
                     });
+                } else {
+                    // Extract search terms (strip common keywords)
+                    $searchTerm = trim(preg_replace('/\b(cari|cek|lihat|info|data|pelanggan|nama|user|status)\b/i', '', $query));
+                    if (strlen($searchTerm) >= 3) {
+                        $custQuery->where(function ($q) use ($searchTerm, $userCol) {
+                            $q->where('nama_pelanggan', 'like', "%{$searchTerm}%")
+                              ->orWhere($userCol, 'like', "%{$searchTerm}%")
+                              ->orWhere('nomor_internet', 'like', "%{$searchTerm}%");
+                        });
+                    }
                 }
-            }
 
-            $context['customers'] = $custQuery->select([
-                'nomor_internet',
-                'nama_pelanggan',
-                'pppoe_username',
-                'kode_bandwith',
-                'status_reg',
-                'is_suspend',
-                'is_termin',
-                'alamat_pasang',
-                'olt',
-                'router_id',
-            ])->limit(5)->get()->toArray();
+                $context['customers'] = $custQuery->select([
+                    'nomor_internet',
+                    'nama_pelanggan',
+                    $userCol . ' as pppoe_username',
+                    'kode_bandwith',
+                    'status_reg',
+                    'is_suspend',
+                    'is_termin',
+                    'alamat_pasang',
+                    'olt',
+                    'router_id',
+                ])->limit(5)->get()->toArray();
+            } catch (\Throwable $e) {
+                Log::warning("[AiAssistant] Gagal mengambil data pelanggan: " . $e->getMessage());
+            }
         }
 
         // Context 2: Billing / Tagihan lookup
         if (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'keuangan') || $extractedId) {
-            $billQuery = DB::table('trx_billing_layanan')
-                ->where('hide', 0);
+            try {
+                $billQuery = DB::table('trx_billing_layanan')
+                    ->where('hide', 0);
 
-            if ($extractedId) {
-                $billQuery->where(function ($q) use ($extractedId) {
-                    $q->where('kode_billing_layanan', 'like', "%{$extractedId}%")
-                      ->orWhere('nomor_internet', 'like', "%{$extractedId}%");
-                });
-            } else if (str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi')) {
-                $billQuery->where('status_bill_lay', 14); // Pending verifikasi
-            } else if (str_contains($lower, 'belum') || str_contains($lower, 'unpaid')) {
-                $billQuery->whereNotIn('status_bill_lay', [15]); // Belum bayar
+                if ($extractedId) {
+                    $billQuery->where(function ($q) use ($extractedId) {
+                        $q->where('kode_billing_layanan', 'like', "%{$extractedId}%")
+                          ->orWhere('nomor_internet', 'like', "%{$extractedId}%");
+                    });
+                } else if (str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi')) {
+                    $billQuery->where('status_bill_lay', 14); // Pending verifikasi
+                } else if (str_contains($lower, 'belum') || str_contains($lower, 'unpaid')) {
+                    $billQuery->whereNotIn('status_bill_lay', [15]); // Belum bayar
+                }
+
+                $context['billings'] = $billQuery->select([
+                    'kode_billing_layanan',
+                    'nomor_internet',
+                    'bulan_tagihan',
+                    'tahun_tagihan',
+                    'total_layanan',
+                    'status_bill_lay',
+                    'payment_type',
+                    'payment_paid',
+                    'amount_paid',
+                ])->orderByDesc('kode_billing_layanan')->limit(5)->get()->toArray();
+
+                // Total pending verification count
+                $context['stats']['pending_verification_count'] = DB::table('trx_billing_layanan')
+                    ->where('hide', 0)
+                    ->where('status_bill_lay', 14)
+                    ->count();
+            } catch (\Throwable $e) {
+                Log::warning("[AiAssistant] Gagal mengambil data tagihan: " . $e->getMessage());
             }
-
-            $context['billings'] = $billQuery->select([
-                'kode_billing_layanan',
-                'nomor_internet',
-                'bulan_tagihan',
-                'tahun_tagihan',
-                'total_layanan',
-                'status_bill_lay',
-                'payment_type',
-                'payment_paid',
-                'amount_paid',
-            ])->orderByDesc('kode_billing_layanan')->limit(5)->get()->toArray();
-
-            // Total pending verification count
-            $context['stats']['pending_verification_count'] = DB::table('trx_billing_layanan')
-                ->where('hide', 0)
-                ->where('status_bill_lay', 14)
-                ->count();
         }
 
         // Context 3: Tiket Gangguan
         if (str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') || str_contains($lower, 'keluhan') || str_contains($lower, 'los') || str_contains($lower, 'komplain')) {
-            $context['tickets'] = DB::table('trx_tiket_gangguan')
-                ->where('hide', 0)
-                ->when($extractedId, function ($q) use ($extractedId) {
-                    $q->where(function ($sub) use ($extractedId) {
-                        $sub->where('tiket', 'like', "%{$extractedId}%")
-                            ->orWhere('nomor_internet', 'like', "%{$extractedId}%");
-                    });
-                })
-                ->when(!$extractedId, function ($q) {
-                    $q->whereNotIn('status', ['close', 'selesai', 'done']);
-                })
-                ->select(['tiket', 'nomor_internet', 'keluhan', 'status', 'kat_tiket', 'penanganan', 'date_create'])
-                ->orderByDesc('date_create')
-                ->limit(5)
-                ->get()
-                ->toArray();
+            try {
+                $context['tickets'] = DB::table('trx_tiket_gangguan')
+                    ->where('hide', 0)
+                    ->when($extractedId, function ($q) use ($extractedId) {
+                        $q->where(function ($sub) use ($extractedId) {
+                            $sub->where('tiket', 'like', "%{$extractedId}%")
+                                ->orWhere('nomor_internet', 'like', "%{$extractedId}%");
+                        });
+                    })
+                    ->when(!$extractedId, function ($q) {
+                        $q->whereNotIn('status', ['close', 'selesai', 'done']);
+                    })
+                    ->select(['tiket', 'nomor_internet', 'keluhan', 'status', 'kat_tiket', 'penanganan', 'date_create'])
+                    ->orderByDesc('date_create')
+                    ->limit(5)
+                    ->get()
+                    ->toArray();
 
-            $context['stats']['open_tickets_count'] = DB::table('trx_tiket_gangguan')
-                ->where('hide', 0)
-                ->whereNotIn('status', ['close', 'selesai', 'done'])
-                ->count();
+                $context['stats']['open_tickets_count'] = DB::table('trx_tiket_gangguan')
+                    ->where('hide', 0)
+                    ->whereNotIn('status', ['close', 'selesai', 'done'])
+                    ->count();
+            } catch (\Throwable $e) {
+                Log::warning("[AiAssistant] Gagal mengambil data tiket: " . $e->getMessage());
+            }
         }
 
         // Context 4: OLT & Network
         if (str_contains($lower, 'olt') || str_contains($lower, 'jaringan') || str_contains($lower, 'noc') || str_contains($lower, 'pon') || str_contains($lower, 'server')) {
-            $context['olts'] = DB::table('m_olt')
-                ->select(['kode_olt', 'name_olt', 'ip_address', 'brand', 'model', 'is_active', 'last_status'])
-                ->orderBy('name_olt')
-                ->limit(8)
-                ->get()
-                ->toArray();
+            try {
+                $context['olts'] = DB::table('m_olt')
+                    ->select(['kode_olt', 'name_olt', 'ip_address', 'brand', 'model', 'is_active', 'last_status'])
+                    ->orderBy('name_olt')
+                    ->limit(8)
+                    ->get()
+                    ->toArray();
+            } catch (\Throwable $e) {
+                Log::warning("[AiAssistant] Gagal mengambil data OLT: " . $e->getMessage());
+            }
         }
 
         // Context 5: Global Quick Stats (for summary/recap requests)
         if (str_contains($lower, 'rekap') || str_contains($lower, 'ringkasan') || str_contains($lower, 'summary') || str_contains($lower, 'hari ini') || str_contains($lower, 'status sistem')) {
-            $currentMonth = date('m');
-            $currentYear = date('Y');
+            try {
+                $currentMonth = date('m');
+                $currentYear = date('Y');
 
-            $context['stats']['active_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('status_reg', 20)->count();
-            $context['stats']['isolated_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('is_suspend', 1)->count();
-            $context['stats']['bills_paid_this_month'] = DB::table('trx_billing_layanan')
-                ->where('hide', 0)
-                ->where('bulan_tagihan', $currentMonth)
-                ->where('tahun_tagihan', $currentYear)
-                ->where('status_bill_lay', 15)
-                ->count();
-            $context['stats']['bills_unpaid_this_month'] = DB::table('trx_billing_layanan')
-                ->where('hide', 0)
-                ->where('bulan_tagihan', $currentMonth)
-                ->where('tahun_tagihan', $currentYear)
-                ->whereNotIn('status_bill_lay', [15])
-                ->count();
-            $context['stats']['open_tickets'] = DB::table('trx_tiket_gangguan')
-                ->where('hide', 0)
-                ->whereNotIn('status', ['close', 'selesai', 'done'])
-                ->count();
+                $context['stats']['active_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('status_reg', 20)->count();
+                $context['stats']['isolated_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('is_suspend', 1)->count();
+                $context['stats']['bills_paid_this_month'] = DB::table('trx_billing_layanan')
+                    ->where('hide', 0)
+                    ->where('bulan_tagihan', $currentMonth)
+                    ->where('tahun_tagihan', $currentYear)
+                    ->where('status_bill_lay', 15)
+                    ->count();
+                $context['stats']['bills_unpaid_this_month'] = DB::table('trx_billing_layanan')
+                    ->where('hide', 0)
+                    ->where('bulan_tagihan', $currentMonth)
+                    ->where('tahun_tagihan', $currentYear)
+                    ->whereNotIn('status_bill_lay', [15])
+                    ->count();
+                $context['stats']['open_tickets'] = DB::table('trx_tiket_gangguan')
+                    ->where('hide', 0)
+                    ->whereNotIn('status', ['close', 'selesai', 'done'])
+                    ->count();
+            } catch (\Throwable $e) {
+                Log::warning("[AiAssistant] Gagal mengambil rekap statistik: " . $e->getMessage());
+            }
         }
 
         return $context;

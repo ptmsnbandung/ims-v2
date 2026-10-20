@@ -4735,29 +4735,15 @@ class FinanceController extends Controller
                 $escapedAlt2 = addslashes(str_replace('-', '/', $kodeBilling));
                 $nowStr = Carbon::now()->toDateTimeString();
                 $adminNoteStr = addslashes("Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}");
-                $escapedBank = addslashes($bank);
 
-                try {
-                    DB::statement("
-                        UPDATE ptmsn.payment_confirmations 
-                        SET status = 'approved',
-                            destination_bank = '{$escapedBank}',
-                            verified_at = '{$nowStr}',
-                            admin_notes = '{$adminNoteStr}',
-                            updated_at = '{$nowStr}'
-                        WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
-                    ");
-                } catch (\Throwable $ptEx) {
-                    // Fallback jika destination_bank tidak ada di ptmsn.payment_confirmations
-                    DB::statement("
-                        UPDATE ptmsn.payment_confirmations 
-                        SET status = 'approved',
-                            verified_at = '{$nowStr}',
-                            admin_notes = '{$adminNoteStr}',
-                            updated_at = '{$nowStr}'
-                        WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
-                    ");
-                }
+                DB::statement("
+                    UPDATE ptmsn.payment_confirmations 
+                    SET status = 'approved',
+                        verified_at = '{$nowStr}',
+                        admin_notes = '{$adminNoteStr}',
+                        updated_at = '{$nowStr}'
+                    WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                ");
             } catch (\Throwable $e) {}
 
             $unsuspendInfo = '';

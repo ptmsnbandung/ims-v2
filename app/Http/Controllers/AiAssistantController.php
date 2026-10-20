@@ -428,6 +428,59 @@ class AiAssistantController extends Controller
             }
         }
 
+        // Context 4.5: Real-time NOC Telemetry & Alerts (ONU LOS / DOWN / Isu Aktif)
+        $isAskingNocAlerts = str_contains($lower, 'loss') || str_contains($lower, 'los') || str_contains($lower, 'down') 
+            || str_contains($lower, 'offline') || str_contains($lower, 'kabel putus') || str_contains($lower, 'isu aktif') 
+            || str_contains($lower, 'isu') || str_contains($lower, 'node') || str_contains($lower, 'alert') || str_contains($lower, 'notifikasi');
+
+        if ($this->canAccessNetwork($user) && $isAskingNocAlerts) {
+            try {
+                $nocController = app(\App\Http\Controllers\Noc\NocController::class);
+                $nocData = $nocController->getNocNotificationsData();
+
+                $activeAlerts = $nocData['alerts'] ?? [];
+                $losAlerts = array_values(array_filter($activeAlerts, fn($a) => ($a['status'] ?? '') === 'LOS'));
+                $downAlerts = array_values(array_filter($activeAlerts, fn($a) => ($a['status'] ?? '') === 'DOWN'));
+
+                $context['noc_telemetry'] = [
+                    'keterangan' => 'Data real-time monitoring OLT & ONU langsung dari sensor telemetri jaringan IMS2 (BUKAN sekadar tiket)',
+                    'summary' => [
+                        'total_active' => $nocData['summary']['total_active'] ?? count($activeAlerts),
+                        'total_los' => $nocData['summary']['total_los'] ?? count($losAlerts),
+                        'total_down' => $nocData['summary']['total_down'] ?? count($downAlerts),
+                        'total_tickets' => $nocData['summary']['total_tickets'] ?? 0,
+                    ],
+                    'onu_los_nodes' => array_map(function($a) {
+                        return [
+                            'interface' => $a['interface_name'] ?? ($a['device_name'] ?? '-'),
+                            'nama_pelanggan' => $a['user_name'] ?? '-',
+                            'nomor_internet' => $a['nomor_internet'] ?? '-',
+                            'olt' => $a['subtitle'] ?? ($a['olt_kode'] ?? '-'),
+                            'port_pon' => $a['pon_index'] ?? '-',
+                            'redaman' => $a['rx_power'] ?? 'No Signal (LOS)',
+                            'waktu_mulai' => $a['created_at'] ?? '-',
+                            'durasi' => $a['duration_human'] ?? '-',
+                            'deskripsi' => $a['message'] ?? 'Kabel optik putus atau redaman loss',
+                        ];
+                    }, $losAlerts),
+                    'onu_down_nodes' => array_slice(array_map(function($a) {
+                        return [
+                            'interface' => $a['interface_name'] ?? ($a['device_name'] ?? '-'),
+                            'nama_pelanggan' => $a['user_name'] ?? '-',
+                            'nomor_internet' => $a['nomor_internet'] ?? '-',
+                            'olt' => $a['subtitle'] ?? ($a['olt_kode'] ?? '-'),
+                            'port_pon' => $a['pon_index'] ?? '-',
+                            'waktu_mulai' => $a['created_at'] ?? '-',
+                            'durasi' => $a['duration_human'] ?? '-',
+                            'deskripsi' => $a['message'] ?? 'Perangkat modem padam / power off',
+                        ];
+                    }, $downAlerts), 0, 15),
+                ];
+            } catch (\Throwable $e) {
+                Log::warning("[AiAssistant] Gagal mengambil data NOC Telemetry: " . $e->getMessage());
+            }
+        }
+
         // Context 5: Global Quick Stats (for summary/recap requests)
         if (str_contains($lower, 'rekap') || str_contains($lower, 'ringkasan') || str_contains($lower, 'summary') || str_contains($lower, 'hari ini') || str_contains($lower, 'status sistem')) {
             try {
@@ -481,6 +534,10 @@ class AiAssistantController extends Controller
             . "{$roleRules}\n\n"
             . "PENTING: Jika pengguna meminta data atau tindakan di luar batasan role di atas (misal NOC/Teknik menanyakan keuangan/tagihan/omset, atau Finance menanyakan konfigurasi router OLT mendalam, atau non-HR menanyakan gaji/karyawan), Anda WAJIB MENOLAKNYA SECARA SOPAN DAN TEGAS: jelaskan bahwa hak akses divisi {$userRole} tidak diizinkan untuk domain tersebut.\n\n"
             . "Aturan operasional teknis & data:\n"
+            . "- Terkait Monitoring Jaringan Realtime (ONU LOS & DOWN):\n"
+            . "  1. Jika pengguna menanyakan 'user yang loss', 'siapa saja yang loss', atau 'ONU down': RUJUK UTAMA adalah data konteks [noc_telemetry] (Monitoring Realtime OLT / Isu Aktif), BUKAN sekadar tiket bantuan.\n"
+            . "  2. Laporkan node dari [noc_telemetry.onu_los_nodes] yang berstatus 'LOS' (kabel putus / redaman loss) mencakup Interface GPON, Nama Pelanggan, No Internet, OLT/Port, Redaman (No Signal LOS), dan Durasi Gangguan.\n"
+            . "  3. Jika ada tiket laporan terkait di helpdesk, sebutkan secara terpisah sebagai tiket laporan agar user memahami perbedaan antara status fisik laser OLT vs tiket aduan.\n"
             . "- Terkait OLT & ONU Pelanggan:\n"
             . "  1. Jika index_olt pelanggan bernilai NULL/kosong: Jelaskan bahwa pengecekan live redaman optik belum bisa dilakukan karena nomor port GPON ONU belum dipetakan pada database registrasi pelanggan. Sebutkan nama & IP OLT induk pelanggan dan sarankan tim teknisi melengkapi index_olt pada menu data pelanggan.\n"
             . "  2. Jika index_olt terisi: Tampilkan nama OLT, IP OLT, dan nomor port GPON index_olt pelanggan tersebut.\n"
@@ -756,6 +813,7 @@ class AiAssistantController extends Controller
             case 'Teknik':
                 return "- Hak Akses: Divisi TEKNIK & NOC (Infrastruktur Jaringan & Lapangan - Setara & Sama).\n"
                     . "- DIIZINKAN (SAMA): Status OLT, ONU, port GPON (index_olt), redaman optik (Rx/Tx dBm), status PPPoE online/offline, traffic, router, IP address, data pelanggan teknis/lapangan (alamat pasang, paket, nomor internet, status instalasi/aktif/suspend), tiket perbaikan & gangguan teknis, serta inventori perangkat teknis.\n"
+                    . "- SUMBER DATA LOSS / DOWN: Untuk pertanyaan seputar 'user yang loss', 'siapa saja yang loss', atau 'perangkat down', gunakan data [noc_telemetry] (Monitoring Realtime OLT) sebagai sumber utama telemetri fisik jaringan.\n"
                     . "- DILARANG KERAS: Data keuangan perusahaan, tagihan billing pembukuan, rekening bank perusahaan, omset/pendapatan, laba-rugi, dan verifikasi pembayaran. Jika ditanya hal terkait keuangan/tagihan/omset, tolak secara sopan: jelaskan bahwa data keuangan hanya dapat diakses oleh divisi Finance.";
 
             case 'Customer Service':
@@ -965,6 +1023,60 @@ class AiAssistantController extends Controller
                 $output[] = "- Tim Teknisi / NOC dapat melengkapi data **Index OLT** pelanggan melalui menu **Data Pelanggan > Edit Registrasi** sesuai port GPON tempat pelanggan teraktivasi di lapangan.";
                 $output[] = "- Setelah `index_olt` terisi, sistem dan AI Copilot dapat menampilkan status redaman laser (optical power) dan link connection secara real-time.";
                 return implode("\n", $output);
+            }
+        }
+
+        // Case 0.5: NOC Telemetry & Active Alerts (ONU LOS / DOWN / Isu Aktif)
+        $isAskingLoss = str_contains($lower, 'loss') || str_contains($lower, 'los') || str_contains($lower, 'kabel putus');
+        $isAskingDown = str_contains($lower, 'down') || str_contains($lower, 'padam') || str_contains($lower, 'mati') || str_contains($lower, 'offline');
+        $isAskingNoc = $isAskingLoss || $isAskingDown || str_contains($lower, 'isu') || str_contains($lower, 'alert') || str_contains($lower, 'node');
+
+        if (!empty($context['noc_telemetry']) && $isAskingNoc) {
+            $hasData = true;
+            $telemetry = $context['noc_telemetry'];
+            $summary = $telemetry['summary'] ?? [];
+            $losNodes = $telemetry['onu_los_nodes'] ?? [];
+            $downNodes = $telemetry['onu_down_nodes'] ?? [];
+
+            $totalActive = $summary['total_active'] ?? (count($losNodes) + count($downNodes));
+            $totalLos = $summary['total_los'] ?? count($losNodes);
+            $totalDown = $summary['total_down'] ?? count($downNodes);
+            $totalTickets = $summary['total_tickets'] ?? 0;
+
+            $output[] = "### 📡 Status Monitoring Realtime OLT (Isu Aktif)";
+            $output[] = "- 🚨 **Semua Isu Aktif:** **{$totalActive} Kejadian**";
+            $output[] = "- 🔴 **ONU LOS (LOSS):** **{$totalLos} Node** (Kabel putus / redaman loss)";
+            $output[] = "- 🟡 **ONU DOWN (OFFLINE):** **{$totalDown} Node** (Modem padam / power off)";
+            $output[] = "- 🎫 **Tiket Open:** **{$totalTickets} Tiket**\n";
+
+            if ($isAskingLoss || !$isAskingDown) {
+                $output[] = "#### 🔴 Daftar Perangkat ONU LOS ({$totalLos} Node):";
+                if (empty($losNodes)) {
+                    $output[] = "✅ *Tidak ada node ONU yang mengalami Loss of Signal (LOS) saat ini. Seluruh redaman optik terpantau normal.*";
+                } else {
+                    $output[] = "| Interface GPON | Nama Pelanggan | No. Internet | OLT / Port | Redaman | Mulai / Durasi |";
+                    $output[] = "|---|---|---|---|---|---|";
+                    foreach ($losNodes as $ln) {
+                        $output[] = "| `{$ln['interface']}` | **{$ln['nama_pelanggan']}** | `{$ln['nomor_internet']}` | {$ln['olt']} | <span class=\"text-rose-500 font-bold font-mono\">{$ln['redaman']}</span> | {$ln['waktu_mulai']} ({$ln['durasi']}) |";
+                    }
+                }
+            }
+
+            if ($isAskingDown && !$isAskingLoss) {
+                $output[] = "\n#### 🟡 Daftar Perangkat ONU DOWN ({$totalDown} Node):";
+                if (empty($downNodes)) {
+                    $output[] = "✅ *Tidak ada node ONU yang DOWN saat ini.*";
+                } else {
+                    $output[] = "| Interface GPON | Nama Pelanggan | No. Internet | OLT / Port | Mulai / Durasi |";
+                    $output[] = "|---|---|---|---|---|";
+                    foreach ($downNodes as $dn) {
+                        $output[] = "| `{$dn['interface']}` | **{$dn['nama_pelanggan']}** | `{$dn['nomor_internet']}` | {$dn['olt']} | {$dn['waktu_mulai']} ({$dn['durasi']}) |";
+                    }
+                }
+            }
+
+            if (!empty($context['tickets']) && !$isAskingDown) {
+                $output[] = "\n> ℹ️ *Catatan: Data di atas adalah data fisik real-time kabel optik / OLT. Selain itu tercatat " . count($context['tickets']) . " tiket keluhan terkait gangguan di helpdesk.*";
             }
         }
 

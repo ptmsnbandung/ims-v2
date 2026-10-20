@@ -1,6 +1,6 @@
 {{-- IMS2 AI Copilot Floating Assistant Widget --}}
 <style>
-/* Robust CSS for IMS AI Floating Widget (No Tailwind Build Dependency) */
+/* Robust CSS for IMS AI Floating Widget */
 .ims-ai-trigger-container {
     position: fixed !important;
     bottom: 22px !important;
@@ -20,8 +20,8 @@
     color: #ffffff !important;
     font-weight: 600 !important;
     font-size: 13px !important;
-    box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
-    border: 1px solid rgba(103, 232, 249, 0.35) !important;
+    box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(103, 232, 249, 0.4) !important;
     cursor: pointer !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     user-select: none !important;
@@ -39,23 +39,119 @@
 
 .ims-ai-modal-box {
     position: fixed !important;
-    bottom: 78px !important;
+    bottom: 76px !important;
     right: 18px !important;
     width: 440px !important;
     max-width: calc(100vw - 36px) !important;
-    height: 560px !important;
-    max-height: calc(100vh - 100px) !important;
+    height: 580px !important;
+    max-height: calc(100vh - 95px) !important;
     z-index: 9999999 !important;
-    background: rgba(10, 25, 41, 0.96) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(6, 182, 212, 0.3) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 35px rgba(6, 182, 212, 0.2) !important;
+    background: rgba(8, 18, 30, 0.98) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(6, 182, 212, 0.35) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.85), 0 0 30px rgba(6, 182, 212, 0.2) !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
     color: #e2e8f0 !important;
+}
+
+.ims-ai-header {
+    flex-shrink: 0 !important;
+    height: 60px !important;
+    padding: 0 16px !important;
+    background: rgba(2, 6, 23, 0.95) !important;
+    border-bottom: 1px solid rgba(6, 182, 212, 0.25) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.ims-ai-icon-btn {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #94a3b8 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.ims-ai-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+
+.ims-ai-icon-btn.close-btn:hover {
+    background: rgba(239, 68, 68, 0.25) !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    color: #fca5a5 !important;
+}
+
+.ims-ai-chat-area {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+}
+
+.ims-ai-chips-container {
+    flex-shrink: 0 !important;
+    height: 48px !important;
+    max-height: 48px !important;
+    padding: 8px 12px !important;
+    background: rgba(2, 6, 23, 0.7) !important;
+    border-top: 1px solid rgba(51, 65, 85, 0.6) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+}
+
+.ims-ai-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    height: 30px !important;
+    max-height: 30px !important;
+    line-height: 30px !important;
+    padding: 0 12px !important;
+    border-radius: 9999px !important;
+    background: rgba(15, 23, 42, 0.85) !important;
+    border: 1px solid rgba(51, 65, 85, 0.8) !important;
+    color: #cbd5e1 !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+}
+
+.ims-ai-chip:hover {
+    background: rgba(6, 182, 212, 0.18) !important;
+    border-color: rgba(6, 182, 212, 0.45) !important;
+    color: #38bdf8 !important;
+    transform: translateY(-1px) !important;
+}
+
+.ims-ai-input-bar {
+    flex-shrink: 0 !important;
+    padding: 12px 14px !important;
+    background: #020617 !important;
+    border-top: 1px solid rgba(6, 182, 212, 0.25) !important;
 }
 
 /* Styling markdown tables & formatting inside AI Chat */
@@ -155,6 +251,10 @@ window.imsAiCopilot = function() {
             }
         },
 
+        closeChat() {
+            this.isOpen = false;
+        },
+
         currentTime() {
             const d = new Date();
             return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
@@ -162,7 +262,7 @@ window.imsAiCopilot = function() {
 
         saveMessages() {
             try {
-                const slice = this.messages.slice(-20);
+                const slice = this.messages.slice(-25);
                 sessionStorage.setItem('ims_ai_chat_messages', JSON.stringify(slice));
             } catch (e) {}
         },
@@ -354,9 +454,9 @@ window.imsAiCopilot = function() {
     <div class="ims-ai-trigger-container">
         <button 
             type="button" 
-            @click="toggleChat()" 
+            @click.stop="toggleChat()" 
             class="ims-ai-trigger-btn"
-            title="Buka IMS AI Copilot"
+            title="Buka / Tutup IMS AI Copilot"
             aria-label="IMS AI Assistant">
             <!-- Pulsing indicator glow -->
             <span style="position:relative; display:inline-flex; width:10px; height:10px; margin-right:2px;">
@@ -378,38 +478,40 @@ window.imsAiCopilot = function() {
     <div 
         x-show="isOpen" 
         x-cloak
-        x-transition:enter="transition ease-out duration-250 transform"
+        @click.outside="closeChat()"
+        @keydown.escape.window="closeChat()"
+        x-transition:enter="transition ease-out duration-200 transform"
         x-transition:enter-start="opacity-0 translate-y-6 scale-95"
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-        x-transition:leave="transition ease-in duration-200 transform"
+        x-transition:leave="transition ease-in duration-150 transform"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
         class="ims-ai-modal-box">
         
         <!-- Header -->
-        <div style="padding:12px 16px; background:rgba(2, 6, 23, 0.9); border-bottom:1px solid rgba(6, 182, 212, 0.25); display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <div style="width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg, #0891b2, #0d9488); display:flex; align-items:center; justify-content:center; color:#fff; box-shadow:0 4px 12px rgba(6, 182, 212, 0.3);">
-                    <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="ims-ai-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg, #0891b2, #0d9488); display:flex; align-items:center; justify-content:center; color:#fff; box-shadow:0 4px 12px rgba(6, 182, 212, 0.35);">
+                    <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                 </div>
                 <div>
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <h3 style="font-size:13px; font-weight:700; color:#ffffff; margin:0;">IMS AI Copilot</h3>
-                        <span style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:#082f49; color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.3);" x-text="engineMode"></span>
+                        <h3 style="font-size:14px; font-weight:700; color:#ffffff; margin:0; line-height:1.2;">IMS AI Copilot</h3>
+                        <span style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:#082f49; color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.35);" x-text="engineMode"></span>
                     </div>
                     <p style="font-size:11px; color:#94a3b8; margin:2px 0 0 0;">Asisten Pintar NOC, Finance & Operasional</p>
                 </div>
             </div>
 
-            <div style="display:flex; align-items:center; gap:4px;">
-                <!-- Clear Chat -->
+            <div style="display:flex; align-items:center; gap:6px;">
+                <!-- Clear Chat Button -->
                 <button 
                     type="button" 
-                    @click="clearHistory()" 
-                    title="Bersihkan Percakapan"
-                    style="padding:6px; background:transparent; border:none; color:#94a3b8; cursor:pointer; border-radius:6px;">
+                    @click.stop="clearHistory()" 
+                    class="ims-ai-icon-btn"
+                    title="Bersihkan Percakapan">
                     <svg style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -417,23 +519,24 @@ window.imsAiCopilot = function() {
                 <!-- Close Button -->
                 <button 
                     type="button" 
-                    @click="isOpen = false" 
-                    style="padding:6px; background:transparent; border:none; color:#94a3b8; cursor:pointer; border-radius:6px;">
-                    <svg style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    @click.stop="closeChat()" 
+                    class="ims-ai-icon-btn close-btn"
+                    title="Tutup AI Chat (Esc)">
+                    <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
         </div>
 
         <!-- Chat Message Area -->
-        <div x-ref="chatBox" class="ims-main-scroll" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:14px; font-size:12px; line-height:1.6;">
+        <div x-ref="chatBox" class="ims-ai-chat-area ims-main-scroll">
             <template x-for="(msg, index) in messages" :key="index">
                 <div :style="msg.role === 'user' ? 'display:flex; justify-content:flex-end;' : 'display:flex; justify-content:flex-start;'">
                     <div 
                         :style="msg.role === 'user' 
                             ? 'background:#0891b2; color:#ffffff; border-radius:16px 16px 2px 16px; padding:10px 14px; max-width:85%; box-shadow:0 4px 12px rgba(8,145,178,0.3);' 
-                            : 'background:rgba(15,23,42,0.9); border:1px solid rgba(51,65,85,0.8); color:#e2e8f0; border-radius:16px 16px 16px 2px; padding:12px 14px; max-width:92%; box-shadow:0 4px 16px rgba(0,0,0,0.4);'"
+                            : 'background:rgba(15,23,42,0.92); border:1px solid rgba(51,65,85,0.85); color:#e2e8f0; border-radius:16px 16px 16px 2px; padding:12px 14px; max-width:92%; box-shadow:0 4px 16px rgba(0,0,0,0.4);'"
                         style="position:relative;">
                         
                         <!-- Role Icon / Header for AI -->
@@ -464,19 +567,24 @@ window.imsAiCopilot = function() {
 
             <!-- Loading Indicator -->
             <div x-show="isLoading" style="display:flex; justify-content:flex-start;">
-                <div style="background:rgba(15,23,42,0.9); border:1px solid rgba(6,182,212,0.3); border-radius:16px 16px 16px 2px; padding:10px 14px; display:flex; align-items:center; gap:8px;">
+                <div style="background:rgba(15,23,42,0.95); border:1px solid rgba(6,182,212,0.35); border-radius:16px 16px 16px 2px; padding:10px 14px; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-flex; gap:4px;">
+                        <span style="width:6px; height:6px; border-radius:9999px; background:#22d3ee;"></span>
+                        <span style="width:6px; height:6px; border-radius:9999px; background:#2dd4bf;"></span>
+                        <span style="width:6px; height:6px; border-radius:9999px; background:#34d399;"></span>
+                    </span>
                     <span style="font-size:11px; font-family:monospace; color:#38bdf8;">Sedang menganalisis database IMS...</span>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Suggestions Chips -->
-        <div class="ims-main-scroll" style="padding:8px 12px; background:rgba(2, 6, 23, 0.6); border-top:1px solid rgba(51, 65, 85, 0.7); display:flex; gap:6px; overflow-x:auto; white-space:nowrap;">
+        <!-- Quick Suggestions Chips (Terkontrol & Horizontal) -->
+        <div class="ims-ai-chips-container ims-main-scroll">
             <template x-for="chip in quickChips" :key="chip.label">
                 <button 
                     type="button" 
-                    @click="sendQuickPrompt(chip.prompt)" 
-                    style="display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:4px 10px; border-radius:9999px; background:rgba(30, 41, 59, 0.85); border:1px solid rgba(51, 65, 85, 0.8); color:#cbd5e1; cursor:pointer; flex-shrink:0;">
+                    @click.stop="sendQuickPrompt(chip.prompt)" 
+                    class="ims-ai-chip">
                     <span x-text="chip.icon"></span>
                     <span x-text="chip.label"></span>
                 </button>
@@ -484,8 +592,8 @@ window.imsAiCopilot = function() {
         </div>
 
         <!-- Input Bar -->
-        <div style="padding:12px; background:#020617; border-top:1px solid rgba(6, 182, 212, 0.25);">
-            <form @submit.prevent="sendMessage()" style="display:flex; align-items:center; gap:8px;">
+        <div class="ims-ai-input-bar">
+            <form @submit.prevent="sendMessage()" style="display:flex; align-items:center; gap:8px; margin:0;">
                 <input 
                     type="text" 
                     x-model="userInput" 
@@ -497,7 +605,7 @@ window.imsAiCopilot = function() {
                 <button 
                     type="submit" 
                     :disabled="isLoading || !userInput.trim()"
-                    style="padding:10px 14px; border-radius:10px; background:#0891b2; color:#fff; border:none; cursor:pointer;">
+                    style="padding:10px 14px; border-radius:10px; background:linear-gradient(135deg, #0891b2, #0d9488); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;">
                     <svg style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>

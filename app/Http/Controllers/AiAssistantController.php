@@ -101,12 +101,35 @@ class AiAssistantController extends Controller
         preg_match('/\b\d{5,14}\b/', $query, $idMatches);
         $extractedId = $idMatches[0] ?? null;
 
-        // Extract clean search term (strip common verbs/keywords)
-        $searchTerm = trim(preg_replace('/\b(cari|cek|lihat|info|data|pelanggan|nama|user|client|cust|tagihan|billing|invoice|status|tolong|mohon|berapa|siapa|tentang|apakah|ada)\b/i', '', $query));
-        $searchTerm = trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $searchTerm));
+        // 1. Try to extract explicit name pattern like 'nama [xxx]', 'pelanggan [xxx]', 'atas nama [xxx]'
+        $explicitName = null;
+        if (preg_match('/(?:atas\s+nama|bernama|nama\s+pelanggan|nama|pelanggan|user|cust)\s+(?:adalah\s+|yaitu\s+|:\s*)?["\']?([a-zA-Z0-9\s]{3,35})["\']?/i', $query, $m)) {
+            $candidate = trim(preg_replace('/\b(aktif|keaktifan|nonaktif|masih|ya|dong|kah|apakah|terisolir|suspend|normal|lunas|belum|hari ini|bulan ini)\b/i', '', $m[1]));
+            if (strlen($candidate) >= 3) {
+                $explicitName = $candidate;
+            }
+        }
+
+        // 2. Comprehensive stopword removal for Indonesian natural language queries
+        $stopwords = [
+            'cari', 'cek', 'lihat', 'info', 'data', 'detail', 'status', 'keaktifan', 'aktif', 'nonaktif', 'masih',
+            'pelanggan', 'nama', 'user', 'client', 'cust', 'customer', 'member',
+            'tagihan', 'billing', 'invoice', 'bayar', 'pembayaran', 'lunas', 'unpaid', 'paid',
+            'tolong', 'mohon', 'bantu', 'bisa', 'dong', 'ya', 'min', 'kak', 'admin', 'halo', 'hai', 'selamat', 'pagi', 'siang', 'sore', 'malam',
+            'apakah', 'ada', 'berapa', 'siapa', 'dimana', 'kapan', 'kenapa', 'bagaimana', 'apa', 'tentang',
+            'terisolir', 'isolir', 'suspend', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
+            'adalah', 'itu', 'ini', 'kah'
+        ];
+        $pattern = '/\b(' . implode('|', $stopwords) . ')\b/i';
+        $cleanSearch = trim(preg_replace($pattern, '', $query));
+        $cleanSearch = trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $cleanSearch));
+        $cleanSearch = preg_replace('/\s+/', ' ', $cleanSearch);
+
+        $nameTokens = array_filter(explode(' ', $cleanSearch), fn($t) => strlen($t) >= 3);
+        $primaryTerm = $explicitName ?: $cleanSearch;
 
         // Context 1: Customer lookup (by ID, username, or name)
-        if ($extractedId || (strlen($searchTerm) >= 3 && !in_array($searchTerm, ['hari ini', 'bulan ini', 'open', 'close', 'lunas', 'pending'])) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
+        if ($extractedId || !empty($primaryTerm) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
             try {
                 $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
                 $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
@@ -119,11 +142,18 @@ class AiAssistantController extends Controller
                         $q->where('nomor_internet', 'like', "%{$extractedId}%")
                           ->orWhere($userCol, 'like', "%{$extractedId}%");
                     });
-                } else if (strlen($searchTerm) >= 3) {
-                    $custQuery->where(function ($q) use ($searchTerm, $userCol) {
-                        $q->where('nama_pelanggan', 'like', "%{$searchTerm}%")
-                          ->orWhere($userCol, 'like', "%{$searchTerm}%")
-                          ->orWhere('nomor_internet', 'like', "%{$searchTerm}%");
+                } else if (!empty($primaryTerm) || !empty($nameTokens)) {
+                    $custQuery->where(function ($q) use ($primaryTerm, $nameTokens, $userCol) {
+                        if (!empty($primaryTerm)) {
+                            $q->where('nama_pelanggan', 'like', "%{$primaryTerm}%")
+                              ->orWhere($userCol, 'like', "%{$primaryTerm}%")
+                              ->orWhere('nomor_internet', 'like', "%{$primaryTerm}%");
+                        }
+                        foreach ($nameTokens as $tok) {
+                            $q->orWhere('nama_pelanggan', 'like', "%{$tok}%")
+                              ->orWhere($userCol, 'like', "%{$tok}%")
+                              ->orWhere('nomor_internet', 'like', "%{$tok}%");
+                        }
                     });
                 }
 

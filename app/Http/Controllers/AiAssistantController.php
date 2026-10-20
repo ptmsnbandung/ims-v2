@@ -74,6 +74,7 @@ class AiAssistantController extends Controller
      */
     public function status(): JsonResponse
     {
+        $user = auth()->user();
         $geminiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
         $configuredModel = (string)config('services.gemini.model', 'gemini-2.0-flash');
         if (str_contains($configuredModel, '2.5-flash')) {
@@ -83,8 +84,8 @@ class AiAssistantController extends Controller
             'configured' => !empty($geminiKey),
             'model' => $configuredModel,
             'user' => [
-                'name' => auth()->user()?->nama_lengkap ?? auth()->user()?->username ?? 'Staff',
-                'role' => auth()->user()?->role ?? 'staff',
+                'name' => $user?->nama ?? $user?->nama_lengkap ?? $user?->username ?? 'Staff',
+                'role' => $this->getUserRole($user),
             ],
         ]);
     }
@@ -323,8 +324,8 @@ class AiAssistantController extends Controller
         }
         $targetCustomerIds = array_values(array_unique(array_filter($targetCustomerIds)));
 
-        // Context 2: Billing / Tagihan lookup
-        if (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'keuangan') || !empty($targetCustomerIds)) {
+        // Context 2: Billing / Tagihan lookup (Khusus role berhak: Finance, Direksi, CEO, Admin, CS)
+        if ($this->canAccessFinance($user) && (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'keuangan') || !empty($targetCustomerIds))) {
             try {
                 $billQuery = DB::table('trx_billing_layanan')
                     ->where('hide', 0);
@@ -413,8 +414,8 @@ class AiAssistantController extends Controller
             }
         }
 
-        // Context 4: OLT & Network
-        if (str_contains($lower, 'olt') || str_contains($lower, 'jaringan') || str_contains($lower, 'noc') || str_contains($lower, 'pon') || str_contains($lower, 'server') || str_contains($lower, 'redaman') || str_contains($lower, 'optik') || !empty($context['customers'])) {
+        // Context 4: OLT & Network (Khusus role teknis: NOC, Teknik, Direksi, CEO, Admin)
+        if ($this->canAccessNetwork($user) && (str_contains($lower, 'olt') || str_contains($lower, 'jaringan') || str_contains($lower, 'noc') || str_contains($lower, 'pon') || str_contains($lower, 'server') || str_contains($lower, 'redaman') || str_contains($lower, 'optik') || !empty($context['customers']))) {
             try {
                 $context['olts'] = DB::table('m_olt')
                     ->select(['kode_olt', 'name_olt', 'ip_address', 'brand', 'model', 'is_active', 'last_status'])
@@ -435,18 +436,23 @@ class AiAssistantController extends Controller
 
                 $context['stats']['active_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('status_reg', 20)->count();
                 $context['stats']['isolated_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('is_suspend', 1)->count();
-                $context['stats']['bills_paid_this_month'] = DB::table('trx_billing_layanan')
-                    ->where('hide', 0)
-                    ->where('bulan_tagihan', $currentMonth)
-                    ->where('tahun_tagihan', $currentYear)
-                    ->where('status_bill_lay', 15)
-                    ->count();
-                $context['stats']['bills_unpaid_this_month'] = DB::table('trx_billing_layanan')
-                    ->where('hide', 0)
-                    ->where('bulan_tagihan', $currentMonth)
-                    ->where('tahun_tagihan', $currentYear)
-                    ->whereNotIn('status_bill_lay', [15])
-                    ->count();
+                
+                // Financial summary stats only for Finance & Direksi
+                if ($this->canAccessFinance($user)) {
+                    $context['stats']['bills_paid_this_month'] = DB::table('trx_billing_layanan')
+                        ->where('hide', 0)
+                        ->where('bulan_tagihan', $currentMonth)
+                        ->where('tahun_tagihan', $currentYear)
+                        ->where('status_bill_lay', 15)
+                        ->count();
+                    $context['stats']['bills_unpaid_this_month'] = DB::table('trx_billing_layanan')
+                        ->where('hide', 0)
+                        ->where('bulan_tagihan', $currentMonth)
+                        ->where('tahun_tagihan', $currentYear)
+                        ->whereNotIn('status_bill_lay', [15])
+                        ->count();
+                }
+
                 $context['stats']['open_tickets'] = DB::table('trx_tiket_gangguan')
                     ->where('hide', 0)
                     ->whereNotIn('status', ['close', 'selesai', 'done'])
@@ -464,25 +470,25 @@ class AiAssistantController extends Controller
      */
     protected function callGeminiApi(string $apiKey, string $model, string $userMessage, array $history, array $contextData, $user): string
     {
-        $userName = $user?->nama_lengkap ?? $user?->username ?? 'Staff IMS';
-        $userRole = $user?->role ?? 'staff';
+        $userName = $user?->nama ?? $user?->nama_lengkap ?? $user?->username ?? 'Staff IMS';
+        $userRole = $this->getUserRole($user);
         $today = now()->format('d-m-Y');
+        $roleRules = $this->getRoleInstructionRules($userRole);
 
-        $systemInstruction = "Anda adalah IMS AI Copilot, asisten kecerdasan buatan cerdas untuk sistem internal ISP (PT Media Solusi Network / MSN Bandung).
-Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operasional harian:
-- Menjawab pertanyaan terkait data pelanggan, status registrasi, isolir/suspend, dan OLT.
-- Membantu pencarian & ringkasan tagihan / billing, pembayaran pending verifikasi, dan status lunas.
-- Menjelaskan status tiket gangguan dan keluhan pelanggan.
-- Terkait OLT & ONU Pelanggan:
-  1. Jika index_olt pelanggan bernilai NULL / kosong: Jelaskan dengan jelas dan ramah bahwa pengecekan status fisik real-time / redaman laser optik (Rx/Tx) belum bisa dilakukan karena nomor port GPON ONU (format: gpon-onu_1/{slot}/{port}:{onu_id}) belum dipetakan pada database registrasi pelanggan tersebut. Sebutkan nama & IP OLT induk pelanggan (misal: OLT Babakan Tarogong / O2) dan sarankan tim teknisi/NOC melengkapi index_olt pada menu data pelanggan.
-  2. Jika index_olt terisi: Tampilkan nama OLT, IP OLT, dan nomor port GPON index_olt pelanggan tersebut.
-- Memberikan jawaban yang ringkas, profesional, to the point, dan langsung dapat ditindaklanjuti.
-- Gunakan format markdown yang rapi: gunakan tabel untuk data tabular, bullet points, dan kode mono `font-mono` untuk ID internet, IP, kode billing, dan nominal rupiah.
-- Pengguna yang sedang berbicara bernama {$userName} dengan hak akses / role: {$userRole}.
-- Hari ini: {$today}. Data tagihan mungkin belum ada untuk bulan berjalan; untuk 'bulan ini/terakhir' cek dulu periode terbaru (MAX tahun_tagihan, bulan_tagihan) dan sebutkan periode yang dipakai pada jawaban. Jangan menyebut angka yang tidak berasal dari hasil query.
-- Jangan mengarang data sensitif. Jika data tidak ditemukan di konteks yang disediakan, sampaikan dengan sopan dan sarankan parameter pencarian yang tepat (misal: 'Silakan masukkan nomor internet pelanggan atau nama lengkap').
-
-" . $this->schemaHint();
+        $systemInstruction = "Anda adalah IMS AI Copilot, asisten resmi untuk sistem internal ISP PT Media Solusi Network (IMS2).\n"
+            . "User yang sedang berbicara: {$userName} (Role/Divisi: {$userRole}).\n\n"
+            . "KEBIJAKAN HAK AKSES ROLE (SANGAT KETAT & WAJIB DIPATUHI):\n"
+            . "{$roleRules}\n\n"
+            . "PENTING: Jika pengguna meminta data atau tindakan di luar batasan role di atas (misal NOC/Teknik menanyakan keuangan/tagihan/omset, atau Finance menanyakan konfigurasi router OLT mendalam, atau non-HR menanyakan gaji/karyawan), Anda WAJIB MENOLAKNYA SECARA SOPAN DAN TEGAS: jelaskan bahwa hak akses divisi {$userRole} tidak diizinkan untuk domain tersebut.\n\n"
+            . "Aturan operasional teknis & data:\n"
+            . "- Terkait OLT & ONU Pelanggan:\n"
+            . "  1. Jika index_olt pelanggan bernilai NULL/kosong: Jelaskan bahwa pengecekan live redaman optik belum bisa dilakukan karena nomor port GPON ONU belum dipetakan pada database registrasi pelanggan. Sebutkan nama & IP OLT induk pelanggan dan sarankan tim teknisi melengkapi index_olt pada menu data pelanggan.\n"
+            . "  2. Jika index_olt terisi: Tampilkan nama OLT, IP OLT, dan nomor port GPON index_olt pelanggan tersebut.\n"
+            . "- Hari ini: {$today}. Untuk 'bulan ini/terakhir' cek periode terbaru dan sebutkan periode yang dipakai.\n"
+            . "- Berikan jawaban yang ringkas, profesional, to the point, dan langsung dapat ditindaklanjuti.\n"
+            . "- Gunakan format markdown rapi: tabel untuk data tabular, bullet points, dan kode mono `font-mono` untuk ID internet, IP, kode billing, dan status.\n"
+            . "- Jangan pernah menampilkan password, token, atau kredensial sistem.\n\n"
+            . $this->schemaHint($userRole);
 
         // Build contents array for Gemini
         $contents = [];
@@ -612,7 +618,7 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
                     foreach ($calls as $p) {
                         $results[] = ['functionResponse' => [
                             'name' => $p['functionCall']['name'],
-                            'response' => ['result' => $this->runAiTool($p['functionCall']['name'], $p['functionCall']['args'] ?? [])],
+                            'response' => ['result' => $this->runAiTool($p['functionCall']['name'], $p['functionCall']['args'] ?? [], $user)],
                         ]];
                     }
                     $convo[] = ['role' => 'user', 'parts' => $results];
@@ -626,7 +632,164 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
         throw new \Exception($lastError);
     }
 
-    protected function schemaHint(): string
+    public function getUserRole($user): string
+    {
+        if (!$user) {
+            return 'Staff';
+        }
+
+        if (method_exists($user, 'isDirektur') && $user->isDirektur()) {
+            return 'Direktur';
+        }
+        if (method_exists($user, 'isCeo') && $user->isCeo()) {
+            return 'CEO';
+        }
+        if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
+            return 'Admin';
+        }
+        if (method_exists($user, 'isFinance') && $user->isFinance()) {
+            return 'Finance';
+        }
+        if (method_exists($user, 'isNoc') && $user->isNoc()) {
+            return 'NOC';
+        }
+        if (method_exists($user, 'isTeknik') && $user->isTeknik()) {
+            return 'Teknik';
+        }
+
+        $namaLevel = strtolower($user->level?->nama_level ?? $user->nama_level ?? '');
+        if (str_contains($namaLevel, 'customer')) {
+            return 'Customer Service';
+        }
+        if (str_contains($namaLevel, 'sales') || str_contains($namaLevel, 'salses') || str_contains($namaLevel, 'mitra')) {
+            return 'Sales & Marketing';
+        }
+        if (str_contains($namaLevel, 'gudang')) {
+            return 'Gudang';
+        }
+        if (str_contains($namaLevel, 'human') || str_contains($namaLevel, 'hrd')) {
+            return 'HRD';
+        }
+        if (str_contains($namaLevel, 'legal')) {
+            return 'Legal';
+        }
+
+        return $user->level?->nama_level ?? $user->nama_level ?? 'Staff';
+    }
+
+    public function canAccessFinance($user): bool
+    {
+        $role = $this->getUserRole($user);
+        return in_array($role, ['Direktur', 'CEO', 'Admin', 'Finance', 'Customer Service'], true);
+    }
+
+    public function canAccessNetwork($user): bool
+    {
+        $role = $this->getUserRole($user);
+        return in_array($role, ['Direktur', 'CEO', 'Admin', 'NOC', 'Teknik'], true);
+    }
+
+    public function canAccessHr($user): bool
+    {
+        $role = $this->getUserRole($user);
+        return in_array($role, ['Direktur', 'CEO', 'Admin', 'HRD'], true);
+    }
+
+    protected function isTableForbiddenForRole(string $tableOrSql, $user): ?string
+    {
+        $role = $this->getUserRole($user);
+        if (in_array($role, ['Direktur', 'CEO', 'Admin'], true)) {
+            return null; // Full Access
+        }
+
+        $lower = strtolower($tableOrSql);
+
+        // 1. Finance tables
+        $financeTables = ['trx_billing_layanan', 'payment_confirmations', 'tb_rekening', 'tb_bank', 'tb_kas', 'tb_jurnal', 'tb_keuangan', 'tb_pembukuan', 'rekap_billing'];
+        foreach ($financeTables as $ft) {
+            if (preg_match('/\b' . preg_quote($ft, '/') . '\b/i', $lower)) {
+                if ($role === 'Customer Service') {
+                    if ($ft !== 'trx_billing_layanan') {
+                        return "Akses Ditolak: Role 'Customer Service' hanya diizinkan melihat status tagihan pelanggan, bukan buku kas/rekening internal perusahaan.";
+                    }
+                } elseif ($role !== 'Finance') {
+                    return "Akses Ditolak: Role Anda ({$role}) tidak memiliki izin mengakses data keuangan/tagihan. Domain ini khusus untuk divisi Finance & Direksi.";
+                }
+            }
+        }
+
+        // 2. Core Network & OLT tables
+        $networkTables = ['m_olt', 'm_router', 'm_port_olt', 'tb_router', 'trx_device_olt'];
+        foreach ($networkTables as $nt) {
+            if (preg_match('/\b' . preg_quote($nt, '/') . '\b/i', $lower)) {
+                if (!in_array($role, ['NOC', 'Teknik'], true)) {
+                    return "Akses Ditolak: Role Anda ({$role}) tidak memiliki izin mengakses data infrastruktur perangkat OLT/Router. Domain ini khusus untuk divisi NOC & Teknik.";
+                }
+            }
+        }
+
+        // 3. HR / Payroll tables
+        $hrTables = ['tb_karyawan', 'tb_gaji', 'tb_payroll', 'tb_absensi', 'tb_pengguna'];
+        foreach ($hrTables as $ht) {
+            if (preg_match('/\b' . preg_quote($ht, '/') . '\b/i', $lower) && $role !== 'HRD') {
+                return "Akses Ditolak: Role Anda ({$role}) tidak memiliki izin mengakses data kepegawaian/gaji.";
+            }
+        }
+
+        return null;
+    }
+
+    protected function getRoleInstructionRules(string $role): string
+    {
+        switch ($role) {
+            case 'Direktur':
+            case 'CEO':
+            case 'Admin':
+                return "- Hak Akses: PENUH (Superadmin). Anda boleh mengakses seluruh domain: Finance, Pelanggan, OLT/Jaringan, Tiket, Karyawan, dan Rekapitulasi Global.";
+
+            case 'Finance':
+                return "- Hak Akses: Divisi FINANCE.\n"
+                    . "- DIIZINKAN: Data tagihan (trx_billing_layanan), verifikasi pembayaran (status 14), invoice lunas (status 15), pencarian pelanggan terkait billing, dan rekap keuangan.\n"
+                    . "- DILARANG KERAS: Konfigurasi teknis internal core OLT/Router, redaman optik teknis, dan data rahasia HR personal. Tolak permintaan teknis secara sopan.";
+
+            case 'NOC':
+                return "- Hak Akses: Divisi NOC (Network Operations Center).\n"
+                    . "- DIIZINKAN: Status OLT, ONU, PPPoE online/offline, traffic, router, IP address, status koneksi pelanggan, dan tiket gangguan teknis.\n"
+                    . "- DILARANG KERAS: Data keuangan perusahaan, tagihan billing pelanggan, rekening bank perusahaan, omset/pendapatan, laba-rugi, dan verifikasi pembayaran. Jika ditanya hal terkait keuangan/tagihan/omset, tolak secara sopan: jelaskan bahwa data keuangan hanya dapat diakses oleh divisi Finance.";
+
+            case 'Teknik':
+                return "- Hak Akses: Divisi TEKNIK (Lapangan).\n"
+                    . "- DIIZINKAN: Data pelanggan lapangan (alamat pasang, nomor internet, status instalasi/aktif/suspend), tiket perbaikan/gangguan, status ODC/ODP/redaman.\n"
+                    . "- DILARANG KERAS: Data keuangan, tagihan/billing, mutasi kas/bank, dan konfigurasi core routing.";
+
+            case 'Customer Service':
+                return "- Hak Akses: Divisi CUSTOMER SERVICE.\n"
+                    . "- DIIZINKAN: Data profil pelanggan, paket internet, status tiket komplain/gangguan, dan status pembayaran umum tagihan pelanggan (untuk klarifikasi pelanggan).\n"
+                    . "- DILARANG: Laporan keuangan global perusahaan, mutasi rekening bank internal, pembukuan finance, dan konfigurasi OLT internal.";
+
+            case 'Sales & Marketing':
+            case 'MITRA':
+                return "- Hak Akses: Divisi SALES & MARKETING / MITRA.\n"
+                    . "- DIIZINKAN: Calon pelanggan baru, status registrasi baru (draft, survey, instalasi, aktivasi), brosur paket.\n"
+                    . "- DILARANG: Data pembukuan keuangan perusahaan dan konfigurasi jaringan OLT/NOC.";
+
+            case 'Gudang':
+                return "- Hak Akses: Divisi GUDANG / LOGISTIK.\n"
+                    . "- DIIZINKAN: Data inventori perangkat, stok modem ONT, kabel dropcore, dan mutasi barang.\n"
+                    . "- DILARANG: Data keuangan pembukuan dan konfigurasi jaringan.";
+
+            case 'HRD':
+                return "- Hak Akses: Divisi HUMAN RESOURCE (HRD).\n"
+                    . "- DIIZINKAN: Data karyawan, absensi, dan data personal kepegawaian.\n"
+                    . "- DILARANG: Konfigurasi teknis OLT dan mutasi bank operasional.";
+
+            default:
+                return "- Hak Akses: STAFF UMUM.\n"
+                    . "- Hanya diizinkan melihat informasi operasional dasar umum sesuai tugas.";
+        }
+    }
+
+    protected function schemaHint(string $userRole = 'Staff'): string
     {
         $tables = Cache::remember('ai_copilot_tables', 3600, function () {
             try {
@@ -636,20 +799,50 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             }
         });
 
-        return "KEMAMPUAN DATABASE: Anda punya tool `describe_table` dan `run_select_query` (read-only) untuk menjawab APA SAJA yang ada di database IMS2. Konteks di atas hanya ringkasan awal; jika kurang, atau pertanyaan menyangkut data lain (mitra, router, barang/inventori, penjualan, user, jadwal, dsb), WAJIB gunakan tool, jangan menebak atau menjawab 'tidak ada data' sebelum benar-benar query.\n"
-            . "- Pelanggan: `trx_batchjob_register` (hide=0, kunci nomor_internet, status_reg 20=aktif, is_suspend=1 terisolir). Tagihan: `trx_billing_layanan` (status_bill_lay 15=lunas, 14=verifikasi). Tiket: `trx_tiket_gangguan`. OLT: `m_olt`.\n"
-            . "- Pencarian nama pakai LIKE '%kata%' per kata; jika 0 hasil coba kata lebih pendek. Gabungkan beberapa query bila perlu, lalu simpulkan dalam bahasa Indonesia.\n"
-            . "- Jangan pernah menampilkan password/token/kredensial. Hanya SELECT.\n"
-            . "Daftar tabel: " . implode(', ', $tables);
+        // Filter out tables that are completely forbidden for this role
+        if (!in_array($userRole, ['Direktur', 'CEO', 'Admin'], true)) {
+            $tables = array_values(array_filter($tables, function ($t) use ($userRole) {
+                if (($userRole === 'NOC' || $userRole === 'Teknik') && in_array($t, ['trx_billing_layanan', 'payment_confirmations', 'tb_rekening', 'tb_bank', 'tb_kas', 'tb_jurnal'])) {
+                    return false;
+                }
+                if ($userRole === 'Finance' && in_array($t, ['m_olt', 'm_router', 'm_port_olt', 'tb_router'])) {
+                    return false;
+                }
+                if ($userRole !== 'HRD' && in_array($t, ['tb_gaji', 'tb_payroll'])) {
+                    return false;
+                }
+                return true;
+            }));
+        }
+
+        return "KEMAMPUAN DATABASE: Anda memiliki tool `describe_table` dan `run_select_query` (read-only) untuk menjawab data di database IMS2 sesuai wewenang role {$userRole}.\n"
+            . "- Pelanggan: `trx_batchjob_register` (hide=0, kunci nomor_internet, status_reg 20=aktif, is_suspend=1 terisolir).\n"
+            . "- Tiket: `trx_tiket_gangguan`.\n"
+            . ($this->canAccessFinanceRole($userRole) ? "- Tagihan: `trx_billing_layanan` (status_bill_lay 15=lunas, 14=verifikasi).\n" : "")
+            . ($this->canAccessNetworkRole($userRole) ? "- OLT & Jaringan: `m_olt`.\n" : "")
+            . "Daftar tabel yang diizinkan untuk role {$userRole}: " . implode(', ', $tables);
     }
 
-    protected function runAiTool(string $name, array $args): array
+    protected function canAccessFinanceRole(string $role): bool
+    {
+        return in_array($role, ['Direktur', 'CEO', 'Admin', 'Finance', 'Customer Service'], true);
+    }
+
+    protected function canAccessNetworkRole(string $role): bool
+    {
+        return in_array($role, ['Direktur', 'CEO', 'Admin', 'NOC', 'Teknik'], true);
+    }
+
+    protected function runAiTool(string $name, array $args, $user = null): array
     {
         try {
             if ($name === 'describe_table') {
                 $table = (string)($args['table'] ?? '');
                 if (!preg_match('/^[A-Za-z0-9_]+$/', $table) || !Schema::hasTable($table)) {
                     return ['error' => "Tabel '{$table}' tidak ditemukan."];
+                }
+                if ($forbidden = $this->isTableForbiddenForRole($table, $user)) {
+                    return ['error' => $forbidden];
                 }
                 $sample = DB::table($table)->limit(1)->get()->map(fn($r) => $this->maskSensitive((array)$r))->first();
                 return [
@@ -666,6 +859,9 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
                     || preg_match('/;|--|#|\/\*/', $bare)
                     || preg_match('/\b(insert|update|delete|drop|alter|truncate|create|grant|revoke|replace|call|exec|handler|load_file|outfile|dumpfile|sleep|benchmark|information_schema|mysql\.|for\s+update)\b/i', $bare)) {
                     return ['error' => 'Hanya satu query SELECT read-only yang diizinkan.'];
+                }
+                if ($forbidden = $this->isTableForbiddenForRole($bare, $user)) {
+                    return ['error' => $forbidden];
                 }
                 if (preg_match('/' . $this->sensitivePattern() . '/i', $bare)) {
                     return ['error' => 'Query menyentuh kolom sensitif (password/token/kredensial) dan ditolak.'];
@@ -709,11 +905,44 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
      */
     protected function generateLocalResponse(string $query, array $context, $user, bool $isFallback = false, ?string $errorMessage = null): string
     {
-        $userName = $user?->nama_lengkap ?? $user?->username ?? 'Staff';
+        $userName = $user?->nama ?? $user?->nama_lengkap ?? $user?->username ?? 'Staff';
+        $userRole = $this->getUserRole($user);
         $lower = strtolower($query);
         $output = [];
 
         $output[] = "> 🏷️ *Mode: Offline*\n";
+
+        // Pre-check 1: Restrict Finance data
+        $isAskingFinance = str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') 
+            || str_contains($lower, 'omset') || str_contains($lower, 'keuangan') || str_contains($lower, 'invoice') 
+            || str_contains($lower, 'pending') || str_contains($lower, 'verif') || str_contains($lower, 'lunas');
+
+        if ($isAskingFinance && !$this->canAccessFinance($user)) {
+            $output[] = "### 🔒 Akses Ditolak (Role: {$userRole})";
+            $output[] = "Akun Anda terdaftar sebagai **{$userRole}**. Akses ke informasi tagihan, verifikasi pembayaran, dan data keuangan dibatasi khusus untuk divisi **Finance** dan **Direksi**.";
+            return implode("\n", $output);
+        }
+
+        // Pre-check 2: Restrict Core Network & OLT data
+        $isAskingOlt = (str_contains($lower, 'olt') || str_contains($lower, 'router') || str_contains($lower, 'redaman') 
+            || str_contains($lower, 'gpon') || str_contains($lower, 'optik') || str_contains($lower, 'pon')) 
+            && !str_contains($lower, 'pelanggan');
+
+        if ($isAskingOlt && !$this->canAccessNetwork($user)) {
+            $output[] = "### 🔒 Akses Ditolak (Role: {$userRole})";
+            $output[] = "Akun Anda terdaftar sebagai **{$userRole}**. Akses ke konfigurasi teknis perangkat OLT dan infrastruktur jaringan dibatasi khusus untuk divisi **NOC**, **Teknik**, dan **Direksi**.";
+            return implode("\n", $output);
+        }
+
+        // Pre-check 3: Restrict HR data
+        $isAskingHr = str_contains($lower, 'gaji') || str_contains($lower, 'salary') || str_contains($lower, 'karyawan') 
+            || str_contains($lower, 'absensi') || str_contains($lower, 'hrd');
+
+        if ($isAskingHr && !$this->canAccessHr($user)) {
+            $output[] = "### 🔒 Akses Ditolak (Role: {$userRole})";
+            $output[] = "Akun Anda terdaftar sebagai **{$userRole}**. Data kepegawaian dan penggajian karyawan bersifat rahasia dan dibatasi khusus untuk divisi **HRD** dan **Direksi**.";
+            return implode("\n", $output);
+        }
 
         $hasData = false;
 
@@ -864,12 +1093,36 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
 
         // Default greeting / help response
         $output[] = "Halo **{$userName}**! 👋 Saya adalah **IMS AI Copilot**.";
-        $output[] = "\nSaya siap membantu pekerjaan Anda dalam operasional IMS2:";
-        $output[] = "1. **Cek Pelanggan**: Ketik nama pelanggan atau nomor internet (contoh: `cek pelanggan 102938` atau `cari nama Budi`).";
-        $output[] = "2. **Cek Tagihan & Pembayaran**: Ketik `cek tagihan pending` atau `cek billing 102938`.";
-        $output[] = "3. **Cek Tiket Gangguan**: Ketik `cek tiket open` atau `keluhan internet`.";
-        $output[] = "4. **Cek Jaringan / OLT**: Ketik `status olt` atau `jaringan`.";
-        $output[] = "5. **Ringkasan Operasional**: Ketik `rekap hari ini` atau `summary sistem`.";
+        $output[] = "Akun Anda aktif dengan role: **{$userRole}**.\n";
+        $output[] = "Bantuan operasional yang tersedia untuk divisi Anda:";
+
+        if (in_array($userRole, ['Direktur', 'CEO', 'Admin'], true)) {
+            $output[] = "1. **Cek Pelanggan**: Cari nama atau nomor internet pelanggan.";
+            $output[] = "2. **Cek Tagihan & Pembayaran**: Ketik `cek tagihan pending` atau `cek billing 102938`.";
+            $output[] = "3. **Status OLT & Jaringan**: Pantau status OLT, IP, dan port GPON.";
+            $output[] = "4. **Tiket Gangguan**: Pantau tiket open dan keluhan pelanggan.";
+            $output[] = "5. **Rekap Sistem**: Ringkasan performa operasional hari ini.";
+        } elseif ($userRole === 'Finance') {
+            $output[] = "1. **Cek Tagihan Pending**: Ketik `cek tagihan pending` atau `verifikasi tagihan`.";
+            $output[] = "2. **Cek Pembayaran Pelanggan**: Ketik `cek billing 102938` atau nama pelanggan.";
+            $output[] = "3. **Rekap Keuangan**: Ketik `rekap tagihan bulan ini`.";
+        } elseif ($userRole === 'NOC') {
+            $output[] = "1. **Status OLT & Jaringan**: Ketik `status olt` atau `cek olt O2`.";
+            $output[] = "2. **Cek Pelanggan & GPON**: Ketik `cek pelanggan 102938` untuk melihat status koneksi, paket, dan port OLT.";
+            $output[] = "3. **Tiket Gangguan**: Ketik `cek tiket open` atau keluhan jaringan.";
+            $output[] = "4. **Rekap Jaringan**: Ketik `rekap hari ini` untuk total user online & terisolir.";
+        } elseif ($userRole === 'Teknik') {
+            $output[] = "1. **Cek Pelanggan Lapangan**: Ketik nama atau no internet untuk cek alamat pasang & paket.";
+            $output[] = "2. **Tiket Gangguan / Perbaikan**: Ketik `cek tiket open`.";
+            $output[] = "3. **Cek Port OLT**: Ketik `cek index_olt pelanggan 102938`.";
+        } elseif ($userRole === 'Customer Service') {
+            $output[] = "1. **Cari Data Pelanggan**: Ketik nama atau nomor internet pelanggan.";
+            $output[] = "2. **Cek Status Tiket / Komplain**: Ketik `cek tiket pelanggan`.";
+            $output[] = "3. **Cek Status Pembayaran**: Konfirmasi apakah tagihan pelanggan sudah terverifikasi.";
+        } else {
+            $output[] = "1. **Cari Data Pelanggan**: Cari nama atau nomor internet pelanggan.";
+            $output[] = "2. **Status Tiket**: Cek tiket terkait.";
+        }
 
         return implode("\n", $output);
     }

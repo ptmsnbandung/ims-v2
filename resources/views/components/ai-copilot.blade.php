@@ -260,6 +260,8 @@ window.imsAiCopilot = function() {
         isLoading: false,
         userInput: '',
         engineMode: 'AI',
+        userRole: '',
+        userName: '',
         quickChips: [
             { icon: '📊', label: 'Rekap Hari Ini', prompt: 'Rekap operasional IMS2 hari ini' },
             { icon: '💳', label: 'Tagihan Pending', prompt: 'Cek tagihan pending verifikasi' },
@@ -287,7 +289,7 @@ window.imsAiCopilot = function() {
         addWelcomeMessage() {
             this.messages = [{
                 role: 'assistant',
-                text: "Halo! 👋 Saya adalah **IMS AI Copilot**.\n\nSaya dapat membantu Anda mencari data **pelanggan**, mengecek status **tagihan & verifikasi pembayaran**, memeriksa **tiket gangguan**, serta memantau **OLT & jaringan** secara langsung.\n\nAda yang bisa saya bantu sekarang?",
+                text: "Halo! 👋 Saya adalah **IMS AI Copilot**.\n\nSaya siap membantu pekerjaan Anda sesuai wewenang divisi/role Anda di IMS2. Tanyakan seputar data pelanggan, tiket gangguan, OLT/jaringan, atau tagihan.\n\nAda yang bisa saya bantu sekarang?",
                 time: this.currentTime()
             }];
             this.saveMessages();
@@ -338,8 +340,52 @@ window.imsAiCopilot = function() {
                     } else {
                         this.engineMode = 'Offline';
                     }
+                    if (data.user) {
+                        this.userRole = data.user.role || '';
+                        this.userName = data.user.name || '';
+                        this.updateQuickChips(this.userRole);
+                    }
                 }
             } catch (e) {}
+        },
+
+        updateQuickChips(role) {
+            const r = (role || '').toLowerCase();
+            if (r.includes('finance')) {
+                this.quickChips = [
+                    { icon: '💳', label: 'Tagihan Pending', prompt: 'Cek tagihan pending verifikasi' },
+                    { icon: '📊', label: 'Rekap Tagihan', prompt: 'Rekap tagihan bulan ini' },
+                    { icon: '👥', label: 'Cari Pelanggan', prompt: 'Cari pelanggan' },
+                    { icon: '🧾', label: 'Billing Terkini', prompt: 'Cek status billing pelanggan' }
+                ];
+            } else if (r.includes('noc')) {
+                this.quickChips = [
+                    { icon: '🌐', label: 'Status OLT', prompt: 'Status OLT dan jaringan' },
+                    { icon: '🎫', label: 'Tiket Open', prompt: 'Cek tiket gangguan yang masih open' },
+                    { icon: '👥', label: 'Cek Pelanggan', prompt: 'Cek status pelanggan' },
+                    { icon: '📊', label: 'Rekap Jaringan', prompt: 'Rekap status jaringan hari ini' }
+                ];
+            } else if (r.includes('teknik')) {
+                this.quickChips = [
+                    { icon: '🎫', label: 'Tiket Gangguan', prompt: 'Cek tiket open' },
+                    { icon: '👥', label: 'Cek Pelanggan', prompt: 'Cari data pelanggan' },
+                    { icon: '🌐', label: 'Status OLT', prompt: 'Status OLT' }
+                ];
+            } else if (r.includes('customer')) {
+                this.quickChips = [
+                    { icon: '👥', label: 'Cari Pelanggan', prompt: 'Cari data pelanggan' },
+                    { icon: '🎫', label: 'Tiket Komplain', prompt: 'Cek tiket gangguan open' },
+                    { icon: '💳', label: 'Cek Tagihan', prompt: 'Cek status tagihan pelanggan' }
+                ];
+            } else {
+                this.quickChips = [
+                    { icon: '📊', label: 'Rekap Hari Ini', prompt: 'Rekap operasional IMS2 hari ini' },
+                    { icon: '💳', label: 'Tagihan Pending', prompt: 'Cek tagihan pending verifikasi' },
+                    { icon: '🌐', label: 'Status OLT', prompt: 'Status OLT dan jaringan' },
+                    { icon: '🎫', label: 'Tiket Open', prompt: 'Cek tiket gangguan yang masih open' },
+                    { icon: '👥', label: 'Cari Pelanggan', prompt: 'Cek pelanggan aktif' }
+                ];
+            }
         },
 
         sendQuickPrompt(text) {
@@ -567,6 +613,7 @@ window.imsAiCopilot = function() {
                     <div style="display:flex; align-items:center; gap:8px;">
                         <h3 style="font-size:14px; font-weight:700; color:#ffffff; margin:0; line-height:1.2;">IMS AI Copilot</h3>
                         <span style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:#082f49; color:#38bdf8; border:1px solid rgba(56, 189, 248, 0.35);" x-text="engineMode"></span>
+                        <span x-show="userRole" style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:rgba(30,27,75,0.7); color:#a5b4fc; border:1px solid rgba(165,180,252,0.35);" x-text="userRole"></span>
                     </div>
                     <p style="font-size:11px; color:#94a3b8; margin:2px 0 0 0;">Asisten Pintar NOC, Finance & Operasional</p>
                 </div>

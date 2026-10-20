@@ -35,6 +35,9 @@ class AiAssistantController extends Controller
         // 2. Check if Gemini API Key is configured
         $geminiKey = trim((string)(config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '')));
         $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
+        if (str_contains($geminiModel, '2.5-flash')) {
+            $geminiModel = 'gemini-2.0-flash';
+        }
 
         if (!empty($geminiKey)) {
             try {
@@ -74,9 +77,13 @@ class AiAssistantController extends Controller
     public function status(): JsonResponse
     {
         $geminiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
+        $configuredModel = (string)config('services.gemini.model', 'gemini-2.0-flash');
+        if (str_contains($configuredModel, '2.5-flash')) {
+            $configuredModel = 'gemini-2.0-flash';
+        }
         return response()->json([
             'configured' => !empty($geminiKey),
-            'model' => config('services.gemini.model', 'gemini-2.0-flash'),
+            'model' => $configuredModel,
             'user' => [
                 'name' => auth()->user()?->nama_lengkap ?? auth()->user()?->username ?? 'Staff',
                 'role' => auth()->user()?->role ?? 'staff',
@@ -517,13 +524,16 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
                     foreach ($remoteModels as $rm) {
                         $methods = $rm['supportedGenerationMethods'] ?? [];
                         if (in_array('generateContent', $methods)) {
-                            $validModels[] = str_replace('models/', '', $rm['name'] ?? '');
+                            $mName = str_replace('models/', '', $rm['name'] ?? '');
+                            if (!str_contains($mName, '2.5-flash')) {
+                                $validModels[] = $mName;
+                            }
                         }
                     }
                     if (!empty($validModels)) {
                         usort($validModels, function ($a, $b) {
-                            $scoreA = str_contains($a, '2.0-flash') ? 4 : (str_contains($a, 'flash') ? 3 : (str_contains($a, '2.0') ? 2 : 1));
-                            $scoreB = str_contains($b, '2.0-flash') ? 4 : (str_contains($b, 'flash') ? 3 : (str_contains($b, '2.0') ? 2 : 1));
+                            $scoreA = str_contains($a, '2.0-flash') ? 5 : (str_contains($a, 'flash') ? 3 : 1);
+                            $scoreB = str_contains($b, '2.0-flash') ? 5 : (str_contains($b, 'flash') ? 3 : 1);
                             return $scoreB <=> $scoreA;
                         });
                         $discovered = $validModels;
@@ -535,11 +545,13 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             }
         }
 
-        $modelsToTry = array_filter(array_unique(array_merge([$model], (array)($discovered ?: ['gemini-2.0-flash', 'gemini-2.5-flash']))));
-        // Limit to max 2 candidates to prevent request from exceeding web server timeout
-        $modelsToTry = array_slice($modelsToTry, 0, 2);
+        $defaultCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+        $cleanModel = str_contains($model, '2.5-flash') ? 'gemini-2.0-flash' : $model;
+        $modelsToTry = array_values(array_filter(array_unique(array_merge([$cleanModel], (array)($discovered ?: $defaultCandidates)))));
+        $modelsToTry = array_slice($modelsToTry, 0, 3);
 
         // 2. Iterate through candidate models with fast per-step timeout
+        $triedModels = [];
         $lastError = 'Semua model Gemini yang dicoba gagal merespon.';
         $tools = [['functionDeclarations' => [
             [
@@ -554,7 +566,9 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             ],
         ]]];
 
-        foreach ($modelsToTry as $mName) {
+        for ($mIdx = 0; $mIdx < count($modelsToTry) && $mIdx < 4; $mIdx++) {
+            $mName = $modelsToTry[$mIdx];
+            $triedModels[] = $mName;
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$mName}:generateContent?key={$apiKey}";
             $convo = $contents;
 
@@ -568,7 +582,18 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
                     ]);
 
                     if (!$response->successful()) {
-                        $lastError = $response->json('error.message') ?? ('HTTP ' . $response->status());
+                        $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());
+                        $lastError = $errMessage;
+
+                        // Self-healing: if Google API error recommends a specific model, extract and retry with it immediately!
+                        if (preg_match('/models\/([a-zA-Z0-9._-]+)/i', $errMessage, $mMatches)) {
+                            $suggestedModel = $mMatches[1];
+                            if ($suggestedModel !== $mName && !in_array($suggestedModel, $triedModels, true) && !in_array($suggestedModel, $modelsToTry, true)) {
+                                $modelsToTry[] = $suggestedModel;
+                                Cache::put($cacheKey, array_values(array_unique(array_merge([$suggestedModel], (array)($discovered ?: [])))), 3600);
+                            }
+                        }
+
                         continue 2;
                     }
 
@@ -693,7 +718,7 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
         if ($isFallback) {
             $output[] = "> ⚠️ *Catatan: Menampilkan data internal langsung via Offline Database Heuristic Engine.*";
             if (!empty($errorMessage)) {
-                $cleanErr = strlen($errorMessage) > 160 ? substr($errorMessage, 0, 160) . '...' : $errorMessage;
+                $cleanErr = strlen($errorMessage) > 300 ? substr($errorMessage, 0, 300) . '...' : $errorMessage;
                 $output[] = "> 🔍 *Status Google API: " . htmlspecialchars($cleanErr) . "*";
             }
         }

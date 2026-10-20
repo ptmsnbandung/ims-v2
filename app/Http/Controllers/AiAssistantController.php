@@ -114,9 +114,10 @@ class AiAssistantController extends Controller
         $stopwords = [
             'cari', 'cek', 'lihat', 'info', 'data', 'detail', 'status', 'keaktifan', 'aktif', 'nonaktif', 'masih',
             'pelanggan', 'nama', 'user', 'client', 'cust', 'customer', 'member',
+            'alamat', 'lokasi', 'tempat', 'dimana', 'rumah',
             'tagihan', 'billing', 'invoice', 'bayar', 'pembayaran', 'lunas', 'unpaid', 'paid',
             'tolong', 'mohon', 'bantu', 'bisa', 'dong', 'ya', 'min', 'kak', 'admin', 'halo', 'hai', 'selamat', 'pagi', 'siang', 'sore', 'malam',
-            'apakah', 'ada', 'berapa', 'siapa', 'dimana', 'kapan', 'kenapa', 'bagaimana', 'apa', 'tentang',
+            'apakah', 'ada', 'berapa', 'siapa', 'kapan', 'kenapa', 'bagaimana', 'apa', 'tentang',
             'terisolir', 'isolir', 'suspend', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
             'adalah', 'itu', 'ini', 'kah'
         ];
@@ -125,39 +126,16 @@ class AiAssistantController extends Controller
         $cleanSearch = trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $cleanSearch));
         $cleanSearch = preg_replace('/\s+/', ' ', $cleanSearch);
 
-        $nameTokens = array_filter(explode(' ', $cleanSearch), fn($t) => strlen($t) >= 3);
-        $primaryTerm = $explicitName ?: $cleanSearch;
+        $searchTerm = $explicitName ?: $cleanSearch;
+        $nameTokens = array_values(array_filter(explode(' ', $searchTerm), fn($t) => strlen($t) >= 3));
 
         // Context 1: Customer lookup (by ID, username, or name)
-        if ($extractedId || !empty($primaryTerm) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
+        if ($extractedId || !empty($searchTerm) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
             try {
                 $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
                 $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
 
-                $custQuery = DB::table('trx_batchjob_register')
-                    ->where('hide', 0);
-
-                if ($extractedId) {
-                    $custQuery->where(function ($q) use ($extractedId, $userCol) {
-                        $q->where('nomor_internet', 'like', "%{$extractedId}%")
-                          ->orWhere($userCol, 'like', "%{$extractedId}%");
-                    });
-                } else if (!empty($primaryTerm) || !empty($nameTokens)) {
-                    $custQuery->where(function ($q) use ($primaryTerm, $nameTokens, $userCol) {
-                        if (!empty($primaryTerm)) {
-                            $q->where('nama_pelanggan', 'like', "%{$primaryTerm}%")
-                              ->orWhere($userCol, 'like', "%{$primaryTerm}%")
-                              ->orWhere('nomor_internet', 'like', "%{$primaryTerm}%");
-                        }
-                        foreach ($nameTokens as $tok) {
-                            $q->orWhere('nama_pelanggan', 'like', "%{$tok}%")
-                              ->orWhere($userCol, 'like', "%{$tok}%")
-                              ->orWhere('nomor_internet', 'like', "%{$tok}%");
-                        }
-                    });
-                }
-
-                $context['customers'] = $custQuery->select([
+                $selectCols = [
                     'nomor_internet',
                     'nama_pelanggan',
                     $userCol . ' as pppoe_username',
@@ -168,7 +146,62 @@ class AiAssistantController extends Controller
                     'alamat_pasang',
                     'olt',
                     'router_id',
-                ])->limit(5)->get()->toArray();
+                ];
+
+                $matchedCustomers = collect();
+
+                if ($extractedId) {
+                    $matchedCustomers = DB::table('trx_batchjob_register')
+                        ->where('hide', 0)
+                        ->where(function ($q) use ($extractedId, $userCol) {
+                            $q->where('nomor_internet', 'like', "%{$extractedId}%")
+                              ->orWhere($userCol, 'like', "%{$extractedId}%");
+                        })
+                        ->select($selectCols)
+                        ->limit(5)
+                        ->get();
+                }
+
+                // Tier 1: Try full phrase match on nama_pelanggan or userCol
+                if ($matchedCustomers->isEmpty() && !empty($searchTerm) && strlen($searchTerm) >= 3) {
+                    $matchedCustomers = DB::table('trx_batchjob_register')
+                        ->where('hide', 0)
+                        ->where(function ($q) use ($searchTerm, $userCol) {
+                            $q->where('nama_pelanggan', 'like', "%{$searchTerm}%")
+                              ->orWhere($userCol, 'like', "%{$searchTerm}%")
+                              ->orWhere('nomor_internet', 'like', "%{$searchTerm}%");
+                        })
+                        ->select($selectCols)
+                        ->limit(5)
+                        ->get();
+                }
+
+                // Tier 2: If multi-word, match ALL tokens with AND (e.g. 'rama' AND 'putra')
+                if ($matchedCustomers->isEmpty() && count($nameTokens) > 1) {
+                    $q = DB::table('trx_batchjob_register')->where('hide', 0);
+                    foreach ($nameTokens as $tok) {
+                        $q->where(function ($sub) use ($tok, $userCol) {
+                            $sub->where('nama_pelanggan', 'like', "%{$tok}%")
+                                ->orWhere($userCol, 'like', "%{$tok}%");
+                        });
+                    }
+                    $matchedCustomers = $q->select($selectCols)->limit(5)->get();
+                }
+
+                // Tier 3: Single token match
+                if ($matchedCustomers->isEmpty() && count($nameTokens) === 1) {
+                    $matchedCustomers = DB::table('trx_batchjob_register')
+                        ->where('hide', 0)
+                        ->where(function ($q) use ($nameTokens, $userCol) {
+                            $q->where('nama_pelanggan', 'like', "%{$nameTokens[0]}%")
+                              ->orWhere($userCol, 'like', "%{$nameTokens[0]}%");
+                        })
+                        ->select($selectCols)
+                        ->limit(5)
+                        ->get();
+                }
+
+                $context['customers'] = $matchedCustomers->toArray();
             } catch (\Throwable $e) {
                 Log::warning("[AiAssistant] Gagal mengambil data pelanggan: " . $e->getMessage());
             }

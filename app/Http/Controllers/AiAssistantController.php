@@ -545,7 +545,7 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             }
         }
 
-        $defaultCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+        $defaultCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
         $cleanModel = str_contains($model, '2.5-flash') ? 'gemini-2.0-flash' : $model;
         $modelsToTry = array_values(array_filter(array_unique(array_merge([$cleanModel], (array)($discovered ?: $defaultCandidates)))));
         $modelsToTry = array_slice($modelsToTry, 0, 3);
@@ -720,6 +720,9 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
             if (!empty($errorMessage)) {
                 $cleanErr = strlen($errorMessage) > 300 ? substr($errorMessage, 0, 300) . '...' : $errorMessage;
                 $output[] = "> 🔍 *Status Google API: " . htmlspecialchars($cleanErr) . "*";
+                if (stripos($errorMessage, 'quota') !== false || stripos($errorMessage, 'rate') !== false || stripos($errorMessage, '429') !== false) {
+                    $output[] = "> 💡 *Tips: Batas kuota gratis Google Gemini tercapai (15 request/menit atau 1.500/hari). Tunggu ~1 menit untuk reset per-menit, atau buat API Key baru secara gratis di [Google AI Studio](https://aistudio.google.com/app/apikey).*";
+                }
             }
         }
 

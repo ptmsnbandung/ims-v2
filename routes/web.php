@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BroadcastController;
+use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\FinanceController;
@@ -28,6 +29,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/notifications/poll', [NotificationController::class, 'poll'])->name('api.notifications.poll');
     Route::get('/api/notifications/stream', [NotificationController::class, 'stream'])->name('api.notifications.stream');
     Route::get('/api/notifications/payments', [NotificationController::class, 'getRecentPayments'])->name('api.notifications.payments');
+
+    // AI Assistant / Copilot Routes
+    Route::prefix('ai-assistant')->name('ai.')->group(function () {
+        Route::post('/chat', [AiAssistantController::class, 'chat'])->name('chat');
+        Route::get('/status', [AiAssistantController::class, 'status'])->name('status');
+    });
 
     // Routes Role Master Admin & Direktur
     Route::middleware('role:admin,direktur')->prefix('admin')->name('admin.')->group(function () {

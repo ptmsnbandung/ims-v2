@@ -30,8 +30,8 @@ class AiAssistantController extends Controller
         $contextData = $this->gatherContext($userMessage, $currentUser);
 
         // 2. Check if Gemini API Key is configured
-        $geminiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
-        $geminiModel = config('services.gemini.model', 'gemini-1.5-flash');
+        $geminiKey = trim((string)(config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '')));
+        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-1.5-flash')));
 
         if (!empty($geminiKey)) {
             try {
@@ -43,14 +43,15 @@ class AiAssistantController extends Controller
                     'model' => $geminiModel,
                 ]);
             } catch (\Throwable $e) {
-                Log::warning('Gemini AI Assistant error: ' . $e->getMessage());
-                // Fallback to local heuristic engine
-                $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
+                $errDetail = $e->getMessage();
+                Log::warning('Gemini AI Assistant error: ' . $errDetail);
+                // Fallback to local heuristic engine with clear diagnostic reason
+                $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true, $errDetail);
                 return response()->json([
                     'status' => 'success',
                     'reply' => $fallbackReply,
                     'mode' => 'local_fallback',
-                    'warning' => 'Koneksi Gemini API mengalami gangguan sementara, beralih ke mode lokal internal.',
+                    'warning' => 'Koneksi Gemini API mengalami kendala: ' . $errDetail,
                 ]);
             }
         }
@@ -292,7 +293,9 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
         ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Gemini API returned status ' . $response->status() . ': ' . $response->body());
+            $errBody = $response->json();
+            $msg = $errBody['error']['message'] ?? ('HTTP ' . $response->status() . ': ' . $response->body());
+            throw new \Exception($msg);
         }
 
         $resJson = $response->json();
@@ -308,7 +311,7 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
     /**
      * Local heuristic response generator when API key is missing or service unreachable.
      */
-    protected function generateLocalResponse(string $query, array $context, $user, bool $isFallback = false): string
+    protected function generateLocalResponse(string $query, array $context, $user, bool $isFallback = false, ?string $errorMessage = null): string
     {
         $userName = $user?->nama_lengkap ?? $user?->username ?? 'Staff';
         $lower = strtolower($query);
@@ -316,6 +319,11 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
 
         if ($isFallback) {
             $output[] = "> ⚠️ *Catatan: Menampilkan data internal langsung via Offline Database Heuristic Engine.*";
+            if (!empty($errorMessage)) {
+                // Shorten if too long
+                $cleanErr = strlen($errorMessage) > 160 ? substr($errorMessage, 0, 160) . '...' : $errorMessage;
+                $output[] = "> 🔍 *Status Google API: " . htmlspecialchars($cleanErr) . "*";
+            }
         }
 
         // Case 1: Customer details found or searched

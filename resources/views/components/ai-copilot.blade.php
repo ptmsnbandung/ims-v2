@@ -14,15 +14,14 @@
     display: inline-flex !important;
     align-items: center !important;
     gap: 10px !important;
-    padding: 8px 18px 8px 12px !important;
+    padding: 7px 10px 7px 18px !important;
     border-radius: 9999px !important;
-    background: linear-gradient(135deg, #0891b2 0%, #0d9488 100%) !important;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.94) 100%) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
     color: #ffffff !important;
-    font-weight: 700 !important;
-    font-size: 13.5px !important;
-    letter-spacing: 0.02em !important;
-    box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
-    border: 1px solid rgba(103, 232, 249, 0.4) !important;
+    border: 1px solid rgba(56, 189, 248, 0.35) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.55), 0 0 15px rgba(56, 189, 248, 0.2) !important;
     cursor: pointer !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     user-select: none !important;
@@ -30,12 +29,29 @@
 
 .ims-ai-trigger-btn:hover {
     transform: translateY(-2px) scale(1.03) !important;
-    box-shadow: 0 15px 30px -5px rgba(6, 182, 212, 0.6) !important;
-    background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%) !important;
+    border-color: rgba(56, 189, 248, 0.75) !important;
+    box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.7), 0 0 24px rgba(56, 189, 248, 0.4) !important;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 1) 0%, rgba(30, 41, 59, 0.98) 100%) !important;
 }
 
 .ims-ai-trigger-btn:active {
     transform: scale(0.96) !important;
+}
+
+.ims-ai-trigger-text {
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    letter-spacing: 0.03em !important;
+    color: #ffffff !important;
+    display: inline-block !important;
+}
+
+.ims-ai-trigger-logo {
+    width: 28px !important;
+    height: 28px !important;
+    object-fit: contain !important;
+    display: block !important;
+    filter: drop-shadow(0 2px 6px rgba(56, 189, 248, 0.35)) !important;
 }
 
 .ims-ai-modal-box {
@@ -491,8 +507,8 @@ window.imsAiCopilot = function() {
             class="ims-ai-trigger-btn"
             title="Buka / Tutup IMS AI Copilot"
             aria-label="IMS AI Assistant">
-            <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:26px; height:26px; object-fit:contain; display:block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-            <span>IMS AI</span>
+            <span class="ims-ai-trigger-text">IMS AI</span>
+            <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" class="ims-ai-trigger-logo">
         </button>
     </div>
 

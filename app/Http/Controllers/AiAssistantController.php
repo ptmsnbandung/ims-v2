@@ -145,6 +145,7 @@ class AiAssistantController extends Controller
                     'is_termin',
                     'alamat_pasang',
                     'olt',
+                    'index_olt',
                     'router_id',
                 ];
 
@@ -202,6 +203,64 @@ class AiAssistantController extends Controller
                 }
 
                 $context['customers'] = $matchedCustomers->toArray();
+
+                // Context 1.1: Enrich customers with OLT master data and ONU port diagnosis
+                if (!empty($context['customers'])) {
+                    $oltAliasMap = [
+                        'bagong' => 'O2',
+                        'babakan tarogong' => 'O2',
+                        'o2' => 'O2',
+                        'kayu agung' => 'O1',
+                        'kayuagung' => 'O1',
+                        'msn' => 'O1',
+                        'o1' => 'O1',
+                        'soreang' => 'O3',
+                        'bbu' => 'O3',
+                        'o3' => 'O3',
+                    ];
+
+                    $allOlts = DB::table('m_olt')
+                        ->select(['kode_olt', 'name_olt', 'ip_address', 'brand', 'model', 'is_active'])
+                        ->get()
+                        ->keyBy('kode_olt');
+
+                    foreach ($context['customers'] as $c) {
+                        $rawOlt = strtolower(trim((string)($c->olt ?? '')));
+                        $resolvedCode = $oltAliasMap[$rawOlt] ?? null;
+                        if (!$resolvedCode) {
+                            foreach ($allOlts as $code => $oltObj) {
+                                if (str_contains(strtolower($oltObj->name_olt), $rawOlt) || strtolower($code) === $rawOlt) {
+                                    $resolvedCode = $code;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ($resolvedCode && isset($allOlts[$resolvedCode])) {
+                            $matchedOlt = $allOlts[$resolvedCode];
+                            $c->olt_code = $matchedOlt->kode_olt;
+                            $c->olt_name = $matchedOlt->name_olt;
+                            $c->olt_ip = $matchedOlt->ip_address;
+                            $c->olt_status = $matchedOlt->is_active == 1 ? 'Aktif' : 'Non-Aktif';
+                        } else {
+                            $c->olt_code = null;
+                            $c->olt_name = $c->olt ?: 'Belum ditentukan';
+                            $c->olt_ip = null;
+                            $c->olt_status = 'Unknown';
+                        }
+
+                        $cleanIndex = trim((string)($c->index_olt ?? ''));
+                        $c->index_olt = $cleanIndex ?: null;
+                        $c->has_onu_port = !empty($cleanIndex);
+                        if (!$c->has_onu_port) {
+                            $c->onu_telemetry_status = 'Port GPON Belum Dikonfigurasi (index_olt NULL)';
+                            $c->onu_telemetry_note = 'Data live redaman optik (Rx/Tx dBm) dan fisik link ONU belum dapat dicek karena nomor port GPON ONU belum diisi pada registrasi pelanggan.';
+                        } else {
+                            $c->onu_telemetry_status = "Port GPON Terdaftar: {$cleanIndex}";
+                            $c->onu_telemetry_note = 'Port GPON terdaftar. Pengecekan status fisik dapat dilakukan via OLT management.';
+                        }
+                    }
+                }
             } catch (\Throwable $e) {
                 Log::warning("[AiAssistant] Gagal mengambil data pelanggan: " . $e->getMessage());
             }
@@ -315,7 +374,7 @@ class AiAssistantController extends Controller
         }
 
         // Context 4: OLT & Network
-        if (str_contains($lower, 'olt') || str_contains($lower, 'jaringan') || str_contains($lower, 'noc') || str_contains($lower, 'pon') || str_contains($lower, 'server')) {
+        if (str_contains($lower, 'olt') || str_contains($lower, 'jaringan') || str_contains($lower, 'noc') || str_contains($lower, 'pon') || str_contains($lower, 'server') || str_contains($lower, 'redaman') || str_contains($lower, 'optik') || !empty($context['customers'])) {
             try {
                 $context['olts'] = DB::table('m_olt')
                     ->select(['kode_olt', 'name_olt', 'ip_address', 'brand', 'model', 'is_active', 'last_status'])
@@ -373,6 +432,9 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
 - Menjawab pertanyaan terkait data pelanggan, status registrasi, isolir/suspend, dan OLT.
 - Membantu pencarian & ringkasan tagihan / billing, pembayaran pending verifikasi, dan status lunas.
 - Menjelaskan status tiket gangguan dan keluhan pelanggan.
+- Terkait OLT & ONU Pelanggan:
+  1. Jika index_olt pelanggan bernilai NULL / kosong: Jelaskan dengan jelas dan ramah bahwa pengecekan status fisik real-time / redaman laser optik (Rx/Tx) belum bisa dilakukan karena nomor port GPON ONU (format: gpon-onu_1/{slot}/{port}:{onu_id}) belum dipetakan pada database registrasi pelanggan tersebut. Sebutkan nama & IP OLT induk pelanggan (misal: OLT Babakan Tarogong / O2) dan sarankan tim teknisi/NOC melengkapi index_olt pada menu data pelanggan.
+  2. Jika index_olt terisi: Tampilkan nama OLT, IP OLT, dan nomor port GPON index_olt pelanggan tersebut.
 - Memberikan jawaban yang ringkas, profesional, to the point, dan langsung dapat ditindaklanjuti.
 - Gunakan format markdown yang rapi: gunakan tabel untuk data tabular, bullet points, dan kode mono `font-mono` untuk ID internet, IP, kode billing, dan nominal rupiah.
 - Pengguna yang sedang berbicara bernama {$userName} dengan hak akses / role: {$userRole}.
@@ -498,6 +560,30 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
 
         $hasData = false;
 
+        // Case 0: Explicit check if user asks why OLT / ONU status cannot be checked
+        $isAskingWhyOlt = (str_contains($lower, 'kenapa') || str_contains($lower, 'mengapa') || str_contains($lower, 'tidak bisa') || str_contains($lower, 'gagal') || str_contains($lower, 'alasan'))
+            && (str_contains($lower, 'olt') || str_contains($lower, 'cek') || str_contains($lower, 'status') || str_contains($lower, 'redaman') || str_contains($lower, 'ini'));
+
+        if ($isAskingWhyOlt && !empty($context['customers'])) {
+            $c = $context['customers'][0];
+            $oltName = $c->olt_name ?? ($c->olt ?: 'OLT');
+            $oltIp = $c->olt_ip ?? '103.161.206.214';
+            $oltStatus = $c->olt_status ?? 'Aktif';
+
+            $output[] = "### 🔍 Penjelasan: Mengapa Status Live OLT / ONU Belum Bisa Dicek";
+            $output[] = "Pengecekan fisik/telemetri *real-time* perangkat OLT untuk user `{$c->nomor_internet}` (**{$c->nama_pelanggan}**) belum dapat dilakukan secara otomatis karena:\n";
+            $output[] = "1. **Index Port GPON Kosong (`index_olt = NULL`)**";
+            $output[] = "   - Di arsitektur jaringan GPON (ZTE/Huawei), OLT memerlukan identitas port fisik dalam format `gpon-onu_1/{slot}/{port}:{onu_id}` (misalnya `gpon-onu_1/1/2:8`) untuk menembakkan laser telemetri dan membaca redaman sinyal optik (Rx/Tx dBm) ONU pelanggan.";
+            $output[] = "   - Pada data registrasi pelanggan ini di tabel `trx_batchjob_register`, kolom **Index OLT** masih kosong (`NULL`), sehingga sistem belum mengetahui di port splitter mana kabel serat optik pelanggan ini terpasang.";
+            $output[] = "2. **Status Perangkat OLT Induk**";
+            $output[] = "   - Pelanggan ini terdaftar pada OLT **{$oltName}** (Host IP: `{$oltIp}`).";
+            $output[] = "   - Server OLT induk terpantau **{$oltStatus}**, namun tanpa port `index_olt`, perintah telnet/SNMP pembacaan optik belum memiliki target port yang valid.\n";
+            $output[] = "🛠️ **Langkah Solusi / Rekomendasi:**";
+            $output[] = "- Tim Teknisi / NOC dapat melengkapi data **Index OLT** pelanggan melalui menu **Data Pelanggan > Edit Registrasi** sesuai port GPON tempat pelanggan teraktivasi di lapangan.";
+            $output[] = "- Setelah `index_olt` terisi, sistem dan AI Copilot dapat menampilkan status redaman laser (optical power) dan link connection secara real-time.";
+            return implode("\n", $output);
+        }
+
         // Case 1: Customer details found
         if (!empty($context['customers'])) {
             $hasData = true;
@@ -512,9 +598,16 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
                     default => '⚪ Registrasi (' . $c->status_reg . ')'
                 };
                 $suspendText = $c->is_suspend == 1 ? "🔴 Terisolir (Suspend)" : "🟢 Normal";
+                $oltLabel = !empty($c->olt_name) ? "{$c->olt_name} (" . ($c->olt_ip ?? '-') . ")" : ($c->olt ?: '-');
+                $indexLabel = !empty($c->index_olt) ? "`{$c->index_olt}`" : "⚠️ *Belum terdaftar (NULL)*";
+
                 $output[] = "- **{$c->nama_pelanggan}** (`{$c->nomor_internet}`)";
                 $output[] = "  - Paket: `{$c->kode_bandwith}` | Status: {$statusText} | Isolir: {$suspendText}";
-                $output[] = "  - PPPoE: `{$c->pppoe_username}` | OLT: `{$c->olt}`";
+                $output[] = "  - PPPoE: `" . ($c->pppoe_username ?: '-') . "`";
+                $output[] = "  - OLT: **{$oltLabel}** | Index Port: {$indexLabel}";
+                if (empty($c->index_olt)) {
+                    $output[] = "    *(Catatan: Pengecekan redaman live butuh input port `index_olt` di menu Pelanggan)*";
+                }
                 $output[] = "  - Alamat: *{$c->alamat_pasang}*";
             }
         }

@@ -259,7 +259,7 @@ window.imsAiCopilot = function() {
         isOpen: false,
         isLoading: false,
         userInput: '',
-        engineMode: 'AI Copilot',
+        engineMode: 'AI',
         quickChips: [
             { icon: '📊', label: 'Rekap Hari Ini', prompt: 'Rekap operasional IMS2 hari ini' },
             { icon: '💳', label: 'Tagihan Pending', prompt: 'Cek tagihan pending verifikasi' },
@@ -334,9 +334,9 @@ window.imsAiCopilot = function() {
                 if (res.ok) {
                     const data = await res.json();
                     if (data.configured) {
-                        this.engineMode = 'Gemini Flash';
+                        this.engineMode = 'AI';
                     } else {
-                        this.engineMode = 'DB Engine';
+                        this.engineMode = 'Offline';
                     }
                 }
             } catch (e) {}
@@ -411,9 +411,9 @@ window.imsAiCopilot = function() {
 
                 if (response.ok && data && data.status === 'success') {
                     if (data.mode === 'gemini') {
-                        this.engineMode = 'Gemini Flash';
-                    } else if (data.mode === 'local_fallback') {
-                        this.engineMode = 'Local Fallback';
+                        this.engineMode = 'AI';
+                    } else {
+                        this.engineMode = 'Offline';
                     }
 
                     this.messages.push({

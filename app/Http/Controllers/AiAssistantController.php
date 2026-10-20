@@ -44,20 +44,18 @@ class AiAssistantController extends Controller
                 $reply = $this->callGeminiApi($geminiKey, $geminiModel, $userMessage, $history, $contextData, $currentUser);
                 return response()->json([
                     'status' => 'success',
-                    'reply' => $reply,
+                    'reply' => "> 🤖 *Mode: AI*\n\n" . $reply,
                     'mode' => 'gemini',
                     'model' => $geminiModel,
                 ]);
             } catch (\Throwable $e) {
-                $errDetail = $e->getMessage();
-                Log::warning('Gemini AI Assistant error: ' . $errDetail);
-                // Fallback to local heuristic engine with clear diagnostic reason
-                $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true, $errDetail);
+                Log::warning('Gemini AI Assistant error: ' . $e->getMessage());
+                // Fallback to local heuristic engine
+                $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
                 return response()->json([
                     'status' => 'success',
                     'reply' => $fallbackReply,
                     'mode' => 'local_fallback',
-                    'warning' => 'Koneksi Gemini API mengalami kendala: ' . $errDetail,
                 ]);
             }
         }
@@ -715,16 +713,7 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
         $lower = strtolower($query);
         $output = [];
 
-        if ($isFallback) {
-            $output[] = "> ⚠️ *Catatan: Menampilkan data internal langsung via Offline Database Heuristic Engine.*";
-            if (!empty($errorMessage)) {
-                $cleanErr = strlen($errorMessage) > 300 ? substr($errorMessage, 0, 300) . '...' : $errorMessage;
-                $output[] = "> 🔍 *Status Google API: " . htmlspecialchars($cleanErr) . "*";
-                if (stripos($errorMessage, 'quota') !== false || stripos($errorMessage, 'rate') !== false || stripos($errorMessage, '429') !== false) {
-                    $output[] = "> 💡 *Tips: Batas kuota gratis Google Gemini tercapai (15 request/menit atau 1.500/hari). Tunggu ~1 menit untuk reset per-menit, atau buat API Key baru secara gratis di [Google AI Studio](https://aistudio.google.com/app/apikey).*";
-                }
-            }
-        }
+        $output[] = "> 🏷️ *Mode: Offline*\n";
 
         $hasData = false;
 
@@ -881,11 +870,6 @@ Tugas Anda membantu staff (NOC, Finance, Teknik, dan Direksi/Admin) dalam operas
         $output[] = "3. **Cek Tiket Gangguan**: Ketik `cek tiket open` atau `keluhan internet`.";
         $output[] = "4. **Cek Jaringan / OLT**: Ketik `status olt` atau `jaringan`.";
         $output[] = "5. **Ringkasan Operasional**: Ketik `rekap hari ini` atau `summary sistem`.";
-
-        if (!$isFallback) {
-            $output[] = "\n---";
-            $output[] = "💡 *Tips: Untuk percakapan natural tak terbatas & analisis mendalam, tambahkan `GEMINI_API_KEY=AIzaSy...` pada file `.env`.*";
-        }
 
         return implode("\n", $output);
     }

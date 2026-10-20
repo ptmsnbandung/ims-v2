@@ -52,10 +52,14 @@
     border: 1px solid rgba(6, 182, 212, 0.35) !important;
     border-radius: 20px !important;
     box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.85), 0 0 30px rgba(6, 182, 212, 0.2) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-    color: #e2e8f0 !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #e2e8f0;
+}
+
+.ims-ai-modal-box[style*="display: none"] {
+    display: none !important;
 }
 
 .ims-ai-header {
@@ -485,7 +489,7 @@ window.imsAiCopilot = function() {
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
         x-transition:leave="transition ease-in duration-150 transform"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-        x-transition:leave-end="opacity-0 translate-y-6 scale-95"
+        :style="!isOpen ? 'display: none !important;' : 'display: flex !important;'"
         class="ims-ai-modal-box">
         
         <!-- Header -->

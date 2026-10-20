@@ -32,32 +32,39 @@ class AiAssistantController extends Controller
         // 1. Gather relevant domain context from IMS database based on user intent
         $contextData = $this->gatherContext($userMessage, $currentUser);
 
-        // 2. Check if Gemini API Key is configured
-        $geminiKey = trim((string)(config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '')));
+        // 2. Check if Gemini API Key is configured (supports multiple comma-separated keys for failover & quota pooling)
+        $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
+        $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
         $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
         if (str_contains($geminiModel, '2.5-flash')) {
             $geminiModel = 'gemini-2.0-flash';
         }
 
-        if (!empty($geminiKey)) {
-            try {
-                $reply = $this->callGeminiApi($geminiKey, $geminiModel, $userMessage, $history, $contextData, $currentUser);
-                return response()->json([
-                    'status' => 'success',
-                    'reply' => $reply,
-                    'mode' => 'gemini',
-                    'model' => $geminiModel,
-                ]);
-            } catch (\Throwable $e) {
-                Log::warning('Gemini AI Assistant error: ' . $e->getMessage());
-                // Fallback to local heuristic engine
-                $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
-                return response()->json([
-                    'status' => 'success',
-                    'reply' => $fallbackReply,
-                    'mode' => 'local_fallback',
-                ]);
+        if (!empty($geminiKeys)) {
+            $lastException = null;
+            foreach ($geminiKeys as $keyIndex => $key) {
+                try {
+                    $reply = $this->callGeminiApi($key, $geminiModel, $userMessage, $history, $contextData, $currentUser);
+                    return response()->json([
+                        'status' => 'success',
+                        'reply' => $reply,
+                        'mode' => 'gemini',
+                        'model' => $geminiModel,
+                        'key_index' => $keyIndex + 1,
+                    ]);
+                } catch (\Throwable $e) {
+                    $lastException = $e;
+                    Log::warning("[AiAssistant] Gemini Key #" . ($keyIndex + 1) . " gagal/kuota habis: " . $e->getMessage() . ". Beralih ke kunci berikutnya...");
+                }
             }
+
+            // Fallback to local heuristic engine when all keys are exhausted or error
+            $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
+            return response()->json([
+                'status' => 'success',
+                'reply' => $fallbackReply,
+                'mode' => 'local_fallback',
+            ]);
         }
 
         // 3. Fallback when API key is not yet set
@@ -75,13 +82,15 @@ class AiAssistantController extends Controller
     public function status(): JsonResponse
     {
         $user = auth()->user();
-        $geminiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
+        $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
+        $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
         $configuredModel = (string)config('services.gemini.model', 'gemini-2.0-flash');
         if (str_contains($configuredModel, '2.5-flash')) {
             $configuredModel = 'gemini-2.0-flash';
         }
         return response()->json([
-            'configured' => !empty($geminiKey),
+            'configured' => !empty($geminiKeys),
+            'key_count' => count($geminiKeys),
             'model' => $configuredModel,
             'user' => [
                 'name' => $user?->nama ?? $user?->nama_lengkap ?? $user?->username ?? 'Staff',
@@ -660,8 +669,8 @@ class AiAssistantController extends Controller
         // Build contents array for Gemini
         $contents = [];
 
-        // Add relevant past conversation history (up to last 6 messages)
-        $recentHistory = array_slice($history, -6);
+        // Add relevant past conversation history (up to last 4 messages to save tokens)
+        $recentHistory = array_slice($history, -4);
         foreach ($recentHistory as $msg) {
             $role = ($msg['role'] ?? 'user') === 'user' ? 'user' : 'model';
             $text = $msg['text'] ?? '';
@@ -749,7 +758,7 @@ class AiAssistantController extends Controller
                         'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
                         'contents' => $convo,
                         'tools' => $tools,
-                        'generationConfig' => ['temperature' => 0.3, 'maxOutputTokens' => 2048],
+                        'generationConfig' => ['temperature' => 0.3, 'maxOutputTokens' => 1024],
                     ]);
 
                     if (!$response->successful()) {

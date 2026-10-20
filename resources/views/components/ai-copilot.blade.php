@@ -358,18 +358,13 @@ window.imsAiCopilot = function() {
                     { icon: '👥', label: 'Cari Pelanggan', prompt: 'Cari pelanggan' },
                     { icon: '🧾', label: 'Billing Terkini', prompt: 'Cek status billing pelanggan' }
                 ];
-            } else if (r.includes('noc')) {
+            } else if (r.includes('noc') || r.includes('teknik')) {
                 this.quickChips = [
                     { icon: '🌐', label: 'Status OLT', prompt: 'Status OLT dan jaringan' },
-                    { icon: '🎫', label: 'Tiket Open', prompt: 'Cek tiket gangguan yang masih open' },
+                    { icon: '🎫', label: 'Tiket Gangguan', prompt: 'Cek tiket gangguan yang masih open' },
                     { icon: '👥', label: 'Cek Pelanggan', prompt: 'Cek status pelanggan' },
-                    { icon: '📊', label: 'Rekap Jaringan', prompt: 'Rekap status jaringan hari ini' }
-                ];
-            } else if (r.includes('teknik')) {
-                this.quickChips = [
-                    { icon: '🎫', label: 'Tiket Gangguan', prompt: 'Cek tiket open' },
-                    { icon: '👥', label: 'Cek Pelanggan', prompt: 'Cari data pelanggan' },
-                    { icon: '🌐', label: 'Status OLT', prompt: 'Status OLT' }
+                    { icon: '📊', label: 'Rekap Jaringan', prompt: 'Rekap status jaringan hari ini' },
+                    { icon: '📡', label: 'Port GPON', prompt: 'Cek status OLT dan index_olt port GPON' }
                 ];
             } else if (r.includes('customer')) {
                 this.quickChips = [

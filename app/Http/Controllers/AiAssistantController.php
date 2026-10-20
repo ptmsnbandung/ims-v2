@@ -753,14 +753,10 @@ class AiAssistantController extends Controller
                     . "- DILARANG KERAS: Konfigurasi teknis internal core OLT/Router, redaman optik teknis, dan data rahasia HR personal. Tolak permintaan teknis secara sopan.";
 
             case 'NOC':
-                return "- Hak Akses: Divisi NOC (Network Operations Center).\n"
-                    . "- DIIZINKAN: Status OLT, ONU, PPPoE online/offline, traffic, router, IP address, status koneksi pelanggan, dan tiket gangguan teknis.\n"
-                    . "- DILARANG KERAS: Data keuangan perusahaan, tagihan billing pelanggan, rekening bank perusahaan, omset/pendapatan, laba-rugi, dan verifikasi pembayaran. Jika ditanya hal terkait keuangan/tagihan/omset, tolak secara sopan: jelaskan bahwa data keuangan hanya dapat diakses oleh divisi Finance.";
-
             case 'Teknik':
-                return "- Hak Akses: Divisi TEKNIK (Lapangan).\n"
-                    . "- DIIZINKAN: Data pelanggan lapangan (alamat pasang, nomor internet, status instalasi/aktif/suspend), tiket perbaikan/gangguan, status ODC/ODP/redaman.\n"
-                    . "- DILARANG KERAS: Data keuangan, tagihan/billing, mutasi kas/bank, dan konfigurasi core routing.";
+                return "- Hak Akses: Divisi TEKNIK & NOC (Infrastruktur Jaringan & Lapangan - Setara & Sama).\n"
+                    . "- DIIZINKAN (SAMA): Status OLT, ONU, port GPON (index_olt), redaman optik (Rx/Tx dBm), status PPPoE online/offline, traffic, router, IP address, data pelanggan teknis/lapangan (alamat pasang, paket, nomor internet, status instalasi/aktif/suspend), tiket perbaikan & gangguan teknis, serta inventori perangkat teknis.\n"
+                    . "- DILARANG KERAS: Data keuangan perusahaan, tagihan billing pembukuan, rekening bank perusahaan, omset/pendapatan, laba-rugi, dan verifikasi pembayaran. Jika ditanya hal terkait keuangan/tagihan/omset, tolak secara sopan: jelaskan bahwa data keuangan hanya dapat diakses oleh divisi Finance.";
 
             case 'Customer Service':
                 return "- Hak Akses: Divisi CUSTOMER SERVICE.\n"
@@ -1106,15 +1102,11 @@ class AiAssistantController extends Controller
             $output[] = "1. **Cek Tagihan Pending**: Ketik `cek tagihan pending` atau `verifikasi tagihan`.";
             $output[] = "2. **Cek Pembayaran Pelanggan**: Ketik `cek billing 102938` atau nama pelanggan.";
             $output[] = "3. **Rekap Keuangan**: Ketik `rekap tagihan bulan ini`.";
-        } elseif ($userRole === 'NOC') {
+        } elseif ($userRole === 'NOC' || $userRole === 'Teknik') {
             $output[] = "1. **Status OLT & Jaringan**: Ketik `status olt` atau `cek olt O2`.";
-            $output[] = "2. **Cek Pelanggan & GPON**: Ketik `cek pelanggan 102938` untuk melihat status koneksi, paket, dan port OLT.";
-            $output[] = "3. **Tiket Gangguan**: Ketik `cek tiket open` atau keluhan jaringan.";
-            $output[] = "4. **Rekap Jaringan**: Ketik `rekap hari ini` untuk total user online & terisolir.";
-        } elseif ($userRole === 'Teknik') {
-            $output[] = "1. **Cek Pelanggan Lapangan**: Ketik nama atau no internet untuk cek alamat pasang & paket.";
-            $output[] = "2. **Tiket Gangguan / Perbaikan**: Ketik `cek tiket open`.";
-            $output[] = "3. **Cek Port OLT**: Ketik `cek index_olt pelanggan 102938`.";
+            $output[] = "2. **Cek Pelanggan, Redaman & GPON**: Ketik `cek pelanggan 102938` untuk melihat status koneksi, paket, redaman optik, dan port OLT.";
+            $output[] = "3. **Tiket Gangguan / Lapangan**: Ketik `cek tiket open` atau keluhan jaringan.";
+            $output[] = "4. **Rekap Jaringan & Operasional**: Ketik `rekap hari ini` untuk total user online & terisolir.";
         } elseif ($userRole === 'Customer Service') {
             $output[] = "1. **Cari Data Pelanggan**: Ketik nama atau nomor internet pelanggan.";
             $output[] = "2. **Cek Status Tiket / Komplain**: Ketik `cek tiket pelanggan`.";

@@ -864,6 +864,8 @@
             <form action="{{ route('finance.notifikasi.approve') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="kode_billing" :value="approveData.kode_billing">
+                <input type="hidden" name="nama_pelanggan" :value="approveData.nama_pelanggan">
+                <input type="hidden" name="nomor_internet" :value="approveData.nomor_internet">
 
                 <!-- Modal Header (Sidebar Blue Theme) -->
                 <div class="px-6 py-4 bg-[#061d28] border-b border-[#0d2a38] flex items-center justify-between text-white">

@@ -711,11 +711,24 @@ class NotificationController extends Controller
                         $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: $nowJkt);
                         $carbonDate = Carbon::parse($cDate, 'Asia/Jakarta');
                         $merchant = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: 'Transfer Manual'));
+                        $namaPelanggan = trim((string)($c->customer_name ?? ''));
+                        if ((empty($namaPelanggan) || strcasecmp($namaPelanggan, 'Pelanggan') === 0 || $namaPelanggan === '-') && !empty($c->customer_id) && $c->customer_id !== '-') {
+                            $custRow = DB::table(Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register')
+                                ->where('nomor_internet', $c->customer_id)
+                                ->first();
+                            if ($custRow && !empty($custRow->nama_pelanggan)) {
+                                $namaPelanggan = $custRow->nama_pelanggan;
+                            }
+                        }
+                        if (empty($namaPelanggan)) {
+                            $namaPelanggan = 'Pelanggan';
+                        }
+
                         $payments[] = [
                             'id' => 'conf_' . md5(($c->id ?? '') . '_' . $k),
                             'kode_billing' => $k ?: '-',
                             'nomor_internet' => $c->customer_id ?? '-',
-                            'nama_pelanggan' => $c->customer_name ?? 'Pelanggan',
+                            'nama_pelanggan' => $namaPelanggan,
                             'nominal' => 0,
                             'nominal_formatted' => 'Bukti Transfer',
                             'status' => 'waiting',
@@ -746,11 +759,25 @@ class NotificationController extends Controller
                     $cDate = ($c->created_at ?? null) ?: (($c->updated_at ?? null) ?: $nowJkt);
                     $carbonDate = Carbon::parse($cDate, 'Asia/Jakarta');
                     $merchant = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: 'Transfer Manual'));
+
+                    $namaPelanggan = trim((string)($c->customer_name ?? ''));
+                    if ((empty($namaPelanggan) || strcasecmp($namaPelanggan, 'Pelanggan') === 0 || $namaPelanggan === '-') && !empty($c->customer_id) && $c->customer_id !== '-') {
+                        $custRow = DB::table(Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register')
+                            ->where('nomor_internet', $c->customer_id)
+                            ->first();
+                        if ($custRow && !empty($custRow->nama_pelanggan)) {
+                            $namaPelanggan = $custRow->nama_pelanggan;
+                        }
+                    }
+                    if (empty($namaPelanggan)) {
+                        $namaPelanggan = 'Pelanggan';
+                    }
+
                     $payments[] = [
                         'id' => 'ptmsn_conf_' . md5(($c->id ?? '') . '_' . $k),
                         'kode_billing' => $k ?: '-',
                         'nomor_internet' => $c->customer_id ?? '-',
-                        'nama_pelanggan' => $c->customer_name ?? 'Pelanggan',
+                        'nama_pelanggan' => $namaPelanggan,
                         'nominal' => 0,
                         'nominal_formatted' => 'Bukti Transfer',
                         'status' => 'waiting',

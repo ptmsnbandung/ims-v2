@@ -4427,6 +4427,24 @@ class FinanceController extends Controller
             }
         }
 
+        // Kumpulkan nomor internet yang memerlukan lookup nama pelanggan asli
+        $missingCustNos = [];
+        foreach ($confirmations as $c) {
+            $cName = trim((string)($c->customer_name ?? ''));
+            if (empty($cName) || strcasecmp($cName, 'Pelanggan') === 0 || $cName === '-') {
+                if (!empty($c->customer_id) && $c->customer_id !== '-') {
+                    $missingCustNos[] = $c->customer_id;
+                }
+            }
+        }
+        $custNameMap = [];
+        if (!empty($missingCustNos)) {
+            $custNameMap = DB::table($tableCustomer)
+                ->whereIn('nomor_internet', array_unique($missingCustNos))
+                ->pluck('nama_pelanggan', 'nomor_internet')
+                ->toArray();
+        }
+
         // Tambahkan dari Payment Confirmations terlebih dahulu
         foreach ($confirmations as $c) {
             $kodeBillingConf = $c->kode_billing_layanan ?? '';
@@ -4453,12 +4471,23 @@ class FinanceController extends Controller
             $nominal = (float) ($relatedBill?->total_layanan ?: $relatedBill?->amount_paid ?: 0);
             $bankTujuan = ($c->destination_bank ?? null) ?: (($c->bank ?? null) ?: (($c->bank_name ?? null) ?: ($relatedBill?->merchant_type ?: 'Transfer Manual')));
 
-            $namaPelanggan = $c->customer_name ?? null;
+            $rawCustName = trim((string)($c->customer_name ?? ''));
             $noInternet = $c->customer_id ?? null;
-            if (empty($namaPelanggan) && $relatedBill) {
-                $noInternet = $noInternet ?: $relatedBill->nomor_internet;
-                $cust = DB::table($tableCustomer)->where('nomor_internet', $relatedBill->nomor_internet)->first();
-                $namaPelanggan = $cust?->nama_pelanggan ?? 'Pelanggan';
+            if ($relatedBill && (empty($noInternet) || $noInternet === '-')) {
+                $noInternet = $relatedBill->nomor_internet;
+            }
+
+            // Jika nama pelanggan kosong, strip, atau bertuliskan 'Pelanggan', cari nama aslinya dari view_batchjob / trx_batchjob_register
+            $namaPelanggan = $rawCustName;
+            if (empty($namaPelanggan) || strcasecmp($namaPelanggan, 'Pelanggan') === 0 || $namaPelanggan === '-') {
+                if ($noInternet && isset($custNameMap[$noInternet])) {
+                    $namaPelanggan = $custNameMap[$noInternet];
+                } elseif ($relatedBill?->nomor_internet && isset($custNameMap[$relatedBill->nomor_internet])) {
+                    $namaPelanggan = $custNameMap[$relatedBill->nomor_internet];
+                } elseif ($noInternet && $noInternet !== '-') {
+                    $cRow = DB::table($tableCustomer)->where('nomor_internet', $noInternet)->first();
+                    $namaPelanggan = $cRow?->nama_pelanggan ?: ($noInternet ?: 'Pelanggan');
+                }
             }
             if (empty($namaPelanggan)) {
                 $namaPelanggan = 'Pelanggan';
@@ -4617,7 +4646,23 @@ class FinanceController extends Controller
         try {
             $inv = DB::table('trx_billing_layanan')
                 ->where('kode_billing_layanan', $kodeBilling)
+                ->orWhere('kode_billing_layanan', str_replace('/', '-', $kodeBilling))
+                ->orWhere('kode_billing_layanan', str_replace('-', '/', $kodeBilling))
                 ->first();
+
+            // Resolve nama pelanggan yang sebenarnya dari customer database
+            $tableCustomer = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
+            $custName = trim((string) $request->input('nama_pelanggan', ''));
+            $custNo = $inv?->nomor_internet ?: $request->input('nomor_internet');
+            if ((empty($custName) || strcasecmp($custName, 'Pelanggan') === 0 || $custName === '-') && $custNo) {
+                $custRow = DB::table($tableCustomer)->where('nomor_internet', $custNo)->first();
+                if ($custRow && !empty($custRow->nama_pelanggan)) {
+                    $custName = $custRow->nama_pelanggan;
+                }
+            }
+            if (empty($custName)) {
+                $custName = 'Pelanggan';
+            }
 
             if (empty($nominal) || (float)$nominal <= 0) {
                 $nominal = (float) ($inv?->total_layanan ?: 0);
@@ -4693,6 +4738,12 @@ class FinanceController extends Controller
                     'admin_notes' => "Diverifikasi & disetujui oleh {$userUpdate} via Approval Notifikasi: {$catatan}",
                     'updated_at' => Carbon::now()->toDateTimeString(),
                 ];
+                if ($hasCol('customer_name') && !empty($custName) && strcasecmp($custName, 'Pelanggan') !== 0) {
+                    $pcData['customer_name'] = $custName;
+                }
+                if ($hasCol('customer_id') && !empty($custNo) && $custNo !== '-') {
+                    $pcData['customer_id'] = $custNo;
+                }
                 if ($hasCol('destination_bank')) {
                     $pcData['destination_bank'] = $bank;
                 } elseif ($hasCol('bank_name')) {
@@ -4712,8 +4763,8 @@ class FinanceController extends Controller
                 } else {
                     $newPcData = array_merge($pcData, [
                         'kode_billing_layanan' => $kodeBilling,
-                        'customer_id' => $inv?->nomor_internet ?? '-',
-                        'customer_name' => 'Pelanggan',
+                        'customer_id' => $custNo ?: ($inv?->nomor_internet ?? '-'),
+                        'customer_name' => $custName,
                         'notes' => $catatan,
                         'created_at' => Carbon::now()->toDateTimeString(),
                     ]);
@@ -4744,6 +4795,18 @@ class FinanceController extends Controller
                         updated_at = '{$nowStr}'
                     WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
                 ");
+
+                if (!empty($custName) && strcasecmp($custName, 'Pelanggan') !== 0) {
+                    $escapedCustName = addslashes($custName);
+                    try {
+                        DB::statement("
+                            UPDATE ptmsn.payment_confirmations 
+                            SET customer_name = '{$escapedCustName}'
+                            WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                              AND (customer_name IS NULL OR customer_name = '' OR customer_name = 'Pelanggan')
+                        ");
+                    } catch (\Throwable $e) {}
+                }
             } catch (\Throwable $e) {}
 
             $unsuspendInfo = '';

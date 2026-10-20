@@ -756,7 +756,12 @@ class NocController extends Controller
         // Ambil data telemetry OLT (menggunakan cached snapshot / baseline instan agar halaman dimuat < 100ms)
         $telemetryMap = [];
         foreach ($olts as $olt) {
-            $telemetryMap[$olt->kode_olt] = $oltService->getCachedOrBaselineTelemetry($olt);
+            $telemetry = $oltService->getCachedOrBaselineTelemetry($olt);
+            if (empty($telemetry['latency']) || (int)$telemetry['latency'] === 8) {
+                $telemetry['latency'] = $oltService->measureOltPing($olt);
+                $telemetry['message'] = "Online ({$telemetry['latency']} ms)";
+            }
+            $telemetryMap[$olt->kode_olt] = $telemetry;
         }
 
         return view('noc.olt', [

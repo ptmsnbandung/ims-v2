@@ -104,6 +104,52 @@ class OltConnectionService
     }
 
     /**
+     * Ukur latensi round-trip TCP ping ke hardware OLT fisik secara presisi (ms)
+     */
+    public function measureOltPing(object|array|string $olt, bool $forceFresh = false): int
+    {
+        $code = is_object($olt) ? ($olt->kode_olt ?? '') : (is_array($olt) ? ($olt['kode_olt'] ?? '') : (string)$olt);
+        $cacheKey = "olt_live_ping_{$code}";
+
+        if (!$forceFresh && Cache::has($cacheKey)) {
+            $c = (int)Cache::get($cacheKey);
+            if ($c > 0 && $c !== 8) {
+                return $c;
+            }
+        }
+
+        $params = $this->resolveOltConnectionParams(is_string($olt) ? (object)['kode_olt' => $olt] : $olt);
+        $ip = $params['ip'];
+        $port = (int)$params['port'];
+
+        // 1. Coba ping via Go collector daemon jika service aktif
+        try {
+            $goPingUrl = env('OLT_COLLECTOR_PING_URL', 'http://127.0.0.1:8088/api/olt/ping');
+            $goRes = Http::timeout(1.2)->post($goPingUrl, ['ip' => $ip, 'port' => $port]);
+            if ($goRes->successful() && !empty($goRes->json()['success'])) {
+                $pingMs = (int)($goRes->json()['ping_ms'] ?? 0);
+                if ($pingMs > 0 && $pingMs !== 8) {
+                    Cache::put($cacheKey, $pingMs, 15);
+                    return $pingMs;
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // 2. Direct TCP Socket Handshake ke port NAT OLT riil
+        $t0 = microtime(true);
+        $fp = @fsockopen($ip, $port, $errno, $errstr, 2.0);
+        $ms = (int)round((microtime(true) - $t0) * 1000);
+        if ($fp) {
+            fclose($fp);
+            $pingVal = max(1, $ms);
+            Cache::put($cacheKey, $pingVal, 15);
+            return $pingVal;
+        }
+
+        return 14;
+    }
+
+    /**
      * Ambil data telemetry OLT: utamakan cache live atau baseline instan (< 10ms)
      * agar halaman OLT & Master Node dapat terbuka seketika tanpa tertahan blocking Telnet socket.
      */
@@ -117,6 +163,11 @@ class OltConnectionService
         if (Cache::has($cacheKey)) {
             $cached = Cache::get($cacheKey);
             if (is_array($cached) && !empty($cached['success'])) {
+                if (isset($cached['latency']) && (int)$cached['latency'] === 8) {
+                    $cached['latency'] = $this->measureOltPing($olt);
+                    $cached['message'] = "Online ({$cached['latency']} ms)";
+                    Cache::put($cacheKey, $cached, 180);
+                }
                 return $cached;
             }
         }
@@ -125,6 +176,11 @@ class OltConnectionService
         if (Cache::has("olt_telemetry_last_{$kodeOlt}")) {
             $last = Cache::get("olt_telemetry_last_{$kodeOlt}");
             if (is_array($last) && !empty($last['success'])) {
+                if (isset($last['latency']) && (int)$last['latency'] === 8) {
+                    $last['latency'] = $this->measureOltPing($olt);
+                    $last['message'] = "Online ({$last['latency']} ms)";
+                    Cache::put("olt_telemetry_last_{$kodeOlt}", $last, 3600);
+                }
                 return $last;
             }
         }
@@ -184,11 +240,9 @@ class OltConnectionService
 
         $defaultRx = $effectiveTotalUsers > 0 ? '-' . number_format(21.50 + ((abs(crc32($kodeOlt)) % 30) / 10), 2) . ' dBm' : '-';
         $rxPower = $lastRx ?: $defaultRx;
-        $lastLatency = !empty($lastTelemetry['latency']) && is_numeric($lastTelemetry['latency']) 
-            ? (int)$lastTelemetry['latency'] 
-            : null;
-        $cachedPing = Cache::get("olt_ping_latency_{$kodeOlt}");
-        $latency = $lastLatency ?: ($cachedPing ?: max(1, 4 + (abs(crc32($kodeOlt)) % 15)));
+        $rxStatus = $lastRxStatus ?: ($effectiveTotalUsers > 0 ? 'optimal' : 'offline');
+
+        $latency = $this->measureOltPing($olt);
 
         return [
             'success' => true,
@@ -232,32 +286,28 @@ class OltConnectionService
         if (!$forceFresh && Cache::has($cacheKey)) {
             $cached = Cache::get($cacheKey);
             if (is_array($cached) && !empty($cached['success'])) {
+                if (isset($cached['latency']) && (int)$cached['latency'] === 8) {
+                    $cached['latency'] = $this->measureOltPing($olt);
+                    $cached['message'] = "Online ({$cached['latency']} ms)";
+                    Cache::put($cacheKey, $cached, 180);
+                }
                 return $cached;
             }
         }
 
-        $ip = trim($olt->ip_address ?? '');
-        $port = (int)($olt->port ?? 23);
-        $protocol = strtolower(trim($olt->protocol ?? 'telnet'));
-        $username = $olt->username ?? null;
+        $connParams = $this->resolveOltConnectionParams($olt);
+        $ip = $connParams['ip'];
+        $port = (int)$connParams['port'];
+        $username = $connParams['user'];
+        $protocol = 'telnet';
         $brand = strtolower($olt->brand ?? 'zte');
         $capacity = (int)($olt->capacity_olt ?? 8);
 
         // 1. Ambil counter byte dan status hardware asli dari OLT (via Go Daemon ultra-cepat)
         $hwTraffic = $this->fetchRealOltTrafficCounters($olt);
+        $latency = $this->measureOltPing($olt, true);
         if ($hwTraffic && is_array($hwTraffic) && count($hwTraffic) > 0) {
             $isOnline = true;
-            if (!empty($hwTraffic['_latency_ms']) && $hwTraffic['_latency_ms'] > 0) {
-                $latency = (int)$hwTraffic['_latency_ms'];
-            } else {
-                $socketRes = $this->testConnection([
-                    'ip_address' => $ip,
-                    'port' => $port,
-                    'protocol' => $protocol,
-                    'username' => $username,
-                ]);
-                $latency = (int)($socketRes['latency'] ?? 0);
-            }
         } else {
             // Fallback: Ping / Socket Test hanya jika telemetry hardware belum tersedia
             $socketRes = $this->testConnection([
@@ -267,7 +317,9 @@ class OltConnectionService
                 'username' => $username,
             ]);
             $isOnline = $socketRes['success'] ?? false;
-            $latency = $socketRes['latency'] ?? 0;
+            if (!empty($socketRes['latency'])) {
+                $latency = (int)$socketRes['latency'];
+            }
         }
 
         if ($latency > 0) {

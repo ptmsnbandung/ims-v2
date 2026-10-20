@@ -2074,92 +2074,95 @@ class OltConnectionService
 
                 // 1. Preload data database untuk enrichment (Nama, Nomor Internet, ODP, Paket BW)
                 $curSlot = $this->getOltGponSlot($olt);
-                $enrichKey = "olt_enrich_maps_{$kodeOlt}_{$curSlot}_{$portNum}";
-                [$dbBySlot, $dbBySn] = Cache::remember($enrichKey, 300, function () use ($olt, $kodeOlt, $curSlot, $portNum, $gomsnOltId) {
-                    $dbBySlot = [];
-                    $dbBySn = [];
+                $dbBySlot = [];
+                $dbBySn = [];
+                $regs = collect();
+                try {
+                    $regs = $this->getOltCustomerBaseQuery($olt)->get();
+                } catch (\Throwable $e) {
                     try {
-                        $regs = $this->getOltCustomerBaseQuery($olt)->get();
-                    } catch (\Throwable $e) {
-                        try {
-                            $name = strtolower($olt->name_olt ?? ($olt->nama_olt ?? ''));
-                            $regs = DB::table('trx_batchjob_register')
-                                ->where(function($q) use ($kodeOlt, $name) {
-                                    $q->where('olt', $kodeOlt);
-                                    if (!empty($name)) {
-                                        $q->orWhere('olt', 'like', "%{$name}%");
-                                    }
-                                    if ($kodeOlt === 'O1' || str_contains($name, 'kayu agung') || str_contains($name, 'msn')) {
-                                        $q->orWhere('olt', 'MSN')->orWhere('olt', 'like', '%Kayu%');
-                                    } elseif ($kodeOlt === 'O2' || str_contains($name, 'babakan tarogong') || str_contains($name, 'bagong')) {
-                                        $q->orWhere('olt', 'Bagong')->orWhere('olt', 'like', '%Babakan%')->orWhere('olt', 'like', '%Tarogong%');
-                                    } elseif ($kodeOlt === 'O3' || str_contains($name, 'soreang') || str_contains($name, 'bbu')) {
-                                        $q->orWhere('olt', 'Soreang')->orWhere('olt', 'like', '%Soreang%')->orWhere('olt', 'like', '%BBU%');
-                                    }
-                                })
-                                ->get();
-                        } catch (\Throwable $e2) {
-                            $regs = collect();
-                        }
+                        $name = strtolower($olt->name_olt ?? ($olt->nama_olt ?? ''));
+                        $regs = DB::table('trx_batchjob_register')
+                            ->where(function($q) use ($kodeOlt, $name) {
+                                $q->where('olt', $kodeOlt);
+                                if (!empty($name)) {
+                                    $q->orWhere('olt', 'like', "%{$name}%");
+                                }
+                                if ($kodeOlt === 'O1' || str_contains($name, 'kayu agung') || str_contains($name, 'msn')) {
+                                    $q->orWhere('olt', 'MSN')->orWhere('olt', 'like', '%Kayu%');
+                                } elseif ($kodeOlt === 'O2' || str_contains($name, 'babakan tarogong') || str_contains($name, 'bagong')) {
+                                    $q->orWhere('olt', 'Bagong')->orWhere('olt', 'like', '%Babakan%')->orWhere('olt', 'like', '%Tarogong%');
+                                } elseif ($kodeOlt === 'O3' || str_contains($name, 'soreang') || str_contains($name, 'bbu')) {
+                                    $q->orWhere('olt', 'Soreang')->orWhere('olt', 'like', '%Soreang%')->orWhere('olt', 'like', '%BBU%');
+                                }
+                            })
+                            ->get();
+                    } catch (\Throwable $e2) {
+                        $regs = collect();
                     }
-                    $userOdpMap = [];
-                    $userOdpByNameMap = [];
-                    $allGomsnIds = array_unique(array_filter([$gomsnOltId, 1, 2, 3]));
-                    foreach ($allGomsnIds as $gId) {
-                        if (Schema::hasTable("gomsn.odp{$gId}") && Schema::hasTable("gomsn.users{$gId}")) {
-                            try {
-                                $odps = DB::table("gomsn.odp{$gId}")->get()->keyBy('id');
-                                $gUsers = DB::table("gomsn.users{$gId}")->get();
-                                foreach ($gUsers as $gu) {
-                                    $odpName = ($gu->odp_id && isset($odps[$gu->odp_id])) ? trim($odps[$gu->odp_id]->nama_odp) : null;
-                                    if ($odpName && strtoupper($odpName) !== 'ODP' && strtoupper($odpName) !== 'N/A' && strtoupper($odpName) !== 'HARDWARE OLT') {
-                                        $gu->odp_name = $odpName;
-                                        $cNo = trim($gu->nomor_internet ?? '');
-                                        $cNm = strtoupper(trim($gu->nama_user ?? ''));
-                                        if (!empty($cNo) && !isset($userOdpMap[$cNo])) {
-                                            $userOdpMap[$cNo] = $odpName;
-                                        }
-                                        if (!empty($cNm) && !isset($userOdpByNameMap[$cNm])) {
-                                            $userOdpByNameMap[$cNm] = $odpName;
-                                        }
+                }
+
+                $userOdpMap = [];
+                $userOdpByNameMap = [];
+                $allGomsnIds = array_unique(array_filter([$gomsnOltId, 1, 2, 3]));
+                foreach ($allGomsnIds as $gId) {
+                    if (Schema::hasTable("gomsn.odp{$gId}") && Schema::hasTable("gomsn.users{$gId}")) {
+                        try {
+                            $odps = DB::table("gomsn.odp{$gId}")->get()->keyBy('id');
+                            $gUsers = DB::table("gomsn.users{$gId}")->get();
+                            foreach ($gUsers as $gu) {
+                                $odpName = ($gu->odp_id && isset($odps[$gu->odp_id])) ? trim($odps[$gu->odp_id]->nama_odp) : null;
+                                if ($odpName && strtoupper($odpName) !== 'ODP' && strtoupper($odpName) !== 'N/A' && strtoupper($odpName) !== 'HARDWARE OLT') {
+                                    $gu->odp_name = $odpName;
+                                    $cNo = trim($gu->nomor_internet ?? '');
+                                    $cNm = strtoupper(trim($gu->nama_user ?? ''));
+                                    if (!empty($cNo) && !isset($userOdpMap[$cNo])) {
+                                        $userOdpMap[$cNo] = $odpName;
                                     }
-                                    if ($gomsnOltId && $gId === $gomsnOltId) {
-                                        $sn = strtoupper(trim($gu->keterangan ?? ''));
-                                        if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
-                                            $dbBySn[$sn] = $gu;
-                                        }
+                                    if (!empty($cNm) && !isset($userOdpByNameMap[$cNm])) {
+                                        $userOdpByNameMap[$cNm] = $odpName;
                                     }
                                 }
-                            } catch (\Throwable $e) {}
-                        }
+                                if ($gomsnOltId && $gId === $gomsnOltId) {
+                                    $sn = strtoupper(trim($gu->keterangan ?? ''));
+                                    if (!empty($sn) && strlen($sn) >= 6 && !isset($dbBySn[$sn])) {
+                                        $dbBySn[$sn] = $gu;
+                                    }
+                                }
+                            }
+                        } catch (\Throwable $e) {}
+                    }
+                }
+
+                foreach ($regs as $r) {
+                    $cNo = trim($r->nomor_internet ?? '');
+                    $cName = strtoupper(trim($r->nama_pelanggan ?? ''));
+                    if (!empty($cNo) && isset($userOdpMap[$cNo])) {
+                        $r->odp_name = $userOdpMap[$cNo];
+                    } elseif (!empty($cName) && isset($userOdpByNameMap[$cName])) {
+                        $r->odp_name = $userOdpByNameMap[$cName];
                     }
 
-                    foreach ($regs as $r) {
-                        $cNo = trim($r->nomor_internet ?? '');
-                        $cName = strtoupper(trim($r->nama_pelanggan ?? ''));
-                        if (!empty($cNo) && isset($userOdpMap[$cNo])) {
-                            $r->odp_name = $userOdpMap[$cNo];
-                        } elseif (!empty($cName) && isset($userOdpByNameMap[$cName])) {
-                            $r->odp_name = $userOdpByNameMap[$cName];
-                        }
-
-                        $sn = strtoupper(trim($r->note_request ?? ''));
-                        if (!empty($sn) && strlen($sn) >= 6) {
-                            $dbBySn[$sn] = $r;
-                        }
-                        $idx = trim($r->index_olt ?? '');
-                        if (preg_match('/(?:1\/' . $curSlot . '\/' . $portNum . ':|' . $portNum . ':)(\d+)/', $idx, $m)) {
-                            $onuSlotNum = (int)$m[1];
-                            $dbBySlot[$onuSlotNum] = $r;
-                        }
+                    $sn = strtoupper(trim($r->note_request ?? ''));
+                    if (!empty($sn) && strlen($sn) >= 6) {
+                        $dbBySn[$sn] = $r;
                     }
-
-                    return [$dbBySlot, $dbBySn];
-                });
+                    $idx = trim($r->index_olt ?? '');
+                    if (preg_match('/(?:1\/' . $curSlot . '\/' . $portNum . ':|' . $portNum . ':)(\d+)/', $idx, $m)) {
+                        $onuSlotNum = (int)$m[1];
+                        $dbBySlot[$onuSlotNum] = $r;
+                    }
+                }
 
                 $allCustNos = [];
-                foreach ($dbBySlot as $item) { if (!empty($item->nomor_internet)) $allCustNos[] = $item->nomor_internet; }
-                foreach ($dbBySn as $item) { if (!empty($item->nomor_internet)) $allCustNos[] = $item->nomor_internet; }
+                foreach ($dbBySlot as $item) { 
+                    $no = is_object($item) ? ($item->nomor_internet ?? null) : ($item['nomor_internet'] ?? null);
+                    if (!empty($no)) $allCustNos[] = $no; 
+                }
+                foreach ($dbBySn as $item) { 
+                    $no = is_object($item) ? ($item->nomor_internet ?? null) : ($item['nomor_internet'] ?? null);
+                    if (!empty($no)) $allCustNos[] = $no; 
+                }
                 $allCustNos = array_unique($allCustNos);
 
                 $billingsMap = [];
@@ -2180,11 +2183,11 @@ class OltConnectionService
 
                 $allNames = [];
                 foreach ($dbBySlot as $item) { 
-                    $n = $item->nama_pelanggan ?? ($item->nama_user ?? null);
+                    $n = is_object($item) ? ($item->nama_pelanggan ?? ($item->nama_user ?? null)) : ($item['nama_pelanggan'] ?? ($item['nama_user'] ?? null));
                     if (!empty($n)) $allNames[] = $n; 
                 }
                 foreach ($dbBySn as $item) { 
-                    $n = $item->nama_pelanggan ?? ($item->nama_user ?? null);
+                    $n = is_object($item) ? ($item->nama_pelanggan ?? ($item->nama_user ?? null)) : ($item['nama_pelanggan'] ?? ($item['nama_user'] ?? null));
                     if (!empty($n)) $allNames[] = $n; 
                 }
                 $allNames = array_unique($allNames);

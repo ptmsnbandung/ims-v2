@@ -256,7 +256,13 @@
 <script>
 window.imsAiCopilot = function() {
     return {
-        isOpen: false,
+        isOpen: (function() {
+            try {
+                return localStorage.getItem('ims_ai_modal_open') === 'true';
+            } catch (e) {
+                return false;
+            }
+        })(),
         isLoading: false,
         userInput: '',
         engineMode: 'AI',
@@ -283,6 +289,12 @@ window.imsAiCopilot = function() {
                 this.addWelcomeMessage();
             }
 
+            if (this.isOpen) {
+                this.$nextTick(() => {
+                    this.scrollToBottom();
+                });
+            }
+
             this.checkStatus();
         },
 
@@ -297,6 +309,9 @@ window.imsAiCopilot = function() {
 
         toggleChat() {
             this.isOpen = !this.isOpen;
+            try {
+                localStorage.setItem('ims_ai_modal_open', this.isOpen ? 'true' : 'false');
+            } catch (e) {}
             if (this.isOpen) {
                 this.$nextTick(() => {
                     this.scrollToBottom();
@@ -309,6 +324,9 @@ window.imsAiCopilot = function() {
 
         closeChat() {
             this.isOpen = false;
+            try {
+                localStorage.setItem('ims_ai_modal_open', 'false');
+            } catch (e) {}
         },
 
         currentTime() {
@@ -590,8 +608,6 @@ window.imsAiCopilot = function() {
     <div 
         x-show="isOpen" 
         x-cloak
-        @click.outside="closeChat()"
-        @keydown.escape.window="closeChat()"
         x-transition:enter="transition ease-out duration-200 transform"
         x-transition:enter-start="opacity-0 translate-y-6 scale-95"
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
@@ -625,12 +641,12 @@ window.imsAiCopilot = function() {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                 </button>
-                <!-- Close Button -->
+                <!-- Close Button (Only close when X is clicked) -->
                 <button 
                     type="button" 
                     @click.stop="closeChat()" 
                     class="ims-ai-icon-btn close-btn"
-                    title="Tutup AI Chat (Esc)">
+                    title="Tutup IMS AI">
                     <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                     </svg>

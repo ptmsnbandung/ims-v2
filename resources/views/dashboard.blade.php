@@ -151,6 +151,12 @@
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
         transform: translateY(-0.5px);
     }
+
+    /* Halo Avatar Initial Circle */
+    .ims-halo-avatar {
+        background-color: #ffffff !important;
+        color: #043b49 !important;
+    }
 </style>
 
 <div class="ims-glass-canvas space-y-3 sm:space-y-3.5"
@@ -163,9 +169,13 @@
             <!-- Left: Profile & Welcome -->
             <div class="flex items-center gap-3 min-w-0">
                 <!-- Avatar Initial Pill (Pristine White Circle with Deep Teal Text) -->
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-[#043b49] font-black text-xs sm:text-sm flex items-center justify-center shadow-md border border-white/90 shrink-0">
-                    {{ strtoupper(substr($user->nama, 0, 1)) }}
-                </div>
+                @if(!empty($user->foto_url))
+                    <img src="{{ $user->foto_url }}" alt="{{ $user->nama }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-white/90 shadow-md shrink-0">
+                @else
+                    <div class="ims-halo-avatar w-9 h-9 sm:w-10 sm:h-10 rounded-full font-black text-xs sm:text-sm flex items-center justify-center shadow-md border border-white/90 shrink-0" style="background-color: #ffffff !important; color: #043b49 !important;">
+                        {{ strtoupper(substr($user->nama ?? $user->name ?? $user->username ?? 'U', 0, 1)) }}
+                    </div>
+                @endif
                 
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
@@ -376,7 +386,7 @@
                                         $pct = $totalBwAll > 0 ? round(($val / $totalBwAll) * 100, 1) : 0;
                                         $dotColor = $paletteColors[$idx % count($paletteColors)];
                                     @endphp
-                                    <div class="flex items-center justify-between text-[10.5px] sm:text-[9px] py-1 px-2.5 rounded-lg bg-white/55 border border-white/80 hover:bg-white/90 transition shadow-2xs">
+                                    <div class="flex items-center justify-between text-[10.5px] sm:text-[9px] py-1.5 px-2.5 rounded-lg hover:bg-slate-100/70 transition" style="border: none !important; box-shadow: none !important;">
                                         <div class="flex items-center gap-2 min-w-0 pr-1">
                                             <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $dotColor }};"></span>
                                             <span class="font-bold text-slate-700 truncate uppercase text-[9.5px]" title="{{ $label }}">{{ $label }}</span>

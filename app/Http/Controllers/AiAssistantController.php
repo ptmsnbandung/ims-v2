@@ -35,6 +35,7 @@ class AiAssistantController extends Controller
         // 2. Check if Gemini API Key is configured (supports multiple comma-separated keys for failover & quota pooling)
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
+        @set_time_limit(60);
         $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
         if (str_contains($geminiModel, '1.5') || str_contains($geminiModel, '2.0') || str_contains($geminiModel, '2.5')) {
             $geminiModel = 'gemini-3.8-flash';
@@ -108,6 +109,9 @@ class AiAssistantController extends Controller
                         $this->recordKeyError($key, $msg, str_contains($msgLower, '429') ? 429 : 500);
                     }
                     Log::warning("[AiAssistant] Gemini Key #{$keyIndex} gagal: " . $msg . ". Beralih ke kunci berikutnya...");
+                    if (str_contains($msgLower, 'timed out')) {
+                        break;
+                    }
                 }
             }
 
@@ -1432,7 +1436,7 @@ class AiAssistantController extends Controller
                         $payload['tools'] = $stepTools;
                     }
 
-                    $response = Http::timeout(8)->post($url, $payload);
+                    $response = Http::timeout(25)->post($url, $payload);
 
                     if (!$response->successful()) {
                         $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());
@@ -1527,7 +1531,7 @@ class AiAssistantController extends Controller
             } catch (\Throwable $e) {
                 $lastError = $e->getMessage();
                 $firstError ??= "[{$mName}] " . $lastError;
-                if ($mIdx === 0 && (str_contains($lastError, 'Limit kuota') || str_contains($lastError, 'Autentikasi'))) {
+                if ($mIdx === 0 && (str_contains($lastError, 'Limit kuota') || str_contains($lastError, 'Autentikasi') || str_contains($lastError, 'timed out'))) {
                     throw $e;
                 }
             }

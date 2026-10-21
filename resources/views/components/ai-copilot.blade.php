@@ -81,9 +81,10 @@
 
 .ims-ai-header {
     flex-shrink: 0 !important;
-    height: 60px !important;
-    padding: 0 16px !important;
-    background: rgba(2, 6, 23, 0.95) !important;
+    min-height: 58px !important;
+    height: auto !important;
+    padding: 10px 16px !important;
+    background: rgba(2, 6, 23, 0.98) !important;
     border-bottom: 1px solid rgba(6, 182, 212, 0.25) !important;
     display: flex !important;
     align-items: center !important;
@@ -328,6 +329,61 @@
 @keyframes ims-spin {
     to { transform: rotate(360deg); }
 }
+
+/* Responsive Mobile Layout (Full Screen App-like View on Mobile) */
+@media (max-width: 640px) {
+    .ims-ai-trigger-container {
+        bottom: 16px !important;
+        right: 16px !important;
+    }
+    .ims-ai-trigger-container.chat-is-open {
+        display: none !important;
+    }
+    .ims-ai-modal-box {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 100% !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        z-index: 99999999 !important;
+    }
+    .ims-ai-header {
+        height: auto !important;
+        min-height: 56px !important;
+        padding: max(10px, env(safe-area-inset-top)) 12px 10px 12px !important;
+    }
+    .ims-ai-chat-area {
+        padding: 12px 12px !important;
+        gap: 10px !important;
+    }
+    .ims-ai-chips-container {
+        padding: 6px 10px !important;
+        height: 42px !important;
+        max-height: 42px !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    .ims-ai-chip {
+        height: 28px !important;
+        max-height: 28px !important;
+        line-height: 28px !important;
+        font-size: 10.5px !important;
+        padding: 0 10px !important;
+    }
+    .ims-ai-input-bar {
+        padding: 8px 12px max(10px, env(safe-area-inset-bottom)) 12px !important;
+    }
+    .ims-ai-input-bar input {
+        font-size: 14px !important;
+    }
+}
 </style>
 
 <script>
@@ -402,6 +458,9 @@ window.imsAiCopilot = function() {
                 localStorage.setItem('ims_ai_modal_open', this.isOpen ? 'true' : 'false');
             } catch (e) {}
             if (this.isOpen) {
+                if (window.innerWidth <= 640) {
+                    document.body.style.overflow = 'hidden';
+                }
                 // Cancel any pending debounced search timer on the underlying page
                 try {
                     window.dispatchEvent(new CustomEvent('ims-cancel-auto-search'));
@@ -413,11 +472,14 @@ window.imsAiCopilot = function() {
                         this.$refs.inputField.focus();
                     }
                 });
+            } else {
+                document.body.style.overflow = '';
             }
         },
 
         closeChat() {
             this.isOpen = false;
+            document.body.style.overflow = '';
             try {
                 localStorage.setItem('ims_ai_modal_open', 'false');
             } catch (e) {}
@@ -706,7 +768,7 @@ window.imsAiCopilot = function() {
 
 <div x-data="imsAiCopilot()" style="position: static !important;">
     <!-- Floating Trigger Button -->
-    <div class="ims-ai-trigger-container">
+    <div class="ims-ai-trigger-container" :class="isOpen ? 'chat-is-open' : ''" x-show="!isOpen">
         <button 
             type="button" 
             @click.stop="toggleChat()" 
@@ -730,16 +792,17 @@ window.imsAiCopilot = function() {
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
         x-transition:leave="transition ease-in duration-150 transform"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+        x-transition:leave-end="opacity-0 translate-y-6 scale-95"
         :style="!isOpen ? 'display: none !important;' : 'display: flex !important;'"
         class="ims-ai-modal-box modal">
         
         <!-- Header -->
         <div class="ims-ai-header">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:36px; height:36px; object-fit:contain; display:block; filter: drop-shadow(0 2px 8px rgba(6, 182, 212, 0.4));">
-                <div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <h3 style="font-size:14px; font-weight:700; color:#ffffff; margin:0; line-height:1.2;">IMS AI Copilot</h3>
+            <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+                <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:34px; height:34px; object-fit:contain; display:block; filter: drop-shadow(0 2px 8px rgba(6, 182, 212, 0.4)); flex-shrink:0;">
+                <div style="min-width:0; flex:1;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <h3 style="font-size:13.5px; font-weight:700; color:#ffffff; margin:0; line-height:1.2; white-space:nowrap;">IMS AI Copilot</h3>
                         <!-- Indikator Status Mesin (Hijau = AI Online, Cyan = AI Lokal, Kuning = Offline) -->
                         <span 
                             :style="engineMode === 'AI' 
@@ -756,13 +819,13 @@ window.imsAiCopilot = function() {
                                         : 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#f59e0b !important; box-shadow:0 0 8px #f59e0b !important;')"></span>
                             <span x-text="engineMode"></span>
                         </span>
-                        <span x-show="userRole" style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:rgba(30,27,75,0.7); color:#a5b4fc; border:1px solid rgba(165,180,252,0.35);" x-text="userRole"></span>
+                        <span x-show="userRole" style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:rgba(30,27,75,0.7); color:#a5b4fc; border:1px solid rgba(165,180,252,0.35); flex-shrink:0;" x-text="userRole"></span>
                     </div>
-                    <p style="font-size:11px; color:#94a3b8; margin:2px 0 0 0;">Asisten Pintar NOC, Finance & Operasional</p>
+                    <p style="font-size:10.5px; color:#94a3b8; margin:2px 0 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Asisten Pintar NOC, Finance & Operasional</p>
                 </div>
             </div>
 
-            <div style="display:flex; align-items:center; gap:6px;">
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                 <!-- Clear Chat Button -->
                 <button 
                     type="button" 

@@ -445,9 +445,13 @@ class AiAssistantController extends Controller
 
                 $usage = $response->json('usageMetadata');
                 $this->recordUsage($selectedKey, $usage);
+                Cache::forget('gemini_key_cooldown_' . md5($selectedKey));
 
                 $parts = $response->json('candidates.0.content.parts') ?? [];
                 $reply = trim(implode('', array_map(fn($p) => empty($p['thought']) ? ($p['text'] ?? '') : '', $parts)));
+                if ($reply === '') {
+                    $reply = trim(implode('', array_map(fn($p) => $p['text'] ?? '', $parts)));
+                }
 
                 return response()->json([
                     'success' => true,
@@ -1474,7 +1478,11 @@ class AiAssistantController extends Controller
 
                     if (empty($calls)) {
                         $text = trim(implode('', array_map(fn($p) => empty($p['thought']) ? ($p['text'] ?? '') : '', $parts)));
+                        if ($text === '') {
+                            $text = trim(implode('', array_map(fn($p) => $p['text'] ?? '', $parts)));
+                        }
                         if ($text !== '') {
+                            Cache::forget('gemini_key_cooldown_' . md5($apiKey));
                             return $text;
                         }
                         $lastError = 'Model mengembalikan respons kosong.';

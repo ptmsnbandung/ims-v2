@@ -56,7 +56,11 @@ class AiAssistantController extends Controller
                     $isTemporaryOrInternal = str_contains($msgLower, 'langkah query') 
                         || str_contains($msgLower, 'respons kosong') 
                         || str_contains($msgLower, 'high demand') 
-                        || str_contains($msgLower, 'temporary');
+                        || str_contains($msgLower, 'temporary')
+                        || str_contains($msgLower, 'not found')
+                        || str_contains($msgLower, '1.5-pro')
+                        || str_contains($msgLower, '2.0-flash')
+                        || str_contains($msgLower, 'is no longer available');
                     if (!$isTemporaryOrInternal) {
                         $this->recordKeyError($key, $msg, 500);
                     }
@@ -150,6 +154,9 @@ class AiAssistantController extends Controller
             if (!empty($keyStats['last_error']) && (
                 str_contains($keyStats['last_error'], 'gemini-2.0-flash') ||
                 str_contains($keyStats['last_error'], 'flash-lite') ||
+                str_contains($keyStats['last_error'], '1.5-pro') ||
+                str_contains($keyStats['last_error'], 'not found') ||
+                str_contains($keyStats['last_error'], 'is no longer available') ||
                 str_contains($keyStats['last_error'], 'langkah query') ||
                 str_contains(strtolower($keyStats['last_error']), 'high demand') ||
                 str_contains(strtolower($keyStats['last_error']), 'temporary')
@@ -234,12 +241,8 @@ class AiAssistantController extends Controller
 
         $prompt = trim($request->input('prompt', 'Konfirmasi tes koneksi live AI Gemini IMS2 aktif. Berikan respon 1 kalimat padat.'));
 
-        $modelsToTry = array_values(array_unique(array_filter([
-            $configuredModel,
-            'gemini-1.5-flash',
-            'gemini-2.5-flash',
-            'gemini-1.5-pro',
-        ])));
+        $defaultCandidates = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+        $modelsToTry = array_values(array_unique(array_filter(array_merge([$configuredModel], $defaultCandidates))));
 
         // Probe active models from Google API for this specific key
         $probeError = null;
@@ -251,13 +254,13 @@ class AiAssistantController extends Controller
                 foreach ($remoteModels as $rm) {
                     if (in_array('generateContent', $rm['supportedGenerationMethods'] ?? [])) {
                         $mName = str_replace('models/', '', $rm['name'] ?? '');
-                        if (!str_contains($mName, '2.0-flash') && !str_contains($mName, 'flash-lite')) {
+                        if (!str_contains($mName, '2.0-flash') && !str_contains($mName, 'flash-lite') && !str_contains($mName, '1.5-pro')) {
                             $discovered[] = $mName;
                         }
                     }
                 }
                 if (!empty($discovered)) {
-                    $modelsToTry = array_values(array_unique(array_merge($modelsToTry, $discovered)));
+                    $modelsToTry = array_values(array_unique(array_merge([$configuredModel], $discovered, $modelsToTry)));
                 }
             } else {
                 $probeError = $listRes->json('error.message') ?? ('HTTP ' . $listRes->status());
@@ -265,6 +268,7 @@ class AiAssistantController extends Controller
         } catch (\Throwable $e) {
             $probeError = $e->getMessage();
         }
+        $modelsToTry = array_values(array_filter($modelsToTry, fn($m) => !str_contains($m, '2.0-flash') && !str_contains($m, 'flash-lite') && !str_contains($m, '1.5-pro')));
 
         $startTime = microtime(true);
         $lastError = 'Gagal menghubungi Gemini API';
@@ -324,7 +328,9 @@ class AiAssistantController extends Controller
         }
 
         $latency = round((microtime(true) - $startTime) * 1000);
-        $this->recordKeyError($selectedKey, $lastError, $lastStatus);
+        if ($lastStatus === 429 || $lastStatus === 403 || str_contains(strtolower($lastError), 'api key')) {
+            $this->recordKeyError($selectedKey, $lastError, $lastStatus);
+        }
         return response()->json([
             'success' => false,
             'key_index' => $actualIndex,
@@ -429,7 +435,14 @@ class AiAssistantController extends Controller
         }
 
         $errLower = strtolower($errorMessage);
-        if (str_contains($errLower, 'high demand') || str_contains($errLower, 'temporary') || str_contains($errLower, 'langkah query') || str_contains($errLower, 'respons kosong')) {
+        if (str_contains($errLower, 'high demand') 
+            || str_contains($errLower, 'temporary') 
+            || str_contains($errLower, 'langkah query') 
+            || str_contains($errLower, 'respons kosong')
+            || str_contains($errLower, 'not found')
+            || str_contains($errLower, '1.5-pro')
+            || str_contains($errLower, '2.0-flash')
+            || str_contains($errLower, 'is no longer available')) {
             return;
         }
 
@@ -1113,13 +1126,12 @@ class AiAssistantController extends Controller
             }
         }
 
-        // Guaranteed candidate models: prioritizes configured model, then rock-solid gemini-1.5-flash, then 1.5-pro
-        $modelsToTry = array_values(array_filter(array_unique([
-            $model,
-            'gemini-1.5-flash',
-            'gemini-2.5-flash',
-            'gemini-1.5-pro',
-        ])));
+        $defaultCandidates = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+        $modelsToTry = !empty($discovered) 
+            ? array_values(array_unique(array_merge([$model], $discovered)))
+            : array_values(array_unique(array_merge([$model], $defaultCandidates)));
+        $modelsToTry = array_values(array_filter($modelsToTry, fn($m) => !str_contains($m, '2.0-flash') && !str_contains($m, 'flash-lite') && !str_contains($m, '1.5-pro')));
+        $modelsToTry = array_slice($modelsToTry, 0, 3);
 
         // 2. Iterate through candidate models with fast per-step timeout
         $triedModels = [];
@@ -1161,6 +1173,16 @@ class AiAssistantController extends Controller
                         $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());
                         $lastError = $errMessage;
 
+                        // If high demand spike, pause 300ms and try one quick retry on step 0
+                        if (str_contains(strtolower($errMessage), 'high demand') && $step === 0) {
+                            usleep(300000);
+                            $retryRes = Http::timeout(12)->post($url, $payload);
+                            if ($retryRes->successful()) {
+                                $response = $retryRes;
+                                goto process_step_response;
+                            }
+                        }
+
                         // If error suggests another model, add and try it immediately
                         if (preg_match('/models\/([a-zA-Z0-9._-]+)/i', $errMessage, $mMatches)) {
                             $suggestedModel = $mMatches[1];
@@ -1171,6 +1193,7 @@ class AiAssistantController extends Controller
 
                         continue 2;
                     }
+                    process_step_response:
 
                     $usage = $response->json('usageMetadata');
                     $this->recordUsage($apiKey, $usage);

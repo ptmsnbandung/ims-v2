@@ -128,7 +128,8 @@ class AiAssistantController extends Controller
             'tolong', 'mohon', 'bantu', 'bisa', 'dong', 'ya', 'min', 'kak', 'admin', 'halo', 'hai', 'selamat', 'pagi', 'siang', 'sore', 'malam',
             'apakah', 'ada', 'berapa', 'siapa', 'kapan', 'kenapa', 'bagaimana', 'apa', 'tentang',
             'terisolir', 'isolir', 'suspend', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
-            'adalah', 'itu', 'ini', 'kah', 'dengan', 'bernama', 'si', 'dari', 'pada', 'yang', 'tidak', 'bukan', 'akan'
+            'adalah', 'itu', 'ini', 'kah', 'dengan', 'bernama', 'si', 'dari', 'pada', 'yang', 'tidak', 'bukan', 'akan',
+            'selain', 'total', 'jumlah', 'rekap', 'semua', 'seluruh', 'sisa', 'tunggakan', 'piutang'
         ];
         $pattern = '/\b(' . implode('|', $stopwords) . ')\b/i';
 
@@ -353,8 +354,13 @@ class AiAssistantController extends Controller
         $targetCustomerIds = array_values(array_unique(array_filter($targetCustomerIds)));
 
         // Context 2: Billing / Tagihan lookup (Khusus role berhak: Finance, Direksi, CEO, Admin, CS)
+        $isGeneralFinanceQuery = str_contains($lower, 'total') || str_contains($lower, 'rekap')
+            || str_contains($lower, 'semua') || str_contains($lower, 'selain')
+            || str_contains($lower, 'seluruh') || str_contains($lower, 'daftar tagihan')
+            || str_contains($lower, 'piutang') || str_contains($lower, 'tunggakan');
+
         // CRITICAL: Jika pertanyaan menargetkan nama pelanggan spesifik, JANGAN PERNAH menampilkan invoice orang lain!
-        $isSpecificCustomerQuery = !empty($extractedId) || !empty($searchCandidates) || !empty($nameTokens);
+        $isSpecificCustomerQuery = !$isGeneralFinanceQuery && (!empty($extractedId) || !empty($searchCandidates) || !empty($nameTokens));
 
         if ($this->canAccessFinance($user) && (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'keuangan') || !empty($targetCustomerIds))) {
             try {
@@ -401,13 +407,54 @@ class AiAssistantController extends Controller
 
                     $context['billings'] = $bills;
                 } else {
-                    // Query tagihan umum (rekap tagihan global, pending verifikasi, atau belum bayar massal)
+                    // Query tagihan umum (rekap tagihan global, pending verifikasi, selain lunas, atau belum bayar massal)
+                    $isAskingUnpaid = str_contains($lower, 'belum') || str_contains($lower, 'unpaid')
+                        || str_contains($lower, 'selain') || str_contains($lower, 'tunggak')
+                        || str_contains($lower, 'piutang') || str_contains($lower, 'kurang bayar');
+                    $isAskingVerification = str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi');
+                    $isAskingTotal = str_contains($lower, 'total') || str_contains($lower, 'rekap')
+                        || str_contains($lower, 'summary') || str_contains($lower, 'berapa')
+                        || str_contains($lower, 'jumlah') || str_contains($lower, 'semua');
+
+                    if ($isAskingUnpaid || ($isAskingTotal && (str_contains($lower, 'tagih') || str_contains($lower, 'bill')))) {
+                        $unpaidStats = DB::table('trx_billing_layanan')
+                            ->where('hide', 0)
+                            ->whereNotIn('status_bill_lay', [15])
+                            ->selectRaw('count(*) as count, coalesce(sum(total_layanan), 0) as total_rp')
+                            ->first();
+
+                        $breakdownRows = DB::table('trx_billing_layanan')
+                            ->where('hide', 0)
+                            ->whereNotIn('status_bill_lay', [15])
+                            ->selectRaw('status_bill_lay, count(*) as count, coalesce(sum(total_layanan), 0) as total_rp')
+                            ->groupBy('status_bill_lay')
+                            ->get();
+
+                        $context['billing_summary'] = [
+                            'judul' => 'Rekapitulasi Tagihan Belum Terbayar (Selain Lunas)',
+                            'total_unpaid_invoices' => (int)($unpaidStats->count ?? 0),
+                            'total_unpaid_amount' => (float)($unpaidStats->total_rp ?? 0),
+                            'total_unpaid_amount_formatted' => 'Rp ' . number_format((float)($unpaidStats->total_rp ?? 0), 0, ',', '.'),
+                            'breakdown' => $breakdownRows->map(function ($r) {
+                                $r->status_name = match((string)$r->status_bill_lay) {
+                                    '14' => 'Menunggu Verifikasi (Pending)',
+                                    '13' => 'Belum Bayar (Unpaid)',
+                                    '12' => 'Publish Tagihan',
+                                    '11' => 'Draft',
+                                    default => 'Status #' . $r->status_bill_lay
+                                };
+                                $r->total_formatted = 'Rp ' . number_format((float)$r->total_rp, 0, ',', '.');
+                                return $r;
+                            })->toArray(),
+                        ];
+                    }
+
                     $billQuery = DB::table('trx_billing_layanan')->where('hide', 0);
-                    if (str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi')) {
+                    if ($isAskingVerification) {
                         $billQuery->where('status_bill_lay', 14); // Pending verifikasi
-                    } else if (str_contains($lower, 'belum') || str_contains($lower, 'unpaid')) {
-                        $billQuery->whereNotIn('status_bill_lay', [15]); // Belum bayar
-                    } else if (!str_contains($lower, 'semua') && !str_contains($lower, 'daftar') && !str_contains($lower, 'rekap') && !str_contains($lower, 'summary')) {
+                    } else if ($isAskingUnpaid) {
+                        $billQuery->whereNotIn('status_bill_lay', [15]); // Belum bayar / selain lunas
+                    } else if (!$isAskingTotal && !str_contains($lower, 'daftar')) {
                         $billQuery->whereRaw('1 = 0'); // Jangan ambil jika tidak jelas tujuannya
                     }
 
@@ -1229,8 +1276,44 @@ class AiAssistantController extends Controller
             }
         }
 
+        // Case 2.0: Billing Summary / Unpaid Total requested (selain lunas / belum bayar / piutang)
+        $isAskingUnpaidTotal = str_contains($lower, 'selain') || str_contains($lower, 'belum')
+            || str_contains($lower, 'tunggak') || str_contains($lower, 'piutang')
+            || str_contains($lower, 'kurang bayar')
+            || (str_contains($lower, 'total') && (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar')));
+
+        if (!empty($context['billing_summary']) && $isAskingUnpaidTotal) {
+            $hasData = true;
+            $bs = $context['billing_summary'];
+            $output[] = "### 💳 " . ($bs['judul'] ?? 'Rekapitulasi Tagihan Belum Terbayar');
+            $output[] = "- 📊 **Total Tagihan Tertunggak:** **" . number_format($bs['total_unpaid_invoices'], 0, ',', '.') . " Invoice**";
+            $output[] = "- 💰 **Total Nominal Piutang:** **{$bs['total_unpaid_amount_formatted']}**\n";
+
+            if (!empty($bs['breakdown'])) {
+                $output[] = "#### 📋 Rincian Berdasarkan Status:";
+                $output[] = "| Status Tagihan | Jumlah Invoice | Total Nominal |";
+                $output[] = "|---|---|---|";
+                foreach ($bs['breakdown'] as $br) {
+                    $bName = is_array($br) ? ($br['status_name'] ?? '-') : ($br->status_name ?? '-');
+                    $bCount = is_array($br) ? ($br['count'] ?? 0) : ($br->count ?? 0);
+                    $bTotal = is_array($br) ? ($br['total_formatted'] ?? '-') : ($br->total_formatted ?? '-');
+                    $output[] = "| **{$bName}** | " . number_format($bCount, 0, ',', '.') . " invoice | `{$bTotal}` |";
+                }
+            }
+
+            if (!empty($context['billings'])) {
+                $output[] = "\n#### 🔍 Contoh Tagihan Belum Bayar Terbaru:";
+                $output[] = "| No. Billing | No. Internet | Periode | Total | Status |";
+                $output[] = "|---|---|---|---|---|";
+                foreach ($context['billings'] as $b) {
+                    $totalRp = 'Rp ' . number_format((float)($b->total_layanan ?? 0), 0, ',', '.');
+                    $output[] = "| `{$b->kode_billing_layanan}` | `{$b->nomor_internet}` | {$b->bulan_tagihan}/{$b->tahun_tagihan} | {$totalRp} | 🔴 " . ($b->status_desc ?? 'Belum Bayar') . " |";
+                }
+            }
+        }
+
         // Case 2: Billing details found
-        if (!empty($context['billings'])) {
+        if (!empty($context['billings']) && empty($context['billing_summary'])) {
             $hasData = true;
             $output[] = "\n### 💳 Data Tagihan & Pembayaran (" . count($context['billings']) . "):";
             $output[] = "| No. Billing | No. Internet | Periode | Total | Status |";
@@ -1306,7 +1389,7 @@ class AiAssistantController extends Controller
         // If specific keyword was used but no data returned
         if (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'pending') || str_contains($lower, 'verif')) {
             $output[] = "### 💳 Informasi Tagihan & Verifikasi";
-            if (isset($context['stats']['pending_verification_count']) && $context['stats']['pending_verification_count'] === 0) {
+            if ((str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi')) && isset($context['stats']['pending_verification_count']) && $context['stats']['pending_verification_count'] === 0) {
                 $output[] = "✅ **Tidak ada tagihan yang menunggu verifikasi saat ini.**\nSeluruh konfirmasi pembayaran dari pelanggan maupun portal sudah diproses oleh tim finance.";
             } else {
                 $output[] = "🔍 Data tagihan spesifik tidak ditemukan. Silakan masukkan nomor billing atau nomor internet pelanggan.";

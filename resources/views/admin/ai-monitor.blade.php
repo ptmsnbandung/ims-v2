@@ -422,9 +422,17 @@ async function executePing() {
             statusBadge.innerText = 'ERROR ' + (data.status_code || 500);
             accountBadge.innerText = 'Akun #' + (data.key_index || keyIndex);
             latencyEl.innerText = (data.latency_ms || 0) + ' ms';
-            pTokensEl.innerText = '0';
-            cTokensEl.innerText = '0';
-            replyText.innerText = 'Gagal menghubungi Gemini API:\n' + (data.error || data.message || 'Unknown error');
+            let msg = data.error || data.message || 'Unknown error';
+            if (data.probe_error) {
+                msg += '\n\n[Google API Key Probe]: ' + data.probe_error;
+            }
+            if (data.model_errors && Object.keys(data.model_errors).length > 0) {
+                msg += '\n\n[Rincian Model yang Dicoba]:';
+                for (const [m, e] of Object.entries(data.model_errors)) {
+                    msg += `\n• ${m}: ${e}`;
+                }
+            }
+            replyText.innerText = msg;
         }
     } catch (err) {
         resultCard.classList.remove('hidden');

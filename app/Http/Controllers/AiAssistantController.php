@@ -224,12 +224,43 @@ class AiAssistantController extends Controller
             $configuredModel,
             'gemini-2.5-flash',
             'gemini-1.5-flash',
-            'gemini-2.0-flash',
+            'gemini-1.5-pro',
         ])));
+
+        // Probe active models from Google API for this specific key
+        $probeError = null;
+        try {
+            $listRes = Http::timeout(4)->get("https://generativelanguage.googleapis.com/v1beta/models?key={$selectedKey}");
+            if ($listRes->successful()) {
+                $remoteModels = $listRes->json('models', []);
+                $discovered = [];
+                foreach ($remoteModels as $rm) {
+                    if (in_array('generateContent', $rm['supportedGenerationMethods'] ?? [])) {
+                        $mName = str_replace('models/', '', $rm['name'] ?? '');
+                        if (!str_contains($mName, '2.0-flash')) {
+                            $discovered[] = $mName;
+                        }
+                    }
+                }
+                if (!empty($discovered)) {
+                    usort($discovered, function ($a, $b) {
+                        $scoreA = str_contains($a, '2.5-flash') ? 6 : (str_contains($a, '1.5-flash') ? 5 : (str_contains($a, 'flash') ? 3 : 1));
+                        $scoreB = str_contains($b, '2.5-flash') ? 6 : (str_contains($b, '1.5-flash') ? 5 : (str_contains($b, 'flash') ? 3 : 1));
+                        return $scoreB <=> $scoreA;
+                    });
+                    $modelsToTry = array_values(array_unique(array_merge($discovered, $modelsToTry)));
+                }
+            } else {
+                $probeError = $listRes->json('error.message') ?? ('HTTP ' . $listRes->status());
+            }
+        } catch (\Throwable $e) {
+            $probeError = $e->getMessage();
+        }
 
         $startTime = microtime(true);
         $lastError = 'Gagal menghubungi Gemini API';
         $lastStatus = 500;
+        $modelErrors = [];
 
         foreach ($modelsToTry as $geminiModel) {
             try {
@@ -247,11 +278,12 @@ class AiAssistantController extends Controller
                     $err = $response->json('error.message') ?? ('HTTP ' . $response->status());
                     $lastError = $err;
                     $lastStatus = $response->status();
+                    $modelErrors[$geminiModel] = "[{$lastStatus}] {$err}";
 
                     // If error suggests another model, add and try it immediately
                     if (preg_match('/models\/([a-zA-Z0-9._-]+)/i', $err, $mMatches)) {
                         $suggestedModel = $mMatches[1];
-                        if (!in_array($suggestedModel, $modelsToTry, true)) {
+                        if (!in_array($suggestedModel, $modelsToTry, true) && !str_contains($suggestedModel, '2.0-flash')) {
                             $modelsToTry[] = $suggestedModel;
                         }
                     }
@@ -278,6 +310,7 @@ class AiAssistantController extends Controller
                 ]);
             } catch (\Throwable $e) {
                 $lastError = $e->getMessage();
+                $modelErrors[$geminiModel] = $e->getMessage();
             }
         }
 
@@ -288,6 +321,9 @@ class AiAssistantController extends Controller
             'key_index' => $actualIndex,
             'latency_ms' => $latency,
             'error' => $lastError,
+            'probe_error' => $probeError,
+            'models_tried' => $modelsToTry,
+            'model_errors' => $modelErrors,
             'status_code' => $lastStatus,
         ], $lastStatus >= 400 && $lastStatus < 600 ? $lastStatus : 500);
     }

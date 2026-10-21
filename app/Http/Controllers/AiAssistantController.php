@@ -111,7 +111,7 @@ class AiAssistantController extends Controller
                     }
                     Log::warning("[AiAssistant] Gemini Key #{$keyIndex} gagal: " . $msg . ". Beralih ke kunci berikutnya...");
                     if (str_contains($msgLower, 'timed out')) {
-                        if ((microtime(true) - $keysStartTime) > 60 || $keysAttempted >= 2) {
+                        if ((microtime(true) - $keysStartTime) > 25 || $keysAttempted >= 2) {
                             break;
                         }
                     }
@@ -1394,7 +1394,13 @@ class AiAssistantController extends Controller
             . "     * Rujukan utama ada di context `[rekap_keuangan_billing]`. Jika data agregat untuk bulan/tahun yang ditanyakan sudah ada di context, gunakan data resmi tersebut. Jika belum ada atau butuh query khusus, panggil tool `run_select_query` dengan `SUM(total_layanan)` dan `COUNT(*)`. DILARANG KERAS menyimpulkan total perusahaan dari cuplikan sampel baris invoice!\n"
             . "D. SIKLUS TIKET GANGGUAN & HELPDESK (trx_tiket_gangguan):\n"
             . "   - Tiket masuk ke trx_tiket_gangguan -> Status: Baru Open (#11) -> Terjadwal/On Schedule (#12) -> Diproses -> Selesai (#13/Selesai).\n"
-            . "   - Kategori: Gangguan Sinyal/Kabel Putus, Internet Lambat, Ubah Password, Relokasi Rumah, Ubah Paket Layanan.\n\n"
+            . "   - Kategori: Gangguan Sinyal/Kabel Putus, Internet Lambat, Ubah Password, Relokasi Rumah, Ubah Paket Layanan.\n"
+            . "E. JADWAL OTOMATIS & PROSEDUR OPERASIONAL (SOP) IMS2:\n"
+            . "   - Terbit Invoice Tagihan Bulanan Massal: Setiap tanggal 1 pukul 08:00 WIB pagi (cron `finance:auto-generate-invoices` otomatis membuat invoice pelanggan aktif).\n"
+            . "   - Jatuh Tempo Tagihan: Tanggal 25 setiap bulan.\n"
+            . "   - Terbit Request Suspend / Isolir Otomatis: Setiap tanggal 25 pukul 06:00 WIB pagi (cron `suspend:unpaid-customers` otomatis menyaring dan membuat antrean request suspend ke tim NOC untuk semua pelanggan yang belum lunas/status_bill_lay != 15).\n"
+            . "   - Eksekusi Suspend: Diteruskan ke tim NOC/MikroTik berdasarkan antrean tabel `trx_suspend` (status 11=Req Suspend, 12=Suspend Aktif).\n"
+            . "   - Unsuspend / Buka Isolir: Otomatis diajukan seketika verifikasi bukti bayar disetujui tim Finance (#14 -> #15) atau manual oleh admin/finance.\n\n"
             . "KEBIJAKAN HAK AKSES ROLE (SANGAT KETAT):\n"
             . "{$roleRules}\n\n"
             . "5. INTEGRITAS DATA PELANGGAN & TAGIHAN (SANGAT KRUSIAL):\n"
@@ -1472,7 +1478,11 @@ class AiAssistantController extends Controller
         $isPurelyConversational = preg_match('/^(halo|hai|hi|hey|selamat (pagi|siang|sore|malam)|assalamu|terima kasih|makasih|thanks|kamu siapa|bisa apa|menu|help)\b/i', trim($lowerMsg)) 
             && !preg_match('/\b(berapa|total|cari|cek|data|pelanggan|tagihan|billing|tiket|olt|bayar|lunas|unpaid|pemasukan|pendapatan|omset|oktober|september|agustus|juli|juni|mei|april|maret|februari|januari|select|query|tabel|kolom)\b/i', $lowerMsg);
 
-        $tools = $isPurelyConversational ? [] : [['functionDeclarations' => [
+        // Detect if query is asking about SOP/policies/schedules/knowledge where database SQL query tools are NOT needed
+        $isSopOrPolicy = preg_match('/\b(kapan|jadwal|tanggal berapa|jam berapa|aturan|sop|prosedur|kebijakan|syarat|jatuh tempo|terbit|suspend terbit|auto suspend|generate invoice|invoice terbit|request suspend|bisa apa|wewenang|tugas role|panduan|cara kerja|arti status)\b/i', $lowerMsg)
+            && !preg_match('/\b(cari|cek pelanggan|atas nama|nomor internet|id internet|select|query|tabel|kolom|\d{5,})\b/i', $lowerMsg);
+
+        $tools = ($isPurelyConversational || $isSopOrPolicy) ? [] : [['functionDeclarations' => [
             [
                 'name' => 'describe_table',
                 'description' => 'Lihat daftar kolom sebuah tabel database IMS2 beserta 1 contoh baris. Panggil sebelum menulis query pada tabel yang belum dikenal.',
@@ -1486,7 +1496,11 @@ class AiAssistantController extends Controller
         ]]];
 
         if (empty($tools)) {
-            $systemInstruction .= "\n\nCATATAN PERMINTAAN INI: tool database TIDAK aktif karena percakapan sapaan. DILARANG menulis query SQL atau blok kode. Balas sapaan singkat 1-2 kalimat dan tawarkan bantuan sesuai role.";
+            if ($isPurelyConversational) {
+                $systemInstruction .= "\n\nCATATAN PERMINTAAN INI: Percakapan sapaan. DILARANG menulis query SQL. Balas sapaan singkat 1-2 kalimat dan tawarkan bantuan sesuai role.";
+            } else {
+                $systemInstruction .= "\n\nCATATAN PERMINTAAN INI: Pertanyaan SOP/Jadwal/Konseptual. Jawab langsung secara presisi dan padat dari pengetahuan sistem di atas tanpa memanggil database.";
+            }
         } else {
             $systemInstruction .= "\n\n" . $this->schemaHint($userRole);
         }
@@ -1517,12 +1531,12 @@ class AiAssistantController extends Controller
                         $payload['tools'] = $stepTools;
                     }
 
-                    $response = Http::timeout(45)->post($url, $payload);
+                    $response = Http::timeout(15)->post($url, $payload);
 
                     // Automatic fallback if specific model does not support thinkingConfig
                     if (!$response->successful() && str_contains($response->body(), 'thinkingConfig')) {
                         unset($payload['generationConfig']['thinkingConfig']);
-                        $response = Http::timeout(45)->post($url, $payload);
+                        $response = Http::timeout(15)->post($url, $payload);
                     }
 
                     if (!$response->successful()) {
@@ -1558,7 +1572,7 @@ class AiAssistantController extends Controller
                         // 3. High demand spike: quick 300ms pause and retry once on step 0
                         if (str_contains(strtolower($errMessage), 'high demand') && $step === 0) {
                             usleep(300000);
-                            $retryRes = Http::timeout(45)->post($url, $payload);
+                            $retryRes = Http::timeout(15)->post($url, $payload);
                             if ($retryRes->successful()) {
                                 $response = $retryRes;
                                 goto process_step_response;
@@ -2023,7 +2037,31 @@ class AiAssistantController extends Controller
             }
         }
 
-        // Case 0: Role & System Guidance
+        // Case 0.1: Jadwal Operasional, Auto Suspend, dan Billing SOP
+        $isAskingScheduleOrSuspend = str_contains($lower, 'suspend') 
+            || str_contains($lower, 'isolir') 
+            || str_contains($lower, 'jatuh tempo') 
+            || str_contains($lower, 'kapan tagihan') 
+            || str_contains($lower, 'invoice terbit');
+
+        if ($isAskingScheduleOrSuspend && empty($context['customers'])) {
+            $hasData = true;
+            $output[] = "### ⏱️ Jadwal Otomatis & Prosedur Suspend (Isolir) IMS2:";
+            $output[] = "Berdasarkan sistem penjadwalan resmi (*Scheduler Cron*) IMS2:\n";
+            $output[] = "1. **📅 Terbit Request Suspend Otomatis:**";
+            $output[] = "   - Request suspend otomatis diterbitkan setiap **tanggal 25 setiap bulan pada pukul 06:00 WIB pagi**.";
+            $output[] = "   - Sistem menjalankan perintah `suspend:unpaid-customers` untuk menyaring seluruh pelanggan aktif yang tagihannya belum berstatus lunas (`status_bill_lay != 15`).";
+            $output[] = "2. **🧾 Jadwal Terbit Invoice Tagihan Bulanan:**";
+            $output[] = "   - Invoice massal bulanan diterbitkan otomatis setiap **tanggal 1 setiap bulan pada pukul 08:00 WIB pagi** (`finance:auto-generate-invoices`).";
+            $output[] = "3. **⚠️ Batas Waktu Jatuh Tempo:**";
+            $output[] = "   - Pelanggan diberikan rentang pembayaran mulai **tanggal 1 hingga tanggal 24**.";
+            $output[] = "4. **🔄 Alur Eksekusi & Buka Isolir (Unsuspend):**";
+            $output[] = "   - Request suspend masuk ke antrean tabel `trx_suspend` (status #11) untuk dieksekusi pemutusan/isolir oleh tim NOC pada MikroTik/OLT.";
+            $output[] = "   - **Buka Isolir (Unsuspend):** Terbit otomatis seketika tim Finance memverifikasi dan menyetujui bukti pembayaran pelanggan (status #14 -> #15).";
+            return implode("\n", $output);
+        }
+
+        // Case 0.2: Role & System Guidance
         $isAskingRole = !empty($context['role_guide']) 
             || str_contains($lower, 'role') 
             || str_contains($lower, 'wewenang') 

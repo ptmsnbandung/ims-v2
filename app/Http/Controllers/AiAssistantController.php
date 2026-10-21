@@ -69,13 +69,23 @@ class AiAssistantController extends Controller
             }
 
             // Fallback to local heuristic engine when all keys are exhausted or error
+            $totalKeys = count($geminiKeys);
             $errDetail = $lastException?->getMessage() ?? 'Google API sedang cooldown atau batas limit tercapai.';
             $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
+
+            $shortErr = str_contains($errDetail, '429') 
+                ? 'Limit kuota/frekuensi Google (429 Too Many Requests)' 
+                : substr($errDetail, 0, 90);
+
+            $note = "\n\n---\n> ℹ️ *Info Failover: Sistem telah mencoba ke-{$totalKeys} API Key Google terdaftar, namun seluruhnya merespon '{$shortErr}'. Dijawab otomatis via Asisten Internal IMS2.*";
+            $fallbackReply .= $note;
+
             return response()->json([
                 'status' => 'success',
                 'reply' => $fallbackReply,
                 'mode' => 'local_fallback',
                 'fallback_reason' => $errDetail,
+                'keys_tried' => $totalKeys,
             ]);
         }
 
@@ -486,7 +496,8 @@ class AiAssistantController extends Controller
             'apakah', 'ada', 'berapa', 'siapa', 'kapan', 'kenapa', 'bagaimana', 'apa', 'tentang',
             'terisolir', 'isolir', 'suspend', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
             'adalah', 'itu', 'ini', 'kah', 'dengan', 'bernama', 'si', 'dari', 'pada', 'yang', 'tidak', 'bukan', 'akan',
-            'selain', 'total', 'jumlah', 'rekap', 'semua', 'seluruh', 'sisa', 'tunggakan', 'piutang'
+            'selain', 'total', 'jumlah', 'rekap', 'semua', 'seluruh', 'sisa', 'tunggakan', 'piutang',
+            'oleh', 'dilakukan', 'melakukan', 'role', 'fungsi', 'tugas', 'wewenang', 'sistem', 'aplikasi', 'cara', 'aturan', 'menu', 'fitur', 'panduan', 'bantuan', 'contoh', 'seperti', 'tersebut', 'saja'
         ];
         $pattern = '/\b(' . implode('|', $stopwords) . ')\b/i';
 
@@ -494,14 +505,77 @@ class AiAssistantController extends Controller
         $cleanSearch = trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $cleanSearch));
         $cleanSearch = preg_replace('/\s+/', ' ', $cleanSearch);
 
+        // Check if query is asking about role capabilities or general system help
+        $isAskingRoleOrHelp = str_contains($lower, 'role') || str_contains($lower, 'wewenang') 
+            || str_contains($lower, 'bisa dilakukan') || str_contains($lower, 'fungsi admin') 
+            || str_contains($lower, 'tugas admin') || str_contains($lower, 'admin bisa apa') 
+            || str_contains($lower, 'tugas') || str_contains($lower, 'bisa apa') 
+            || str_contains($lower, 'panduan') || str_contains($lower, 'bantuan')
+            || str_contains($lower, 'cara pakai') || str_contains($lower, 'fitur');
+
+        if ($isAskingRoleOrHelp) {
+            $context['type'] = 'role_guide';
+            $context['role_guide'] = [
+                'Admin' => [
+                    'deskripsi' => 'Administrator Sistem Internal IMS2',
+                    'wewenang' => [
+                        'Manajemen Pelanggan: Akses penuh data pelanggan, status registrasi (#12-#23), isolir/suspend, dan terminasi.',
+                        'Billing & Keuangan: Mengakses seluruh invoice tagihan, cek status pending verifikasi, dan memantau status lunas/unpaid.',
+                        'Jaringan & OLT: Memantau master OLT (O1, O2, O3), IP address, port GPON, dan kondisi telemetri jaringan.',
+                        'Helpdesk & Gangguan: Memantau dan mengelola seluruh tiket gangguan pelanggan.',
+                        'Sistem & AI: Mengelola pengguna, memantau token & rotasi multi-kunci Google Gemini pada menu Monitoring AI.',
+                    ],
+                ],
+                'Direktur' => [
+                    'deskripsi' => 'Eksekutif / Manajemen Puncak',
+                    'wewenang' => [
+                        'Melihat ringkasan eksekutif performa harian (omzet, total tagihan terbayar/tertunggak, pertumbuhan pelanggan baru).',
+                        'Monitoring kesehatan jaringan dan status operasional OLT.',
+                        'Akses komprehensif ke semua data operasional dan keuangan IMS2.',
+                    ],
+                ],
+                'Finance' => [
+                    'deskripsi' => 'Divisi Keuangan & Billing',
+                    'wewenang' => [
+                        'Verifikasi bukti transfer / pembayaran dari pelanggan (#14 -> #15).',
+                        'Penerbitan tagihan bulanan (draft, publish, unpaid).',
+                        'Rekap pendapatan harian, bulanan, dan audit piutang.',
+                    ],
+                ],
+                'NOC' => [
+                    'deskripsi' => 'Network Operations Center',
+                    'wewenang' => [
+                        'Monitoring realtime OLT, redaman optik port GPON (LOS / DOWN), dan router backbone.',
+                        'Diagnosa modem ONU pelanggan dan status koneksi PPPoE.',
+                        'Eskalasi dan penanganan tiket gangguan jaringan.',
+                    ],
+                ],
+                'Teknik' => [
+                    'deskripsi' => 'Tim Teknisi Lapangan',
+                    'wewenang' => [
+                        'Eksekusi instalasi pelanggan baru (#16), perbaikan dropcore, dan pemeliharaan lapangan.',
+                        'Update status penanganan tiket gangguan.',
+                    ],
+                ],
+                'Customer Service' => [
+                    'deskripsi' => 'Layanan Pelanggan & Helpdesk',
+                    'wewenang' => [
+                        'Pencarian data pelanggan berdasarkan nama atau nomor internet.',
+                        'Pengecekan status tagihan dan informasi paket.',
+                        'Pembuatan tiket gangguan pelanggan.',
+                    ],
+                ],
+            ];
+        }
+
         // Build list of high-priority search candidates
         $searchCandidates = [];
-        if (!empty($cleanSearch) && strlen($cleanSearch) >= 3) {
+        if (!empty($cleanSearch) && strlen($cleanSearch) >= 3 && !$isAskingRoleOrHelp) {
             $searchCandidates[] = $cleanSearch;
         }
 
         // Pattern A: Match 'atas nama [Name]' or 'nama [Name]' or 'pelanggan [Name]'
-        if (preg_match('/(?:atas\s+nama|nama\s+pelanggan|nama|pelanggan|user)\s+([A-Za-z\s]{3,35}?)(?=\s+(?:tidak|belum|bukan|adalah|yaitu|di|pada|ke|yang|dari|dengan|\.|\,|\n|\r|$))/i', $query, $nm)) {
+        if (!$isAskingRoleOrHelp && preg_match('/(?:atas\s+nama|nama\s+pelanggan|nama|pelanggan|user)\s+([A-Za-z\s]{3,35}?)(?=\s+(?:tidak|belum|bukan|adalah|yaitu|di|pada|ke|yang|dari|dengan|\.|\,|\n|\r|$))/i', $query, $nm)) {
             $extractedName = trim(preg_replace($pattern, '', $nm[1]));
             if (!empty($extractedName) && strlen($extractedName) >= 3) {
                 array_unshift($searchCandidates, $extractedName);
@@ -509,17 +583,17 @@ class AiAssistantController extends Controller
         }
 
         // Pattern B: Match consecutive UPPERCASE words (e.g. 'MUHAMMAD RAMA PUTRA')
-        if (preg_match_all('/\b([A-Z]{3,}(?:\s+[A-Z]{2,}){1,4})\b/', $query, $capsMatches)) {
+        if (!$isAskingRoleOrHelp && preg_match_all('/\b([A-Z]{3,}(?:\s+[A-Z]{2,}){1,4})\b/', $query, $capsMatches)) {
             foreach ($capsMatches[1] as $capName) {
                 $capClean = trim(preg_replace($pattern, '', $capName));
-                if (!empty($capClean) && strlen($capClean) >= 3 && !in_array(strtoupper($capClean), ['IMS2', 'IMS', 'NOC', 'OLT', 'GPON', 'NULL'])) {
+                if (!empty($capClean) && strlen($capClean) >= 3 && !in_array(strtoupper($capClean), ['IMS2', 'IMS', 'NOC', 'OLT', 'GPON', 'NULL', 'ROLE', 'ADMIN'])) {
                     array_unshift($searchCandidates, $capClean);
                 }
             }
         }
 
         // Pattern C: Quoted name string e.g. "MUHAMMAD RAMA PUTRA"
-        if (preg_match('/["\']([a-zA-Z0-9\s]{3,35})["\']/i', $query, $qm)) {
+        if (!$isAskingRoleOrHelp && preg_match('/["\']([a-zA-Z0-9\s]{3,35})["\']/i', $query, $qm)) {
             $qClean = trim(preg_replace($pattern, '', $qm[1]));
             if (!empty($qClean) && strlen($qClean) >= 3) {
                 array_unshift($searchCandidates, $qClean);
@@ -537,8 +611,15 @@ class AiAssistantController extends Controller
             || str_contains($lower, 'berapa user') || str_contains($lower, 'berapa usser') || str_contains($lower, 'berapa pelanggan')
             || (str_contains($lower, 'baru') && (str_contains($lower, 'user') || str_contains($lower, 'usser') || str_contains($lower, 'pelanggan')));
 
+        $hasExplicitCustomerIntent = !empty($extractedId) 
+            || str_contains($lower, 'pelanggan') 
+            || str_contains($lower, 'cust') 
+            || str_contains($lower, 'atas nama') 
+            || str_contains($lower, 'cari nama') 
+            || str_contains($lower, 'cek nama');
+
         // Context 1: Customer lookup (by ID, username, or name candidates across batchjob & m_pelanggan)
-        if (($extractedId || !empty($searchCandidates) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user') || str_contains($lower, 'usser')) && !$isAskingCustomerStats) {
+        if (($hasExplicitCustomerIntent || !empty($searchCandidates)) && !$isAskingCustomerStats && !$isAskingRoleOrHelp) {
             try {
                 $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
                 $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
@@ -614,8 +695,8 @@ class AiAssistantController extends Controller
                     $matchedCustomers = $q->select($selectCols)->limit(5)->get();
                 }
 
-                // Tier 3: Token-by-token fallback (e.g. match first distinctive token >= 4 chars)
-                if ($matchedCustomers->isEmpty() && !empty($nameTokens)) {
+                // Tier 3: Token-by-token fallback (e.g. match first distinctive token >= 4 chars) ONLY if explicit customer intent
+                if ($matchedCustomers->isEmpty() && !empty($nameTokens) && $hasExplicitCustomerIntent) {
                     foreach ($nameTokens as $tok) {
                         if (strlen($tok) >= 4) {
                             $res = DB::table('trx_batchjob_register as r')
@@ -1175,7 +1256,9 @@ class AiAssistantController extends Controller
             || !empty($contextData['stats']['total_customers'])
             || !empty($contextData['stats']['active_customers'])
             || !empty($contextData['olts'])
-            || !empty($contextData['tickets']);
+            || !empty($contextData['tickets'])
+            || !empty($contextData['role_guide'])
+            || ($contextData['type'] ?? '') === 'role_guide';
 
         $tools = $hasCompleteContext ? [] : [['functionDeclarations' => [
             [
@@ -1662,6 +1745,75 @@ class AiAssistantController extends Controller
             if (!empty($context['tickets']) && !$isAskingDown) {
                 $output[] = "\n> ℹ️ *Catatan: Data di atas adalah data fisik real-time kabel optik / OLT. Selain itu tercatat " . count($context['tickets']) . " tiket keluhan terkait gangguan di helpdesk.*";
             }
+        }
+
+        // Case 0: Role & System Guidance
+        $isAskingRole = !empty($context['role_guide']) 
+            || str_contains($lower, 'role') 
+            || str_contains($lower, 'wewenang') 
+            || str_contains($lower, 'bisa dilakukan') 
+            || str_contains($lower, 'fungsi admin')
+            || str_contains($lower, 'tugas admin')
+            || str_contains($lower, 'admin bisa apa');
+
+        if ($isAskingRole) {
+            $hasData = true;
+            $targetRole = 'Admin';
+            if (str_contains($lower, 'direktur') || str_contains($lower, 'ceo')) {
+                $targetRole = 'Direktur';
+            } elseif (str_contains($lower, 'finance') || str_contains($lower, 'keuangan') || str_contains($lower, 'billing')) {
+                $targetRole = 'Finance';
+            } elseif (str_contains($lower, 'noc')) {
+                $targetRole = 'NOC';
+            } elseif (str_contains($lower, 'teknik') || str_contains($lower, 'teknisi')) {
+                $targetRole = 'Teknik';
+            } elseif (str_contains($lower, 'cs') || str_contains($lower, 'customer service')) {
+                $targetRole = 'Customer Service';
+            }
+
+            if ($targetRole === 'Admin') {
+                $output[] = "### 🛡️ Wewenang & Hak Akses Role Admin di IMS2:";
+                $output[] = "Sebagai **Administrator Sistem**, Role Admin memiliki wewenang operasional penuh di IMS2:\n";
+                $output[] = "1. **👥 Manajemen Pelanggan (Lifecycle Penuh):**";
+                $output[] = "   - Memantau registrasi baru, status instalasi, aktivasi NOC, hingga pelanggan aktif (#20).";
+                $output[] = "   - Mengelola isolir pelanggan (suspend) dan reaktivasi.";
+                $output[] = "2. **💳 Billing & Keuangan:**";
+                $output[] = "   - Mengakses seluruh tagihan bulanan (draft, publish, unpaid, lunas).";
+                $output[] = "   - Mengetahui tagihan yang sedang menunggu verifikasi pembayaran oleh tim finance.";
+                $output[] = "   - Mengaudit total piutang dan pembayaran pelanggan.";
+                $output[] = "3. **🌐 Jaringan & OLT:**";
+                $output[] = "   - Memantau Master OLT (Kayu Agung, Babakan Tarogong, Soreang), IP address, dan port GPON.";
+                $output[] = "   - Memeriksa telemetri modem pelanggan (UP, LOS, DOWN).";
+                $output[] = "4. **🎫 Helpdesk & Tiket Gangguan:**";
+                $output[] = "   - Memantau seluruh tiket gangguan teknis dan jadwal penanganan tim lapangan.";
+                $output[] = "5. **⚙️ Manajemen AI & Pengguna:**";
+                $output[] = "   - Mengelola akun staf dan memantau rotasi kuota multi-kunci Google Gemini di menu **Monitoring AI**.";
+            } elseif ($targetRole === 'Direktur') {
+                $output[] = "### 👑 Wewenang & Hak Akses Role Direktur / CEO:";
+                $output[] = "- 📊 **Ringkasan Eksekutif:** Akses rekap performa omzet, total piutang, dan tren pertumbuhan user baru.";
+                $output[] = "- 💰 **Monitoring Keuangan:** Memantau tagihan terbayar dan sisa kas masuk.";
+                $output[] = "- 🌐 **Kesehatan Jaringan:** Memantau ketersediaan OLT dan SLA jaringan ISP.";
+            } elseif ($targetRole === 'Finance') {
+                $output[] = "### 💼 Wewenang & Hak Akses Role Finance:";
+                $output[] = "- 💳 **Verifikasi Pembayaran:** Konfirmasi bukti bayar dan pelunasan invoice (#14 -> #15).";
+                $output[] = "- 🧾 **Manajemen Billing:** Penerbitan dan audit tagihan bulanan pelanggan.";
+                $output[] = "- 📈 **Laporan Keuangan:** Rekap pendapatan harian, bulanan, dan audit piutang.";
+            } elseif ($targetRole === 'NOC') {
+                $output[] = "### 🖥️ Wewenang & Hak Akses Role NOC:";
+                $output[] = "- 🌐 **Monitoring OLT & GPON:** Pantau redaman optik (LOS/DOWN) dan port GPON.";
+                $output[] = "- 📡 **Konfigurasi Jaringan:** Aktivasi layanan pelanggan baru (#18/#19) dan manajemen IP/PPPoE.";
+                $output[] = "- 🎫 **Eskalasi Tiket:** Diagnosa teknis gangguan sebelum diteruskan ke tim lapangan.";
+            } elseif ($targetRole === 'Teknik') {
+                $output[] = "### 🔧 Wewenang & Hak Akses Role Teknik:";
+                $output[] = "- 🏠 **Instalasi Lapangan:** Pemasangan kabel dropcore dan aktivasi modem pelanggan baru (#16).";
+                $output[] = "- 🛠️ **Perbaikan Gangguan:** Penanganan fisik kabel putus, redaman tinggi, atau pergantian perangkat.";
+            } else {
+                $output[] = "### 🎧 Wewenang & Hak Akses Role Customer Service:";
+                $output[] = "- 👤 **Informasi Pelanggan:** Cek status langganan, paket, dan nomor internet.";
+                $output[] = "- 🎫 **Helpdesk:** Pembuatan tiket komplain dan eskalasi kendala ke tim teknis.";
+                $output[] = "- 💳 **Cek Tagihan:** Membantu konfirmasi status pembayaran kepada pelanggan.";
+            }
+            return implode("\n", $output);
         }
 
         // Case 1: Customer details found

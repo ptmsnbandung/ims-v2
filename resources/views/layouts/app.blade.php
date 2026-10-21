@@ -3841,6 +3841,15 @@
 
             // 2. Global Debounced Auto-Submit for filter search inputs (3 seconds delay)
             let autoSearchTimer = null;
+
+            // Immediately cancel auto-search timer if user opens AI modal
+            window.addEventListener('ims-cancel-auto-search', function() {
+                if (autoSearchTimer) {
+                    clearTimeout(autoSearchTimer);
+                    autoSearchTimer = null;
+                }
+            });
+
             document.addEventListener('input', function(e) {
                 const target = e.target;
                 if (!target || target.tagName !== 'INPUT') return;
@@ -3851,8 +3860,15 @@
                 const form = target.form;
                 if (!form || (form.method || '').toUpperCase() !== 'GET') return;
 
-                // Ignore modals, date pickers, or explicitly excluded inputs
-                if (target.hasAttribute('data-no-auto-search') || target.closest('[role="dialog"]') || target.closest('.modal')) return;
+                // Ignore modals, date pickers, AI copilot widget, or explicitly excluded inputs
+                if (target.hasAttribute('data-no-auto-search') 
+                    || target.closest('.ims-ai-modal-box') 
+                    || target.closest('.ims-ai-trigger-container') 
+                    || target.closest('[data-ai-widget]')
+                    || target.closest('[role="dialog"]') 
+                    || target.closest('.modal')) {
+                    return;
+                }
 
                 clearTimeout(autoSearchTimer);
                 autoSearchTimer = setTimeout(function() {

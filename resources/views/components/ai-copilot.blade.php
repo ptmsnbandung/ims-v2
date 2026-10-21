@@ -402,6 +402,11 @@ window.imsAiCopilot = function() {
                 localStorage.setItem('ims_ai_modal_open', this.isOpen ? 'true' : 'false');
             } catch (e) {}
             if (this.isOpen) {
+                // Cancel any pending debounced search timer on the underlying page
+                try {
+                    window.dispatchEvent(new CustomEvent('ims-cancel-auto-search'));
+                } catch (e) {}
+
                 this.$nextTick(() => {
                     this.scrollToBottom();
                     if (this.$refs.inputField) {
@@ -715,13 +720,16 @@ window.imsAiCopilot = function() {
     <div 
         x-show="isOpen" 
         x-cloak
+        role="dialog"
+        aria-modal="true"
+        data-ai-widget="true"
         x-transition:enter="transition ease-out duration-200 transform"
         x-transition:enter-start="opacity-0 translate-y-6 scale-95"
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
         x-transition:leave="transition ease-in duration-150 transform"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         :style="!isOpen ? 'display: none !important;' : 'display: flex !important;'"
-        class="ims-ai-modal-box">
+        class="ims-ai-modal-box modal">
         
         <!-- Header -->
         <div class="ims-ai-header">
@@ -859,12 +867,14 @@ window.imsAiCopilot = function() {
 
         <!-- Input Bar -->
         <div class="ims-ai-input-bar">
-            <form @submit.prevent="sendMessage()" style="display:flex; align-items:center; gap:8px; margin:0;">
+            <form method="POST" action="javascript:void(0);" @submit.prevent="sendMessage()" style="display:flex; align-items:center; gap:8px; margin:0;">
                 <input 
                     type="text" 
                     x-model="userInput" 
                     x-ref="inputField"
                     :disabled="isLoading"
+                    data-no-auto-search="true"
+                    autocomplete="off"
                     placeholder="Tanya pelanggan, tagihan, status OLT, atau tiket..." 
                     style="flex:1; background:#0f172a; border:1px solid #334155; border-radius:10px; padding:10px 12px; font-size:12px; color:#ffffff; outline:none;"
                 />

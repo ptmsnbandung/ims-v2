@@ -32,14 +32,14 @@ class AiAssistantController extends Controller
         // 1. Gather relevant domain context from IMS database based on user intent
         $contextData = $this->gatherContext($userMessage, $currentUser);
 
-        // 1. Check if user query matches direct internal SOP (e.g. jadwal suspend, billing cycle, role rules)
+        // 1. Check if user query matches direct internal SOP, schedules, or casual conversational chit-chat
         // Answer INSTANTLY from internal intelligence without external network latency
-        $directSopReply = $this->checkDirectSopResponse($userMessage, $contextData, $currentUser);
-        if ($directSopReply !== null) {
+        $directReply = $this->checkDirectAnswerResponse($userMessage, $contextData, $currentUser);
+        if ($directReply !== null) {
             return response()->json([
                 'status' => 'success',
-                'reply' => $directSopReply,
-                'mode' => 'local_sop',
+                'reply' => $directReply,
+                'mode' => 'local_instant',
             ]);
         }
 
@@ -121,10 +121,9 @@ class AiAssistantController extends Controller
                         $this->recordKeyError($key, $msg, str_contains($msgLower, '429') ? 429 : 500);
                     }
                     Log::warning("[AiAssistant] Gemini Key #{$keyIndex} gagal: " . $msg . ". Beralih ke kunci berikutnya...");
-                    if (str_contains($msgLower, 'timed out')) {
-                        if ((microtime(true) - $keysStartTime) > 25 || $keysAttempted >= 2) {
-                            break;
-                        }
+                    if (str_contains($msgLower, 'timed out') || str_contains($msgLower, 'could not resolve') || str_contains($msgLower, 'connection')) {
+                        // Server outbound connection to Google API is blocked or unreachable; fail fast to local engine
+                        break;
                     }
                 }
             }
@@ -1536,9 +1535,12 @@ class AiAssistantController extends Controller
                     $response = Http::withOptions([
                         'curl' => [
                             CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-                            CURLOPT_CONNECTTIMEOUT => 4,
+                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                            CURLOPT_CONNECTTIMEOUT => 3,
+                            CURLOPT_SSL_VERIFYPEER => false,
+                            CURLOPT_SSL_VERIFYHOST => 0,
                         ],
-                    ])->timeout(10)->post($url, $payload);
+                    ])->timeout(8)->post($url, $payload);
 
                     // Automatic fallback if specific model does not support thinkingConfig
                     if (!$response->successful() && str_contains($response->body(), 'thinkingConfig')) {
@@ -1546,9 +1548,12 @@ class AiAssistantController extends Controller
                         $response = Http::withOptions([
                             'curl' => [
                                 CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-                                CURLOPT_CONNECTTIMEOUT => 4,
+                                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                CURLOPT_CONNECTTIMEOUT => 3,
+                                CURLOPT_SSL_VERIFYPEER => false,
+                                CURLOPT_SSL_VERIFYHOST => 0,
                             ],
-                        ])->timeout(10)->post($url, $payload);
+                        ])->timeout(8)->post($url, $payload);
                     }
 
                     if (!$response->successful()) {
@@ -1587,9 +1592,12 @@ class AiAssistantController extends Controller
                             $retryRes = Http::withOptions([
                                 'curl' => [
                                     CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-                                    CURLOPT_CONNECTTIMEOUT => 4,
+                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                    CURLOPT_CONNECTTIMEOUT => 3,
+                                    CURLOPT_SSL_VERIFYPEER => false,
+                                    CURLOPT_SSL_VERIFYHOST => 0,
                                 ],
-                            ])->timeout(10)->post($url, $payload);
+                            ])->timeout(8)->post($url, $payload);
                             if ($retryRes->successful()) {
                                 $response = $retryRes;
                                 goto process_step_response;
@@ -1927,14 +1935,49 @@ class AiAssistantController extends Controller
     }
 
     /**
-     * Instantly answer deterministic operational SOP questions (schedules, policies, role rules)
+     * Instantly answer deterministic operational SOP questions and conversational chit-chat
      * without external network delay or timeout risks.
      */
-    protected function checkDirectSopResponse(string $userMessage, array $contextData, $currentUser): ?string
+    protected function checkDirectAnswerResponse(string $userMessage, array $contextData, $currentUser): ?string
     {
-        $lower = strtolower($userMessage);
+        $lower = strtolower(trim($userMessage));
+        $userName = $currentUser?->nama ?? $currentUser?->nama_lengkap ?? $currentUser?->username ?? 'Rekan IMS';
 
-        // A. Jadwal Suspend / Isolir / Cron
+        // 1. Gender / Identitas Pribadi AI (e.g. "kamu cowo atau cewe?", "gender kamu apa?")
+        if (preg_match('/\b(cowo|cewe|cowok|cewek|pria|wanita|laki|perempuan|gender|jenis kelamin|kelamin)\b/i', $lower)
+            && preg_match('/\b(kamu|lu|anda|lu tuh|kamu tuh|dirimu|kau)\b/i', $lower)) {
+            return "Saya adalah asisten virtual berbasis kecerdasan buatan (AI) sistem IMS2, jadi saya **tidak memiliki jenis kelamin (bukan cowok maupun cewek)**. 🤖✨\n\n"
+                . "Saya diprogram khusus untuk mendampingi rekan-rekan PT Media Solusi Network (NOC, Finance, Teknik, dan Manajemen) dalam mengelola operasional ISP dengan cepat dan efisien.\n\n"
+                . "Ada data pelanggan, tagihan, atau perangkat jaringan yang ingin Anda cek hari ini, **{$userName}**? 😊";
+        }
+
+        // 2. Siapa Kamu / Identitas Sistem
+        if (preg_match('/\b(siapa kamu|kamu siapa|siapa anda|anda siapa|nama kamu|siapa namamu|kamu itu apa|identitasmu)\b/i', $lower)) {
+            return "Halo **{$userName}**! 👋 Saya adalah **IMS AI Copilot**, asisten pintar resmi untuk sistem operasional PT Media Solusi Network (IMS2).\n\n"
+                . "Saya dirancang untuk membantu Anda memantau dan mengaudit data operasional seperti:\n"
+                . "- 👤 Pencarian profil pelanggan, status registrasi, dan port OLT\n"
+                . "- 💳 Audit tagihan, piutang, dan verifikasi bukti bayar Finance\n"
+                . "- 🌐 Monitoring telemetri fisik OLT, modem LOS/DOWN, dan port GPON\n"
+                . "- 🎫 Pemantauan tiket komplain dan eskalasi gangguan helpdesk";
+        }
+
+        // 3. Siapa Pembuat / Pencipta
+        if (preg_match('/\b(pembuatmu|penciptamu|yang buat kamu|yang bikin kamu|dibuat oleh|diciptakan oleh)\b/i', $lower)) {
+            return "Saya dikembangkan secara internal oleh **Tim Developer PT Media Solusi Network** untuk mempercepat otomasi sistem, integrasi telemetri OLT, dan pendampingan kerja seluruh divisi di IMS2. 🚀";
+        }
+
+        // 4. Tanya Kabar
+        if (preg_match('/\b(apa kabar|gimana kabarnya|gimana kabar|sehat gak|sehat|kabarmu)\b/i', $lower)
+            && preg_match('/\b(kamu|anda|copilot|ims)\b/i', $lower)) {
+            return "Kabar saya sangat baik dan seluruh sensor sistem IMS2 siap siaga membantu Anda! 🟢\n\nBagaimana kabar Anda hari ini, **{$userName}**? Ada yang bisa saya bantu periksa di sistem?";
+        }
+
+        // 5. Ucapan Terima Kasih
+        if (preg_match('/^(terima kasih|makasih|thanks|thank you|tengkyu|arigato|nuhun)\b/i', $lower)) {
+            return "Sama-sama, **{$userName}**! Senang bisa membantu Anda. Jika ada data atau kendala operasional lain yang perlu ditelusuri, silakan tanyakan kapan saja! 😊";
+        }
+
+        // 6. Jadwal Suspend / Isolir / Cron
         $isAskingSuspendSchedule = (str_contains($lower, 'suspend') || str_contains($lower, 'isolir')) 
             && (str_contains($lower, 'kapan') || str_contains($lower, 'jadwal') || str_contains($lower, 'tanggal berapa') || str_contains($lower, 'jam berapa') || str_contains($lower, 'terbit') || str_contains($lower, 'otomatis') || str_contains($lower, 'auto'));
 
@@ -1953,7 +1996,7 @@ class AiAssistantController extends Controller
                 . "   - **Buka Isolir (Unsuspend):** Terbit otomatis seketika tim Finance memverifikasi dan menyetujui bukti pembayaran pelanggan (status `#14` $\\rightarrow$ `#15`), atau diajukan manual oleh admin/finance.";
         }
 
-        // B. Jadwal Terbit Invoice Bulanan
+        // 7. Jadwal Terbit Invoice Bulanan
         $isAskingInvoiceSchedule = (str_contains($lower, 'tagihan') || str_contains($lower, 'invoice') || str_contains($lower, 'billing')) 
             && (str_contains($lower, 'kapan') || str_contains($lower, 'jadwal') || str_contains($lower, 'tanggal berapa') || str_contains($lower, 'jam berapa') || str_contains($lower, 'terbit') || str_contains($lower, 'generate'));
 
@@ -2353,6 +2396,27 @@ class AiAssistantController extends Controller
             $output[] = "### 🎫 Status Tiket Gangguan";
             $output[] = "🎉 **Tidak ada tiket gangguan yang berstatus open / aktif saat ini.**\nLayanan internet pelanggan terpantau aman tanpa laporan kendala.";
             return implode("\n", $output);
+        }
+
+        // Case 6: Conversational / Chit-chat questions (e.g. "kamu cowo atau cewe", "kamu siapa", "apa kabar")
+        if (preg_match('/\b(cowo|cewe|cowok|cewek|pria|wanita|gender|kelamin)\b/i', $lower)) {
+            return "Saya adalah asisten virtual berbasis kecerdasan buatan (AI) sistem IMS2, jadi saya **tidak memiliki jenis kelamin (bukan cowok maupun cewek)**. 🤖✨\n\nSaya bertugas mendampingi operasional seluruh tim IMS2 (NOC, Finance, Teknik, dan Manajemen). Ada yang bisa saya bantu hari ini, **{$userName}**?";
+        }
+
+        if (preg_match('/\b(kamu siapa|siapa kamu|siapa anda|nama kamu|siapa namamu)\b/i', $lower)) {
+            return "Halo **{$userName}**! 👋 Saya adalah **IMS AI Copilot**, asisten cerdas sistem internal PT Media Solusi Network (IMS2). Saya siap membantu Anda mengecek pelanggan, status OLT & redaman, keuangan, dan tiket kendala jaringan.";
+        }
+
+        if (preg_match('/\b(pembuatmu|penciptamu|yang buat kamu|yang bikin kamu|dibuat oleh)\b/i', $lower)) {
+            return "Saya dikembangkan oleh **Tim Developer PT Media Solusi Network** khusus untuk mempermudah dan mempercepat operasional sistem IMS2. 🚀";
+        }
+
+        if (preg_match('/\b(apa kabar|gimana kabarnya|sehat)\b/i', $lower)) {
+            return "Kabar saya luar biasa dan siap membantu operasional sistem IMS2 kapan saja! 🟢 Bagaimana dengan Anda hari ini, **{$userName}**?";
+        }
+
+        if (preg_match('/^(terima kasih|makasih|thanks|thank you|tengkyu)\b/i', $lower)) {
+            return "Sama-sama, **{$userName}**! Senang bisa membantu Anda. Jika ada data lain yang ingin Anda cari, tanyakan saja ya! 😊";
         }
 
         // Default greeting / help response

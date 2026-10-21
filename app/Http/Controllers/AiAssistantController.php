@@ -32,13 +32,24 @@ class AiAssistantController extends Controller
         // 1. Gather relevant domain context from IMS database based on user intent
         $contextData = $this->gatherContext($userMessage, $currentUser);
 
+        // 1. Check if user query matches direct internal SOP (e.g. jadwal suspend, billing cycle, role rules)
+        // Answer INSTANTLY from internal intelligence without external network latency
+        $directSopReply = $this->checkDirectSopResponse($userMessage, $contextData, $currentUser);
+        if ($directSopReply !== null) {
+            return response()->json([
+                'status' => 'success',
+                'reply' => $directSopReply,
+                'mode' => 'local_sop',
+            ]);
+        }
+
         // 2. Check if Gemini API Key is configured (supports multiple comma-separated keys for failover & quota pooling)
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        @set_time_limit(180);
-        $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
-        if (str_contains($geminiModel, '1.5') || str_contains($geminiModel, '2.0') || str_contains($geminiModel, '2.5')) {
-            $geminiModel = 'gemini-3.8-flash';
+        @set_time_limit(60);
+        $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
+        if (str_contains($geminiModel, '3.8')) {
+            $geminiModel = 'gemini-2.5-flash';
         }
 
         if (!empty($geminiKeys)) {
@@ -173,9 +184,9 @@ class AiAssistantController extends Controller
         $user = auth()->user();
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $configuredModel = (string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash'));
-        if (str_contains($configuredModel, '1.5') || str_contains($configuredModel, '2.0') || str_contains($configuredModel, '2.5')) {
-            $configuredModel = 'gemini-3.8-flash';
+        $configuredModel = (string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash'));
+        if (str_contains($configuredModel, '3.8')) {
+            $configuredModel = 'gemini-2.5-flash';
         }
         return response()->json([
             'configured' => !empty($geminiKeys),
@@ -195,9 +206,9 @@ class AiAssistantController extends Controller
     {
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
-        if (str_contains($geminiModel, '1.5') || str_contains($geminiModel, '2.0') || str_contains($geminiModel, '2.5')) {
-            $geminiModel = 'gemini-3.8-flash';
+        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
+        if (str_contains($geminiModel, '3.8')) {
+            $geminiModel = 'gemini-2.5-flash';
         }
 
         $today = now()->format('Y-m-d');
@@ -354,9 +365,9 @@ class AiAssistantController extends Controller
     {
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $configuredModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
-        if (str_contains($configuredModel, '1.5') || str_contains($configuredModel, '2.0') || str_contains($configuredModel, '2.5')) {
-            $configuredModel = 'gemini-3.8-flash';
+        $configuredModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
+        if (str_contains($configuredModel, '3.8')) {
+            $configuredModel = 'gemini-2.5-flash';
         }
 
         if (empty($geminiKeys)) {
@@ -369,7 +380,7 @@ class AiAssistantController extends Controller
 
         $prompt = trim($request->input('prompt', 'Konfirmasi tes koneksi live AI Gemini IMS2 aktif. Berikan respon 1 kalimat padat.'));
 
-        $defaultCandidates = ['gemini-3.8-flash', 'gemini-3.1-pro-preview'];
+        $defaultCandidates = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
         $modelsToTry = array_values(array_unique(array_filter(array_merge([$configuredModel], $defaultCandidates))));
 
         // Probe active models from Google API for this specific key
@@ -1452,21 +1463,12 @@ class AiAssistantController extends Controller
             'parts' => [['text' => $currentUserPrompt]],
         ];
 
-        // 1. Candidate models to try (Google Gemini 3.x series)
-        if (str_contains($model, '1.5') || str_contains($model, '2.0') || str_contains($model, '2.5')) {
-            $model = 'gemini-3.8-flash';
+        // 1. Candidate models to try (Official active Google Gemini models)
+        if (str_contains($model, '3.8')) {
+            $model = 'gemini-2.5-flash';
         }
-        $defaultCandidates = ['gemini-3.8-flash', 'gemini-3.1-pro-preview'];
+        $defaultCandidates = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
         $modelsToTry = array_values(array_unique(array_filter(array_merge([$model], $defaultCandidates))));
-        $modelsToTry = array_values(array_filter($modelsToTry, fn($m) => 
-            !str_contains($m, '1.5-') && 
-            !str_contains($m, '2.0-') && 
-            !str_contains($m, '2.5-') && 
-            !str_contains($m, 'tts') && 
-            !str_contains($m, 'image') && 
-            !str_contains($m, 'computer-use') && 
-            !str_contains($m, 'flash-lite')
-        ));
         $modelsToTry = array_slice($modelsToTry, 0, 2);
 
         // 2. Iterate through candidate models with fast per-step timeout
@@ -1531,12 +1533,22 @@ class AiAssistantController extends Controller
                         $payload['tools'] = $stepTools;
                     }
 
-                    $response = Http::timeout(15)->post($url, $payload);
+                    $response = Http::withOptions([
+                        'curl' => [
+                            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                            CURLOPT_CONNECTTIMEOUT => 4,
+                        ],
+                    ])->timeout(10)->post($url, $payload);
 
                     // Automatic fallback if specific model does not support thinkingConfig
                     if (!$response->successful() && str_contains($response->body(), 'thinkingConfig')) {
                         unset($payload['generationConfig']['thinkingConfig']);
-                        $response = Http::timeout(15)->post($url, $payload);
+                        $response = Http::withOptions([
+                            'curl' => [
+                                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                                CURLOPT_CONNECTTIMEOUT => 4,
+                            ],
+                        ])->timeout(10)->post($url, $payload);
                     }
 
                     if (!$response->successful()) {
@@ -1572,7 +1584,12 @@ class AiAssistantController extends Controller
                         // 3. High demand spike: quick 300ms pause and retry once on step 0
                         if (str_contains(strtolower($errMessage), 'high demand') && $step === 0) {
                             usleep(300000);
-                            $retryRes = Http::timeout(15)->post($url, $payload);
+                            $retryRes = Http::withOptions([
+                                'curl' => [
+                                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                                    CURLOPT_CONNECTTIMEOUT => 4,
+                                ],
+                            ])->timeout(10)->post($url, $payload);
                             if ($retryRes->successful()) {
                                 $response = $retryRes;
                                 goto process_step_response;
@@ -1907,6 +1924,47 @@ class AiAssistantController extends Controller
     protected function maskSensitive(array $row): array
     {
         return array_filter($row, fn($v, $k) => !$this->isSensitive((string)$k), ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * Instantly answer deterministic operational SOP questions (schedules, policies, role rules)
+     * without external network delay or timeout risks.
+     */
+    protected function checkDirectSopResponse(string $userMessage, array $contextData, $currentUser): ?string
+    {
+        $lower = strtolower($userMessage);
+
+        // A. Jadwal Suspend / Isolir / Cron
+        $isAskingSuspendSchedule = (str_contains($lower, 'suspend') || str_contains($lower, 'isolir')) 
+            && (str_contains($lower, 'kapan') || str_contains($lower, 'jadwal') || str_contains($lower, 'tanggal berapa') || str_contains($lower, 'jam berapa') || str_contains($lower, 'terbit') || str_contains($lower, 'otomatis') || str_contains($lower, 'auto'));
+
+        if ($isAskingSuspendSchedule && empty($contextData['customers'])) {
+            return "### ⏱️ Jadwal Otomatis & Prosedur Suspend (Isolir) IMS2:\n\n"
+                . "Berdasarkan sistem penjadwalan resmi (*Scheduler Cron*) IMS2:\n\n"
+                . "1. **📅 Terbit Request Suspend Otomatis:**\n"
+                . "   - Request suspend otomatis diterbitkan setiap **tanggal 25 setiap bulan pada pukul 06:00 WIB pagi**.\n"
+                . "   - Sistem menjalankan perintah cron `suspend:unpaid-customers` untuk menyaring seluruh pelanggan aktif yang tagihannya belum berstatus lunas (`status_bill_lay != 15`).\n\n"
+                . "2. **🧾 Jadwal Terbit Tagihan (Invoice Bulanan):**\n"
+                . "   - Invoice massal bulanan diterbitkan otomatis setiap **tanggal 1 setiap bulan pada pukul 08:00 WIB pagi** (`finance:auto-generate-invoices`).\n\n"
+                . "3. **⚠️ Batas Waktu Jatuh Tempo:**\n"
+                . "   - Pelanggan diberikan rentang pembayaran mulai **tanggal 1 hingga tanggal 24**.\n\n"
+                . "4. **🔄 Alur Eksekusi & Buka Isolir (Unsuspend):**\n"
+                . "   - Request suspend masuk ke antrean tabel `trx_suspend` (status `#11`) untuk dieksekusi pemutusan/isolir oleh tim NOC pada MikroTik/OLT.\n"
+                . "   - **Buka Isolir (Unsuspend):** Terbit otomatis seketika tim Finance memverifikasi dan menyetujui bukti pembayaran pelanggan (status `#14` $\\rightarrow$ `#15`), atau diajukan manual oleh admin/finance.";
+        }
+
+        // B. Jadwal Terbit Invoice Bulanan
+        $isAskingInvoiceSchedule = (str_contains($lower, 'tagihan') || str_contains($lower, 'invoice') || str_contains($lower, 'billing')) 
+            && (str_contains($lower, 'kapan') || str_contains($lower, 'jadwal') || str_contains($lower, 'tanggal berapa') || str_contains($lower, 'jam berapa') || str_contains($lower, 'terbit') || str_contains($lower, 'generate'));
+
+        if ($isAskingInvoiceSchedule && empty($contextData['customers']) && !str_contains($lower, 'cek') && !str_contains($lower, 'total') && !str_contains($lower, 'berapa')) {
+            return "### 🧾 Jadwal Penerbitan Invoice Bulanan IMS2:\n\n"
+                . "1. **📅 Jadwal Terbit:** Setiap **tanggal 1 setiap bulan pukul 08:00 WIB pagi** secara otomatis melalui command scheduler `finance:auto-generate-invoices`.\n"
+                . "2. **👥 Target:** Seluruh pelanggan berstatus **Online Aktif** (`status_reg = 20`). Pelanggan berstatus survey, instalasi, atau terminasi dilewati.\n"
+                . "3. **⚠️ Jatuh Tempo:** **Tanggal 25 setiap bulan pukul 06:00 WIB** (masuk antrean auto-suspend jika belum lunas).";
+        }
+
+        return null;
     }
 
     /**

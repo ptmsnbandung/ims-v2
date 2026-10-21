@@ -797,15 +797,15 @@ window.imsAiCopilot = function() {
                                 <span>IMS Copilot</span>
                                 <!-- Status Pill Indicator: Hijau = AI, Kuning = Offline -->
                                 <span 
-                                    :style="msg.isAi !== false 
+                                    :style="(msg.isAi !== false || engineMode === 'AI') 
                                         ? 'display:inline-flex !important; align-items:center !important; gap:5px !important; padding:1px 8px !important; border-radius:9999px !important; background:rgba(16,185,129,0.18) !important; border:1px solid rgba(16,185,129,0.5) !important; color:#34d399 !important; font-size:10px !important; font-weight:700 !important; letter-spacing:0.02em !important;' 
                                         : 'display:inline-flex !important; align-items:center !important; gap:5px !important; padding:1px 8px !important; border-radius:9999px !important; background:rgba(245,158,11,0.18) !important; border:1px solid rgba(245,158,11,0.5) !important; color:#fbbf24 !important; font-size:10px !important; font-weight:700 !important; letter-spacing:0.02em !important;'"
-                                    :title="msg.isAi !== false ? 'Mode: AI Online (Google Gemini)' : 'Mode: Offline (Database Heuristic)'">
+                                    :title="(msg.isAi !== false || engineMode === 'AI') ? 'Mode: AI Online (Google Gemini)' : 'Mode: Offline (Database Heuristic)'">
                                     <span 
-                                        :style="msg.isAi !== false 
+                                        :style="(msg.isAi !== false || engineMode === 'AI') 
                                             ? 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#10b981 !important; box-shadow:0 0 8px #10b981 !important;' 
                                             : 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#f59e0b !important; box-shadow:0 0 8px #f59e0b !important;'"></span>
-                                    <span x-text="msg.isAi !== false ? 'AI' : 'Offline'"></span>
+                                    <span x-text="(msg.isAi !== false || engineMode === 'AI') ? 'AI' : 'Offline'"></span>
                                 </span>
                             </span>
                             <button 

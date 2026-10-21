@@ -1079,13 +1079,15 @@ class AiAssistantController extends Controller
                         $methods = $rm['supportedGenerationMethods'] ?? [];
                         if (in_array('generateContent', $methods)) {
                             $mName = str_replace('models/', '', $rm['name'] ?? '');
-                            $validModels[] = $mName;
+                            if (!str_contains($mName, '2.0-flash')) {
+                                $validModels[] = $mName;
+                            }
                         }
                     }
                     if (!empty($validModels)) {
                         usort($validModels, function ($a, $b) {
-                            $scoreA = str_contains($a, '2.5-flash') ? 6 : (str_contains($a, '2.0-flash') ? 5 : (str_contains($a, 'flash') ? 3 : 1));
-                            $scoreB = str_contains($b, '2.5-flash') ? 6 : (str_contains($b, '2.0-flash') ? 5 : (str_contains($b, 'flash') ? 3 : 1));
+                            $scoreA = str_contains($a, '2.5-flash') ? 6 : (str_contains($a, '1.5-flash') ? 5 : (str_contains($a, 'flash') ? 3 : 1));
+                            $scoreB = str_contains($b, '2.5-flash') ? 6 : (str_contains($b, '1.5-flash') ? 5 : (str_contains($b, 'flash') ? 3 : 1));
                             return $scoreB <=> $scoreA;
                         });
                         $discovered = $validModels;
@@ -1097,8 +1099,9 @@ class AiAssistantController extends Controller
             }
         }
 
-        $defaultCandidates = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+        $defaultCandidates = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
         $modelsToTry = array_values(array_filter(array_unique(array_merge([$model], (array)($discovered ?: $defaultCandidates)))));
+        $modelsToTry = array_values(array_filter($modelsToTry, fn($m) => !str_contains($m, '2.0-flash')));
         $modelsToTry = array_slice($modelsToTry, 0, 3);
 
         // 2. Iterate through candidate models with fast per-step timeout
@@ -1117,7 +1120,7 @@ class AiAssistantController extends Controller
             ],
         ]]];
 
-        for ($mIdx = 0; $mIdx < count($modelsToTry) && $mIdx < 2; $mIdx++) {
+        for ($mIdx = 0; $mIdx < count($modelsToTry) && $mIdx < 3; $mIdx++) {
             $mName = $modelsToTry[$mIdx];
             $triedModels[] = $mName;
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$mName}:generateContent?key={$apiKey}";

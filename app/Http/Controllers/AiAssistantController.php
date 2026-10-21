@@ -35,7 +35,7 @@ class AiAssistantController extends Controller
         // 2. Check if Gemini API Key is configured (supports multiple comma-separated keys for failover & quota pooling)
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
+        $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
         if (str_contains($geminiModel, '1.5') || str_contains($geminiModel, '2.0') || str_contains($geminiModel, '2.5')) {
             $geminiModel = 'gemini-3.8-flash';
         }
@@ -446,6 +446,7 @@ class AiAssistantController extends Controller
                 $usage = $response->json('usageMetadata');
                 $this->recordUsage($selectedKey, $usage);
                 Cache::forget('gemini_key_cooldown_' . md5($selectedKey));
+                Cache::put('ims_ai_working_model', $geminiModel, 86400);
 
                 $parts = $response->json('candidates.0.content.parts') ?? [];
                 $reply = trim(implode('', array_map(fn($p) => empty($p['thought']) ? ($p['text'] ?? '') : '', $parts)));
@@ -1412,6 +1413,7 @@ class AiAssistantController extends Controller
             ],
         ]]];
 
+        $firstError = null;
         for ($mIdx = 0; $mIdx < count($modelsToTry) && $mIdx < 3; $mIdx++) {
             $mName = $modelsToTry[$mIdx];
             $triedModels[] = $mName;
@@ -1437,6 +1439,7 @@ class AiAssistantController extends Controller
                         $lastError = $errMessage;
                         $statusCode = $response->status();
                         Log::error("[AiAssistant] Gemini call to {$mName} failed [HTTP {$statusCode}]: {$errMessage}");
+                        $firstError ??= "[{$mName}] {$errMessage}";
 
                         // 1. Quota / Rate Limit (HTTP 429 or RESOURCE_EXHAUSTED):
                         // Google Cloud quotas apply at the API key / GCP project level.
@@ -1448,8 +1451,10 @@ class AiAssistantController extends Controller
                             || str_contains(strtolower($errMessage), 'quota');
 
                         if ($is429) {
-                            Cache::put('gemini_key_cooldown_' . md5($apiKey), now()->addSeconds(60)->timestamp, 60);
-                            throw new \Exception("Limit kuota/frekuensi Google (429): " . $errMessage);
+                            if ($mIdx === 0) {
+                                Cache::put('gemini_key_cooldown_' . md5($apiKey), now()->addSeconds(60)->timestamp, 60);
+                            }
+                            throw new \Exception("Limit kuota/frekuensi Google (429) [{$mName}]: " . $errMessage);
                         }
 
                         // 2. Auth error (HTTP 400 invalid key / 403 permission denied):
@@ -1500,6 +1505,7 @@ class AiAssistantController extends Controller
                         }
                         if ($text !== '') {
                             Cache::forget('gemini_key_cooldown_' . md5($apiKey));
+                            Cache::put('ims_ai_working_model', $mName, 86400);
                             return $text;
                         }
                         $lastError = 'Model mengembalikan respons kosong.';
@@ -1520,10 +1526,14 @@ class AiAssistantController extends Controller
                 $lastError = 'Terlalu banyak langkah query database.';
             } catch (\Throwable $e) {
                 $lastError = $e->getMessage();
+                $firstError ??= "[{$mName}] " . $lastError;
+                if ($mIdx === 0 && (str_contains($lastError, 'Limit kuota') || str_contains($lastError, 'Autentikasi'))) {
+                    throw $e;
+                }
             }
         }
 
-        throw new \Exception($lastError);
+        throw new \Exception($firstError ?? $lastError);
     }
 
     public function getUserRole($user): string

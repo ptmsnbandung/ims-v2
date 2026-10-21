@@ -38,8 +38,39 @@ class AiAssistantController extends Controller
         $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
 
         if (!empty($geminiKeys)) {
+            $now = now()->timestamp;
+            $freshKeys = [];
+            $coolingKeys = [];
+
+            foreach ($geminiKeys as $idx => $key) {
+                $cooldownUntil = (int)Cache::get('gemini_key_cooldown_' . md5($key), 0);
+                if ($cooldownUntil > $now) {
+                    $coolingKeys[] = [
+                        'key' => $key,
+                        'original_index' => $idx + 1,
+                        'cooldown_until' => $cooldownUntil,
+                    ];
+                } else {
+                    $freshKeys[] = [
+                        'key' => $key,
+                        'original_index' => $idx + 1,
+                        'cooldown_until' => 0,
+                    ];
+                }
+            }
+
+            // Fresh keys are prioritized first; cooling keys are tried only if fresh keys fail
+            usort($coolingKeys, fn($a, $b) => $a['cooldown_until'] <=> $b['cooldown_until']);
+            $orderedKeys = array_merge($freshKeys, $coolingKeys);
+
             $lastException = null;
-            foreach ($geminiKeys as $keyIndex => $key) {
+            $keysAttempted = 0;
+
+            foreach ($orderedKeys as $item) {
+                $key = $item['key'];
+                $keyIndex = $item['original_index'];
+                $keysAttempted++;
+
                 try {
                     $reply = $this->callGeminiApi($key, $geminiModel, $userMessage, $history, $contextData, $currentUser);
                     return response()->json([
@@ -47,7 +78,7 @@ class AiAssistantController extends Controller
                         'reply' => $reply,
                         'mode' => 'gemini',
                         'model' => $geminiModel,
-                        'key_index' => $keyIndex + 1,
+                        'key_index' => $keyIndex,
                     ]);
                 } catch (\Throwable $e) {
                     $lastException = $e;
@@ -62,9 +93,9 @@ class AiAssistantController extends Controller
                         || str_contains($msgLower, '2.0-flash')
                         || str_contains($msgLower, 'is no longer available');
                     if (!$isTemporaryOrInternal) {
-                        $this->recordKeyError($key, $msg, 500);
+                        $this->recordKeyError($key, $msg, str_contains($msgLower, '429') ? 429 : 500);
                     }
-                    Log::warning("[AiAssistant] Gemini Key #" . ($keyIndex + 1) . " gagal: " . $msg . ". Beralih ke kunci berikutnya...");
+                    Log::warning("[AiAssistant] Gemini Key #{$keyIndex} gagal: " . $msg . ". Beralih ke kunci berikutnya...");
                 }
             }
 
@@ -162,8 +193,10 @@ class AiAssistantController extends Controller
             $kPercent = min(100, round(($kRequests / $rpdPerKey) * 100, 1));
             $masked = strlen($k) > 10 ? substr($k, 0, 6) . '...' . substr($k, -4) : 'AIzaSy...';
 
+            $cooldownSec = max(0, ((int)Cache::get('gemini_key_cooldown_' . md5($k), 0)) - now()->timestamp);
+
             // Auto-clear stale errors from previously deprecated models, internal step limits, temporary spikes, or expired minute-rate-limits (RPM)
-            if (!empty($keyStats['last_error']) && (
+            if ($cooldownSec === 0 && !empty($keyStats['last_error']) && (
                 str_contains($keyStats['last_error'], 'gemini-2.0-flash') ||
                 str_contains($keyStats['last_error'], 'flash-lite') ||
                 str_contains($keyStats['last_error'], '1.5-pro') ||
@@ -172,7 +205,7 @@ class AiAssistantController extends Controller
                 str_contains($keyStats['last_error'], 'langkah query') ||
                 str_contains(strtolower($keyStats['last_error']), 'high demand') ||
                 str_contains(strtolower($keyStats['last_error']), 'temporary') ||
-                ($kRequests < 1450 && (str_contains($keyStats['last_error'], '429') || str_contains($keyStats['last_error'], 'kuota harian/menit')))
+                ($kRequests < 1450 && (str_contains($keyStats['last_error'], '429') || str_contains($keyStats['last_error'], 'kuota harian/menit') || str_contains($keyStats['last_error'], 'frekuensi')))
             )) {
                 $keyStats['last_error'] = null;
                 $keyStats['status'] = $kRequests > 0 ? 'active' : 'standby';
@@ -181,7 +214,12 @@ class AiAssistantController extends Controller
             }
 
             $status = $keyStats['status'] ?? 'standby';
-            if ($status === 'standby' && $kRequests > 0) {
+            if ($cooldownSec > 0) {
+                $status = 'exhausted';
+                if (empty($keyStats['last_error']) || !str_contains($keyStats['last_error'], 'Cooldown')) {
+                    $keyStats['last_error'] = "Cooldown limit frekuensi (RPM): sisa {$cooldownSec} detik";
+                }
+            } elseif ($status === 'standby' && $kRequests > 0) {
                 $status = 'active';
             }
 
@@ -363,7 +401,15 @@ class AiAssistantController extends Controller
     {
         $today = now()->format('Y-m-d');
         Cache::forget('ims_ai_usage_' . $today);
-        return response()->json(['success' => true, 'message' => 'Cache monitoring token AI hari ini berhasil direset.']);
+
+        // Clear any cooldown locks on configured keys
+        $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
+        $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
+        foreach ($geminiKeys as $k) {
+            Cache::forget('gemini_key_cooldown_' . md5($k));
+        }
+
+        return response()->json(['success' => true, 'message' => 'Cache monitoring token dan cooldown API key AI berhasil direset.']);
     }
 
     /**
@@ -1296,8 +1342,30 @@ class AiAssistantController extends Controller
                     if (!$response->successful()) {
                         $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());
                         $lastError = $errMessage;
+                        $statusCode = $response->status();
 
-                        // If high demand spike, pause 300ms and try one quick retry on step 0
+                        // 1. Quota / Rate Limit (HTTP 429 or RESOURCE_EXHAUSTED):
+                        // Google Cloud quotas apply at the API key / GCP project level.
+                        // Continuing to try other models on the SAME throttled key will fail and delay the response.
+                        // Mark key cooldown (60s) and immediately throw so chat() switches to the next API key.
+                        $is429 = $statusCode === 429 
+                            || str_contains($errMessage, '429') 
+                            || str_contains($errMessage, 'RESOURCE_EXHAUSTED') 
+                            || str_contains(strtolower($errMessage), 'quota');
+
+                        if ($is429) {
+                            Cache::put('gemini_key_cooldown_' . md5($apiKey), now()->addSeconds(60)->timestamp, 60);
+                            throw new \Exception("Limit kuota/frekuensi Google (429): " . $errMessage);
+                        }
+
+                        // 2. Auth error (HTTP 400 invalid key / 403 permission denied):
+                        // The key itself is invalid or has restricted permissions; other models will also fail.
+                        $isAuthError = ($statusCode === 400 && str_contains(strtolower($errMessage), 'api_key')) || $statusCode === 403;
+                        if ($isAuthError) {
+                            throw new \Exception("Autentikasi API Key gagal ({$statusCode}): " . $errMessage);
+                        }
+
+                        // 3. High demand spike: quick 300ms pause and retry once on step 0
                         if (str_contains(strtolower($errMessage), 'high demand') && $step === 0) {
                             usleep(300000);
                             $retryRes = Http::timeout(12)->post($url, $payload);
@@ -1307,7 +1375,7 @@ class AiAssistantController extends Controller
                             }
                         }
 
-                        // If error suggests another model, add and try it immediately
+                        // 4. Model not found (404) or suggested alternate model:
                         if (preg_match('/models\/([a-zA-Z0-9._-]+)/i', $errMessage, $mMatches)) {
                             $suggestedModel = $mMatches[1];
                             if ($suggestedModel !== $mName && !in_array($suggestedModel, $triedModels, true) && !in_array($suggestedModel, $modelsToTry, true)) {

@@ -35,7 +35,7 @@ class AiAssistantController extends Controller
         // 2. Check if Gemini API Key is configured (supports multiple comma-separated keys for failover & quota pooling)
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        @set_time_limit(60);
+        @set_time_limit(90);
         $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
         if (str_contains($geminiModel, '1.5') || str_contains($geminiModel, '2.0') || str_contains($geminiModel, '2.5')) {
             $geminiModel = 'gemini-3.8-flash';
@@ -1440,7 +1440,7 @@ class AiAssistantController extends Controller
                         $payload['tools'] = $stepTools;
                     }
 
-                    $response = Http::timeout(25)->post($url, $payload);
+                    $response = Http::timeout(30)->post($url, $payload);
 
                     if (!$response->successful()) {
                         $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());
@@ -1475,7 +1475,7 @@ class AiAssistantController extends Controller
                         // 3. High demand spike: quick 300ms pause and retry once on step 0
                         if (str_contains(strtolower($errMessage), 'high demand') && $step === 0) {
                             usleep(300000);
-                            $retryRes = Http::timeout(12)->post($url, $payload);
+                            $retryRes = Http::timeout(30)->post($url, $payload);
                             if ($retryRes->successful()) {
                                 $response = $retryRes;
                                 goto process_step_response;

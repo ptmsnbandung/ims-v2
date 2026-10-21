@@ -47,9 +47,10 @@ class AiAssistantController extends Controller
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
         @set_time_limit(60);
-        $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
-        if (str_contains($geminiModel, '3.8')) {
-            $geminiModel = 'gemini-2.5-flash';
+        $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
+        if (str_contains($geminiModel, '3.8') || str_contains($geminiModel, '2.5') || str_contains($geminiModel, 'transcribe') || empty($geminiModel)) {
+            $geminiModel = 'gemini-2.0-flash';
+            Cache::forget('ims_ai_working_model');
         }
 
         // Circuit Breaker: If outbound connection to Google API timed out recently, answer instantly (0.02s) via Local Engine
@@ -201,9 +202,9 @@ class AiAssistantController extends Controller
         $user = auth()->user();
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $configuredModel = (string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash'));
-        if (str_contains($configuredModel, '3.8')) {
-            $configuredModel = 'gemini-2.5-flash';
+        $configuredModel = (string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash'));
+        if (str_contains($configuredModel, '3.8') || str_contains($configuredModel, '2.5') || str_contains($configuredModel, 'transcribe') || empty($configuredModel)) {
+            $configuredModel = 'gemini-2.0-flash';
         }
         return response()->json([
             'configured' => !empty($geminiKeys),
@@ -223,9 +224,9 @@ class AiAssistantController extends Controller
     {
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
-        if (str_contains($geminiModel, '3.8')) {
-            $geminiModel = 'gemini-2.5-flash';
+        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
+        if (str_contains($geminiModel, '3.8') || str_contains($geminiModel, '2.5') || str_contains($geminiModel, 'transcribe') || empty($geminiModel)) {
+            $geminiModel = 'gemini-2.0-flash';
         }
 
         $today = now()->format('Y-m-d');
@@ -382,9 +383,9 @@ class AiAssistantController extends Controller
     {
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $configuredModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
-        if (str_contains($configuredModel, '3.8')) {
-            $configuredModel = 'gemini-2.5-flash';
+        $configuredModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
+        if (str_contains($configuredModel, '3.8') || str_contains($configuredModel, '2.5') || str_contains($configuredModel, 'transcribe') || empty($configuredModel)) {
+            $configuredModel = 'gemini-2.0-flash';
         }
 
         if (empty($geminiKeys)) {
@@ -397,7 +398,7 @@ class AiAssistantController extends Controller
 
         $prompt = trim($request->input('prompt', 'Konfirmasi tes koneksi live AI Gemini IMS2 aktif. Berikan respon 1 kalimat padat.'));
 
-        $defaultCandidates = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+        $defaultCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash'];
         $modelsToTry = array_values(array_unique(array_filter(array_merge([$configuredModel], $defaultCandidates))));
 
         // Probe active models from Google API for this specific key
@@ -463,19 +464,7 @@ class AiAssistantController extends Controller
                     $lastStatus = $response->status();
                     $modelErrors[$geminiModel] = "[{$lastStatus}] {$err}";
 
-                    // If error suggests another model, add and try it immediately
-                    if (preg_match('/models\/([a-zA-Z0-9._-]+)/i', $err, $mMatches)) {
-                        $suggestedModel = $mMatches[1];
-                        $isExcluded = str_contains($suggestedModel, '1.5-') 
-                            || str_contains($suggestedModel, '2.0-') 
-                            || str_contains($suggestedModel, '2.5-') 
-                            || str_contains($suggestedModel, 'tts') 
-                            || str_contains($suggestedModel, 'image') 
-                            || str_contains($suggestedModel, 'computer-use');
-                        if (!$isExcluded && !in_array($suggestedModel, $modelsToTry, true)) {
-                            $modelsToTry[] = $suggestedModel;
-                        }
-                    }
+                    // If candidate model fails, proceed to next candidate
                     continue;
                 }
 
@@ -1480,11 +1469,11 @@ class AiAssistantController extends Controller
             'parts' => [['text' => $currentUserPrompt]],
         ];
 
-        // 1. Candidate models to try (Official active Google Gemini models)
-        if (str_contains($model, '3.8')) {
-            $model = 'gemini-2.5-flash';
+        // 1. Candidate models to try (Official active Google Gemini chat models)
+        if (str_contains($model, '3.8') || str_contains($model, '2.5') || str_contains($model, 'transcribe') || empty($model)) {
+            $model = 'gemini-2.0-flash';
         }
-        $defaultCandidates = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+        $defaultCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash'];
         $modelsToTry = array_values(array_unique(array_filter(array_merge([$model], $defaultCandidates))));
         $modelsToTry = array_slice($modelsToTry, 0, 2);
 
@@ -1622,20 +1611,7 @@ class AiAssistantController extends Controller
                             }
                         }
 
-                        // 4. Model not found (404) or suggested alternate model:
-                        if (preg_match('/models\/([a-zA-Z0-9._-]+)/i', $errMessage, $mMatches)) {
-                            $suggestedModel = $mMatches[1];
-                            $isExcluded = str_contains($suggestedModel, '1.5-') 
-                                || str_contains($suggestedModel, '2.0-') 
-                                || str_contains($suggestedModel, '2.5-') 
-                                || str_contains($suggestedModel, 'tts') 
-                                || str_contains($suggestedModel, 'image') 
-                                || str_contains($suggestedModel, 'computer-use');
-                            if ($suggestedModel !== $mName && !$isExcluded && !in_array($suggestedModel, $triedModels, true) && !in_array($suggestedModel, $modelsToTry, true)) {
-                                $modelsToTry[] = $suggestedModel;
-                            }
-                        }
-
+                        // 4. Model not found (404) or unsupported: proceed to next verified candidate model
                         continue 2;
                     }
                     process_step_response:

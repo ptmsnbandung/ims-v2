@@ -63,6 +63,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/broadcast/template/store', [BroadcastController::class, 'saveTemplate'])->name('broadcast.template.store');
         Route::post('/broadcast/template/{id}/delete', [BroadcastController::class, 'deleteTemplate'])->name('broadcast.template.delete');
         Route::get('/broadcast/history', [BroadcastController::class, 'history'])->name('broadcast.history');
+
+        // 4. Monitoring AI (Gemini Multi-Key Pooling & Token Usage)
+        Route::get('/ai-monitor', [AiAssistantController::class, 'monitorView'])->name('ai-monitor');
+        Route::post('/ai-monitor/ping', [AiAssistantController::class, 'monitorPing'])->name('ai-monitor.ping');
+        Route::post('/ai-monitor/reset-metrics', [AiAssistantController::class, 'resetMetrics'])->name('ai-monitor.reset');
     });
 
     // WhatsApp Cloud API Webhook (Public Callback Endpoint)

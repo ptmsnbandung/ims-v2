@@ -54,6 +54,7 @@ class AiAssistantController extends Controller
                     ]);
                 } catch (\Throwable $e) {
                     $lastException = $e;
+                    $this->recordKeyError($key, $e->getMessage(), 500);
                     Log::warning("[AiAssistant] Gemini Key #" . ($keyIndex + 1) . " gagal/kuota habis: " . $e->getMessage() . ". Beralih ke kunci berikutnya...");
                 }
             }
@@ -97,6 +98,281 @@ class AiAssistantController extends Controller
                 'role' => $this->getUserRole($user),
             ],
         ]);
+    }
+
+    /**
+     * Admin monitoring dashboard for Gemini Multi-Key pooling and token usage.
+     */
+    public function monitorView(Request $request)
+    {
+        $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
+        $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
+        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
+        if (str_contains($geminiModel, '2.5-flash')) {
+            $geminiModel = 'gemini-2.0-flash';
+        }
+
+        $today = now()->format('Y-m-d');
+        $usageData = Cache::get('ims_ai_usage_' . $today, [
+            'date' => $today,
+            'total_requests' => 0,
+            'prompt_tokens' => 0,
+            'candidates_tokens' => 0,
+            'total_tokens' => 0,
+            'keys' => [],
+        ]);
+
+        $rpdPerKey = 1500; // Free Tier standard Google Gemini 2.0 Flash (1,500 RPD)
+        $totalPoolRpd = count($geminiKeys) * $rpdPerKey;
+        $totalRequestsUsed = (int)($usageData['total_requests'] ?? 0);
+        $totalRequestsRemaining = max(0, $totalPoolRpd - $totalRequestsUsed);
+        $percentUsed = $totalPoolRpd > 0 ? min(100, round(($totalRequestsUsed / $totalPoolRpd) * 100, 1)) : 0;
+
+        // Build key details
+        $keyList = [];
+        foreach ($geminiKeys as $index => $k) {
+            $keyId = substr(md5($k), 0, 10);
+            $keyStats = $usageData['keys'][$keyId] ?? [
+                'requests' => 0,
+                'prompt_tokens' => 0,
+                'candidates_tokens' => 0,
+                'total_tokens' => 0,
+                'status' => 'standby',
+                'last_used_at' => null,
+                'last_error' => null,
+            ];
+
+            $kRequests = (int)($keyStats['requests'] ?? 0);
+            $kRemaining = max(0, $rpdPerKey - $kRequests);
+            $kPercent = min(100, round(($kRequests / $rpdPerKey) * 100, 1));
+            $masked = strlen($k) > 10 ? substr($k, 0, 6) . '...' . substr($k, -4) : 'AIzaSy...';
+
+            $status = $keyStats['status'] ?? 'standby';
+            if ($status === 'standby' && $kRequests > 0) {
+                $status = 'active';
+            }
+
+            $keyList[] = [
+                'index' => $index + 1,
+                'account_name' => 'Akun Google #' . ($index + 1),
+                'key_id' => $keyId,
+                'masked' => $masked,
+                'status' => $status,
+                'requests_used' => $kRequests,
+                'requests_remaining' => $kRemaining,
+                'percent_used' => $kPercent,
+                'limit_rpd' => $rpdPerKey,
+                'prompt_tokens' => (int)($keyStats['prompt_tokens'] ?? 0),
+                'candidates_tokens' => (int)($keyStats['candidates_tokens'] ?? 0),
+                'total_tokens' => (int)($keyStats['total_tokens'] ?? 0),
+                'last_used_at' => $keyStats['last_used_at'] ?? 'Belum ada aktivitas hari ini',
+                'last_error' => $keyStats['last_error'] ?? null,
+            ];
+        }
+
+        // Calculate reset countdown (07:00 WIB = 00:00 UTC)
+        $now = now();
+        $resetTime = now()->setTime(7, 0, 0);
+        if ($now->greaterThanOrEqualTo($resetTime)) {
+            $resetTime = $resetTime->addDay();
+        }
+        $diffSeconds = $now->diffInSeconds($resetTime);
+        $resetCountdownHours = floor($diffSeconds / 3600);
+        $resetCountdownMinutes = floor(($diffSeconds % 3600) / 60);
+
+        $metrics = [
+            'total_keys' => count($geminiKeys),
+            'model' => $geminiModel,
+            'total_pool_rpd' => $totalPoolRpd,
+            'total_requests_used' => $totalRequestsUsed,
+            'total_requests_remaining' => $totalRequestsRemaining,
+            'percent_used' => $percentUsed,
+            'prompt_tokens' => (int)($usageData['prompt_tokens'] ?? 0),
+            'candidates_tokens' => (int)($usageData['candidates_tokens'] ?? 0),
+            'total_tokens' => (int)($usageData['total_tokens'] ?? 0),
+            'reset_countdown' => sprintf('%02d jam %02d menit', $resetCountdownHours, $resetCountdownMinutes),
+            'keys' => $keyList,
+            'is_configured' => count($geminiKeys) > 0,
+        ];
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json($metrics);
+        }
+
+        return view('admin.ai-monitor', compact('metrics'));
+    }
+
+    /**
+     * Test ping Gemini key live to check latency and response.
+     */
+    public function monitorPing(Request $request): JsonResponse
+    {
+        $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
+        $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
+        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
+        if (str_contains($geminiModel, '2.5-flash')) {
+            $geminiModel = 'gemini-2.0-flash';
+        }
+
+        if (empty($geminiKeys)) {
+            return response()->json(['success' => false, 'message' => 'Belum ada GEMINI_API_KEY terkonfigurasi di sistem.'], 400);
+        }
+
+        $keyIndex = (int)$request->input('key_index', 1) - 1;
+        $selectedKey = $geminiKeys[$keyIndex] ?? $geminiKeys[0];
+        $actualIndex = isset($geminiKeys[$keyIndex]) ? ($keyIndex + 1) : 1;
+
+        $prompt = trim($request->input('prompt', 'Konfirmasi tes koneksi live AI Gemini IMS2 aktif. Berikan respon 1 kalimat padat.'));
+
+        $startTime = microtime(true);
+        try {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$selectedKey}";
+            $response = Http::timeout(10)->post($url, [
+                'contents' => [
+                    ['role' => 'user', 'parts' => [['text' => $prompt]]],
+                ],
+                'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 150],
+            ]);
+
+            $latency = round((microtime(true) - $startTime) * 1000);
+
+            if (!$response->successful()) {
+                $err = $response->json('error.message') ?? ('HTTP ' . $response->status());
+                $this->recordKeyError($selectedKey, $err, $response->status());
+                return response()->json([
+                    'success' => false,
+                    'key_index' => $actualIndex,
+                    'latency_ms' => $latency,
+                    'error' => $err,
+                    'status_code' => $response->status(),
+                ], 400);
+            }
+
+            $usage = $response->json('usageMetadata');
+            $this->recordUsage($selectedKey, $usage);
+
+            $parts = $response->json('candidates.0.content.parts') ?? [];
+            $reply = trim(implode('', array_map(fn($p) => empty($p['thought']) ? ($p['text'] ?? '') : '', $parts)));
+
+            return response()->json([
+                'success' => true,
+                'key_index' => $actualIndex,
+                'latency_ms' => $latency,
+                'reply' => $reply,
+                'tokens' => [
+                    'prompt' => (int)($usage['promptTokenCount'] ?? 0),
+                    'candidates' => (int)($usage['candidatesTokenCount'] ?? 0),
+                    'total' => (int)($usage['totalTokenCount'] ?? 0),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            $latency = round((microtime(true) - $startTime) * 1000);
+            $this->recordKeyError($selectedKey, $e->getMessage(), 500);
+            return response()->json([
+                'success' => false,
+                'key_index' => $actualIndex,
+                'latency_ms' => $latency,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Reset today's monitor metrics cache.
+     */
+    public function resetMetrics(): JsonResponse
+    {
+        $today = now()->format('Y-m-d');
+        Cache::forget('ims_ai_usage_' . $today);
+        return response()->json(['success' => true, 'message' => 'Cache monitoring token AI hari ini berhasil direset.']);
+    }
+
+    /**
+     * Record API key token and request usage in daily cache.
+     */
+    protected function recordUsage(string $apiKey, ?array $usage): void
+    {
+        $today = now()->format('Y-m-d');
+        $cacheKey = 'ims_ai_usage_' . $today;
+        $data = Cache::get($cacheKey, [
+            'date' => $today,
+            'total_requests' => 0,
+            'prompt_tokens' => 0,
+            'candidates_tokens' => 0,
+            'total_tokens' => 0,
+            'keys' => [],
+        ]);
+
+        $keyId = substr(md5($apiKey), 0, 10);
+        $data['total_requests']++;
+
+        $pTokens = (int)($usage['promptTokenCount'] ?? 0);
+        $cTokens = (int)($usage['candidatesTokenCount'] ?? 0);
+        $tTokens = (int)($usage['totalTokenCount'] ?? ($pTokens + $cTokens));
+
+        $data['prompt_tokens'] += $pTokens;
+        $data['candidates_tokens'] += $cTokens;
+        $data['total_tokens'] += $tTokens;
+
+        if (!isset($data['keys'][$keyId])) {
+            $data['keys'][$keyId] = [
+                'masked' => strlen($apiKey) > 10 ? substr($apiKey, 0, 6) . '...' . substr($apiKey, -4) : 'AIzaSy...',
+                'requests' => 0,
+                'prompt_tokens' => 0,
+                'candidates_tokens' => 0,
+                'total_tokens' => 0,
+                'status' => 'active',
+                'last_used_at' => null,
+                'last_error' => null,
+            ];
+        }
+
+        $data['keys'][$keyId]['requests']++;
+        $data['keys'][$keyId]['prompt_tokens'] += $pTokens;
+        $data['keys'][$keyId]['candidates_tokens'] += $cTokens;
+        $data['keys'][$keyId]['total_tokens'] += $tTokens;
+        $data['keys'][$keyId]['status'] = 'active';
+        $data['keys'][$keyId]['last_used_at'] = now()->format('H:i:s d/m/Y');
+        $data['keys'][$keyId]['last_error'] = null;
+
+        Cache::put($cacheKey, $data, now()->addDays(14));
+    }
+
+    /**
+     * Record API key error / rate limit exhaustion.
+     */
+    protected function recordKeyError(string $apiKey, string $errorMessage, int $statusCode = 0): void
+    {
+        $today = now()->format('Y-m-d');
+        $cacheKey = 'ims_ai_usage_' . $today;
+        $data = Cache::get($cacheKey, [
+            'date' => $today,
+            'total_requests' => 0,
+            'prompt_tokens' => 0,
+            'candidates_tokens' => 0,
+            'total_tokens' => 0,
+            'keys' => [],
+        ]);
+
+        $keyId = substr(md5($apiKey), 0, 10);
+        if (!isset($data['keys'][$keyId])) {
+            $data['keys'][$keyId] = [
+                'masked' => strlen($apiKey) > 10 ? substr($apiKey, 0, 6) . '...' . substr($apiKey, -4) : 'AIzaSy...',
+                'requests' => 0,
+                'prompt_tokens' => 0,
+                'candidates_tokens' => 0,
+                'total_tokens' => 0,
+                'status' => 'standby',
+                'last_used_at' => null,
+                'last_error' => null,
+            ];
+        }
+
+        $isQuota = $statusCode === 429 || str_contains(strtolower($errorMessage), 'quota') || str_contains(strtolower($errorMessage), 'rate limit');
+        $data['keys'][$keyId]['status'] = $isQuota ? 'exhausted' : 'error';
+        $data['keys'][$keyId]['last_error'] = ($isQuota ? 'Limit kuota harian/menit tercapai (429)' : substr($errorMessage, 0, 120)) . ' (' . now()->format('H:i:s') . ')';
+
+        Cache::put($cacheKey, $data, now()->addDays(14));
     }
 
     /**
@@ -811,6 +1087,7 @@ class AiAssistantController extends Controller
                     if (!$response->successful()) {
                         $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());
                         $lastError = $errMessage;
+                        $this->recordKeyError($apiKey, $errMessage, $response->status());
 
                         // Self-healing: if Google API error recommends a specific model, extract and retry with it immediately!
                         if (preg_match('/models\/([a-zA-Z0-9._-]+)/i', $errMessage, $mMatches)) {
@@ -823,6 +1100,9 @@ class AiAssistantController extends Controller
 
                         continue 2;
                     }
+
+                    $usage = $response->json('usageMetadata');
+                    $this->recordUsage($apiKey, $usage);
 
                     $parts = $response->json('candidates.0.content.parts') ?? [];
                     $calls = array_values(array_filter($parts, fn($p) => isset($p['functionCall'])));

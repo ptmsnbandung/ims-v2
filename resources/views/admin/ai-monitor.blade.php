@@ -188,10 +188,17 @@
                                     <span>AKTIF</span>
                                 </span>
                             @elseif($key['status'] === 'exhausted')
-                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                                    <span>KUOTA HABIS</span>
-                                </span>
+                                @if($key['requests_used'] >= 1480)
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                        <span>KUOTA HARIAN HABIS</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30" title="Rate limit per menit (RPM) Google tercapai. Pulih otomatis dalam 30-60 detik.">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                        <span>COOLDOWN (RPM)</span>
+                                    </span>
+                                @endif
                             @elseif($key['status'] === 'error')
                                 <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
                                     <span>TERKENDALA</span>

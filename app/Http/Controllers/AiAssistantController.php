@@ -150,7 +150,7 @@ class AiAssistantController extends Controller
             $kPercent = min(100, round(($kRequests / $rpdPerKey) * 100, 1));
             $masked = strlen($k) > 10 ? substr($k, 0, 6) . '...' . substr($k, -4) : 'AIzaSy...';
 
-            // Auto-clear stale errors from previously deprecated models, internal step limits, or temporary high demand spikes
+            // Auto-clear stale errors from previously deprecated models, internal step limits, temporary spikes, or expired minute-rate-limits (RPM)
             if (!empty($keyStats['last_error']) && (
                 str_contains($keyStats['last_error'], 'gemini-2.0-flash') ||
                 str_contains($keyStats['last_error'], 'flash-lite') ||
@@ -159,7 +159,8 @@ class AiAssistantController extends Controller
                 str_contains($keyStats['last_error'], 'is no longer available') ||
                 str_contains($keyStats['last_error'], 'langkah query') ||
                 str_contains(strtolower($keyStats['last_error']), 'high demand') ||
-                str_contains(strtolower($keyStats['last_error']), 'temporary')
+                str_contains(strtolower($keyStats['last_error']), 'temporary') ||
+                ($kRequests < 1450 && (str_contains($keyStats['last_error'], '429') || str_contains($keyStats['last_error'], 'kuota harian/menit')))
             )) {
                 $keyStats['last_error'] = null;
                 $keyStats['status'] = $kRequests > 0 ? 'active' : 'standby';
@@ -526,8 +527,16 @@ class AiAssistantController extends Controller
         $searchCandidates = array_values(array_unique($searchCandidates));
         $nameTokens = array_values(array_filter(explode(' ', $cleanSearch), fn($t) => strlen($t) >= 3));
 
+        // Check if query is asking for aggregate stats / new users rather than a specific customer profile
+        $isAskingCustomerStats = str_contains($lower, 'rekap') || str_contains($lower, 'ringkasan') || str_contains($lower, 'summary') 
+            || str_contains($lower, 'user baru') || str_contains($lower, 'usser baru') 
+            || str_contains($lower, 'pelanggan baru') || str_contains($lower, 'bulan ini') 
+            || str_contains($lower, 'total user') || str_contains($lower, 'total pelanggan') 
+            || str_contains($lower, 'berapa user') || str_contains($lower, 'berapa usser') || str_contains($lower, 'berapa pelanggan')
+            || (str_contains($lower, 'baru') && (str_contains($lower, 'user') || str_contains($lower, 'usser') || str_contains($lower, 'pelanggan')));
+
         // Context 1: Customer lookup (by ID, username, or name candidates across batchjob & m_pelanggan)
-        if ($extractedId || !empty($searchCandidates) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user')) {
+        if (($extractedId || !empty($searchCandidates) || !empty($nameTokens) || str_contains($lower, 'pelanggan') || str_contains($lower, 'cust') || str_contains($lower, 'user') || str_contains($lower, 'usser')) && !$isAskingCustomerStats) {
             try {
                 $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
                 $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
@@ -911,14 +920,35 @@ class AiAssistantController extends Controller
             }
         }
 
-        // Context 5: Global Quick Stats (for summary/recap requests)
-        if (str_contains($lower, 'rekap') || str_contains($lower, 'ringkasan') || str_contains($lower, 'summary') || str_contains($lower, 'hari ini') || str_contains($lower, 'status sistem')) {
+        // Context 5: Global Quick Stats (for summary/recap requests & customer growth metrics)
+        $isAskingStats = str_contains($lower, 'rekap') || str_contains($lower, 'ringkasan') || str_contains($lower, 'summary') 
+            || str_contains($lower, 'hari ini') || str_contains($lower, 'status sistem') 
+            || $isAskingCustomerStats;
+
+        if ($isAskingStats) {
             try {
                 $currentMonth = date('m');
                 $currentYear = date('Y');
+                $monthNames = [
+                    '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+                    '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+                    '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+                ];
+                $monthName = $monthNames[$currentMonth] ?? $currentMonth;
 
+                $context['stats']['current_period'] = "{$monthName} {$currentYear}";
+                $context['stats']['total_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->count();
                 $context['stats']['active_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('status_reg', 20)->count();
                 $context['stats']['isolated_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('is_suspend', 1)->count();
+                $context['stats']['new_customers_this_month'] = DB::table('trx_batchjob_register')
+                    ->where('hide', 0)
+                    ->whereYear('date_create', $currentYear)
+                    ->whereMonth('date_create', $currentMonth)
+                    ->count();
+                $context['stats']['new_customers_today'] = DB::table('trx_batchjob_register')
+                    ->where('hide', 0)
+                    ->whereDate('date_create', date('Y-m-d'))
+                    ->count();
                 
                 // Financial summary stats only for Finance & Direksi
                 if ($this->canAccessFinance($user)) {
@@ -1219,6 +1249,7 @@ class AiAssistantController extends Controller
                         ]];
                     }
                     $convo[] = ['role' => 'user', 'parts' => $results];
+                    usleep(300000); // 300ms pacing between function call steps to prevent Google 15 RPM burst limit
                 }
                 $lastError = 'Terlalu banyak langkah query database.';
             } catch (\Throwable $e) {
@@ -1410,7 +1441,7 @@ class AiAssistantController extends Controller
         }
 
         return "KEMAMPUAN DATABASE: Anda memiliki tool `describe_table` dan `run_select_query` (read-only) untuk menjawab data di database IMS2 sesuai wewenang role {$userRole}.\n"
-            . "- Pelanggan: `trx_batchjob_register` (hide=0, kunci nomor_internet, status_reg 20=aktif, is_suspend=1 terisolir).\n"
+            . "- Pelanggan: `trx_batchjob_register` (hide=0, nomor_internet, nama_pelanggan, date_create untuk tanggal registrasi/pendaftaran, status_reg 20=aktif, is_suspend=1 terisolir).\n"
             . "- Tiket: `trx_tiket_gangguan`.\n"
             . ($this->canAccessFinanceRole($userRole) ? "- Tagihan: `trx_billing_layanan` (status_bill_lay 15=lunas, 14=verifikasi).\n" : "")
             . ($this->canAccessNetworkRole($userRole) ? "- OLT & Jaringan: `m_olt`.\n" : "")
@@ -1736,11 +1767,18 @@ class AiAssistantController extends Controller
         }
 
         // Case 5: Summary stats
-        if (!empty($context['stats']) && (isset($context['stats']['active_customers']) || isset($context['stats']['isolated_customers']))) {
+        if (!empty($context['stats']) && (isset($context['stats']['active_customers']) || isset($context['stats']['new_customers_this_month']) || isset($context['stats']['total_customers']))) {
             $hasData = true;
-            $output[] = "\n### 📊 Ringkasan Operasional IMS2:";
+            $output[] = "\n### 📊 Ringkasan Operasional & Pelanggan IMS2:";
+            if (isset($context['stats']['new_customers_this_month'])) {
+                $period = $context['stats']['current_period'] ?? 'Bulan Ini';
+                $output[] = "- 🆕 **Pelanggan / User Baru ({$period}):** `{$context['stats']['new_customers_this_month']}` user terdaftar";
+            }
+            if (isset($context['stats']['total_customers'])) {
+                $output[] = "- 👥 **Total Seluruh Pelanggan Terdaftar:** `{$context['stats']['total_customers']}` pelanggan";
+            }
             if (isset($context['stats']['active_customers'])) {
-                $output[] = "- 👥 **Total Pelanggan Aktif Online (#20):** `{$context['stats']['active_customers']}` pelanggan";
+                $output[] = "- 🟢 **Total Pelanggan Aktif Online (#20):** `{$context['stats']['active_customers']}` pelanggan";
             }
             if (isset($context['stats']['isolated_customers'])) {
                 $output[] = "- 🚫 **Pelanggan Terisolir (Suspend):** `{$context['stats']['isolated_customers']}` pelanggan";

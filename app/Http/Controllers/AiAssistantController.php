@@ -35,7 +35,7 @@ class AiAssistantController extends Controller
         // 2. Check if Gemini API Key is configured (supports multiple comma-separated keys for failover & quota pooling)
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        @set_time_limit(90);
+        @set_time_limit(180);
         $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
         if (str_contains($geminiModel, '1.5') || str_contains($geminiModel, '2.0') || str_contains($geminiModel, '2.5')) {
             $geminiModel = 'gemini-3.8-flash';
@@ -69,6 +69,7 @@ class AiAssistantController extends Controller
 
             $lastException = null;
             $keysAttempted = 0;
+            $keysStartTime = microtime(true);
 
             foreach ($orderedKeys as $item) {
                 $key = $item['key'];
@@ -110,7 +111,9 @@ class AiAssistantController extends Controller
                     }
                     Log::warning("[AiAssistant] Gemini Key #{$keyIndex} gagal: " . $msg . ". Beralih ke kunci berikutnya...");
                     if (str_contains($msgLower, 'timed out')) {
-                        break;
+                        if ((microtime(true) - $keysStartTime) > 60 || $keysAttempted >= 2) {
+                            break;
+                        }
                     }
                 }
             }
@@ -140,7 +143,8 @@ class AiAssistantController extends Controller
                 $shortErr = substr($errDetail, 0, 95);
             }
 
-            $note = "\n\n---\n> ℹ️ *Info Failover: Sistem telah mencoba ke-{$totalKeys} API Key Google terdaftar. Seluruhnya merespon '{$shortErr}'. Dijawab otomatis via Asisten Internal IMS2.*";
+            $attemptCountText = ($keysAttempted >= $totalKeys) ? "ke-{$totalKeys}" : "{$keysAttempted} dari {$totalKeys}";
+            $note = "\n\n---\n> ℹ️ *Info Failover: Sistem telah mencoba {$attemptCountText} API Key Google terdaftar. Seluruhnya merespon '{$shortErr}'. Dijawab otomatis via Asisten Internal IMS2.*";
             $fallbackReply .= $note;
 
             return response()->json([
@@ -1323,8 +1327,7 @@ class AiAssistantController extends Controller
             . "   - Periksa selalu 'nomor_internet' pada setiap baris di [billings]. Jika tidak cocok dengan pelanggan yang ditanyakan, atau jika [billings] kosong/berisi tagihan orang lain, nyatakan dengan jujur dan jelas: Pelanggan tersebut TIDAK MEMILIKI TAGIHAN TERTUNGGAK.\n"
             . "   - Dilarang keras berasumsi atau mengarang nomor internet dan invoice.\n\n"
             . "Jika pengguna meminta data di luar wewenangnya, tolak langsung secara singkat, tegas, dan sopan tanpa berputar-putar.\n"
-            . "Hari ini: {$today}.\n\n"
-            . $this->schemaHint($userRole);
+            . "Hari ini: {$today}.";
 
         // Build contents array for Gemini ensuring strict user -> model -> user alternating turns
         $contents = [];
@@ -1418,7 +1421,9 @@ class AiAssistantController extends Controller
         ]]];
 
         if (empty($tools)) {
-            $systemInstruction .= "\n\nCATATAN PERMINTAAN INI: tool database TIDAK tersedia. DILARANG menulis query SQL atau blok kode. Jawab hanya dari [Konteks Database IMS2] dan pengetahuan di atas. Jika pengguna hanya menyapa (halo/hai/selamat pagi), balas sapaan singkat 1-2 kalimat dan tawarkan bantuan sesuai role, tanpa rekap data.";
+            $systemInstruction .= "\n\nCATATAN PERMINTAAN INI: tool database TIDAK aktif. DILARANG menulis query SQL atau blok kode. Jawab hanya dari [Konteks Database IMS2] dan pengetahuan di atas. Jika pengguna hanya menyapa (halo/hai/selamat pagi), balas sapaan singkat 1-2 kalimat dan tawarkan bantuan sesuai role, tanpa rekap data.";
+        } else {
+            $systemInstruction .= "\n\n" . $this->schemaHint($userRole);
         }
 
         $firstError = null;
@@ -1431,16 +1436,29 @@ class AiAssistantController extends Controller
             try {
                 for ($step = 0; $step < 5; $step++) {
                     $stepTools = ($step >= 4) ? [] : $tools;
+                    $genConfig = [
+                        'temperature' => 0.2,
+                        'maxOutputTokens' => 1200,
+                        'thinkingConfig' => [
+                            'thinkingBudget' => 0,
+                        ],
+                    ];
                     $payload = [
                         'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
                         'contents' => $convo,
-                        'generationConfig' => ['temperature' => 0.3, 'maxOutputTokens' => 1500],
+                        'generationConfig' => $genConfig,
                     ];
                     if (!empty($stepTools)) {
                         $payload['tools'] = $stepTools;
                     }
 
-                    $response = Http::timeout(30)->post($url, $payload);
+                    $response = Http::timeout(45)->post($url, $payload);
+
+                    // Automatic fallback if specific model does not support thinkingConfig
+                    if (!$response->successful() && str_contains($response->body(), 'thinkingConfig')) {
+                        unset($payload['generationConfig']['thinkingConfig']);
+                        $response = Http::timeout(45)->post($url, $payload);
+                    }
 
                     if (!$response->successful()) {
                         $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());
@@ -1475,7 +1493,7 @@ class AiAssistantController extends Controller
                         // 3. High demand spike: quick 300ms pause and retry once on step 0
                         if (str_contains(strtolower($errMessage), 'high demand') && $step === 0) {
                             usleep(300000);
-                            $retryRes = Http::timeout(30)->post($url, $payload);
+                            $retryRes = Http::timeout(45)->post($url, $payload);
                             if ($retryRes->successful()) {
                                 $response = $retryRes;
                                 goto process_step_response;
@@ -1724,12 +1742,13 @@ class AiAssistantController extends Controller
             }));
         }
 
+        $tableSample = count($tables) > 35 ? (implode(', ', array_slice($tables, 0, 35)) . ' (dan tabel terkait lainnya)') : implode(', ', $tables);
         return "KEMAMPUAN DATABASE: Anda memiliki tool `describe_table` dan `run_select_query` (read-only) untuk menjawab data di database IMS2 sesuai wewenang role {$userRole}.\n"
             . "- Pelanggan: `trx_batchjob_register` (hide=0, nomor_internet, nama_pelanggan, date_create untuk tanggal registrasi/pendaftaran, status_reg 20=aktif, is_suspend=1 terisolir).\n"
             . "- Tiket: `trx_tiket_gangguan`.\n"
             . ($this->canAccessFinanceRole($userRole) ? "- Tagihan: `trx_billing_layanan` (status_bill_lay 15=lunas, 14=verifikasi).\n" : "")
             . ($this->canAccessNetworkRole($userRole) ? "- OLT & Jaringan: `m_olt`.\n" : "")
-            . "Daftar tabel yang diizinkan untuk role {$userRole}: " . implode(', ', $tables);
+            . "Daftar tabel yang diizinkan untuk role {$userRole}: " . $tableSample;
     }
 
     protected function canAccessFinanceRole(string $role): bool

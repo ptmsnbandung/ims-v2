@@ -1417,6 +1417,10 @@ class AiAssistantController extends Controller
             ],
         ]]];
 
+        if (empty($tools)) {
+            $systemInstruction .= "\n\nCATATAN PERMINTAAN INI: tool database TIDAK tersedia. DILARANG menulis query SQL atau blok kode. Jawab hanya dari [Konteks Database IMS2] dan pengetahuan di atas. Jika pengguna hanya menyapa (halo/hai/selamat pagi), balas sapaan singkat 1-2 kalimat dan tawarkan bantuan sesuai role, tanpa rekap data.";
+        }
+
         $firstError = null;
         for ($mIdx = 0; $mIdx < count($modelsToTry) && $mIdx < 3; $mIdx++) {
             $mName = $modelsToTry[$mIdx];

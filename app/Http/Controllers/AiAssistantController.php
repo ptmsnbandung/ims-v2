@@ -125,9 +125,16 @@ class AiAssistantController extends Controller
                 }
             }
 
-            $shortErr = str_contains($errDetail, '429') 
-                ? "Limit frekuensi per menit Google (15 RPM) tercapai. Kuota pulih otomatis dalam ~{$minCoolSec} detik" 
-                : substr($errDetail, 0, 90);
+            if (preg_match('/retry in ([0-9]+[a-z0-9.]+)/i', $errDetail, $retryMatch)) {
+                $retryDuration = $retryMatch[1];
+                $shortErr = "Batas kuota harian akun Google (Free Tier) habis. Google meminta menunggu: {$retryDuration} atau gunakan API Key dari project Google baru";
+            } elseif (str_contains($errDetail, 'plan and billing details') || str_contains($errDetail, 'limit: 0')) {
+                $shortErr = "Batas kuota gratis Google Project habis (Perlu API Key dari akun/project Google baru atau aktivasi billing)";
+            } elseif (str_contains($errDetail, '429')) {
+                $shortErr = "Limit frekuensi per menit Google (15 RPM) tercapai. Kuota pulih otomatis dalam ~{$minCoolSec} detik";
+            } else {
+                $shortErr = substr($errDetail, 0, 95);
+            }
 
             $note = "\n\n---\n> ℹ️ *Info Failover: Sistem telah mencoba ke-{$totalKeys} API Key Google terdaftar. Seluruhnya merespon '{$shortErr}'. Dijawab otomatis via Asisten Internal IMS2.*";
             $fallbackReply .= $note;

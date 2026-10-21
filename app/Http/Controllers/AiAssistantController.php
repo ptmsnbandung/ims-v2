@@ -949,16 +949,27 @@ class AiAssistantController extends Controller
         }
         $targetCustomerIds = array_values(array_unique(array_filter($targetCustomerIds)));
 
-        // Context 2: Billing / Tagihan lookup (Khusus role berhak: Finance, Direksi, CEO, Admin, CS)
+        // Context 2: Billing / Tagihan / Keuangan (Khusus role berhak: Finance, Direksi, CEO, Admin, CS)
         $isGeneralFinanceQuery = str_contains($lower, 'total') || str_contains($lower, 'rekap')
             || str_contains($lower, 'semua') || str_contains($lower, 'selain')
             || str_contains($lower, 'seluruh') || str_contains($lower, 'daftar tagihan')
-            || str_contains($lower, 'piutang') || str_contains($lower, 'tunggakan');
+            || str_contains($lower, 'piutang') || str_contains($lower, 'tunggakan')
+            || str_contains($lower, 'pemasukan') || str_contains($lower, 'pendapatan')
+            || str_contains($lower, 'omset') || str_contains($lower, 'paid')
+            || str_contains($lower, 'lunas') || str_contains($lower, 'rupiah')
+            || str_contains($lower, 'uang') || str_contains($lower, 'berapa');
+
+        $isFinancialTopic = str_contains($lower, 'tagih') || str_contains($lower, 'bill')
+            || str_contains($lower, 'bayar') || str_contains($lower, 'invoice')
+            || str_contains($lower, 'keuangan') || str_contains($lower, 'pemasukan')
+            || str_contains($lower, 'pendapatan') || str_contains($lower, 'omset')
+            || str_contains($lower, 'lunas') || str_contains($lower, 'paid')
+            || str_contains($lower, 'unpaid') || !empty($targetCustomerIds);
 
         // CRITICAL: Jika pertanyaan menargetkan nama pelanggan spesifik, JANGAN PERNAH menampilkan invoice orang lain!
         $isSpecificCustomerQuery = !$isGeneralFinanceQuery && (!empty($extractedId) || !empty($searchCandidates) || !empty($nameTokens));
 
-        if ($this->canAccessFinance($user) && (str_contains($lower, 'tagih') || str_contains($lower, 'bill') || str_contains($lower, 'bayar') || str_contains($lower, 'invoice') || str_contains($lower, 'keuangan') || !empty($targetCustomerIds))) {
+        if ($this->canAccessFinance($user) && $isFinancialTopic) {
             try {
                 if ($isSpecificCustomerQuery && empty($targetCustomerIds)) {
                     // User bertanya tentang pelanggan tertentu, namun pelanggan tidak ada di database: JANGAN kembalikan tagihan random orang lain!
@@ -1003,58 +1014,109 @@ class AiAssistantController extends Controller
 
                     $context['billings'] = $bills;
                 } else {
-                    // Query tagihan umum (rekap tagihan global, pending verifikasi, selain lunas, atau belum bayar massal)
-                    $isAskingUnpaid = str_contains($lower, 'belum') || str_contains($lower, 'unpaid')
-                        || str_contains($lower, 'selain') || str_contains($lower, 'tunggak')
-                        || str_contains($lower, 'piutang') || str_contains($lower, 'kurang bayar');
-                    $isAskingVerification = str_contains($lower, 'verif') || str_contains($lower, 'pending') || str_contains($lower, 'konfirmasi');
-                    $isAskingTotal = str_contains($lower, 'total') || str_contains($lower, 'rekap')
-                        || str_contains($lower, 'summary') || str_contains($lower, 'berapa')
-                        || str_contains($lower, 'jumlah') || str_contains($lower, 'semua');
-
-                    if ($isAskingUnpaid || ($isAskingTotal && (str_contains($lower, 'tagih') || str_contains($lower, 'bill')))) {
-                        $unpaidStats = DB::table('trx_billing_layanan')
-                            ->where('hide', 0)
-                            ->whereNotIn('status_bill_lay', [15])
-                            ->selectRaw('count(*) as count, coalesce(sum(total_layanan), 0) as total_rp')
-                            ->first();
-
-                        $breakdownRows = DB::table('trx_billing_layanan')
-                            ->where('hide', 0)
-                            ->whereNotIn('status_bill_lay', [15])
-                            ->selectRaw('status_bill_lay, count(*) as count, coalesce(sum(total_layanan), 0) as total_rp')
-                            ->groupBy('status_bill_lay')
-                            ->get();
-
-                        $context['billing_summary'] = [
-                            'judul' => 'Rekapitulasi Tagihan Belum Terbayar (Selain Lunas)',
-                            'total_unpaid_invoices' => (int)($unpaidStats->count ?? 0),
-                            'total_unpaid_amount' => (float)($unpaidStats->total_rp ?? 0),
-                            'total_unpaid_amount_formatted' => 'Rp ' . number_format((float)($unpaidStats->total_rp ?? 0), 0, ',', '.'),
-                            'breakdown' => $breakdownRows->map(function ($r) {
-                                $r->status_name = match((string)$r->status_bill_lay) {
-                                    '14' => 'Menunggu Verifikasi (Pending)',
-                                    '13' => 'Belum Bayar (Unpaid)',
-                                    '12' => 'Publish Tagihan',
-                                    '11' => 'Draft',
-                                    default => 'Status #' . $r->status_bill_lay
-                                };
-                                $r->total_formatted = 'Rp ' . number_format((float)$r->total_rp, 0, ',', '.');
-                                return $r;
-                            })->toArray(),
-                        ];
+                    // Deteksi filter periode bulan dan tahun dari pesan pengguna
+                    $monthMap = [
+                        'januari' => '01', 'jan' => '01',
+                        'februari' => '02', 'feb' => '02', 'pebruari' => '02',
+                        'maret' => '03', 'mar' => '03',
+                        'april' => '04', 'apr' => '04',
+                        'mei' => '05',
+                        'juni' => '06', 'jun' => '06',
+                        'juli' => '07', 'jul' => '07',
+                        'agustus' => '08', 'agt' => '08', 'agust' => '08',
+                        'september' => '09', 'sep' => '09', 'sept' => '09',
+                        'oktober' => '10', 'okt' => '10',
+                        'november' => '11', 'nov' => '11',
+                        'desember' => '12', 'des' => '12',
+                    ];
+                    $targetMonth = null;
+                    $targetMonthName = null;
+                    foreach ($monthMap as $mName => $mCode) {
+                        if (preg_match('/\b' . $mName . '\b/i', $lower)) {
+                            $targetMonth = $mCode;
+                            $targetMonthName = ucfirst($mName);
+                            break;
+                        }
+                    }
+                    $targetYear = null;
+                    if (preg_match('/\b(202[0-9])\b/', $lower, $yMatches)) {
+                        $targetYear = $yMatches[1];
+                    } else if ($targetMonth !== null) {
+                        $currentYear = date('Y');
+                        $hasCurrentYear = DB::table('trx_billing_layanan')->where('hide', 0)->where('bulan_tagihan', $targetMonth)->where('tahun_tagihan', $currentYear)->exists();
+                        if ($hasCurrentYear) {
+                            $targetYear = $currentYear;
+                        } else {
+                            $latestYear = DB::table('trx_billing_layanan')->where('hide', 0)->where('bulan_tagihan', $targetMonth)->max('tahun_tagihan');
+                            $targetYear = $latestYear ?: $currentYear;
+                        }
                     }
 
-                    $billQuery = DB::table('trx_billing_layanan')->where('hide', 0);
-                    if ($isAskingVerification) {
-                        $billQuery->where('status_bill_lay', 14); // Pending verifikasi
-                    } else if ($isAskingUnpaid) {
-                        $billQuery->whereNotIn('status_bill_lay', [15]); // Belum bayar / selain lunas
-                    } else if (!$isAskingTotal && !str_contains($lower, 'daftar')) {
-                        $billQuery->whereRaw('1 = 0'); // Jangan ambil jika tidak jelas tujuannya
+                    // Query Agregasi Resmi (Akumulasi Total Database untuk periode yang relevan)
+                    $sumQ = DB::table('trx_billing_layanan')->where('hide', 0);
+                    if ($targetMonth) {
+                        $sumQ->where('bulan_tagihan', $targetMonth);
+                    }
+                    if ($targetYear) {
+                        $sumQ->where('tahun_tagihan', $targetYear);
+                    }
+                    $statRow = $sumQ->selectRaw("
+                        count(*) as total_invoices,
+                        coalesce(sum(total_layanan), 0) as total_all_rp,
+                        count(case when status_bill_lay = 15 then 1 end) as paid_count,
+                        coalesce(sum(case when status_bill_lay = 15 then total_layanan else 0 end), 0) as paid_rp,
+                        count(case when status_bill_lay = 14 then 1 end) as pending_count,
+                        coalesce(sum(case when status_bill_lay = 14 then total_layanan else 0 end), 0) as pending_rp,
+                        count(case when status_bill_lay in (11, 12, 13) then 1 end) as unpaid_count,
+                        coalesce(sum(case when status_bill_lay in (11, 12, 13) then total_layanan else 0 end), 0) as unpaid_rp
+                    ")->first();
+
+                    $periodeLabel = $targetMonth ? ("Bulan " . ($targetMonthName ?? $targetMonth) . " " . ($targetYear ?? date('Y'))) : "Keseluruhan Database";
+                    $context['rekap_keuangan_billing'] = [
+                        'periode' => $periodeLabel,
+                        'total_seluruh_tagihan_diterbitkan' => [
+                            'keterangan' => 'Total seluruh invoice (semua status lunas, pending, unpaid) yang diterbitkan pada periode ini',
+                            'jumlah_invoice' => (int)($statRow->total_invoices ?? 0),
+                            'total_rupiah' => (float)($statRow->total_all_rp ?? 0),
+                            'total_rupiah_formatted' => 'Rp ' . number_format((float)($statRow->total_all_rp ?? 0), 0, ',', '.'),
+                        ],
+                        'total_pemasukan_lunas_paid' => [
+                            'keterangan' => 'Total uang masuk yang sudah lunas dibayar pelanggan (status_bill_lay = 15)',
+                            'jumlah_invoice' => (int)($statRow->paid_count ?? 0),
+                            'total_rupiah' => (float)($statRow->paid_rp ?? 0),
+                            'total_rupiah_formatted' => 'Rp ' . number_format((float)($statRow->paid_rp ?? 0), 0, ',', '.'),
+                        ],
+                        'total_tertunggak_belum_bayar' => [
+                            'keterangan' => 'Total tagihan belum bayar / piutang (status_bill_lay = 13/12/11)',
+                            'jumlah_invoice' => (int)($statRow->unpaid_count ?? 0),
+                            'total_rupiah' => (float)($statRow->unpaid_rp ?? 0),
+                            'total_rupiah_formatted' => 'Rp ' . number_format((float)($statRow->unpaid_rp ?? 0), 0, ',', '.'),
+                        ],
+                        'total_menunggu_verifikasi_pending' => [
+                            'keterangan' => 'Total bukti bayar menunggu verifikasi finance (status_bill_lay = 14)',
+                            'jumlah_invoice' => (int)($statRow->pending_count ?? 0),
+                            'total_rupiah' => (float)($statRow->pending_rp ?? 0),
+                            'total_rupiah_formatted' => 'Rp ' . number_format((float)($statRow->pending_rp ?? 0), 0, ',', '.'),
+                        ],
+                    ];
+
+                    // Sample invoice rows for reference
+                    $sampleQ = DB::table('trx_billing_layanan')->where('hide', 0);
+                    if ($targetMonth) {
+                        $sampleQ->where('bulan_tagihan', $targetMonth);
+                    }
+                    if ($targetYear) {
+                        $sampleQ->where('tahun_tagihan', $targetYear);
+                    }
+                    if (str_contains($lower, 'lunas') || str_contains($lower, 'paid') || str_contains($lower, 'pemasukan')) {
+                        $sampleQ->where('status_bill_lay', 15);
+                    } else if (str_contains($lower, 'pending') || str_contains($lower, 'verif')) {
+                        $sampleQ->where('status_bill_lay', 14);
+                    } else if (str_contains($lower, 'belum') || str_contains($lower, 'unpaid') || str_contains($lower, 'tunggak')) {
+                        $sampleQ->whereNotIn('status_bill_lay', [15]);
                     }
 
-                    $bills = $billQuery->select([
+                    $bills = $sampleQ->select([
                         'kode_billing_layanan',
                         'nomor_internet',
                         'bulan_tagihan',
@@ -1067,7 +1129,7 @@ class AiAssistantController extends Controller
                     ])
                     ->orderByDesc('tahun_tagihan')
                     ->orderByDesc('bulan_tagihan')
-                    ->limit(6)
+                    ->limit(5)
                     ->get()
                     ->map(function ($b) {
                         $b->status_desc = match((string)$b->status_bill_lay) {
@@ -1082,7 +1144,8 @@ class AiAssistantController extends Controller
                     })
                     ->toArray();
 
-                    $context['billings'] = $bills;
+                    $context['billings_sample'] = $bills;
+                    $context['billings_sample_note'] = 'PERHATIAN: [billings_sample] HANYA cuplikan 5 sampel baris untuk melihat format kode invoice. Rujukan resmi total nominal dan jumlah transaksi harus mengambil dari [rekap_keuangan_billing]!';
                 }
 
                 // Total pending verification count
@@ -1306,25 +1369,37 @@ class AiAssistantController extends Controller
             . "2. LANGSUNG sajikan data, kesimpulan, atau tabel fakta pada kalimat pertama.\n"
             . "3. Bahasa harus ringkas, jelas, mudah dipahami, dan langsung dapat dieksekusi oleh staf/teknisi lapangan.\n"
             . "4. Gunakan bullet points atau tabel markdown yang rapi dengan `font-mono` untuk ID internet, IP, port OLT, dan kode billing.\n\n"
-            . "PEMAHAMAN ALUR KERJA SISTEM IMS2 (ISP END-TO-END LIFECYCLE):\n"
-            . "A. SIKLUS PELANGGAN:\n"
-            . "   - Registrasi -> Survey Lokasi (#12) -> Instalasi Lapangan (#16) -> Aktivasi NOC (#18/#19) -> Online Aktif (#20) -> Billing Bulanan -> Terisolir/Suspend (is_suspend=1 jika nunggak) -> Reaktivasi Otomatis/Manual jika lunas -> Terminasi (#23/is_termin=1 jika berhenti langganan).\n"
+            . "PEMAHAMAN ALUR KERJA SISTEM & DATABASE IMS2:\n"
+            . "A. SIKLUS PELANGGAN (trx_batchjob_register):\n"
+            . "   - Tabel pelanggan: `trx_batchjob_register` (hide=0). Status reg (status_reg): 20=Aktif/Online, 12=Survey, 16=Instalasi, 23=Terminasi/Berhenti. is_suspend=1 (Terisolir).\n"
+            . "   - Kolom penting: `nomor_internet`, `nama_pelanggan`, `alamat_pasang`, `paket_layanan`, `date_create`.\n"
             . "B. SIKLUS PERANGKAT & JARINGAN FTTH (GPON):\n"
             . "   - Infrastruktur: Router POP/BGP -> Master OLT (m_olt: O1 Kayu Agung, O2 Babakan Tarogong, O3 Soreang) -> Port PON -> Spliter -> Dropcore -> Modem ONU pelanggan (index_olt: format gpon-onu_1/{slot}/{port}:{onu_id}).\n"
             . "   - Status Fisik: UP (Online Normal), LOS (Loss of Signal / Kabel optik putus fisik / redaman hilang), DOWN (Modem padam / mati lampu / dying gasp).\n"
             . "   - Jika index_olt kosong (NULL): Jelaskan langsung singkat bahwa port GPON fisik belum diisi di registrasi pelanggan sehingga sensor optik belum bisa membaca redaman.\n"
             . "   - Monitoring Realtime: Data [noc_telemetry] adalah sumber data telemetri fisik OLT terkini. Jika ditanya 'user yang loss/down', laporkan dari telemetri ini.\n"
-            . "C. SIKLUS BILLING & KEUANGAN:\n"
-            . "   - Tagihan bulanan dibuat di trx_billing_layanan -> Status: Draft (#11), Publish (#12), Belum Bayar (#13), Pending Verifikasi Bukti (#14), Lunas (#15).\n"
-            . "   - Pelanggan bayar -> upload bukti/gateway -> diverifikasi Finance -> Lunas.\n"
-            . "D. SIKLUS TIKET GANGGUAN & HELPDESK:\n"
+            . "C. SIKLUS BILLING & KEUANGAN (trx_billing_layanan):\n"
+            . "   - Tagihan bulanan dicatat di trx_billing_layanan (hide=0).\n"
+            . "   - Periode: `bulan_tagihan` ('01' s/d '12'), `tahun_tagihan` (misal '2026').\n"
+            . "   - Status Tagihan (status_bill_lay):\n"
+            . "     * 15 = LUNAS / PAID (Pemasukan uang kas masuk / pembayaran selesai).\n"
+            . "     * 14 = PENDING VERIFIKASI (Bukti bayar diupload, menunggu diverifikasi tim finance).\n"
+            . "     * 13 = BELUM BAYAR / UNPAID (Tagihan terbit belum terbayar / piutang).\n"
+            . "     * 12 = PUBLISH (Tagihan sudah diterbitkan ke pelanggan).\n"
+            . "     * 11 = DRAFT.\n"
+            . "   - ATURAN MENGHITUNG KEUANGAN & PEMASUKAN:\n"
+            . "     * 'Total uang pemasukan / pembayaran lunas / status paid': Hitung HANYA tagihan dengan `status_bill_lay = 15` (SUM total_layanan).\n"
+            . "     * 'Total seluruh tagihan / total billing / seluruh pembayaran terbit': Hitung SEMUA invoice (semua status) yang terbit pada periode tersebut.\n"
+            . "     * 'Total tunggakan / belum bayar': Hitung status_bill_lay in (11, 12, 13).\n"
+            . "     * Rujukan utama ada di context `[rekap_keuangan_billing]`. Jika data agregat untuk bulan/tahun yang ditanyakan sudah ada di context, gunakan data resmi tersebut. Jika belum ada atau butuh query khusus, panggil tool `run_select_query` dengan `SUM(total_layanan)` dan `COUNT(*)`. DILARANG KERAS menyimpulkan total perusahaan dari cuplikan sampel baris invoice!\n"
+            . "D. SIKLUS TIKET GANGGUAN & HELPDESK (trx_tiket_gangguan):\n"
             . "   - Tiket masuk ke trx_tiket_gangguan -> Status: Baru Open (#11) -> Terjadwal/On Schedule (#12) -> Diproses -> Selesai (#13/Selesai).\n"
             . "   - Kategori: Gangguan Sinyal/Kabel Putus, Internet Lambat, Ubah Password, Relokasi Rumah, Ubah Paket Layanan.\n\n"
             . "KEBIJAKAN HAK AKSES ROLE (SANGAT KETAT):\n"
             . "{$roleRules}\n\n"
             . "5. INTEGRITAS DATA PELANGGAN & TAGIHAN (SANGAT KRUSIAL):\n"
             . "   - DILARANG KERAS menghubungkan, mengaitkan, atau menampilkan invoice/tagihan milik orang lain kepada pelanggan yang sedang ditanyakan.\n"
-            . "   - Periksa selalu 'nomor_internet' pada setiap baris di [billings]. Jika tidak cocok dengan pelanggan yang ditanyakan, atau jika [billings] kosong/berisi tagihan orang lain, nyatakan dengan jujur dan jelas: Pelanggan tersebut TIDAK MEMILIKI TAGIHAN TERTUNGGAK.\n"
+            . "   - Periksa selalu 'nomor_internet' pada setiap baris di [billings] atau [billings_sample]. Jika tidak cocok dengan pelanggan yang ditanyakan, atau jika kosong/berisi tagihan orang lain, nyatakan dengan jujur dan jelas: Pelanggan tersebut TIDAK MEMILIKI TAGIHAN TERTUNGGAK.\n"
             . "   - Dilarang keras berasumsi atau mengarang nomor internet dan invoice.\n\n"
             . "Jika pengguna meminta data di luar wewenangnya, tolak langsung secara singkat, tegas, dan sopan tanpa berputar-putar.\n"
             . "Hari ini: {$today}.";
@@ -1392,22 +1467,12 @@ class AiAssistantController extends Controller
         $triedModels = [];
         $lastError = 'Semua model Gemini yang dicoba gagal merespon.';
 
-        // Detect if query is conversational/system/meta (not an explicit request to run database SQL)
+        // Detect if query is purely conversational greeting/thanks (no database data lookup needed)
         $lowerMsg = strtolower($userMessage);
-        $isDbQueryIntent = preg_match('/\b(select|cari data|cek database|jalankan query|tabel|kolom|struktur|query)\b/i', $lowerMsg);
+        $isPurelyConversational = preg_match('/^(halo|hai|hi|hey|selamat (pagi|siang|sore|malam)|assalamu|terima kasih|makasih|thanks|kamu siapa|bisa apa|menu|help)\b/i', trim($lowerMsg)) 
+            && !preg_match('/\b(berapa|total|cari|cek|data|pelanggan|tagihan|billing|tiket|olt|bayar|lunas|unpaid|pemasukan|pendapatan|omset|oktober|september|agustus|juli|juni|mei|april|maret|februari|januari|select|query|tabel|kolom)\b/i', $lowerMsg);
 
-        // If context already contains answers OR query is conversational, skip database tools!
-        // This ensures a 1-shot instant response (< 500ms) and prevents multi-step RPM quota exhaustion!
-        $hasCompleteContext = !$isDbQueryIntent
-            || !empty($contextData['stats']['new_customers_this_month'])
-            || !empty($contextData['stats']['total_customers'])
-            || !empty($contextData['stats']['active_customers'])
-            || !empty($contextData['olts'])
-            || !empty($contextData['tickets'])
-            || !empty($contextData['role_guide'])
-            || ($contextData['type'] ?? '') === 'role_guide';
-
-        $tools = $hasCompleteContext ? [] : [['functionDeclarations' => [
+        $tools = $isPurelyConversational ? [] : [['functionDeclarations' => [
             [
                 'name' => 'describe_table',
                 'description' => 'Lihat daftar kolom sebuah tabel database IMS2 beserta 1 contoh baris. Panggil sebelum menulis query pada tabel yang belum dikenal.',
@@ -1421,7 +1486,7 @@ class AiAssistantController extends Controller
         ]]];
 
         if (empty($tools)) {
-            $systemInstruction .= "\n\nCATATAN PERMINTAAN INI: tool database TIDAK aktif. DILARANG menulis query SQL atau blok kode. Jawab hanya dari [Konteks Database IMS2] dan pengetahuan di atas. Jika pengguna hanya menyapa (halo/hai/selamat pagi), balas sapaan singkat 1-2 kalimat dan tawarkan bantuan sesuai role, tanpa rekap data.";
+            $systemInstruction .= "\n\nCATATAN PERMINTAAN INI: tool database TIDAK aktif karena percakapan sapaan. DILARANG menulis query SQL atau blok kode. Balas sapaan singkat 1-2 kalimat dan tawarkan bantuan sesuai role.";
         } else {
             $systemInstruction .= "\n\n" . $this->schemaHint($userRole);
         }
@@ -1743,12 +1808,14 @@ class AiAssistantController extends Controller
         }
 
         $tableSample = count($tables) > 35 ? (implode(', ', array_slice($tables, 0, 35)) . ' (dan tabel terkait lainnya)') : implode(', ', $tables);
-        return "KEMAMPUAN DATABASE: Anda memiliki tool `describe_table` dan `run_select_query` (read-only) untuk menjawab data di database IMS2 sesuai wewenang role {$userRole}.\n"
-            . "- Pelanggan: `trx_batchjob_register` (hide=0, nomor_internet, nama_pelanggan, date_create untuk tanggal registrasi/pendaftaran, status_reg 20=aktif, is_suspend=1 terisolir).\n"
-            . "- Tiket: `trx_tiket_gangguan`.\n"
-            . ($this->canAccessFinanceRole($userRole) ? "- Tagihan: `trx_billing_layanan` (status_bill_lay 15=lunas, 14=verifikasi).\n" : "")
-            . ($this->canAccessNetworkRole($userRole) ? "- OLT & Jaringan: `m_olt`.\n" : "")
-            . "Daftar tabel yang diizinkan untuk role {$userRole}: " . $tableSample;
+        return "KEMAMPUAN DATABASE & TOOLS (`describe_table`, `run_select_query`):\n"
+            . "Anda memiliki hak akses read-only untuk mengeksekusi query database IMS2 sesuai wewenang role {$userRole}.\n"
+            . "- Tagihan & Keuangan (`trx_billing_layanan`): kolom `bulan_tagihan` ('01'-'12'), `tahun_tagihan` ('2026'), `total_layanan` (rupiah), `status_bill_lay` (15=LUNAS/PEMASUKAN, 14=PENDING VERIFIKASI, 13=BELUM BAYAR/UNPAID, 12=PUBLISH, 11=DRAFT), `payment_paid`, `amount_paid`.\n"
+            . "- Pelanggan (`trx_batchjob_register`): kolom `nomor_internet`, `nama_pelanggan`, `alamat_pasang`, `paket_layanan`, `status_reg` (20=online/aktif, 12=survey, 16=instalasi, 23=terminasi), `is_suspend` (1=terisolir), `date_create`.\n"
+            . "- Tiket Gangguan (`trx_tiket_gangguan`): kolom `tiket`, `nomor_internet`, `keluhan`, `status`, `kat_tiket`, `penanganan`, `date_create`.\n"
+            . ($this->canAccessNetworkRole($userRole) ? "- OLT & Jaringan (`m_olt`): kolom `kode_olt`, `name_olt`, `ip_address`, `brand`, `model`, `is_active`.\n" : "")
+            . "Daftar tabel: " . $tableSample . ".\n"
+            . "ATURAN UTAMA: Jika user menanyakan data spesifik, jumlah, atau agregasi (COUNT, SUM) yang belum tersedia di context, gunakan tool `run_select_query` untuk mengecek database riil secara langsung!";
     }
 
     protected function canAccessFinanceRole(string $role): bool

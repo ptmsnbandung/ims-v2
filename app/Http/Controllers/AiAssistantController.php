@@ -51,8 +51,11 @@ class AiAssistantController extends Controller
                     ]);
                 } catch (\Throwable $e) {
                     $lastException = $e;
-                    $this->recordKeyError($key, $e->getMessage(), 500);
-                    Log::warning("[AiAssistant] Gemini Key #" . ($keyIndex + 1) . " gagal/kuota habis: " . $e->getMessage() . ". Beralih ke kunci berikutnya...");
+                    $msg = $e->getMessage();
+                    if (!str_contains($msg, 'langkah query') && !str_contains($msg, 'respons kosong')) {
+                        $this->recordKeyError($key, $msg, 500);
+                    }
+                    Log::warning("[AiAssistant] Gemini Key #" . ($keyIndex + 1) . " gagal: " . $msg . ". Beralih ke kunci berikutnya...");
                 }
             }
 
@@ -138,8 +141,12 @@ class AiAssistantController extends Controller
             $kPercent = min(100, round(($kRequests / $rpdPerKey) * 100, 1));
             $masked = strlen($k) > 10 ? substr($k, 0, 6) . '...' . substr($k, -4) : 'AIzaSy...';
 
-            // Auto-clear stale error from previously deprecated gemini-2.0-flash
-            if (!empty($keyStats['last_error']) && str_contains($keyStats['last_error'], 'gemini-2.0-flash')) {
+            // Auto-clear stale errors from previously deprecated models or internal step limits
+            if (!empty($keyStats['last_error']) && (
+                str_contains($keyStats['last_error'], 'gemini-2.0-flash') ||
+                str_contains($keyStats['last_error'], 'flash-lite') ||
+                str_contains($keyStats['last_error'], 'langkah query')
+            )) {
                 $keyStats['last_error'] = null;
                 $keyStats['status'] = $kRequests > 0 ? 'active' : 'standby';
                 $usageData['keys'][$keyId] = $keyStats;
@@ -1079,7 +1086,7 @@ class AiAssistantController extends Controller
                         $methods = $rm['supportedGenerationMethods'] ?? [];
                         if (in_array('generateContent', $methods)) {
                             $mName = str_replace('models/', '', $rm['name'] ?? '');
-                            if (!str_contains($mName, '2.0-flash')) {
+                            if (!str_contains($mName, '2.0-flash') && !str_contains($mName, 'flash-lite')) {
                                 $validModels[] = $mName;
                             }
                         }
@@ -1101,7 +1108,7 @@ class AiAssistantController extends Controller
 
         $defaultCandidates = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
         $modelsToTry = array_values(array_filter(array_unique(array_merge([$model], (array)($discovered ?: $defaultCandidates)))));
-        $modelsToTry = array_values(array_filter($modelsToTry, fn($m) => !str_contains($m, '2.0-flash')));
+        $modelsToTry = array_values(array_filter($modelsToTry, fn($m) => !str_contains($m, '2.0-flash') && !str_contains($m, 'flash-lite')));
         $modelsToTry = array_slice($modelsToTry, 0, 3);
 
         // 2. Iterate through candidate models with fast per-step timeout
@@ -1127,13 +1134,18 @@ class AiAssistantController extends Controller
             $convo = $contents;
 
             try {
-                for ($step = 0; $step < 3; $step++) {
-                    $response = Http::timeout(8)->post($url, [
+                for ($step = 0; $step < 5; $step++) {
+                    $stepTools = ($step >= 4) ? [] : $tools;
+                    $payload = [
                         'systemInstruction' => ['parts' => [['text' => $systemInstruction]]],
                         'contents' => $convo,
-                        'tools' => $tools,
-                        'generationConfig' => ['temperature' => 0.3, 'maxOutputTokens' => 1024],
-                    ]);
+                        'generationConfig' => ['temperature' => 0.3, 'maxOutputTokens' => 1500],
+                    ];
+                    if (!empty($stepTools)) {
+                        $payload['tools'] = $stepTools;
+                    }
+
+                    $response = Http::timeout(12)->post($url, $payload);
 
                     if (!$response->successful()) {
                         $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());

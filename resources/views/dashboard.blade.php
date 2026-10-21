@@ -3,95 +3,193 @@
 @section('page_title', 'Dashboard Utama')
 
 @section('content')
-<div x-data="{ activeTab: '{{ ($canSeeFinanceTraffic ?? false) && ($user->isCeo() || $user->isFinance()) ? 'finance' : 'charts' }}' }" 
-     x-effect="if (activeTab === 'finance') { $nextTick(() => window.dispatchEvent(new Event('resize'))); }"
-     class="space-y-3 sm:space-y-3.5">
-    <!-- Role Welcome Banner (Deep Oceanic Teal & Cyan Gradient - Serasi dengan Gambar 2) -->
-    <div class="ims-banner relative overflow-hidden rounded-2xl py-3 px-3.5 sm:py-3 sm:px-5 shadow-sm text-white border border-teal-500/20"
-         style="background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%);">
-        
-        <!-- Subtle Ambient Lighting Effect -->
-        <div class="pointer-events-none absolute -right-10 -bottom-10 w-56 h-56 bg-white/10 rounded-full blur-2xl"></div>
+<style>
+    /* ------------------------------------------------------------- */
+    /* GLASSMORPHISM DASHBOARD THEME STYLING                         */
+    /* ------------------------------------------------------------- */
+    .ims-glass-canvas {
+        background: radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.85) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(243, 232, 255, 0.85) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(209, 250, 229, 0.75) 0px, transparent 50%),
+                    radial-gradient(at 0% 100%, rgba(224, 242, 254, 0.85) 0px, transparent 50%),
+                    radial-gradient(at 50% 50%, rgba(245, 243, 255, 0.65) 0px, transparent 50%),
+                    linear-gradient(135deg, #eef2ff 0%, #e0f2fe 30%, #f0fdf4 65%, #fdf2f8 100%) !important;
+        min-height: calc(100vh - 70px);
+        margin: -0.375rem -0.75rem -0.625rem -0.75rem;
+        padding: 0.85rem 1rem 2.5rem 1rem;
+        transition: all 0.3s ease;
+    }
+    @media (min-width: 640px) {
+        .ims-glass-canvas {
+            margin: -0.5rem -1rem -0.625rem -1rem;
+            padding: 1rem 1.25rem 3rem 1.25rem;
+        }
+    }
+    @media (min-width: 1024px) {
+        .ims-glass-canvas {
+            margin: -0.5rem -1.25rem -0.625rem -1.25rem;
+            padding: 1.15rem 1.5rem 3.5rem 1.5rem;
+        }
+    }
 
+    /* Ambient main container background override for dashboard */
+    body:has(.ims-glass-canvas) main {
+        background: transparent !important;
+    }
+
+    /* Translucent Frosted Glass Card */
+    .ims-glass-card {
+        background: rgba(255, 255, 255, 0.72) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.9) !important;
+        border-radius: 22px !important;
+        box-shadow: 0 10px 30px -5px rgba(31, 38, 135, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Inner Row Items (OLT list, Customer rows) */
+    .ims-glass-item {
+        background: rgba(255, 255, 255, 0.62) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.95) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.15s ease;
+    }
+    .ims-glass-item:hover {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-color: rgba(255, 255, 255, 1) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    /* Switcher Pill Capsule */
+    .ims-glass-pill-container {
+        background: rgba(255, 255, 255, 0.55) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.85) !important;
+        border-radius: 9999px !important;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    /* Year Select Frosted Pill */
+    .ims-glass-select {
+        background: rgba(255, 255, 255, 0.65) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.9) !important;
+        border-radius: 9999px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        color: #1e293b !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+    }
+
+    /* Emerald Button Pill */
+    .ims-glass-btn-emerald {
+        background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        border-radius: 9999px !important;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28) !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        transition: all 0.2s ease;
+    }
+    .ims-glass-btn-emerald:hover {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35) !important;
+        transform: translateY(-0.5px);
+    }
+</style>
+
+<div class="ims-glass-canvas space-y-3 sm:space-y-3.5"
+     x-data="{ activeTab: '{{ ($canSeeFinanceTraffic ?? false) && ($user->isCeo() || $user->isFinance()) ? 'finance' : 'charts' }}' }" 
+     x-effect="if (activeTab === 'finance') { $nextTick(() => window.dispatchEvent(new Event('resize'))); }">
+    
+    <!-- Top Frosted Glass Welcome Bar (Persis Gambar Referensi) -->
+    <div class="ims-glass-card relative overflow-hidden py-3 px-3.5 sm:py-3.5 sm:px-5">
         <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <!-- Left: Profile & Welcome -->
             <div class="flex items-center gap-3 min-w-0">
-                <!-- Avatar Initial Pill -->
-                <div class="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-md border border-white/25 text-white font-black text-xs flex items-center justify-center shadow-inner shrink-0 ring-2 ring-white/10">
+                <!-- Avatar Initial Pill (Frosted White Circle) -->
+                <div class="w-9 h-9 rounded-full bg-white/90 backdrop-blur-md border border-slate-200/80 text-slate-800 font-black text-xs flex items-center justify-center shadow-xs shrink-0">
                     {{ strtoupper(substr($user->nama, 0, 1)) }}
                 </div>
                 
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <h2 class="text-xs sm:text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5" style="color: #FFFFFF !important;">
+                        <h2 class="text-xs sm:text-sm font-extrabold text-slate-800 tracking-tight flex items-center gap-1.5">
                             <span>Halo, {{ $user->nama }}!</span>
                             <span>👋</span>
                         </h2>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/15 text-white/95 border border-white/20 backdrop-blur-xs">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-indigo-100/80 text-indigo-700 border border-indigo-200/80">
                             {{ $user->nama_level }}
                         </span>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-400/20 text-emerald-200 border border-emerald-400/30 backdrop-blur-xs">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-100/80 text-emerald-700 border border-emerald-200/80">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                             Online
                         </span>
                     </div>
-                    <p class="text-[10.5px] sm:text-xs text-[#c6edf3] line-clamp-1 sm:line-clamp-none mt-1 leading-snug" style="color: #c6edf3 !important;">
+                    <p class="text-[10.5px] sm:text-xs text-slate-500 line-clamp-1 sm:line-clamp-none mt-0.5 leading-snug">
                         {{ $user->role_description }}
                     </p>
                 </div>
             </div>
 
-            <!-- Right: View Tabs, Year Filter & Status Layanan (Unified Responsive Pill System) -->
+            <!-- Right: View Tabs, Year Filter & Status Layanan -->
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0 mt-1 sm:mt-0">
                 <!-- View Tabs Switcher Pill Container -->
-                <div class="w-full sm:w-auto flex items-center justify-between sm:justify-start"
-                     style="height: 34px; padding: 3px; border-radius: 9999px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.22); box-sizing: border-box;">
+                <div class="ims-glass-pill-container w-full sm:w-auto flex items-center justify-between sm:justify-start"
+                     style="height: 34px; padding: 3px; box-sizing: border-box;">
                     @if($canSeeFinanceTraffic ?? false)
                         <button type="button" 
                                 @click="activeTab = 'finance'" 
                                 :style="activeTab === 'finance' 
-                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #032b35 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: all 0.15s ease;' 
-                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #ffffff !important; opacity: 0.85; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                                class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:opacity-100">
-                            <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'finance' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <span :style="activeTab === 'finance' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'">Traffic Keuangan</span>
+                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #0f172a !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.15s ease;' 
+                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #64748b !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                                class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-slate-900">
+                            <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'finance' ? 'color: #0f172a !important;' : 'color: #64748b !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span :style="activeTab === 'finance' ? 'color: #0f172a !important;' : 'color: #64748b !important;'">Traffic Keuangan</span>
                         </button>
                     @endif
                     <button type="button" 
                             @click="activeTab = 'charts'" 
                             :style="activeTab === 'charts' 
-                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #032b35 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: all 0.15s ease;' 
-                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #ffffff !important; opacity: 0.85; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                            class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:opacity-100">
-                        <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'charts' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                        <span :style="activeTab === 'charts' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'">Grafik Utama</span>
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #0f172a !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #64748b !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                            class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-slate-900">
+                        <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'charts' ? 'color: #0f172a !important;' : 'color: #64748b !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <span :style="activeTab === 'charts' ? 'color: #0f172a !important;' : 'color: #64748b !important;'">Grafik Utama</span>
                     </button>
                     <button type="button" 
                             @click="activeTab = 'tables'" 
                             :style="activeTab === 'tables' 
-                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #032b35 !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: all 0.15s ease;' 
-                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #ffffff !important; opacity: 0.85; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                            class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:opacity-100">
-                        <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'tables' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <span :style="activeTab === 'tables' ? 'color: #032b35 !important;' : 'color: #ffffff !important;'">Data Pendaftaran</span>
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #0f172a !important; font-size: 11px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: #64748b !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                            class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-slate-900">
+                        <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'tables' ? 'color: #0f172a !important;' : 'color: #64748b !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <span :style="activeTab === 'tables' ? 'color: #0f172a !important;' : 'color: #64748b !important;'">Data Pendaftaran</span>
                     </button>
                 </div>
 
-                <!-- Secondary Actions: Year Selector & Status Layanan (Grid 2 cols on mobile, flex on desktop) -->
+                <!-- Secondary Actions: Year Selector & Status Layanan -->
                 <div class="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto">
                     <!-- Year Selector Form in Matching Glass Pill -->
                     <form action="{{ route('dashboard') }}" method="GET" class="m-0 p-0 w-full sm:w-auto flex">
                         <div class="relative w-full sm:w-auto flex items-center h-[34px]">
                             <select name="tahun" onchange="this.form.submit()" 
-                                    style="height: 34px; padding-left: 14px; padding-right: 28px; border-radius: 9999px; background: rgba(0, 0, 0, 0.3) !important; border: 1px solid rgba(255, 255, 255, 0.22) !important; color: #ffffff !important; font-size: 11px; font-weight: 700; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; cursor: pointer; outline: none; width: 100%; text-align: center; text-align-last: center;"
-                                    class="focus:ring-1 focus:ring-white/40">
+                                    class="ims-glass-select focus:ring-1 focus:ring-blue-400"
+                                    style="height: 34px; padding-left: 14px; padding-right: 28px; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; cursor: pointer; outline: none; width: 100%; text-align: center; text-align-last: center;">
                                 @foreach($availableYears as $year)
                                     <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} style="color: #0f172a; background: #ffffff;">
                                         Tahun {{ $year }}
                                     </option>
                                 @endforeach
                             </select>
-                            <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/85 flex items-center justify-center">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 flex items-center justify-center">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M6 9l6 6 6-6"/>
                                 </svg>
@@ -101,8 +199,7 @@
 
                     <!-- Status Layanan Button (Vibrant Emerald Pill) -->
                     <a href="{{ route('teknik.tiket') }}" 
-                       style="height: 34px; border-radius: 9999px; background: #10b981 !important; border: 1px solid rgba(255, 255, 255, 0.25) !important; color: #ffffff !important; font-size: 11px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.18);"
-                       class="px-3.5 hover:bg-emerald-600 flex items-center justify-center gap-1.5 transition no-underline">
+                       class="ims-glass-btn-emerald px-3.5 flex items-center justify-center gap-1.5 transition no-underline h-[34px]">
                         <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                         <span class="truncate" style="color: #ffffff !important;">Status Layanan</span>
                     </a>
@@ -115,62 +212,63 @@
     <div x-show="activeTab === 'charts' || activeTab === 'all'" class="space-y-3 sm:space-y-3.5">
         @if($canSeeFinanceTraffic ?? false)
         <!-- Mini Financial Traffic Quick-Strip (Direktur, CEO, Finance) -->
-        <div class="p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-slate-900 via-[#042f3d] to-slate-900 border border-teal-500/30 shadow-xs text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div class="ims-glass-card p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-slate-800">
             <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 flex items-center justify-center shrink-0">
+                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Ringkasan Traffic Keuangan {{ $selectedTahun }}</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold font-mono bg-emerald-400/20 text-emerald-200 border border-emerald-400/30">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Ringkasan Traffic Keuangan {{ $selectedTahun }}</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold font-mono bg-emerald-100 text-emerald-700 border border-emerald-200">
                             {{ $financeTrafficData['collectionRateYear'] ?? 0 }}% Terkumpul
                         </span>
                     </div>
-                    <p class="text-[11px] text-slate-300 truncate mt-0.5">
-                        Realisasi <span class="font-mono font-bold text-emerald-300">Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}</span> dari total tagihan <span class="font-mono font-bold text-white">Rp {{ number_format($financeTrafficData['totalYearInvoiced'] ?? 0, 0, ',', '.') }}</span> &middot; Piutang: <span class="font-mono font-bold text-amber-300">Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}</span>
+                    <p class="text-[11px] text-slate-600 truncate mt-0.5">
+                        Realisasi <span class="font-mono font-bold text-emerald-700">Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}</span> dari total tagihan <span class="font-mono font-bold text-slate-800">Rp {{ number_format($financeTrafficData['totalYearInvoiced'] ?? 0, 0, ',', '.') }}</span> &middot; Piutang: <span class="font-mono font-bold text-amber-700">Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}</span>
                     </p>
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                <button type="button" @click="activeTab = 'finance'" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10.5px] font-bold bg-white text-[#032b35] hover:bg-teal-50 transition shadow-xs cursor-pointer">
+                <button type="button" @click="activeTab = 'finance'" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10.5px] font-bold bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
                     <span>Lihat Rincian & Grafik</span>
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                    <svg class="w-3 h-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </div>
         </div>
         @endif
+
         <!-- Row 1: Tren Bulanan (7 Cols) & Donut Bandwidth (5 Cols) -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
             <!-- 1. Grafik Tren User Baru per Bulan -->
-            <div class="md:col-span-7 lg:col-span-7 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div class="ims-glass-card md:col-span-7 lg:col-span-7 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2 sm:pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
                                 <span class="w-2 h-2 rounded-full bg-blue-600 shrink-0" style="display: inline-block;"></span>
                                 <span>Tren Pertumbuhan User Baru per Bulan</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
                                 Registrasi vs aktivasi selesai sepanjang {{ $selectedTahun }}.
                             </p>
                         </div>
 
                         <!-- Mini KPI Badges: 2-column grid on mobile, inline on desktop -->
                         <div class="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-1.5 w-full sm:w-auto shrink-0">
-                            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1.5 sm:py-0.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 shadow-2xs">
+                            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-blue-50/80 border border-blue-200/60 shadow-2xs">
                                 <div class="flex items-center gap-1.5">
                                     <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                    <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-blue-600 dark:text-cyan-400 block leading-none">Registrasi</span>
+                                    <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-blue-600 block leading-none">Registrasi</span>
                                 </div>
-                                <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
+                                <span class="text-xs font-black font-mono text-slate-800 leading-tight">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
                             </div>
-                            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1.5 sm:py-0.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 shadow-2xs">
+                            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 shadow-2xs">
                                 <div class="flex items-center gap-1.5">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 block leading-none">Aktif Online</span>
+                                    <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-emerald-600 block leading-none">Aktif Online</span>
                                 </div>
-                                <span class="text-xs font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalTahunAktif']) }}</span>
+                                <span class="text-xs font-black font-mono text-slate-800 leading-tight">{{ number_format($chartData['totalTahunAktif']) }}</span>
                             </div>
                         </div>
                     </div>
@@ -182,30 +280,30 @@
                 </div>
 
                 <!-- Footer Note -->
-                <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500 dark:text-slate-400 flex-wrap gap-2">
+                <div class="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500 flex-wrap gap-2">
                     <div class="flex items-center gap-2">
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-300">Pendaftaran Baru</span>
+                            <span class="font-medium text-slate-700">Pendaftaran Baru</span>
                         </span>
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-300">Aktivasi Selesai (Aktif)</span>
+                            <span class="font-medium text-slate-700">Aktivasi Selesai (Aktif)</span>
                         </span>
                     </div>
                     <span class="font-mono text-slate-400">Jan - Des {{ $selectedTahun }}</span>
                 </div>
             </div>
 
-            <!-- 2. Donut Kategori Bandwidth & Itemized List Side-by-Side (Donut Lebih Besar & List Rapi) -->
-            <div class="md:col-span-5 lg:col-span-5 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 2. Donut Kategori Bandwidth & Itemized List Side-by-Side -->
+            <div class="ims-glass-card md:col-span-5 lg:col-span-5 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
-                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                    <div class="border-b border-slate-200/60 pb-2 sm:pb-1.5">
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
                             <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" style="display: inline-block;"></span>
                             <span>Distribusi Kategori Bandwidth</span>
                         </h4>
-                        <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                        <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
                             Pangsa paket layanan yang dipilih pelanggan.
                         </p>
                     </div>
@@ -230,14 +328,14 @@
                                         $pct = $totalBwAll > 0 ? round(($val / $totalBwAll) * 100, 1) : 0;
                                         $dotColor = $paletteColors[$idx % count($paletteColors)];
                                     @endphp
-                                    <div class="flex items-center justify-between text-[10.5px] sm:text-[7.5px] py-1 sm:py-0.5 px-2 sm:px-1 rounded bg-slate-50/70 sm:bg-transparent dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                    <div class="flex items-center justify-between text-[10.5px] sm:text-[7.5px] py-1 sm:py-0.5 px-2 sm:px-1 rounded-lg bg-white/40 border border-white/60 hover:bg-white/80 transition">
                                         <div class="flex items-center gap-2 sm:gap-1.5 min-w-0 pr-1">
                                             <span class="w-2 h-2 sm:w-1.5 sm:h-1.5 rounded-full shrink-0" style="background-color: {{ $dotColor }};"></span>
-                                            <span class="font-semibold text-slate-700 dark:text-slate-300 truncate" title="{{ $label }}">{{ $label }}</span>
+                                            <span class="font-semibold text-slate-700 truncate uppercase" title="{{ $label }}">{{ $label }}</span>
                                         </div>
                                         <div class="flex items-center gap-1 font-mono shrink-0 ml-1">
-                                            <span class="font-bold text-slate-900 dark:text-white">{{ number_format($val) }}</span>
-                                            <span class="text-[9px] sm:text-[7px] text-slate-400">({{ $pct }}%)</span>
+                                            <span class="font-bold text-slate-800">{{ number_format($val) }}</span>
+                                            <span class="text-[9px] sm:text-[7px] text-slate-500">({{ $pct }}%)</span>
                                         </div>
                                     </div>
                                 @endforeach
@@ -246,36 +344,36 @@
                     </div>
                 </div>
 
-                <div class="mt-2 sm:mt-0.5 pt-1.5 sm:pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-[8px] text-slate-400">
+                <div class="mt-2 sm:mt-0.5 pt-1.5 sm:pt-1 border-t border-slate-200/60 flex items-center justify-between text-[9px] sm:text-[8px] text-slate-500">
                     <span>Total Porsi Layanan</span>
-                    <span class="font-bold font-mono text-slate-700 dark:text-slate-300">{{ number_format($totalBwAll) }} User</span>
+                    <span class="font-bold font-mono text-slate-700">{{ number_format($totalBwAll) }} User</span>
                 </div>
             </div>
         </div>
 
-        <!-- Row 2: 3 Kotak Data (Sebaran Wilayah, Peringkat Wilayah, & Data Pelanggan Baru 5 User) -->
+        <!-- Row 2: 3 Kotak Data (Sebaran Wilayah, Status OLT, & Data Pelanggan Baru 5 User) -->
         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-3.5">
-            <!-- 3. Grafik Sebaran User per Kota / Wilayah Pasang (Memenuhi Card Rapi) -->
-            <div class="md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 3. Grafik Sebaran User per Kota / Wilayah Pasang -->
+            <div class="ims-glass-card md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2 sm:pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
                                 <span class="w-2 h-2 rounded-full bg-cyan-500 shrink-0" style="display: inline-block;"></span>
                                 <span>Sebaran User per Wilayah</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
-                                Distribusi per kota pasang.
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
+                                Distribusi per pola pasang.
                             </p>
                         </div>
 
                         <!-- Total City User Badge -->
-                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 shadow-2xs w-full sm:w-auto shrink-0">
+                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-sky-50/80 border border-sky-200/60 shadow-2xs w-full sm:w-auto shrink-0">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
-                                <span class="text-[8.5px] sm:text-[7.5px] uppercase font-bold tracking-wider text-sky-600 dark:text-cyan-400 block leading-none">Total</span>
+                                <span class="text-[8.5px] sm:text-[7.5px] uppercase font-bold tracking-wider text-sky-600 block leading-none">Total</span>
                             </div>
-                            <span class="text-xs sm:text-[11px] font-black font-mono text-slate-900 dark:text-white leading-tight">{{ number_format($chartData['totalCityUsers']) }}</span>
+                            <span class="text-xs sm:text-[11px] font-black font-mono text-slate-800 leading-tight">{{ number_format($chartData['totalCityUsers']) }}</span>
                         </div>
                     </div>
 
@@ -285,18 +383,18 @@
                     </div>
                 </div>
 
-                <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500 dark:text-slate-400">
+                <div class="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500">
                     <div class="flex items-center gap-1.5">
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-300">Total</span>
+                            <span class="font-medium text-slate-700">Total</span>
                         </span>
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-300">Aktif</span>
+                            <span class="font-medium text-slate-700">Aktif</span>
                         </span>
                     </div>
-                    <a href="{{ route('teknik.pelanggan') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
+                    <a href="{{ route('teknik.pelanggan') }}" class="font-bold text-blue-600 hover:underline flex items-center gap-0.5">
                         <span>Data Pelanggan</span>
                         <span>&rarr;</span>
                     </a>
@@ -304,26 +402,26 @@
             </div>
 
             <!-- 4. Status OLT Live (Cukup Nama OLT & Statusnya Saja) -->
-            <div class="md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <div class="ims-glass-card md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2 sm:pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0" style="display: inline-block;"></span>
                                 <span>Status OLT Live</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
                                 Status konektivitas OLT real-time.
                             </p>
                         </div>
 
                         <!-- Live Pulse Indicator Pill -->
-                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2 py-1 sm:py-0.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs w-full sm:w-auto shrink-0">
+                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2 py-1 sm:py-0.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 shadow-2xs w-full sm:w-auto shrink-0">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 leading-none">Live Ping</span>
+                                <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-emerald-600 leading-none">Live Ping</span>
                             </div>
-                            <span class="text-[10px] sm:text-[8px] font-mono text-emerald-600 dark:text-emerald-400 font-bold sm:hidden">Online</span>
+                            <span class="text-[10px] sm:text-[8px] font-mono text-emerald-600 font-bold sm:hidden">Online</span>
                         </div>
                     </div>
 
@@ -332,11 +430,11 @@
                             @php
                                 $isUp = ($oltItem['status'] ?? 'UP') === 'UP' || ($oltItem['is_online'] ?? false);
                             @endphp
-                            <div class="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-2 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 transition">
+                            <div class="ims-glass-item p-2 flex items-center justify-between gap-2 transition">
                                 <!-- Nama OLT -->
                                 <div class="flex items-center gap-2 min-w-0">
                                     <span class="w-2 h-2 rounded-full {{ $isUp ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }} shrink-0"></span>
-                                    <span class="font-bold text-[11px] text-slate-800 dark:text-slate-200 truncate" title="{{ $oltItem['name_olt'] ?? 'OLT' }}">
+                                    <span class="font-bold text-[11px] text-slate-800 truncate" title="{{ $oltItem['name_olt'] ?? 'OLT' }}">
                                         {{ $oltItem['name_olt'] ?? 'OLT' }}
                                     </span>
                                 </div>
@@ -344,12 +442,12 @@
                                 <!-- Status OLT -->
                                 <div class="flex-shrink-0">
                                     @if($isUp)
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100/90 text-emerald-700 border border-emerald-200/80">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                             <span>UP</span>
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-100/90 text-rose-700 border border-rose-200/80">
                                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                             <span>DOWN</span>
                                         </span>
@@ -364,38 +462,38 @@
                     </div>
                 </div>
 
-                <div class="mt-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-400">
+                <div class="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500">
                     <span class="flex items-center gap-1">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        <span>Total: <strong class="text-slate-700 dark:text-slate-300 font-mono">{{ count($oltLiveStatus ?? []) }} OLT</strong></span>
+                        <span>Total: <strong class="text-slate-700 font-mono">{{ count($oltLiveStatus ?? []) }} OLT</strong></span>
                     </span>
-                    <a href="{{ route('noc.olt') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
+                    <a href="{{ route('noc.olt') }}" class="font-bold text-blue-600 hover:underline flex items-center gap-0.5">
                         <span>Data OLT</span>
                         <span>&rarr;</span>
                     </a>
                 </div>
             </div>
 
-            <!-- 5. Data Pelanggan Baru (Cukup 5 User Saja, Nomor Internet & Nama Saja - Sangat Rapi) -->
-            <div class="md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+            <!-- 5. Data Pelanggan Baru (5 User Terkini) -->
+            <div class="ims-glass-card md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2 sm:pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
                                 <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" style="display: inline-block;"></span>
                                 <span>Data Pelanggan Baru</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-400 dark:text-slate-500 mt-0.5 leading-snug">
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
                                 5 pendaftaran user terkini ({{ $selectedTahun }}).
                             </p>
                         </div>
 
-                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 shadow-2xs w-full sm:w-auto shrink-0">
+                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-indigo-50/80 border border-indigo-200/60 shadow-2xs w-full sm:w-auto shrink-0">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                                <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-indigo-700 dark:text-indigo-300">Terkini</span>
+                                <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-indigo-700">Terkini</span>
                             </div>
-                            <span class="text-xs sm:text-[8.5px] font-bold font-mono text-indigo-700 dark:text-indigo-300">5 User</span>
+                            <span class="text-xs sm:text-[8.5px] font-bold font-mono text-indigo-700">5 User</span>
                         </div>
                     </div>
 
@@ -413,25 +511,25 @@
                             $recent5Users = [];
                         }
                     @endphp
-                    <div class="pt-1 space-y-0.5">
+                    <div class="pt-2 space-y-1">
                         @forelse($recent5Users as $nu)
                             @php
                                 $nuNoInternet = (string) (is_array($nu) ? ($nu['nomor_internet'] ?? '') : ($nu->nomor_internet ?? ''));
                                 $nuNama = (string) (is_array($nu) ? ($nu['nama_pelanggan'] ?? 'Pelanggan') : ($nu->nama_pelanggan ?? 'Pelanggan'));
                                 $profileUrl = !empty($nuNoInternet) ? route('teknik.pelanggan.profile', $nuNoInternet) : '#';
                             @endphp
-                            <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-slate-50/80 dark:bg-slate-950/50 border border-slate-200/60 dark:border-slate-800/60 hover:bg-blue-50/50 dark:hover:bg-slate-800/60 hover:border-blue-200 dark:hover:border-blue-800 transition group">
-                                <div class="flex items-center gap-1.5 min-w-0 pr-1.5">
-                                    <span class="w-3.5 h-3.5 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-cyan-400 text-[8px] font-black flex items-center justify-center font-mono shrink-0">
+                            <div class="ims-glass-item flex items-center justify-between px-2.5 py-1.5 transition group">
+                                <div class="flex items-center gap-2 min-w-0 pr-1.5">
+                                    <span class="w-4 h-4 rounded-full bg-indigo-100/90 text-indigo-700 text-[8.5px] font-black flex items-center justify-center font-mono shrink-0">
                                         {{ $loop->iteration }}
                                     </span>
-                                    <span class="text-[9.5px] font-bold text-slate-800 dark:text-slate-200 uppercase truncate group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition" title="{{ $nuNama }}">
+                                    <span class="text-[10px] font-bold text-slate-800 uppercase truncate group-hover:text-blue-600 transition" title="{{ $nuNama }}">
                                         {{ $nuNama }}
                                     </span>
                                 </div>
                                 <div class="shrink-0">
                                     @if(!empty($nuNoInternet))
-                                        <a href="{{ $profileUrl }}" class="px-1.5 py-0.2 rounded bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-blue-600 dark:text-cyan-400 font-mono text-[9px] font-bold hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white transition inline-block">
+                                        <a href="{{ $profileUrl }}" class="px-2 py-0.5 rounded-md bg-white/90 border border-slate-200/80 text-slate-600 font-mono text-[9px] font-bold hover:bg-blue-600 hover:text-white transition inline-block">
                                             {{ $nuNoInternet }}
                                         </a>
                                     @else
@@ -447,9 +545,9 @@
                     </div>
                 </div>
 
-                <div class="mt-0.5 pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400">
+                <div class="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[8.5px] text-slate-500">
                     <span>Total <b>{{ number_format($newUserStats['totalBaru']) }}</b> User</span>
-                    <a href="{{ route('teknik.pendaftaran') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
+                    <a href="{{ route('teknik.pendaftaran') }}" class="font-bold text-blue-600 hover:underline flex items-center gap-0.5">
                         <span>Semua Data</span>
                         <span>&rarr;</span>
                     </a>
@@ -467,7 +565,7 @@
         <!-- Row 1: 4 KPI Cards (High Impact, Premium FinTech Console) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-3.5">
             <!-- 1. Total Tagihan Terbit -->
-            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between hover:border-sky-500/40 transition">
+            <div class="ims-glass-card p-3.5 sm:p-4 flex flex-col justify-between hover:border-sky-500/40 transition">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Tagihan {{ $selectedTahun }}</span>
                     <div class="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-500/20">
@@ -486,7 +584,7 @@
             </div>
 
             <!-- 2. Realisasi Pembayaran Lunas (Cash In) -->
-            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-500/30 dark:border-emerald-500/20 shadow-xs flex flex-col justify-between hover:border-emerald-500/50 transition">
+            <div class="ims-glass-card p-3.5 sm:p-4 flex flex-col justify-between hover:border-emerald-500/50 transition">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Realisasi Lunas (Cash In)</span>
                     <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
@@ -505,7 +603,7 @@
             </div>
 
             <!-- 3. Piutang Berjalan (Belum Lunas) -->
-            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-amber-500/30 dark:border-amber-500/20 shadow-xs flex flex-col justify-between hover:border-amber-500/50 transition">
+            <div class="ims-glass-card p-3.5 sm:p-4 flex flex-col justify-between hover:border-amber-500/50 transition">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Piutang Berjalan</span>
                     <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
@@ -524,7 +622,7 @@
             </div>
 
             <!-- 4. Efektivitas Collection Rate -->
-            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-indigo-500/30 dark:border-indigo-500/20 shadow-xs flex flex-col justify-between hover:border-indigo-500/50 transition">
+            <div class="ims-glass-card p-3.5 sm:p-4 flex flex-col justify-between hover:border-indigo-500/50 transition">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Collection Rate</span>
                     <span class="text-[9px] font-bold px-2 py-0.5 rounded-full {{ ($financeTrafficData['collectionRateYear'] ?? 0) >= 80 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' }}">
@@ -549,10 +647,10 @@
         <!-- Row 2: Charts (Flex Container - 67% Monthly Trend & 33% Donut Status) -->
         <div class="flex flex-col lg:flex-row gap-3 sm:gap-3.5 items-stretch w-full">
             <!-- 1. Grafik Tren Tagihan & Realisasi Bulanan (67% Width) -->
-            <div class="w-full lg:w-[67%] min-w-0 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+            <div class="ims-glass-card w-full lg:w-[67%] min-w-0 p-3.5 sm:p-4 flex flex-col justify-between"
                  style="flex: 2 1 0%; min-width: 0;">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2.5">
                         <div>
                             <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
@@ -585,10 +683,10 @@
             </div>
 
             <!-- 2. Donut Rasio Koleksi & Ringkasan (33% Width) -->
-            <div class="w-full lg:w-[33%] min-w-0 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+            <div class="ims-glass-card w-full lg:w-[33%] min-w-0 p-3.5 sm:p-4 flex flex-col justify-between"
                  style="flex: 1 1 0%; min-width: 0;">
                 <div>
-                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <div class="border-b border-slate-200/60 pb-2.5">
                         <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
                             <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0"></span>
                             <span>Rasio Status Penagihan</span>
@@ -637,7 +735,7 @@
         <!-- Row 3: Monthly Breakdown Table (67% Width) & Recent Invoices (33% Width) -->
         <div class="flex flex-col lg:flex-row gap-3 sm:gap-3.5 items-stretch w-full">
             <!-- 1. Tabel Rincian Traffic Keuangan per Bulan -->
-            <div class="w-full lg:w-[67%] min-w-0 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+            <div class="ims-glass-card w-full lg:w-[67%] min-w-0 p-3.5 sm:p-4 flex flex-col justify-between"
                  style="flex: 2 1 0%; min-width: 0;">
                 <div>
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
@@ -723,7 +821,7 @@
             </div>
 
             <!-- 2. Recent Invoices List -->
-            <div class="w-full lg:w-[33%] min-w-0 p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+            <div class="ims-glass-card w-full lg:w-[33%] min-w-0 p-3.5 sm:p-4 flex flex-col justify-between"
                  style="flex: 1 1 0%; min-width: 0;">
                 <div>
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
@@ -799,7 +897,7 @@
     <div x-show="activeTab === 'tables' || activeTab === 'all'" x-cloak class="space-y-3.5 pt-1">
         
         <!-- Header & Filter Bar Section -->
-        <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="ims-glass-card p-3 sm:p-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
                 <div class="flex items-center gap-2">
                     <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-cyan-400 flex items-center justify-center">
@@ -830,7 +928,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             
             <!-- 1. Total Pelanggan Baru Terdaftar -->
-            <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-blue-400 dark:hover:border-cyan-500 transition">
+            <div class="ims-glass-card p-3 sm:p-3.5 hover:border-blue-400 transition">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User / Pelanggan Baru</span>
                     <div class="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-cyan-400 flex items-center justify-center">
@@ -860,7 +958,7 @@
             </div>
 
             <!-- 2. Pelanggan Baru Aktif (Online / Live) -->
-            <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-emerald-500 transition">
+            <div class="ims-glass-card p-3 sm:p-3.5 hover:border-emerald-500 transition">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aktivasi Selesai (Aktif)</span>
                     <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -882,7 +980,7 @@
             </div>
 
             <!-- 3. Dalam Proses / Antrean Pemasangan -->
-            <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-amber-400 transition">
+            <div class="ims-glass-card p-3 sm:p-3.5 hover:border-amber-400 transition">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Proses & Antrean</span>
                     <div class="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -905,7 +1003,7 @@
             </div>
 
             <!-- 4. Total Pelanggan Aktif Sistem -->
-            <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-cyan-500 transition">
+            <div class="ims-glass-card p-3 sm:p-3.5 hover:border-cyan-500 transition">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pelanggan Aktif</span>
                     <div class="w-7 h-7 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
@@ -942,7 +1040,7 @@
                     </a>
                 </div>
 
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
+                <div class="ims-glass-card rounded-xl overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
@@ -1051,7 +1149,7 @@
             <div class="lg:col-span-5 space-y-3.5">
                 
                 <!-- Paket Terfavorit Pelanggan Baru -->
-                <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5">
+                <div class="ims-glass-card p-3 sm:p-3.5 space-y-2.5">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                         <h4 class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                             Paket Populer (Tahun {{ $selectedTahun }})
@@ -1093,7 +1191,7 @@
                 </div>
 
                 <!-- Funnel / Progres Pendaftaran Baru -->
-                <div class="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+                <div class="ims-glass-card p-3 sm:p-3.5 space-y-2">
                     <h4 class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-1.5">
                         Status Alur Pendaftaran Baru
                     </h4>

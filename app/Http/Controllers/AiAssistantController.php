@@ -1304,53 +1304,24 @@ class AiAssistantController extends Controller
             'parts' => [['text' => $currentUserPrompt]],
         ];
 
-        // 1. Discover or use cached valid models for this API key
-        $cacheKey = 'gemini_valid_models_' . substr(md5($apiKey), 0, 8);
-        $discovered = Cache::get($cacheKey);
-        if (!$discovered) {
-            try {
-                $listRes = Http::timeout(4)->get("https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}");
-                if ($listRes->successful()) {
-                    $remoteModels = $listRes->json('models', []);
-                    $validModels = [];
-                    foreach ($remoteModels as $rm) {
-                        $methods = $rm['supportedGenerationMethods'] ?? [];
-                        if (in_array('generateContent', $methods)) {
-                            $mName = str_replace('models/', '', $rm['name'] ?? '');
-                            if (!str_contains($mName, '2.0-flash') && !str_contains($mName, 'flash-lite')) {
-                                $validModels[] = $mName;
-                            }
-                        }
-                    }
-                    if (!empty($validModels)) {
-                        usort($validModels, function ($a, $b) {
-                            $scoreA = str_contains($a, '2.5-flash') ? 6 : (str_contains($a, '1.5-flash') ? 5 : (str_contains($a, 'flash') ? 3 : 1));
-                            $scoreB = str_contains($b, '2.5-flash') ? 6 : (str_contains($b, '1.5-flash') ? 5 : (str_contains($b, 'flash') ? 3 : 1));
-                            return $scoreB <=> $scoreA;
-                        });
-                        $discovered = $validModels;
-                        Cache::put($cacheKey, $discovered, 3600);
-                    }
-                }
-            } catch (\Throwable $e) {
-                // Fallback silently if Google ListModels endpoint is slow or unreachable
-            }
-        }
-
-        $defaultCandidates = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
-        $modelsToTry = !empty($discovered) 
-            ? array_values(array_unique(array_merge([$model], $discovered, $defaultCandidates)))
-            : array_values(array_unique(array_merge([$model], $defaultCandidates)));
+        // 1. Candidate models to try (no extra probe request to save 15 RPM quota)
+        $defaultCandidates = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+        $modelsToTry = array_values(array_unique(array_filter(array_merge([$model], $defaultCandidates))));
         $modelsToTry = array_values(array_filter($modelsToTry, fn($m) => !str_contains($m, '2.0-flash') && !str_contains($m, 'flash-lite') && !str_contains($m, '1.5-pro')));
-        $modelsToTry = array_slice($modelsToTry, 0, 3);
+        $modelsToTry = array_slice($modelsToTry, 0, 2);
 
         // 2. Iterate through candidate models with fast per-step timeout
         $triedModels = [];
         $lastError = 'Semua model Gemini yang dicoba gagal merespon.';
 
-        // If context already contains definitive answers (e.g. pre-calculated statistics or overview),
-        // skip database query tools to avoid multi-step loops and Google 15 RPM rate limiting!
-        $hasCompleteContext = !empty($contextData['stats']['new_customers_this_month'])
+        // Detect if query is conversational/system/meta (not an explicit request to run database SQL)
+        $lowerMsg = strtolower($userMessage);
+        $isDbQueryIntent = preg_match('/\b(select|cari data|cek database|jalankan query|tabel|kolom|struktur|query)\b/i', $lowerMsg);
+
+        // If context already contains answers OR query is conversational, skip database tools!
+        // This ensures a 1-shot instant response (< 500ms) and prevents multi-step RPM quota exhaustion!
+        $hasCompleteContext = !$isDbQueryIntent
+            || !empty($contextData['stats']['new_customers_this_month'])
             || !empty($contextData['stats']['total_customers'])
             || !empty($contextData['stats']['active_customers'])
             || !empty($contextData['olts'])

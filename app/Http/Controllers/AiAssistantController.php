@@ -137,6 +137,9 @@ class AiAssistantController extends Controller
                         $this->recordKeyError($key, $msg, str_contains($msgLower, '429') ? 429 : 500);
                     }
                     Log::warning("[AiAssistant] Gemini Key #{$keyIndex} gagal: " . $msg . ". Beralih ke kunci berikutnya...");
+                    if (str_contains($msgLower, 'high demand')) {
+                        usleep(600000); // 600ms pacing before trying next key to allow Google load spike to clear
+                    }
                     if (str_contains($msgLower, 'timed out') || str_contains($msgLower, 'could not resolve') || str_contains($msgLower, 'connection') || str_contains($msgLower, 'curl error 28')) {
                         // Server outbound connection to Google API is blocked or unreachable; cache for 120s and fail fast to local engine
                         Cache::put('google_api_network_unreachable', true, 120);
@@ -166,6 +169,8 @@ class AiAssistantController extends Controller
                 $shortErr = "Batas kuota harian akun Google (Free Tier) habis. Google meminta menunggu: {$retryDuration} atau gunakan API Key dari project Google baru";
             } elseif (str_contains($errDetail, 'plan and billing details') || str_contains($errDetail, 'limit: 0')) {
                 $shortErr = "Batas kuota gratis Google Project habis (Perlu API Key dari akun/project Google baru atau aktivasi billing)";
+            } elseif (str_contains(strtolower($errDetail), 'high demand')) {
+                $shortErr = "Server Google AI (Gemini 3.8) sedang mengalami lonjakan antrean global (High Demand). Silakan ulangi dalam beberapa detik";
             } elseif (str_contains($errDetail, '429')) {
                 $shortErr = "Limit frekuensi per menit Google (15 RPM) tercapai. Kuota pulih otomatis dalam ~{$minCoolSec} detik";
             } else {
@@ -398,7 +403,7 @@ class AiAssistantController extends Controller
 
         $prompt = trim($request->input('prompt', 'Konfirmasi tes koneksi live AI Gemini IMS2 aktif. Berikan respon 1 kalimat padat.'));
 
-        $defaultCandidates = ['gemini-3.8-flash', 'gemini-3.8'];
+        $defaultCandidates = ['gemini-3.8-flash', 'gemini-3.8-pro', 'gemini-3.8'];
         $modelsToTry = array_values(array_unique(array_filter(array_merge([$configuredModel], $defaultCandidates))));
 
         // Probe active models from Google API for this specific key
@@ -1473,7 +1478,7 @@ class AiAssistantController extends Controller
         if (empty($model) || str_contains($model, 'transcribe') || str_contains($model, '2.0-flash')) {
             $model = 'gemini-3.8-flash';
         }
-        $defaultCandidates = ['gemini-3.8-flash', 'gemini-3.8'];
+        $defaultCandidates = ['gemini-3.8-flash', 'gemini-3.8-pro', 'gemini-3.8'];
         $modelsToTry = array_values(array_unique(array_filter(array_merge([$model], $defaultCandidates))));
         $modelsToTry = array_slice($modelsToTry, 0, 2);
 
@@ -1593,18 +1598,18 @@ class AiAssistantController extends Controller
                             throw new \Exception("Autentikasi API Key gagal ({$statusCode}): " . $errMessage);
                         }
 
-                        // 3. High demand spike: quick 300ms pause and retry once on step 0
+                        // 3. High demand spike: pause 800ms and retry once on step 0
                         if (str_contains(strtolower($errMessage), 'high demand') && $step === 0) {
-                            usleep(300000);
+                            usleep(800000);
                             $retryRes = Http::withOptions([
                                 'curl' => [
                                     CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
                                     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                    CURLOPT_CONNECTTIMEOUT => 3,
+                                    CURLOPT_CONNECTTIMEOUT => 4,
                                     CURLOPT_SSL_VERIFYPEER => false,
                                     CURLOPT_SSL_VERIFYHOST => 0,
                                 ],
-                            ])->timeout(8)->post($url, $payload);
+                            ])->timeout(10)->post($url, $payload);
                             if ($retryRes->successful()) {
                                 $response = $retryRes;
                                 goto process_step_response;

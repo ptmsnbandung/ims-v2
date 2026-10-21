@@ -416,6 +416,7 @@ async function executePing() {
             pTokensEl.innerText = data.tokens?.prompt || 0;
             cTokensEl.innerText = data.tokens?.candidates || 0;
             replyText.innerText = data.reply || '(Respon kosong)';
+            setTimeout(() => { window.location.reload(); }, 1500);
         } else {
             statusBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30';
             statusBadge.innerText = 'ERROR ' + (data.status_code || 500);

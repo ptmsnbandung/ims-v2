@@ -138,6 +138,14 @@ class AiAssistantController extends Controller
             $kPercent = min(100, round(($kRequests / $rpdPerKey) * 100, 1));
             $masked = strlen($k) > 10 ? substr($k, 0, 6) . '...' . substr($k, -4) : 'AIzaSy...';
 
+            // Auto-clear stale error from previously deprecated gemini-2.0-flash
+            if (!empty($keyStats['last_error']) && str_contains($keyStats['last_error'], 'gemini-2.0-flash')) {
+                $keyStats['last_error'] = null;
+                $keyStats['status'] = $kRequests > 0 ? 'active' : 'standby';
+                $usageData['keys'][$keyId] = $keyStats;
+                Cache::put('ims_ai_usage_' . $today, $usageData, now()->addDays(14));
+            }
+
             $status = $keyStats['status'] ?? 'standby';
             if ($status === 'standby' && $kRequests > 0) {
                 $status = 'active';

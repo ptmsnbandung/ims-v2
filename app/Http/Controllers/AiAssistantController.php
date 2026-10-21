@@ -71,6 +71,15 @@ class AiAssistantController extends Controller
                 $keyIndex = $item['original_index'];
                 $keysAttempted++;
 
+                // Track live RPM usage for current minute
+                $keyId = substr(md5($key), 0, 10);
+                $minuteKey = 'ims_ai_rpm_' . $keyId . '_' . date('YmdHi');
+                if (!Cache::has($minuteKey)) {
+                    Cache::put($minuteKey, 1, 120);
+                } else {
+                    Cache::increment($minuteKey);
+                }
+
                 try {
                     $reply = $this->callGeminiApi($key, $geminiModel, $userMessage, $history, $contextData, $currentUser);
                     return response()->json([
@@ -104,11 +113,20 @@ class AiAssistantController extends Controller
             $errDetail = $lastException?->getMessage() ?? 'Google API sedang cooldown atau batas limit tercapai.';
             $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
 
+            // Calculate minimum cooldown seconds remaining among all keys
+            $minCoolSec = 60;
+            foreach ($geminiKeys as $k) {
+                $cSec = max(0, ((int)Cache::get('gemini_key_cooldown_' . md5($k), 0)) - now()->timestamp);
+                if ($cSec > 0 && $cSec < $minCoolSec) {
+                    $minCoolSec = $cSec;
+                }
+            }
+
             $shortErr = str_contains($errDetail, '429') 
-                ? 'Limit kuota/frekuensi Google (429 Too Many Requests)' 
+                ? "Limit frekuensi per menit Google (15 RPM) tercapai. Kuota pulih otomatis dalam ~{$minCoolSec} detik" 
                 : substr($errDetail, 0, 90);
 
-            $note = "\n\n---\n> ℹ️ *Info Failover: Sistem telah mencoba ke-{$totalKeys} API Key Google terdaftar, namun seluruhnya merespon '{$shortErr}'. Dijawab otomatis via Asisten Internal IMS2.*";
+            $note = "\n\n---\n> ℹ️ *Info Failover: Sistem telah mencoba ke-{$totalKeys} API Key Google terdaftar. Seluruhnya merespon '{$shortErr}'. Dijawab otomatis via Asisten Internal IMS2.*";
             $fallbackReply .= $note;
 
             return response()->json([
@@ -168,11 +186,18 @@ class AiAssistantController extends Controller
             'keys' => [],
         ]);
 
-        $rpdPerKey = 1500; // Free Tier standard Google Gemini 2.0 Flash (1,500 RPD)
+        $rpdPerKey = 1500; // Free Tier standard Google Gemini 2.5 Flash (1,500 RPD)
+        $rpmPerKey = 15;   // Free Tier standard Google Gemini (15 RPM)
         $totalPoolRpd = count($geminiKeys) * $rpdPerKey;
+        $totalPoolRpm = count($geminiKeys) * $rpmPerKey;
         $totalRequestsUsed = (int)($usageData['total_requests'] ?? 0);
         $totalRequestsRemaining = max(0, $totalPoolRpd - $totalRequestsUsed);
         $percentUsed = $totalPoolRpd > 0 ? min(100, round(($totalRequestsUsed / $totalPoolRpd) * 100, 1)) : 0;
+
+        $totalRpmUsedCurrentMinute = 0;
+        $totalActiveKeys = 0;
+        $totalCoolingKeys = 0;
+        $activeCooldowns = [];
 
         // Build key details
         $keyList = [];
@@ -194,6 +219,18 @@ class AiAssistantController extends Controller
             $masked = strlen($k) > 10 ? substr($k, 0, 6) . '...' . substr($k, -4) : 'AIzaSy...';
 
             $cooldownSec = max(0, ((int)Cache::get('gemini_key_cooldown_' . md5($k), 0)) - now()->timestamp);
+            if ($cooldownSec > 0) {
+                $totalCoolingKeys++;
+                $activeCooldowns[] = $cooldownSec;
+            } else {
+                $totalActiveKeys++;
+            }
+
+            // Real-time requests in current minute (RPM)
+            $kRpmUsed = (int)Cache::get('ims_ai_rpm_' . $keyId . '_' . date('YmdHi'), 0);
+            $kRpmRemaining = max(0, $rpmPerKey - $kRpmUsed);
+            $kRpmPercent = min(100, round(($kRpmUsed / $rpmPerKey) * 100, 1));
+            $totalRpmUsedCurrentMinute += $kRpmUsed;
 
             // Auto-clear stale errors from previously deprecated models, internal step limits, temporary spikes, or expired minute-rate-limits (RPM)
             if ($cooldownSec === 0 && !empty($keyStats['last_error']) && (
@@ -229,10 +266,15 @@ class AiAssistantController extends Controller
                 'key_id' => $keyId,
                 'masked' => $masked,
                 'status' => $status,
+                'cooldown_sec' => $cooldownSec,
                 'requests_used' => $kRequests,
                 'requests_remaining' => $kRemaining,
                 'percent_used' => $kPercent,
                 'limit_rpd' => $rpdPerKey,
+                'rpm_limit' => $rpmPerKey,
+                'rpm_used' => $kRpmUsed,
+                'rpm_remaining' => $kRpmRemaining,
+                'rpm_percent' => $kRpmPercent,
                 'prompt_tokens' => (int)($keyStats['prompt_tokens'] ?? 0),
                 'candidates_tokens' => (int)($keyStats['candidates_tokens'] ?? 0),
                 'total_tokens' => (int)($keyStats['total_tokens'] ?? 0),
@@ -240,6 +282,8 @@ class AiAssistantController extends Controller
                 'last_error' => $keyStats['last_error'] ?? null,
             ];
         }
+
+        $minCooldownRemaining = !empty($activeCooldowns) ? min($activeCooldowns) : 0;
 
         // Calculate reset countdown (07:00 WIB = 00:00 UTC)
         $now = now();
@@ -255,6 +299,12 @@ class AiAssistantController extends Controller
             'total_keys' => count($geminiKeys),
             'model' => $geminiModel,
             'total_pool_rpd' => $totalPoolRpd,
+            'total_pool_rpm' => $totalPoolRpm,
+            'rpm_per_key' => $rpmPerKey,
+            'total_rpm_used_current_minute' => $totalRpmUsedCurrentMinute,
+            'total_active_keys' => $totalActiveKeys,
+            'total_cooling_keys' => $totalCoolingKeys,
+            'min_cooldown_remaining' => $minCooldownRemaining,
             'total_requests_used' => $totalRequestsUsed,
             'total_requests_remaining' => $totalRequestsRemaining,
             'percent_used' => $percentUsed,
@@ -402,14 +452,16 @@ class AiAssistantController extends Controller
         $today = now()->format('Y-m-d');
         Cache::forget('ims_ai_usage_' . $today);
 
-        // Clear any cooldown locks on configured keys
+        // Clear any cooldown locks and live RPM counters on configured keys
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
         foreach ($geminiKeys as $k) {
+            $kid = substr(md5($k), 0, 10);
             Cache::forget('gemini_key_cooldown_' . md5($k));
+            Cache::forget('ims_ai_rpm_' . $kid . '_' . date('YmdHi'));
         }
 
-        return response()->json(['success' => true, 'message' => 'Cache monitoring token dan cooldown API key AI berhasil direset.']);
+        return response()->json(['success' => true, 'message' => 'Cache monitoring token, RPM, dan cooldown API key AI berhasil direset.']);
     }
 
     /**

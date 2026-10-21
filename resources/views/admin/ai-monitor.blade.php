@@ -39,7 +39,7 @@
     </div>
 
     <!-- Top Summary Metric Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <!-- 1. Total Pool Kuota Request (RPD) -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs relative overflow-hidden">
             <div class="flex items-center justify-between mb-3">
@@ -73,7 +73,50 @@
             </p>
         </div>
 
-        <!-- 2. Konsumsi Token Hari Ini -->
+        <!-- 2. Kuota Frekuensi Per Menit (RPM Pool) -->
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border {{ ($metrics['total_cooling_keys'] ?? 0) > 0 ? 'border-amber-500/50 shadow-md shadow-amber-500/5' : 'border-slate-200 dark:border-slate-800' }} shadow-xs relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Batas Frekuensi / Menit</span>
+                <span class="p-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                </span>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-bold font-mono text-slate-900 dark:text-white">
+                    {{ $metrics['total_pool_rpm'] ?? (count($metrics['keys']) * 15) }}
+                </span>
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                    RPM (15/akun)
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="flex justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400 mb-1.5">
+                    <span>Menit Berjalan: {{ $metrics['total_rpm_used_current_minute'] ?? 0 }} req</span>
+                    <span>{{ min(100, round((($metrics['total_rpm_used_current_minute'] ?? 0) / max(1, $metrics['total_pool_rpm'] ?? 1)) * 100)) }}%</span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div class="bg-gradient-to-r from-amber-500 to-rose-500 h-2 rounded-full transition-all duration-300" 
+                         style="width: {{ min(100, round((($metrics['total_rpm_used_current_minute'] ?? 0) / max(1, $metrics['total_pool_rpm'] ?? 1)) * 100)) }}%"></div>
+                </div>
+            </div>
+            <div class="mt-2.5 text-[11px] font-mono">
+                @if(($metrics['total_cooling_keys'] ?? 0) > 0)
+                    <span class="text-amber-500 dark:text-amber-400 font-semibold flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                        <span>{{ $metrics['total_cooling_keys'] }} Akun Cooldown (pulih ~{{ $metrics['min_cooldown_remaining'] ?? 0 }}s)</span>
+                    </span>
+                @else
+                    <span class="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span>{{ $metrics['total_active_keys'] ?? count($metrics['keys']) }} / {{ count($metrics['keys']) }} Akun Siap Pakai</span>
+                    </span>
+                @endif
+            </div>
+        </div>
+
+        <!-- 3. Konsumsi Token Hari Ini -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs relative overflow-hidden">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Token Hari Ini</span>
@@ -100,7 +143,7 @@
             <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2">Dihitung otomatis via Gemini usageMetadata</p>
         </div>
 
-        <!-- 3. Model & Kunci Terhubung -->
+        <!-- 4. Model & Kunci Terhubung -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs relative overflow-hidden">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Model AI Terpasang</span>
@@ -124,13 +167,13 @@
             <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2">Beralih otomatis jika akun terkena limit 429</p>
         </div>
 
-        <!-- 4. Reset Kuota Google Harian -->
+        <!-- 5. Reset Kuota Google Harian -->
         <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs relative overflow-hidden">
             <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Jadwal Reset Kuota Google</span>
-                <span class="p-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Jadwal Reset Harian</span>
+                <span class="p-2 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                     </svg>
                 </span>
             </div>
@@ -141,9 +184,9 @@
             </div>
             <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400">
                 <span>Reset Berikutnya:</span>
-                <span class="text-amber-500 font-bold">07:00 WIB (00:00 UTC)</span>
+                <span class="text-amber-500 font-bold">07:00 WIB</span>
             </div>
-            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2">Google me-refresh 1.500 RPD setiap tengah malam UTC</p>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2">Google me-refresh 1.500 RPD setiap 00:00 UTC</p>
         </div>
     </div>
 
@@ -218,12 +261,12 @@
                             <span class="text-[10px] text-slate-400 font-mono">ID: {{ $key['key_id'] }}</span>
                         </div>
 
-                        <!-- Usage Progress Bar -->
-                        <div class="space-y-1.5 mb-4">
+                        <!-- Usage Progress Bar (RPD) -->
+                        <div class="space-y-1.5 mb-3">
                             <div class="flex justify-between text-xs font-mono">
-                                <span class="text-slate-500 dark:text-slate-400">Request:</span>
+                                <span class="text-slate-500 dark:text-slate-400">Request Harian:</span>
                                 <span class="font-bold text-slate-900 dark:text-white">
-                                    {{ number_format($key['requests_used']) }} / {{ number_format($key['limit_rpd']) }}
+                                    {{ number_format($key['requests_used']) }} / {{ number_format($key['limit_rpd']) }} RPD
                                 </span>
                             </div>
                             <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
@@ -233,6 +276,38 @@
                             <div class="flex justify-between text-[10px] font-mono text-slate-400">
                                 <span>Sisa: {{ number_format($key['requests_remaining']) }} RPD</span>
                                 <span>{{ $key['percent_used'] }}%</span>
+                            </div>
+                        </div>
+
+                        <!-- RPM (Minute Quota) Meter -->
+                        <div class="space-y-1.5 mb-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800/80">
+                            <div class="flex justify-between items-center text-xs font-mono">
+                                <span class="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                    <span>Frekuensi Menit Ini:</span>
+                                </span>
+                                <span class="font-bold font-mono {{ ($key['rpm_used'] ?? 0) >= 14 ? 'text-rose-400' : (($key['rpm_used'] ?? 0) >= 10 ? 'text-amber-400' : 'text-slate-800 dark:text-slate-200') }}">
+                                    {{ $key['rpm_used'] ?? 0 }} / {{ $key['rpm_limit'] ?? 15 }} RPM
+                                </span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                <div class="h-1.5 rounded-full transition-all duration-300 {{ ($key['rpm_used'] ?? 0) >= 14 ? 'bg-rose-500' : (($key['rpm_used'] ?? 0) >= 10 ? 'bg-amber-500' : 'bg-cyan-500') }}" 
+                                     style="width: {{ $key['rpm_percent'] ?? 0 }}%"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px] font-mono">
+                                <span class="text-slate-400">Sisa Menit Ini: {{ $key['rpm_remaining'] ?? 15 }} req</span>
+                                @if(!empty($key['cooldown_sec']) && $key['cooldown_sec'] > 0)
+                                    <span class="inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 key-cooldown-timer animate-pulse" 
+                                          data-seconds="{{ $key['cooldown_sec'] }}">
+                                        ⏳ Cooldown: {{ $key['cooldown_sec'] }}s
+                                    </span>
+                                @else
+                                    <span class="text-emerald-500 font-semibold flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Ready
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -470,5 +545,24 @@ async function resetMetrics() {
         alert('Gagal mereset cache: ' + e.message);
     }
 }
+
+// Live Realtime Ticker for RPM Cooldown Countdown
+setInterval(() => {
+    let anyCooled = false;
+    document.querySelectorAll('.key-cooldown-timer').forEach(el => {
+        let sec = parseInt(el.getAttribute('data-seconds') || '0', 10);
+        if (sec > 1) {
+            sec--;
+            el.setAttribute('data-seconds', sec);
+            el.textContent = `⏳ Cooldown: ${sec}s`;
+            anyCooled = true;
+        } else if (sec === 1) {
+            el.setAttribute('data-seconds', 0);
+            el.textContent = '✅ Pulih!';
+            el.className = 'inline-flex items-center gap-1 font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
+            setTimeout(() => window.location.reload(), 1500);
+        }
+    });
+}, 1000);
 </script>
 @endsection

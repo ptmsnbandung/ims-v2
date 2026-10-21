@@ -35,10 +35,7 @@ class AiAssistantController extends Controller
         // 2. Check if Gemini API Key is configured (supports multiple comma-separated keys for failover & quota pooling)
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
-        if (str_contains($geminiModel, '2.5-flash')) {
-            $geminiModel = 'gemini-2.0-flash';
-        }
+        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
 
         if (!empty($geminiKeys)) {
             $lastException = null;
@@ -85,10 +82,7 @@ class AiAssistantController extends Controller
         $user = auth()->user();
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $configuredModel = (string)config('services.gemini.model', 'gemini-2.0-flash');
-        if (str_contains($configuredModel, '2.5-flash')) {
-            $configuredModel = 'gemini-2.0-flash';
-        }
+        $configuredModel = (string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash'));
         return response()->json([
             'configured' => !empty($geminiKeys),
             'key_count' => count($geminiKeys),
@@ -107,10 +101,7 @@ class AiAssistantController extends Controller
     {
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
-        if (str_contains($geminiModel, '2.5-flash')) {
-            $geminiModel = 'gemini-2.0-flash';
-        }
+        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
 
         $today = now()->format('Y-m-d');
         $usageData = Cache::get('ims_ai_usage_' . $today, [
@@ -209,10 +200,7 @@ class AiAssistantController extends Controller
     {
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        $geminiModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.0-flash')));
-        if (str_contains($geminiModel, '2.5-flash')) {
-            $geminiModel = 'gemini-2.0-flash';
-        }
+        $configuredModel = trim((string)(config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-2.5-flash')));
 
         if (empty($geminiKeys)) {
             return response()->json(['success' => false, 'message' => 'Belum ada GEMINI_API_KEY terkonfigurasi di sistem.'], 400);
@@ -224,57 +212,76 @@ class AiAssistantController extends Controller
 
         $prompt = trim($request->input('prompt', 'Konfirmasi tes koneksi live AI Gemini IMS2 aktif. Berikan respon 1 kalimat padat.'));
 
+        $modelsToTry = array_values(array_unique(array_filter([
+            $configuredModel,
+            'gemini-2.5-flash',
+            'gemini-1.5-flash',
+            'gemini-2.0-flash',
+        ])));
+
         $startTime = microtime(true);
-        try {
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$selectedKey}";
-            $response = Http::timeout(10)->post($url, [
-                'contents' => [
-                    ['role' => 'user', 'parts' => [['text' => $prompt]]],
-                ],
-                'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 150],
-            ]);
+        $lastError = 'Gagal menghubungi Gemini API';
+        $lastStatus = 500;
 
-            $latency = round((microtime(true) - $startTime) * 1000);
+        foreach ($modelsToTry as $geminiModel) {
+            try {
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$selectedKey}";
+                $response = Http::timeout(10)->post($url, [
+                    'contents' => [
+                        ['role' => 'user', 'parts' => [['text' => $prompt]]],
+                    ],
+                    'generationConfig' => ['temperature' => 0.2, 'maxOutputTokens' => 150],
+                ]);
 
-            if (!$response->successful()) {
-                $err = $response->json('error.message') ?? ('HTTP ' . $response->status());
-                $this->recordKeyError($selectedKey, $err, $response->status());
+                $latency = round((microtime(true) - $startTime) * 1000);
+
+                if (!$response->successful()) {
+                    $err = $response->json('error.message') ?? ('HTTP ' . $response->status());
+                    $lastError = $err;
+                    $lastStatus = $response->status();
+
+                    // If error suggests another model, add and try it immediately
+                    if (preg_match('/models\/([a-zA-Z0-9._-]+)/i', $err, $mMatches)) {
+                        $suggestedModel = $mMatches[1];
+                        if (!in_array($suggestedModel, $modelsToTry, true)) {
+                            $modelsToTry[] = $suggestedModel;
+                        }
+                    }
+                    continue;
+                }
+
+                $usage = $response->json('usageMetadata');
+                $this->recordUsage($selectedKey, $usage);
+
+                $parts = $response->json('candidates.0.content.parts') ?? [];
+                $reply = trim(implode('', array_map(fn($p) => empty($p['thought']) ? ($p['text'] ?? '') : '', $parts)));
+
                 return response()->json([
-                    'success' => false,
+                    'success' => true,
                     'key_index' => $actualIndex,
+                    'model' => $geminiModel,
                     'latency_ms' => $latency,
-                    'error' => $err,
-                    'status_code' => $response->status(),
-                ], 400);
+                    'reply' => $reply,
+                    'tokens' => [
+                        'prompt' => (int)($usage['promptTokenCount'] ?? 0),
+                        'candidates' => (int)($usage['candidatesTokenCount'] ?? 0),
+                        'total' => (int)($usage['totalTokenCount'] ?? 0),
+                    ],
+                ]);
+            } catch (\Throwable $e) {
+                $lastError = $e->getMessage();
             }
-
-            $usage = $response->json('usageMetadata');
-            $this->recordUsage($selectedKey, $usage);
-
-            $parts = $response->json('candidates.0.content.parts') ?? [];
-            $reply = trim(implode('', array_map(fn($p) => empty($p['thought']) ? ($p['text'] ?? '') : '', $parts)));
-
-            return response()->json([
-                'success' => true,
-                'key_index' => $actualIndex,
-                'latency_ms' => $latency,
-                'reply' => $reply,
-                'tokens' => [
-                    'prompt' => (int)($usage['promptTokenCount'] ?? 0),
-                    'candidates' => (int)($usage['candidatesTokenCount'] ?? 0),
-                    'total' => (int)($usage['totalTokenCount'] ?? 0),
-                ],
-            ]);
-        } catch (\Throwable $e) {
-            $latency = round((microtime(true) - $startTime) * 1000);
-            $this->recordKeyError($selectedKey, $e->getMessage(), 500);
-            return response()->json([
-                'success' => false,
-                'key_index' => $actualIndex,
-                'latency_ms' => $latency,
-                'error' => $e->getMessage(),
-            ], 500);
         }
+
+        $latency = round((microtime(true) - $startTime) * 1000);
+        $this->recordKeyError($selectedKey, $lastError, $lastStatus);
+        return response()->json([
+            'success' => false,
+            'key_index' => $actualIndex,
+            'latency_ms' => $latency,
+            'error' => $lastError,
+            'status_code' => $lastStatus,
+        ], $lastStatus >= 400 && $lastStatus < 600 ? $lastStatus : 500);
     }
 
     /**
@@ -1028,15 +1035,13 @@ class AiAssistantController extends Controller
                         $methods = $rm['supportedGenerationMethods'] ?? [];
                         if (in_array('generateContent', $methods)) {
                             $mName = str_replace('models/', '', $rm['name'] ?? '');
-                            if (!str_contains($mName, '2.5-flash')) {
-                                $validModels[] = $mName;
-                            }
+                            $validModels[] = $mName;
                         }
                     }
                     if (!empty($validModels)) {
                         usort($validModels, function ($a, $b) {
-                            $scoreA = str_contains($a, '2.0-flash') ? 5 : (str_contains($a, 'flash') ? 3 : 1);
-                            $scoreB = str_contains($b, '2.0-flash') ? 5 : (str_contains($b, 'flash') ? 3 : 1);
+                            $scoreA = str_contains($a, '2.5-flash') ? 6 : (str_contains($a, '2.0-flash') ? 5 : (str_contains($a, 'flash') ? 3 : 1));
+                            $scoreB = str_contains($b, '2.5-flash') ? 6 : (str_contains($b, '2.0-flash') ? 5 : (str_contains($b, 'flash') ? 3 : 1));
                             return $scoreB <=> $scoreA;
                         });
                         $discovered = $validModels;
@@ -1048,10 +1053,9 @@ class AiAssistantController extends Controller
             }
         }
 
-        $defaultCandidates = ['gemini-2.0-flash', 'gemini-1.5-flash'];
-        $cleanModel = str_contains($model, '2.5-flash') ? 'gemini-2.0-flash' : $model;
-        $modelsToTry = array_values(array_filter(array_unique(array_merge([$cleanModel], (array)($discovered ?: $defaultCandidates)))));
-        $modelsToTry = array_slice($modelsToTry, 0, 2);
+        $defaultCandidates = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+        $modelsToTry = array_values(array_filter(array_unique(array_merge([$model], (array)($discovered ?: $defaultCandidates)))));
+        $modelsToTry = array_slice($modelsToTry, 0, 3);
 
         // 2. Iterate through candidate models with fast per-step timeout
         $triedModels = [];

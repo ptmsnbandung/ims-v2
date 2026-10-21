@@ -69,11 +69,13 @@ class AiAssistantController extends Controller
             }
 
             // Fallback to local heuristic engine when all keys are exhausted or error
+            $errDetail = $lastException?->getMessage() ?? 'Google API sedang cooldown atau batas limit tercapai.';
             $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
             return response()->json([
                 'status' => 'success',
                 'reply' => $fallbackReply,
                 'mode' => 'local_fallback',
+                'fallback_reason' => $errDetail,
             ]);
         }
 
@@ -1156,9 +1158,9 @@ class AiAssistantController extends Controller
             }
         }
 
-        $defaultCandidates = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+        $defaultCandidates = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
         $modelsToTry = !empty($discovered) 
-            ? array_values(array_unique(array_merge([$model], $discovered)))
+            ? array_values(array_unique(array_merge([$model], $discovered, $defaultCandidates)))
             : array_values(array_unique(array_merge([$model], $defaultCandidates)));
         $modelsToTry = array_values(array_filter($modelsToTry, fn($m) => !str_contains($m, '2.0-flash') && !str_contains($m, 'flash-lite') && !str_contains($m, '1.5-pro')));
         $modelsToTry = array_slice($modelsToTry, 0, 3);
@@ -1166,7 +1168,16 @@ class AiAssistantController extends Controller
         // 2. Iterate through candidate models with fast per-step timeout
         $triedModels = [];
         $lastError = 'Semua model Gemini yang dicoba gagal merespon.';
-        $tools = [['functionDeclarations' => [
+
+        // If context already contains definitive answers (e.g. pre-calculated statistics or overview),
+        // skip database query tools to avoid multi-step loops and Google 15 RPM rate limiting!
+        $hasCompleteContext = !empty($contextData['stats']['new_customers_this_month'])
+            || !empty($contextData['stats']['total_customers'])
+            || !empty($contextData['stats']['active_customers'])
+            || !empty($contextData['olts'])
+            || !empty($contextData['tickets']);
+
+        $tools = $hasCompleteContext ? [] : [['functionDeclarations' => [
             [
                 'name' => 'describe_table',
                 'description' => 'Lihat daftar kolom sebuah tabel database IMS2 beserta 1 contoh baris. Panggil sebelum menulis query pada tabel yang belum dikenal.',

@@ -52,6 +52,21 @@ class AiAssistantController extends Controller
             $geminiModel = 'gemini-2.5-flash';
         }
 
+        // Circuit Breaker: If outbound connection to Google API timed out recently, answer instantly (0.02s) via Local Engine
+        $isGeminiNetworkUnreachable = Cache::get('google_api_network_unreachable', false);
+        if ($isGeminiNetworkUnreachable) {
+            $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
+            $note = "\n\n---\n> ℹ️ *Info Failover: Koneksi ke Google AI sedang mengalami timeout/latensi tinggi jaringan. Pertanyaan dijawab seketika via Asisten Internal IMS2.*";
+            $fallbackReply .= $note;
+
+            return response()->json([
+                'status' => 'success',
+                'reply' => $fallbackReply,
+                'mode' => 'local_fallback',
+                'fallback_reason' => 'Google API Network Timeout Circuit Breaker Active',
+            ]);
+        }
+
         if (!empty($geminiKeys)) {
             $now = now()->timestamp;
             $freshKeys = [];
@@ -121,8 +136,9 @@ class AiAssistantController extends Controller
                         $this->recordKeyError($key, $msg, str_contains($msgLower, '429') ? 429 : 500);
                     }
                     Log::warning("[AiAssistant] Gemini Key #{$keyIndex} gagal: " . $msg . ". Beralih ke kunci berikutnya...");
-                    if (str_contains($msgLower, 'timed out') || str_contains($msgLower, 'could not resolve') || str_contains($msgLower, 'connection')) {
-                        // Server outbound connection to Google API is blocked or unreachable; fail fast to local engine
+                    if (str_contains($msgLower, 'timed out') || str_contains($msgLower, 'could not resolve') || str_contains($msgLower, 'connection') || str_contains($msgLower, 'curl error 28')) {
+                        // Server outbound connection to Google API is blocked or unreachable; cache for 120s and fail fast to local engine
+                        Cache::put('google_api_network_unreachable', true, 120);
                         break;
                     }
                 }
@@ -142,7 +158,9 @@ class AiAssistantController extends Controller
                 }
             }
 
-            if (preg_match('/retry in ([0-9]+[a-z0-9.]+)/i', $errDetail, $retryMatch)) {
+            if (str_contains($errDetail, 'timed out') || str_contains($errDetail, 'curl error 28') || str_contains($errDetail, 'operation timed out')) {
+                $shortErr = "Koneksi ke server Google mengalami timeout/latensi tinggi (ISP/Firewall)";
+            } elseif (preg_match('/retry in ([0-9]+[a-z0-9.]+)/i', $errDetail, $retryMatch)) {
                 $retryDuration = $retryMatch[1];
                 $shortErr = "Batas kuota harian akun Google (Free Tier) habis. Google meminta menunggu: {$retryDuration} atau gunakan API Key dari project Google baru";
             } elseif (str_contains($errDetail, 'plan and billing details') || str_contains($errDetail, 'limit: 0')) {
@@ -1536,11 +1554,11 @@ class AiAssistantController extends Controller
                         'curl' => [
                             CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
                             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                            CURLOPT_CONNECTTIMEOUT => 3,
+                            CURLOPT_CONNECTTIMEOUT => 4,
                             CURLOPT_SSL_VERIFYPEER => false,
                             CURLOPT_SSL_VERIFYHOST => 0,
                         ],
-                    ])->timeout(8)->post($url, $payload);
+                    ])->timeout(12)->post($url, $payload);
 
                     // Automatic fallback if specific model does not support thinkingConfig
                     if (!$response->successful() && str_contains($response->body(), 'thinkingConfig')) {
@@ -1549,11 +1567,11 @@ class AiAssistantController extends Controller
                             'curl' => [
                                 CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
                                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                CURLOPT_CONNECTTIMEOUT => 3,
+                                CURLOPT_CONNECTTIMEOUT => 4,
                                 CURLOPT_SSL_VERIFYPEER => false,
                                 CURLOPT_SSL_VERIFYHOST => 0,
                             ],
-                        ])->timeout(8)->post($url, $payload);
+                        ])->timeout(12)->post($url, $payload);
                     }
 
                     if (!$response->successful()) {
@@ -1657,7 +1675,8 @@ class AiAssistantController extends Controller
             } catch (\Throwable $e) {
                 $lastError = $e->getMessage();
                 $firstError ??= "[{$mName}] " . $lastError;
-                if ($mIdx === 0 && (str_contains($lastError, 'Limit kuota') || str_contains($lastError, 'Autentikasi') || str_contains($lastError, 'timed out'))) {
+                $isNetworkIssue = str_contains($lastError, 'timed out') || str_contains($lastError, 'cURL error 28') || str_contains($lastError, 'could not resolve');
+                if ($isNetworkIssue || ($mIdx === 0 && (str_contains($lastError, 'Limit kuota') || str_contains($lastError, 'Autentikasi')))) {
                     throw $e;
                 }
             }

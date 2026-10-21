@@ -1321,26 +1321,42 @@ class AiAssistantController extends Controller
             . "Hari ini: {$today}.\n\n"
             . $this->schemaHint($userRole);
 
-        // Build contents array for Gemini
+        // Build contents array for Gemini ensuring strict user -> model -> user alternating turns
         $contents = [];
+
+        // Exclude the last message from history if it is the current user message
+        if (!empty($history)) {
+            $lastHistory = end($history);
+            if (($lastHistory['role'] ?? '') === 'user' && trim($lastHistory['text'] ?? '') === trim($userMessage)) {
+                array_pop($history);
+            }
+        }
 
         // Add relevant past conversation history (up to last 4 messages to save tokens)
         $recentHistory = array_slice($history, -4);
         foreach ($recentHistory as $msg) {
             $role = ($msg['role'] ?? 'user') === 'user' ? 'user' : 'model';
-            $text = $msg['text'] ?? '';
+            $text = trim($msg['text'] ?? '');
             if (!empty($text)) {
-                $contents[] = [
-                    'role' => $role,
-                    'parts' => [['text' => $text]],
-                ];
+                // Strip failover notes from past assistant responses so they don't pollute Gemini context
+                $cleanText = preg_replace('/\n*---\n*> ℹ️ \*Info Failover:[\s\S]*$/i', '', $text);
+                if (!empty($cleanText)) {
+                    $contents[] = [
+                        'role' => $role,
+                        'parts' => [['text' => $cleanText]],
+                    ];
+                }
             }
         }
 
         // Prepare context injection for the current prompt
         $contextPrompt = "Data internal terkini dari sistem IMS2 terkait pertanyaan pengguna:\n" . json_encode($contextData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
         $currentUserPrompt = "Pertanyaan User: {$userMessage}\n\n[Konteks Database IMS2]:\n{$contextPrompt}";
+
+        // Ensure alternating turns: if the last element in $contents is 'user', remove it to avoid Google HTTP 400
+        while (!empty($contents) && end($contents)['role'] === 'user') {
+            array_pop($contents);
+        }
 
         $contents[] = [
             'role' => 'user',
@@ -1414,12 +1430,13 @@ class AiAssistantController extends Controller
                         $payload['tools'] = $stepTools;
                     }
 
-                    $response = Http::timeout(12)->post($url, $payload);
+                    $response = Http::timeout(8)->post($url, $payload);
 
                     if (!$response->successful()) {
                         $errMessage = $response->json('error.message') ?? ('HTTP ' . $response->status());
                         $lastError = $errMessage;
                         $statusCode = $response->status();
+                        Log::error("[AiAssistant] Gemini call to {$mName} failed [HTTP {$statusCode}]: {$errMessage}");
 
                         // 1. Quota / Rate Limit (HTTP 429 or RESOURCE_EXHAUSTED):
                         // Google Cloud quotas apply at the API key / GCP project level.

@@ -529,7 +529,7 @@ window.imsAiCopilot = function() {
             this.$nextTick(() => this.scrollToBottom());
 
             try {
-                const historyPayload = this.messages.map(m => ({
+                const historyPayload = this.messages.slice(0, -1).map(m => ({
                     role: m.role === 'user' ? 'user' : 'model',
                     text: m.text
                 }));

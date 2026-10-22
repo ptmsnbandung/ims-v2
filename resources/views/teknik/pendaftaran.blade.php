@@ -353,109 +353,161 @@
                             <!-- 6. Aksi Workflow -->
                             <td class="py-2.5 px-3 align-top text-xs">
                                 <div class="flex flex-col gap-1 min-w-[120px]">
-                                    
-                                    {{-- Tahap 1: Pendaftaran Baru / Menunggu Verifikasi (#11, #11.1, #12) --}}
-                                    @if(in_array($item->status_reg, ['11', '11.1', '12']))
-                                        <button type="button" 
-                                                @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
-                                                title="Buat Jadwal Survey Lapangan">
-                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-                                            </svg>
-                                            <span>Schedule Survey</span>
-                                        </button>
-                                    @endif
+                                    @php
+                                        $canManageTechnical = !auth()->user()?->isNoc() || auth()->user()?->hasRole(['admin', 'direktur']);
+                                    @endphp
 
-                                    {{-- Tahap 2: Jadwal Survey Terbit (#13, #13.1) -> Siap Input Report Hasil Survey --}}
-                                    @if(in_array($item->status_reg, ['13', '13.1']))
-                                        <button type="button" 
-                                                @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
-                                                title="Input Laporan Hasil Survey Lokasi">
-                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                            <span>Report Survey</span>
-                                        </button>
-                                        <button type="button" 
-                                                @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
-                                            <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                            </svg>
-                                            <span>Ubah Survey</span>
-                                        </button>
-                                    @endif
-
-                                    {{-- Tahap 3: Selesai Survey (#16) -> Siap Dijadwalkan Instalasi --}}
-                                    @if($item->status_reg == '16')
-                                        <button type="button" 
-                                                @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
-                                                title="Buat Jadwal Instalasi & Pemasangan">
-                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 9.75v1.409l4.26 4.26" />
-                                            </svg>
-                                            <span>Schedule Instalasi</span>
-                                        </button>
-                                        <button type="button" 
-                                                @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-semibold">
-                                            <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
-                                            </svg>
-                                            <span>Edit Hasil Survey</span>
-                                        </button>
-                                    @endif
-
-                                    {{-- Tahap 4: Jadwal Instalasi Terbit (#17, #17.1) --}}
-                                    @if(in_array($item->status_reg, ['17', '17.1']))
-                                        <button type="button" 
-                                                @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
-                                                title="Input Laporan Hasil Instalasi & Barang">
-                                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                            <span>Report Instalasi</span>
-                                        </button>
-                                        <button type="button" 
-                                                @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
-                                            <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                            </svg>
-                                            <span>Ubah Instalasi</span>
-                                        </button>
-                                    @endif
-
-                                    {{-- Tahap 5: Selesai Instalasi (#18) --}}
-                                    @if($item->status_reg == '18')
-                                        @if(empty($item->aktivasi_note))
-                                            {{-- Belum kirim request ke NOC: tampilkan tombol kirim request --}}
+                                    @if($canManageTechnical)
+                                        {{-- AKSI WORKFLOW LAPANGAN UNTUK TEKNISI --}}
+                                        {{-- Tahap 1: Pendaftaran Baru / Menunggu Verifikasi (#11, #11.1, #12) --}}
+                                        @if(in_array($item->status_reg, ['11', '11.1', '12']))
                                             <button type="button" 
-                                                    @click="openRequestAktivasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
-                                                    title="Kirim Permintaan Aktivasi Layanan ke Tim NOC">
+                                                    @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                    title="Buat Jadwal Survey Lapangan">
                                                 <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a5 5 0 0 1-5.84 7.38v-4.8m5.84-2.58a5 5 0 0 0-7.38-5.84l3.4 3.4M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM6.166 5.106a.75.75 0 0 1 1.06 0l1.592 1.592a.75.75 0 0 1-1.06 1.06L6.166 6.166a.75.75 0 0 1 0-1.06Zm11.668 0a.75.75 0 0 1 0 1.06l-1.592 1.592a.75.75 0 1 1-1.06-1.06l1.592-1.592a.75.75 0 0 1 1.06 0Z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
                                                 </svg>
-                                                <span>Request Aktivasi NOC</span>
+                                                <span>Schedule Survey</span>
+                                            </button>
+                                        @endif
+
+                                        {{-- Tahap 2: Jadwal Survey Terbit (#13, #13.1) -> Siap Input Report Hasil Survey --}}
+                                        @if(in_array($item->status_reg, ['13', '13.1']))
+                                            <button type="button" 
+                                                    @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                    title="Input Laporan Hasil Survey Lokasi">
+                                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                                <span>Report Survey</span>
                                             </button>
                                             <button type="button" 
-                                                    @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                                    class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
-                                                <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
+                                                <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                                </svg>
+                                                <span>Ubah Survey</span>
+                                            </button>
+                                        @endif
+
+                                        {{-- Tahap 3: Selesai Survey (#16) -> Siap Dijadwalkan Instalasi --}}
+                                        @if($item->status_reg == '16')
+                                            <button type="button" 
+                                                    @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                    title="Buat Jadwal Instalasi & Pemasangan">
+                                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 9.75v1.409l4.26 4.26" />
+                                                </svg>
+                                                <span>Schedule Instalasi</span>
+                                            </button>
+                                            <button type="button" 
+                                                    @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-semibold">
+                                                <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
                                                 </svg>
-                                                <span>Edit Hasil Instalasi</span>
+                                                <span>Edit Hasil Survey</span>
                                             </button>
-                                        @else
-                                            {{-- Sudah dikirim ke NOC: menunggu jadwal aktivasi oleh NOC --}}
+                                        @endif
+
+                                        {{-- Tahap 4: Jadwal Instalasi Terbit (#17, #17.1) --}}
+                                        @if(in_array($item->status_reg, ['17', '17.1']))
+                                            <button type="button" 
+                                                    @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                    title="Input Laporan Hasil Instalasi & Barang">
+                                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                                <span>Report Instalasi</span>
+                                            </button>
+                                            <button type="button" 
+                                                    @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="inline-flex items-center gap-1.5 text-sky-700 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 text-[10px] transition font-semibold">
+                                                <svg class="w-3 h-3 text-sky-600 dark:text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                                </svg>
+                                                <span>Ubah Instalasi</span>
+                                            </button>
+                                        @endif
+
+                                        {{-- Tahap 5: Selesai Instalasi (#18) --}}
+                                        @if($item->status_reg == '18')
+                                            @if(empty($item->aktivasi_note))
+                                                {{-- Belum kirim request ke NOC: tampilkan tombol kirim request --}}
+                                                <button type="button" 
+                                                        @click="openRequestAktivasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                        class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-[10px] font-bold transition shadow-xs cursor-pointer"
+                                                        title="Kirim Permintaan Aktivasi Layanan ke Tim NOC">
+                                                    <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a5 5 0 0 1-5.84 7.38v-4.8m5.84-2.58a5 5 0 0 0-7.38-5.84l3.4 3.4M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75ZM6.166 5.106a.75.75 0 0 1 1.06 0l1.592 1.592a.75.75 0 0 1-1.06 1.06L6.166 6.166a.75.75 0 0 1 0-1.06Zm11.668 0a.75.75 0 0 1 0 1.06l-1.592 1.592a.75.75 0 1 1-1.06-1.06l1.592-1.592a.75.75 0 0 1 1.06 0Z" />
+                                                    </svg>
+                                                    <span>Request Aktivasi NOC</span>
+                                                </button>
+                                                <button type="button" 
+                                                        @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                        class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
+                                                    <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                                                    </svg>
+                                                    <span>Edit Hasil Instalasi</span>
+                                                </button>
+                                            @else
+                                                {{-- Sudah dikirim ke NOC: menunggu jadwal aktivasi oleh NOC --}}
+                                                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                    <span>Menunggu Jadwal NOC</span>
+                                                </div>
+                                                <button type="button" 
+                                                        @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                        class="inline-flex items-center gap-1.5 text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 text-[10px] transition font-semibold">
+                                                    <svg class="w-3 h-3 text-teal-600 dark:text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                    </svg>
+                                                    <span>Lihat Instalasi</span>
+                                                </button>
+                                            @endif
+                                        @endif
+                                    @else
+                                        {{-- TAMPILAN MONITORING UNTUK ROLE NOC (PROSES INSTALASI DILAKUKAN TEKNISI) --}}
+                                        @if(in_array($item->status_reg, ['11', '11.1', '12']))
+                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                                <span>Antrean Survey (Teknisi)</span>
+                                            </div>
+                                        @elseif(in_array($item->status_reg, ['13', '13.1']))
+                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-[10px] font-bold">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
+                                                <span>Survey Terjadwal (Teknisi)</span>
+                                            </div>
+                                        @elseif($item->status_reg == '16')
+                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                                <span>Antrean Instalasi (Teknisi)</span>
+                                            </div>
+                                            <button type="button" 
+                                                    @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                                    class="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 text-[10px] transition font-semibold">
+                                                <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                </svg>
+                                                <span>Lihat Hasil Survey</span>
+                                            </button>
+                                        @elseif(in_array($item->status_reg, ['17', '17.1']))
+                                            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300 text-[10px] font-bold">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
+                                                <span>Proses Instalasi (Teknisi)</span>
+                                            </div>
+                                        @elseif($item->status_reg == '18')
                                             <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                <span>Menunggu Jadwal NOC</span>
+                                                <span>Selesai Instalasi</span>
                                             </div>
                                             <button type="button" 
                                                     @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
@@ -607,47 +659,93 @@
 
                     <!-- Workflow Primary Actions -->
                     <div class="space-y-2 pt-1">
-                        {{-- Workflow Buttons by Status --}}
-                        @if(in_array($item->status_reg, ['11', '11.1', '12']))
-                            <button type="button" 
-                                    @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
-                                <span>Schedule Survey</span>
-                            </button>
-                        @elseif(in_array($item->status_reg, ['13', '13.1']))
-                            <button type="button" 
-                                    @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                <span>Report Survey</span>
-                            </button>
-                        @elseif($item->status_reg == '16')
-                            <button type="button" 
-                                    @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877"/></svg>
-                                <span>Schedule Instalasi</span>
-                            </button>
-                        @elseif(in_array($item->status_reg, ['17', '17.1']))
-                            <button type="button" 
-                                    @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                    class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                <span>Report Instalasi</span>
-                            </button>
-                        @elseif($item->status_reg == '18')
-                            @if(empty($item->aktivasi_note))
+                        @php
+                            $canManageTechnical = !auth()->user()?->isNoc() || auth()->user()?->hasRole(['admin', 'direktur']);
+                        @endphp
+
+                        @if($canManageTechnical)
+                            {{-- Workflow Buttons by Status (Teknisi / Admin) --}}
+                            @if(in_array($item->status_reg, ['11', '11.1', '12']))
                                 <button type="button" 
-                                        @click="openRequestAktivasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
-                                        class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold shadow-xs transition active:scale-98">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.59 14.37a5 5 0 0 1-5.84 7.38v-4.8"/></svg>
-                                    <span>Request Aktivasi NOC</span>
+                                        @click="openScheduleSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                                    <span>Schedule Survey</span>
                                 </button>
-                            @else
-                                <div class="w-full text-center py-2 px-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-500/20">
-                                    Menunggu Aktivasi NOC
+                            @elseif(in_array($item->status_reg, ['13', '13.1']))
+                                <button type="button" 
+                                        @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    <span>Report Survey</span>
+                                </button>
+                            @elseif($item->status_reg == '16')
+                                <button type="button" 
+                                        @click="openScheduleInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877"/></svg>
+                                    <span>Schedule Instalasi</span>
+                                </button>
+                            @elseif(in_array($item->status_reg, ['17', '17.1']))
+                                <button type="button" 
+                                        @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                    <span>Report Instalasi</span>
+                                </button>
+                            @elseif($item->status_reg == '18')
+                                @if(empty($item->aktivasi_note))
+                                    <button type="button" 
+                                            @click="openRequestAktivasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                            class="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold shadow-xs transition active:scale-98">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.59 14.37a5 5 0 0 1-5.84 7.38v-4.8"/></svg>
+                                        <span>Request Aktivasi NOC</span>
+                                    </button>
+                                @else
+                                    <div class="w-full text-center py-2 px-3 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-semibold border border-amber-500/20">
+                                        Menunggu Aktivasi NOC
+                                    </div>
+                                @endif
+                            @endif
+                        @else
+                            {{-- TAMPILAN MONITORING UNTUK ROLE NOC --}}
+                            @if(in_array($item->status_reg, ['11', '11.1', '12']))
+                                <div class="w-full text-center py-2 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-800 flex items-center justify-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                    <span>Antrean Survey (Teknisi)</span>
                                 </div>
+                            @elseif(in_array($item->status_reg, ['13', '13.1']))
+                                <div class="w-full text-center py-2 px-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 text-xs font-bold border border-sky-200 dark:border-sky-800 flex items-center justify-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                                    <span>Survey Terjadwal (Teknisi)</span>
+                                </div>
+                            @elseif($item->status_reg == '16')
+                                <div class="w-full text-center py-2 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200 dark:border-indigo-800 flex items-center justify-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                    <span>Antrean Instalasi (Teknisi)</span>
+                                </div>
+                                <button type="button" 
+                                        @click="openReportSurveyModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                                    <span>Lihat Hasil Survey</span>
+                                </button>
+                            @elseif(in_array($item->status_reg, ['17', '17.1']))
+                                <div class="w-full text-center py-2 px-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-800 flex items-center justify-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+                                    <span>Proses Instalasi (Teknisi)</span>
+                                </div>
+                            @elseif($item->status_reg == '18')
+                                <div class="w-full text-center py-2 px-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-xs font-bold border border-amber-300 dark:border-amber-700 flex items-center justify-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                    <span>Selesai Instalasi</span>
+                                </div>
+                                <button type="button" 
+                                        @click="openReportInstalasiModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}')"
+                                        class="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-xs font-semibold">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                                    <span>Lihat Instalasi</span>
+                                </button>
                             @endif
                         @endif
 

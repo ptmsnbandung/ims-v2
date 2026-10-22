@@ -161,9 +161,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('role:noc,direktur,admin,ceo')->prefix('noc')->name('noc.')->group(function () {
-        // 1. Dashboard NOC Command Center
+        // 1. Dashboard NOC Command Center & Pendaftaran
         Route::get('/', [NocController::class, 'dashboard'])->name('dashboard');
         Route::get('/dashboard', [NocController::class, 'dashboard'])->name('dashboard.index');
+        Route::get('/pendaftaran', fn() => redirect()->route('teknik.pendaftaran'))->name('pendaftaran');
 
         // 2. Menu OLT (Dropdown OLT -> PON -> ODP -> Users)
         Route::get('/network-olt/{olt_id?}', [OltExplorerController::class, 'index'])->name('network-olt');

@@ -1177,6 +1177,10 @@ class TeknikController extends Controller
      */
     public function storeScheduleSurvey(Request $request): RedirectResponse
     {
+        if (auth()->user()?->isNoc() && !auth()->user()?->hasRole(['admin', 'direktur'])) {
+            return redirect()->back()->with('error', 'Akses ditolak: Proses survey dan instalasi lapangan hanya dapat dilakukan oleh tim Teknisi.');
+        }
+
         $request->validate([
             'nomor_internet' => 'required|string',
             'survey_date_start' => 'required|date',
@@ -1308,6 +1312,10 @@ class TeknikController extends Controller
      */
     public function storeReportSurvey(Request $request): RedirectResponse
     {
+        if (auth()->user()?->isNoc() && !auth()->user()?->hasRole(['admin', 'direktur'])) {
+            return redirect()->back()->with('error', 'Akses ditolak: Proses survey dan instalasi lapangan hanya dapat dilakukan oleh tim Teknisi.');
+        }
+
         $request->validate([
             'nomor_internet' => 'required|string',
             'is_reschedule' => 'nullable|in:1,0,true,false',
@@ -1478,6 +1486,10 @@ class TeknikController extends Controller
      */
     public function storeScheduleInstalasi(Request $request): RedirectResponse
     {
+        if (auth()->user()?->isNoc() && !auth()->user()?->hasRole(['admin', 'direktur'])) {
+            return redirect()->back()->with('error', 'Akses ditolak: Proses survey dan instalasi lapangan hanya dapat dilakukan oleh tim Teknisi.');
+        }
+
         $request->validate([
             'nomor_internet' => 'required|string',
             'instalasi_date_start' => 'required|date',
@@ -1632,6 +1644,10 @@ class TeknikController extends Controller
      */
     public function storeReportInstalasi(Request $request): RedirectResponse
     {
+        if (auth()->user()?->isNoc() && !auth()->user()?->hasRole(['admin', 'direktur'])) {
+            return redirect()->back()->with('error', 'Akses ditolak: Proses survey dan instalasi lapangan hanya dapat dilakukan oleh tim Teknisi.');
+        }
+
         $request->validate([
             'nomor_internet' => 'required|string',
             'is_reschedule' => 'nullable|in:1,0,true,false',
@@ -1795,6 +1811,10 @@ class TeknikController extends Controller
      */
     public function requestAktivasiNoc(Request $request): RedirectResponse
     {
+        if (auth()->user()?->isNoc() && !auth()->user()?->hasRole(['admin', 'direktur'])) {
+            return redirect()->back()->with('error', 'Akses ditolak: Request aktivasi layanan ke NOC hanya dapat diajukan oleh tim Teknisi setelah instalasi selesai.');
+        }
+
         $request->validate([
             'nomor_internet' => 'required|string',
             'catatan_aktivasi' => 'nullable|string',
@@ -1997,7 +2017,7 @@ class TeknikController extends Controller
         }
 
         $now = now()->format('Y-m-d H:i:s');
-        $currentUser = auth()->user()->nama ?? 'TEKNIK';
+        $currentUser = auth()->user()->nama ?? (auth()->user()?->isNoc() ? 'NOC' : 'TEKNIK');
 
         // Safe Foreign Key resolutions
         $kelurahanPasang = $request->filled('kode_wilayah_kelurahan_pasang') ? trim($request->kode_wilayah_kelurahan_pasang) : null;
@@ -2174,7 +2194,7 @@ class TeknikController extends Controller
 
         $nomorInternet = $request->nomor_internet;
         $now = now()->format('Y-m-d H:i:s');
-        $currentUser = auth()->user()->nama ?? 'TEKNIK';
+        $currentUser = auth()->user()->nama ?? (auth()->user()?->isNoc() ? 'NOC' : 'TEKNIK');
 
         // Ensure upload directory exists
         $uploadDir = public_path('uploads/registrasi');
@@ -2304,7 +2324,7 @@ class TeknikController extends Controller
         ]);
 
         $now = now()->format('Y-m-d H:i:s');
-        $currentUser = auth()->user()->nama ?? 'TEKNIK';
+        $currentUser = auth()->user()->nama ?? (auth()->user()?->isNoc() ? 'NOC' : 'TEKNIK');
 
         $statusDesc = $request->kategori_batal == '14' ? 'Tidak Terjangkau Jaringan' : 'Permintaan dari User (Batal Pasang)';
 

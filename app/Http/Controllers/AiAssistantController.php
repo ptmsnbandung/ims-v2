@@ -18,7 +18,7 @@ class AiAssistantController extends Controller
      */
     public function chat(Request $request): JsonResponse
     {
-        @set_time_limit(60);
+        @set_time_limit(120);
 
         $request->validate([
             'message' => 'required|string|max:1000',
@@ -46,27 +46,13 @@ class AiAssistantController extends Controller
         // 2. Check if Gemini API Key is configured (supports multiple comma-separated keys for failover & quota pooling)
         $rawGeminiKeys = config('services.gemini.api_key') ?: env('GEMINI_API_KEY', '');
         $geminiKeys = array_values(array_filter(array_map('trim', preg_split('/[,;\n]+/', (string)$rawGeminiKeys))));
-        @set_time_limit(60);
+        @set_time_limit(120);
         $geminiModel = trim((string)(Cache::get('ims_ai_working_model') ?: config('services.gemini.model') ?: env('GEMINI_MODEL', 'gemini-3.8-flash')));
         if (empty($geminiModel) || str_contains($geminiModel, 'transcribe') || str_contains($geminiModel, '2.0-flash')) {
             $geminiModel = 'gemini-3.8-flash';
             Cache::forget('ims_ai_working_model');
         }
-
-        // Circuit Breaker: If outbound connection to Google API timed out recently, answer instantly (0.02s) via Local Engine
-        $isGeminiNetworkUnreachable = Cache::get('google_api_network_unreachable', false);
-        if ($isGeminiNetworkUnreachable) {
-            $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true);
-            $note = "\n\n---\n> ℹ️ *Info Failover: Koneksi ke Google AI sedang mengalami timeout/latensi tinggi jaringan. Pertanyaan dijawab seketika via Asisten Internal IMS2.*";
-            $fallbackReply .= $note;
-
-            return response()->json([
-                'status' => 'success',
-                'reply' => $fallbackReply,
-                'mode' => 'local_fallback',
-                'fallback_reason' => 'Google API Network Timeout Circuit Breaker Active',
-            ]);
-        }
+        Cache::forget('google_api_network_unreachable');
 
         if (!empty($geminiKeys)) {
             $now = now()->timestamp;
@@ -141,9 +127,7 @@ class AiAssistantController extends Controller
                         usleep(600000); // 600ms pacing before trying next key to allow Google load spike to clear
                     }
                     if (str_contains($msgLower, 'timed out') || str_contains($msgLower, 'could not resolve') || str_contains($msgLower, 'connection') || str_contains($msgLower, 'curl error 28')) {
-                        // Server outbound connection to Google API is blocked or unreachable; cache for 120s and fail fast to local engine
-                        Cache::put('google_api_network_unreachable', true, 120);
-                        break;
+                        Log::warning("[AiAssistant] Gemini Key #{$keyIndex} mengalami latensi jaringan / timeout. Mencoba kunci lain...");
                     }
                 }
             }
@@ -453,8 +437,17 @@ class AiAssistantController extends Controller
 
         foreach ($modelsToTry as $geminiModel) {
             try {
+                $timeoutSec = (int)config('services.gemini.timeout', 60);
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$selectedKey}";
-                $response = Http::timeout(10)->post($url, [
+                $response = Http::withOptions([
+                    'curl' => [
+                        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                        CURLOPT_CONNECTTIMEOUT => 15,
+                        CURLOPT_SSL_VERIFYPEER => false,
+                        CURLOPT_SSL_VERIFYHOST => 0,
+                    ],
+                ])->timeout($timeoutSec)->post($url, [
                     'contents' => [
                         ['role' => 'user', 'parts' => [['text' => $prompt]]],
                     ],
@@ -1544,15 +1537,16 @@ class AiAssistantController extends Controller
                         $payload['tools'] = $stepTools;
                     }
 
+                    $timeoutSec = (int)config('services.gemini.timeout', 60);
                     $response = Http::withOptions([
                         'curl' => [
                             CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
                             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                            CURLOPT_CONNECTTIMEOUT => 4,
+                            CURLOPT_CONNECTTIMEOUT => 15,
                             CURLOPT_SSL_VERIFYPEER => false,
                             CURLOPT_SSL_VERIFYHOST => 0,
                         ],
-                    ])->timeout(12)->post($url, $payload);
+                    ])->timeout($timeoutSec)->post($url, $payload);
 
                     // Automatic fallback if specific model does not support thinkingConfig
                     if (!$response->successful() && str_contains($response->body(), 'thinkingConfig')) {
@@ -1561,11 +1555,11 @@ class AiAssistantController extends Controller
                             'curl' => [
                                 CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
                                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                CURLOPT_CONNECTTIMEOUT => 4,
+                                CURLOPT_CONNECTTIMEOUT => 15,
                                 CURLOPT_SSL_VERIFYPEER => false,
                                 CURLOPT_SSL_VERIFYHOST => 0,
                             ],
-                        ])->timeout(12)->post($url, $payload);
+                        ])->timeout($timeoutSec)->post($url, $payload);
                     }
 
                     if (!$response->successful()) {
@@ -1605,11 +1599,11 @@ class AiAssistantController extends Controller
                                 'curl' => [
                                     CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
                                     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                    CURLOPT_CONNECTTIMEOUT => 4,
+                                    CURLOPT_CONNECTTIMEOUT => 15,
                                     CURLOPT_SSL_VERIFYPEER => false,
                                     CURLOPT_SSL_VERIFYHOST => 0,
                                 ],
-                            ])->timeout(10)->post($url, $payload);
+                            ])->timeout($timeoutSec)->post($url, $payload);
                             if ($retryRes->successful()) {
                                 $response = $retryRes;
                                 goto process_step_response;

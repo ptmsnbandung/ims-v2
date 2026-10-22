@@ -926,18 +926,6 @@ window.imsAiCopilot = function() {
             </div>
         </div>
 
-        <!-- Quick Suggestions Chips (Terkontrol & Horizontal) -->
-        <div class="ims-ai-chips-container">
-            <template x-for="chip in quickChips" :key="chip.label">
-                <button 
-                    type="button" 
-                    @click.stop="sendQuickPrompt(chip.prompt)" 
-                    class="ims-ai-chip">
-                    <span x-text="chip.icon"></span>
-                    <span x-text="chip.label"></span>
-                </button>
-            </template>
-        </div>
 
         <!-- Input Bar -->
         <div class="ims-ai-input-bar">

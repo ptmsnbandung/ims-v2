@@ -117,14 +117,29 @@ class AiAssistantController extends Controller
 
                 try {
                     $reply = $this->callGeminiApi($key, $geminiModel, $userMessage, $history, $contextData, $currentUser);
+
+                    // Extract dynamic contextual suggestions from Gemini if present
+                    $extractedSuggestions = [];
+                    if (preg_match('/\[SUGGESTIONS:\s*(.*?)\]/is', $reply, $sugMatch)) {
+                        preg_match_all('/"([^"]+)"/', $sugMatch[1], $quotes);
+                        if (!empty($quotes[1])) {
+                            $extractedSuggestions = array_slice($quotes[1], 0, 4);
+                        }
+                        $reply = trim(str_replace($sugMatch[0], '', $reply));
+                    }
+
                     $isUnclear = $this->isUnclearReply($reply);
+                    $suggestions = !empty($extractedSuggestions) 
+                        ? $extractedSuggestions 
+                        : ($isUnclear ? $this->generateSuggestions($userMessage, $currentUser) : []);
+
                     return response()->json([
                         'status' => 'success',
                         'reply' => $reply,
                         'mode' => 'gemini',
                         'model' => $geminiModel,
                         'key_index' => $keyIndex,
-                        'suggestions' => $isUnclear ? $this->generateSuggestions($userMessage, $currentUser) : [],
+                        'suggestions' => $suggestions,
                     ]);
                 } catch (\Throwable $e) {
                     $lastException = $e;
@@ -1594,9 +1609,11 @@ class AiAssistantController extends Controller
             . "   - Jika pengguna menanyakan status / cek status / isolir / suspend / aktif pelanggan (misal: 'cek status 11711224', 'Cek apakah Dian Haerani masih terisolir?', 'apakah pelanggan 11711224 aktif?', 'status pelanggan 11711224'), JAWAB LANGSUNG STATUSNYA SECARA SINGKAT (1 kalimat): 'Pelanggan [Nama] ([NoInternet]) saat ini berstatus [Normal / Terisolir]'. DILARANG KERAS menampilkan seluruh kartu profil (alamat, OLT, router, tagihan 3 bulan) jika tidak diminta!\n"
             . "   - Jika pengguna HANYA menanyakan aktif atau tidak, jawab langsung status keaktifannya saja secara singkat.\n"
             . "   - Jika pengguna menanyakan di router mana, jawab nama router dan PPPoE-nya saja.\n"
-            . "   - Jika pengguna menanyakan alamat, jawab alamatnya saja.\n"
             . "   - Hanya tampilkan kartu profil lengkap jika pengguna memang meminta 'data', 'profil', atau 'info lengkap' pelanggan.\n\n"
-            . "Jika pengguna meminta data di luar wewenangnya, tolak langsung secara singkat, tegas, dan sopan tanpa berputar-putar.\n"
+            . "Jika pengguna meminta data di luar wewenangnya, tolak langsung secara singkat, tegas, dan sopan tanpa berputar-putar.\n\n"
+            . "7. REKOMENDASI PERTANYAAN RELEVAN (SUGGESTIONS):\n"
+            . "   - Jika pertanyaan pengguna ambigu, belum lengkap, atau membutuhkan tindak lanjut operasional, sertakan di baris PALING AKHIR respons:\n"
+            . "   - `[SUGGESTIONS: \"Pertanyaan 1\", \"Pertanyaan 2\", \"Pertanyaan 3\"]` (wajib NYAMBUNG langsung dengan topik yang ditanyakan pengguna).\n"
             . "Hari ini: {$today}.";
 
         // Build contents array for Gemini ensuring strict user -> model -> user alternating turns
@@ -4167,104 +4184,269 @@ class AiAssistantController extends Controller
     }
 
     /**
-     * Generate smart, contextual recommendation buttons when a query is ambiguous,
-     * unrecognized, or needs clarification.
+     * Generate smart, contextual recommendation buttons that are deeply relevant
+     * and connected ("nyambung") to the user's specific question.
      */
     protected function generateSuggestions(string $query, $user): array
     {
         $lower = strtolower(trim($query));
         $userRole = $this->getUserRole($user);
 
-        // 1. Keyword-based matching to infer user's rough intention
-        if (str_contains($lower, 'qris') || str_contains($lower, 'bayar') || str_contains($lower, 'tagih') || str_contains($lower, 'duit') || str_contains($lower, 'transfer') || str_contains($lower, 'rekening') || str_contains($lower, 'invoice') || str_contains($lower, 'bill')) {
-            return [
-                'Apakah bisa menggunakan QRIS?',
-                'Rekening transfer resmi PT MSN',
-                'Kapan jadwal invoice bulanan terbit?',
-                'Cek tagihan pending verifikasi',
-            ];
+        // Predefined knowledge catalog covering all IMS2 operational domains
+        $catalog = [
+            // 1. Payment Channels & QRIS
+            [
+                'question' => 'Apakah bisa menggunakan QRIS?',
+                'category' => 'payment',
+                'keywords' => ['qris', 'midtrans', 'gopay', 'shopeepay', 'shopee', 'ovo', 'dana', 'linkaja', 'scan', 'barcode', 'metode bayar', 'cara bayar', 'online payment', 'bayar qris', 'bisa bayar'],
+            ],
+            [
+                'question' => 'Rekening transfer resmi PT MSN',
+                'category' => 'payment',
+                'keywords' => ['rekening', 'transfer', 'bca', 'mandiri', 'bjb', 'no rek', 'bank transfer', 'nomor rekening', 'tf bank', 'manual transfer', 'pembayaran bank'],
+            ],
+            [
+                'question' => 'Kapan jadwal invoice bulanan terbit?',
+                'category' => 'payment',
+                'keywords' => ['invoice', 'tagihan', 'billing', 'terbit', 'jatuh tempo', 'tanggal 1', 'jadwal tagihan', 'kapan tagihan', 'auto generate invoice', 'bayar bulanan'],
+            ],
+            [
+                'question' => 'Cek tagihan pending verifikasi',
+                'category' => 'payment',
+                'keywords' => ['pending', 'verif', 'verifikasi', 'approval', 'bukti bayar', 'konfirmasi bayar', 'menunggu verifikasi', 'bukti transfer', 'struk'],
+            ],
+            [
+                'question' => 'Apa arti status billing 14 dan 15?',
+                'category' => 'payment',
+                'keywords' => ['status bill', 'status tagihan', 'kode bill', '14', '15', 'paid', 'unpaid', 'waiting payment', 'arti status tagihan'],
+            ],
+
+            // 2. Suspend, Isolir & Unsuspend
+            [
+                'question' => 'Kapan jadwal suspend otomatis berjalan?',
+                'category' => 'suspend',
+                'keywords' => ['suspend', 'isolir', 'auto suspend', 'tanggal 25', 'jadwal suspend', 'pemutusan otomatis', 'kapan isolir', 'kenapa isolir', 'kenapa suspend', 'disuspend'],
+            ],
+            [
+                'question' => 'Bagaimana cara buka isolir pelanggan?',
+                'category' => 'suspend',
+                'keywords' => ['buka isolir', 'unsuspend', 'buka suspend', 'aktifkan lagi', 'lepas isolir', 'buka blokir', 'cara unsuspend', 'solusi suspend', 'terisolir'],
+            ],
+            [
+                'question' => 'Apakah bayar via QRIS langsung buka isolir otomatis?',
+                'category' => 'suspend',
+                'keywords' => ['qris suspend', 'qris isolir', 'auto unsuspend', 'langsung aktif', 'buka otomatis', 'bayar langsung buka', 'otomatis buka'],
+            ],
+            [
+                'question' => 'Bagaimana prosedur terminasi pelanggan?',
+                'category' => 'suspend',
+                'keywords' => ['terminasi', 'putus langganan', 'berhenti langganan', 'cabut modem', 'dismantle', 'tutup akun', 'cabut perangkat', 'stop internet', 'berhenti'],
+            ],
+
+            // 3. OLT, GPON, Modem & Hardware Telemetry
+            [
+                'question' => 'Status OLT dan modem LOS hari ini',
+                'category' => 'network',
+                'keywords' => ['olt', 'los', 'down', 'loss', 'kabel putus', 'modem mati', 'mati lampu', 'sensor olt', 'pon', 'merah', 'kedip merah', 'gpon down', 'modem merah'],
+            ],
+            [
+                'question' => 'Apa perbedaan kick MikroTik vs reboot ONU?',
+                'category' => 'network',
+                'keywords' => ['kick', 'reboot', 'mikrotik', 'onu', 'restart modem', 'reboot onu', 'kick pppoe', 'ppp session', 'reset koneksi'],
+            ],
+            [
+                'question' => 'Daftar router MikroTik aktif',
+                'category' => 'network',
+                'keywords' => ['router', 'mikrotik', 'gateway', 'pop', 'bgp', 'pppoe server', 'daftar router', 'host router'],
+            ],
+            [
+                'question' => 'Berapa standar redaman normal optik GPON?',
+                'category' => 'network',
+                'keywords' => ['redaman', 'standar redaman', 'dbm', 'rx power', 'tx power', 'kualitas sinyal', 'redaman tinggi', 'dropcore', 'sinyal jelek', 'redam optik'],
+            ],
+
+            // 4. Registration, Survey & Technician Field Work
+            [
+                'question' => 'Apakah NOC bisa melakukan survey dan instalasi?',
+                'category' => 'technician',
+                'keywords' => ['noc survey', 'noc instalasi', 'tugas noc', 'wewenang noc', 'hak akses noc', 'bolehkah noc', 'survey lapangan', 'instalasi teknisi', 'noc'],
+            ],
+            [
+                'question' => 'Alur pasang baru dan siklus registrasi pelanggan',
+                'category' => 'technician',
+                'keywords' => ['pasang baru', 'daftar baru', 'cara daftar', 'siklus registrasi', 'tahapan pasang', 'syarat pasang', 'tahap survey', 'tahap instalasi', 'daftar internet'],
+            ],
+            [
+                'question' => 'Perbedaan wewenang NOC vs Finance',
+                'category' => 'technician',
+                'keywords' => ['finance vs noc', 'wewenang finance', 'akses finance', 'role finance', 'role noc', 'matriks wewenang', 'wewenang'],
+            ],
+
+            // 5. Bandwidth Packages & Building Types
+            [
+                'question' => 'Ada berapa user paket UP TO NEW yang aktif?',
+                'category' => 'packages',
+                'keywords' => ['up to new', 'paket up to', 'kb09212', 'paket terbanyak', 'broadband', 'corporate', 'paket internet', 'mbps', 'paket aktif', 'paket'],
+            ],
+            [
+                'question' => 'Berapa biaya registrasi kategori UP TO NEW dan Corporate?',
+                'category' => 'packages',
+                'keywords' => ['biaya registrasi', 'biaya pasang', 'biaya daftar', 'harga registrasi', 'biaya corporate', 'tarif pasang', 'harga paket'],
+            ],
+            [
+                'question' => 'Sebutkan klasifikasi jenis bangunan pelanggan',
+                'category' => 'packages',
+                'keywords' => ['jenis bangunan', 'rumah pribadi', 'rumah kantor', 'gedung', 'kantor', 'kosan', 'event', 'klasifikasi bangunan', 'bangunan'],
+            ],
+
+            // 6. Inventory, Material Stock & Databases
+            [
+                'question' => 'Berapa sisa stok modem ZTE F660 di gudang?',
+                'category' => 'logistics',
+                'keywords' => ['stok', 'gudang', 'modem zte', 'f660', 'f609', 'sisa modem', 'material teknisi', 'logistik', 'stok barang', 'barang'],
+            ],
+            [
+                'question' => 'Daftar inventaris kabel dan ODP di gudang gomsn',
+                'category' => 'logistics',
+                'keywords' => ['kabel', 'dropcore', 'odp', 'splitter', 'patchcore', 'roset', 'inventaris kabel', 'stok gomsn', 'sisa kabel'],
+            ],
+            [
+                'question' => 'Jelaskan perbedaan database ims_v2, gomsn, dan ptmsn',
+                'category' => 'logistics',
+                'keywords' => ['gomsn', 'ptmsn', 'ims_v2', 'database', 'multi database', 'beda database', 'tabel database', 'arsitektur database'],
+            ],
+
+            // 7. Tickets & Complaint Handling
+            [
+                'question' => 'Ada berapa tiket gangguan open hari ini?',
+                'category' => 'tickets',
+                'keywords' => ['tiket', 'gangguan', 'komplain', 'tiket open', 'helpdesk', 'keluhan', 'laporan gangguan', 'internet mati', 'internet lemot', 'lemot'],
+            ],
+
+            // 8. Application Features & Identity
+            [
+                'question' => 'Apa saja fitur utama sistem IMS2?',
+                'category' => 'system',
+                'keywords' => ['fitur aplikasi', 'kemampuan aplikasi', 'tentang aplikasi', 'apa itu ims2', 'sistem ims2', 'fungsi aplikasi', 'keunggulan aplikasi', 'fitur'],
+            ],
+            [
+                'question' => 'Menu apa saja yang tersedia di aplikasi ini?',
+                'category' => 'system',
+                'keywords' => ['menu aplikasi', 'daftar menu', 'navigasi sistem', 'halaman apa saja', 'fitur menu', 'menu operasional', 'menu'],
+            ],
+            [
+                'question' => 'Siapa pembuat aplikasi IMS2?',
+                'category' => 'system',
+                'keywords' => ['pembuat', 'pencipta', 'developer', 'dibuat oleh', 'pt msn developer', 'pengembang'],
+            ],
+        ];
+
+        $tokens = preg_split('/[\s,?.!_\-\/]+/u', $lower, -1, PREG_SPLIT_NO_EMPTY);
+        $scored = [];
+
+        foreach ($catalog as $item) {
+            $score = 0;
+            $qLower = strtolower($item['question']);
+
+            // Avoid recommending the exact same string
+            if ($lower === $qLower) {
+                continue;
+            }
+
+            foreach ($item['keywords'] as $kw) {
+                $kwLower = strtolower($kw);
+
+                // Exact phrase match in query
+                if (str_contains($lower, $kwLower)) {
+                    $score += (strlen($kwLower) >= 8) ? 18 : 12;
+                }
+
+                // Token level matching with typo handling (Levenshtein)
+                foreach ($tokens as $token) {
+                    if (strlen($token) < 3) continue;
+
+                    if ($token === $kwLower) {
+                        $score += 15;
+                    } elseif (str_contains($kwLower, $token)) {
+                        $score += 8;
+                    } elseif (strlen($token) >= 4 && strlen($kwLower) >= 4) {
+                        $lev = levenshtein($token, $kwLower);
+                        if ($lev <= 1) {
+                            $score += 10; // e.g. "invois" -> "invoice", "suspen" -> "suspend"
+                        } elseif ($lev === 2 && strlen($token) >= 6) {
+                            $score += 6;
+                        }
+                    }
+                }
+            }
+
+            if ($score > 0) {
+                $scored[] = [
+                    'question' => $item['question'],
+                    'category' => $item['category'],
+                    'score' => $score,
+                ];
+            }
         }
 
-        if (str_contains($lower, 'olt') || str_contains($lower, 'modem') || str_contains($lower, 'los') || str_contains($lower, 'down') || str_contains($lower, 'onu') || str_contains($lower, 'pon') || str_contains($lower, 'redaman') || str_contains($lower, 'kabel') || str_contains($lower, 'optik') || str_contains($lower, 'gpon')) {
-            return [
-                'Status OLT dan modem LOS hari ini',
-                'Apa perbedaan kick MikroTik vs reboot ONU?',
-                'Daftar router MikroTik aktif',
-                'Berapa standar redaman GPON normal?',
-            ];
+        // Sort descending by relevance score
+        usort($scored, fn($a, $b) => $b['score'] <=> $a['score']);
+
+        $results = [];
+        $matchedCategories = [];
+        foreach ($scored as $s) {
+            if (!in_array($s['question'], $results, true)) {
+                $results[] = $s['question'];
+                if (!empty($s['category'])) {
+                    $matchedCategories[$s['category']] = true;
+                }
+            }
+            if (count($results) >= 4) {
+                break;
+            }
         }
 
-        if (str_contains($lower, 'suspend') || str_contains($lower, 'isolir') || str_contains($lower, 'blokir') || str_contains($lower, 'buka') || str_contains($lower, 'unsuspend') || str_contains($lower, 'putus') || str_contains($lower, 'mati')) {
-            return [
-                'Kapan jadwal suspend otomatis berjalan?',
-                'Bagaimana cara buka isolir pelanggan?',
-                'Bagaimana prosedur terminasi pelanggan?',
-                'Cek pelanggan yang sedang suspend',
-            ];
+        // If fewer than 4 matches found, backfill from the same matched categories
+        // ensuring 100% relevant and connected options for the user
+        if (!empty($results) && count($results) < 4 && !empty($matchedCategories)) {
+            foreach ($catalog as $item) {
+                if (isset($matchedCategories[$item['category']]) && !in_array($item['question'], $results, true)) {
+                    $results[] = $item['question'];
+                    if (count($results) >= 4) {
+                        break;
+                    }
+                }
+            }
         }
 
-        if (str_contains($lower, 'pelanggan') || str_contains($lower, 'user') || str_contains($lower, 'cust') || str_contains($lower, 'member') || str_contains($lower, 'nama') || str_contains($lower, 'cari') || str_contains($lower, 'aktif')) {
-            return [
-                'Cek pelanggan aktif',
-                'Ada berapa user paket UP TO NEW?',
-                'Cek status pelanggan 11711224',
-                'Sebutkan klasifikasi jenis bangunan pelanggan',
-            ];
+        if (!empty($results)) {
+            return $results;
         }
 
-        if (str_contains($lower, 'role') || str_contains($lower, 'wewenang') || str_contains($lower, 'tugas') || str_contains($lower, 'noc') || str_contains($lower, 'teknik') || str_contains($lower, 'teknisi') || str_contains($lower, 'finance') || str_contains($lower, 'survey') || str_contains($lower, 'instalasi')) {
-            return [
-                'Apakah NOC bisa melakukan survey dan instalasi?',
-                'Perbedaan wewenang NOC vs Finance',
-                'Alur pasang baru dan siklus registrasi',
-            ];
-        }
-
-        if (str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') || str_contains($lower, 'komplain') || str_contains($lower, 'rusak') || str_contains($lower, 'kendala')) {
-            return [
-                'Ada berapa tiket gangguan open hari ini?',
-                'Alur penanganan tiket komplain helpdesk',
-            ];
-        }
-
-        if (str_contains($lower, 'aplikasi') || str_contains($lower, 'fitur') || str_contains($lower, 'menu') || str_contains($lower, 'sistem') || str_contains($lower, 'ims2')) {
-            return [
-                'Apa saja fitur utama sistem IMS2?',
-                'Menu apa saja yang tersedia di aplikasi ini?',
-                'Siapa pembuat aplikasi IMS2?',
-            ];
-        }
-
-        if (str_contains($lower, 'barang') || str_contains($lower, 'stok') || str_contains($lower, 'material') || str_contains($lower, 'gudang') || str_contains($lower, 'logistik') || str_contains($lower, 'gomsn') || str_contains($lower, 'ptmsn') || str_contains($lower, 'database')) {
-            return [
-                'Berapa sisa stok modem ZTE F660 di gudang?',
-                'Jelaskan perbedaan database ims_v2, gomsn, dan ptmsn',
-            ];
-        }
-
-        // 2. Default suggestions tailored by User Role if query is gibberish/completely unrecognized
+        // Fallback: If query was 100% gibberish or empty where no keywords matched,
+        // provide role-specific recommendations
         if (in_array($userRole, ['NOC', 'Teknik'], true)) {
             return [
-                'Status OLT dan jaringan hari ini',
-                'Cek pelanggan aktif',
+                'Status OLT dan modem LOS hari ini',
                 'Cek tiket gangguan yang masih open',
+                'Ada berapa user paket UP TO NEW yang aktif?',
                 'Apa saja fitur utama sistem IMS2?',
             ];
         }
 
         if ($userRole === 'Finance') {
             return [
-                'Cek tagihan pending verifikasi',
                 'Apakah bisa menggunakan QRIS?',
+                'Cek tagihan pending verifikasi',
                 'Kapan jadwal suspend otomatis berjalan?',
-                'Apa saja fitur utama sistem IMS2?',
+                'Kapan jadwal invoice bulanan terbit?',
             ];
         }
 
         return [
-            'Rekap operasional IMS2 hari ini',
-            'Cek pelanggan aktif',
             'Apakah bisa menggunakan QRIS?',
+            'Kapan jadwal suspend otomatis berjalan?',
+            'Ada berapa user paket UP TO NEW yang aktif?',
             'Apa saja fitur utama sistem IMS2?',
         ];
     }

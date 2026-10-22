@@ -2169,8 +2169,7 @@ class AiAssistantController extends Controller
 
         if ($isGibberish) {
             return "### ❓ Pertanyaan Belum Dipahami\n\n"
-                . "Maaf **{$userName}**, asisten belum memahami kata atau maksud dari: *\"{$userMessage}\"*.\n\n"
-                . "Apakah yang Anda maksud salah satu topik operasional pada tombol rekomendasi di bawah ini?";
+                . "Maaf **{$userName}**, asisten belum memahami kata atau maksud dari: *\"{$userMessage}\"*.";
         }
 
         // 0. Pertanyaan Singkat Status / Keaktifan / Isolir Pelanggan Tunggal (Instant & Deterministik)
@@ -3422,8 +3421,7 @@ class AiAssistantController extends Controller
         // =========================================================================
 
         return "### ❓ Pertanyaan Belum Dipahami\n\n"
-            . "Maaf **{$userName}**, asisten belum memahami kata atau maksud dari: *\"{$query}\"*.\n\n"
-            . "Apakah yang Anda maksud salah satu topik operasional pada tombol rekomendasi di bawah ini?";
+            . "Maaf **{$userName}**, asisten belum memahami kata atau maksud dari: *\"{$query}\"*.";
     }
 
     /**

@@ -33,10 +33,15 @@
              this.customerResults = [];
          },
 
+         selectedReason: '',
+         customReason: '',
+
          resetForm() {
              this.selectedCustomer = null;
              this.searchCustomerQuery = '';
              this.customerResults = [];
+             this.selectedReason = '';
+             this.customReason = '';
          }
      }">
 
@@ -372,16 +377,40 @@
                 </template>
 
                 <!-- 2. Alasan Berhenti Berlangganan -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alasan Berhenti Berlangganan <span class="text-rose-500 dark:text-rose-400">*</span></label>
-                    <select name="note_termin" required class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium mb-2">
-                        <option value="">-- Pilih Alasan Utama --</option>
-                        <option value="Permintaan Pelanggan (Pindah Rumah / Alamat)">Permintaan Pelanggan (Pindah Rumah / Alamat)</option>
-                        <option value="Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)">Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)</option>
-                        <option value="Tunggakan Pembayaran Tidak Diselesaikan">Tunggakan Pembayaran Tidak Diselesaikan</option>
-                        <option value="Beralih ke Provider Lain">Beralih ke Provider Lain</option>
-                        <option value="Lainnya">Lainnya (Tuliskan di Catatan)</option>
-                    </select>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alasan Berhenti Berlangganan <span class="text-rose-500 dark:text-rose-400">*</span></label>
+                        <select name="note_termin"
+                                x-model="selectedReason"
+                                required
+                                class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                            <option value="">-- Pilih Alasan Utama --</option>
+                            <option value="Permintaan Pelanggan (Pindah Rumah / Alamat)">Permintaan Pelanggan (Pindah Rumah / Alamat)</option>
+                            <option value="Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)">Permintaan Pelanggan (Keberatan Biaya Bulanan / Tarif)</option>
+                            <option value="Tunggakan Pembayaran Tidak Diselesaikan">Tunggakan Pembayaran Tidak Diselesaikan</option>
+                            <option value="Beralih ke Provider Lain">Beralih ke Provider Lain</option>
+                            <option value="Lainnya">Lainnya (Alasan di Luar Pilihan)</option>
+                        </select>
+                    </div>
+
+                    <!-- Input Alasan Khusus di Luar Pilihan Dropdown -->
+                    <div x-show="selectedReason === 'Lainnya'"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         class="space-y-1.5">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                            Tuliskan Alasan / Keterangan di Luar Pilihan <span class="text-rose-500 dark:text-rose-400">*</span>
+                        </label>
+                        <textarea name="note_termin_custom"
+                                  x-model="customReason"
+                                  :required="selectedReason === 'Lainnya'"
+                                  rows="3"
+                                  placeholder="Ketik alasan pelanggan berhenti berlangganan secara spesifik..."
+                                  class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none"></textarea>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Jelaskan alasan detail pelanggan agar tim NOC dan teknisi lapangan memiliki catatan yang jelas saat penarikan.</p>
+                    </div>
                 </div>
 
                 <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">

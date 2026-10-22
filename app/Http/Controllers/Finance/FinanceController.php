@@ -2206,6 +2206,7 @@ class FinanceController extends Controller
         $request->validate([
             'nomor_internet' => 'required|string',
             'note_termin' => 'required|string',
+            'note_termin_custom' => 'nullable|string|max:500',
         ]);
 
         $customer = DB::table('view_batchjob')->where('nomor_internet', $request->nomor_internet)->first();
@@ -2217,10 +2218,17 @@ class FinanceController extends Controller
         $currentUser = auth()->user()->nama ?? 'Finance';
         $kodeTrx = 'TR-' . $request->nomor_internet . rand(1000, 9999);
 
+        $reason = trim($request->note_termin);
+        if ($reason === 'Lainnya') {
+            $reason = trim($request->note_termin_custom ?? '') ?: 'Lainnya';
+        } elseif ($request->filled('note_termin_custom')) {
+            $reason .= ' - ' . trim($request->note_termin_custom);
+        }
+
         DB::table('trx_terminasi')->insert([
             'kode_trx_terminasi' => $kodeTrx,
             'nomor_internet' => $request->nomor_internet,
-            'note_termin' => $request->note_termin,
+            'note_termin' => $reason,
             'status_terminasi' => '11', // 11: Request Baru ke NOC
             'collect_perangkat' => '0',
             'collect_payment' => '0',

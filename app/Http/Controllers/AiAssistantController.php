@@ -34,10 +34,12 @@ class AiAssistantController extends Controller
         if (!preg_match('/\b(?:MS|ms)?\d{5,18}\b/i', $userMessage)) {
             $fastReply = $this->checkDirectAnswerResponse($userMessage, [], $currentUser);
             if ($fastReply !== null) {
+                $isUnclear = $this->isUnclearReply($fastReply);
                 return response()->json([
                     'status' => 'success',
                     'reply' => $fastReply,
                     'mode' => 'local_instant',
+                    'suggestions' => $isUnclear ? $this->generateSuggestions($userMessage, $currentUser) : [],
                 ]);
             }
         }
@@ -49,10 +51,12 @@ class AiAssistantController extends Controller
         // Answer INSTANTLY from internal intelligence without external network latency
         $directReply = $this->checkDirectAnswerResponse($userMessage, $contextData, $currentUser);
         if ($directReply !== null) {
+            $isUnclear = $this->isUnclearReply($directReply);
             return response()->json([
                 'status' => 'success',
                 'reply' => $directReply,
                 'mode' => 'local_instant',
+                'suggestions' => $isUnclear ? $this->generateSuggestions($userMessage, $currentUser) : [],
             ]);
         }
 
@@ -113,12 +117,14 @@ class AiAssistantController extends Controller
 
                 try {
                     $reply = $this->callGeminiApi($key, $geminiModel, $userMessage, $history, $contextData, $currentUser);
+                    $isUnclear = $this->isUnclearReply($reply);
                     return response()->json([
                         'status' => 'success',
                         'reply' => $reply,
                         'mode' => 'gemini',
                         'model' => $geminiModel,
                         'key_index' => $keyIndex,
+                        'suggestions' => $isUnclear ? $this->generateSuggestions($userMessage, $currentUser) : [],
                     ]);
                 } catch (\Throwable $e) {
                     $lastException = $e;
@@ -150,6 +156,7 @@ class AiAssistantController extends Controller
             $totalKeys = count($geminiKeys);
             $errDetail = $lastException?->getMessage() ?? 'Google API sedang cooldown atau batas limit tercapai.';
             $fallbackReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, true, $errDetail, $history);
+            $isUnclear = $this->isUnclearReply($fallbackReply);
 
             // Calculate minimum cooldown seconds remaining among all keys
             $minCoolSec = 60;
@@ -181,15 +188,18 @@ class AiAssistantController extends Controller
                 'mode' => 'local_fallback',
                 'fallback_reason' => $errDetail,
                 'keys_tried' => $totalKeys,
+                'suggestions' => $isUnclear ? $this->generateSuggestions($userMessage, $currentUser) : [],
             ]);
         }
 
         // 3. Fallback when API key is not yet set
         $localReply = $this->generateLocalResponse($userMessage, $contextData, $currentUser, false, null, $history);
+        $isUnclear = $this->isUnclearReply($localReply);
         return response()->json([
             'status' => 'success',
             'reply' => $localReply,
             'mode' => 'local',
+            'suggestions' => $isUnclear ? $this->generateSuggestions($userMessage, $currentUser) : [],
         ]);
     }
 
@@ -2134,6 +2144,18 @@ class AiAssistantController extends Controller
         $lower = strtolower(trim($userMessage));
         $userName = $currentUser?->nama ?? $currentUser?->nama_lengkap ?? $currentUser?->username ?? 'Rekan IMS';
 
+        // 0. Gibberish / nonsense / vague query detector (provide recommendations)
+        $isGibberish = preg_match('/^[b-df-hj-np-tv-z]{5,}$/i', $lower)
+            || preg_match('/^(.)\1{4,}$/', $lower)
+            || preg_match('/^(asdf|qwerty|zxcv|hmmm|zzz|tes 123|test 123)$/i', $lower)
+            || (strlen($lower) <= 3 && !in_array($lower, ['noc', 'olt', 'los', 'pon', 'onu', 'gpon', 'bca', 'bjb', 'qris', 'up', 'down', 'cek', 'hai', 'hi', 'tes'], true));
+
+        if ($isGibberish) {
+            return "### ❓ Pertanyaan Belum Dipahami\n\n"
+                . "Maaf **{$userName}**, asisten belum memahami kata atau maksud dari: *\"{$userMessage}\"*.\n\n"
+                . "Apakah yang Anda maksud salah satu topik operasional pada tombol rekomendasi di bawah ini?";
+        }
+
         // 0. Pertanyaan Singkat Status / Keaktifan / Isolir Pelanggan Tunggal (Instant & Deterministik)
         if (!empty($contextData['customers'])) {
             $isAskingStatus = preg_match('/\b(status|aktif|online|keaktifan|isolir|terisolir|diisolir|suspend|disuspend|tersuspend|blokir|diblokir|terblokir|kondisi|keadaan)\b/i', $lower)
@@ -3382,15 +3404,9 @@ class AiAssistantController extends Controller
         // JAWABAN PASTI JIKA PERTANYAAN DI LUAR DOMAIN / TIDAK DIMENGERTI
         // =========================================================================
 
-        return "### ❓ Pertanyaan Tidak Dipahami\n\n"
-            . "Maaf **{$userName}**, asisten lokal belum memahami maksud atau pertanyaan Anda: *\"{$query}\"*.\n\n"
-            . "Sebagai asisten operasional sistem IMS2, saya dapat membantu Anda menjawab:\n"
-            . "- 👤 **Cari Pelanggan:** Cari berdasarkan nama, nomor internet, atau PPPoE (*'Cari pelanggan Gunawan'* atau *'Cek nomor 260831056'*).\n"
-            . "- 💳 **Keuangan & Omset:** Cek omset bulan ini, tagihan pending verifikasi, atau total piutang (*khusus Finance/Admin*).\n"
-            . "- 🌐 **Infrastruktur OLT:** Cek master OLT aktif dan panduan teknis redaman optik / index GPON (*khusus NOC/Admin*).\n"
-            . "- 🎫 **Tiket Komplain:** Pantau tiket gangguan yang sedang berstatus open.\n"
-            . "- 📋 **SOP & Prosedur:** SOP Portal Pelanggan, jadwal auto-suspend, prosedur terminasi, atau kode status registrasi (#10 s/d #20).\n\n"
-            . "Silakan ajukan pertanyaan yang berkaitan dengan data atau operasional di atas.";
+        return "### ❓ Pertanyaan Belum Dipahami\n\n"
+            . "Maaf **{$userName}**, asisten belum memahami kata atau maksud dari: *\"{$query}\"*.\n\n"
+            . "Apakah yang Anda maksud salah satu topik operasional pada tombol rekomendasi di bawah ini?";
     }
 
     /**
@@ -4128,5 +4144,128 @@ class AiAssistantController extends Controller
             . "  * `payment_confirmations`: Antrean unggahan bukti transfer dari portal sebelum masuk ke verifikasi Finance.\n"
             . "  * `tickets`: Tiket keluhan yang dibuat mandiri oleh pelanggan dari portal web.\n\n"
             . "> 💡 *Aplikasi IMS2 mengintegrasikan ketiga database ini secara mulus sehingga perubahan di satu modul (misal aktivasi di OLT GOMSN atau pembayaran di Portal PTMSN) langsung terupdate di dashboard IMS2.*";
+    }
+
+    /**
+     * Determines whether a generated response indicates an unclear, ambiguous, or misunderstood query.
+     */
+    protected function isUnclearReply(?string $reply): bool
+    {
+        if (empty($reply)) {
+            return true;
+        }
+        $lower = strtolower($reply);
+        return str_contains($lower, 'pertanyaan belum dipahami')
+            || str_contains($lower, 'pertanyaan tidak dipahami')
+            || str_contains($lower, 'belum memahami')
+            || str_contains($lower, 'tidak memahami')
+            || str_contains($lower, 'tidak mengerti')
+            || str_contains($lower, 'tidak dapat memahami')
+            || str_contains($lower, 'kurang jelas')
+            || str_contains($lower, 'apakah yang anda maksud')
+            || str_contains($lower, 'apakah maksud anda');
+    }
+
+    /**
+     * Generate smart, contextual recommendation buttons when a query is ambiguous,
+     * unrecognized, or needs clarification.
+     */
+    protected function generateSuggestions(string $query, $user): array
+    {
+        $lower = strtolower(trim($query));
+        $userRole = $this->getUserRole($user);
+
+        // 1. Keyword-based matching to infer user's rough intention
+        if (str_contains($lower, 'qris') || str_contains($lower, 'bayar') || str_contains($lower, 'tagih') || str_contains($lower, 'duit') || str_contains($lower, 'transfer') || str_contains($lower, 'rekening') || str_contains($lower, 'invoice') || str_contains($lower, 'bill')) {
+            return [
+                'Apakah bisa menggunakan QRIS?',
+                'Rekening transfer resmi PT MSN',
+                'Kapan jadwal invoice bulanan terbit?',
+                'Cek tagihan pending verifikasi',
+            ];
+        }
+
+        if (str_contains($lower, 'olt') || str_contains($lower, 'modem') || str_contains($lower, 'los') || str_contains($lower, 'down') || str_contains($lower, 'onu') || str_contains($lower, 'pon') || str_contains($lower, 'redaman') || str_contains($lower, 'kabel') || str_contains($lower, 'optik') || str_contains($lower, 'gpon')) {
+            return [
+                'Status OLT dan modem LOS hari ini',
+                'Apa perbedaan kick MikroTik vs reboot ONU?',
+                'Daftar router MikroTik aktif',
+                'Berapa standar redaman GPON normal?',
+            ];
+        }
+
+        if (str_contains($lower, 'suspend') || str_contains($lower, 'isolir') || str_contains($lower, 'blokir') || str_contains($lower, 'buka') || str_contains($lower, 'unsuspend') || str_contains($lower, 'putus') || str_contains($lower, 'mati')) {
+            return [
+                'Kapan jadwal suspend otomatis berjalan?',
+                'Bagaimana cara buka isolir pelanggan?',
+                'Bagaimana prosedur terminasi pelanggan?',
+                'Cek pelanggan yang sedang suspend',
+            ];
+        }
+
+        if (str_contains($lower, 'pelanggan') || str_contains($lower, 'user') || str_contains($lower, 'cust') || str_contains($lower, 'member') || str_contains($lower, 'nama') || str_contains($lower, 'cari') || str_contains($lower, 'aktif')) {
+            return [
+                'Cek pelanggan aktif',
+                'Ada berapa user paket UP TO NEW?',
+                'Cek status pelanggan 11711224',
+                'Sebutkan klasifikasi jenis bangunan pelanggan',
+            ];
+        }
+
+        if (str_contains($lower, 'role') || str_contains($lower, 'wewenang') || str_contains($lower, 'tugas') || str_contains($lower, 'noc') || str_contains($lower, 'teknik') || str_contains($lower, 'teknisi') || str_contains($lower, 'finance') || str_contains($lower, 'survey') || str_contains($lower, 'instalasi')) {
+            return [
+                'Apakah NOC bisa melakukan survey dan instalasi?',
+                'Perbedaan wewenang NOC vs Finance',
+                'Alur pasang baru dan siklus registrasi',
+            ];
+        }
+
+        if (str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') || str_contains($lower, 'komplain') || str_contains($lower, 'rusak') || str_contains($lower, 'kendala')) {
+            return [
+                'Ada berapa tiket gangguan open hari ini?',
+                'Alur penanganan tiket komplain helpdesk',
+            ];
+        }
+
+        if (str_contains($lower, 'aplikasi') || str_contains($lower, 'fitur') || str_contains($lower, 'menu') || str_contains($lower, 'sistem') || str_contains($lower, 'ims2')) {
+            return [
+                'Apa saja fitur utama sistem IMS2?',
+                'Menu apa saja yang tersedia di aplikasi ini?',
+                'Siapa pembuat aplikasi IMS2?',
+            ];
+        }
+
+        if (str_contains($lower, 'barang') || str_contains($lower, 'stok') || str_contains($lower, 'material') || str_contains($lower, 'gudang') || str_contains($lower, 'logistik') || str_contains($lower, 'gomsn') || str_contains($lower, 'ptmsn') || str_contains($lower, 'database')) {
+            return [
+                'Berapa sisa stok modem ZTE F660 di gudang?',
+                'Jelaskan perbedaan database ims_v2, gomsn, dan ptmsn',
+            ];
+        }
+
+        // 2. Default suggestions tailored by User Role if query is gibberish/completely unrecognized
+        if (in_array($userRole, ['NOC', 'Teknik'], true)) {
+            return [
+                'Status OLT dan jaringan hari ini',
+                'Cek pelanggan aktif',
+                'Cek tiket gangguan yang masih open',
+                'Apa saja fitur utama sistem IMS2?',
+            ];
+        }
+
+        if ($userRole === 'Finance') {
+            return [
+                'Cek tagihan pending verifikasi',
+                'Apakah bisa menggunakan QRIS?',
+                'Kapan jadwal suspend otomatis berjalan?',
+                'Apa saja fitur utama sistem IMS2?',
+            ];
+        }
+
+        return [
+            'Rekap operasional IMS2 hari ini',
+            'Cek pelanggan aktif',
+            'Apakah bisa menggunakan QRIS?',
+            'Apa saja fitur utama sistem IMS2?',
+        ];
     }
 }

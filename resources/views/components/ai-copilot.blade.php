@@ -202,6 +202,57 @@
     transform: translateY(-1px) !important;
 }
 
+/* Recommendation / Suggestion Buttons for Unclear Queries */
+.ims-ai-suggestion-box {
+    margin-top: 10px !important;
+    padding: 10px 12px !important;
+    background: rgba(8, 145, 178, 0.08) !important;
+    border: 1px dashed rgba(6, 182, 212, 0.4) !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+.ims-ai-suggestion-title {
+    font-size: 11px !important;
+    color: #38bdf8 !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    letter-spacing: 0.01em !important;
+}
+.ims-ai-suggestion-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+}
+.ims-ai-suggestion-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 6px 12px !important;
+    background: rgba(15, 23, 42, 0.85) !important;
+    border: 1px solid rgba(56, 189, 248, 0.4) !important;
+    border-radius: 8px !important;
+    color: #f1f5f9 !important;
+    font-size: 11.5px !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+    text-align: left !important;
+}
+.ims-ai-suggestion-btn:hover {
+    background: rgba(6, 182, 212, 0.22) !important;
+    border-color: #38bdf8 !important;
+    color: #38bdf8 !important;
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3) !important;
+}
+.ims-ai-suggestion-btn:active {
+    transform: translateY(0) !important;
+}
+
 .ims-ai-input-bar {
     flex-shrink: 0 !important;
     padding: 12px 14px !important;
@@ -654,6 +705,7 @@ window.imsAiCopilot = function() {
                         text: cleanText,
                         isAi: isAi,
                         isFallback: isFallback,
+                        suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
                         time: this.currentTime()
                     });
                 } else {
@@ -897,6 +949,31 @@ window.imsAiCopilot = function() {
 
                         <!-- Rendered Content -->
                         <div class="ai-content-body" style="word-break:break-word;" x-html="renderMarkdown(msg.text)"></div>
+
+                        <!-- Interactive Recommendation Buttons -->
+                        <template x-if="msg.suggestions && msg.suggestions.length > 0">
+                            <div class="ims-ai-suggestion-box">
+                                <div class="ims-ai-suggestion-title">
+                                    <svg style="width:13px; height:13px; flex-shrink:0; color:#38bdf8;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Apakah yang Anda maksud salah satu dari ini?</span>
+                                </div>
+                                <div class="ims-ai-suggestion-list">
+                                    <template x-for="(sug, sIdx) in msg.suggestions" :key="sIdx">
+                                        <button 
+                                            type="button" 
+                                            @click="sendQuickPrompt(sug)"
+                                            class="ims-ai-suggestion-btn">
+                                            <span x-text="sug"></span>
+                                            <svg style="width:11px; height:11px; flex-shrink:0; opacity:0.8;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                            </svg>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
 
                         <!-- Timestamp -->
                         <div :style="msg.role === 'user' ? 'color:#cffafe;' : 'color:#64748b;'" style="font-size:9px; margin-top:4px; text-align:right;" x-text="msg.time"></div>

@@ -812,11 +812,13 @@
                 min-height: 100vh !important;
                 min-height: 100dvh !important;
                 height: auto !important;
-                overflow: visible !important;
+                overflow-x: hidden !important;
+                max-width: 100vw !important;
             }
             .ims-main-scroll {
                 height: auto !important;
-                overflow: visible !important;
+                overflow-x: hidden !important;
+                max-width: 100vw !important;
             }
         }
 
@@ -1884,9 +1886,9 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                                 </svg>
                                 
-                                <!-- Distinct NOC Indicator Dot (Cyan/Rose) -->
-                                <span class="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full shadow-2xs transition-colors"
-                                      :class="activeCount > 0 ? 'bg-rose-500 ring-1 ring-white dark:ring-slate-900' : 'bg-cyan-500'"></span>
+                                <!-- Distinct NOC Indicator Dot (Cyan only when idle/normal, hidden if active alert badge is shown) -->
+                                <span x-show="activeCount === 0" x-cloak
+                                      class="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-2xs"></span>
 
                                 <!-- Ripple Ping Effect for New / Unread Outage Alert -->
                                 <span x-show="activeCount > 0 && hasNewAlert" x-cloak

@@ -16,8 +16,19 @@
                     linear-gradient(135deg, #eef2ff 0%, #e0f2fe 30%, #f0fdf4 65%, #fdf2f8 100%) !important;
         min-height: calc(100vh - 70px);
         margin: -0.375rem -0.75rem -0.625rem -0.75rem;
-        padding: 0.85rem 1rem 2.5rem 1rem;
+        padding: 0.75rem 0.75rem 6.5rem 0.75rem;
+        overflow-x: hidden !important;
         transition: all 0.3s ease;
+    }
+    @media (max-width: 639.98px) {
+        .ims-glass-card {
+            border-radius: 18px !important;
+            padding: 0.85rem !important;
+        }
+        .ims-glass-halo-banner {
+            border-radius: 18px !important;
+            padding: 0.85rem !important;
+        }
     }
     @media (min-width: 640px) {
         .ims-glass-canvas {
@@ -201,13 +212,13 @@
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0 mt-1 sm:mt-0">
                 <!-- View Tabs Switcher Pill Container -->
                 <div class="ims-halo-pill-container w-full sm:w-auto flex items-center justify-between sm:justify-start"
-                     style="height: 34px; padding: 3px; box-sizing: border-box;">
+                     style="height: 36px; padding: 3px; box-sizing: border-box;">
                     @if($canSeeFinanceTraffic ?? false)
                         <button type="button" 
                                 @click="activeTab = 'finance'" 
                                 :style="activeTab === 'finance' 
-                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
-                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
+                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
                                 class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-white">
                             <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'finance' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             <span :style="activeTab === 'finance' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Traffic Keuangan</span>
@@ -216,8 +227,8 @@
                     <button type="button" 
                             @click="activeTab = 'charts'" 
                             :style="activeTab === 'charts' 
-                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
-                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
                             class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-white">
                         <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'charts' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         <span :style="activeTab === 'charts' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Grafik Utama</span>
@@ -225,8 +236,8 @@
                     <button type="button" 
                             @click="activeTab = 'tables'" 
                             :style="activeTab === 'tables' 
-                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
-                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
                             class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-white">
                         <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'tables' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         <span :style="activeTab === 'tables' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Data Pendaftaran</span>
@@ -237,10 +248,10 @@
                 <div class="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto">
                     <!-- Year Selector Form in Matching Glass Pill -->
                     <form action="{{ route('dashboard') }}" method="GET" class="m-0 p-0 w-full sm:w-auto flex">
-                        <div class="relative w-full sm:w-auto flex items-center h-[34px]">
+                        <div class="relative w-full sm:w-auto flex items-center h-[36px]">
                             <select name="tahun" onchange="this.form.submit()" 
                                     class="ims-halo-select focus:ring-2 focus:ring-white/40"
-                                    style="height: 34px; padding-left: 14px; padding-right: 28px; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; cursor: pointer; outline: none; width: 100%; text-align: center; text-align-last: center;">
+                                    style="height: 36px; padding-left: 14px; padding-right: 28px; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; cursor: pointer; outline: none; width: 100%; text-align: center; text-align-last: center;">
                                 @foreach($availableYears as $year)
                                     <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} style="color: #0f172a; background: #ffffff;">
                                         Tahun {{ $year }}
@@ -257,7 +268,7 @@
 
                     <!-- Status Layanan Button (Pristine White Pill with Deep Teal Text) -->
                     <a href="{{ route('teknik.tiket') }}" 
-                       class="ims-halo-btn-status px-3.5 flex items-center justify-center gap-1.5 transition no-underline h-[34px]">
+                       class="ims-halo-btn-status px-3.5 flex items-center justify-center gap-1.5 transition no-underline h-[36px]">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#055366] animate-pulse"></span>
                         <span class="truncate">Status Layanan</span>
                     </a>
@@ -1359,6 +1370,8 @@ document.addEventListener('DOMContentLoaded', function () {
             xaxis: {
                 categories: monthlyLabels,
                 labels: {
+                    hideOverlappingLabels: true,
+                    rotate: 0,
                     style: {
                         colors: textColor,
                         fontSize: '9px',
@@ -1530,6 +1543,7 @@ document.addEventListener('DOMContentLoaded', function () {
             xaxis: {
                 categories: cityLabels,
                 labels: {
+                    hideOverlappingLabels: true,
                     style: {
                         colors: textColor,
                         fontSize: '9px',

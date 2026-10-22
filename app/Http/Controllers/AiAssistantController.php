@@ -2127,6 +2127,276 @@ class AiAssistantController extends Controller
                 . "3. **⚠️ Jatuh Tempo:** **Tanggal 25 setiap bulan pukul 06:00 WIB** (masuk antrean auto-suspend jika belum lunas).";
         }
 
+        // 10. Pertanyaan Matrix Hak Akses & Wewenang Antar Divisi
+        if ($roleAccessReply = $this->handleRoleAccessQuestion($lower, $currentUser)) {
+            return $roleAccessReply;
+        }
+
+        // 11. Alur Pembayaran & Verifikasi Finance
+        if ($paymentWorkflowReply = $this->handlePaymentWorkflowQuestion($lower)) {
+            return $paymentWorkflowReply;
+        }
+
+        // 12. Struktur Database & Skema Tabel IMS2
+        if ($databaseReply = $this->handleDatabaseQuestion($lower)) {
+            return $databaseReply;
+        }
+
+        // 13. Alur Pasang Baru & Siklus Registrasi Pelanggan
+        if ($regWorkflowReply = $this->handleRegistrationWorkflowQuestion($lower)) {
+            return $regWorkflowReply;
+        }
+
+        // 14. Alur Penanganan Tiket Gangguan & Helpdesk
+        if ($ticketWorkflowReply = $this->handleTicketWorkflowQuestion($lower)) {
+            return $ticketWorkflowReply;
+        }
+
+        // 15. Glosarium & Definisi Istilah Jaringan ISP
+        if ($glossaryReply = $this->handleNetworkGlossaryQuestion($lower)) {
+            return $glossaryReply;
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolves queries regarding role permissions, access boundaries, and duty matrices across IMS2 divisions.
+     */
+    protected function handleRoleAccessQuestion(string $lower, $currentUser = null): ?string
+    {
+        $isRoleQuery = preg_match('/\b(bisa melihat|bisa akses|bisa buka|bisa cek|bisa liat|boleh melihat|boleh akses|hak akses|wewenang|tugas|fungsi role|peran|matrix role|matriks role)\b/i', $lower)
+            || preg_match('/\b(apakah\s+(finance|keuangan|noc|teknik|teknisi|cs|customer service|hrd|sales|mitra|gudang|admin|direktur|ceo|staff))\b/i', $lower)
+            || preg_match('/\b(role apa|daftar role|semua role|siapa yang bisa)\b/i', $lower);
+
+        if (!$isRoleQuery) {
+            return null;
+        }
+
+        // 1. Finance vs OLT / Jaringan / Router / Redaman
+        if ((str_contains($lower, 'finance') || str_contains($lower, 'keuangan'))
+            && (str_contains($lower, 'olt') || str_contains($lower, 'router') || str_contains($lower, 'jaringan') || str_contains($lower, 'pon') || str_contains($lower, 'redaman') || str_contains($lower, 'gpon'))) {
+            return "### 🔒 Hak Akses Role: Finance vs Data OLT Jaringan\n\n"
+                . "❌ **Tidak, divisi Finance tidak dapat melihat maupun mengakses data perangkat OLT dan infrastruktur jaringan.**\n\n"
+                . "📋 **Pembagian Wewenang Resmi di IMS2:**\n"
+                . "1. **Divisi Finance:** Khusus mengelola modul penagihan (`trx_billing_layanan`), verifikasi bukti pembayaran bank, pencatatan mutasi kas, dan rekapitulasi omset/piutang.\n"
+                . "2. **Divisi NOC & Teknik:** Bertanggung jawab penuh atas konfigurasi core OLT (`m_olt`), manajemen port GPON (`index_olt`), level redaman optik modem (`Rx/Tx dBm`), status link ONU (LOS/DOWN), dan router MikroTik.\n"
+                . "3. **Superadmin (Direktur / CEO / Admin):** Memiliki wewenang penuh (*Full Access*) untuk memantau modul Finance sekaligus infrastruktur OLT.";
+        }
+
+        // 2. NOC / Teknik vs Keuangan / Tagihan / Omset / Gaji
+        if ((str_contains($lower, 'noc') || str_contains($lower, 'teknik') || str_contains($lower, 'teknisi'))
+            && (str_contains($lower, 'keuangan') || str_contains($lower, 'tagihan') || str_contains($lower, 'omset') || str_contains($lower, 'omzet') || str_contains($lower, 'gaji') || str_contains($lower, 'pembukuan') || str_contains($lower, 'rekening') || str_contains($lower, 'verifikasi'))) {
+            return "### 🔒 Hak Akses Role: NOC & Teknik vs Data Keuangan\n\n"
+                . "❌ **Tidak, divisi NOC dan Teknik tidak memiliki hak akses untuk melihat laporan keuangan, pembukuan bank, omset, maupun verifikasi tagihan.**\n\n"
+                . "📋 **Pembagian Wewenang Resmi di IMS2:**\n"
+                . "1. **Divisi NOC & Teknik:** Dikhususkan untuk pemeliharaan fisik jaringan, telemetri OLT, status link modem ONT, router MikroTik, dan perbaikan gangguan lapangan.\n"
+                . "2. **Divisi Finance:** Memegang wewenang eksklusif untuk verifikasi pembayaran pelanggan, penagihan invoice, dan pembukuan kas/bank.\n"
+                . "3. **Superadmin / Direksi:** Memiliki hak akses penuh (*Full Access*) ke seluruh data operasional dan keuangan.";
+        }
+
+        // 3. Customer Service (CS) vs OLT / Keuangan
+        if ((str_contains($lower, 'cs') || str_contains($lower, 'customer service'))
+            && (str_contains($lower, 'olt') || str_contains($lower, 'jaringan') || str_contains($lower, 'router') || str_contains($lower, 'kas') || str_contains($lower, 'rekening') || str_contains($lower, 'pembukuan'))) {
+            return "### 🔒 Hak Akses Role: Customer Service (CS)\n\n"
+                . "📋 **Cakupan Wewenang CS di IMS2:**\n"
+                . "- 🟢 **Yang Diizinkan:** Melihat profil data pelanggan, mengecek status pembayaran invoice individual (untuk klarifikasi pelanggan), dan membuka tiket gangguan helpdesk.\n"
+                . "- 🔴 **Yang Dilarang:** CS tidak memiliki akses ke konfigurasi core OLT/Router jaringan dan tidak dapat melihat buku kas/rekening internal bank.";
+        }
+
+        // 4. Superadmin (Admin / Direktur / CEO)
+        if ((str_contains($lower, 'admin') || str_contains($lower, 'direktur') || str_contains($lower, 'ceo'))
+            && (str_contains($lower, 'bisa apa') || str_contains($lower, 'wewenang') || str_contains($lower, 'akses') || str_contains($lower, 'tugas'))) {
+            return "### 👑 Hak Akses Superadmin (Direktur, CEO, Admin) IMS2:\n\n"
+                . "Role **Admin**, **Direktur**, dan **CEO** memiliki hak akses penuh (**Superadmin / Full Access**) ke seluruh sistem IMS2:\n"
+                . "1. **Manajemen Pelanggan:** Akses penuh data registrasi, perubahan paket, mutasi alamat, isolir/suspend, hingga penarikan terminasi.\n"
+                . "2. **Keuangan & Billing:** Melihat seluruh omset, rekap piutang, mutasi bank, dan verifikasi tagihan.\n"
+                . "3. **Infrastruktur Jaringan:** Monitoring master OLT, telemetri port GPON, router MikroTik, dan tiket komplain.\n"
+                . "4. **Kepegawaian (HRD) & AI Copilot:** Manajemen akun karyawan, audit log, dan monitoring token multi-kunci AI.";
+        }
+
+        // 5. Wewenang Spesifik: Finance
+        if ((str_contains($lower, 'finance') || str_contains($lower, 'keuangan')) && (str_contains($lower, 'wewenang') || str_contains($lower, 'tugas') || str_contains($lower, 'fungsi') || str_contains($lower, 'bisa apa'))) {
+            return "### 💼 Wewenang & Tanggung Jawab Divisi Finance IMS2:\n\n"
+                . "1. **Verifikasi Pembayaran:** Memvalidasi bukti transfer pelanggan di menu *Billing Layanan > Verifikasi* (mengubah status `#14` ke `#15 Lunas`).\n"
+                . "2. **Penerbitan Tagihan Bulanan:** Mengawasi jalannya cron auto-generate tagihan setiap tanggal 1 bulan berjalan.\n"
+                . "3. **Laporan Keuangan:** Memantau realisasi omset, penerimaan kas harian, dan total piutang/tunggakan tertunggak.\n"
+                . "4. **Permintaan Terminasi:** Mengajukan permohonan terminasi pelanggan yang menunggak lama ke antrean teknis.";
+        }
+
+        // 6. Wewenang Spesifik: NOC & Teknik
+        if ((str_contains($lower, 'noc') || str_contains($lower, 'teknik')) && (str_contains($lower, 'wewenang') || str_contains($lower, 'tugas') || str_contains($lower, 'fungsi') || str_contains($lower, 'bisa apa'))) {
+            return "### 📡 Wewenang & Tanggung Jawab Divisi NOC & Teknik IMS2:\n\n"
+                . "1. **Konfigurasi OLT & GPON:** Mengatur master OLT, binding port ONU (`index_olt`), dan alokasi VLAN/PPPoE.\n"
+                . "2. **Monitoring Telemetri Jaringan:** Memantau modem pelanggan berstatus LOS (kabel putus) atau DOWN (perangkat padam) secara realtime.\n"
+                . "3. **Eksekusi Suspend & Isolir:** Melakukan pemutusan layanan di router MikroTik untuk pelanggan tertunggak setiap tanggal 25.\n"
+                . "4. **Helpdesk & Gangguan:** Melakukan troubleshooting dan penugasan teknisi lapangan untuk perbaikan kabel optik/ODP.";
+        }
+
+        // 7. Matriks Seluruh Role di IMS2
+        return "### 👥 Matriks Hak Akses Role Sistem IMS2:\n\n"
+            . "| Divisi / Role | Akses Data Pelanggan | Akses Billing / Keuangan | Akses OLT / Jaringan | Tiket Gangguan |\n"
+            . "|:---|:---:|:---:|:---:|:---:|\n"
+            . "| **Direktur / CEO / Admin** | 🟢 Penuh | 🟢 Penuh (Omset, Mutasi) | 🟢 Penuh (OLT, MikroTik) | 🟢 Penuh |\n"
+            . "| **Finance** | 🟡 Terkait Billing | 🟢 Penuh (Verifikasi, Rekap) | 🔴 Tidak Ada | ⚪ Baca Saja |\n"
+            . "| **NOC / Teknik** | 🟢 Teknis Lapangan | 🔴 Tidak Ada (Dibatasi) | 🟢 Penuh (Master OLT & GPON) | 🟢 Eksekusi |\n"
+            . "| **Customer Service** | 🟢 Registrasi & Profil | 🟡 Cek Status Tagihan Saja | 🔴 Tidak Ada | 🟢 Buat Tiket |\n"
+            . "| **HRD** | ⚪ Internal Karyawan | 🔴 Tidak Ada | 🔴 Tidak Ada | 🔴 Tidak Ada |\n\n"
+            . "> 🔒 *Setiap role dibatasi secara ketat oleh middleware keamanan IMS2 untuk menjaga privasi keuangan dan integritas jaringan.*";
+    }
+
+    /**
+     * Resolves queries regarding customer billing, payment workflows, and finance approval procedures.
+     */
+    protected function handlePaymentWorkflowQuestion(string $lower): ?string
+    {
+        $isPaymentWorkflow = preg_match('/\b(alur|proses|tahapan|cara|mekanisme|sop|bagaimana|gimana)\b/i', $lower)
+            && preg_match('/\b(bayar|pembayaran|tagihan|billing|finance|verifikasi)\b/i', $lower)
+            && !preg_match('/\b(buka isolir|terminasi|suspend|kue|bolu)\b/i', $lower);
+
+        if (!$isPaymentWorkflow) {
+            return null;
+        }
+
+        return "### 💳 Alur Pembayaran Tagihan & Verifikasi Finance IMS2:\n\n"
+            . "Berikut siklus lengkap alur pembayaran tagihan internet di sistem IMS2:\n\n"
+            . "1. **📅 Penerbitan Tagihan (Invoice Bulanan):**\n"
+            . "   - Setiap **tanggal 1 pukul 08:00 WIB**, sistem secara otomatis men-generate tagihan berstatus `#12 (Publish)` untuk seluruh pelanggan aktif.\n"
+            . "   - Pelanggan menerima notifikasi rincian tagihan secara otomatis melalui pesan WhatsApp.\n\n"
+            . "2. **📲 Proses Pembayaran Pelanggan:**\n"
+            . "   - **Opsi A: Portal Pelanggan (*Self-Service* - Otomatis):**\n"
+            . "     - Pelanggan login mandiri ke Portal Pelanggan (`ptmsn`).\n"
+            . "     - Memilih pembayaran instan via **QRIS, Virtual Account, ShopeePay, atau Gopay**.\n"
+            . "     - **Hasil:** Status tagihan seketika berubah menjadi `#15 Lunas` secara otomatis (*realtime*) tanpa verifikasi manual.\n"
+            . "   - **Opsi B: Transfer Manual Rekening Perusahaan / Kasir Loket:**\n"
+            . "     - Pelanggan mentransfer ke rekening bank PT MSN atau membayar cash ke petugas kasir/kolektor.\n"
+            . "     - Pelanggan mengunggah foto bukti transfer melalui menu konfirmasi pembayaran portal.\n"
+            . "     - **Hasil:** Status tagihan berubah menjadi `#14 (Menunggu Verifikasi)`.\n\n"
+            . "3. **🔍 Verifikasi oleh Tim Finance:**\n"
+            . "   - Staf Finance membuka menu **Billing Layanan > Verifikasi Pembayaran**.\n"
+            . "   - Mencocokkan nominal transfer dengan mutasi rekening bank perusahaan.\n"
+            . "   - Klik tombol **Setujui Verifikasi** $\\rightarrow$ Status tagihan sah berubah menjadi `#15 Lunas`.\n\n"
+            . "4. **🔄 Dampak Otomatis Sistem (*Unsuspend*):**\n"
+            . "   - Jika pelanggan sebelumnya dalam status isolir (`#11`), pelunasan tagihan seketika memicu otomasi pembukaan isolir (*unsuspend*) ke router MikroTik/OLT tim NOC tanpa intervensi manual.";
+    }
+
+    /**
+     * Resolves queries regarding database architecture, tables, and system data models.
+     */
+    protected function handleDatabaseQuestion(string $lower): ?string
+    {
+        $isDatabaseQuery = preg_match('/\b(database|basis data|tabel|table|schema|skema|kolom|struktur db)\b/i', $lower)
+            && (preg_match('/\b(apa saja|ada apa|daftar|sebutkan|struktur|arsitektur|pakai apa|menggunakan apa|penjelasan|hubungan)\b/i', $lower) || str_contains($lower, 'database'));
+
+        if (!$isDatabaseQuery) {
+            return null;
+        }
+
+        return "### 🗄️ Struktur Database & Skema Tabel Sistem IMS2:\n\n"
+            . "Sistem IMS2 menggunakan database **MySQL / MariaDB** dengan ORM Laravel Eloquent & Query Builder berkinerja tinggi. Berikut tabel-tabel utama:\n\n"
+            . "1. **👥 Pelanggan & Registrasi:**\n"
+            . "   - `trx_batchjob_register` / `view_batchjob`: Tabel inti data pelanggan, alamat pasang, nomor telepon, PPPoE username, paket layanan, dan siklus status registrasi (`#10` s/d `#23`).\n"
+            . "   - `m_pelanggan`: Master data kependudukan (NIK, nama lengkap, kontak darurat).\n\n"
+            . "2. **💳 Keuangan & Billing:**\n"
+            . "   - `trx_billing_layanan`: Invoice bulanan pelanggan (`kode_billing_layanan`, `nomor_internet`, `total_layanan`, `status_bill_lay` #11-#15, `bulan_tagihan`, `tahun_tagihan`, `payment_paid`).\n"
+            . "   - `payment_confirmations`: Antrean konfirmasi unggahan bukti transfer manual dari pelanggan.\n\n"
+            . "3. **📡 Infrastruktur Jaringan & OLT:**\n"
+            . "   - `m_olt`: Master perangkat OLT (`kode_olt`, `name_olt`, `ip_address`, `brand`, `model`, `is_active`).\n"
+            . "   - `m_port_olt`: Pemetaan port fisik GPON OLT.\n"
+            . "   - `tb_router`: Master router MikroTik gateway pelanggan.\n\n"
+            . "4. **⏱️ Otomasi & Gangguan:**\n"
+            . "   - `trx_suspend`: Antrean auto-suspend tgl 25 dan perintah buka isolir.\n"
+            . "   - `trx_tiket_gangguan`: Tiket komplain pelanggan helpdesk (`tiket`, `keluhan`, `penanganan`, `status`).\n"
+            . "   - `tb_pengguna` & `tb_level`: Otentikasi staf, password hash, dan wewenang role user.";
+    }
+
+    /**
+     * Resolves queries regarding new customer installation and lifecycle registration.
+     */
+    protected function handleRegistrationWorkflowQuestion(string $lower): ?string
+    {
+        $isRegFlow = preg_match('/\b(alur|proses|tahapan|cara|mekanisme|sop|bagaimana|gimana)\b/i', $lower)
+            && preg_match('/\b(pasang baru|registrasi|daftar pelanggan|pendaftaran|instalasi baru|pemasangan)\b/i', $lower);
+
+        if (!$isRegFlow) {
+            return null;
+        }
+
+        return "### 📋 Alur Pendaftaran & Pasang Baru Pelanggan IMS2:\n\n"
+            . "Berikut tahapan dari pendaftaran awal hingga internet pelanggan online aktif:\n\n"
+            . "1. **📝 Registrasi Masuk (`#10`):** CS / Sales menginput data identitas pemohon, nomor telepon, dan paket internet yang dipilih.\n"
+            . "2. **🔍 Survey Lokasi (`#12`):** Tim Teknik melakukan survey ke titik lokasi untuk mengecek ketersediaan port ODP dan pengukuran jarak tarikan kabel optik.\n"
+            . "3. **🛠️ Penarikan Dropcore & Pasang ONT (`#16`):** Teknisi menarik kabel dropcore optik dari ODP ke rumah pelanggan serta memasang modem ONT/ONU.\n"
+            . "4. **💻 Aktivasi & Binding NOC (`#18` / `#19`):** Tim NOC mengalokasikan akun PPPoE, binding VLAN, dan mendaftarkan port GPON OLT (`index_olt`).\n"
+            . "5. **🟢 Online Aktif (`#20`):** Layanan internet resmi aktif, sinyal optik stabil, dan pelanggan masuk ke siklus penagihan bulanan reguler.";
+    }
+
+    /**
+     * Resolves queries regarding network tickets, helpdesk complaints, and field technician dispatch.
+     */
+    protected function handleTicketWorkflowQuestion(string $lower): ?string
+    {
+        $isTicketFlow = preg_match('/\b(alur|proses|tahapan|cara|mekanisme|sop|bagaimana|gimana)\b/i', $lower)
+            && preg_match('/\b(tiket|gangguan|komplain|keluhan|kendala|helpdesk|laporan rusak)\b/i', $lower);
+
+        if (!$isTicketFlow) {
+            return null;
+        }
+
+        return "### 🎫 Alur Penanganan Tiket Gangguan & Helpdesk IMS2:\n\n"
+            . "Berikut prosedur penanganan keluhan internet pelanggan:\n\n"
+            . "1. **Laporan Masuk & Pembuatan Tiket (`OPEN`):** CS atau pelanggan membuat tiket komplain di sistem dengan mencantumkan nomor internet dan rincian keluhan.\n"
+            . "2. **Diagnosa Telemetri NOC:** Tim NOC mengecek status modem secara live di sistem telemetri OLT (mendeteksi apakah status `LOS` / kabel putus, `DOWN` / modem mati lampu, atau redaman tinggi).\n"
+            . "3. **Penugasan Teknisi Lapangan:** Jika ditemukan kendala fisik jalur optik, tiket dieskalasi ke teknisi lapangan terdekat beserta titik ODP target.\n"
+            . "4. **Perbaikan Jalur & Splicing:** Teknisi melakukan perbaikan kabel, splicing ulang, dan kalibrasi redaman hingga normal (`-15.00` s/d `-24.00 dBm`).\n"
+            . "5. **Penyelesaian & Tutup Tiket (`CLOSED`):** Setelah koneksi diverifikasi online dan dikonfirmasi ke pelanggan, status tiket diubah menjadi `Selesai / Closed`.";
+    }
+
+    /**
+     * Resolves queries regarding ISP and telecommunication terms (OLT, ONT, GPON, LOS, PPPoE, ODP).
+     */
+    protected function handleNetworkGlossaryQuestion(string $lower): ?string
+    {
+        $isGlossary = preg_match('/\b(apa itu|apa artinya|pengertian|definisi|singkatan dari|apa maksud)\b/i', $lower)
+            && preg_match('/\b(olt|ont|onu|gpon|los|pppoe|odp|odc|dropcore|splicing|vlan|dbm|snmp)\b/i', $lower);
+
+        if (!$isGlossary) {
+            return null;
+        }
+
+        if (str_contains($lower, 'olt')) {
+            return "### 📡 Apa itu OLT (Optical Line Terminal)?\n\n"
+                . "**OLT** adalah perangkat induk fiber optik yang berada di kantor pusat (*Data Center / Central Office*) ISP PT Media Solusi Network.\n\n"
+                . "Fungsi utamanya adalah memancarkan laser optik GPON ke ratusan modem pelanggan melalui splitter pasif. Di IMS2, master OLT tersimpan di tabel `m_olt` (misal: OLT Kayu Agung, OLT Babakan Tarogong, OLT Soreang).";
+        }
+
+        if (str_contains($lower, 'ont') || str_contains($lower, 'onu')) {
+            return "### 📟 Apa itu ONT / ONU (Optical Network Terminal)?\n\n"
+                . "**ONT/ONU** adalah perangkat modem pelanggan di lokasi rumah/kantor yang mengubah sinyal cahaya optik dari kabel dropcore menjadi sinyal elektrik ethernet (LAN) dan WiFi untuk dipakai pengguna.";
+        }
+
+        if (str_contains($lower, 'gpon')) {
+            return "### 💡 Apa itu GPON (Gigabit Passive Optical Network)?\n\n"
+                . "**GPON** adalah teknologi jaringan akses optik pasif berkecepatan tinggi yang digunakan oleh PT MSN. GPON mampu mendistribusikan bandwidth hingga 2.5 Gbps downstream ke pelanggan melalui satu core kabel menggunakan pembagi optik (*splitter*).";
+        }
+
+        if (str_contains($lower, 'los')) {
+            return "### 🔴 Apa itu Status LOS (Loss of Signal)?\n\n"
+                . "**LOS** menandakan bahwa modem ONT pelanggan tidak menerima daya cahaya laser optik sama sekali (biasanya redaman di atas `-40 dBm`).\n\n"
+                . "Penyebab paling umum: kabel serat optik dropcore putus, konektor biru/hijau kendor, atau kabel utama distribusi terkena pohon/kendaraan.";
+        }
+
+        if (str_contains($lower, 'pppoe')) {
+            return "### 🔐 Apa itu PPPoE (Point-to-Point Protocol over Ethernet)?\n\n"
+                . "**PPPoE** adalah protokol otentikasi jaringan yang digunakan router MikroTik IMS2 untuk mengidentifikasi akun pelanggan via username & password unik, sekaligus membatasi kecepatan bandwidth paket internet sesuai paket yang dibeli.";
+        }
+
+        if (str_contains($lower, 'odp') || str_contains($lower, 'odc')) {
+            return "### 📦 Apa itu ODP & ODC?\n\n"
+                . "- **ODP (Optical Distribution Point):** Kotak panel putih/hitam di tiang listrik jalan tempat teknisi mencolokkan kabel dropcore pelanggan (biasanya kapasitas 8 atau 16 port).\n"
+                . "- **ODC (Optical Distribution Cabinet):** Lemari kabinet optik kapasitas besar (96-288 core) yang menghubungkan kabel feeder dari kantor pusat ke beberapa titik ODP di lapangan.";
+        }
+
         return null;
     }
 
@@ -2176,6 +2446,26 @@ class AiAssistantController extends Controller
                     . "3. Cocokkan nominal `total_layanan` dengan mutasi rekening perusahaan.\n"
                     . "4. Klik tombol **Setujui Verifikasi** untuk mengubah status ke `#15 Lunas`.";
             }
+        }
+
+        // Domain Knowledge: Role Matrix, Workflows & Architecture
+        if ($roleAccessReply = $this->handleRoleAccessQuestion($lower, $user)) {
+            return $roleAccessReply;
+        }
+        if ($paymentWorkflowReply = $this->handlePaymentWorkflowQuestion($lower)) {
+            return $paymentWorkflowReply;
+        }
+        if ($databaseReply = $this->handleDatabaseQuestion($lower)) {
+            return $databaseReply;
+        }
+        if ($regWorkflowReply = $this->handleRegistrationWorkflowQuestion($lower)) {
+            return $regWorkflowReply;
+        }
+        if ($ticketWorkflowReply = $this->handleTicketWorkflowQuestion($lower)) {
+            return $ticketWorkflowReply;
+        }
+        if ($glossaryReply = $this->handleNetworkGlossaryQuestion($lower)) {
+            return $glossaryReply;
         }
 
         // 1. Pre-checks: Role permissions

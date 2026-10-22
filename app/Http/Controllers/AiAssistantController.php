@@ -738,7 +738,7 @@ class AiAssistantController extends Controller
             'tagihan', 'billing', 'invoice', 'bayar', 'pembayaran', 'lunas', 'unpaid', 'paid', 'belum', 'sudah', 'telah', 'sedang',
             'tolong', 'mohon', 'bantu', 'bisa', 'dong', 'ya', 'min', 'kak', 'admin', 'halo', 'hai', 'selamat', 'pagi', 'siang', 'sore', 'malam',
             'apakah', 'ada', 'berapa', 'siapa', 'kapan', 'kenapa', 'bagaimana', 'apa', 'tentang',
-            'terisolir', 'isolir', 'suspend', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
+            'terisolir', 'diisolir', 'isolir', 'suspend', 'disuspend', 'tersuspend', 'blokir', 'diblokir', 'terblokir', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
             'adalah', 'itu', 'ini', 'kah', 'dengan', 'bernama', 'si', 'dari', 'pada', 'yang', 'tidak', 'bukan', 'akan',
             'selain', 'total', 'jumlah', 'rekap', 'semua', 'seluruh', 'sisa', 'tunggakan', 'piutang',
             'oleh', 'dilakukan', 'melakukan', 'role', 'fungsi', 'tugas', 'wewenang', 'sistem', 'aplikasi', 'cara', 'aturan', 'menu', 'fitur', 'panduan', 'bantuan', 'contoh', 'seperti', 'tersebut', 'saja',
@@ -869,7 +869,7 @@ class AiAssistantController extends Controller
             || str_contains($lower, 'id pelanggan')
             || str_contains($lower, 'pppoe');
 
-        $isGeneralDomainQuery = preg_match('/\b(total|jumlah|berapa|daftar|list|tampilkan|semua|rekap|fitur|router|mikrotik|olt|tiket|gangguan|komplain|suspend|isolir)\b/i', $lower)
+        $isGeneralDomainQuery = preg_match('/\b(total|jumlah|berapa|daftar|list|tampilkan|semua|rekap|fitur|router|mikrotik|olt|tiket|gangguan|komplain|suspend|disuspend|tersuspend|isolir|diisolir|terisolir|blokir|diblokir|terblokir)\b/i', $lower)
             && empty($extractedId);
 
         // Context 1: Customer lookup (by ID, username, or name candidates across batchjob & m_pelanggan)
@@ -3009,6 +3009,9 @@ class AiAssistantController extends Controller
                         $nom = 'Rp ' . number_format((float)($cb->total_layanan ?? 0), 0, ',', '.');
                         $output[] = "  - Invoice `{$cb->kode_billing_layanan}` ({$cb->bulan_tagihan}/{$cb->tahun_tagihan}): {$nom} | {$stb}";
                     }
+                } elseif (preg_match('/\b(tagih|invoice|bill|bayar|tunggak)\b/i', $lower)) {
+                    $output[] = "\n  **💳 Riwayat Tagihan:**";
+                    $output[] = "  ℹ️ *Pelanggan ini belum memiliki catatan riwayat invoice di sistem billing.*";
                 }
             }
             return implode("\n", $output);
@@ -3324,9 +3327,13 @@ class AiAssistantController extends Controller
      */
     protected function handleSuspendedCustomersList(string $lower): ?string
     {
-        if (preg_match('/\b(suspend|isolir|terisolir)\b/i', $lower) 
-            && (preg_match('/\b(pelanggan|user|daftar|siapa|tampilkan|list|ada siapa)\b/i', $lower) || str_contains($lower, 'sedang suspend'))
-            && !str_contains($lower, 'cara') && !str_contains($lower, 'prosedur') && !str_contains($lower, 'jadwal')) {
+        $isSuspendKeyword = preg_match('/(suspend|disuspend|tersuspend|isolir|diisolir|terisolir|blokir|diblokir|terblokir)/i', $lower);
+        $isListKeyword = preg_match('/\b(pelanggan|user|daftar|siapa|tampilkan|list|ada siapa|data|orang)\b/i', $lower)
+            || str_contains($lower, 'sedang') || str_contains($lower, 'saat ini');
+        $isSopExclude = str_contains($lower, 'cara') || str_contains($lower, 'prosedur') || str_contains($lower, 'jadwal') 
+            || str_contains($lower, 'alur') || str_contains($lower, 'unsuspend') || str_contains($lower, 'buka');
+
+        if ($isSuspendKeyword && $isListKeyword && !$isSopExclude) {
             $tableCustomer = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
             $suspended = DB::table($tableCustomer)
                 ->where(function($q) {
@@ -3432,7 +3439,16 @@ class AiAssistantController extends Controller
                       ->orWhereDate('date_update', $todayDate);
                 });
             } else {
-                $ticketQuery->whereNotIn('status', ['selesai', 'closed', 'batal']);
+                $ticketQuery->where(function($q) {
+                    $q->whereIn('status', ['11', '12', 'open', 'baru', 'proses', 'diproses'])
+                      ->orWhere(function($sub) {
+                          $sub->whereNotIn('status', ['13', '14', 'selesai', 'closed', 'close', 'done', 'batal', 'cancel', 'dibatalkan'])
+                              ->where(function($p) {
+                                  $p->whereNull('penanganan')
+                                    ->orWhere('penanganan', 'not like', '%batal%');
+                              });
+                      });
+                });
             }
 
             $ticketCount = $ticketQuery->count();
@@ -3447,12 +3463,19 @@ class AiAssistantController extends Controller
                 $reply .= "| No. Tiket | No. Internet | Keluhan | Status | Penanganan |\n";
                 $reply .= "|:---|:---|:---|:---:|:---|\n";
                 foreach ($sampleTickets as $t) {
-                    $st = strtoupper($t->status ?: 'OPEN');
+                    $stRaw = strtolower(trim((string)$t->status));
+                    $stBadge = match($stRaw) {
+                        '11', 'open', 'baru' => '🟡 Baru (OPEN)',
+                        '12', 'proses', 'diproses' => '🔵 Sedang Ditangani',
+                        '13', 'selesai', 'closed', 'done' => '🟢 Selesai',
+                        '14', 'batal', 'cancel', 'dibatalkan' => '⚪ Dibatalkan',
+                        default => strtoupper($t->status ?: 'OPEN')
+                    };
                     $pen = $t->penanganan ?: 'Menunggu Teknisi';
-                    $reply .= "| `{$t->tiket}` | `{$t->nomor_internet}` | {$t->keluhan} | **{$st}** | {$pen} |\n";
+                    $reply .= "| `{$t->tiket}` | `{$t->nomor_internet}` | {$t->keluhan} | **{$stBadge}** | {$pen} |\n";
                 }
             } else {
-                $reply .= "🎉 **Tidak ada tiket gangguan yang tercatat.** Jaringan pelanggan terpantau aman dan stabil.";
+                $reply .= "🎉 **Tidak ada tiket gangguan yang berstatus OPEN / sedang ditangani saat ini.** Jaringan pelanggan terpantau aman dan stabil.";
             }
             return $reply;
         }

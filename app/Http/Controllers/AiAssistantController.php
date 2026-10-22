@@ -1525,7 +1525,12 @@ class AiAssistantController extends Controller
             . "   - Jatuh Tempo Tagihan: Tanggal 25 setiap bulan.\n"
             . "   - Terbit Request Suspend / Isolir Otomatis: Setiap tanggal 25 pukul 06:00 WIB pagi (cron `suspend:unpaid-customers` otomatis menyaring dan membuat antrean request suspend ke tim NOC untuk semua pelanggan yang belum lunas/status_bill_lay != 15).\n"
             . "   - Eksekusi Suspend: Diteruskan ke tim NOC/MikroTik berdasarkan antrean tabel `trx_suspend` (status 11=Req Suspend, 12=Suspend Aktif).\n"
-            . "   - Unsuspend / Buka Isolir: Otomatis diajukan seketika verifikasi bukti bayar disetujui tim Finance (#14 -> #15) atau manual oleh admin/finance.\n\n"
+            . "   - Unsuspend / Buka Isolir: Otomatis diajukan seketika verifikasi bukti bayar disetujui tim Finance (#14 -> #15) atau manual oleh admin/finance.\n"
+            . "F. ALUR PENDAFTARAN, SURVEY & INSTALASI (SOP TEKNIK VS NOC):\n"
+            . "   - Pendaftaran Pelanggan Baru: BISA dilakukan oleh tim Sales, CS, Admin, dan juga tim NOC.\n"
+            . "   - Survey Lokasi & Instalasi Lapangan: MUTLAK HANYA DILAKUKAN OLEH TEKNISI LAPANGAN (Tim Teknik).\n"
+            . "   - Apakah NOC bisa melakukan survey dan instalasi lapangan? TIDAK BISA. Sistem mengunci modul survey dan instalasi hanya untuk Teknisi.\n"
+            . "   - Peran NOC pada pelanggan baru: Melakukan aktivasi layanan jaringan (PPPoE / OLT / VLAN) di menu Aktivasi NOC setelah instalasi diselesaikan oleh Teknisi.\n\n"
             . "KEBIJAKAN HAK AKSES ROLE (SANGAT KETAT):\n"
             . "{$roleRules}\n\n"
             . "5. INTEGRITAS DATA STATUS PELANGGAN (SUMBER RESMI: trx_batchjob_register):\n"
@@ -2320,10 +2325,22 @@ class AiAssistantController extends Controller
     {
         $isRoleQuery = preg_match('/\b(bisa melihat|bisa akses|bisa buka|bisa cek|bisa liat|boleh melihat|boleh akses|hak akses|wewenang|tugas|fungsi role|peran|matrix role|matriks role)\b/i', $lower)
             || preg_match('/\b(apakah\s+(finance|keuangan|noc|teknik|teknisi|cs|customer service|hrd|sales|mitra|gudang|admin|direktur|ceo|staff))\b/i', $lower)
-            || preg_match('/\b(role apa|daftar role|semua role|siapa yang bisa)\b/i', $lower);
+            || preg_match('/\b(role apa|daftar role|semua role|siapa yang bisa)\b/i', $lower)
+            || (str_contains($lower, 'apakah') && (str_contains($lower, 'noc') || str_contains($lower, 'teknik') || str_contains($lower, 'finance')) && (str_contains($lower, 'instalasi') || str_contains($lower, 'survey') || str_contains($lower, 'daftar') || str_contains($lower, 'registrasi')));
 
         if (!$isRoleQuery) {
             return null;
+        }
+
+        // 0. NOC vs Survey & Instalasi Lapangan vs Pendaftaran
+        if (str_contains($lower, 'noc')
+            && (str_contains($lower, 'instalasi') || str_contains($lower, 'survey') || str_contains($lower, 'pasang'))) {
+            return "### 🔒 Hak Akses Role: NOC vs Survey & Instalasi Lapangan\n\n"
+                . "❌ **Tidak, proses survey lokasi dan instalasi lapangan TIDAK BISA dilakukan oleh NOC.**\n\n"
+                . "📋 **Aturan & Pembagian Wewenang Resmi di IMS2:**\n"
+                . "1. **📝 Pendaftaran Pelanggan Baru:** Role **NOC BISA** melakukan registrasi/input pendaftaran pelanggan baru dan mengedit data calon pelanggan.\n"
+                . "2. **🛠️ Survey & Instalasi Lapangan:** Wewenang penuh **eksklusif tim Teknisi**. Fitur dan tombol aksi *Schedule Survey*, *Report Survey*, *Schedule Instalasi*, dan *Report Instalasi* dikunci dari role NOC dan hanya dapat dieksekusi oleh tim Teknisi.\n"
+                . "3. **💻 Aktivasi Layanan:** Setelah teknisi menyelesaikan instalasi fisik di rumah pelanggan, permintaan aktivasi diajukan ke tim NOC. **NOC bertugas melakukan aktivasi PPPoE, alokasi IP, dan pendaftaran port OLT** di menu *Aktivasi Jaringan*.";
         }
 
         // 1. Finance vs OLT / Jaringan / Router / Redaman
@@ -3445,13 +3462,100 @@ class AiAssistantController extends Controller
     {
         if (preg_match('/\b(total|jumlah|berapa)\b/i', $lower) 
             && preg_match('/\b(pelanggan|user|member)\b/i', $lower) 
-            && (preg_match('/\b(aktif|online|suspend|isolir|terdaftar|keseluruhan|semua)\b/i', $lower) || str_contains($lower, 'sekarang') || str_contains($lower, 'saat ini'))
+            && (preg_match('/\b(aktif|online|suspend|isolir|terdaftar|keseluruhan|semua|corporate|korporat|broadband|lastmile)\b/i', $lower) || str_contains($lower, 'sekarang') || str_contains($lower, 'saat ini'))
             && !preg_match('/\b(tunggak|piutang|belum bayar|belum terbayar)\b/i', $lower)) {
             
-            $tableCustomer = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
-            $totalActive = DB::table($tableCustomer)->where('status_reg', '20')->count();
-            $totalSuspend = DB::table($tableCustomer)->whereIn('status_reg', ['21', '21.1'])->count();
-            $totalTermin = DB::table($tableCustomer)->whereIn('status_reg', ['23', '23.1'])->count();
+            // Jika spesifik menanyakan kategori CORPORATE
+            if (str_contains($lower, 'corporate') || str_contains($lower, 'korporat') || str_contains($lower, 'perusahaan') || str_contains($lower, 'b2b')) {
+                try {
+                    $corpActive = DB::table('view_batchjob')
+                        ->where(function ($q) {
+                            $q->where('nama_kategori_bandwith', 'like', '%corporate%')
+                              ->orWhere('alias_nama_kategori', 'like', '%corporate%');
+                        })
+                        ->where('status_reg', '20')
+                        ->count();
+
+                    $corpSuspend = DB::table('view_batchjob')
+                        ->where(function ($q) {
+                            $q->where('nama_kategori_bandwith', 'like', '%corporate%')
+                              ->orWhere('alias_nama_kategori', 'like', '%corporate%');
+                        })
+                        ->whereIn('status_reg', ['21', '21.1'])
+                        ->count();
+
+                    $corpTermin = DB::table('view_batchjob')
+                        ->where(function ($q) {
+                            $q->where('nama_kategori_bandwith', 'like', '%corporate%')
+                              ->orWhere('alias_nama_kategori', 'like', '%corporate%');
+                        })
+                        ->whereIn('status_reg', ['23', '23.1'])
+                        ->count();
+
+                    $corpTotal = DB::table('view_batchjob')
+                        ->where(function ($q) {
+                            $q->where('nama_kategori_bandwith', 'like', '%corporate%')
+                              ->orWhere('alias_nama_kategori', 'like', '%corporate%');
+                        })
+                        ->count();
+                } catch (\Throwable $e) {
+                    $corpActive = DB::table('trx_batchjob_register')
+                        ->leftJoin('mst_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'mst_bandwith.kode_bandwith')
+                        ->leftJoin('mst_kategori_bandwith', 'mst_bandwith.kode_kategori_bandwith', '=', 'mst_kategori_bandwith.kode_kategori_bandwith')
+                        ->where(function ($q) {
+                            $q->where('mst_kategori_bandwith.nama_kategori_bandwith', 'like', '%corporate%')
+                              ->orWhere('mst_kategori_bandwith.alias_nama_kategori', 'like', '%corporate%');
+                        })
+                        ->where('trx_batchjob_register.status_reg', '20')
+                        ->count();
+
+                    $corpSuspend = DB::table('trx_batchjob_register')
+                        ->leftJoin('mst_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'mst_bandwith.kode_bandwith')
+                        ->leftJoin('mst_kategori_bandwith', 'mst_bandwith.kode_kategori_bandwith', '=', 'mst_kategori_bandwith.kode_kategori_bandwith')
+                        ->where(function ($q) {
+                            $q->where('mst_kategori_bandwith.nama_kategori_bandwith', 'like', '%corporate%')
+                              ->orWhere('mst_kategori_bandwith.alias_nama_kategori', 'like', '%corporate%');
+                        })
+                        ->whereIn('trx_batchjob_register.status_reg', ['21', '21.1'])
+                        ->count();
+
+                    $corpTermin = DB::table('trx_batchjob_register')
+                        ->leftJoin('mst_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'mst_bandwith.kode_bandwith')
+                        ->leftJoin('mst_kategori_bandwith', 'mst_bandwith.kode_kategori_bandwith', '=', 'mst_kategori_bandwith.kode_kategori_bandwith')
+                        ->where(function ($q) {
+                            $q->where('mst_kategori_bandwith.nama_kategori_bandwith', 'like', '%corporate%')
+                              ->orWhere('mst_kategori_bandwith.alias_nama_kategori', 'like', '%corporate%');
+                        })
+                        ->whereIn('trx_batchjob_register.status_reg', ['23', '23.1'])
+                        ->count();
+
+                    $corpTotal = DB::table('trx_batchjob_register')
+                        ->leftJoin('mst_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'mst_bandwith.kode_bandwith')
+                        ->leftJoin('mst_kategori_bandwith', 'mst_bandwith.kode_kategori_bandwith', '=', 'mst_kategori_bandwith.kode_kategori_bandwith')
+                        ->where(function ($q) {
+                            $q->where('mst_kategori_bandwith.nama_kategori_bandwith', 'like', '%corporate%')
+                              ->orWhere('mst_kategori_bandwith.alias_nama_kategori', 'like', '%corporate%');
+                        })
+                        ->count();
+                }
+
+                return "### 🏢 Rekap Pelanggan Corporate IMS2 Saat Ini:\n\n"
+                    . "- 🟢 **Pelanggan Corporate Aktif (#20):** **" . number_format($corpActive, 0, ',', '.') . " User**\n"
+                    . "- 🔴 **Pelanggan Corporate Suspend (#21):** **" . number_format($corpSuspend, 0, ',', '.') . " User**\n"
+                    . "- ⚪ **Pelanggan Corporate Terminasi (#23):** **" . number_format($corpTermin, 0, ',', '.') . " User**\n"
+                    . "- 📊 **Total Registrasi Corporate:** **" . number_format($corpTotal, 0, ',', '.') . " User**\n\n"
+                    . "💡 *Data dihitung realtime sinkron dengan kategori paket CORPORATE di menu Data Pelanggan (`view_batchjob`).*";
+            }
+
+            try {
+                $totalActive = DB::table('view_batchjob')->where('status_reg', '20')->count();
+                $totalSuspend = DB::table('view_batchjob')->whereIn('status_reg', ['21', '21.1'])->count();
+                $totalTermin = DB::table('view_batchjob')->whereIn('status_reg', ['23', '23.1'])->count();
+            } catch (\Throwable $e) {
+                $totalActive = DB::table('trx_batchjob_register')->where('status_reg', '20')->count();
+                $totalSuspend = DB::table('trx_batchjob_register')->whereIn('status_reg', ['21', '21.1'])->count();
+                $totalTermin = DB::table('trx_batchjob_register')->whereIn('status_reg', ['23', '23.1'])->count();
+            }
             $totalAllReg = DB::table('trx_batchjob_register')->count();
 
             return "### 👥 Rekap Total Pelanggan IMS2 Saat Ini:\n\n"

@@ -1518,6 +1518,12 @@ class AiAssistantController extends Controller
             . "   - DILARANG KERAS menghubungkan, mengaitkan, atau menampilkan invoice/tagihan milik orang lain kepada pelanggan yang sedang ditanyakan.\n"
             . "   - Periksa selalu 'nomor_internet' pada setiap baris di [billings] atau [billings_sample]. Jika tidak cocok dengan pelanggan yang ditanyakan, atau jika kosong/berisi tagihan orang lain, nyatakan dengan jujur dan jelas: Pelanggan tersebut TIDAK MEMILIKI TAGIHAN TERTUNGGAK.\n"
             . "   - Dilarang keras berasumsi atau mengarang nomor internet dan invoice.\n\n"
+            . "6. PRINSIP JAWABAN SINGKAT & TEPAT SASARAN (DIRECT ANSWER):\n"
+            . "   - Jika pengguna HANYA menanyakan status isolir/suspend pelanggan (misal: 'Cek apakah Dian Haerani masih terisolir?' atau 'apakah NOVA NOVIANTI sedang disuspend?'), JAWAB LANGSUNG STATUSNYA SECARA SINGKAT (1 kalimat): 'Pelanggan [Nama] ([NoInternet]) saat ini berstatus [Normal / Terisolir]'. DILARANG KERAS menampilkan seluruh kartu profil (alamat, OLT, router, tagihan 3 bulan) jika tidak diminta!\n"
+            . "   - Jika pengguna HANYA menanyakan aktif atau tidak, jawab langsung status keaktifannya saja secara singkat.\n"
+            . "   - Jika pengguna menanyakan di router mana, jawab nama router dan PPPoE-nya saja.\n"
+            . "   - Jika pengguna menanyakan alamat, jawab alamatnya saja.\n"
+            . "   - Hanya tampilkan kartu profil lengkap jika pengguna memang meminta 'data', 'profil', atau 'info lengkap' pelanggan.\n\n"
             . "Jika pengguna meminta data di luar wewenangnya, tolak langsung secara singkat, tegas, dan sopan tanpa berputar-putar.\n"
             . "Hari ini: {$today}.";
 
@@ -2970,6 +2976,76 @@ class AiAssistantController extends Controller
 
         // 7. Data Pelanggan Spesifik (Profil & Tagihan Terpadu)
         if (!empty($context['customers'])) {
+            $isAskingOnlySuspend = preg_match('/\b(isolir|terisolir|diisolir|suspend|disuspend|tersuspend|blokir|diblokir|terblokir)\b/i', $lower)
+                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|invoice|riwayat)\b/i', $lower);
+
+            $isAskingOnlyActive = preg_match('/\b(aktif|online|keaktifan)\b/i', $lower)
+                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|invoice|riwayat|berapa|total|jumlah)\b/i', $lower);
+
+            $isAskingOnlyRouter = preg_match('/\b(router|mikrotik)\b/i', $lower)
+                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|daftar|list)\b/i', $lower);
+
+            $isAskingOnlyAddress = preg_match('/\b(alamat|lokasi|tempat|rumah|dimana)\b/i', $lower)
+                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan)\b/i', $lower);
+
+            // A. Jawaban langsung jika HANYA menanyakan status isolir / suspend
+            if ($isAskingOnlySuspend) {
+                $lines = [];
+                foreach ($context['customers'] as $c) {
+                    $isCustSuspended = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
+                    if ($isCustSuspended) {
+                        $lines[] = "🔴 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Terisolir (Suspend)**.";
+                    } else {
+                        $lines[] = "🟢 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Normal / Aktif (Tidak Terisolir)**.";
+                    }
+                }
+                return implode("\n", $lines);
+            }
+
+            // B. Jawaban langsung jika HANYA menanyakan aktif atau tidak
+            if ($isAskingOnlyActive) {
+                $lines = [];
+                foreach ($context['customers'] as $c) {
+                    $statusDesc = match((string)$c->status_reg) {
+                        '20' => '🟢 Online Aktif (Layanan normal)',
+                        '21', '21.1' => '🔴 Terisolir (Suspend)',
+                        '23', '23.1' => '⚫ Terminasi / Dismantle (Putus Berlangganan)',
+                        '18', '19' => '🔵 Tahap Aktivasi NOC',
+                        '16' => '🟡 Tahap Instalasi Lapangan',
+                        '12' => '⚪ Tahap Survey Lokasi',
+                        default => 'Registrasi (' . $c->status_reg . ')'
+                    };
+                    $lines[] = "Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **{$statusDesc}**.";
+                }
+                return implode("\n", $lines);
+            }
+
+            // C. Jawaban langsung jika HANYA menanyakan router
+            if ($isAskingOnlyRouter) {
+                $lines = [];
+                foreach ($context['customers'] as $c) {
+                    $routerLabel = '-';
+                    if (!empty($c->router_id) && Schema::hasTable('routers')) {
+                        $rObj = DB::table('routers')->where('id', $c->router_id)->first();
+                        if ($rObj) {
+                            $routerLabel = "{$rObj->name} (" . ($rObj->host ?? '-') . ")";
+                        }
+                    }
+                    $pppoe = $c->pppoe_username ?: '-';
+                    $lines[] = "Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) terdaftar di **{$routerLabel}** dengan PPPoE `{$pppoe}`.";
+                }
+                return implode("\n", $lines);
+            }
+
+            // D. Jawaban langsung jika HANYA menanyakan alamat
+            if ($isAskingOnlyAddress) {
+                $lines = [];
+                foreach ($context['customers'] as $c) {
+                    $lines[] = "Alamat pemasangan pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`): *{$c->alamat_pasang}*.";
+                }
+                return implode("\n", $lines);
+            }
+
             $output[] = "### 👤 Data Pelanggan Ditemukan (" . count($context['customers']) . "):";
             foreach ($context['customers'] as $c) {
                 $statusText = match((string)$c->status_reg) {

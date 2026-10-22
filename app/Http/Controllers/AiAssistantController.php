@@ -3973,7 +3973,7 @@ class AiAssistantController extends Controller
 
                 $stokBadge = ((int)$item->jumlah > 0) 
                     ? "🟢 **{$item->jumlah} {$item->satuan}**" 
-                    : "🔴 <span class='text-rose-500'>0 {$item->satuan}</span>";
+                    : "🔴 **0 {$item->satuan}**";
 
                 $reply .= "| {$no} | **{$nama}** | {$kategori} | {$stokBadge} |\n";
                 $no++;

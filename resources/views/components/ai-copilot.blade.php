@@ -756,7 +756,8 @@ window.imsAiCopilot = function() {
             let escaped = rawText
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
+                .replace(/>/g, '&gt;')
+                .replace(/&lt;br\s*\/?&gt;/gi, '<br/>');
 
             escaped = escaped.replace(/^### (.*$)/gim, '<h4 style="color:#38bdf8; font-weight:700; margin:8px 0 4px 0;">$1</h4>');
             escaped = escaped.replace(/^## (.*$)/gim, '<h3 style="color:#7dd3fc; font-weight:700; margin:10px 0 4px 0;">$1</h3>');

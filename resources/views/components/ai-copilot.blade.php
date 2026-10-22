@@ -419,7 +419,8 @@ window.imsAiCopilot = function() {
                     const parsed = JSON.parse(saved);
                     this.messages = parsed.map(m => {
                         if (m.text) {
-                            m.text = m.text.replace(/^>\s*(🤖|🏷️)\s*\*Mode:\s*(AI|Offline)\*\s*\n\n?/i, '');
+                            m.text = m.text.replace(/^>\s*(🤖|🏷️)\s*\*Mode:\s*(AI|Offline)\*\s*\n\n?/i, '')
+                                           .replace(/\n*---\n*>\s*ℹ️\s*\*Info Failover:[\s\S]*$/i, '');
                         }
                         if (typeof m.isAi === 'undefined') {
                             m.isAi = true;
@@ -642,7 +643,9 @@ window.imsAiCopilot = function() {
                     const isFallback = (data.mode === 'local_fallback');
                     this.engineMode = isAi ? 'AI' : (isFallback ? 'AI (Lokal)' : 'Offline');
 
-                    let cleanText = (data.reply || 'Data berhasil diproses.').replace(/^>\s*(🤖|🏷️)\s*\*Mode:\s*(AI|Offline)\*\s*\n\n?/i, '');
+                    let cleanText = (data.reply || 'Data berhasil diproses.')
+                        .replace(/^>\s*(🤖|🏷️)\s*\*Mode:\s*(AI|Offline)\*\s*\n\n?/i, '')
+                        .replace(/\n*---\n*>\s*ℹ️\s*\*Info Failover:[\s\S]*$/i, '');
 
                     this.messages.push({
                         role: 'assistant',
@@ -806,18 +809,17 @@ window.imsAiCopilot = function() {
                         <!-- Indikator Status Mesin (Hijau = AI Online, Cyan = AI Lokal, Kuning = Offline) -->
                         <span 
                             :style="engineMode === 'AI' 
-                                ? 'display:inline-flex !important; align-items:center !important; gap:5px !important; padding:1px 8px !important; border-radius:9999px !important; background:rgba(16,185,129,0.18) !important; border:1px solid rgba(16,185,129,0.5) !important; color:#34d399 !important; font-size:10px !important; font-weight:700 !important; font-family:monospace !important;' 
+                                ? 'display:inline-flex !important; align-items:center !important; justify-content:center !important; width:15px !important; height:15px !important; border-radius:9999px !important; background:rgba(16,185,129,0.18) !important; border:1px solid rgba(16,185,129,0.5) !important;' 
                                 : (engineMode.includes('Lokal')
-                                    ? 'display:inline-flex !important; align-items:center !important; gap:5px !important; padding:1px 8px !important; border-radius:9999px !important; background:rgba(6,182,212,0.18) !important; border:1px solid rgba(6,182,212,0.5) !important; color:#38bdf8 !important; font-size:10px !important; font-weight:700 !important; font-family:monospace !important;'
-                                    : 'display:inline-flex !important; align-items:center !important; gap:5px !important; padding:1px 8px !important; border-radius:9999px !important; background:rgba(245,158,11,0.18) !important; border:1px solid rgba(245,158,11,0.5) !important; color:#fbbf24 !important; font-size:10px !important; font-weight:700 !important; font-family:monospace !important;')"
-                            :title="engineMode === 'AI' ? 'Mode: AI Online (Google Gemini)' : (engineMode.includes('Lokal') ? 'Mode: AI Internal (Heuristik Database Lokal)' : 'Mode: Offline')">
+                                    ? 'display:inline-flex !important; align-items:center !important; justify-content:center !important; width:15px !important; height:15px !important; border-radius:9999px !important; background:rgba(6,182,212,0.18) !important; border:1px solid rgba(6,182,212,0.5) !important;'
+                                    : 'display:inline-flex !important; align-items:center !important; justify-content:center !important; width:15px !important; height:15px !important; border-radius:9999px !important; background:rgba(245,158,11,0.18) !important; border:1px solid rgba(245,158,11,0.5) !important;')"
+                            :title="engineMode === 'AI' ? 'Mode: AI Online (Google Gemini)' : (engineMode.includes('Lokal') ? 'Mode: Asisten Internal (Database Lokal)' : 'Mode: Offline')">
                             <span 
                                 :style="engineMode === 'AI' 
-                                    ? 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#10b981 !important; box-shadow:0 0 8px #10b981 !important;' 
+                                    ? 'display:inline-block !important; width:6.5px !important; height:6.5px !important; min-width:6.5px !important; border-radius:9999px !important; background:#10b981 !important; box-shadow:0 0 8px #10b981 !important;' 
                                     : (engineMode.includes('Lokal')
-                                        ? 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#06b6d4 !important; box-shadow:0 0 8px #06b6d4 !important;'
-                                        : 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#f59e0b !important; box-shadow:0 0 8px #f59e0b !important;')"></span>
-                            <span x-text="engineMode"></span>
+                                        ? 'display:inline-block !important; width:6.5px !important; height:6.5px !important; min-width:6.5px !important; border-radius:9999px !important; background:#06b6d4 !important; box-shadow:0 0 8px #06b6d4 !important;'
+                                        : 'display:inline-block !important; width:6.5px !important; height:6.5px !important; min-width:6.5px !important; border-radius:9999px !important; background:#f59e0b !important; box-shadow:0 0 8px #f59e0b !important;')"></span>
                         </span>
                         <span x-show="userRole" style="font-size:10px; font-family:monospace; padding:1px 6px; border-radius:4px; background:rgba(30,27,75,0.7); color:#a5b4fc; border:1px solid rgba(165,180,252,0.35); flex-shrink:0;" x-text="userRole"></span>
                     </div>
@@ -864,21 +866,20 @@ window.imsAiCopilot = function() {
                             <span style="display:flex; align-items:center; gap:8px; font-weight:600;">
                                 <img src="{{ asset('assets/images/msnai.png') }}" alt="IMS AI" style="width:16px; height:16px; object-fit:contain;">
                                 <span>IMS Copilot</span>
-                                <!-- Status Pill Indicator: Hijau = AI Online, Cyan = AI Lokal, Kuning = Offline -->
+                                <!-- Status Dot Indicator: Hijau = AI Online, Cyan = AI Lokal, Kuning = Offline -->
                                 <span 
                                     :style="msg.isAi 
-                                        ? 'display:inline-flex !important; align-items:center !important; gap:5px !important; padding:1px 8px !important; border-radius:9999px !important; background:rgba(16,185,129,0.18) !important; border:1px solid rgba(16,185,129,0.5) !important; color:#34d399 !important; font-size:10px !important; font-weight:700 !important; letter-spacing:0.02em !important;' 
+                                        ? 'display:inline-flex !important; align-items:center !important; justify-content:center !important; width:15px !important; height:15px !important; border-radius:9999px !important; background:rgba(16,185,129,0.18) !important; border:1px solid rgba(16,185,129,0.5) !important;' 
                                         : (msg.isFallback 
-                                            ? 'display:inline-flex !important; align-items:center !important; gap:5px !important; padding:1px 8px !important; border-radius:9999px !important; background:rgba(6,182,212,0.18) !important; border:1px solid rgba(6,182,212,0.5) !important; color:#38bdf8 !important; font-size:10px !important; font-weight:700 !important; letter-spacing:0.02em !important;' 
-                                            : 'display:inline-flex !important; align-items:center !important; gap:5px !important; padding:1px 8px !important; border-radius:9999px !important; background:rgba(245,158,11,0.18) !important; border:1px solid rgba(245,158,11,0.5) !important; color:#fbbf24 !important; font-size:10px !important; font-weight:700 !important; letter-spacing:0.02em !important;')"
-                                    :title="msg.isAi ? 'Mode: AI Online (Google Gemini)' : (msg.isFallback ? 'Mode: AI Internal (Heuristik Database Lokal)' : 'Mode: Offline')">
+                                            ? 'display:inline-flex !important; align-items:center !important; justify-content:center !important; width:15px !important; height:15px !important; border-radius:9999px !important; background:rgba(6,182,212,0.18) !important; border:1px solid rgba(6,182,212,0.5) !important;' 
+                                            : 'display:inline-flex !important; align-items:center !important; justify-content:center !important; width:15px !important; height:15px !important; border-radius:9999px !important; background:rgba(245,158,11,0.18) !important; border:1px solid rgba(245,158,11,0.5) !important;')"
+                                    :title="msg.isAi ? 'Mode: AI Online (Google Gemini)' : (msg.isFallback ? 'Mode: Asisten Internal (Database Lokal)' : 'Mode: Offline')">
                                     <span 
                                         :style="msg.isAi 
-                                            ? 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#10b981 !important; box-shadow:0 0 8px #10b981 !important;' 
+                                            ? 'display:inline-block !important; width:6.5px !important; height:6.5px !important; min-width:6.5px !important; border-radius:9999px !important; background:#10b981 !important; box-shadow:0 0 8px #10b981 !important;' 
                                             : (msg.isFallback 
-                                                ? 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#06b6d4 !important; box-shadow:0 0 8px #06b6d4 !important;' 
-                                                : 'display:inline-block !important; width:7px !important; height:7px !important; min-width:7px !important; border-radius:9999px !important; background:#f59e0b !important; box-shadow:0 0 8px #f59e0b !important;')"></span>
-                                    <span x-text="msg.isAi ? 'AI' : (msg.isFallback ? 'AI (Lokal)' : 'Offline')"></span>
+                                                ? 'display:inline-block !important; width:6.5px !important; height:6.5px !important; min-width:6.5px !important; border-radius:9999px !important; background:#06b6d4 !important; box-shadow:0 0 8px #06b6d4 !important;' 
+                                                : 'display:inline-block !important; width:6.5px !important; height:6.5px !important; min-width:6.5px !important; border-radius:9999px !important; background:#f59e0b !important; box-shadow:0 0 8px #f59e0b !important;')"></span>
                                 </span>
                             </span>
                             <button 

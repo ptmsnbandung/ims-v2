@@ -161,10 +161,6 @@ class AiAssistantController extends Controller
                 $shortErr = substr($errDetail, 0, 95);
             }
 
-            $attemptCountText = ($keysAttempted >= $totalKeys) ? "ke-{$totalKeys}" : "{$keysAttempted} dari {$totalKeys}";
-            $note = "\n\n---\n> ℹ️ *Info Failover: Sistem telah mencoba {$attemptCountText} API Key Google terdaftar. Seluruhnya merespon '{$shortErr}'. Dijawab otomatis via Asisten Internal IMS2.*";
-            $fallbackReply .= $note;
-
             return response()->json([
                 'status' => 'success',
                 'reply' => $fallbackReply,

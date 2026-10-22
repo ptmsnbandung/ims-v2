@@ -1530,7 +1530,33 @@ class AiAssistantController extends Controller
             . "   - Pendaftaran Pelanggan Baru: BISA dilakukan oleh tim Sales, CS, Admin, dan juga tim NOC.\n"
             . "   - Survey Lokasi & Instalasi Lapangan: MUTLAK HANYA DILAKUKAN OLEH TEKNISI LAPANGAN (Tim Teknik).\n"
             . "   - Apakah NOC bisa melakukan survey dan instalasi lapangan? TIDAK BISA. Sistem mengunci modul survey dan instalasi hanya untuk Teknisi.\n"
-            . "   - Peran NOC pada pelanggan baru: Melakukan aktivasi layanan jaringan (PPPoE / OLT / VLAN) di menu Aktivasi NOC setelah instalasi diselesaikan oleh Teknisi.\n\n"
+            . "   - Peran NOC pada pelanggan baru: Melakukan aktivasi layanan jaringan (PPPoE / OLT / VLAN) di menu Aktivasi NOC setelah instalasi diselesaikan oleh Teknisi.\n"
+            . "G. ARSITEKTUR MULTI-DATABASE (ims_v2, gomsn, ptmsn):\n"
+            . "   - `ims_v2`: Database sistem utama ISP (CRM pelanggan `trx_batchjob_register`/`view_batchjob`, billing `trx_billing_layanan`, router MikroTik `tb_router`, tiket helpdesk `trx_tiket_gangguan`, paket `m_bandwith`/`m_bandwith_kategori`, pembayaran `m_payment_type`, status tagihan `m_status_bill_lay`).\n"
+            . "   - `gomsn`: Database topologi FTTH/GIS & gudang logistik (`olt` master OLT, `pon1`/`pon2`/`pon3` port PON, `odp1`/`odp2`/`odp3` ODP, `users1`/`users2`/`users3` mapping port ONU pelanggan, `stok_barang` & `riwayat_stok` inventaris barang teknisi, `users_unified` data teknisi).\n"
+            . "   - `ptmsn`: Database portal publik pelanggan (`ptmsn.com`), berisi paket web `packages`, tiket portal `tickets`, registrasi mandiri `customers`, invoice portal `invoices`, dan unggah bukti bayar `payment_confirmations`.\n"
+            . "H. MASTER KATEGORI BANDWIDTH (m_bandwith_kategori):\n"
+            . "   - UP TO NEW (KB09212, Biaya Reg Rp 100.000) - Terbanyak digunakan pelanggan (~544 user aktif).\n"
+            . "   - BROADBAND (KB69779) & BROADBAND NEW (KB69771) (Biaya Reg Rp 300.000) - Paket residensial (~100 user aktif).\n"
+            . "   - CORPORATE (KB22285, Biaya Reg Rp 1.500.000) - Khusus instansi/perusahaan B2B (~30 user aktif).\n"
+            . "   - LASTMILE (KB58163, Biaya Reg Rp 1.500.000) - Dedicated lastmile link antar-provider (~36 user aktif).\n"
+            . "   - SMALL OFFICE HOME OFFICE / SOHO (KB1682, Biaya Reg Rp 500.000) - Usaha kecil/ruko.\n"
+            . "   - BROADBAND FREE (KBFRE02, Biaya Reg Rp 0) - Fasilitas cuma-cuma internal/mitra (3 user aktif).\n"
+            . "   - BANDWIDTH ON DEMAND / BOD (KBBOD1, Biaya Reg Rp 500.000) - Bandwidth temporer event.\n"
+            . "I. JENIS BANGUNAN PELANGGAN (jenis_bangunan di view_batchjob):\n"
+            . "   - RUMAH-PRIBADI (~1.532 pelanggan), RUMAH-KANTOR (~143 pelanggan), GEDUNG (7 pelanggan), KOS-KOSAN (3 pelanggan), KANTOR (2 pelanggan), OUTDOR/EVENT (1 pelanggan).\n"
+            . "J. JENIS BARANG & STOK LOGISTIK (gomsn.stok_barang):\n"
+            . "   - Modem ONU: ZTE F660 New, ZTE F660 bks, ZTE F609 V1, ZTE F660 V8+, Onu V3, Tp Link, Onu Terminasi Soreang.\n"
+            . "   - Kabel: Kabel 1 Core (Bandung), Kabel 6 Core, Kabel 12 Core, Dropcore optik.\n"
+            . "   - Konektor: Patchcore SC-UPC/LC-UPC, Pigtail SC-UPC/LC-UPC, Adapter biru, Adapter 12V.\n"
+            . "   - Distribusi FTTH: ODP 1:16, ODP 8 Core, Splitter 1x2, 1x4, 1x8, 1x16, Roset, Closure.\n"
+            . "   - Aksesoris: Termofit, Solasi Hitam, Kabel Ties, Paku Klem, OPM AMG 168, Knip Tang.\n"
+            . "K. PAYMENT TYPE & METODE PEMBAYARAN (m_payment_type & merchant_type):\n"
+            . "   - 1. Midtrans: Payment Gateway (QRIS, GoPay, ShopeePay, VA Bank BCA/Mandiri/Permata, Alfamart/Indomaret cstore, Akulaku).\n"
+            . "   - 2. Manual Transfer: Transfer bank rekening PT MSN (BCA KCP Riau Bandung, Mandiri KCP Bandung Cibeunying, BJB KCP Buah Batu).\n"
+            . "   - 3. Cash To Collector: Bayar tunai ke petugas penagih atau kasir loket kantor.\n"
+            . "L. STATUS BILLING & TAGIHAN (m_status_bill_lay):\n"
+            . "   - #11 Draft, #12 Auto Publish, #13 Publish (Unpaid), #14 Waiting Payment (Pending Verifikasi), #15 Paid (Lunas), #16 Cancel Billing, #17 Cancel Midtrans, #18 Expire Midtrans, #19 Waiting Re-Publish, #20 Change Payment Method.\n\n"
             . "KEBIJAKAN HAK AKSES ROLE (SANGAT KETAT):\n"
             . "{$roleRules}\n\n"
             . "5. INTEGRITAS DATA STATUS PELANGGAN (SUMBER RESMI: trx_batchjob_register):\n"
@@ -2315,6 +2341,36 @@ class AiAssistantController extends Controller
             return $sopRouterReply;
         }
 
+        // 26. Kategori Bandwidth & Paket Layanan
+        if ($bandwithReply = $this->handleBandwithCategoriesQuestion($lower)) {
+            return $bandwithReply;
+        }
+
+        // 27. Jenis Bangunan Pelanggan
+        if ($buildingReply = $this->handleBuildingTypesQuestion($lower)) {
+            return $buildingReply;
+        }
+
+        // 28. Jenis Barang & Stok Material (gomsn.stok_barang)
+        if ($inventoryReply = $this->handleInventoryItemsQuestion($lower)) {
+            return $inventoryReply;
+        }
+
+        // 29. Payment Type & Metode Pembayaran
+        if ($paymentTypeReply = $this->handlePaymentTypeQuestion($lower)) {
+            return $paymentTypeReply;
+        }
+
+        // 30. Status Billing & Tagihan
+        if ($billingStatusReply = $this->handleBillingStatusQuestion($lower)) {
+            return $billingStatusReply;
+        }
+
+        // 31. Multi-Database (ims_v2, gomsn, ptmsn)
+        if ($multiDbReply = $this->handleMultiDatabaseQuestion($lower)) {
+            return $multiDbReply;
+        }
+
         return null;
     }
 
@@ -2455,29 +2511,32 @@ class AiAssistantController extends Controller
      */
     protected function handleDatabaseQuestion(string $lower): ?string
     {
-        $isDatabaseQuery = preg_match('/\b(database|basis data|tabel|table|schema|skema|kolom|struktur db)\b/i', $lower)
-            && (preg_match('/\b(apa saja|ada apa|daftar|sebutkan|struktur|arsitektur|pakai apa|menggunakan apa|penjelasan|hubungan)\b/i', $lower) || str_contains($lower, 'database'));
+        $isDatabaseQuery = preg_match('/\b(database|basis data|tabel|table|schema|skema|kolom|struktur db|gomsn|ptmsn)\b/i', $lower)
+            && (preg_match('/\b(apa saja|ada apa|daftar|sebutkan|struktur|arsitektur|pakai apa|menggunakan apa|penjelasan|hubungan|jelaskan|tahu apa)\b/i', $lower) || str_contains($lower, 'database') || str_contains($lower, 'gomsn') || str_contains($lower, 'ptmsn'));
 
         if (!$isDatabaseQuery) {
             return null;
         }
 
+        // Jika secara spesifik menanyakan gomsn atau ptmsn
+        if (str_contains($lower, 'gomsn') || str_contains($lower, 'ptmsn') || str_contains($lower, 'multi')) {
+            return $this->handleMultiDatabaseQuestion($lower);
+        }
+
         return "### 🗄️ Struktur Database & Skema Tabel Sistem IMS2:\n\n"
-            . "Sistem IMS2 menggunakan database **MySQL / MariaDB** dengan ORM Laravel Eloquent & Query Builder berkinerja tinggi. Berikut tabel-tabel utama:\n\n"
-            . "1. **👥 Pelanggan & Registrasi:**\n"
-            . "   - `trx_batchjob_register` / `view_batchjob`: Tabel inti data pelanggan, alamat pasang, nomor telepon, PPPoE username, paket layanan, dan siklus status registrasi (`#10` s/d `#23`).\n"
-            . "   - `m_pelanggan`: Master data kependudukan (NIK, nama lengkap, kontak darurat).\n\n"
-            . "2. **💳 Keuangan & Billing:**\n"
-            . "   - `trx_billing_layanan`: Invoice bulanan pelanggan (`kode_billing_layanan`, `nomor_internet`, `total_layanan`, `status_bill_lay` #11-#15, `bulan_tagihan`, `tahun_tagihan`, `payment_paid`).\n"
-            . "   - `payment_confirmations`: Antrean konfirmasi unggahan bukti transfer manual dari pelanggan.\n\n"
-            . "3. **📡 Infrastruktur Jaringan & OLT:**\n"
-            . "   - `m_olt`: Master perangkat OLT (`kode_olt`, `name_olt`, `ip_address`, `brand`, `model`, `is_active`).\n"
-            . "   - `m_port_olt`: Pemetaan port fisik GPON OLT.\n"
-            . "   - `tb_router`: Master router MikroTik gateway pelanggan.\n\n"
-            . "4. **⏱️ Otomasi & Gangguan:**\n"
-            . "   - `trx_suspend`: Antrean auto-suspend tgl 25 dan perintah buka isolir.\n"
-            . "   - `trx_tiket_gangguan`: Tiket komplain pelanggan helpdesk (`tiket`, `keluhan`, `penanganan`, `status`).\n"
-            . "   - `tb_pengguna` & `tb_level`: Otentikasi staf, password hash, dan wewenang role user.";
+            . "Sistem IMS2 menggunakan database **MySQL / MariaDB** dengan arsitektur **multi-database** yang saling terhubung (`ims_v2`, `gomsn`, dan `ptmsn`):\n\n"
+            . "1. **👥 Pelanggan & Registrasi (`ims_v2`):**\n"
+            . "   - `trx_batchjob_register` / `view_batchjob`: Master pelanggan, alamat pasang, PPPoE username, paket layanan (`m_bandwith`), jenis bangunan, dan siklus status registrasi (`#10` s/d `#23`).\n"
+            . "   - `m_pelanggan`: Master data kependudukan (NIK, nama lengkap, kontak).\n\n"
+            . "2. **💳 Keuangan & Billing (`ims_v2`):**\n"
+            . "   - `trx_billing_layanan` & `trx_billing_layanan_detail`: Invoice tagihan bulanan (`status_bill_lay` #11 s/d #20).\n"
+            . "   - `m_payment_type`: Master saluran pembayaran (Midtrans, Transfer Manual, Cash to Collector).\n"
+            . "   - `payment_confirmations`: Antrean konfirmasi bukti bayar.\n\n"
+            . "3. **📡 Topologi FTTH & Gudang Logistik (`gomsn`):**\n"
+            . "   - `olt`, `pon1`-`pon3`, `odp1`-`odp3`, `users1`-`users3`: Master pemetaan perangkat OLT, port PON, kotak ODP, dan port GPON pelanggan.\n"
+            . "   - `stok_barang` & `riwayat_stok`: Inventaris alat teknisi (modem ONU, kabel optik, patchcore, splitter, roset).\n\n"
+            . "4. **🌐 Portal Publik Pelanggan (`ptmsn`):**\n"
+            . "   - `packages`, `customers`, `invoices`, `tickets`: Data etalase paket web dan portal mandiri pelanggan.";
     }
 
     /**
@@ -3462,89 +3521,66 @@ class AiAssistantController extends Controller
     {
         if (preg_match('/\b(total|jumlah|berapa)\b/i', $lower) 
             && preg_match('/\b(pelanggan|user|member)\b/i', $lower) 
-            && (preg_match('/\b(aktif|online|suspend|isolir|terdaftar|keseluruhan|semua|corporate|korporat|broadband|lastmile)\b/i', $lower) || str_contains($lower, 'sekarang') || str_contains($lower, 'saat ini'))
+            && (preg_match('/\b(aktif|online|suspend|isolir|terdaftar|keseluruhan|semua|corporate|korporat|broadband|lastmile|soho|upto|up to|free|bod|demand)\b/i', $lower) || str_contains($lower, 'sekarang') || str_contains($lower, 'saat ini'))
             && !preg_match('/\b(tunggak|piutang|belum bayar|belum terbayar)\b/i', $lower)) {
             
-            // Jika spesifik menanyakan kategori CORPORATE
-            if (str_contains($lower, 'corporate') || str_contains($lower, 'korporat') || str_contains($lower, 'perusahaan') || str_contains($lower, 'b2b')) {
+            // Deteksi Kategori Spesifik Bandwidth
+            $targetCategory = null;
+            $categoryTitle = '';
+            if (str_contains($lower, 'up to new') || str_contains($lower, 'upto new') || str_contains($lower, 'up to') || str_contains($lower, 'upto')) {
+                $targetCategory = 'up to new';
+                $categoryTitle = 'UP TO NEW';
+            } elseif (str_contains($lower, 'corporate') || str_contains($lower, 'korporat') || str_contains($lower, 'perusahaan') || str_contains($lower, 'b2b')) {
+                $targetCategory = 'corporate';
+                $categoryTitle = 'CORPORATE';
+            } elseif (str_contains($lower, 'broadband free') || str_contains($lower, 'free')) {
+                $targetCategory = 'free';
+                $categoryTitle = 'BROADBAND FREE';
+            } elseif (str_contains($lower, 'broadband')) {
+                $targetCategory = 'broadband';
+                $categoryTitle = 'BROADBAND';
+            } elseif (str_contains($lower, 'lastmile')) {
+                $targetCategory = 'lastmile';
+                $categoryTitle = 'LASTMILE';
+            } elseif (str_contains($lower, 'soho') || str_contains($lower, 'small office')) {
+                $targetCategory = 'soho';
+                $categoryTitle = 'SMALL OFFICE HOME OFFICE (SOHO)';
+            } elseif (str_contains($lower, 'bod') || str_contains($lower, 'demand')) {
+                $targetCategory = 'demand';
+                $categoryTitle = 'BANDWIDTH ON DEMAND (BOD)';
+            }
+
+            if ($targetCategory) {
                 try {
-                    $corpActive = DB::table('view_batchjob')
-                        ->where(function ($q) {
-                            $q->where('nama_kategori_bandwith', 'like', '%corporate%')
-                              ->orWhere('alias_nama_kategori', 'like', '%corporate%');
+                    $rows = DB::table('view_batchjob')
+                        ->where(function ($q) use ($targetCategory) {
+                            $q->where('nama_kategori_bandwith', 'like', "%{$targetCategory}%")
+                              ->orWhere('alias_nama_kategori', 'like', "%{$targetCategory}%");
                         })
-                        ->where('status_reg', '20')
-                        ->count();
+                        ->select('status_reg', DB::raw('count(*) as total'))
+                        ->groupBy('status_reg')
+                        ->get();
 
-                    $corpSuspend = DB::table('view_batchjob')
-                        ->where(function ($q) {
-                            $q->where('nama_kategori_bandwith', 'like', '%corporate%')
-                              ->orWhere('alias_nama_kategori', 'like', '%corporate%');
-                        })
-                        ->whereIn('status_reg', ['21', '21.1'])
-                        ->count();
-
-                    $corpTermin = DB::table('view_batchjob')
-                        ->where(function ($q) {
-                            $q->where('nama_kategori_bandwith', 'like', '%corporate%')
-                              ->orWhere('alias_nama_kategori', 'like', '%corporate%');
-                        })
-                        ->whereIn('status_reg', ['23', '23.1'])
-                        ->count();
-
-                    $corpTotal = DB::table('view_batchjob')
-                        ->where(function ($q) {
-                            $q->where('nama_kategori_bandwith', 'like', '%corporate%')
-                              ->orWhere('alias_nama_kategori', 'like', '%corporate%');
-                        })
-                        ->count();
+                    $catActive = 0; $catSuspend = 0; $catTermin = 0; $catTotal = 0;
+                    foreach ($rows as $r) {
+                        $st = (string)$r->status_reg;
+                        $cnt = (int)$r->total;
+                        $catTotal += $cnt;
+                        if ($st === '20') $catActive += $cnt;
+                        elseif (in_array($st, ['21', '21.1'])) $catSuspend += $cnt;
+                        elseif (in_array($st, ['23', '23.1'])) $catTermin += $cnt;
+                    }
                 } catch (\Throwable $e) {
-                    $corpActive = DB::table('trx_batchjob_register')
-                        ->leftJoin('mst_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'mst_bandwith.kode_bandwith')
-                        ->leftJoin('mst_kategori_bandwith', 'mst_bandwith.kode_kategori_bandwith', '=', 'mst_kategori_bandwith.kode_kategori_bandwith')
-                        ->where(function ($q) {
-                            $q->where('mst_kategori_bandwith.nama_kategori_bandwith', 'like', '%corporate%')
-                              ->orWhere('mst_kategori_bandwith.alias_nama_kategori', 'like', '%corporate%');
-                        })
-                        ->where('trx_batchjob_register.status_reg', '20')
-                        ->count();
-
-                    $corpSuspend = DB::table('trx_batchjob_register')
-                        ->leftJoin('mst_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'mst_bandwith.kode_bandwith')
-                        ->leftJoin('mst_kategori_bandwith', 'mst_bandwith.kode_kategori_bandwith', '=', 'mst_kategori_bandwith.kode_kategori_bandwith')
-                        ->where(function ($q) {
-                            $q->where('mst_kategori_bandwith.nama_kategori_bandwith', 'like', '%corporate%')
-                              ->orWhere('mst_kategori_bandwith.alias_nama_kategori', 'like', '%corporate%');
-                        })
-                        ->whereIn('trx_batchjob_register.status_reg', ['21', '21.1'])
-                        ->count();
-
-                    $corpTermin = DB::table('trx_batchjob_register')
-                        ->leftJoin('mst_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'mst_bandwith.kode_bandwith')
-                        ->leftJoin('mst_kategori_bandwith', 'mst_bandwith.kode_kategori_bandwith', '=', 'mst_kategori_bandwith.kode_kategori_bandwith')
-                        ->where(function ($q) {
-                            $q->where('mst_kategori_bandwith.nama_kategori_bandwith', 'like', '%corporate%')
-                              ->orWhere('mst_kategori_bandwith.alias_nama_kategori', 'like', '%corporate%');
-                        })
-                        ->whereIn('trx_batchjob_register.status_reg', ['23', '23.1'])
-                        ->count();
-
-                    $corpTotal = DB::table('trx_batchjob_register')
-                        ->leftJoin('mst_bandwith', 'trx_batchjob_register.kode_bandwith', '=', 'mst_bandwith.kode_bandwith')
-                        ->leftJoin('mst_kategori_bandwith', 'mst_bandwith.kode_kategori_bandwith', '=', 'mst_kategori_bandwith.kode_kategori_bandwith')
-                        ->where(function ($q) {
-                            $q->where('mst_kategori_bandwith.nama_kategori_bandwith', 'like', '%corporate%')
-                              ->orWhere('mst_kategori_bandwith.alias_nama_kategori', 'like', '%corporate%');
-                        })
-                        ->count();
+                    $catActive = DB::table('trx_batchjob_register')->where('status_reg', '20')->count();
+                    $catSuspend = 0; $catTermin = 0; $catTotal = $catActive;
                 }
 
-                return "### 🏢 Rekap Pelanggan Corporate IMS2 Saat Ini:\n\n"
-                    . "- 🟢 **Pelanggan Corporate Aktif (#20):** **" . number_format($corpActive, 0, ',', '.') . " User**\n"
-                    . "- 🔴 **Pelanggan Corporate Suspend (#21):** **" . number_format($corpSuspend, 0, ',', '.') . " User**\n"
-                    . "- ⚪ **Pelanggan Corporate Terminasi (#23):** **" . number_format($corpTermin, 0, ',', '.') . " User**\n"
-                    . "- 📊 **Total Registrasi Corporate:** **" . number_format($corpTotal, 0, ',', '.') . " User**\n\n"
-                    . "💡 *Data dihitung realtime sinkron dengan kategori paket CORPORATE di menu Data Pelanggan (`view_batchjob`).*";
+                return "### 🌐 Rekap Pelanggan {$categoryTitle} IMS2 Saat Ini:\n\n"
+                    . "- 🟢 **Pelanggan Aktif (#20):** **" . number_format($catActive, 0, ',', '.') . " User**\n"
+                    . "- 🔴 **Pelanggan Suspend (#21):** **" . number_format($catSuspend, 0, ',', '.') . " User**\n"
+                    . "- ⚪ **Pelanggan Terminasi (#23):** **" . number_format($catTermin, 0, ',', '.') . " User**\n"
+                    . "- 📊 **Total Keseluruhan Registrasi {$categoryTitle}:** **" . number_format($catTotal, 0, ',', '.') . " User**\n\n"
+                    . "💡 *Data dihitung realtime sinkron dengan kategori paket {$categoryTitle} di menu Data Pelanggan (`view_batchjob`).*";
             }
 
             try {
@@ -3757,5 +3793,284 @@ class AiAssistantController extends Controller
                 . "   - Sistem akan menjalankan proses **UNSUSPEND** ke router MikroTik (enable secret & kick) serta OLT (remote reboot ONU) untuk memulihkan kembali koneksi internetnya.";
         }
         return null;
+    }
+
+    /**
+     * Resolves queries regarding bandwidth categories (m_bandwith_kategori) and package profiles.
+     */
+    protected function handleBandwithCategoriesQuestion(string $lower): ?string
+    {
+        $isQuery = (str_contains($lower, 'kategori') || str_contains($lower, 'daftar') || str_contains($lower, 'macam') || str_contains($lower, 'jenis'))
+            && (str_contains($lower, 'bandwith') || str_contains($lower, 'bandwidth') || str_contains($lower, 'paket') || str_contains($lower, 'layanan'));
+
+        if (!$isQuery) {
+            return null;
+        }
+
+        try {
+            $categories = DB::table('m_bandwith_kategori')->where('disable', 0)->orderBy('biaya_reg', 'asc')->get();
+            $reply = "### 🌐 Master Kategori Bandwidth & Paket Layanan IMS2:\n\n"
+                . "Sistem IMS2 mengelompokkan layanan internet ke dalam beberapa kategori bandwidth resmi (`m_bandwith_kategori`):\n\n"
+                . "| Kode | Kategori Bandwidth | Alias | Biaya Registrasi | User Aktif (#20) |\n"
+                . "|:---|:---|:---:|:---:|:---:|\n";
+
+            foreach ($categories as $cat) {
+                $userCount = DB::table('view_batchjob')
+                    ->where('status_reg', '20')
+                    ->where(function($q) use ($cat) {
+                        $q->where('nama_kategori_bandwith', $cat->nama_kategori_bandwith)
+                          ->orWhere('alias_nama_kategori', $cat->alias_nama_kategori);
+                    })
+                    ->count();
+
+                $regFee = 'Rp ' . number_format((float)$cat->biaya_reg, 0, ',', '.');
+                $reply .= "| `{$cat->kode_kategori_bandwith}` | **{$cat->nama_kategori_bandwith}** | `{$cat->alias_nama_kategori}` | `{$regFee}` | **{$userCount} User** |\n";
+            }
+
+            $reply .= "\n📋 **Keterangan Peruntukan Paket:**\n"
+                . "1. **UP TO NEW:** Paket internet residensial/rumahan berkecepatan dinamis (populasi terbesar pelanggan PT MSN).\n"
+                . "2. **BROADBAND & BROADBAND NEW:** Paket broadband reguler tanpa FUP untuk kebutuhan rumahan aktif.\n"
+                . "3. **CORPORATE:** Paket internet dedicated simetris bergaransi SLA untuk perkantoran dan instansi pemerintah.\n"
+                . "4. **LASTMILE:** Jalur transmisi dedicated antar-provider / B2B backbone.\n"
+                . "5. **SMALL OFFICE HOME OFFICE (SOHO):** Paket bisnis ruko/UMKM dengan alokasi bandwidth prioritas.\n"
+                . "6. **BANDWIDTH ON DEMAND (BOD):** Peningkatan bandwidth sementara untuk event/kegiatan berkala.\n"
+                . "7. **BROADBAND FREE:** Fasilitas akses khusus internal operasional atau mitra.";
+
+            return $reply;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolves queries regarding building types (jenis_bangunan) of customers.
+     */
+    protected function handleBuildingTypesQuestion(string $lower): ?string
+    {
+        $isQuery = str_contains($lower, 'bangunan')
+            && (str_contains($lower, 'jenis') || str_contains($lower, 'tipe') || str_contains($lower, 'kategori') || str_contains($lower, 'daftar') || str_contains($lower, 'apa saja'));
+
+        if (!$isQuery) {
+            return null;
+        }
+
+        try {
+            $types = DB::table('view_batchjob')
+                ->select('jenis_bangunan', DB::raw('count(*) as total'))
+                ->groupBy('jenis_bangunan')
+                ->orderBy('total', 'desc')
+                ->get();
+
+            $reply = "### 🏠 Klasifikasi Jenis Bangunan Pelanggan IMS2:\n\n"
+                . "Sistem mencatat peruntukan lokasi instalasi pada kolom `jenis_bangunan` (`trx_batchjob_register` / `view_batchjob`):\n\n"
+                . "| Jenis Bangunan | Total Terdaftar | Keterangan & Karakteristik |\n"
+                . "|:---|:---:|:---|\n";
+
+            foreach ($types as $t) {
+                $name = $t->jenis_bangunan ?: 'TIDAK DIISI / LAINNYA';
+                $desc = match(strtoupper($name)) {
+                    'RUMAH-PRIBADI' => 'Hunian tempat tinggal perseorangan / keluarga (segmen residensial)',
+                    'RUMAH-KANTOR' => 'Ruko atau rumah tempat tinggal yang difungsikan sebagai kantor bisnis',
+                    'GEDUNG' => 'Gedung perkantoran bertingkat, instansi dinas, atau gedung komersial',
+                    'KOS-KOSAN' => 'Rumah indekos atau penginapan dengan banyak kamar/penghuni',
+                    'KANTOR' => 'Kantor mandiri perusahaan swasta atau lembaga non-gedung',
+                    'OUTDOR/EVENT' => 'Lokasi luar ruang, taman kota, atau titik event temporer',
+                    default => 'Data registrasi tanpa keterangan bangunan khusus'
+                };
+                $reply .= "| **{$name}** | **{$t->total} User** | {$desc} |\n";
+            }
+
+            $reply .= "\n💡 *Jenis bangunan membantu tim Teknisi mempersiapkan tipe klem kabel, panjang dropcore, dan estimasi kesulitan penarikan jalur.*";
+            return $reply;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolves queries regarding field items and inventory stock from gomsn.stok_barang.
+     */
+    protected function handleInventoryItemsQuestion(string $lower): ?string
+    {
+        $isQuery = (str_contains($lower, 'barang') || str_contains($lower, 'material') || str_contains($lower, 'stok') || str_contains($lower, 'inventaris') || str_contains($lower, 'perangkat'))
+            && (str_contains($lower, 'jenis') || str_contains($lower, 'daftar') || str_contains($lower, 'apa saja') || str_contains($lower, 'gudang') || str_contains($lower, 'teknisi') || str_contains($lower, 'instalasi') || str_contains($lower, 'stok'));
+
+        if (!$isQuery) {
+            return null;
+        }
+
+        try {
+            $items = DB::select("SELECT id, nama_barang, jumlah, satuan FROM gomsn.stok_barang ORDER BY nama_barang ASC");
+            if (empty($items)) {
+                return null;
+            }
+
+            $reply = "### 📦 Daftar Jenis Barang & Stok Logistik Gudang (Database GOMSN):\n\n"
+                . "Data inventaris perangkat dan material instalasi lapangan bersumber realtime dari tabel `gomsn.stok_barang`:\n\n"
+                . "| No | Nama Barang / Material | Kategori Perangkat | Sisa Stok Gudang |\n"
+                . "|:---:|:---|:---|:---:|\n";
+
+            $no = 1;
+            foreach ($items as $item) {
+                $nama = $item->nama_barang;
+                $kategori = 'Aksesoris / Toolkit';
+                if (stripos($nama, 'onu') !== false || stripos($nama, 'zte') !== false || stripos($nama, 'tp link') !== false) {
+                    $kategori = '📟 Modem ONU / ONT';
+                } elseif (stripos($nama, 'kabel') !== false || stripos($nama, 'core') !== false) {
+                    $kategori = '🧶 Kabel Serat Optik';
+                } elseif (stripos($nama, 'odp') !== false || stripos($nama, 'splitter') !== false || stripos($nama, 'roset') !== false || stripos($nama, 'closure') !== false) {
+                    $kategori = '🔀 Distribusi FTTH (ODP/Splitter)';
+                } elseif (stripos($nama, 'patchcore') !== false || stripos($nama, 'pigtail') !== false || stripos($nama, 'adapter') !== false) {
+                    $kategori = '🔌 Konektor & Patchcord';
+                }
+
+                $stokBadge = ((int)$item->jumlah > 0) 
+                    ? "🟢 **{$item->jumlah} {$item->satuan}**" 
+                    : "🔴 <span class='text-rose-500'>0 {$item->satuan}</span>";
+
+                $reply .= "| {$no} | **{$nama}** | {$kategori} | {$stokBadge} |\n";
+                $no++;
+            }
+
+            $reply .= "\n> 🔄 *Perubahan jumlah stok tercatat secara otomatis di tabel `gomsn.riwayat_stok` dan `gomsn.stok_barang_log` setiap kali barang keluar untuk instalasi teknisi.*";
+            return $reply;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolves queries regarding payment types and payment methods.
+     */
+    protected function handlePaymentTypeQuestion(string $lower): ?string
+    {
+        $isQuery = (str_contains($lower, 'payment type') || str_contains($lower, 'tipe bayar') || str_contains($lower, 'metode bayar') || str_contains($lower, 'metode pembayaran') || str_contains($lower, 'cara bayar') || str_contains($lower, 'jenis pembayaran') || str_contains($lower, 'saluran pembayaran'));
+
+        if (!$isQuery) {
+            return null;
+        }
+
+        try {
+            $paymentTypes = DB::table('m_payment_type')->where('hide', '0')->get();
+            $reply = "### 💳 Payment Type & Saluran Pembayaran Resmi IMS2:\n\n"
+                . "Sistem IMS2 menyediakan 3 kelompok utama metode pembayaran tagihan (`m_payment_type`):\n\n";
+
+            foreach ($paymentTypes as $pt) {
+                $icon = match($pt->payment_type) {
+                    '1' => '⚡',
+                    '2' => '🏦',
+                    '3' => '💵',
+                    default => '💳'
+                };
+                $reply .= "#### {$icon} {$pt->payment_type}. {$pt->desc_payment_type}\n";
+
+                if ($pt->payment_type == '1') {
+                    $reply .= "- **Kanal:** Payment Gateway Midtrans Snap (Online Instant 24/7).\n"
+                        . "- **Metode yang Didukung:** **QRIS (GoPay, ShopeePay, OVO, Dana)**, Virtual Account (BCA, Mandiri, BNI, Permata, BRI), Gerai Ritel (Alfamart, Indomaret / cstore), dan Akulaku PayLater.\n"
+                        . "- **Otomasi:** Tagihan seketika berubah menjadi `#15 Lunas` secara otomatis (*instant webhook callback*). Jika pelanggan terisolir, langsung otomatis terbuka (*unsuspend*).\n\n";
+                } elseif ($pt->payment_type == '2') {
+                    $reply .= "- **Kanal:** Transfer Manual ke Rekening Bank Resmi PT Media Solusi Network:\n"
+                        . "  * 🔵 **BCA KCP Riau Bandung**\n"
+                        . "  * 🔵 **Mandiri KCP Bandung Cibeunying**\n"
+                        . "  * 🔵 **BJB KCP Buah Batu**\n"
+                        . "- **Otomasi:** Pelanggan mengunggah bukti transfer, tagihan berstatus `#14 Waiting Payment` hingga diverifikasi oleh tim Finance di menu Billing.\n\n";
+                } elseif ($pt->payment_type == '3') {
+                    $reply .= "- **Kanal:** Pembayaran Tunai Langsung (*Cash*).\n"
+                        . "- **Penerima:** Petugas penagih lapangan (Kolektor) atau Loket Kasir di Kantor PT Media Solusi Network.\n"
+                        . "- **Otomasi:** Petugas menginput konfirmasi tanda terima kas dan bukti kuitansi di sistem IMS.\n\n";
+                }
+            }
+
+            return $reply;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolves queries regarding all billing statuses (#11 to #20).
+     */
+    protected function handleBillingStatusQuestion(string $lower): ?string
+    {
+        $isQuery = (str_contains($lower, 'status bill') || str_contains($lower, 'status tagihan') || str_contains($lower, 'kode tagihan') || str_contains($lower, 'arti status'))
+            && (str_contains($lower, 'apa saja') || str_contains($lower, 'daftar') || str_contains($lower, 'sebutkan') || str_contains($lower, 'penjelasan') || str_contains($lower, 'semua') || str_contains($lower, 'lengkap') || preg_match('/\b(11|12|13|14|15|16|17|18|19|20)\b/', $lower));
+
+        if (!$isQuery) {
+            return null;
+        }
+
+        try {
+            $statuses = DB::table('m_status_bill_lay')->where('hide', '0')->orderByRaw('CAST(status_bill_lay AS UNSIGNED) ASC')->get();
+            $reply = "### 💳 Kamus Lengkap Status Billing & Tagihan IMS2 (`m_status_bill_lay`):\n\n"
+                . "| Kode | Status Tagihan | Arti & Konsekuensi Sistem Operasional |\n"
+                . "|:---:|:---|:---|\n";
+
+            foreach ($statuses as $st) {
+                $desc = trim($st->desc_bill_lay);
+                $detail = match($st->status_bill_lay) {
+                    '11' => 'Invoice baru dibuat/digenerate sistem, masih dalam draft internal Finance.',
+                    '12' => 'Proses otomatis cron tanggal 1 menerbitkan invoice massal ke seluruh pelanggan aktif.',
+                    '13' => 'Tagihan resmi terbit dan aktif belum dibayar (Unpaid/Piutang). Menunggu pelunasan sebelum tgl 25.',
+                    '14' => 'Bukti bayar telah diupload pelanggan, menunggu persetujuan verifikasi tim Finance.',
+                    '15' => 'Tagihan sah lunas diverifikasi (kas masuk). Jika pelanggan terisolir, seketika auto-unsuspend.',
+                    '16' => 'Invoice dibatalkan karena pembatalan registrasi, revisi tarif, atau salah generate.',
+                    '17' => 'Transaksi payment gateway Midtrans dibatalkan oleh pengguna atau sistem gateway.',
+                    '18' => 'Waktu pembayaran Snap Midtrans / Virtual Account telah habis/kedaluwarsa.',
+                    '19' => 'Invoice memerlukan penerbitan ulang (re-publish) setelah adanya penyesuaian nominal/item.',
+                    '20' => 'Pelanggan memilih berganti saluran pembayaran (misal dari transfer manual ke QRIS Midtrans).',
+                    default => 'Status operasional penagihan pelanggan'
+                };
+                $reply .= "| `{$st->status_bill_lay}` | **{$desc}** | {$detail} |\n";
+            }
+
+            return $reply;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Resolves queries regarding multi-database architecture (ims_v2, gomsn, ptmsn).
+     */
+    protected function handleMultiDatabaseQuestion(string $lower): ?string
+    {
+        $isQuery = (str_contains($lower, 'gomsn') || str_contains($lower, 'ptmsn') || str_contains($lower, 'multi database') || str_contains($lower, 'database lain') || str_contains($lower, 'basis data') || str_contains($lower, 'tiga database') || str_contains($lower, '3 database'));
+
+        if (!$isQuery) {
+            return null;
+        }
+
+        return "### 🗄️ Arsitektur Multi-Database Terintegrasi PT Media Solusi Network:\n\n"
+            . "Ekosistem teknologi PT MSN berjalan di atas **3 database MySQL terpisah** yang saling tersinkronisasi secara realtime:\n\n"
+            . "---\n\n"
+            . "#### 1. 🏢 `ims_v2` (Core ERP, Billing & Operation Center)\n"
+            . "- **Fungsi Utama:** Pusat operasional harian perusahaan, penagihan bulanan, customer relation management (CRM), dan helpdesk.\n"
+            . "- **Tabel-Tabel Kunci:**\n"
+            . "  * `trx_batchjob_register` / `view_batchjob`: Master siklus hidup pelanggan (#10 s/d #23).\n"
+            . "  * `trx_billing_layanan` & `trx_billing_layanan_detail`: Invoice penagihan bulanan.\n"
+            . "  * `m_bandwith` & `m_bandwith_kategori`: Master paket dan tarif internet.\n"
+            . "  * `tb_router`: Master router MikroTik NAS PPPoE gateway.\n"
+            . "  * `trx_tiket_gangguan`: Tiket komplain helpdesk & penugasan lapangan.\n"
+            . "  * `m_payment_type` & `m_status_bill_lay`: Master metode pembayaran dan kode tagihan.\n\n"
+            . "---\n\n"
+            . "#### 2. 📡 `gomsn` (GIS FTTH Topology, OLT Core & Inventory Logistics)\n"
+            . "- **Fungsi Utama:** Database pemetaan fisik jaringan serat optik (GIS Dropcore), core OLT telemetri, dan gudang material teknisi.\n"
+            . "- **Tabel-Tabel Kunci:**\n"
+            . "  * `olt`: Master perangkat OLT pusat (Kayu Agung, Babakan Tarogong, Soreang).\n"
+            . "  * `pon1`, `pon2`, `pon3`: Master port PON GPON fisik per OLT.\n"
+            . "  * `odp1`, `odp2`, `odp3`: Titik koordinat kotak ODP di lapangan beserta rasio splitter.\n"
+            . "  * `users1`, `users2`, `users3`: Pemetaan port modem ONU pelanggan ke OLT dan ODP.\n"
+            . "  * `stok_barang` & `riwayat_stok`: Inventaris alat teknisi (modem ONU ZTE, kabel dropcore, ODP, splitter, patchcore).\n"
+            . "  * `users_unified`: Master akun staf teknisi lapangan dan penugasan lembur.\n\n"
+            . "---\n\n"
+            . "#### 3. 🌐 `ptmsn` (Public Portal & Customer Self-Service Website)\n"
+            . "- **Fungsi Utama:** Website publik portal pelanggan (`ptmsn.com`), etalase pendaftaran paket, dan payment gateway mandiri.\n"
+            . "- **Tabel-Tabel Kunci:**\n"
+            . "  * `packages`: Etalase paket internet publik (Bronze, Silver, Gold, Platinum, Crystal, dll).\n"
+            . "  * `customers`: Akun login mandiri pelanggan portal.\n"
+            . "  * `invoices`: Salinan invoice yang dapat diunduh pelanggan via portal.\n"
+            . "  * `payment_confirmations`: Antrean unggahan bukti transfer dari portal sebelum masuk ke verifikasi Finance.\n"
+            . "  * `tickets`: Tiket keluhan yang dibuat mandiri oleh pelanggan dari portal web.\n\n"
+            . "> 💡 *Aplikasi IMS2 mengintegrasikan ketiga database ini secara mulus sehingga perubahan di satu modul (misal aktivasi di OLT GOMSN atau pembayaran di Portal PTMSN) langsung terupdate di dashboard IMS2.*";
     }
 }

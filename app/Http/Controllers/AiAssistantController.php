@@ -853,9 +853,15 @@ class AiAssistantController extends Controller
         $hasExplicitCustomerIntent = !empty($extractedId) 
             || str_contains($lower, 'pelanggan') 
             || str_contains($lower, 'cust') 
+            || str_contains($lower, 'customer')
+            || str_contains($lower, 'member')
             || str_contains($lower, 'atas nama') 
             || str_contains($lower, 'cari nama') 
-            || str_contains($lower, 'cek nama');
+            || str_contains($lower, 'cek nama')
+            || str_contains($lower, 'no internet')
+            || str_contains($lower, 'nomor internet')
+            || str_contains($lower, 'id pelanggan')
+            || str_contains($lower, 'pppoe');
 
         // Context 1: Customer lookup (by ID, username, or name candidates across batchjob & m_pelanggan)
         if (($hasExplicitCustomerIntent || !empty($searchCandidates)) && !$isAskingCustomerStats && !$isAskingRoleOrHelp) {
@@ -1359,6 +1365,11 @@ class AiAssistantController extends Controller
                 Log::warning("[AiAssistant] Gagal mengambil rekap statistik: " . $e->getMessage());
             }
         }
+
+        $context['extracted_id'] = $extractedId;
+        $context['clean_search'] = $cleanSearch;
+        $context['has_customer_intent'] = $hasExplicitCustomerIntent || !empty($extractedId);
+        $context['search_candidates'] = $searchCandidates;
 
         return $context;
     }
@@ -2065,7 +2076,28 @@ class AiAssistantController extends Controller
             return "Sama-sama, **{$userName}**! Senang bisa membantu Anda. Jika ada data atau kendala operasional lain yang perlu ditelusuri, silakan tanyakan kapan saja! 😊";
         }
 
-        // 6. Jadwal Suspend / Isolir / Cron
+        // 6. Prosedur Buka Isolir (Unsuspend)
+        $isAskingUnsuspend = preg_match('/\b(buka isolir|cara buka isolir|unsuspend|un-suspend|buka suspend|prosedur buka isolir)\b/i', $lower);
+        if ($isAskingUnsuspend && empty($contextData['customers'])) {
+            return "### 🔄 Prosedur Buka Isolir (Unsuspend) Pelanggan IMS2:\n\n"
+                . "1. **Pelunasan Tagihan:** Pelanggan menyelesaikan pembayaran tagihan tertunggak melalui Portal Pelanggan (QRIS/Payment Gateway) atau transfer bank ke rekening perusahaan.\n"
+                . "2. **Verifikasi Finance:** Tim Finance memverifikasi bukti pembayaran di menu **Billing Layanan > Verifikasi** (status tagihan berubah dari `#14` menjadi `#15 Lunas`).\n"
+                . "3. **Otomasi Unsuspend:** Sistem IMS2 secara otomatis menghapus antrean isolir dan mengirimkan perintah buka blokir (*unsuspend*) ke router MikroTik/OLT tim NOC.\n"
+                . "4. **Pengajuan Manual:** Jika dibutuhkan pembukaan isolir darurat atas persetujuan pimpinan, admin dapat membuka isolir melalui menu **Data Pelanggan > Buka Isolir**.";
+        }
+
+        // 7. Prosedur Permintaan Terminasi (Tutup Akun & Putus Berlangganan)
+        $isAskingTerminasi = preg_match('/\b(terminasi|putus langganan|berhenti langganan|cabut perangkat|tutup akun|dismantle|cara terminasi|prosedur terminasi)\b/i', $lower);
+        if ($isAskingTerminasi && empty($contextData['customers'])) {
+            return "### 🔌 Prosedur Permintaan Terminasi (Tutup Akun) IMS2:\n\n"
+                . "1. **Pengajuan Request:** Petugas (Finance/Teknik/CS) membuka menu **Data Pelanggan**, klik tombol **Request Terminasi** pada pelanggan terkait.\n"
+                . "2. **Pilih Alasan Berhenti:** Pilih alasan utama (Pindah rumah, tarif, tunggakan, atau *Lainnya* dengan menuliskan alasan spesifik di luar pilihan dropdown).\n"
+                . "3. **Antrean NOC & Lapangan:** Permintaan masuk ke menu **Permintaan Terminasi** berstatus `#11 (Request Baru)`.\n"
+                . "4. **Eksekusi Penarikan:** Tim NOC menonaktifkan konfigurasi PPPoE/port OLT dan teknisi lapangan menarik perangkat modem ONT/ONU dari lokasi pelanggan.\n"
+                . "5. **Status Akhir:** Status pelanggan resmi berubah menjadi `#23 Dismantle (Putus)` dan penerbitan invoice bulanan dihentikan.";
+        }
+
+        // 8. Jadwal Suspend / Isolir / Cron
         $isAskingSuspendSchedule = (str_contains($lower, 'suspend') || str_contains($lower, 'isolir')) 
             && (str_contains($lower, 'kapan') || str_contains($lower, 'jadwal') || str_contains($lower, 'tanggal berapa') || str_contains($lower, 'jam berapa') || str_contains($lower, 'terbit') || str_contains($lower, 'otomatis') || str_contains($lower, 'auto'));
 
@@ -2084,7 +2116,7 @@ class AiAssistantController extends Controller
                 . "   - **Buka Isolir (Unsuspend):** Terbit otomatis seketika tim Finance memverifikasi dan menyetujui bukti pembayaran pelanggan (status `#14` $\\rightarrow$ `#15`), atau diajukan manual oleh admin/finance.";
         }
 
-        // 7. Jadwal Terbit Invoice Bulanan
+        // 9. Jadwal Terbit Invoice Bulanan
         $isAskingInvoiceSchedule = (str_contains($lower, 'tagihan') || str_contains($lower, 'invoice') || str_contains($lower, 'billing')) 
             && (str_contains($lower, 'kapan') || str_contains($lower, 'jadwal') || str_contains($lower, 'tanggal berapa') || str_contains($lower, 'jam berapa') || str_contains($lower, 'terbit') || str_contains($lower, 'generate'));
 
@@ -2245,11 +2277,32 @@ class AiAssistantController extends Controller
             return implode("\n", $output);
         }
 
-        // D. Jadwal Otomatis Cron (Suspend & Invoice)
-        $isAskingSchedule = str_contains($lower, 'suspend') || str_contains($lower, 'isolir') 
-            || str_contains($lower, 'jatuh tempo') || str_contains($lower, 'kapan tagihan') 
-            || str_contains($lower, 'kapan invoice') || str_contains($lower, 'kapan suspend')
-            || str_contains($lower, 'jadwal tagihan') || str_contains($lower, 'jadwal suspend');
+        // D. Prosedur Buka Isolir (Unsuspend)
+        $isAskingUnsuspend = preg_match('/\b(buka isolir|cara buka isolir|unsuspend|un-suspend|buka suspend|prosedur buka isolir)\b/i', $lower);
+        if ($isAskingUnsuspend && empty($context['customers'])) {
+            $output[] = "### 🔄 Prosedur Buka Isolir (Unsuspend) Pelanggan IMS2:";
+            $output[] = "1. **Pelunasan Tagihan:** Pelanggan menyelesaikan pembayaran tagihan tertunggak melalui Portal Pelanggan (QRIS/Payment Gateway) atau transfer bank ke rekening perusahaan.";
+            $output[] = "2. **Verifikasi Finance:** Tim Finance memverifikasi bukti pembayaran di menu **Billing Layanan > Verifikasi** (status tagihan berubah dari `#14` menjadi `#15 Lunas`).";
+            $output[] = "3. **Otomasi Unsuspend:** Sistem IMS2 secara otomatis menghapus antrean isolir dan mengirimkan perintah buka blokir (*unsuspend*) ke router MikroTik/OLT tim NOC.";
+            $output[] = "4. **Pengajuan Manual:** Jika dibutuhkan pembukaan isolir darurat atas persetujuan pimpinan, admin dapat membuka isolir melalui menu **Data Pelanggan > Buka Isolir**.";
+            return implode("\n", $output);
+        }
+
+        // E. Prosedur Permintaan Terminasi (Tutup Akun & Putus Berlangganan)
+        $isAskingTerminasi = preg_match('/\b(terminasi|putus langganan|berhenti langganan|cabut perangkat|tutup akun|dismantle|cara terminasi|prosedur terminasi)\b/i', $lower);
+        if ($isAskingTerminasi && empty($context['customers'])) {
+            $output[] = "### 🔌 Prosedur Permintaan Terminasi (Tutup Akun) IMS2:";
+            $output[] = "1. **Pengajuan Request:** Petugas (Finance/Teknik/CS) membuka menu **Data Pelanggan**, klik tombol **Request Terminasi** pada pelanggan terkait.";
+            $output[] = "2. **Pilih Alasan Berhenti:** Pilih alasan utama (Pindah rumah, tarif, tunggakan, atau *Lainnya* dengan menuliskan alasan spesifik di luar pilihan dropdown).";
+            $output[] = "3. **Antrean NOC & Lapangan:** Permintaan masuk ke menu **Permintaan Terminasi** berstatus `#11 (Request Baru)`.";
+            $output[] = "4. **Eksekusi Penarikan:** Tim NOC menonaktifkan konfigurasi PPPoE/port OLT dan teknisi lapangan menarik perangkat modem ONT/ONU dari lokasi pelanggan.";
+            $output[] = "5. **Status Akhir:** Status pelanggan resmi berubah menjadi `#23 Dismantle (Putus)` dan penerbitan invoice bulanan dihentikan.";
+            return implode("\n", $output);
+        }
+
+        // F. Jadwal Otomatis Cron (Suspend & Invoice)
+        $isAskingSchedule = (str_contains($lower, 'suspend') || str_contains($lower, 'isolir') || str_contains($lower, 'tagihan') || str_contains($lower, 'invoice')) 
+            && (str_contains($lower, 'jadwal') || str_contains($lower, 'kapan') || str_contains($lower, 'tanggal') || str_contains($lower, 'jam berapa') || str_contains($lower, 'jatuh tempo') || str_contains($lower, 'cron') || str_contains($lower, 'otomatis') || str_contains($lower, 'auto'));
 
         if ($isAskingSchedule && empty($context['customers'])) {
             $output[] = "### ⏱️ Jadwal Otomatis & Prosedur Suspend (Isolir) IMS2:";
@@ -2267,7 +2320,7 @@ class AiAssistantController extends Controller
             return implode("\n", $output);
         }
 
-        // E. Troubleshooting Redaman Optik & Panduan Index OLT
+        // G. Troubleshooting Redaman Optik & Panduan Index OLT
         $isAskingWhyOlt = (str_contains($lower, 'kenapa') || str_contains($lower, 'mengapa') || str_contains($lower, 'cara') || str_contains($lower, 'panduan') || str_contains($lower, 'standar'))
             && (str_contains($lower, 'olt') || str_contains($lower, 'redaman') || str_contains($lower, 'index') || str_contains($lower, 'optik'));
 
@@ -2560,7 +2613,48 @@ class AiAssistantController extends Controller
             return implode("\n", $output);
         }
 
-        // 8. Rekapitulasi Operasional Sistem (Hari Ini)
+        // 8. Deteksi Pencarian Pelanggan tapi TIDAK Ditemukan
+        $hasCustomerIntent = (!empty($context['has_customer_intent']) || !empty($context['extracted_id']))
+            || (
+                preg_match('/\b(pelanggan|cust|customer|member|atas nama|no internet|nomor internet|id pelanggan|pppoe)\b/i', $lower)
+                || (preg_match('/\b(cari|cek|siapa yang punya|pemilik|punya siapa)\b/i', $lower) && preg_match('/\b(nama|pelanggan|user|cust|member|nomor|no)\b/i', $lower))
+            );
+
+        if ($hasCustomerIntent && empty($context['customers'])) {
+            $targetQuery = !empty($context['extracted_id']) 
+                ? $context['extracted_id'] 
+                : (!empty($context['clean_search']) ? $context['clean_search'] : $query);
+
+            return "### 🔍 Data Pelanggan Tidak Ditemukan\n\n"
+                . "Maaf **{$userName}**, data pelanggan dengan nomor internet atau nama **\"{$targetQuery}\"** tidak ditemukan di database IMS2.\n\n"
+                . "💡 **Saran Pengecekan:**\n"
+                . "- **Nomor Internet:** Pastikan nomor internet resmi terdiri dari 6-12 digit angka (contoh: `260831056`).\n"
+                . "- **Nama Pelanggan:** Jika mencari dengan nama, coba gunakan 1 kata saja (misal: nama depan atau nama belakang).\n"
+                . "- **Pendaftaran:** Pastikan data registrasi pelanggan sudah terdaftar di menu **Data Pelanggan**.";
+        }
+
+        // 9. Deteksi Pencarian Tagihan Spesifik tapi TIDAK Ditemukan
+        $isAskingSpecificBill = (str_contains($lower, 'billing') || str_contains($lower, 'tagihan') || str_contains($lower, 'invoice'))
+            && (!empty($context['extracted_id']) || preg_match('/\b(inv|202\d)\b/i', $lower));
+
+        if ($isAskingSpecificBill && empty($context['billings'])) {
+            $billTarget = !empty($context['extracted_id']) ? $context['extracted_id'] : $query;
+            return "### 🧾 Tagihan Tidak Ditemukan\n\n"
+                . "Data tagihan atau invoice dengan kata kunci **\"{$billTarget}\"** tidak ditemukan di sistem.\n\n"
+                . "💡 Pelanggan mungkin belum memiliki tagihan aktif pada periode ini, atau seluruh kewajiban tagihannya sudah berstatus lunas.";
+        }
+
+        // 10. Deteksi Pencarian Tiket Spesifik tapi TIDAK Ditemukan
+        $isAskingSpecificTicket = (str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') || str_contains($lower, 'komplain'))
+            && !empty($context['extracted_id']);
+
+        if ($isAskingSpecificTicket && empty($context['tickets'])) {
+            return "### 🎫 Tiket Gangguan Tidak Ditemukan\n\n"
+                . "Tidak ditemukan laporan tiket gangguan yang tercatat untuk nomor **\"{$context['extracted_id']}\"**.\n\n"
+                . "💡 Layanan internet pelanggan terkait terpantau normal atau tiket komplain sebelumnya telah diselesaikan (*Closed*).";
+        }
+
+        // 11. Rekapitulasi Operasional Sistem (Hari Ini)
         $isAskingSummary = str_contains($lower, 'rekap') || str_contains($lower, 'summary') 
             || str_contains($lower, 'ringkasan') || str_contains($lower, 'hari ini') 
             || str_contains($lower, 'status operasional');
@@ -2613,37 +2707,54 @@ class AiAssistantController extends Controller
         }
 
         // =========================================================================
-        // SMART CONTEXTUAL FALLBACK (PANDUAN LENGKAP SPESIFIK ROLE)
+        // SAPAAN MURNI (GREETING & QUICK MENU)
         // =========================================================================
 
-        $output[] = "Halo **{$userName}**! 👋 Saya adalah **IMS AI Copilot**.";
-        $output[] = "Akun Anda aktif dengan role: **{$userRole}**.\n";
-        $output[] = "Berikut beberapa pertanyaan operasional cerdas yang bisa langsung saya jawab dari database:";
+        $isPureGreeting = preg_match('/^(halo|hai|hi|hei|pagi|siang|sore|malam|assalamualaikum|ping|p|tes|test|help|bantuan|menu)\b/i', $lower);
+        if ($isPureGreeting) {
+            $output[] = "Halo **{$userName}**! 👋 Saya adalah **IMS AI Copilot**.";
+            $output[] = "Akun Anda aktif dengan role: **{$userRole}**.\n";
+            $output[] = "Berikut beberapa panduan operasional cerdas yang bisa langsung saya jawab dari database:";
 
-        if (in_array($userRole, ['Direktur', 'CEO', 'Admin'], true)) {
-            $output[] = "1. **Keuangan & Omset:** *'Berapa omset bulan ini?'* atau *'Cek tagihan pending verifikasi'*";
-            $output[] = "2. **Piutang & Tunggakan:** *'Berapa total tagihan belum bayar?'*";
-            $output[] = "3. **Cari Pelanggan:** *'Cari pelanggan Gunawan'* atau *'Cek nomor internet 11011023'*";
-            $output[] = "4. **Jaringan & OLT:** *'Status OLT'* atau *'Jelaskan standar redaman optik'*";
-            $output[] = "5. **SOP & Aplikasi:** *'Apa perbedaan Portal Pelanggan dan Bukan Portal?'* atau *'Jelaskan siklus kode status registrasi'*";
-        } elseif ($userRole === 'Finance') {
-            $output[] = "1. **Verifikasi:** *'Cek tagihan pending verifikasi'*";
-            $output[] = "2. **Laporan Omset:** *'Berapa total lunas bulan ini?'*";
-            $output[] = "3. **Piutang:** *'Berapa total tagihan tertunggak?'*";
-            $output[] = "4. **Cek Tagihan Pelanggan:** *'Cek billing 11011023'*";
-            $output[] = "5. **Alur:** *'Kapan jadwal suspend otomatis?'* atau *'Apa arti status bill 14?'*";
-        } elseif ($userRole === 'NOC' || $userRole === 'Teknik') {
-            $output[] = "1. **Status OLT:** *'Status master OLT'*";
-            $output[] = "2. **Redaman & Telemetri:** *'Kenapa redaman pelanggan tidak terbaca?'* atau *'Berapa standar redaman GPON?'*";
-            $output[] = "3. **Cari Pelanggan:** *'Cek pelanggan 11011023'*";
-            $output[] = "4. **Tiket Gangguan:** *'Cek tiket open'*";
-            $output[] = "5. **Siklus:** *'Jelaskan kode status registrasi #10 sampai #20'*";
-        } else {
-            $output[] = "1. **Cari Pelanggan:** Ketik nama atau nomor internet pelanggan.";
-            $output[] = "2. **Status Tiket:** *'Cek tiket gangguan'*";
-            $output[] = "3. **Informasi:** *'Jelaskan alur pasang baru'*";
+            if (in_array($userRole, ['Direktur', 'CEO', 'Admin'], true)) {
+                $output[] = "1. **Keuangan & Omset:** *'Berapa omset bulan ini?'* atau *'Cek tagihan pending verifikasi'*";
+                $output[] = "2. **Piutang & Tunggakan:** *'Berapa total tagihan belum bayar?'*";
+                $output[] = "3. **Cari Pelanggan:** *'Cari pelanggan Gunawan'* atau *'Cek nomor internet 11011023'*";
+                $output[] = "4. **Jaringan & OLT:** *'Status OLT'* atau *'Jelaskan standar redaman optik'*";
+                $output[] = "5. **SOP & Aplikasi:** *'Apa perbedaan Portal Pelanggan dan Bukan Portal?'* atau *'Jelaskan siklus kode status registrasi'*";
+            } elseif ($userRole === 'Finance') {
+                $output[] = "1. **Verifikasi:** *'Cek tagihan pending verifikasi'*";
+                $output[] = "2. **Laporan Omset:** *'Berapa total lunas bulan ini?'*";
+                $output[] = "3. **Piutang:** *'Berapa total tagihan tertunggak?'*";
+                $output[] = "4. **Cek Tagihan Pelanggan:** *'Cek billing 11011023'*";
+                $output[] = "5. **Alur:** *'Kapan jadwal suspend otomatis?'* atau *'Apa arti status bill 14?'*";
+            } elseif ($userRole === 'NOC' || $userRole === 'Teknik') {
+                $output[] = "1. **Status OLT:** *'Status master OLT'*";
+                $output[] = "2. **Redaman & Telemetri:** *'Kenapa redaman pelanggan tidak terbaca?'* atau *'Berapa standar redaman GPON?'*";
+                $output[] = "3. **Cari Pelanggan:** *'Cek pelanggan 11011023'*";
+                $output[] = "4. **Tiket Gangguan:** *'Cek tiket open'*";
+                $output[] = "5. **Siklus:** *'Jelaskan kode status registrasi #10 sampai #20'*";
+            } else {
+                $output[] = "1. **Cari Pelanggan:** Ketik nama atau nomor internet pelanggan.";
+                $output[] = "2. **Status Tiket:** *'Cek tiket gangguan'*";
+                $output[] = "3. **Informasi:** *'Jelaskan alur pasang baru'*";
+            }
+
+            return implode("\n", $output);
         }
 
-        return implode("\n", $output);
+        // =========================================================================
+        // JAWABAN PASTI JIKA PERTANYAAN DI LUAR DOMAIN / TIDAK DIMENGERTI
+        // =========================================================================
+
+        return "### ❓ Pertanyaan Tidak Dipahami\n\n"
+            . "Maaf **{$userName}**, asisten lokal belum memahami maksud atau pertanyaan Anda: *\"{$query}\"*.\n\n"
+            . "Sebagai asisten operasional sistem IMS2, saya dapat membantu Anda menjawab:\n"
+            . "- 👤 **Cari Pelanggan:** Cari berdasarkan nama, nomor internet, atau PPPoE (*'Cari pelanggan Gunawan'* atau *'Cek nomor 260831056'*).\n"
+            . "- 💳 **Keuangan & Omset:** Cek omset bulan ini, tagihan pending verifikasi, atau total piutang (*khusus Finance/Admin*).\n"
+            . "- 🌐 **Infrastruktur OLT:** Cek master OLT aktif dan panduan teknis redaman optik / index GPON (*khusus NOC/Admin*).\n"
+            . "- 🎫 **Tiket Komplain:** Pantau tiket gangguan yang sedang berstatus open.\n"
+            . "- 📋 **SOP & Prosedur:** SOP Portal Pelanggan, jadwal auto-suspend, prosedur terminasi, atau kode status registrasi (#10 s/d #20).\n\n"
+            . "Silakan ajukan pertanyaan yang berkaitan dengan data atau operasional di atas.";
     }
 }

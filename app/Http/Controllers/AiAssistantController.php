@@ -127,7 +127,8 @@ class AiAssistantController extends Controller
                         usleep(600000); // 600ms pacing before trying next key to allow Google load spike to clear
                     }
                     if (str_contains($msgLower, 'timed out') || str_contains($msgLower, 'could not resolve') || str_contains($msgLower, 'connection') || str_contains($msgLower, 'curl error 28')) {
-                        Log::warning("[AiAssistant] Gemini Key #{$keyIndex} mengalami latensi jaringan / timeout. Mencoba kunci lain...");
+                        Log::warning("[AiAssistant] Gemini Key #{$keyIndex} mengalami latensi jaringan / timeout. Menjalankan auto-ping pemulihan otomatis...");
+                        $this->autoPingRecoverKey($key, $geminiModel);
                     }
                 }
             }
@@ -286,6 +287,23 @@ class AiAssistantController extends Controller
                 $keyStats['status'] = $kRequests > 0 ? 'active' : 'standby';
                 $usageData['keys'][$keyId] = $keyStats;
                 Cache::put('ims_ai_usage_' . $today, $usageData, now()->addDays(14));
+            }
+
+            // Auto-ping pemulihan otomatis jika akun terdeteksi timeout atau error tanpa harus klik manual
+            $isTimedOutError = !empty($keyStats['last_error']) && (
+                str_contains(strtolower($keyStats['last_error']), 'timed out') ||
+                str_contains(strtolower($keyStats['last_error']), 'timeout') ||
+                str_contains(strtolower($keyStats['last_error']), 'curl error 28') ||
+                str_contains(strtolower($keyStats['last_error']), 'could not resolve')
+            );
+            if ($cooldownSec === 0 && ($isTimedOutError || ($keyStats['status'] ?? '') === 'error')) {
+                if ($this->autoPingRecoverKey($k, $geminiModel)) {
+                    $keyStats['last_error'] = null;
+                    $keyStats['status'] = 'active';
+                    $usageData['keys'][$keyId] = $keyStats;
+                    Cache::put('ims_ai_usage_' . $today, $usageData, now()->addDays(14));
+                    $totalActiveKeys++;
+                }
             }
 
             $status = $keyStats['status'] ?? 'standby';
@@ -579,6 +597,42 @@ class AiAssistantController extends Controller
     }
 
     /**
+     * Automatic ping test to immediately recover and re-activate a key after network timeout.
+     */
+    public function autoPingRecoverKey(string $apiKey, string $geminiModel = 'gemini-3.8-flash'): bool
+    {
+        try {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$geminiModel}:generateContent?key={$apiKey}";
+            $response = Http::withOptions([
+                'curl' => [
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                    CURLOPT_CONNECTTIMEOUT => 4,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                ],
+            ])->timeout(6)->post($url, [
+                'contents' => [
+                    ['role' => 'user', 'parts' => [['text' => 'ping']]],
+                ],
+                'generationConfig' => ['temperature' => 0.1, 'maxOutputTokens' => 5],
+            ]);
+
+            if ($response->successful()) {
+                $usage = $response->json('usageMetadata');
+                $this->recordUsage($apiKey, $usage ?: []);
+                Cache::forget('gemini_key_cooldown_' . md5($apiKey));
+                Log::info("[AiAssistant] Auto-ping berhasil mengaktifkan kembali Gemini Key setelah timeout.");
+                return true;
+            }
+        } catch (\Throwable $e) {
+            Log::debug("[AiAssistant] Auto-ping probe gagal: " . $e->getMessage());
+        }
+
+        return false;
+    }
+
+    /**
      * Record API key error / rate limit exhaustion.
      */
     protected function recordKeyError(string $apiKey, string $errorMessage, int $statusCode = 0): void
@@ -618,6 +672,14 @@ class AiAssistantController extends Controller
             || str_contains($errLower, '2.0-flash')
             || str_contains($errLower, 'is no longer available')) {
             return;
+        }
+
+        // Jika terjadi timeout / kendala latensi, langsung jalankan auto-ping pemulihan
+        $isTimeout = str_contains($errLower, 'timed out') || str_contains($errLower, 'timeout') || str_contains($errLower, 'curl error 28') || str_contains($errLower, 'could not resolve');
+        if ($isTimeout) {
+            if ($this->autoPingRecoverKey($apiKey)) {
+                return; // Auto-ping berhasil mengaktifkan akun kembali, batalkan pencatatan error!
+            }
         }
 
         $isQuota = $statusCode === 429 || str_contains($errLower, 'quota') || str_contains($errLower, 'rate limit');

@@ -243,8 +243,11 @@
                                     </span>
                                 @endif
                             @elseif($key['status'] === 'error')
-                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                                    <span>TERKENDALA</span>
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 auto-ping-target" 
+                                      data-key-index="{{ $key['index'] }}" 
+                                      title="Koneksi mengalami timeout/terkendala. Menjalankan auto-ping pemulihan otomatis...">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                                    <span>AUTO-PING...</span>
                                 </span>
                             @else
                                 <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">
@@ -545,6 +548,49 @@ async function resetMetrics() {
         alert('Gagal mereset cache: ' + e.message);
     }
 }
+
+// Auto-ping execution for any timed-out or error keys without manual click
+function checkAndAutoPing() {
+    const targets = document.querySelectorAll('.auto-ping-target');
+    targets.forEach((el, i) => {
+        const keyIdx = parseInt(el.getAttribute('data-key-index') || '0', 10);
+        if (keyIdx > 0 && !el.dataset.pinging) {
+            el.dataset.pinging = 'true';
+            setTimeout(() => {
+                silentPingKey(keyIdx, el);
+            }, i * 1000);
+        }
+    });
+}
+
+async function silentPingKey(keyIndex, elBadge) {
+    try {
+        const res = await fetch("{{ route('admin.ai-monitor.ping') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({
+                key_index: keyIndex,
+                prompt: 'ping'
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            if (elBadge) {
+                elBadge.className = 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                elBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>AKTIF</span>';
+            }
+            setTimeout(() => window.location.reload(), 1200);
+        }
+    } catch (e) {
+        console.warn('Auto-ping gagal untuk key #' + keyIndex, e);
+    }
+}
+
+// Trigger auto-ping on page load
+setTimeout(checkAndAutoPing, 500);
 
 // Live Realtime Ticker for RPM Cooldown Countdown
 setInterval(() => {

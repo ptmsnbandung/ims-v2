@@ -1532,10 +1532,11 @@ class AiAssistantController extends Controller
             . "   - DILARANG KERAS menyimpulkan sendiri bahwa pelanggan berstatus terisolir/suspend hanya karena ada invoice belum bayar di [billings]!\n"
             . "   - Jika di [customers] `status_layanan_resmi` adalah '🟢 Online Aktif' atau `status_isolir_lapangan` adalah 'NORMAL (TIDAK TERISOLIR)', maka pelanggan tersebut MUTLAK NORMAL AKTIF (TIDAK TERISOLIR)!\n"
             . "   - Pelanggan HANYA berstatus Terisolir jika `status_isolir_lapangan` bernilai 'TERISOLIR (SUSPEND)'.\n"
+            . "   - JIKA DI RIWAYAT CHAT SEBELUMNYA (HISTORY) PERNAH DISEBUT PELANGGAN TERISOLIR/SUSPEND, ANDA WAJIB MENGABAIKAN KESALAHAN TERSEBUT DAN MENGIKUTI DATA TERKINI DARI DATABASE (Online Aktif)!\n"
             . "   - DILARANG KERAS menghubungkan, mengaitkan, atau menampilkan invoice milik orang lain kepada pelanggan yang ditanyakan.\n"
             . "   - Dilarang keras berasumsi atau mengarang nomor internet dan invoice.\n\n"
             . "6. PRINSIP JAWABAN SINGKAT & TEPAT SASARAN (DIRECT ANSWER):\n"
-            . "   - Jika pengguna HANYA menanyakan status isolir/suspend pelanggan (misal: 'Cek apakah Dian Haerani masih terisolir?' atau 'apakah NOVA NOVIANTI sedang disuspend?'), JAWAB LANGSUNG STATUSNYA SECARA SINGKAT (1 kalimat): 'Pelanggan [Nama] ([NoInternet]) saat ini berstatus [Normal / Terisolir]'. DILARANG KERAS menampilkan seluruh kartu profil (alamat, OLT, router, tagihan 3 bulan) jika tidak diminta!\n"
+            . "   - Jika pengguna menanyakan status / cek status / isolir / suspend / aktif pelanggan (misal: 'cek status 11711224', 'Cek apakah Dian Haerani masih terisolir?', 'apakah pelanggan 11711224 aktif?', 'status pelanggan 11711224'), JAWAB LANGSUNG STATUSNYA SECARA SINGKAT (1 kalimat): 'Pelanggan [Nama] ([NoInternet]) saat ini berstatus [Normal / Terisolir]'. DILARANG KERAS menampilkan seluruh kartu profil (alamat, OLT, router, tagihan 3 bulan) jika tidak diminta!\n"
             . "   - Jika pengguna HANYA menanyakan aktif atau tidak, jawab langsung status keaktifannya saja secara singkat.\n"
             . "   - Jika pengguna menanyakan di router mana, jawab nama router dan PPPoE-nya saja.\n"
             . "   - Jika pengguna menanyakan alamat, jawab alamatnya saja.\n"
@@ -2087,6 +2088,61 @@ class AiAssistantController extends Controller
     {
         $lower = strtolower(trim($userMessage));
         $userName = $currentUser?->nama ?? $currentUser?->nama_lengkap ?? $currentUser?->username ?? 'Rekan IMS';
+
+        // 0. Pertanyaan Singkat Status / Keaktifan / Isolir Pelanggan Tunggal (Instant & Deterministik)
+        if (!empty($contextData['customers'])) {
+            $isAskingStatus = preg_match('/\b(status|aktif|online|keaktifan|isolir|terisolir|diisolir|suspend|disuspend|tersuspend|blokir|diblokir|terblokir|kondisi|keadaan)\b/i', $lower)
+                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|invoice|riwayat|berapa|total|jumlah|daftar|list)\b/i', $lower);
+
+            if ($isAskingStatus) {
+                $lines = [];
+                foreach ($contextData['customers'] as $c) {
+                    $isCustSuspended = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
+                    if ($isCustSuspended) {
+                        $lines[] = "🔴 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Terisolir (Suspend)**.";
+                    } else {
+                        $statusDesc = match((string)$c->status_reg) {
+                            '20' => '🟢 Online Aktif (Layanan normal / Tidak Terisolir)',
+                            '23', '23.1' => '⚫ Terminasi / Dismantle (Putus Berlangganan)',
+                            '18', '19' => '🔵 Tahap Aktivasi NOC',
+                            '16' => '🟡 Tahap Instalasi Lapangan',
+                            '12' => '⚪ Tahap Survey Lokasi',
+                            default => 'Registrasi (' . $c->status_reg . ')'
+                        };
+                        $lines[] = "Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **{$statusDesc}**.";
+                    }
+                }
+                return implode("\n", $lines);
+            }
+
+            $isAskingOnlyRouter = preg_match('/\b(router|mikrotik)\b/i', $lower)
+                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|daftar|list)\b/i', $lower);
+            if ($isAskingOnlyRouter) {
+                $lines = [];
+                foreach ($contextData['customers'] as $c) {
+                    $routerLabel = '-';
+                    if (!empty($c->router_id) && Schema::hasTable('routers')) {
+                        $rObj = DB::table('routers')->where('id', $c->router_id)->first();
+                        if ($rObj) {
+                            $routerLabel = "{$rObj->name} (" . ($rObj->host ?? '-') . ")";
+                        }
+                    }
+                    $pppoe = $c->pppoe_username ?: '-';
+                    $lines[] = "Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) terdaftar di **{$routerLabel}** dengan PPPoE `{$pppoe}`.";
+                }
+                return implode("\n", $lines);
+            }
+
+            $isAskingOnlyAddress = preg_match('/\b(alamat|lokasi|tempat|rumah|dimana)\b/i', $lower)
+                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan)\b/i', $lower);
+            if ($isAskingOnlyAddress) {
+                $lines = [];
+                foreach ($contextData['customers'] as $c) {
+                    $lines[] = "Alamat pemasangan pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`): *{$c->alamat_pasang}*.";
+                }
+                return implode("\n", $lines);
+            }
+        }
 
         // 1. Gender / Identitas Pribadi AI (e.g. "kamu cowo atau cewe?", "gender kamu apa?")
         if (preg_match('/\b(cowo|cewe|cowok|cewek|pria|wanita|laki|perempuan|gender|jenis kelamin|kelamin)\b/i', $lower)
@@ -2992,11 +3048,8 @@ class AiAssistantController extends Controller
 
         // 7. Data Pelanggan Spesifik (Profil & Tagihan Terpadu)
         if (!empty($context['customers'])) {
-            $isAskingOnlySuspend = preg_match('/\b(isolir|terisolir|diisolir|suspend|disuspend|tersuspend|blokir|diblokir|terblokir)\b/i', $lower)
-                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|invoice|riwayat)\b/i', $lower);
-
-            $isAskingOnlyActive = preg_match('/\b(aktif|online|keaktifan)\b/i', $lower)
-                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|invoice|riwayat|berapa|total|jumlah)\b/i', $lower);
+            $isAskingStatus = preg_match('/\b(status|aktif|online|keaktifan|isolir|terisolir|diisolir|suspend|disuspend|tersuspend|blokir|diblokir|terblokir|kondisi|keadaan)\b/i', $lower)
+                && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|invoice|riwayat|berapa|total|jumlah|daftar|list)\b/i', $lower);
 
             $isAskingOnlyRouter = preg_match('/\b(router|mikrotik)\b/i', $lower)
                 && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan|tagihan|daftar|list)\b/i', $lower);
@@ -3004,34 +3057,24 @@ class AiAssistantController extends Controller
             $isAskingOnlyAddress = preg_match('/\b(alamat|lokasi|tempat|rumah|dimana)\b/i', $lower)
                 && !preg_match('/\b(semua|seluruh|lengkap|detail|profil|data pelanggan)\b/i', $lower);
 
-            // A. Jawaban langsung jika HANYA menanyakan status isolir / suspend
-            if ($isAskingOnlySuspend) {
+            // A. Jawaban langsung jika menanyakan status / isolir / suspend / aktif
+            if ($isAskingStatus) {
                 $lines = [];
                 foreach ($context['customers'] as $c) {
                     $isCustSuspended = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
                     if ($isCustSuspended) {
                         $lines[] = "🔴 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Terisolir (Suspend)**.";
                     } else {
-                        $lines[] = "🟢 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Normal / Aktif (Tidak Terisolir)**.";
+                        $statusDesc = match((string)$c->status_reg) {
+                            '20' => '🟢 Online Aktif (Layanan normal / Tidak Terisolir)',
+                            '23', '23.1' => '⚫ Terminasi / Dismantle (Putus Berlangganan)',
+                            '18', '19' => '🔵 Tahap Aktivasi NOC',
+                            '16' => '🟡 Tahap Instalasi Lapangan',
+                            '12' => '⚪ Tahap Survey Lokasi',
+                            default => 'Registrasi (' . $c->status_reg . ')'
+                        };
+                        $lines[] = "Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **{$statusDesc}**.";
                     }
-                }
-                return implode("\n", $lines);
-            }
-
-            // B. Jawaban langsung jika HANYA menanyakan aktif atau tidak
-            if ($isAskingOnlyActive) {
-                $lines = [];
-                foreach ($context['customers'] as $c) {
-                    $statusDesc = match((string)$c->status_reg) {
-                        '20' => '🟢 Online Aktif (Layanan normal)',
-                        '21', '21.1' => '🔴 Terisolir (Suspend)',
-                        '23', '23.1' => '⚫ Terminasi / Dismantle (Putus Berlangganan)',
-                        '18', '19' => '🔵 Tahap Aktivasi NOC',
-                        '16' => '🟡 Tahap Instalasi Lapangan',
-                        '12' => '⚪ Tahap Survey Lokasi',
-                        default => 'Registrasi (' . $c->status_reg . ')'
-                    };
-                    $lines[] = "Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **{$statusDesc}**.";
                 }
                 return implode("\n", $lines);
             }

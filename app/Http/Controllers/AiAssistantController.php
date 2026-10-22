@@ -29,10 +29,23 @@ class AiAssistantController extends Controller
         $history = $request->input('history', []);
         $currentUser = auth()->user();
 
+        // 0. Fast-path check: answer internal SOP, schedules, policies, roles, and payment questions in < 5ms
+        // bypassing heavy database context gathering when no explicit customer ID is present
+        if (!preg_match('/\b(?:MS|ms)?\d{5,18}\b/i', $userMessage)) {
+            $fastReply = $this->checkDirectAnswerResponse($userMessage, [], $currentUser);
+            if ($fastReply !== null) {
+                return response()->json([
+                    'status' => 'success',
+                    'reply' => $fastReply,
+                    'mode' => 'local_instant',
+                ]);
+            }
+        }
+
         // 1. Gather relevant domain context from IMS database based on user intent & past history
         $contextData = $this->gatherContext($userMessage, $currentUser, $history);
 
-        // 1. Check if user query matches direct internal SOP, schedules, or casual conversational chit-chat
+        // 2. Check if user query matches direct internal SOP, schedules, or casual conversational chit-chat
         // Answer INSTANTLY from internal intelligence without external network latency
         $directReply = $this->checkDirectAnswerResponse($userMessage, $contextData, $currentUser);
         if ($directReply !== null) {
@@ -1636,7 +1649,7 @@ class AiAssistantController extends Controller
             && !preg_match('/\b(berapa|total|cari|cek|data|pelanggan|tagihan|billing|tiket|olt|bayar|lunas|unpaid|pemasukan|pendapatan|omset|oktober|september|agustus|juli|juni|mei|april|maret|februari|januari|select|query|tabel|kolom)\b/i', $lowerMsg);
 
         // Detect if query is asking about SOP/policies/schedules/knowledge where database SQL query tools are NOT needed
-        $isSopOrPolicy = preg_match('/\b(kapan|jadwal|tanggal berapa|jam berapa|aturan|sop|prosedur|kebijakan|syarat|jatuh tempo|terbit|suspend terbit|auto suspend|generate invoice|invoice terbit|request suspend|bisa apa|wewenang|tugas role|panduan|cara kerja|arti status)\b/i', $lowerMsg)
+        $isSopOrPolicy = preg_match('/\b(kapan|jadwal|tanggal berapa|jam berapa|aturan|sop|prosedur|kebijakan|syarat|jatuh tempo|terbit|suspend terbit|auto suspend|generate invoice|invoice terbit|request suspend|bisa apa|wewenang|tugas role|panduan|cara kerja|arti status|qris|midtrans|metode bayar|tipe bayar|cara bayar|pembayaran|bisa menggunakan)\b/i', $lowerMsg)
             && !preg_match('/\b(cari|cek pelanggan|atas nama|nomor internet|id internet|select|query|tabel|kolom|\d{5,})\b/i', $lowerMsg);
 
         $tools = ($isPurelyConversational || $isSopOrPolicy) ? [] : [['functionDeclarations' => [
@@ -3944,10 +3957,50 @@ class AiAssistantController extends Controller
      */
     protected function handlePaymentTypeQuestion(string $lower): ?string
     {
-        $isQuery = (str_contains($lower, 'payment type') || str_contains($lower, 'tipe bayar') || str_contains($lower, 'metode bayar') || str_contains($lower, 'metode pembayaran') || str_contains($lower, 'cara bayar') || str_contains($lower, 'jenis pembayaran') || str_contains($lower, 'saluran pembayaran'));
+        $isQuery = (
+            str_contains($lower, 'payment type') ||
+            str_contains($lower, 'tipe bayar') ||
+            str_contains($lower, 'metode bayar') ||
+            str_contains($lower, 'metode pembayaran') ||
+            str_contains($lower, 'cara bayar') ||
+            str_contains($lower, 'jenis pembayaran') ||
+            str_contains($lower, 'saluran pembayaran') ||
+            str_contains($lower, 'qris') ||
+            str_contains($lower, 'midtrans') ||
+            str_contains($lower, 'gopay') ||
+            str_contains($lower, 'shopeepay') ||
+            str_contains($lower, 'virtual account') ||
+            (str_contains($lower, 'rekening') && (str_contains($lower, 'transfer') || str_contains($lower, 'bank') || str_contains($lower, 'pembayaran') || str_contains($lower, 'pt msn') || str_contains($lower, 'media solusi'))) ||
+            (str_contains($lower, 'bayar') && (str_contains($lower, 'bisa') || str_contains($lower, 'lewat apa') || str_contains($lower, 'pake apa') || str_contains($lower, 'pakai apa') || str_contains($lower, 'kemana'))) ||
+            (str_contains($lower, 'menggunakan') && (str_contains($lower, 'qris') || str_contains($lower, 'midtrans') || str_contains($lower, 'transfer') || str_contains($lower, 'tunai') || str_contains($lower, 'cash')))
+        );
 
         if (!$isQuery) {
             return null;
+        }
+
+        // Targeted instant reply if user specifically asks about QRIS (e.g. "apakah bisa menggunakan qris")
+        if (str_contains($lower, 'qris')) {
+            return "### ✅ Ya, Pembayaran Menggunakan QRIS Sangat Bisa Dilakukan!\n\n"
+                . "Sistem IMS2 mendukung penuh pembayaran melalui **QRIS** (GoPay, ShopeePay, OVO, DANA, LinkAja, BCA QR, Livin Mandiri, BRImo, dll.) melalui integrasi otomatis **Payment Gateway Midtrans Snap**.\n\n"
+                . "⚡ **Keunggulan & Prosedur Pembayaran QRIS di IMS2:**\n"
+                . "1. **Konfirmasi Otomatis & Realtime (24 Jam):** Begitu kode QRIS di-scan dan transaksi berhasil, status tagihan seketika berubah otomatis menjadi `#15 Lunas (Paid)` via webhook tanpa perlu upload bukti transfer atau menunggu verifikasi manual Finance.\n"
+                . "2. **Buka Isolir Instan (Auto-Unsuspend):** Apabila internet pelanggan dalam status isolir/suspend karena tunggakan, sistem IMS2 langsung mengirim perintah buka isolir ke router/OLT dalam hitungan detik setelah QRIS dibayar.\n"
+                . "3. **Cara Menggunakan:** Pelanggan cukup mengakses link tagihan / Portal Pelanggan (`ptmsn.com`), memilih pembayaran **Online / Midtrans**, lalu memilih kanal **QRIS / GoPay**.\n\n"
+                . "---\n\n"
+                . "💡 *Selain QRIS, IMS2 juga menyediakan opsi Transfer Bank Manual (BCA, Mandiri, BJB) dan Tunai (Loket Kasir / Petugas Kolektor).*";
+        }
+
+        // Targeted instant reply if user specifically asks about Rekening Transfer
+        if (str_contains($lower, 'rekening') || (str_contains($lower, 'transfer') && !str_contains($lower, 'qris') && !str_contains($lower, 'semua'))) {
+            return "### 🏦 Rekening Transfer Bank Resmi PT Media Solusi Network:\n\n"
+                . "Pelanggan dapat melakukan transfer manual pembayaran tagihan ke rekening perusahaan berikut:\n\n"
+                . "- 🔵 **Bank BCA KCP Riau Bandung**\n"
+                . "- 🔵 **Bank Mandiri KCP Bandung Cibeunying**\n"
+                . "- 🔵 **Bank BJB KCP Buah Batu**\n\n"
+                . "⚠️ **Catatan Alur Verifikasi:**\n"
+                . "Setelah melakukan transfer, bukti transfer wajib diunggah di sistem. Tagihan akan berstatus `#14 Waiting Payment` hingga diverifikasi oleh tim Finance menjadi `#15 Lunas`.\n\n"
+                . "💡 *Tips: Gunakan pembayaran via **QRIS / Payment Gateway** untuk pelunasan dan buka isolir instan otomatis tanpa verifikasi manual.*";
         }
 
         try {

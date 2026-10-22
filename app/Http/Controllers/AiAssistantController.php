@@ -1031,7 +1031,8 @@ class AiAssistantController extends Controller
                             $c->onu_telemetry_note = 'Port GPON terdaftar. Pengecekan status fisik dapat dilakukan via OLT management.';
                         }
 
-                        $isSusp = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
+                        $isAktif = ((string)$c->status_reg === '20');
+                        $isSusp = !$isAktif && (in_array((string)$c->status_reg, ['21', '21.1'], true) || (!empty($c->is_suspend) && $c->is_suspend == 1 && (string)$c->status_reg !== '23'));
                         $c->status_reg_nama = match((string)$c->status_reg) {
                             '20' => 'Aktif (Normal)',
                             '21', '21.1' => 'Suspend (Terisolir)',
@@ -1042,7 +1043,7 @@ class AiAssistantController extends Controller
                             default => 'Registrasi (' . $c->status_reg . ')'
                         };
                         $c->status_isolir_lapangan = $isSusp ? 'TERISOLIR (SUSPEND)' : 'NORMAL (TIDAK TERISOLIR)';
-                        $c->status_layanan_resmi = $isSusp ? '🔴 Terisolir (Suspend)' : '🟢 Online Aktif';
+                        $c->status_layanan_resmi = $isAktif ? '🟢 Online Aktif' : ($isSusp ? '🔴 Terisolir (Suspend)' : $c->status_reg_nama);
                     }
                 }
             } catch (\Throwable $e) {
@@ -2097,12 +2098,12 @@ class AiAssistantController extends Controller
             if ($isAskingStatus) {
                 $lines = [];
                 foreach ($contextData['customers'] as $c) {
-                    $isCustSuspended = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
-                    if ($isCustSuspended) {
+                    if ((string)$c->status_reg === '20') {
+                        $lines[] = "🟢 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Online Aktif (Layanan normal)**.";
+                    } elseif (in_array((string)$c->status_reg, ['21', '21.1'], true) || (!empty($c->is_suspend) && $c->is_suspend == 1 && (string)$c->status_reg !== '23')) {
                         $lines[] = "🔴 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Terisolir (Suspend)**.";
                     } else {
                         $statusDesc = match((string)$c->status_reg) {
-                            '20' => '🟢 Online Aktif (Layanan normal / Tidak Terisolir)',
                             '23', '23.1' => '⚫ Terminasi / Dismantle (Putus Berlangganan)',
                             '18', '19' => '🔵 Tahap Aktivasi NOC',
                             '16' => '🟡 Tahap Instalasi Lapangan',
@@ -3061,12 +3062,12 @@ class AiAssistantController extends Controller
             if ($isAskingStatus) {
                 $lines = [];
                 foreach ($context['customers'] as $c) {
-                    $isCustSuspended = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
-                    if ($isCustSuspended) {
+                    if ((string)$c->status_reg === '20') {
+                        $lines[] = "🟢 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Online Aktif (Layanan normal)**.";
+                    } elseif (in_array((string)$c->status_reg, ['21', '21.1'], true) || (!empty($c->is_suspend) && $c->is_suspend == 1 && (string)$c->status_reg !== '23')) {
                         $lines[] = "🔴 Pelanggan **{$c->nama_pelanggan}** (`{$c->nomor_internet}`) saat ini berstatus **Terisolir (Suspend)**.";
                     } else {
                         $statusDesc = match((string)$c->status_reg) {
-                            '20' => '🟢 Online Aktif (Layanan normal / Tidak Terisolir)',
                             '23', '23.1' => '⚫ Terminasi / Dismantle (Putus Berlangganan)',
                             '18', '19' => '🔵 Tahap Aktivasi NOC',
                             '16' => '🟡 Tahap Instalasi Lapangan',
@@ -3107,18 +3108,18 @@ class AiAssistantController extends Controller
 
             $output[] = "### 👤 Data Pelanggan Ditemukan (" . count($context['customers']) . "):";
             foreach ($context['customers'] as $c) {
-                $isCustSuspended = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
-                $unifiedStatus = $isCustSuspended 
-                    ? '🔴 Terisolir (Suspend)' 
-                    : match((string)$c->status_reg) {
-                        '20' => '🟢 Online Aktif',
-                        '18', '19' => '🔵 Aktivasi NOC',
-                        '16' => '🟡 Tahap Instalasi',
-                        '12' => '⚪ Tahap Survey',
-                        '23', '23.1' => '⚫ Terminasi (Putus)',
-                        '14', '15' => '🔴 Dibatalkan',
-                        default => 'Registrasi (' . $c->status_reg . ')'
-                    };
+                $unifiedStatus = ((string)$c->status_reg === '20')
+                    ? '🟢 Online Aktif'
+                    : (in_array((string)$c->status_reg, ['21', '21.1'], true) || (!empty($c->is_suspend) && $c->is_suspend == 1 && (string)$c->status_reg !== '23')
+                        ? '🔴 Terisolir (Suspend)' 
+                        : match((string)$c->status_reg) {
+                            '18', '19' => '🔵 Aktivasi NOC',
+                            '16' => '🟡 Tahap Instalasi',
+                            '12' => '⚪ Tahap Survey',
+                            '23', '23.1' => '⚫ Terminasi (Putus)',
+                            '14', '15' => '🔴 Dibatalkan',
+                            default => 'Registrasi (' . $c->status_reg . ')'
+                        });
 
                 $oltLabel = !empty($c->olt_name) ? "{$c->olt_name} (" . ($c->olt_ip ?? '-') . ")" : ($c->olt ?: '-');
                 $indexLabel = !empty($c->index_olt) ? "`{$c->index_olt}`" : "⚠️ *Belum diatur (NULL)*";

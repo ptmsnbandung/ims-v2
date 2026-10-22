@@ -1030,6 +1030,19 @@ class AiAssistantController extends Controller
                             $c->onu_telemetry_status = "Port GPON Terdaftar: {$cleanIndex}";
                             $c->onu_telemetry_note = 'Port GPON terdaftar. Pengecekan status fisik dapat dilakukan via OLT management.';
                         }
+
+                        $isSusp = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
+                        $c->status_reg_nama = match((string)$c->status_reg) {
+                            '20' => 'Aktif (Normal)',
+                            '21', '21.1' => 'Suspend (Terisolir)',
+                            '23', '23.1' => 'Terminasi (Putus/Dismantle)',
+                            '18', '19' => 'Aktivasi NOC',
+                            '16' => 'Instalasi Lapangan',
+                            '12' => 'Survey',
+                            default => 'Registrasi (' . $c->status_reg . ')'
+                        };
+                        $c->status_isolir_lapangan = $isSusp ? 'TERISOLIR (SUSPEND)' : 'NORMAL (TIDAK TERISOLIR)';
+                        $c->status_layanan_resmi = $isSusp ? '🔴 Terisolir (Suspend)' : '🟢 Online Aktif';
                     }
                 }
             } catch (\Throwable $e) {
@@ -1514,9 +1527,12 @@ class AiAssistantController extends Controller
             . "   - Unsuspend / Buka Isolir: Otomatis diajukan seketika verifikasi bukti bayar disetujui tim Finance (#14 -> #15) atau manual oleh admin/finance.\n\n"
             . "KEBIJAKAN HAK AKSES ROLE (SANGAT KETAT):\n"
             . "{$roleRules}\n\n"
-            . "5. INTEGRITAS DATA PELANGGAN & TAGIHAN (SANGAT KRUSIAL):\n"
-            . "   - DILARANG KERAS menghubungkan, mengaitkan, atau menampilkan invoice/tagihan milik orang lain kepada pelanggan yang sedang ditanyakan.\n"
-            . "   - Periksa selalu 'nomor_internet' pada setiap baris di [billings] atau [billings_sample]. Jika tidak cocok dengan pelanggan yang ditanyakan, atau jika kosong/berisi tagihan orang lain, nyatakan dengan jujur dan jelas: Pelanggan tersebut TIDAK MEMILIKI TAGIHAN TERTUNGGAK.\n"
+            . "5. INTEGRITAS DATA STATUS PELANGGAN (SUMBER RESMI: trx_batchjob_register):\n"
+            . "   - STATUS LAYANAN PELANGGAN (Aktif vs Suspend) HARUS DICEK HANYA DARI properti `status_layanan_resmi` atau `status_isolir_lapangan` di objek [customers] (yang bersumber mutlak dari `trx_batchjob_register`).\n"
+            . "   - DILARANG KERAS menyimpulkan sendiri bahwa pelanggan berstatus terisolir/suspend hanya karena ada invoice belum bayar di [billings]!\n"
+            . "   - Jika di [customers] `status_layanan_resmi` adalah '🟢 Online Aktif' atau `status_isolir_lapangan` adalah 'NORMAL (TIDAK TERISOLIR)', maka pelanggan tersebut MUTLAK NORMAL AKTIF (TIDAK TERISOLIR)!\n"
+            . "   - Pelanggan HANYA berstatus Terisolir jika `status_isolir_lapangan` bernilai 'TERISOLIR (SUSPEND)'.\n"
+            . "   - DILARANG KERAS menghubungkan, mengaitkan, atau menampilkan invoice milik orang lain kepada pelanggan yang ditanyakan.\n"
             . "   - Dilarang keras berasumsi atau mengarang nomor internet dan invoice.\n\n"
             . "6. PRINSIP JAWABAN SINGKAT & TEPAT SASARAN (DIRECT ANSWER):\n"
             . "   - Jika pengguna HANYA menanyakan status isolir/suspend pelanggan (misal: 'Cek apakah Dian Haerani masih terisolir?' atau 'apakah NOVA NOVIANTI sedang disuspend?'), JAWAB LANGSUNG STATUSNYA SECARA SINGKAT (1 kalimat): 'Pelanggan [Nama] ([NoInternet]) saat ini berstatus [Normal / Terisolir]'. DILARANG KERAS menampilkan seluruh kartu profil (alamat, OLT, router, tagihan 3 bulan) jika tidak diminta!\n"

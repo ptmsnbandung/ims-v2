@@ -30,7 +30,7 @@ class CustomerProvisioningService
     public function activateCustomer(string $nomorInternet, ?string $operator = null, ?string $note = null): array
     {
         $now = now()->format('Y-m-d H:i:s');
-        $operator = $operator ?: (auth()->user()->nama ?? 'System NOC');
+        $operator = mb_substr(trim($operator ?: (auth()->user()->nama ?? 'System NOC')), 0, 100);
 
         // 1. Ambil data pelanggan
         $customer = DB::table('trx_batchjob_register')
@@ -111,25 +111,27 @@ class CustomerProvisioningService
 
         // 3. Update Database: Status Reg -> 20 (Aktif) HANYA JIKA ROUTER BERHASIL
         try {
-            DB::table('trx_batchjob_register')
-                ->where('nomor_internet', $nomorInternet)
-                ->update([
-                    'status_reg' => '20',
-                    'date_update' => $now,
-                    'user_update' => $operator,
-                ]);
+            $this->safeDbUpdate('trx_batchjob_register', function ($q) use ($nomorInternet) {
+                $q->where('nomor_internet', $nomorInternet);
+            }, [
+                'status_reg' => '20',
+                'date_update' => $now,
+                'user_update' => $operator,
+            ]);
 
             // Jika ada data suspend yang aktif, update status_suspend ke selesai (13)
             if (Schema::hasTable('trx_suspend')) {
-                DB::table('trx_suspend')
-                    ->where('nomor_internet', $nomorInternet)
-                    ->whereIn('status_suspend', ['11', '12', '18'])
-                    ->update([
+                try {
+                    $this->safeDbUpdate('trx_suspend', function ($q) use ($nomorInternet) {
+                        $q->where('nomor_internet', $nomorInternet)
+                            ->whereIn('status_suspend', ['11', '12', '18']);
+                    }, [
                         'status_suspend' => '13',
                         'suspend_end' => now()->format('Y-m-d'),
                         'date_update' => $now,
                         'user_update' => $operator,
                     ]);
+                } catch (\Throwable $th) {}
             }
 
             $results['database'] = true;
@@ -165,7 +167,7 @@ class CustomerProvisioningService
         // 6. Audit Trail Logging (trx_batchjob_register_log)
         if (Schema::hasTable('trx_batchjob_register_log')) {
             try {
-                DB::table('trx_batchjob_register_log')->insert([
+                $this->safeDbInsert('trx_batchjob_register_log', [
                     'kode_batchjob_register_log' => 'L-' . $nomorInternet . '-' . rand(1000, 9999),
                     'nomor_internet' => $nomorInternet,
                     'status_reg' => '20',
@@ -237,7 +239,7 @@ class CustomerProvisioningService
     public function suspendCustomer(string $nomorInternet, ?string $operator = null, ?string $reason = null, bool $skipOltReboot = false): array
     {
         $now = now()->format('Y-m-d H:i:s');
-        $operator = $operator ?: (auth()->user()->nama ?? 'System NOC');
+        $operator = mb_substr(trim($operator ?: (auth()->user()->nama ?? 'System NOC')), 0, 100);
         $reason = $reason ?: 'Isolir / Suspend Layanan Pelanggan';
 
         // 1. Ambil data pelanggan
@@ -319,13 +321,13 @@ class CustomerProvisioningService
 
         // 3. Update Database: Status Reg -> 21 (Suspend) HANYA JIKA ROUTER BERHASIL
         try {
-            DB::table('trx_batchjob_register')
-                ->where('nomor_internet', $nomorInternet)
-                ->update([
-                    'status_reg' => '21',
-                    'date_update' => $now,
-                    'user_update' => $operator,
-                ]);
+            $this->safeDbUpdate('trx_batchjob_register', function ($q) use ($nomorInternet) {
+                $q->where('nomor_internet', $nomorInternet);
+            }, [
+                'status_reg' => '21',
+                'date_update' => $now,
+                'user_update' => $operator,
+            ]);
 
             $results['database'] = true;
             $results['messages'][] = 'Status database berhasil diubah menjadi SUSPEND (#21)';
@@ -339,20 +341,22 @@ class CustomerProvisioningService
                         ->first();
 
                     if ($activeSuspend) {
-                        DB::table('trx_suspend')
-                            ->where('kode_suspend', $activeSuspend->kode_suspend)
-                            ->update([
-                                'desc_suspend' => $reason,
-                                'date_update'  => $now,
-                                'user_update'  => $operator,
-                            ]);
+                        $this->safeDbUpdate('trx_suspend', function ($q) use ($activeSuspend) {
+                            $q->where('kode_suspend', $activeSuspend->kode_suspend);
+                        }, [
+                            'desc_suspend' => $reason,
+                            'date_update'  => $now,
+                            'user_update'  => $operator,
+                        ]);
                     } else {
                         $baseKode = 'SUS-' . $nomorInternet . '-' . date('Ymd');
                         $existingByKode = DB::table('trx_suspend')->where('kode_suspend', $baseKode)->first();
 
                         if ($existingByKode && $existingByKode->nomor_internet == $nomorInternet) {
                             // Record dengan kode ini milik pelanggan yang sama, perbarui status menjadi 12
-                            DB::table('trx_suspend')->where('kode_suspend', $baseKode)->update([
+                            $this->safeDbUpdate('trx_suspend', function ($q) use ($baseKode) {
+                                $q->where('kode_suspend', $baseKode);
+                            }, [
                                 'desc_suspend'   => $reason,
                                 'status_suspend' => '12',
                                 'suspend_start'  => now()->format('Y-m-d'),
@@ -362,7 +366,7 @@ class CustomerProvisioningService
                             ]);
                         } else {
                             $kodeSuspend = $existingByKode ? ($baseKode . '-' . date('His')) : $baseKode;
-                            DB::table('trx_suspend')->insert([
+                            $this->safeDbInsert('trx_suspend', [
                                 'kode_suspend'   => $kodeSuspend,
                                 'nomor_internet' => $nomorInternet,
                                 'desc_suspend'   => $reason,
@@ -414,7 +418,7 @@ class CustomerProvisioningService
         // 6. Audit Trail Logging (trx_batchjob_register_log)
         if (Schema::hasTable('trx_batchjob_register_log')) {
             try {
-                DB::table('trx_batchjob_register_log')->insert([
+                $this->safeDbInsert('trx_batchjob_register_log', [
                     'kode_batchjob_register_log' => 'L-' . $nomorInternet . '-' . rand(1000, 9999),
                     'nomor_internet' => $nomorInternet,
                     'status_reg' => '21',
@@ -485,7 +489,7 @@ class CustomerProvisioningService
     public function terminateCustomer(string $nomorInternet, ?string $operator = null, ?string $note = null, ?string $kodeTrx = null, ?string $dateDone = null): array
     {
         $now = now()->format('Y-m-d H:i:s');
-        $operator = $operator ?: (auth()->user()->nama ?? 'System NOC');
+        $operator = mb_substr(trim($operator ?: (auth()->user()->nama ?? 'System NOC')), 0, 100);
         $reason = $note ?: 'Terminasi Layanan Pelanggan (Hapus User Router)';
         $finalDateDone = $dateDone ? (strlen($dateDone) <= 10 ? $dateDone . ' ' . date('H:i:s') : $dateDone) : $now;
 
@@ -554,23 +558,23 @@ class CustomerProvisioningService
         // 4. Update Database: Ubah status pelanggan menjadi 23 (Terminated / Nonaktif)
         try {
             if (Schema::hasTable('trx_batchjob_register')) {
-                DB::table('trx_batchjob_register')
-                    ->where('nomor_internet', $nomorInternet)
-                    ->update([
-                        'status_reg' => '23',
-                        'date_update' => $now,
-                        'user_update' => $operator,
-                    ]);
+                $this->safeDbUpdate('trx_batchjob_register', function ($q) use ($nomorInternet) {
+                    $q->where('nomor_internet', $nomorInternet);
+                }, [
+                    'status_reg' => '23',
+                    'date_update' => $now,
+                    'user_update' => $operator,
+                ]);
             }
 
             if (Schema::hasTable('tb_pelanggan') && Schema::hasColumn('tb_pelanggan', 'nomor_internet')) {
-                DB::table('tb_pelanggan')
-                    ->where('nomor_internet', $nomorInternet)
-                    ->update([
-                        'status_reg' => '23',
-                        'date_update' => $now,
-                        'user_update' => $operator,
-                    ]);
+                $this->safeDbUpdate('tb_pelanggan', function ($q) use ($nomorInternet) {
+                    $q->where('nomor_internet', $nomorInternet);
+                }, [
+                    'status_reg' => '23',
+                    'date_update' => $now,
+                    'user_update' => $operator,
+                ]);
             }
 
             // Update transaksi terminasi jika ada
@@ -588,9 +592,13 @@ class CustomerProvisioningService
             }
 
             if ($kodeTrx) {
-                DB::table('trx_terminasi')->where('kode_trx_terminasi', $kodeTrx)->update($trxTerminasiUpdate);
+                $this->safeDbUpdate('trx_terminasi', function ($q) use ($kodeTrx) {
+                    $q->where('kode_trx_terminasi', $kodeTrx);
+                }, $trxTerminasiUpdate);
             } else {
-                DB::table('trx_terminasi')->where('nomor_internet', $nomorInternet)->whereIn('status_terminasi', ['11', '12', '12.1', '13'])->update($trxTerminasiUpdate);
+                $this->safeDbUpdate('trx_terminasi', function ($q) use ($nomorInternet) {
+                    $q->where('nomor_internet', $nomorInternet)->whereIn('status_terminasi', ['11', '12', '12.1', '13']);
+                }, $trxTerminasiUpdate);
             }
 
             $results['database'] = true;
@@ -602,7 +610,7 @@ class CustomerProvisioningService
         // 5. Audit Trail Logging (trx_batchjob_register_log)
         if (Schema::hasTable('trx_batchjob_register_log')) {
             try {
-                DB::table('trx_batchjob_register_log')->insert([
+                $this->safeDbInsert('trx_batchjob_register_log', [
                     'kode_batchjob_register_log' => 'L-' . $nomorInternet . '-' . rand(1000, 9999),
                     'nomor_internet' => $nomorInternet,
                     'status_reg' => '23',
@@ -773,5 +781,51 @@ class CustomerProvisioningService
             'username' => $router->username,
             'password' => $pass,
         ]);
+    }
+
+    /**
+     * Update database table secara aman dengan fallback otomatis pemotongan user_update/user_create jika kolom di remote DB masih VARCHAR(20).
+     */
+    private function safeDbUpdate(string $table, \Closure $whereClause, array $values): int
+    {
+        try {
+            $query = DB::table($table);
+            $whereClause($query);
+            return $query->update($values);
+        } catch (\Illuminate\Database\QueryException $qe) {
+            if ($qe->getCode() == '22001' || str_contains($qe->getMessage(), '1406') || str_contains($qe->getMessage(), 'Data too long')) {
+                $trimmed = $values;
+                foreach (['user_update', 'user_create'] as $col) {
+                    if (isset($trimmed[$col]) && is_string($trimmed[$col])) {
+                        $trimmed[$col] = mb_substr($trimmed[$col], 0, 20);
+                    }
+                }
+                $query = DB::table($table);
+                $whereClause($query);
+                return $query->update($trimmed);
+            }
+            throw $qe;
+        }
+    }
+
+    /**
+     * Insert database record secara aman dengan fallback otomatis pemotongan user_update/user_create jika kolom di remote DB masih VARCHAR(20).
+     */
+    private function safeDbInsert(string $table, array $values): bool
+    {
+        try {
+            return DB::table($table)->insert($values);
+        } catch (\Illuminate\Database\QueryException $qe) {
+            if ($qe->getCode() == '22001' || str_contains($qe->getMessage(), '1406') || str_contains($qe->getMessage(), 'Data too long')) {
+                $trimmed = $values;
+                foreach (['user_update', 'user_create'] as $col) {
+                    if (isset($trimmed[$col]) && is_string($trimmed[$col])) {
+                        $trimmed[$col] = mb_substr($trimmed[$col], 0, 20);
+                    }
+                }
+                return DB::table($table)->insert($trimmed);
+            }
+            throw $qe;
+        }
     }
 }

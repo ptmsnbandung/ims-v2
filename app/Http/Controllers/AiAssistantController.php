@@ -869,8 +869,9 @@ class AiAssistantController extends Controller
             || str_contains($lower, 'id pelanggan')
             || str_contains($lower, 'pppoe');
 
-        $isGeneralDomainQuery = preg_match('/\b(total|jumlah|berapa|daftar|list|tampilkan|semua|rekap|fitur|router|mikrotik|olt|tiket|gangguan|komplain|suspend|disuspend|tersuspend|isolir|diisolir|terisolir|blokir|diblokir|terblokir)\b/i', $lower)
-            && empty($extractedId);
+        $isGeneralDomainQuery = preg_match('/\b(total|jumlah|berapa|daftar|list|tampilkan|semua|rekap|fitur|router|mikrotik|olt|tiket|gangguan|komplain)\b/i', $lower)
+            && empty($extractedId)
+            && empty($searchCandidates);
 
         // Context 1: Customer lookup (by ID, username, or name candidates across batchjob & m_pelanggan)
         if (($hasExplicitCustomerIntent || !empty($searchCandidates)) && !$isAskingCustomerStats && !$isAskingRoleOrHelp && !$isGeneralDomainQuery) {
@@ -1338,8 +1339,9 @@ class AiAssistantController extends Controller
 
                 $context['stats']['current_period'] = "{$monthName} {$currentYear}";
                 $context['stats']['total_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->count();
-                $context['stats']['active_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('status_reg', 20)->count();
-                $context['stats']['isolated_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('is_suspend', 1)->count();
+                $context['stats']['active_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->where('status_reg', '20')->count();
+                $context['stats']['isolated_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->whereIn('status_reg', ['21', '21.1'])->count();
+                $context['stats']['terminated_customers'] = DB::table('trx_batchjob_register')->where('hide', 0)->whereIn('status_reg', ['23', '23.1'])->count();
                 $context['stats']['new_customers_this_month'] = DB::table('trx_batchjob_register')
                     ->where('hide', 0)
                     ->whereYear('date_create', $currentYear)
@@ -2978,7 +2980,8 @@ class AiAssistantController extends Controller
                     '14', '15' => '🔴 Dibatalkan',
                     default => 'Registrasi (' . $c->status_reg . ')'
                 };
-                $suspendText = ($c->is_suspend == 1) ? '🔴 Terisolir (Suspend)' : '🟢 Normal';
+                $isCustSuspended = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
+                $suspendText = $isCustSuspended ? '🔴 Terisolir (Suspend)' : '🟢 Normal (Tidak Terisolir)';
                 $oltLabel = !empty($c->olt_name) ? "{$c->olt_name} (" . ($c->olt_ip ?? '-') . ")" : ($c->olt ?: '-');
                 $indexLabel = !empty($c->index_olt) ? "`{$c->index_olt}`" : "⚠️ *Belum diatur (NULL)*";
 
@@ -3303,21 +3306,21 @@ class AiAssistantController extends Controller
     {
         if (preg_match('/\b(total|jumlah|berapa)\b/i', $lower) 
             && preg_match('/\b(pelanggan|user|member)\b/i', $lower) 
-            && preg_match('/\b(aktif|online)\b/i', $lower) 
+            && (preg_match('/\b(aktif|online|suspend|isolir|terdaftar|keseluruhan|semua)\b/i', $lower) || str_contains($lower, 'sekarang') || str_contains($lower, 'saat ini'))
             && !preg_match('/\b(tunggak|piutang|belum bayar|belum terbayar)\b/i', $lower)) {
-            $totalActive = DB::table('trx_batchjob_register')->where('status_reg', '20')->where(function($q) {
-                $q->whereNull('is_suspend')->orWhere('is_suspend', '!=', 1);
-            })->count();
-            $totalSuspend = DB::table('trx_batchjob_register')->where(function($q) {
-                $q->whereIn('status_reg', ['21', '21.1', '22'])->orWhere('is_suspend', 1);
-            })->count();
-            $totalAll = DB::table('trx_batchjob_register')->count();
+            
+            $tableCustomer = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
+            $totalActive = DB::table($tableCustomer)->where('status_reg', '20')->count();
+            $totalSuspend = DB::table($tableCustomer)->whereIn('status_reg', ['21', '21.1'])->count();
+            $totalTermin = DB::table($tableCustomer)->whereIn('status_reg', ['23', '23.1'])->count();
+            $totalAllReg = DB::table('trx_batchjob_register')->count();
 
             return "### 👥 Rekap Total Pelanggan IMS2 Saat Ini:\n\n"
-                . "- 🟢 **Pelanggan Online Aktif (#20):** **" . number_format($totalActive, 0, ',', '.') . " User**\n"
-                . "- 🔴 **Pelanggan Terisolir (Suspend):** **" . number_format($totalSuspend, 0, ',', '.') . " User**\n"
-                . "- 📊 **Total Keseluruhan Pelanggan Terdaftar:** **" . number_format($totalAll, 0, ',', '.') . " User**\n\n"
-                . "💡 *Data dihitung realtime dari tabel registrasi `trx_batchjob_register`.*";
+                . "- 🟢 **Pelanggan Aktif (#20):** **" . number_format($totalActive, 0, ',', '.') . " User**\n"
+                . "- 🔴 **Pelanggan Suspend (#21):** **" . number_format($totalSuspend, 0, ',', '.') . " User**\n"
+                . "- ⚪ **Pelanggan Terminasi (#23):** **" . number_format($totalTermin, 0, ',', '.') . " User**\n"
+                . "- 📊 **Total Keseluruhan Registrasi Terdaftar:** **" . number_format($totalAllReg, 0, ',', '.') . " User**\n\n"
+                . "💡 *Data dihitung realtime sinkron dengan menu Data Pelanggan (`view_batchjob`).*";
         }
         return null;
     }
@@ -3327,6 +3330,24 @@ class AiAssistantController extends Controller
      */
     protected function handleSuspendedCustomersList(string $lower): ?string
     {
+        // JANGAN proses jika kueri menargetkan ID atau pelanggan spesifik
+        if (preg_match('/\b(?:MS|ms)?\d{5,18}\b/i', $lower)) {
+            return null;
+        }
+
+        // Cek apakah prompt menyebutkan nama orang spesifik (misal: "apakah pelanggan Dian Haerani masih terisolir?")
+        $cleanWords = array_values(array_filter(explode(' ', preg_replace('/[^\p{L}\p{N}\s]/u', '', $lower)), function($w) {
+            $stops = ['siapa', 'saja', 'user', 'yang', 'saat', 'ini', 'sedang', 'disuspend', 'suspend', 'terisolir', 'diisolir', 'isolir', 'terblokir', 'diblokir', 'blokir', 'karena', 'telat', 'bayar', 'tampilkan', 'daftar', 'list', 'pelanggan', 'tolong', 'carikan', 'cek', 'apakah', 'masih', 'statusnya', 'bisa', 'dong'];
+            return !in_array($w, $stops) && strlen($w) >= 3;
+        }));
+
+        if (!empty($cleanWords)) {
+            $firstWord = reset($cleanWords);
+            if (DB::table('trx_batchjob_register')->where('nama_pelanggan', 'like', "%{$firstWord}%")->exists()) {
+                return null; // Biarkan jatuh ke pencarian data pelanggan individu
+            }
+        }
+
         $isSuspendKeyword = preg_match('/(suspend|disuspend|tersuspend|isolir|diisolir|terisolir|blokir|diblokir|terblokir)/i', $lower);
         $isListKeyword = preg_match('/\b(pelanggan|user|daftar|siapa|tampilkan|list|ada siapa|data|orang)\b/i', $lower)
             || str_contains($lower, 'sedang') || str_contains($lower, 'saat ini');
@@ -3336,18 +3357,12 @@ class AiAssistantController extends Controller
         if ($isSuspendKeyword && $isListKeyword && !$isSopExclude) {
             $tableCustomer = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
             $suspended = DB::table($tableCustomer)
-                ->where(function($q) {
-                    $q->whereIn('status_reg', ['21', '21.1', '22'])
-                      ->orWhere('is_suspend', 1);
-                })
+                ->whereIn('status_reg', ['21', '21.1'])
                 ->limit(10)
                 ->get();
 
-            $totalSusp = DB::table('trx_batchjob_register')
-                ->where(function($q) {
-                    $q->whereIn('status_reg', ['21', '21.1', '22'])
-                      ->orWhere('is_suspend', 1);
-                })
+            $totalSusp = DB::table($tableCustomer)
+                ->whereIn('status_reg', ['21', '21.1'])
                 ->count();
 
             $reply = "### 🔴 Daftar Pelanggan Sedang Terisolir (Suspend):\n\n"

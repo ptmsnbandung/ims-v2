@@ -3048,16 +3048,19 @@ class AiAssistantController extends Controller
 
             $output[] = "### 👤 Data Pelanggan Ditemukan (" . count($context['customers']) . "):";
             foreach ($context['customers'] as $c) {
-                $statusText = match((string)$c->status_reg) {
-                    '20' => '🟢 Online Aktif',
-                    '18', '19' => '🔵 Aktivasi NOC',
-                    '16' => '🟡 Tahap Instalasi',
-                    '12' => '⚪ Tahap Survey',
-                    '14', '15' => '🔴 Dibatalkan',
-                    default => 'Registrasi (' . $c->status_reg . ')'
-                };
                 $isCustSuspended = in_array((string)$c->status_reg, ['21', '21.1'], true) || ($c->is_suspend == 1 && (string)$c->status_reg !== '23');
-                $suspendText = $isCustSuspended ? '🔴 Terisolir (Suspend)' : '🟢 Normal (Tidak Terisolir)';
+                $unifiedStatus = $isCustSuspended 
+                    ? '🔴 Terisolir (Suspend)' 
+                    : match((string)$c->status_reg) {
+                        '20' => '🟢 Online Aktif',
+                        '18', '19' => '🔵 Aktivasi NOC',
+                        '16' => '🟡 Tahap Instalasi',
+                        '12' => '⚪ Tahap Survey',
+                        '23', '23.1' => '⚫ Terminasi (Putus)',
+                        '14', '15' => '🔴 Dibatalkan',
+                        default => 'Registrasi (' . $c->status_reg . ')'
+                    };
+
                 $oltLabel = !empty($c->olt_name) ? "{$c->olt_name} (" . ($c->olt_ip ?? '-') . ")" : ($c->olt ?: '-');
                 $indexLabel = !empty($c->index_olt) ? "`{$c->index_olt}`" : "⚠️ *Belum diatur (NULL)*";
 
@@ -3070,7 +3073,7 @@ class AiAssistantController extends Controller
                 }
 
                 $output[] = "- **{$c->nama_pelanggan}** (`{$c->nomor_internet}`)";
-                $output[] = "  - Paket: `{$c->kode_bandwith}` | Status: {$statusText} | Isolir: {$suspendText}";
+                $output[] = "  - Paket: `{$c->kode_bandwith}` | Status Layanan: **{$unifiedStatus}**";
                 $output[] = "  - PPPoE: `" . ($c->pppoe_username ?: '-') . "`";
                 $output[] = "  - Router MikroTik: **{$routerLabel}**";
                 $output[] = "  - OLT: **{$oltLabel}** | Index Port: {$indexLabel}";

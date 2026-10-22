@@ -1640,43 +1640,58 @@ class FinanceController extends Controller
                 'hide' => '0',
             ]);
 
-            // Auto Unsuspend Langsung HANYA JIKA seluruh tagihan sudah lunas bersih
+            // Auto Unsuspend Langsung HANYA JIKA pelanggan memang sedang suspend dan seluruh tagihan telah lunas bersih
             $unsuspendInfo = '';
-            if ($nomorInternet && Schema::hasTable('trx_suspend')) {
-                $isFullyPaid = $this->isCustomerFullyPaid($nomorInternet);
-
-                $activeSuspend = DB::table('trx_suspend')
-                    ->where('nomor_internet', $nomorInternet)
-                    ->whereIn('status_suspend', ['11', '12', '18'])
-                    ->orderBy('date_create', 'desc')
-                    ->first();
-
-                if ($isFullyPaid && $activeSuspend) {
-                    try {
-                        $provisioning = app(CustomerProvisioningService::class);
-                        $unsuspendRes = $provisioning->activateCustomer(
-                            $nomorInternet,
-                            $userUpdate,
-                            "Auto Unsuspend Otomatis: Pembayaran registrasi & seluruh tagihan lunas ({$decodedKode} - {$bank})"
-                        );
-
-                        if ($unsuspendRes['success'] ?? false) {
-                            DB::table('trx_suspend')
-                                ->where('kode_suspend', $activeSuspend->kode_suspend)
-                                ->update([
-                                    'status_suspend' => '13', // 13: Un Suspend (Selesai Buka Isolir)
-                                    'suspend_end' => now()->format('Y-m-d'),
-                                    'desc_suspend_cancel' => "Otomatis dibuka isolir: Seluruh tagihan termasuk registrasi telah lunas ({$decodedKode})",
-                                    'date_update' => Carbon::now()->toDateTimeString(),
-                                    'user_update' => $userUpdate,
-                                ]);
-                            $unsuspendInfo = " serta Layanan Internet otomatis dibuka isolirnya (Unsuspend) karena seluruh tagihan telah lunas.";
-                        }
-                    } catch (\Throwable $exAct) {
-                        Log::warning("Gagal auto unsuspend regis payment {$nomorInternet}: " . $exAct->getMessage());
+            if ($nomorInternet) {
+                $customerReg = Schema::hasTable('trx_batchjob_register')
+                    ? DB::table('trx_batchjob_register')->where('nomor_internet', $nomorInternet)->first()
+                    : null;
+                $isCustSuspended = false;
+                if ($customerReg) {
+                    $regStatus = (string)($customerReg->status_reg ?? '');
+                    $isSusp = (string)($customerReg->is_suspend ?? '0');
+                    if (in_array($regStatus, ['21', '21.1', '22']) || $isSusp === '1') {
+                        $isCustSuspended = true;
                     }
-                } elseif (!$isFullyPaid && $activeSuspend) {
-                    $unsuspendInfo = " (Catatan: Layanan tetap terisolir karena masih terdapat tagihan/tunggakan lain yang belum lunas).";
+                }
+
+                // HANYA jika pelanggan memang sebelumnya suspend, baru ada proses unsuspend ke router
+                if ($isCustSuspended && Schema::hasTable('trx_suspend')) {
+                    $isFullyPaid = $this->isCustomerFullyPaid($nomorInternet);
+
+                    $activeSuspend = DB::table('trx_suspend')
+                        ->where('nomor_internet', $nomorInternet)
+                        ->whereIn('status_suspend', ['11', '12', '18'])
+                        ->orderBy('date_create', 'desc')
+                        ->first();
+
+                    if ($isFullyPaid && $activeSuspend) {
+                        try {
+                            $provisioning = app(CustomerProvisioningService::class);
+                            $unsuspendRes = $provisioning->activateCustomer(
+                                $nomorInternet,
+                                $userUpdate,
+                                "Auto Unsuspend Otomatis: Pembayaran registrasi & seluruh tagihan lunas ({$decodedKode} - {$bank})"
+                            );
+
+                            if ($unsuspendRes['success'] ?? false) {
+                                DB::table('trx_suspend')
+                                    ->where('kode_suspend', $activeSuspend->kode_suspend)
+                                    ->update([
+                                        'status_suspend' => '13', // 13: Un Suspend (Selesai Buka Isolir)
+                                        'suspend_end' => now()->format('Y-m-d'),
+                                        'desc_suspend_cancel' => "Otomatis dibuka isolir: Seluruh tagihan termasuk registrasi telah lunas ({$decodedKode})",
+                                        'date_update' => Carbon::now()->toDateTimeString(),
+                                        'user_update' => $userUpdate,
+                                    ]);
+                                $unsuspendInfo = " serta Layanan Internet otomatis dibuka isolirnya (Unsuspend) karena seluruh tagihan telah lunas.";
+                            }
+                        } catch (\Throwable $exAct) {
+                            Log::warning("Gagal auto unsuspend regis payment {$nomorInternet}: " . $exAct->getMessage());
+                        }
+                    } elseif (!$isFullyPaid && $activeSuspend) {
+                        $unsuspendInfo = " (Catatan: Layanan tetap terisolir karena masih terdapat tagihan/tunggakan lain yang belum lunas).";
+                    }
                 }
             }
 
@@ -3947,35 +3962,58 @@ class FinanceController extends Controller
             return '';
         }
 
-        // 1. Cek apakah pelanggan saat ini dalam kondisi suspend (terisolir)
-        $isSuspended = false;
-        $activeSuspend = null;
+        // 1. Ambil data pelanggan dari trx_batchjob_register
+        $customerReg = null;
+        if (Schema::hasTable('trx_batchjob_register')) {
+            $customerReg = DB::table('trx_batchjob_register')
+                ->where('nomor_internet', $nomorInternet)
+                ->first();
+        }
 
+        // Ambil data suspend aktif di trx_suspend (jika ada)
+        $activeSuspend = null;
         if (Schema::hasTable('trx_suspend')) {
             $activeSuspend = DB::table('trx_suspend')
                 ->where('nomor_internet', $nomorInternet)
                 ->whereIn('status_suspend', ['11', '12', '18'])
                 ->orderBy('date_create', 'desc')
                 ->first();
-
-            if ($activeSuspend) {
-                $isSuspended = true;
-            }
         }
 
-        $customerReg = null;
-        if (Schema::hasTable('trx_batchjob_register')) {
-            $customerReg = DB::table('trx_batchjob_register')
-                ->where('nomor_internet', $nomorInternet)
-                ->first();
-
-            if ($customerReg && (in_array((string)$customerReg->status_reg, ['21', '21.1', '22']) || (string)$customerReg->is_suspend === '1')) {
+        // 2. Evaluasi status pelanggan:
+        // HANYA dianggap SUSPEND jika status_reg di trx_batchjob_register adalah 21, 21.1, 22
+        // ATAU is_suspend == '1'.
+        // Jika pelanggan sebelumnya AKTIF (status_reg == '20' dan bukan suspend),
+        // TIDAK PERLU ADA HUBUNGAN DENGAN ROUTER (cukup update database saja).
+        $isSuspended = false;
+        if ($customerReg) {
+            $regStatus = (string)($customerReg->status_reg ?? '');
+            $isSusp = (string)($customerReg->is_suspend ?? '0');
+            if (in_array($regStatus, ['21', '21.1', '22']) || $isSusp === '1') {
                 $isSuspended = true;
             }
+        } elseif ($activeSuspend) {
+            // Fallback jika data pelanggan tidak ada di trx_batchjob_register
+            $isSuspended = true;
         }
 
-        // Jika pelanggan tidak sedang suspend, tidak perlu proses unsuspend/prorate
+        // JIKA PELANGGAN SEBELUMNYA AKTIF (TIDAK SUSPEND):
+        // Tidak perlu ada hubungan dengan router (tidak kick / tidak reboot ONU). Cukup database saja.
         if (!$isSuspended) {
+            // Bersihkan sisa data trx_suspend jika ada yang masih gantung agar tidak menjadi false-flag di kemudian hari
+            if ($activeSuspend && Schema::hasTable('trx_suspend')) {
+                try {
+                    DB::table('trx_suspend')
+                        ->where('kode_suspend', $activeSuspend->kode_suspend)
+                        ->update([
+                            'status_suspend' => '13',
+                            'suspend_end' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
+                            'desc_suspend_cancel' => "Ditutup otomatis saat verifikasi pembayaran ({$kodeBilling}): Pelanggan sudah berstatus aktif",
+                            'date_update' => Carbon::now('Asia/Jakarta')->toDateTimeString(),
+                            'user_update' => $userUpdate,
+                        ]);
+                } catch (\Throwable $th) {}
+            }
             return '';
         }
 

@@ -3398,7 +3398,10 @@ class AiAssistantController extends Controller
      */
     protected function handleFeaturesQuestion(string $lower): ?string
     {
-        if (preg_match('/\b(fitur|fitur-fitur|apa saja fitur|ada fitur apa|menu apa saja|fungsi aplikasi|tentang aplikasi|kemampuan aplikasi|fitur aplikasi)\b/i', $lower)) {
+        $isFeatureQuery = preg_match('/\b(fitur|fitur-fitur|apa saja fitur|ada fitur apa|menu apa saja|fungsi aplikasi|tentang aplikasi|kemampuan aplikasi|fitur aplikasi|apa itu ims2|modul aplikasi|panduan aplikasi|tentang sistem|fitur sistem|terkait aplikasi|aplikasi ims2)\b/i', $lower)
+            || (str_contains($lower, 'aplikasi') && (str_contains($lower, 'fitur') || str_contains($lower, 'menu') || str_contains($lower, 'fungsi') || str_contains($lower, 'modul') || str_contains($lower, 'apa saja') || str_contains($lower, 'bisa apa') || str_contains($lower, 'tentang') || str_contains($lower, 'apa itu')));
+
+        if ($isFeatureQuery) {
             return "### 🚀 Fitur Utama & Modul Operasional Sistem IMS2:\n\n"
                 . "Sistem **IMS2 (ISP Management System)** adalah platform operasional terintegrasi untuk penyedia layanan internet (ISP) PT Media Solusi Network:\n\n"
                 . "1. **👥 Manajemen Pelanggan (Customer Lifecycle):**\n"

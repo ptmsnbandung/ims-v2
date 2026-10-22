@@ -408,7 +408,8 @@ window.imsAiCopilot = function() {
             { icon: '💳', label: 'Tagihan Pending', prompt: 'Cek tagihan pending verifikasi' },
             { icon: '🌐', label: 'Status OLT', prompt: 'Status OLT dan jaringan' },
             { icon: '🎫', label: 'Tiket Open', prompt: 'Cek tiket gangguan yang masih open' },
-            { icon: '👥', label: 'Cari Pelanggan', prompt: 'Cek pelanggan aktif' }
+            { icon: '👥', label: 'Cari Pelanggan', prompt: 'Cek pelanggan aktif' },
+            { icon: '🚀', label: 'Fitur Aplikasi', prompt: 'Apa saja fitur utama sistem IMS2?' }
         ],
         messages: [],
 
@@ -551,7 +552,8 @@ window.imsAiCopilot = function() {
                     { icon: '💳', label: 'Tagihan Pending', prompt: 'Cek tagihan pending verifikasi' },
                     { icon: '🌐', label: 'Status OLT', prompt: 'Status OLT dan jaringan' },
                     { icon: '🎫', label: 'Tiket Open', prompt: 'Cek tiket gangguan yang masih open' },
-                    { icon: '👥', label: 'Cari Pelanggan', prompt: 'Cek pelanggan aktif' }
+                    { icon: '👥', label: 'Cari Pelanggan', prompt: 'Cek pelanggan aktif' },
+                    { icon: '🚀', label: 'Fitur Aplikasi', prompt: 'Apa saja fitur utama sistem IMS2?' }
                 ];
             }
         },
@@ -937,7 +939,7 @@ window.imsAiCopilot = function() {
                     :disabled="isLoading"
                     data-no-auto-search="true"
                     autocomplete="off"
-                    placeholder="Tanya pelanggan, tagihan, status OLT, atau tiket..." 
+                    placeholder="Tanya pelanggan, tagihan, status OLT, tiket, atau fitur aplikasi..." 
                     style="flex:1; background:#0f172a; border:1px solid #334155; border-radius:10px; padding:10px 12px; font-size:12px; color:#ffffff; outline:none;"
                 />
                 <button 

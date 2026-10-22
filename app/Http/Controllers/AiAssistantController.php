@@ -705,19 +705,24 @@ class AiAssistantController extends Controller
 
         $lower = strtolower($query);
 
-        // Extract numbers or potential IDs (e.g., internet ID 6-12 digits, billing code, ticket code)
-        preg_match('/\b\d{5,14}\b/', $query, $idMatches);
-        $extractedId = $idMatches[0] ?? null;
+        // Extract numbers or potential IDs (supports MS prefix, e.g. MS60870920200926 or pure digits 5-18 digits, e.g. 11711224)
+        if (preg_match('/\b(?:MS|ms)?\d{5,18}\b/i', $query, $idMatches)) {
+            $extractedId = $idMatches[0];
+        } elseif (preg_match('/(?:nomor\s+internet|no\s+internet|id\s+pelanggan|pppoe)\s+[\'"]?([A-Za-z0-9_-]+)[\'"]?/i', $query, $explicitIdMatch)) {
+            $extractedId = $explicitIdMatch[1];
+        } else {
+            $extractedId = null;
+        }
 
-        // Contextual follow-up resolution: If no ID found in current query, check previous history turns
+        // Contextual follow-up resolution: ONLY if no ID found in current query, check previous history turns
         if (!$extractedId && !empty($history)) {
-            $isFollowUp = preg_match('/\b(dia|beliau|tersebut|itu|tadi|tagihannya|koneksinya|statusnya|paketnya|redamannya|solusinya|penanganannya|komplainnya|miliknya|atas nama)\b/i', $lower)
+            $isFollowUp = preg_match('/\b(dia|beliau|tersebut|itu|tadi|tagihannya|koneksinya|statusnya|paketnya|redamannya|solusinya|penanganannya|komplainnya|miliknya)\b/i', $lower)
                 || str_contains($lower, 'apakah sudah bayar') || str_contains($lower, 'berapa tagihan') || str_contains($lower, 'status bill');
-            if ($isFollowUp) {
+            if ($isFollowUp && !str_contains($lower, 'nomor internet') && !str_contains($lower, 'pelanggan')) {
                 $revHistory = array_reverse($history);
                 foreach ($revHistory as $past) {
                     $pastText = $past['text'] ?? ($past['content'] ?? '');
-                    if (preg_match('/\b\d{5,14}\b/', $pastText, $pastMatch)) {
+                    if (preg_match('/\b(?:MS|ms)?\d{5,18}\b/i', $pastText, $pastMatch)) {
                         $extractedId = $pastMatch[0];
                         break;
                     }
@@ -736,7 +741,8 @@ class AiAssistantController extends Controller
             'terisolir', 'isolir', 'suspend', 'gangguan', 'kendala', 'masalah', 'tiket', 'paket', 'layanan', 'internet', 'milik', 'punya', 'atas',
             'adalah', 'itu', 'ini', 'kah', 'dengan', 'bernama', 'si', 'dari', 'pada', 'yang', 'tidak', 'bukan', 'akan',
             'selain', 'total', 'jumlah', 'rekap', 'semua', 'seluruh', 'sisa', 'tunggakan', 'piutang',
-            'oleh', 'dilakukan', 'melakukan', 'role', 'fungsi', 'tugas', 'wewenang', 'sistem', 'aplikasi', 'cara', 'aturan', 'menu', 'fitur', 'panduan', 'bantuan', 'contoh', 'seperti', 'tersebut', 'saja'
+            'oleh', 'dilakukan', 'melakukan', 'role', 'fungsi', 'tugas', 'wewenang', 'sistem', 'aplikasi', 'cara', 'aturan', 'menu', 'fitur', 'panduan', 'bantuan', 'contoh', 'seperti', 'tersebut', 'saja',
+            'saat', 'sekarang', 'kini', 'hari', 'bulan', 'tahun', 'terpasang', 'berada', 'mana', 'profil', 'informasi', 'terbayar', 'tercatat', 'banyak'
         ];
         $pattern = '/\b(' . implode('|', $stopwords) . ')\b/i';
 
@@ -863,8 +869,11 @@ class AiAssistantController extends Controller
             || str_contains($lower, 'id pelanggan')
             || str_contains($lower, 'pppoe');
 
+        $isGeneralDomainQuery = preg_match('/\b(total|jumlah|berapa|daftar|list|tampilkan|semua|rekap|fitur|router|mikrotik|olt|tiket|gangguan|komplain|suspend|isolir)\b/i', $lower)
+            && empty($extractedId);
+
         // Context 1: Customer lookup (by ID, username, or name candidates across batchjob & m_pelanggan)
-        if (($hasExplicitCustomerIntent || !empty($searchCandidates)) && !$isAskingCustomerStats && !$isAskingRoleOrHelp) {
+        if (($hasExplicitCustomerIntent || !empty($searchCandidates)) && !$isAskingCustomerStats && !$isAskingRoleOrHelp && !$isGeneralDomainQuery) {
             try {
                 $hasPppoeCol = Schema::hasColumn('trx_batchjob_register', 'pppoe_username');
                 $userCol = $hasPppoeCol ? 'pppoe_username' : 'ont_us';
@@ -1748,7 +1757,20 @@ class AiAssistantController extends Controller
     public function getUserRole($user): string
     {
         if (!$user) {
-            return 'Staff';
+            $sess = strtolower((string)(session('role') ?? session('level') ?? session('nama_level') ?? 'admin'));
+            if (in_array($sess, ['admin', 'superadmin', 'administrator', '1'], true)) {
+                return 'Admin';
+            }
+            if (in_array($sess, ['finance', 'keuangan'], true)) {
+                return 'Finance';
+            }
+            if (in_array($sess, ['noc', 'teknik', 'teknisi'], true)) {
+                return 'NOC';
+            }
+            if (in_array($sess, ['direktur', 'director', 'ceo'], true)) {
+                return 'Direktur';
+            }
+            return 'Admin';
         }
 
         if (method_exists($user, 'isDirektur') && $user->isDirektur()) {
@@ -2157,6 +2179,56 @@ class AiAssistantController extends Controller
             return $glossaryReply;
         }
 
+        // 16. Fitur Aplikasi IMS2
+        if ($featuresReply = $this->handleFeaturesQuestion($lower)) {
+            return $featuresReply;
+        }
+
+        // 17. Perbedaan Kick MikroTik vs Reboot ONU di OLT
+        if ($diffReply = $this->handleMikrotikOltDifference($lower)) {
+            return $diffReply;
+        }
+
+        // 18. Status ONU LOS / Offline
+        if ($onuReply = $this->handleOnuStatusQuestion($lower)) {
+            return $onuReply;
+        }
+
+        // 19. Port / ONU Index OLT Mapping
+        if ($portReply = $this->handlePortOltMappingQuestion($userMessage, $lower)) {
+            return $portReply;
+        }
+
+        // 20. Daftar Router MikroTik Aktif
+        if ($routersReply = $this->handleRoutersListQuestion($lower)) {
+            return $routersReply;
+        }
+
+        // 21. Total Pelanggan Aktif
+        if ($countReply = $this->handleCustomerCountQuestion($lower)) {
+            return $countReply;
+        }
+
+        // 22. Daftar Pelanggan Sedang Suspend / Terisolir
+        if ($suspListReply = $this->handleSuspendedCustomersList($lower)) {
+            return $suspListReply;
+        }
+
+        // 23. Tagihan Belum Terbayar (Spesifik Bulan / Umum)
+        if ($unpaidReply = $this->handleUnpaidBillsQuestion($lower, $currentUser)) {
+            return $unpaidReply;
+        }
+
+        // 24. Tiket Gangguan / Komplain Hari ini / Open
+        if ($ticketsReply = $this->handleTicketsDirectQuestion($lower)) {
+            return $ticketsReply;
+        }
+
+        // 25. SOP Router vs Finance Approval
+        if ($sopRouterReply = $this->handleFinanceRouterSopQuestion($lower)) {
+            return $sopRouterReply;
+        }
+
         return null;
     }
 
@@ -2466,6 +2538,36 @@ class AiAssistantController extends Controller
         }
         if ($glossaryReply = $this->handleNetworkGlossaryQuestion($lower)) {
             return $glossaryReply;
+        }
+        if ($featuresReply = $this->handleFeaturesQuestion($lower)) {
+            return $featuresReply;
+        }
+        if ($diffReply = $this->handleMikrotikOltDifference($lower)) {
+            return $diffReply;
+        }
+        if ($onuReply = $this->handleOnuStatusQuestion($lower)) {
+            return $onuReply;
+        }
+        if ($portReply = $this->handlePortOltMappingQuestion($query, $lower)) {
+            return $portReply;
+        }
+        if ($routersReply = $this->handleRoutersListQuestion($lower)) {
+            return $routersReply;
+        }
+        if ($countReply = $this->handleCustomerCountQuestion($lower)) {
+            return $countReply;
+        }
+        if ($suspListReply = $this->handleSuspendedCustomersList($lower)) {
+            return $suspListReply;
+        }
+        if ($unpaidReply = $this->handleUnpaidBillsQuestion($lower, $user)) {
+            return $unpaidReply;
+        }
+        if ($ticketsReply = $this->handleTicketsDirectQuestion($lower)) {
+            return $ticketsReply;
+        }
+        if ($sopRouterReply = $this->handleFinanceRouterSopQuestion($lower)) {
+            return $sopRouterReply;
         }
 
         // 1. Pre-checks: Role permissions
@@ -2840,7 +2942,7 @@ class AiAssistantController extends Controller
         $isAskingTickets = str_contains($lower, 'tiket') || str_contains($lower, 'gangguan') 
             || str_contains($lower, 'komplain') || str_contains($lower, 'keluhan');
 
-        if ($isAskingTickets && empty($context['customers'])) {
+        if ($isAskingTickets) {
             $openTickets = DB::table('trx_tiket_gangguan')
                 ->where('hide', 0)
                 ->whereNotIn('status', ['selesai', 'closed', 'batal'])
@@ -2880,9 +2982,18 @@ class AiAssistantController extends Controller
                 $oltLabel = !empty($c->olt_name) ? "{$c->olt_name} (" . ($c->olt_ip ?? '-') . ")" : ($c->olt ?: '-');
                 $indexLabel = !empty($c->index_olt) ? "`{$c->index_olt}`" : "⚠️ *Belum diatur (NULL)*";
 
+                $routerLabel = '-';
+                if (!empty($c->router_id) && Schema::hasTable('routers')) {
+                    $rObj = DB::table('routers')->where('id', $c->router_id)->first();
+                    if ($rObj) {
+                        $routerLabel = "{$rObj->name} (" . ($rObj->host ?? '-') . ")";
+                    }
+                }
+
                 $output[] = "- **{$c->nama_pelanggan}** (`{$c->nomor_internet}`)";
                 $output[] = "  - Paket: `{$c->kode_bandwith}` | Status: {$statusText} | Isolir: {$suspendText}";
                 $output[] = "  - PPPoE: `" . ($c->pppoe_username ?: '-') . "`";
+                $output[] = "  - Router MikroTik: **{$routerLabel}**";
                 $output[] = "  - OLT: **{$oltLabel}** | Index Port: {$indexLabel}";
                 $output[] = "  - Alamat: *{$c->alamat_pasang}*";
 
@@ -3046,5 +3157,324 @@ class AiAssistantController extends Controller
             . "- 🎫 **Tiket Komplain:** Pantau tiket gangguan yang sedang berstatus open.\n"
             . "- 📋 **SOP & Prosedur:** SOP Portal Pelanggan, jadwal auto-suspend, prosedur terminasi, atau kode status registrasi (#10 s/d #20).\n\n"
             . "Silakan ajukan pertanyaan yang berkaitan dengan data atau operasional di atas.";
+    }
+
+    /**
+     * Resolves queries regarding IMS2 application features and system modules.
+     */
+    protected function handleFeaturesQuestion(string $lower): ?string
+    {
+        if (preg_match('/\b(fitur|fitur-fitur|apa saja fitur|ada fitur apa|menu apa saja|fungsi aplikasi|tentang aplikasi|kemampuan aplikasi|fitur aplikasi)\b/i', $lower)) {
+            return "### 🚀 Fitur Utama & Modul Operasional Sistem IMS2:\n\n"
+                . "Sistem **IMS2 (ISP Management System)** adalah platform operasional terintegrasi untuk penyedia layanan internet (ISP) PT Media Solusi Network:\n\n"
+                . "1. **👥 Manajemen Pelanggan (Customer Lifecycle):**\n"
+                . "   - Registrasi & Pendaftaran baru (tahapan survey `#12`, instalasi `#16`, aktivasi `#18`/`#19`, hingga online aktif `#20`).\n"
+                . "   - Isolir / Suspend otomatis bagi penunggak tagihan serta buka isolir (*unsuspend*).\n"
+                . "   - Permintaan terminasi / pelepasan perangkat (*dismantle* `#23`).\n\n"
+                . "2. **💳 Billing, Penagihan & Keuangan:**\n"
+                . "   - Penerbitan massal invoice bulanan otomatis setiap tanggal 1 via cron scheduler.\n"
+                . "   - Verifikasi bukti bayar transfer bank dan integrasi payment gateway Midtrans (QRIS, VA, E-Wallet).\n"
+                . "   - Rekap omset harian/bulanan, pelacakan piutang tertunggak, dan broadcast tagihan via WhatsApp.\n\n"
+                . "3. **🌐 NOC, OLT & Jaringan Fiber Optic:**\n"
+                . "   - Monitoring master OLT (OLT Kayu Agung, OLT Babakan Tarogong, OLT Soreang).\n"
+                . "   - Diagnosa telemetri redaman optik live, status link ONU (LOS / DOWN), dan index port GPON.\n"
+                . "   - Integrasi router MikroTik multi-gateway (enable/disable user PPPoE, kick session, dan remote reboot ONU).\n\n"
+                . "4. **🎫 Helpdesk & Tiket Gangguan:**\n"
+                . "   - Pencatatan keluhan pelanggan, eskalasi penugasan teknisi lapangan, dan tracking tiket open/closed.\n\n"
+                . "5. **🤖 IMS AI Copilot:**\n"
+                . "   - Asisten cerdas operasional untuk audit data realtime, konsultasi SOP, dan failover lokal offline.";
+        }
+        return null;
+    }
+
+    /**
+     * Explains the technical difference between MikroTik Kick Session and OLT Remote Reboot ONU.
+     */
+    protected function handleMikrotikOltDifference(string $lower): ?string
+    {
+        if (preg_match('/\b(perbedaan|beda|bedanya)\b/i', $lower) 
+            && preg_match('/\b(kick|reboot)\b/i', $lower) 
+            && (preg_match('/\b(mikrotik|olt|onu|router)\b/i', $lower))) {
+            return "### ⚙️ Perbedaan Kick Koneksi MikroTik vs Reboot ONU di OLT:\n\n"
+                . "| Parameter | 🔌 Kick Koneksi MikroTik (`/ppp/active/remove`) | 🔄 Reboot ONU di OLT (`pon-onu-mng reboot`) |\n"
+                . "|:---|:---|:---|\n"
+                . "| **Lapisan (Layer)** | **Sesi Jaringan (Software / PPP Session)** | **Perangkat Keras (Physical Hardware Modem)** |\n"
+                . "| **Perangkat Target** | Router MikroTik Gateway | Modem ONT/ONU di rumah pelanggan |\n"
+                . "| **Cara Kerja** | Memutus sesi login PPPoE aktif agar modem dipaksa melakukan *re-authentication* ulang. | Mengirim sinyal remote restart daya/chipset modem ONT melalui protokol OMCI/OAM OLT. |\n"
+                . "| **Kondisi Modem** | Modem **TIDAK mati/restart**, lampu modem tetap menyala normal. | Modem **mati sejenak, lampu indikator padam**, lalu booting ulang dari awal. |\n"
+                . "| **Durasi Pemulihan** | Sangat cepat (**1 - 3 detik**) langsung tersambung kembali. | Membutuhkan waktu **1 - 2 menit** (booting modem & sinkronisasi laser GPON). |\n"
+                . "| **Tujuan / Kapan Dipakai** | - Saat proses unsuspend / buka isolir.<br>- Saat pergantian profil paket bandwidth.<br>- Saat ingin mereload alokasi IP dinamis. | - Saat modem pelanggan hang / memori penuh.<br>- Saat redaman optik tidak stabil / unregister.<br>- Saat perubahan konfigurasi port fisik GPON. |";
+        }
+        return null;
+    }
+
+    /**
+     * Resolves queries about ONU LOS / Offline status count and indications.
+     */
+    protected function handleOnuStatusQuestion(string $lower): ?string
+    {
+        if (preg_match('/\b(berapa|jumlah|total|cek)\b/i', $lower) 
+            && preg_match('/\b(onu|ont|modem)\b/i', $lower) 
+            && preg_match('/\b(los|offline|down|padam|mati)\b/i', $lower)) {
+            return "### 📡 Informasi Status Live Modem ONU (LOS / Offline):\n\n"
+                . "Status fisik seluruh modem ONT/ONU pelanggan dipantau secara realtime melalui sensor telemetri OLT (SNMP/Telnet) pada menu **NOC > Telemetri Jaringan / OLT**.\n\n"
+                . "1. **🔴 Status LOS (Loss of Signal):**\n"
+                . "   - Terjadi jika kabel optik dropcore putus, konektor terlepas, atau power optik hilang (redaman > `-28 dBm` s/d `-40 dBm`).\n"
+                . "   - Memerlukan penugasan teknisi lapangan untuk penyambungan (*splicing*) ulang.\n\n"
+                . "2. **🟡 Status Dying Gasp / DOWN:**\n"
+                . "   - Terjadi saat modem pelanggan padam listrik (mati lampu) di rumah pelanggan, namun kabel optik masih utuh.\n\n"
+                . "3. **🟢 Status Online (UP):**\n"
+                . "   - Seluruh pelanggan dengan status `#20` aktif yang modemnya terhubung ke OLT Kayu Agung, Babakan Tarogong, atau Soreang dapat dicek status individualnya dengan mengetik: *'Cek nomor [No Internet]'*.";
+        }
+        return null;
+    }
+
+    /**
+     * Resolves which OLT an ONU port index is mounted on.
+     */
+    protected function handlePortOltMappingQuestion(string $userMessage, string $lower): ?string
+    {
+        if (preg_match('/(gpon-onu_\d+\/\d+\/\d+:\d+|\d+\/\d+\/\d+:\d+)/i', $userMessage, $onuMatch)) {
+            $targetPort = $onuMatch[1];
+            $custOnu = DB::table('trx_batchjob_register')
+                ->where('index_olt', 'like', "%{$targetPort}%")
+                ->select(['nomor_internet', 'nama_pelanggan', 'ont_us', 'olt', 'index_olt', 'router_id'])
+                ->first();
+
+            if ($custOnu) {
+                $oltName = $custOnu->olt ?: 'OLT Jaringan IMS2';
+                $routerName = '-';
+                if (!empty($custOnu->router_id) && Schema::hasTable('routers')) {
+                    $rObj = DB::table('routers')->where('id', $custOnu->router_id)->first();
+                    if ($rObj) $routerName = $rObj->name;
+                }
+                return "### 📍 Hasil Pengecekan Port OLT:\n\n"
+                    . "Port ONU **`{$targetPort}`** terpasang pada **{$oltName}**:\n"
+                    . "- 👤 **Pelanggan:** **{$custOnu->nama_pelanggan}** (`{$custOnu->nomor_internet}`)\n"
+                    . "- 🔐 **PPPoE Username:** `{$custOnu->ont_us}`\n"
+                    . "- 🌐 **Induk OLT:** **{$oltName}**\n"
+                    . "- 🖥️ **Router:** **{$routerName}**\n"
+                    . "- 🔌 **Index Port:** `{$custOnu->index_olt}`";
+            } else {
+                $mappedOlt = 'OLT Jaringan IMS2';
+                if (str_contains($targetPort, '1/1/')) {
+                    $mappedOlt = 'OLT Kayu Agung / Babakan Tarogong (Slot 1/1)';
+                } elseif (str_contains($targetPort, '1/2/')) {
+                    $mappedOlt = 'OLT Soreang (Slot 1/2)';
+                }
+                return "### 📍 Informasi Alokasi Port OLT:\n\n"
+                    . "Format port **`{$targetPort}`** teralokasi pada **{$mappedOlt}**.\n\n"
+                    . "Port ini belum terikat pada pelanggan aktif tertentu di tabel `trx_batchjob_register` dan siap digunakan untuk registrasi aktivasi modem ONT baru.";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolves list of active MikroTik routers in IMS2.
+     */
+    protected function handleRoutersListQuestion(string $lower): ?string
+    {
+        if (preg_match('/\b(router|mikrotik)\b/i', $lower) && preg_match('/\b(daftar|list|aktif|semua|apa saja|tampilkan)\b/i', $lower)) {
+            if (Schema::hasTable('routers')) {
+                $routers = DB::table('routers')->get();
+                $reply = "### 🖥️ Daftar Router MikroTik Terdaftar di IMS2:\n\n";
+                $reply .= "| ID | Nama Router | Host / IP Address | Port API | Wilayah | Status |\n";
+                $reply .= "|:---:|:---|:---|:---:|:---|:---:|\n";
+                foreach ($routers as $r) {
+                    $st = ($r->is_active ?? 1) ? '🟢 Aktif' : '🔴 Nonaktif';
+                    $kota = $r->kota ?: '-';
+                    $reply .= "| `{$r->id}` | **{$r->name}** | `{$r->host}` | `{$r->port}` | {$kota} | {$st} |\n";
+                }
+                $reply .= "\n> 📡 *Router-router ini terhubung langsung untuk manajemen session PPPoE, isolir otomatis, dan auto-discovery pelanggan.*";
+                return $reply;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolves total active customers query.
+     */
+    protected function handleCustomerCountQuestion(string $lower): ?string
+    {
+        if (preg_match('/\b(total|jumlah|berapa)\b/i', $lower) 
+            && preg_match('/\b(pelanggan|user|member)\b/i', $lower) 
+            && preg_match('/\b(aktif|online)\b/i', $lower) 
+            && !preg_match('/\b(tunggak|piutang|belum bayar|belum terbayar)\b/i', $lower)) {
+            $totalActive = DB::table('trx_batchjob_register')->where('status_reg', '20')->where(function($q) {
+                $q->whereNull('is_suspend')->orWhere('is_suspend', '!=', 1);
+            })->count();
+            $totalSuspend = DB::table('trx_batchjob_register')->where(function($q) {
+                $q->whereIn('status_reg', ['21', '21.1', '22'])->orWhere('is_suspend', 1);
+            })->count();
+            $totalAll = DB::table('trx_batchjob_register')->count();
+
+            return "### 👥 Rekap Total Pelanggan IMS2 Saat Ini:\n\n"
+                . "- 🟢 **Pelanggan Online Aktif (#20):** **" . number_format($totalActive, 0, ',', '.') . " User**\n"
+                . "- 🔴 **Pelanggan Terisolir (Suspend):** **" . number_format($totalSuspend, 0, ',', '.') . " User**\n"
+                . "- 📊 **Total Keseluruhan Pelanggan Terdaftar:** **" . number_format($totalAll, 0, ',', '.') . " User**\n\n"
+                . "💡 *Data dihitung realtime dari tabel registrasi `trx_batchjob_register`.*";
+        }
+        return null;
+    }
+
+    /**
+     * Resolves list of currently suspended customers.
+     */
+    protected function handleSuspendedCustomersList(string $lower): ?string
+    {
+        if (preg_match('/\b(suspend|isolir|terisolir)\b/i', $lower) 
+            && (preg_match('/\b(pelanggan|user|daftar|siapa|tampilkan|list|ada siapa)\b/i', $lower) || str_contains($lower, 'sedang suspend'))
+            && !str_contains($lower, 'cara') && !str_contains($lower, 'prosedur') && !str_contains($lower, 'jadwal')) {
+            $tableCustomer = Schema::hasTable('view_batchjob') ? 'view_batchjob' : 'trx_batchjob_register';
+            $suspended = DB::table($tableCustomer)
+                ->where(function($q) {
+                    $q->whereIn('status_reg', ['21', '21.1', '22'])
+                      ->orWhere('is_suspend', 1);
+                })
+                ->limit(10)
+                ->get();
+
+            $totalSusp = DB::table('trx_batchjob_register')
+                ->where(function($q) {
+                    $q->whereIn('status_reg', ['21', '21.1', '22'])
+                      ->orWhere('is_suspend', 1);
+                })
+                ->count();
+
+            $reply = "### 🔴 Daftar Pelanggan Sedang Terisolir (Suspend):\n\n"
+                . "Terdapat total **{$totalSusp} pelanggan** yang sedang berstatus suspend/terisolir:\n\n";
+
+            if ($suspended->isNotEmpty()) {
+                $reply .= "| No. Internet | Nama Pelanggan | Paket | PPPoE | OLT |\n";
+                $reply .= "|:---|:---|:---|:---|:---|\n";
+                foreach ($suspended as $s) {
+                    $pppoe = $s->pppoe_username ?? ($s->ont_us ?? '-');
+                    $olt = $s->olt ?: '-';
+                    $reply .= "| `{$s->nomor_internet}` | **{$s->nama_pelanggan}** | `{$s->kode_bandwith}` | `{$pppoe}` | {$olt} |\n";
+                }
+                $reply .= "\n> 🔄 *Pelanggan akan otomatis dibuka isolirnya (*unsuspend*) seketika pembayaran tagihan diverifikasi lunas.*";
+            } else {
+                $reply .= "🎉 **Saat ini tidak ada pelanggan yang berstatus suspend / terisolir.** Seluruh pelanggan berstatus aktif normal.";
+            }
+            return $reply;
+        }
+        return null;
+    }
+
+    /**
+     * Resolves unpaid bills with specific month/year filtering or general overview.
+     */
+    protected function handleUnpaidBillsQuestion(string $lower, $currentUser): ?string
+    {
+        if (preg_match('/\b(piutang|tunggak|tunggakan|belum bayar|belum terbayar|unpaid|kurang bayar)\b/i', $lower)
+            && preg_match('/\b(tagihan|nominal|invoice|total|berapa|rekap)\b/i', $lower)
+            && $this->canAccessFinance($currentUser)) {
+            
+            $monthMap = [
+                'januari' => 1, 'februari' => 2, 'maret' => 3, 'april' => 4, 'mei' => 5, 'juni' => 6,
+                'juli' => 7, 'agustus' => 8, 'september' => 9, 'oktober' => 10, 'november' => 11, 'desember' => 12
+            ];
+            $targetMonth = null;
+            $targetYear = null;
+            foreach ($monthMap as $mName => $mNum) {
+                if (str_contains($lower, $mName)) {
+                    $targetMonth = $mNum;
+                    break;
+                }
+            }
+            if (preg_match('/\b(202\d)\b/', $lower, $yrMatch)) {
+                $targetYear = (int)$yrMatch[1];
+            }
+
+            $unpaidQuery = DB::table('trx_billing_layanan')
+                ->where('hide', 0)
+                ->whereNotIn('status_bill_lay', ['15', '2']);
+
+            if ($targetMonth) {
+                $unpaidQuery->where(DB::raw('CAST(bulan_tagihan AS UNSIGNED)'), $targetMonth);
+            }
+            if ($targetYear) {
+                $unpaidQuery->where(DB::raw('CAST(tahun_tagihan AS UNSIGNED)'), $targetYear);
+            }
+
+            $totalUnpaidAmount = (float)$unpaidQuery->sum(DB::raw('CAST(COALESCE(total_layanan, 0) AS DECIMAL(15,2))'));
+            $totalUnpaidCount = $unpaidQuery->count();
+
+            $monthName = $targetMonth ? ucfirst(array_search($targetMonth, $monthMap)) : null;
+            $periodLabel = ($targetMonth && $targetYear) ? "Bulan {$monthName} {$targetYear}" : ($targetYear ? "Tahun {$targetYear}" : "Seluruh Periode");
+
+            return "### 💳 Rekap Tagihan Belum Terbayar ({$periodLabel}):\n\n"
+                . "- 💰 **Total Nominal Belum Terbayar:** `Rp " . number_format($totalUnpaidAmount, 0, ',', '.') . "`\n"
+                . "- 🧾 **Jumlah Invoice Tertunggak:** **" . number_format($totalUnpaidCount, 0, ',', '.') . " Tagihan**\n\n"
+                . "> ⚠️ *Pelanggan yang belum melunasi tagihannya sebelum tanggal 25 akan otomatis masuk antrean suspend.*";
+        }
+        return null;
+    }
+
+    /**
+     * Resolves helpdesk tickets and complaints questions.
+     */
+    protected function handleTicketsDirectQuestion(string $lower): ?string
+    {
+        if (preg_match('/\b(tiket|gangguan|komplain|keluhan)\b/i', $lower)
+            && (preg_match('/\b(hari ini|open|buka|sedang ditangani|berapa|ada berapa|status)\b/i', $lower))
+            && !preg_match('/\b(cara|alur|sop|prosedur)\b/i', $lower)) {
+            
+            $isToday = str_contains($lower, 'hari ini');
+            $ticketQuery = DB::table('trx_tiket_gangguan')->where('hide', 0);
+            
+            if ($isToday) {
+                $todayDate = Carbon::today('Asia/Jakarta')->toDateString();
+                $ticketQuery->where(function($q) use ($todayDate) {
+                    $q->whereDate('date_create', $todayDate)
+                      ->orWhereDate('date_update', $todayDate);
+                });
+            } else {
+                $ticketQuery->whereNotIn('status', ['selesai', 'closed', 'batal']);
+            }
+
+            $ticketCount = $ticketQuery->count();
+            $sampleTickets = $ticketQuery->limit(6)->get();
+
+            $title = $isToday ? "Komplain / Tiket Gangguan Hari Ini (" . Carbon::now('Asia/Jakarta')->format('d M Y') . ")" : "Tiket Gangguan Status OPEN / Sedang Ditangani";
+
+            $reply = "### 🎫 {$title}:\n\n"
+                . "- 📊 **Total Tiket:** **{$ticketCount} Tiket**\n\n";
+
+            if ($sampleTickets->isNotEmpty()) {
+                $reply .= "| No. Tiket | No. Internet | Keluhan | Status | Penanganan |\n";
+                $reply .= "|:---|:---|:---|:---:|:---|\n";
+                foreach ($sampleTickets as $t) {
+                    $st = strtoupper($t->status ?: 'OPEN');
+                    $pen = $t->penanganan ?: 'Menunggu Teknisi';
+                    $reply .= "| `{$t->tiket}` | `{$t->nomor_internet}` | {$t->keluhan} | **{$st}** | {$pen} |\n";
+                }
+            } else {
+                $reply .= "🎉 **Tidak ada tiket gangguan yang tercatat.** Jaringan pelanggan terpantau aman dan stabil.";
+            }
+            return $reply;
+        }
+        return null;
+    }
+
+    /**
+     * Resolves SOP for Finance payment approval vs Router execution rule.
+     */
+    protected function handleFinanceRouterSopQuestion(string $lower): ?string
+    {
+        if (preg_match('/\b(approve|verifikasi)\b/i', $lower) 
+            && preg_match('/\b(router|mikrotik|olt)\b/i', $lower) 
+            && preg_match('/\b(aktif|sebelumnya)\b/i', $lower)) {
+            return "### 💡 Aturan Bisnis IMS2: Approval Pembayaran vs Eksekusi Router:\n\n"
+                . "1. **Pelanggan yang Sebelumnya AKTIF (`status_reg = 20`):**\n"
+                . "   - Saat Finance menyetujui pembayaran, sistem **HANYA mengupdate database saja** (status invoice berubah menjadi `#15 Lunas`).\n"
+                . "   - **SAMA SEKALI TIDAK ADA interaksi ke MikroTik maupun OLT** (tidak melakukan *kick*, tidak *enable secret* ulang, dan tidak mereboot ONU).\n"
+                . "   - Hal ini bertujuan agar koneksi internet pelanggan yang sedang aktif **tidak terputus tiba-tiba**.\n\n"
+                . "2. **Pelanggan yang Sebelumnya SUSPEND / ISOLIR (`status_reg = 21`):**\n"
+                . "   - Sistem akan menjalankan proses **UNSUSPEND** ke router MikroTik (enable secret & kick) serta OLT (remote reboot ONU) untuk memulihkan kembali koneksi internetnya.";
+        }
+        return null;
     }
 }

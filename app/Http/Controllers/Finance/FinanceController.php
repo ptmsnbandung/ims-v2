@@ -4618,18 +4618,21 @@ class FinanceController extends Controller
 
             $proofFile = ($c->proof_file ?? null) ?: (($c->bukti_transfer ?? null) ?: ($c->file ?? null));
 
-            // Logika Deteksi Akurat: Portal Pelanggan (Self-Service) vs Bukan Portal (Internal Finance / Kasir / Kolektor)
-            $detectPortalSource = function($confObj, $billObj, $bankDest, $proof) {
+            // Logika Pemisahan Asal Pembayaran yang Presisi:
+            // 1. Portal Pelanggan (Mandiri oleh Pelanggan via Gateway / Upload Bukti Transfer Portal)
+            // 2. Transfer Manual Finance (Metode Transfer yang di-input / diverifikasi manual oleh Finance di IMS)
+            // 3. Cash / Kolektor (Pembayaran Tunai ke Kolektor atau Loket Kasir)
+            $detectPaymentSource = function($confObj, $billObj, $bankDest, $proof) {
                 $bankLower = strtolower((string)$bankDest);
                 $merchantLower = strtolower((string)($billObj?->merchant_type ?? ''));
                 $paymentType = (string)($billObj?->payment_type ?? '');
                 $proofStr = (string)$proof;
                 $adminNotes = (string)($confObj?->admin_notes ?? '');
                 $notes = (string)($confObj?->notes ?? ($confObj?->keterangan ?? ''));
-                $userUpdate = (string)($billObj?->user_update ?? '');
+                $userUpdate = strtoupper(trim((string)($billObj?->user_update ?? '')));
 
-                // 1. CASH / Kolektor / Kasir loket selalu BUKAN PORTAL
-                if ($paymentType === '3' 
+                // 1. CASH / Kolektor / Kasir loket selalu Cash / Kolektor
+                $isCash = ($paymentType === '3')
                     || str_contains($bankLower, 'cash') 
                     || str_contains($bankLower, 'kolektor') 
                     || str_contains($bankLower, 'collector') 
@@ -4639,51 +4642,81 @@ class FinanceController extends Controller
                     || str_contains($merchantLower, 'kolektor')
                     || str_contains($merchantLower, 'collector')
                     || str_contains($merchantLower, 'kasir')
-                    || str_contains($merchantLower, 'tunai')) {
-                    return false;
+                    || str_contains($merchantLower, 'tunai');
+
+                if ($isCash) {
+                    return [
+                        'is_portal' => false,
+                        'source_type' => 'cash',
+                        'label' => 'Cash / Kolektor',
+                    ];
                 }
 
-                // 2. Bukti transfer yang diupload MANUAL oleh internal staf / admin di menu IMS2 -> BUKAN PORTAL
-                // Ditandai oleh notes 'Upload bukti transfer manual oleh admin' atau admin_notes 'Diupload oleh'
-                $isManualAdminUpload = stripos($notes, 'manual oleh admin') !== false 
+                // 2. Bukti transfer yang diupload MANUAL oleh internal staf / admin di menu IMS2 -> Transfer Manual Finance
+                $isManualAdminUpload = str_contains($proofStr, 'proof_')
+                    || stripos($notes, 'manual oleh admin') !== false 
                     || stripos($adminNotes, 'diupload oleh') !== false 
+                    || stripos($adminNotes, 'diupload & diverifikasi') !== false
                     || stripos($adminNotes, 'diperbarui oleh') !== false
                     || stripos($notes, 'diinput oleh admin') !== false;
 
                 if ($isManualAdminUpload) {
-                    return false;
+                    return [
+                        'is_portal' => false,
+                        'source_type' => 'manual_finance',
+                        'label' => 'Transfer Manual Finance',
+                    ];
                 }
 
                 // 3. Online Payment Gateway (QRIS, Midtrans, Snap, Gopay, ShopeePay) -> PORTAL PELANGGAN
-                if ($paymentType === '1'
-                    || in_array($merchantLower, ['qris', 'gopay', 'shopeepay', 'midtrans', 'snap', 'bank_transfer'])
+                $isGateway = ($paymentType === '1')
+                    || in_array($merchantLower, ['qris', 'gopay', 'shopeepay', 'midtrans', 'snap'])
                     || str_contains($merchantLower, 'qris')
                     || str_contains($merchantLower, 'midtrans')
                     || str_contains($merchantLower, 'snap')
-                    || stripos($userUpdate, 'midtrans') !== false) {
-                    return true;
+                    || str_contains($userUpdate, 'MIDTRANS');
+
+                if ($isGateway) {
+                    return [
+                        'is_portal' => true,
+                        'source_type' => 'portal',
+                        'label' => 'Portal Pelanggan',
+                    ];
                 }
 
-                // 4. Bukti transfer dengan prefix portal 'tf_' atau domain portal -> PORTAL PELANGGAN
+                // 4. Bukti transfer dengan prefix portal 'tf_' atau domain portal / ptmsn (tanpa prefix proof_) -> PORTAL PELANGGAN
                 if (!empty($proofStr)) {
                     if (str_contains($proofStr, 'tf_') 
                         || str_contains($proofStr, 'portal.ptmsn.co.id') 
-                        || str_contains($proofStr, 'ptmsn.co.id')) {
-                        return true;
+                        || (str_contains($proofStr, 'ptmsn.co.id') && !str_contains($proofStr, 'proof_'))) {
+                        return [
+                            'is_portal' => true,
+                            'source_type' => 'portal',
+                            'label' => 'Portal Pelanggan',
+                        ];
                     }
                 }
 
                 // 5. Konfirmasi yang tercatat di tabel payment_confirmations:
-                // Selama bukan manual admin upload (sudah dicek di Rule 2), konfirmasi ini dikirim oleh pelanggan via Portal Pelanggan
-                if ($confObj) {
-                    return true;
+                // Jika ada record konfirmasi dan bukan manual admin upload -> PORTAL PELANGGAN
+                if ($confObj && !$isManualAdminUpload) {
+                    return [
+                        'is_portal' => true,
+                        'source_type' => 'portal',
+                        'label' => 'Portal Pelanggan',
+                    ];
                 }
 
-                // 6. Transaksi billing langsung di IMS tanpa konfirmasi/upload dari pelanggan -> BUKAN PORTAL
-                return false;
+                // 6. Transaksi tagihan Transfer yang di-input langsung oleh internal Finance di IMS tanpa konfirmasi portal pelanggan
+                return [
+                    'is_portal' => false,
+                    'source_type' => 'manual_finance',
+                    'label' => 'Transfer Manual Finance',
+                ];
             };
 
-            $isPortal = $detectPortalSource($c, $relatedBill, $bankTujuan, $proofFile);
+            $sourceInfo = $detectPaymentSource($c, $relatedBill, $bankTujuan, $proofFile);
+            $isPortal = $sourceInfo['is_portal'];
 
             $items->push((object)[
                 'type' => 'confirmation',
@@ -4696,7 +4729,8 @@ class FinanceController extends Controller
                 'bank_tujuan' => $bankTujuan,
                 'payment_type' => $relatedBill?->payment_type ?? (stripos($bankTujuan, 'cash') !== false || stripos($bankTujuan, 'kolektor') !== false ? '3' : '2'),
                 'is_portal' => $isPortal,
-                'portal_source' => $isPortal ? 'Portal Pelanggan' : 'Bukan Portal',
+                'source_type' => $sourceInfo['source_type'],
+                'portal_source' => $sourceInfo['label'],
                 'proof_file' => $proofFile,
                 'notes' => $c->notes ?? ($c->keterangan ?? null),
                 'admin_notes' => $c->admin_notes ?? null,
@@ -4739,8 +4773,11 @@ class FinanceController extends Controller
                 return $raw;
             })();
 
-            // Deteksi apakah pembayaran melalui Portal Pelanggan atau Bukan
-            $isPortal = isset($detectPortalSource) ? $detectPortalSource($conf, $b, $bankTujuanRow, $proofFile) : false;
+            // Deteksi pemisahan asal pembayaran: Portal Pelanggan, Transfer Manual Finance, atau Cash / Kolektor
+            $sourceInfo = isset($detectPaymentSource) 
+                ? $detectPaymentSource($conf, $b, $bankTujuanRow, $proofFile) 
+                : ['is_portal' => false, 'source_type' => 'manual_finance', 'label' => 'Transfer Manual Finance'];
+            $isPortal = $sourceInfo['is_portal'];
 
             $items->push((object)[
                 'type' => 'billing',
@@ -4750,19 +4787,11 @@ class FinanceController extends Controller
                 'nama_pelanggan' => $b->nama_pelanggan ?? ($b->nomor_internet ?: 'Pelanggan'),
                 'nominal' => $nominal,
                 'nominal_formatted' => 'Rp ' . number_format($nominal, 0, ',', '.'),
-                'bank_tujuan' => (function() use ($conf, $b) {
-                    $raw = ($conf->destination_bank ?? null) ?: ($b->merchant_type ?: ($b->payment_type == '2' ? 'Transfer Bank' : ($b->payment_type == '3' ? 'CASH' : 'Online / Snap')));
-                    if (($b->payment_type ?? '') == '3' || stripos($raw, 'collector') !== false || stripos($raw, 'kasir') !== false) {
-                        $raw = preg_replace('/^(?:bca|mandiri|bri|bni|bsi|permata|cimb|bjb|danamon|cash\s+to\s+collector)\s*\(/i', 'CASH (', $raw);
-                        if (in_array(strtolower($raw), ['cash to collector', 'kasir / tunai', 'tunai'])) {
-                            $raw = 'CASH';
-                        }
-                    }
-                    return $raw;
-                })(),
+                'bank_tujuan' => $bankTujuanRow,
                 'payment_type' => $b->payment_type ?? (stripos($conf->destination_bank ?? $b->merchant_type ?? '', 'cash') !== false || stripos($conf->destination_bank ?? $b->merchant_type ?? '', 'kolektor') !== false ? '3' : '2'),
                 'is_portal' => $isPortal,
-                'portal_source' => $isPortal ? 'Portal Pelanggan' : 'Bukan Portal',
+                'source_type' => $sourceInfo['source_type'],
+                'portal_source' => $sourceInfo['label'],
                 'proof_file' => $proofFile,
                 'notes' => $conf->notes ?? null,
                 'admin_notes' => $conf->admin_notes ?? null,
@@ -4778,7 +4807,11 @@ class FinanceController extends Controller
             $sLower = strtolower($search);
             if (in_array($sLower, ['portal', 'portal pelanggan', 'portal-pelanggan'])) {
                 $items = $items->filter(fn($item) => $item->is_portal === true);
-            } elseif (in_array($sLower, ['bukan portal', 'non portal', 'non-portal', 'manual', 'kolektor'])) {
+            } elseif (in_array($sLower, ['manual', 'finance', 'manual finance', 'transfer manual'])) {
+                $items = $items->filter(fn($item) => ($item->source_type ?? '') === 'manual_finance');
+            } elseif (in_array($sLower, ['cash', 'kolektor', 'tunai'])) {
+                $items = $items->filter(fn($item) => ($item->source_type ?? '') === 'cash');
+            } elseif (in_array($sLower, ['bukan portal', 'non portal', 'non-portal'])) {
                 $items = $items->filter(fn($item) => $item->is_portal === false);
             }
         }

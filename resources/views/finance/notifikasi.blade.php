@@ -194,27 +194,29 @@
         const step = this.fallbackStep || 0;
         const currentSrc = this.previewImageUrl || '';
 
-        if (step === 0) {
-            this.fallbackStep = 1;
-            if (currentSrc.includes('portal.ptmsn.co.id')) {
-                this.previewImageUrl = currentSrc.replace('portal.ptmsn.co.id', 'ims-v2.ptmsn.co.id');
-            } else if (currentSrc.includes('ims-v2.ptmsn.co.id')) {
-                this.previewImageUrl = currentSrc.replace('ims-v2.ptmsn.co.id', 'portal.ptmsn.co.id');
-            } else {
-                this.previewImageUrl = currentSrc.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://ims-v2.ptmsn.co.id');
+        // Ekstrak path file setelah domain (misal: /uploads/bukti_transfer/...)
+        const pathMatch = currentSrc.match(/https?:\/\/[^\/]+(\/.*)/);
+        const path = pathMatch ? pathMatch[1] : ('/' + currentSrc.replace(/^\/+/, ''));
+
+        const domains = [
+            'https://portal.ptmsn.co.id',
+            'https://ims-v2.ptmsn.co.id',
+            'https://ptmsn.co.id',
+            'https://www.ptmsn.co.id'
+        ];
+
+        if (step < domains.length) {
+            this.fallbackStep = step + 1;
+            for (let i = step; i < domains.length; i++) {
+                const nextUrl = domains[i] + path;
+                if (nextUrl !== currentSrc) {
+                    this.previewImageUrl = nextUrl;
+                    return;
+                }
             }
-        } else if (step === 1) {
-            this.fallbackStep = 2;
-            if (currentSrc.includes('portal.ptmsn.co.id')) {
-                this.previewImageUrl = currentSrc.replace('portal.ptmsn.co.id', 'ptmsn.co.id');
-            } else if (currentSrc.includes('ims-v2.ptmsn.co.id')) {
-                this.previewImageUrl = currentSrc.replace('ims-v2.ptmsn.co.id', 'ptmsn.co.id');
-            } else {
-                this.previewImageUrl = currentSrc.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://portal.ptmsn.co.id');
-            }
-        } else {
-            this.previewImgError = true;
         }
+
+        this.previewImgError = true;
     }
 }">
 
@@ -503,19 +505,26 @@
                                         </svg>
                                     </a>
 
-                                    @if(!empty($item->is_portal))
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 shrink-0" title="Pembayaran melalui Portal Pelanggan">
+                                    @if(($item->source_type ?? '') === 'portal' || !empty($item->is_portal))
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 shrink-0" title="Pembayaran dikirim mandiri oleh pelanggan melalui Portal Pelanggan">
                                             <svg class="w-2.5 h-2.5 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
                                             </svg>
                                             <span>Portal Pelanggan</span>
                                         </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0" title="Pembayaran di luar portal (Manual / Kasir / Kolektor)">
-                                            <svg class="w-2.5 h-2.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                    @elseif(($item->source_type ?? '') === 'cash')
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0" title="Pembayaran Tunai / Kolektor / Kasir Loket">
+                                            <svg class="w-2.5 h-2.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25" />
                                             </svg>
-                                            <span>Bukan Portal</span>
+                                            <span>Cash / Kolektor</span>
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/70 shrink-0" title="Pembayaran Transfer di-input / diverifikasi manual oleh Finance di IMS (Bukan Portal)">
+                                            <svg class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                            </svg>
+                                            <span>Transfer Manual Finance</span>
                                         </span>
                                     @endif
                                 </div>
@@ -753,19 +762,26 @@
                                         </svg>
                                     </a>
 
-                                    @if(!empty($item->is_portal))
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 shrink-0">
+                                    @if(($item->source_type ?? '') === 'portal' || !empty($item->is_portal))
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 shrink-0" title="Pembayaran dikirim mandiri oleh pelanggan melalui Portal Pelanggan">
                                             <svg class="w-2.5 h-2.5 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
                                             </svg>
                                             <span>Portal Pelanggan</span>
                                         </span>
-                                    @else
-                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
-                                            <svg class="w-2.5 h-2.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                    @elseif(($item->source_type ?? '') === 'cash')
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0" title="Pembayaran Tunai / Kolektor / Kasir Loket">
+                                            <svg class="w-2.5 h-2.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25" />
                                             </svg>
-                                            <span>Bukan Portal</span>
+                                            <span>Cash / Kolektor</span>
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/70 shrink-0" title="Pembayaran Transfer di-input / diverifikasi manual oleh Finance di IMS (Bukan Portal)">
+                                            <svg class="w-2.5 h-2.5 text-amber-600 dark:text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                            </svg>
+                                            <span>Transfer Manual Finance</span>
                                         </span>
                                     @endif
                                 </div>

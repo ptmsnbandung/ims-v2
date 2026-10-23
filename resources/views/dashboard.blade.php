@@ -26,8 +26,8 @@
             padding: 0.85rem !important;
         }
         .ims-glass-halo-banner {
-            border-radius: 18px !important;
-            padding: 0.85rem !important;
+            border-radius: 14px !important;
+            padding: 0.65rem 0.75rem !important;
         }
     }
     @media (min-width: 640px) {
@@ -98,48 +98,48 @@
         font-size: 11px !important;
     }
 
-    /* Green Halo Banner - Exact Deep Ocean Teal Gradient (#043b49 -> #054b5c -> #065b70) */
+    /* Green Halo Banner - Compact, Sleek Deep Ocean Teal Gradient */
     .ims-glass-halo-banner {
         background: linear-gradient(135deg, #043b49 0%, #054b5c 50%, #065b70 100%) !important;
         position: relative;
-        backdrop-filter: blur(20px) saturate(190%) !important;
-        -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.22) !important;
-        border-radius: 22px !important;
-        box-shadow: 0 10px 30px -5px rgba(4, 59, 73, 0.45), 0 2px 6px -1px rgba(0, 0, 0, 0.1) !important;
+        backdrop-filter: blur(16px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 4px 18px -3px rgba(4, 59, 73, 0.35), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
         color: #ffffff !important;
     }
     .ims-glass-halo-banner::before {
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.16) 0%, transparent 40%),
-                    radial-gradient(circle at 90% 80%, rgba(6, 91, 112, 0.35) 0%, transparent 45%);
+        background: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.14) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(6, 91, 112, 0.3) 0%, transparent 45%);
         pointer-events: none;
-        border-radius: 22px;
+        border-radius: 14px;
     }
 
     /* Halo Switcher Pill Capsule */
     .ims-halo-pill-container {
-        background: rgba(0, 0, 0, 0.22) !important;
+        background: rgba(0, 0, 0, 0.25) !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        border: 1px solid rgba(255, 255, 255, 0.16) !important;
         border-radius: 9999px !important;
         box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15) !important;
     }
 
     /* Halo Year Select Frosted Pill */
     .ims-halo-select {
-        background: rgba(255, 255, 255, 0.16) !important;
+        background: rgba(255, 255, 255, 0.14) !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
         border-radius: 9999px !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
         color: #ffffff !important;
         font-weight: 700 !important;
-        font-size: 11px !important;
+        font-size: 10.5px !important;
     }
     .ims-halo-select option {
         color: #0f172a !important;
@@ -152,14 +152,14 @@
         color: #043b49 !important;
         border: 1px solid rgba(255, 255, 255, 0.95) !important;
         border-radius: 9999px !important;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
-        font-weight: 800 !important;
-        font-size: 11px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+        font-weight: 700 !important;
+        font-size: 10.5px !important;
         transition: all 0.2s ease;
     }
     .ims-halo-btn-status:hover {
-        background: #e6f3f5 !important;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
+        background: #f0f8fa !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16) !important;
         transform: translateY(-0.5px);
     }
 
@@ -174,92 +174,92 @@
      x-data="{ activeTab: '{{ ($canSeeFinanceTraffic ?? false) && ($user->isCeo() || $user->isFinance()) ? 'finance' : 'charts' }}' }" 
      x-effect="if (activeTab === 'finance') { $nextTick(() => window.dispatchEvent(new Event('resize'))); }">
     
-    <!-- Top Green Halo Glass Welcome Bar -->
-    <div class="ims-glass-halo-banner relative overflow-hidden py-3 px-3.5 sm:py-3.5 sm:px-5">
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <!-- Top Green Halo Glass Welcome Bar (Compact & Sleek) -->
+    <div class="ims-glass-halo-banner relative overflow-hidden py-2 px-3 sm:py-2.5 sm:px-4">
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
             <!-- Left: Profile & Welcome -->
-            <div class="flex items-center gap-3 min-w-0">
-                <!-- Avatar Initial Pill (Pristine White Circle with Deep Teal Text) -->
+            <div class="flex items-center gap-2.5 min-w-0">
+                <!-- Avatar Initial Pill (Compact Circle) -->
                 @if(!empty($user->foto_url))
-                    <img src="{{ $user->foto_url }}" alt="{{ $user->nama }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border border-white/90 shadow-md shrink-0">
+                    <img src="{{ $user->foto_url }}" alt="{{ $user->nama }}" class="w-8 h-8 rounded-full object-cover border border-white/90 shadow-sm shrink-0">
                 @else
-                    <div class="ims-halo-avatar w-9 h-9 sm:w-10 sm:h-10 rounded-full font-black text-xs sm:text-sm flex items-center justify-center shadow-md border border-white/90 shrink-0" style="background-color: #ffffff !important; color: #043b49 !important;">
+                    <div class="ims-halo-avatar w-8 h-8 rounded-full font-black text-xs flex items-center justify-center shadow-sm border border-white/90 shrink-0" style="background-color: #ffffff !important; color: #043b49 !important;">
                         {{ strtoupper(substr($user->nama ?? $user->name ?? $user->username ?? 'U', 0, 1)) }}
                     </div>
                 @endif
                 
                 <div class="min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <h2 class="text-xs sm:text-sm md:text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <h2 class="text-xs sm:text-[13px] font-bold text-white tracking-tight flex items-center gap-1">
                             <span>Halo, {{ $user->nama }}!</span>
-                            <span>👋</span>
+                            <span class="text-xs">👋</span>
                         </h2>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/30 backdrop-blur-md">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[8.5px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/30 backdrop-blur-md">
                             {{ $user->nama_level }}
                         </span>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#022832]/60 text-teal-100 border border-teal-400/30">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[8.5px] font-semibold bg-[#022832]/60 text-teal-100 border border-teal-400/30">
                             <span class="w-1.5 h-1.5 rounded-full bg-teal-300 animate-pulse"></span>
                             Online
                         </span>
                     </div>
-                    <p class="text-[10.5px] sm:text-xs text-teal-100/90 line-clamp-1 sm:line-clamp-none mt-0.5 leading-snug font-medium">
+                    <p class="text-[9.5px] sm:text-[10px] text-teal-100/80 line-clamp-1 sm:line-clamp-none mt-0.5 leading-snug font-normal">
                         {{ $user->role_description }}
                     </p>
                 </div>
             </div>
 
             <!-- Right: View Tabs, Year Filter & Status Layanan -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0 mt-1 sm:mt-0">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0 mt-0.5 sm:mt-0">
                 <!-- View Tabs Switcher Pill Container -->
                 <div class="ims-halo-pill-container w-full sm:w-auto flex items-center justify-between sm:justify-start"
-                     style="height: 36px; padding: 3px; box-sizing: border-box;">
+                     style="height: 30px; padding: 2px; box-sizing: border-box;">
                     @if($canSeeFinanceTraffic ?? false)
                         <button type="button" 
                                 @click="activeTab = 'finance'" 
                                 :style="activeTab === 'finance' 
-                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
-                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                                class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-white">
-                            <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'finance' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10.5px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); transition: all 0.15s ease;' 
+                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10.5px; font-weight: 500; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                                class="flex-1 sm:flex-initial px-2.5 sm:px-3 hover:text-white">
+                            <svg class="w-3 h-3 shrink-0" :style="activeTab === 'finance' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             <span :style="activeTab === 'finance' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Traffic Keuangan</span>
                         </button>
                     @endif
                     <button type="button" 
                             @click="activeTab = 'charts'" 
                             :style="activeTab === 'charts' 
-                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
-                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                            class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-white">
-                        <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'charts' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10.5px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10.5px; font-weight: 500; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                            class="flex-1 sm:flex-initial px-2.5 sm:px-3 hover:text-white">
+                        <svg class="w-3 h-3 shrink-0" :style="activeTab === 'charts' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         <span :style="activeTab === 'charts' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Grafik Utama</span>
                     </button>
                     <button type="button" 
                             @click="activeTab = 'tables'" 
                             :style="activeTab === 'tables' 
-                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 11px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.22); transition: all 0.15s ease;' 
-                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 11px; font-weight: 600; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                            class="flex-1 sm:flex-initial px-3 sm:px-3.5 hover:text-white">
-                        <svg class="w-3.5 h-3.5 shrink-0" :style="activeTab === 'tables' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10.5px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10.5px; font-weight: 500; border: none; cursor: pointer; transition: all 0.15s ease;'"
+                            class="flex-1 sm:flex-initial px-2.5 sm:px-3 hover:text-white">
+                        <svg class="w-3 h-3 shrink-0" :style="activeTab === 'tables' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         <span :style="activeTab === 'tables' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Data Pendaftaran</span>
                     </button>
                 </div>
 
                 <!-- Secondary Actions: Year Selector & Status Layanan -->
-                <div class="grid grid-cols-2 sm:flex items-center gap-2 w-full sm:w-auto">
+                <div class="grid grid-cols-2 sm:flex items-center gap-1.5 w-full sm:w-auto">
                     <!-- Year Selector Form in Matching Glass Pill -->
                     <form action="{{ route('dashboard') }}" method="GET" class="m-0 p-0 w-full sm:w-auto flex">
-                        <div class="relative w-full sm:w-auto flex items-center h-[36px]">
+                        <div class="relative w-full sm:w-auto flex items-center h-[30px]">
                             <select name="tahun" onchange="this.form.submit()" 
-                                    class="ims-halo-select focus:ring-2 focus:ring-white/40"
-                                    style="height: 36px; padding-left: 14px; padding-right: 28px; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; cursor: pointer; outline: none; width: 100%; text-align: center; text-align-last: center;">
+                                    class="ims-halo-select focus:ring-1 focus:ring-white/40"
+                                    style="height: 30px; padding-left: 12px; padding-right: 24px; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; cursor: pointer; outline: none; width: 100%; text-align: center; text-align-last: center;">
                                 @foreach($availableYears as $year)
                                     <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} style="color: #0f172a; background: #ffffff;">
                                         Tahun {{ $year }}
                                     </option>
                                 @endforeach
                             </select>
-                            <span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/90 flex items-center justify-center">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/90 flex items-center justify-center">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M6 9l6 6 6-6"/>
                                 </svg>
                             </span>
@@ -268,7 +268,7 @@
 
                     <!-- Status Layanan Button (Pristine White Pill with Deep Teal Text) -->
                     <a href="{{ route('teknik.tiket') }}" 
-                       class="ims-halo-btn-status px-3.5 flex items-center justify-center gap-1.5 transition no-underline h-[36px]">
+                       class="ims-halo-btn-status px-3 flex items-center justify-center gap-1.5 transition no-underline h-[30px]">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#055366] animate-pulse"></span>
                         <span class="truncate">Status Layanan</span>
                     </a>

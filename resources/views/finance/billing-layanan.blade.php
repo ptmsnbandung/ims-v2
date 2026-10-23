@@ -849,11 +849,25 @@
                                 <!-- Top Tier: Main Status / Action -->
                                 @if($isMidtrans)
                                     @if($inv->status_bill_lay == '15')
-                                    <div class="h-6 w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] font-bold select-none" title="Tagihan Midtrans Lunas">
-                                        <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                        </svg>
-                                        <span>Lunas</span>
+                                    <div class="h-6 w-full flex items-center gap-1">
+                                        <div class="flex-1 h-full inline-flex items-center justify-center gap-1 px-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] font-bold select-none" title="Tagihan Midtrans Lunas">
+                                            <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                            <span>Lunas</span>
+                                        </div>
+                                        @if(!auth()->user()?->isCeo())
+                                        <button type="button"
+                                                @click="openRollbackModalFromEl($el)"
+                                                data-kode="{{ $inv->kode_billing_layanan }}"
+                                                data-nama="{{ $inv->nama_pelanggan }}"
+                                                title="Batalkan Pembayaran / Salah Approve (Revert ke Belum Bayar)"
+                                                class="h-full w-6 shrink-0 inline-flex items-center justify-center rounded-md bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 transition shadow-2xs cursor-pointer group">
+                                            <svg class="w-3 h-3 transition-transform group-hover:-rotate-45" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                                            </svg>
+                                        </button>
+                                        @endif
                                     </div>
                                     @elseif($isSnapExpired)
                                     <div class="h-6 w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 text-[10px] font-bold select-none" title="Link Pembayaran Midtrans Expired">
@@ -896,11 +910,25 @@
                                         <span>Approve</span>
                                     </button>
                                     @else
-                                    <div class="h-6 w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] font-bold select-none">
-                                        <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                        </svg>
-                                        <span>Lunas</span>
+                                    <div class="h-6 w-full flex items-center gap-1">
+                                        <div class="flex-1 h-full inline-flex items-center justify-center gap-1 px-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] font-bold select-none" title="Tagihan Lunas">
+                                            <svg class="w-3 h-3 flex-shrink-0 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                            <span>Lunas</span>
+                                        </div>
+                                        @if(!auth()->user()?->isCeo())
+                                        <button type="button"
+                                                @click="openRollbackModalFromEl($el)"
+                                                data-kode="{{ $inv->kode_billing_layanan }}"
+                                                data-nama="{{ $inv->nama_pelanggan }}"
+                                                title="Batalkan Pembayaran / Salah Approve (Revert ke Belum Bayar)"
+                                                class="h-full w-6 shrink-0 inline-flex items-center justify-center rounded-md bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 transition shadow-2xs cursor-pointer group">
+                                            <svg class="w-3 h-3 transition-transform group-hover:-rotate-45" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                                            </svg>
+                                        </button>
+                                        @endif
                                     </div>
                                     @endif
                                 @endif
@@ -1304,9 +1332,23 @@
                     <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                         @if($isMidtrans)
                             @if($inv->status_bill_lay == '15')
-                            <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
-                                <span>✓ Lunas</span>
-                            </span>
+                            <div class="flex items-center gap-1.5 w-full">
+                                <span class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
+                                    <span>✓ Lunas</span>
+                                </span>
+                                @if(!auth()->user()?->isCeo())
+                                <button type="button"
+                                        @click="openRollbackModalFromEl($el)"
+                                        data-kode="{{ $inv->kode_billing_layanan }}"
+                                        data-nama="{{ $inv->nama_pelanggan }}"
+                                        title="Batalkan Pembayaran (Salah Approve)"
+                                        class="inline-flex items-center justify-center p-2.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 text-xs font-bold transition cursor-pointer shrink-0">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                                    </svg>
+                                </button>
+                                @endif
+                            </div>
                             @elseif($isSnapExpired)
                             <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 text-xs font-bold">
                                 <span>Expired</span>
@@ -1331,9 +1373,23 @@
                                 <span>Approve</span>
                             </button>
                             @else
-                            <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
-                                <span>✓ Lunas</span>
-                            </span>
+                            <div class="flex items-center gap-1.5 w-full">
+                                <span class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 text-xs font-bold">
+                                    <span>✓ Lunas</span>
+                                </span>
+                                @if(!auth()->user()?->isCeo())
+                                <button type="button"
+                                        @click="openRollbackModalFromEl($el)"
+                                        data-kode="{{ $inv->kode_billing_layanan }}"
+                                        data-nama="{{ $inv->nama_pelanggan }}"
+                                        title="Batalkan Pembayaran (Salah Approve)"
+                                        class="inline-flex items-center justify-center p-2.5 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 text-xs font-bold transition cursor-pointer shrink-0">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                                    </svg>
+                                </button>
+                                @endif
+                            </div>
                             @endif
                         @endif
 
@@ -1850,16 +1906,29 @@
                 </div>
             </div>
 
-            <div class="bg-slate-50 dark:bg-slate-950/80 px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div class="bg-slate-50 dark:bg-slate-950/80 px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                 <a :href="'{{ url('/finance/dokumen/invoice') }}/' + encodeURIComponent(detailData.invoice?.kode_billing_layanan || '')" target="_blank" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm shadow-blue-500/20">
                     <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                     </svg>
                     <span>Buka & Cetak Form Invoice (PDF)</span>
                 </a>
-                <button type="button" @click="detailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer">
-                    Tutup
-                </button>
+                <div class="flex items-center gap-2">
+                    @if(!auth()->user()?->isCeo())
+                    <button type="button"
+                            x-show="detailData.invoice?.status_bill_lay == '15'"
+                            @click="detailModalOpen = false; openRollbackModal(detailData.invoice?.kode_billing_layanan, detailData.invoice?.nama_pelanggan)"
+                            class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 dark:bg-rose-500/15 dark:hover:bg-rose-600 dark:text-rose-400 dark:hover:text-white dark:border-rose-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                        </svg>
+                        <span>Batalkan Pembayaran</span>
+                    </button>
+                    @endif
+                    <button type="button" @click="detailModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2242,19 +2311,27 @@
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Rollback Status Tagihan</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">Kembalikan invoice ke status Draft / Unpublish</p>
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Batalkan Pembayaran</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Rollback pelunasan jika salah approve</p>
                             </div>
                         </div>
-                        <button type="button" @click="rollbackModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
+                        <button type="button" @click="rollbackModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg cursor-pointer">&times;</button>
                     </div>
 
                     <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-xs text-rose-800 dark:text-rose-300">
-                        Apakah Anda yakin ingin me-rollback status invoice <strong class="text-slate-900 dark:text-white font-mono" x-text="rollbackKodeBilling"></strong> milik <strong class="text-slate-900 dark:text-white" x-text="rollbackNamaPelanggan"></strong>? Riwayat pembayaran yang sudah diverifikasi akan dikosongkan kembali ke status draft.
+                        Apakah Anda yakin ingin membatalkan status lunas invoice <strong class="text-slate-900 dark:text-white font-mono" x-text="rollbackKodeBilling"></strong> milik <strong class="text-slate-900 dark:text-white" x-text="rollbackNamaPelanggan"></strong>?
+                        <div class="mt-2 text-[11px] text-rose-700 dark:text-rose-400 leading-relaxed">
+                            Status invoice akan dikembalikan ke <strong>Belum Bayar</strong> dan riwayat pelunasan akan direset sehingga invoice dapat ditinjau atau diapprove ulang.
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alasan Pembatalan (Opsional):</label>
+                        <input type="text" name="alasan" placeholder="Contoh: Salah klik approve / Bukti transfer salah..." class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:border-rose-500 focus:ring-1 focus:ring-rose-500">
                     </div>
                 </div>
 
@@ -2262,8 +2339,11 @@
                     <button type="button" @click="rollbackModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer">
                         Batal
                     </button>
-                    <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/25 cursor-pointer">
-                        Ya, Rollback Invoice
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/25 cursor-pointer flex items-center gap-1.5">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                        </svg>
+                        <span>Ya, Batalkan Pembayaran</span>
                     </button>
                 </div>
             </form>
@@ -2603,6 +2683,18 @@
                 </button>
 
                 <div class="flex items-center gap-2">
+                    @if(!auth()->user()?->isCeo())
+                    <button type="button"
+                            x-show="proofStatus === 'approved'"
+                            @click="proofModalOpen = false; openRollbackModal(proofKodeBilling, proofNamaPelanggan)"
+                            class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg shadow-rose-500/20 flex items-center gap-1.5 transition cursor-pointer">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                        </svg>
+                        <span>Batalkan Approval Pembayaran</span>
+                    </button>
+                    @endif
+
                     <button type="button"
                             x-show="proofStatus !== 'approved'"
                             @click="proofModalOpen = false; openPayModal(proofKodeBilling, proofInternet, proofNamaPelanggan, proofNominal, '2', proofDestinationBank)"

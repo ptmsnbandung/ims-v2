@@ -883,6 +883,109 @@ class FinanceController extends Controller
     }
 
     /**
+     * Membatalkan Pembayaran (Rollback Approval) Invoice Bulanan
+     */
+    public function rollbackBillingLayanan(Request $request, ?string $kodeBilling = null): RedirectResponse
+    {
+        if (Auth::user()?->isCeo()) {
+            return redirect()->back()->with('error', 'Akses ditolak. CEO hanya memiliki izin view.');
+        }
+
+        $user = Auth::user()?->nama ?? Auth::user()?->name ?? 'FINANCE';
+        $userUpdate = mb_substr($user, 0, 50);
+        $decodedKode = $request->input('kode_billing') ? trim($request->input('kode_billing')) : urldecode($kodeBilling ?? '');
+        $alasan = trim((string) $request->input('alasan', ''));
+
+        if (empty($decodedKode)) {
+            return redirect()->back()->with('error', 'Kode billing tidak valid.');
+        }
+
+        try {
+            $inv = DB::table('trx_billing_layanan')->where('kode_billing_layanan', $decodedKode)->first();
+            if (!$inv) {
+                return redirect()->back()->with('error', 'Invoice tidak ditemukan.');
+            }
+
+            if ((string) $inv->status_bill_lay !== '15') {
+                return redirect()->back()->with('error', "Invoice {$decodedKode} belum lunas atau bukan berstatus PAID (Lunas).");
+            }
+
+            // Kembalikan status tagihan: jika Midtrans kembalikan ke '14' (waiting payment), jika manual/transfer ke '13' (publish billing)
+            $pType = (string) ($inv->payment_type ?? '1');
+            $newStatus = ($pType === '1') ? '14' : '13';
+
+            $noteLog = "Pembatalan pembayaran (Rollback approval) oleh {$userUpdate}" . ($alasan !== '' ? ". Alasan: {$alasan}" : "");
+
+            DB::beginTransaction();
+
+            $updateData = [
+                'status_bill_lay' => $newStatus,
+                'payment_paid' => null,
+                'amount_paid' => null,
+                'payment_cancel' => Carbon::now()->toDateTimeString(),
+                'payment_respond_cancel' => $noteLog,
+                'date_update' => Carbon::now()->toDateTimeString(),
+                'user_update' => $userUpdate,
+            ];
+
+            DB::table('trx_billing_layanan')
+                ->where('kode_billing_layanan', $decodedKode)
+                ->update($updateData);
+
+            DB::table('trx_billing_layanan_log')->insert([
+                'kode_billing_lay_log' => 'LOG-' . uniqid(),
+                'kode_billing_layanan' => $decodedKode,
+                'status_bill_lay' => $newStatus,
+                'note_billing_lay' => $noteLog,
+                'date_create' => Carbon::now()->toDateTimeString(),
+                'user_create' => $userUpdate,
+                'hide' => '0',
+            ]);
+
+            // Kembalikan payment_confirmations jika ada
+            if (Schema::hasTable('payment_confirmations')) {
+                DB::table('payment_confirmations')
+                    ->where('kode_billing_layanan', $decodedKode)
+                    ->orWhere('kode_billing_layanan', str_replace('/', '-', $decodedKode))
+                    ->orWhere('kode_billing_layanan', str_replace('-', '/', $decodedKode))
+                    ->update([
+                        'status' => 'pending',
+                        'verified_at' => null,
+                        'admin_notes' => "Approval dibatalkan oleh {$userUpdate}" . ($alasan !== '' ? ": {$alasan}" : ""),
+                        'updated_at' => Carbon::now()->toDateTimeString(),
+                    ]);
+            }
+
+            // Cross-database update ke database ptmsn jika ada
+            try {
+                $escapedKode = addslashes($decodedKode);
+                $escapedAlt1 = addslashes(str_replace('/', '-', $decodedKode));
+                $escapedAlt2 = addslashes(str_replace('-', '/', $decodedKode));
+                $nowStr = Carbon::now()->toDateTimeString();
+                $adminNoteStr = addslashes("Approval dibatalkan oleh {$userUpdate}" . ($alasan !== '' ? ": {$alasan}" : ""));
+
+                DB::statement("
+                    UPDATE ptmsn.payment_confirmations 
+                    SET status = 'pending',
+                        verified_at = NULL,
+                        admin_notes = '{$adminNoteStr}',
+                        updated_at = '{$nowStr}'
+                    WHERE kode_billing_layanan IN ('{$escapedKode}', '{$escapedAlt1}', '{$escapedAlt2}')
+                ");
+            } catch (\Throwable $e) {
+                // Ignore jika ptmsn bukan database lokal
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', "Pembayaran invoice {$decodedKode} berhasil dibatalkan. Status dikembalikan ke Belum Bayar.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal membatalkan pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Penyesuaian Harga, Potongan/Diskon, dan PPN Pelanggan (trx_batchjob_register)
      */
     public function adjustCustomerPricing(Request $request, ?string $nomorInternet = null): RedirectResponse
@@ -987,40 +1090,6 @@ class FinanceController extends Controller
         }
     }
 
-    /**
-     * Rollback Status Tagihan ke Draft / Generating
-     */
-    public function rollbackBillingLayanan(Request $request, ?string $kodeBilling = null): RedirectResponse
-    {
-        $user = Auth::user()?->nama ?? 'FINANCE';
-        $decodedKode = $request->input('kode_billing') ? trim($request->input('kode_billing')) : urldecode($kodeBilling ?? '');
-
-        try {
-            DB::table('trx_billing_layanan')
-                ->where('kode_billing_layanan', $decodedKode)
-                ->update([
-                    'status_bill_lay' => '12', // Auto publish / draft
-                    'payment_paid' => null,
-                    'amount_paid' => null,
-                    'date_update' => Carbon::now()->toDateTimeString(),
-                    'user_update' => $user,
-                ]);
-
-            DB::table('trx_billing_layanan_log')->insert([
-                'kode_billing_lay_log' => 'LOG-' . uniqid(),
-                'kode_billing_layanan' => $decodedKode,
-                'status_bill_lay' => '12',
-                'note_billing_lay' => "Invoice status rolled back to Draft by {$user}",
-                'date_create' => Carbon::now()->toDateTimeString(),
-                'user_create' => $user,
-                'hide' => '0',
-            ]);
-
-            return redirect()->back()->with('success', "Status invoice {$decodedKode} berhasil di-rollback.");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal rollback invoice: ' . $e->getMessage());
-        }
-    }
 
     /**
      * Hapus Tagihan Billing Layanan

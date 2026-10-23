@@ -2479,6 +2479,20 @@ class TeknikController extends Controller
             $query->where('kode_kategori_bandwith', $request->layanan);
         }
 
+        // Filter: Group Layanan
+        if ($request->filled('group_layanan')) {
+            $group = $request->group_layanan;
+            if (strtoupper($group) === 'MEDIANET') {
+                $query->where(function ($q) {
+                    $q->where('group_layanan', 'MEDIANET')
+                      ->orWhereNull('group_layanan')
+                      ->orWhere('group_layanan', '');
+                });
+            } else {
+                $query->where('group_layanan', $group);
+            }
+        }
+
         // Filter: Nomor Internet / Nama Pelanggan
         if ($request->filled('search')) {
             $search = $request->search;
@@ -2574,15 +2588,28 @@ class TeknikController extends Controller
                 ->get()
             : collect();
 
+        // Master data group layanan dari data view_batchjob
+        $groupLayananList = DB::table('view_batchjob')
+            ->whereNotNull('group_layanan')
+            ->where('group_layanan', '!=', '')
+            ->distinct()
+            ->orderBy('group_layanan')
+            ->pluck('group_layanan');
+
+        if (!$groupLayananList->contains('MEDIANET')) {
+            $groupLayananList->prepend('MEDIANET');
+        }
+
         return view('teknik.pelanggan', [
             'user' => $request->user(),
             'pelanggan' => $pelanggan,
             'layananList' => $layananList,
+            'groupLayananList' => $groupLayananList,
             'statusList' => $statusList,
             'wilayahList' => $wilayahList,
             'paketList' => $paketList,
             'bwCounts' => $bwCounts,
-            'filters' => array_merge($request->only(['layanan', 'search', 'alamat', 'wilayah', 'per_page']), ['status' => $statusFilter]),
+            'filters' => array_merge($request->only(['layanan', 'group_layanan', 'search', 'alamat', 'wilayah', 'per_page']), ['status' => $statusFilter]),
         ]);
     }
 
@@ -2615,6 +2642,19 @@ class TeknikController extends Controller
 
         if ($request->filled('layanan')) {
             $query->where('kode_kategori_bandwith', $request->layanan);
+        }
+
+        if ($request->filled('group_layanan')) {
+            $group = $request->group_layanan;
+            if (strtoupper($group) === 'MEDIANET') {
+                $query->where(function ($q) {
+                    $q->where('group_layanan', 'MEDIANET')
+                      ->orWhereNull('group_layanan')
+                      ->orWhere('group_layanan', '');
+                });
+            } else {
+                $query->where('group_layanan', $group);
+            }
         }
 
         if ($request->filled('search')) {

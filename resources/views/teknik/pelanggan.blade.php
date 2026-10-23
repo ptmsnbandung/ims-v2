@@ -21,6 +21,7 @@
          
          // Filter & Search states
          layananFilter: '{{ $filters['layanan'] ?? '' }}',
+         groupLayananFilter: '{{ $filters['group_layanan'] ?? '' }}',
          searchQuery: '{{ $filters['search'] ?? '' }}',
          alamatQuery: '{{ $filters['alamat'] ?? '' }}',
          statusFilter: '{{ $filters['status'] ?? '20' }}',
@@ -48,6 +49,7 @@
              if (!url) {
                  const params = new URLSearchParams();
                  if (this.layananFilter) params.append('layanan', this.layananFilter);
+                 if (this.groupLayananFilter) params.append('group_layanan', this.groupLayananFilter);
                  if (this.searchQuery) params.append('search', this.searchQuery);
                  if (this.alamatQuery) params.append('alamat', this.alamatQuery);
                  if (this.statusFilter) params.append('status', this.statusFilter);
@@ -95,6 +97,7 @@
              this.searchQuery = '';
              this.alamatQuery = '';
              this.layananFilter = '';
+             this.groupLayananFilter = '';
              this.statusFilter = '20';
              this.wilayahFilter = '';
              this.perPageFilter = '10';
@@ -527,8 +530,8 @@
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
         <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm" @submit.prevent="fetchData()">
-            <!-- 5 Kolom Filter Responsif -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            <!-- 6 Kolom Filter Responsif -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
                 
                 <!-- 1. Dropdown Semua Layanan -->
                 <div>
@@ -550,7 +553,23 @@
                     </select>
                 </div>
 
-                <!-- 2. Search No Internet / Nama / NIK / HP -->
+                <!-- 2. Dropdown Group Layanan -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Group Layanan</label>
+                    <select name="group_layanan" 
+                            x-model="groupLayananFilter"
+                            @change="fetchData()"
+                            class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition cursor-pointer">
+                        <option value="">SEMUA GROUP</option>
+                        @foreach($groupLayananList ?? [] as $group)
+                            <option value="{{ $group }}" {{ ($filters['group_layanan'] ?? '') == $group ? 'selected' : '' }}>
+                                {{ $group }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- 3. Search No Internet / Nama / NIK / HP -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cari Pelanggan</label>
                     <div class="relative">
@@ -569,7 +588,7 @@
                     </div>
                 </div>
 
-                <!-- 3. Input Alamat -->
+                <!-- 4. Input Alamat -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Alamat</label>
                     <div class="relative">
@@ -589,7 +608,7 @@
                     </div>
                 </div>
 
-                <!-- 4. Dropdown Semua Status -->
+                <!-- 5. Dropdown Semua Status -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
                     <select name="status" 

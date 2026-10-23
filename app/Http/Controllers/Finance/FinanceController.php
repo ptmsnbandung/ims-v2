@@ -923,7 +923,14 @@ class FinanceController extends Controller
                 'payment_paid' => null,
                 'amount_paid' => null,
                 'payment_cancel' => Carbon::now()->toDateTimeString(),
-                'payment_respond_cancel' => $noteLog,
+                'payment_respond_cancel' => json_encode([
+                    'status' => 'cancelled',
+                    'action' => 'rollback_approval',
+                    'note' => $noteLog,
+                    'user' => $userUpdate,
+                    'reason' => $alasan ?: null,
+                    'cancelled_at' => Carbon::now()->toDateTimeString(),
+                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                 'date_update' => Carbon::now()->toDateTimeString(),
                 'user_update' => $userUpdate,
             ];
@@ -3651,7 +3658,7 @@ class FinanceController extends Controller
                 if (!empty($midtrans['payment_post'])) {
                     DB::table('trx_billing_layanan')->where('kode_billing_layanan', $kodeBilling)->update([
                         'payment_post' => $midtrans['payment_post'],
-                        'payment_respond_post' => $midtrans['payment_respond_post'] ?? '-',
+                        'payment_respond_post' => $midtrans['payment_respond_post'] ?? null,
                         'expiry' => $midtrans['expiry'] ?? null,
                     ]);
                 }

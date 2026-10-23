@@ -1,8156 +1,4073 @@
 <!DOCTYPE html>
-
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
-
 <head>
-
     <meta charset="utf-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
     <meta name="view-transition" content="same-origin">
-
-
 
     <title>{{ isset($title) && $title ? ($title . ' | IMSv2 | PT MEDIA SOLUSI NETWORK') : 'IMSv2 | PT MEDIA SOLUSI NETWORK' }}</title>
 
-
-
     <!-- Compact Density Base Scale (~80% Browser Zoom Scale) -->
-
     <style>
-
         [x-cloak] {
-
             display: none !important;
-
         }
-
-
 
         html {
-
             font-size: 13px !important;
-
             scroll-behavior: smooth;
-
         }
-
-
+        @media (max-width: 639.98px) {
+            html {
+                font-size: 14.5px !important;
+            }
+        }
 
         /* Seamless Modern Page Transition & Progress Indicator */
-
         #ims-page-loader {
-
             position: fixed;
-
             top: 0;
-
             left: 0;
-
             height: 3px;
-
             width: 0%;
-
             background: linear-gradient(90deg, #00a8b5 0%, #0891b2 50%, #0284c7 100%);
-
             z-index: 99999;
-
             transition: width 0.22s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease;
-
             box-shadow: 0 0 10px rgba(8, 145, 178, 0.8), 0 0 4px rgba(2, 132, 199, 0.6);
-
             pointer-events: none;
-
             opacity: 0;
-
         }
-
         #ims-page-loader.active {
-
             opacity: 1;
-
             width: 78%;
-
         }
-
         #ims-page-loader.finish {
-
             width: 100%;
-
             opacity: 0;
-
         }
-
-
 
         /* Smooth Content Entrance Animation */
-
         @keyframes imsPageEnter {
-
             0% {
-
                 opacity: 0;
-
                 transform: translateY(5px);
-
             }
-
             100% {
-
                 opacity: 1;
-
                 transform: translateY(0);
-
             }
-
         }
-
         .ims-page-enter {
-
             animation: imsPageEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-
             will-change: opacity, transform;
-
         }
-
-
 
         /* Isolated View Transition API (Navbar & Sidebar stay rock solid without flashing) */
-
         @view-transition {
-
             navigation: auto;
-
         }
-
         header.ims-top-navbar {
-
             view-transition-name: ims-header;
-
         }
-
         aside.ims-sidebar {
-
             view-transition-name: ims-sidebar;
-
         }
-
         main.ims-page-enter {
-
             view-transition-name: ims-main-content;
-
         }
-
         ::view-transition-old(ims-main-content) {
-
             animation: 90ms cubic-bezier(0.4, 0, 1, 1) both imsFadeOut;
-
         }
-
         ::view-transition-new(ims-main-content) {
-
             animation: 200ms cubic-bezier(0, 0, 0.2, 1) both imsFadeInUp;
-
         }
-
         @keyframes imsFadeOut {
-
             from { opacity: 1; transform: translateY(0); }
-
             to { opacity: 0; transform: translateY(-4px); }
-
         }
-
         @keyframes imsFadeInUp {
-
             from { opacity: 0; transform: translateY(6px); }
-
             to { opacity: 1; transform: translateY(0); }
-
         }
-
-        html {
-
-            font-size: 13px !important;
-
-        }
-
-        @media (max-width: 639.98px) {
-
-            html {
-
-                font-size: 14.5px !important;
-
-            }
-
-        }
-
-
 
         /* Custom Elegant Blue Scrollbar menempel di ujung kanan */
-
         .ims-main-scroll::-webkit-scrollbar,
-
         ::-webkit-scrollbar {
-
             width: 7px;
-
             height: 7px;
-
         }
-
         .ims-main-scroll::-webkit-scrollbar-button,
-
         ::-webkit-scrollbar-button {
-
             display: none !important;
-
             width: 0 !important;
-
             height: 0 !important;
-
         }
-
         .ims-main-scroll::-webkit-scrollbar-track,
-
         ::-webkit-scrollbar-track {
-
             background: transparent;
-
         }
-
         .ims-main-scroll::-webkit-scrollbar-thumb,
-
         ::-webkit-scrollbar-thumb {
-
             background: #0284c7;
-
             border-radius: 9999px;
-
             border: 1px solid rgba(255, 255, 255, 0.4);
-
         }
-
         .ims-main-scroll::-webkit-scrollbar-thumb:hover,
-
         ::-webkit-scrollbar-thumb:hover {
-
             background: #0369a1;
-
         }
-
         * {
-
             scrollbar-width: thin;
-
             scrollbar-color: #0284c7 transparent;
-
         }
-
-
 
         /* Top Navbar - Mobile: Fixed di atas (diam tidak bergerak saat scroll) */
-
         @media (max-width: 767.98px) {
-
             header.ims-top-navbar {
-
                 position: fixed !important;
-
                 top: 0 !important;
-
                 left: 0 !important;
-
                 right: 0 !important;
-
                 width: 100% !important;
-
                 z-index: 45 !important;
-
                 background: linear-gradient(108deg, #032b35 0%, #043f4e 28%, #065b70 60%, #087d94 85%, #009aa9 100%) !important;
-
                 border-bottom: 1px solid rgba(8, 125, 148, 0.45) !important;
-
             }
-
             .ims-top-nav-spacer {
-
                 display: block !important;
-
                 height: 3.5rem !important; /* 56px */
-
                 flex-shrink: 0 !important;
-
             }
-
             header.ims-top-navbar .ims-nav-title {
-
                 color: #ffffff !important;
-
             }
-
             header.ims-top-navbar .ims-nav-sub {
-
                 color: #c6edf3 !important;
-
             }
-
             header.ims-top-navbar .ims-nav-btn {
-
                 background: rgba(255, 255, 255, 0.16) !important;
-
                 border: 1px solid rgba(255, 255, 255, 0.25) !important;
-
                 color: #ffffff !important;
-
             }
-
             header.ims-top-navbar .ims-nav-btn svg {
-
                 color: #ffffff !important;
-
             }
-
             header.ims-top-navbar .ims-nav-btn:hover {
-
                 background: rgba(255, 255, 255, 0.28) !important;
-
             }
-
         }
-
-
 
         /* Top Navbar - Desktop: Bersih, Tajam, Dual Mode (Light & Dark) */
-
         @media (min-width: 768px) {
-
             .ims-top-nav-spacer {
-
                 display: none !important;
-
             }
-
             header.ims-top-navbar {
-
                 position: sticky !important;
-
                 top: 0 !important;
-
                 z-index: 45 !important;
-
                 background: #ffffff !important;
-
                 border-bottom: 1px solid #e2e8f0 !important;
-
             }
-
             html.dark header.ims-top-navbar {
-
                 background: #0f172a !important;
-
                 border-bottom: 1px solid #1e293b !important;
-
             }
-
             header.ims-top-navbar .ims-nav-title {
-
                 color: #0f172a !important;
-
             }
-
             html.dark header.ims-top-navbar .ims-nav-title {
-
                 color: #f8fafc !important;
-
             }
-
             header.ims-top-navbar .ims-nav-sub {
-
                 color: #64748b !important;
-
             }
-
             html.dark header.ims-top-navbar .ims-nav-sub {
-
                 color: #94a3b8 !important;
-
             }
-
             header.ims-top-navbar .ims-nav-btn {
-
                 background: #f8fafc !important;
-
                 border: 1px solid #e2e8f0 !important;
-
                 color: #475569 !important;
-
             }
-
             html.dark header.ims-top-navbar .ims-nav-btn {
-
                 background: #1e293b !important;
-
                 border: 1px solid #334155 !important;
-
                 color: #cbd5e1 !important;
-
             }
-
             header.ims-top-navbar .ims-nav-btn svg {
-
                 color: #475569 !important;
-
             }
-
             html.dark header.ims-top-navbar .ims-nav-btn svg {
-
                 color: #cbd5e1 !important;
-
             }
-
             header.ims-top-navbar .ims-nav-btn:hover {
-
                 background: #f1f5f9 !important;
-
             }
-
             html.dark header.ims-top-navbar .ims-nav-btn:hover {
-
                 background: #334155 !important;
-
             }
-
         }
-
-
 
         /* Notifikasi Modal Dropdown Responsif Mobile & Desktop */
-
         @media (max-width: 639.98px) {
-
             .ims-notif-dropdown {
-
                 position: fixed !important;
-
                 top: 58px !important;
-
                 left: 10px !important;
-
                 right: 10px !important;
-
                 width: auto !important;
-
                 max-width: calc(100vw - 20px) !important;
-
             }
-
         }
-
         @media (min-width: 640px) {
-
             .ims-notif-dropdown {
-
                 position: absolute !important;
-
                 top: 100% !important;
-
                 right: 0 !important;
-
                 left: auto !important;
-
                 margin-top: 0.5rem !important;
-
                 width: 410px !important;
-
                 max-width: calc(100vw - 1.5rem) !important;
-
             }
-
         }
-
     </style>
 
-
-
     <!-- Anti-flicker Theme Initialization (Default to Light Mode) -->
-
     <script>
-
         if (localStorage.getItem('theme') === 'dark') {
-
             document.documentElement.classList.add('dark');
-
         } else {
-
             document.documentElement.classList.remove('dark');
-
         }
-
     </script>
 
-
-
     <!-- Favicon -->
-
     <link rel="icon" type="image/png" href="{{ asset('assets/images/logo.png') }}">
-
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
-
     <link rel="apple-touch-icon" href="{{ asset('assets/images/logo.png') }}">
 
-
-
     <!-- Scripts & Styles -->
-
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-
-
     @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin']))
-
     <script>
-
         function financeNotificationBell() {
-
             return {
-
                 open: false,
-
                 isLoading: false,
-
                 hasNewAlert: false,
-
                 payments: [],
-
                 readIds: [],
-
                 pollTimer: null,
 
-
-
                 init() {
-
                     try {
-
                         this.readIds = JSON.parse(localStorage.getItem('ims_read_payment_ids') || '[]');
-
                     } catch (e) {
-
                         this.readIds = [];
-
                     }
-
-
 
                     this.fetchPayments(true);
 
-
-
                     // Polling data pembayaran setiap 30 detik
-
                     this.pollTimer = setInterval(() => {
-
                         this.fetchPayments(true);
-
                     }, 30000);
 
-
-
                     // Reaktif terhadap notifikasi suara / toast global dari ImsVoice
-
                     window.addEventListener('ims-new-toast', (e) => {
-
                         const detail = e.detail || {};
-
                         const type = (detail.type || '').toLowerCase();
-
                         const title = (detail.title || '').toLowerCase();
-
                         if (type === 'pembayaran' || title.includes('bayar') || title.includes('lunas') || title.includes('tagihan')) {
-
                             this.hasNewAlert = true;
-
                             this.fetchPayments(true);
-
                         }
-
                     });
-
-
 
                     // Reaktif terhadap perubahan status dibaca dari halaman notifikasi
-
                     window.addEventListener('ims-notifications-read-updated', () => {
-
                         try {
-
                             this.readIds = JSON.parse(localStorage.getItem('ims_read_payment_ids') || '[]');
-
                         } catch (e) {
-
                             this.readIds = [];
-
                         }
-
                     });
-
                 },
-
-
 
                 get unreadCount() {
-
                     return this.payments.filter(p => !this.readIds.includes(p.id) && !(p.kode_billing && this.readIds.includes(p.kode_billing))).length;
-
                 },
-
-
 
                 isUnread(id, kodeBilling = null) {
-
                     if (this.readIds.includes(id)) return false;
-
                     if (kodeBilling && this.readIds.includes(kodeBilling)) return false;
-
                     return true;
-
                 },
-
-
 
                 async fetchPayments(silent = false) {
-
                     if (!silent) this.isLoading = true;
-
                     try {
-
                         const res = await fetch('{{ route("api.notifications.payments") }}', {
-
                             headers: {
-
                                 'Accept': 'application/json',
-
                                 'X-Requested-With': 'XMLHttpRequest'
-
                             }
-
                         });
-
                         if (res.ok) {
-
                             const data = await res.json();
-
                             if (data.status === 'success') {
-
                                 const oldIds = this.payments.map(p => p.id);
-
                                 const hasNewIncoming = (data.payments || []).some(p => !oldIds.includes(p.id));
-
                                 if (hasNewIncoming && this.payments.length > 0) {
-
                                     this.hasNewAlert = true;
-
                                 }
-
                                 this.payments = data.payments || [];
-
                             }
-
                         }
-
                     } catch (e) {
-
                         console.warn('Gagal memuat notifikasi pembayaran:', e);
-
                     } finally {
-
                         if (!silent) this.isLoading = false;
-
                     }
-
                 },
-
-
 
                 markRead(item) {
-
                     const id = typeof item === 'object' && item !== null ? item.id : item;
-
                     const kode = typeof item === 'object' && item !== null ? item.kode_billing : null;
-
                     let changed = false;
-
                     if (id && !this.readIds.includes(id)) {
-
                         this.readIds.push(id);
-
                         changed = true;
-
                     }
-
                     if (kode && !this.readIds.includes(kode)) {
-
                         this.readIds.push(kode);
-
                         changed = true;
-
                     }
-
                     if (changed) {
-
                         if (this.readIds.length > 300) {
-
                             this.readIds = this.readIds.slice(-300);
-
                         }
-
                         localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
-
                         window.dispatchEvent(new CustomEvent('ims-notifications-read-updated'));
-
                     }
-
                 },
-
-
 
                 markAllAsRead() {
-
                     let changed = false;
-
                     this.payments.forEach(p => {
-
                         if (p.id && !this.readIds.includes(p.id)) {
-
                             this.readIds.push(p.id);
-
                             changed = true;
-
                         }
-
                         if (p.kode_billing && !this.readIds.includes(p.kode_billing)) {
-
                             this.readIds.push(p.kode_billing);
-
                             changed = true;
-
                         }
-
                     });
-
                     if (changed) {
-
                         if (this.readIds.length > 300) {
-
                             this.readIds = this.readIds.slice(-300);
-
                         }
-
                         localStorage.setItem('ims_read_payment_ids', JSON.stringify(this.readIds));
-
                         window.dispatchEvent(new CustomEvent('ims-notifications-read-updated'));
-
                     }
-
                     this.hasNewAlert = false;
-
                 },
-
-
 
                 toggleOpen() {
-
                     this.open = !this.open;
-
                     if (this.open) {
-
                         this.hasNewAlert = false;
-
                         this.fetchPayments(true);
-
                     }
-
                 }
-
             };
-
         }
-
     </script>
-
     @endif
 
-
-
     @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
-
     <script>
-
         function nocNotificationBell() {
-
             return {
-
                 open: false,
-
                 isLoading: false,
-
                 isFetching: false,
-
                 hasNewAlert: false,
-
                 alerts: [],
-
                 recoveries: [],
-
                 intentional: [],
-
                 activeTab: 'semua', // 'semua', 'aktif', 'pulih'
-
                 hasInitializedBaseline: false,
-
                 summary: {
-
                     total_active: 0,
-
                     total_los_down: 0,
-
                     total_tickets: 0,
-
                     total_intentional: 0,
-
                     total_recoveries: 0,
-
                     total_up: 0,
-
                     total_selesai: 0
-
                 },
-
                 readKeys: [],
-
                 pollTimer: null,
 
-
-
                 init() {
-
                     try {
-
                         this.readKeys = JSON.parse(localStorage.getItem('ims_read_noc_alert_keys') || '[]');
-
                     } catch (e) {
-
                         this.readKeys = [];
-
                     }
-
-
 
                     this.fetchAlerts(true);
 
-
-
                     // Polling data isu NOC setiap 30 detik (nonaktif jika sedang di halaman notifikasi untuk cegah tabrakan request)
-
                     @if(!request()->routeIs('noc.notifikasi'))
-
                     this.pollTimer = setInterval(() => {
-
                         this.fetchAlerts(true);
-
                     }, 30000);
-
                     @endif
-
-
 
                     // Reaktif terhadap perubahan status intentional / pemulihan dari halaman notifikasi
-
                     window.addEventListener('noc-notifications-updated', () => {
-
                         this.fetchAlerts(true);
-
                     });
-
-
 
                     // Reaktif terhadap perubahan status read
-
                     window.addEventListener('ims-noc-read-updated', () => {
-
                         try {
-
                             this.readKeys = JSON.parse(localStorage.getItem('ims_read_noc_alert_keys') || '[]');
-
                         } catch (e) {
-
                             this.readKeys = [];
-
                         }
-
                     });
-
-
 
                     // Reaktif terhadap notifikasi suara / toast global dari ImsVoice
-
                     window.addEventListener('ims-new-toast', (e) => {
-
                         const detail = e.detail || {};
-
                         const type = (detail.type || '').toLowerCase();
-
                         const title = (detail.title || '').toLowerCase();
-
                         if (type.includes('noc') || type.includes('tiket') || title.includes('los') || title.includes('down') || title.includes('tiket') || title.includes('pulih')) {
-
                             this.hasNewAlert = true;
-
                             this.fetchAlerts(true);
-
                         }
-
                     });
-
                 },
-
-
 
                 get activeCount() {
-
                     return this.summary && this.summary.total_active !== undefined ? this.summary.total_active : this.alerts.length;
-
                 },
-
-
 
                 get unreadCount() {
-
                     const unreadAlerts = this.alerts.filter(a => !this.readKeys.includes(a.id) && !this.readKeys.includes(a.device_key)).length;
-
                     const unreadRecs = this.recoveries.filter(r => !this.readKeys.includes(r.id) && !this.readKeys.includes(r.device_key)).length;
-
                     return unreadAlerts + unreadRecs;
-
                 },
-
-
 
                 get displayItems() {
-
                     const parseTime = (item) => {
-
                         if (!item) return 0;
-
                         if (item.timestamp && typeof item.timestamp === 'number') return item.timestamp * 1000;
-
                         if (item.created_at_raw) {
-
                             const t = Date.parse(String(item.created_at_raw).replace(' ', 'T'));
-
                             if (!isNaN(t)) return t;
-
                         }
-
                         if (item.created_at) {
-
                             const t = Date.parse(String(item.created_at));
-
                             if (!isNaN(t)) return t;
-
                         }
-
                         return 0;
-
                     };
 
-
-
                     if (this.activeTab === 'aktif') {
-
                         const items = [...this.alerts];
-
                         items.sort((a, b) => parseTime(b) - parseTime(a));
-
                         return items.slice(0, 5);
-
                     }
-
                     if (this.activeTab === 'pulih') {
-
                         const items = [...this.recoveries];
-
                         items.sort((a, b) => parseTime(b) - parseTime(a));
-
                         return items.slice(0, 5);
-
                     }
-
                     // Tab 'semua': gabungkan isu aktif dan pemulihan, urutkan murni kronologis terbaru di paling atas (maksimal 5 notif)
-
                     const all = [...this.alerts, ...this.recoveries];
-
                     all.sort((a, b) => parseTime(b) - parseTime(a));
-
                     return all.slice(0, 5);
-
                 },
-
-
 
                 formatDuration(item) {
-
                     if (!item) return '';
-
                     const raw = item.created_at_raw || item.created_at;
-
                     if (!raw) return item.duration_human || '';
 
-
-
                     const t = Date.parse(String(raw).replace(' ', 'T'));
-
                     if (isNaN(t)) return item.duration_human || '';
 
-
-
                     const diffSec = Math.floor((Date.now() - t) / 1000);
-
                     if (diffSec < 45) return 'Baru saja';
-
                     if (diffSec < 90) return '1 menit yang lalu';
-
                     if (diffSec < 3600) return Math.floor(diffSec / 60) + ' menit yang lalu';
-
                     if (diffSec < 7200) return '1 jam yang lalu';
-
                     if (diffSec < 86400) return Math.floor(diffSec / 3600) + ' jam yang lalu';
-
                     if (diffSec < 172800) return '1 hari yang lalu';
-
                     return Math.floor(diffSec / 86400) + ' hari yang lalu';
-
                 },
-
-
 
                 testSound() {
-
                     if (window.ImsVoice && typeof window.ImsVoice.testSound === 'function') {
-
                         window.ImsVoice.testSound();
-
                     }
-
                 },
-
-
 
                 isUnread(id, key = null) {
-
                     if (this.readKeys.includes(id)) return false;
-
                     if (key && this.readKeys.includes(key)) return false;
-
                     return true;
-
                 },
-
-
 
                 async fetchAlerts(silent = false) {
-
                     if (this.isFetching) return;
-
                     this.isFetching = true;
-
                     if (!silent) this.isLoading = true;
 
-
-
                     const controller = new AbortController();
-
                     const timeoutId = setTimeout(() => controller.abort(), 35000);
 
-
-
                     try {
-
                         const currentOnuCount = Array.isArray(this.alerts) ? this.alerts.filter(a => a.device_type === 'onu').length : 0;
-
                         const url = (!silent || currentOnuCount === 0) ? '{{ route("noc.api.notifications") }}?refresh=1' : '{{ route("noc.api.notifications") }}';
-
                         const res = await fetch(url, {
-
                             signal: controller.signal,
-
                             headers: {
-
                                 'Accept': 'application/json',
-
                                 'X-Requested-With': 'XMLHttpRequest'
-
                             }
-
                         });
-
                         clearTimeout(timeoutId);
 
-
-
                         if (res.ok) {
-
                             const resData = await res.json();
-
                             if (resData.status === 'success' && resData.data) {
-
                                 const oldKeys = this.alerts.map(a => a.id);
-
                                 const newAlerts = resData.data.alerts || [];
-
                                 const newRecoveries = resData.data.recoveries || [];
-
                                 const hasNewIncoming = newAlerts.some(a => !oldKeys.includes(a.id));
-
                                 if (hasNewIncoming && this.alerts.length > 0) {
-
                                     this.hasNewAlert = true;
-
                                 }
 
-
-
                                 // NOTIFIKASI PEMULIHAN: Mainkan suara pemulihan jika ada perangkat pulih atau tiket selesai
-
                                 this.checkAndPlayRecovery(newRecoveries, newAlerts);
 
-
-
                                 // NOTIFIKASI SUARA ALARM: Bunyikan suara alarm HANYA jika ada insiden baru yang baru terdeteksi
-
                                 this.checkAndPlaySound(newAlerts);
 
-
-
                                 this.alerts = newAlerts;
-
                                 this.recoveries = newRecoveries;
-
                                 this.hasInitializedBaseline = true;
-
                                 this.intentional = resData.data.intentional || [];
-
                                 this.summary = resData.data.summary || {
-
                                     total_active: this.alerts.length,
-
                                     total_los_down: 0,
-
                                     total_tickets: 0,
-
                                     total_intentional: 0,
-
                                     total_recoveries: this.recoveries.length,
-
                                     total_up: 0,
-
                                     total_selesai: 0
-
                                 };
-
                             }
-
                         }
-
                     } catch (e) {
-
                         if (e.name !== 'AbortError') {
-
                             console.warn('Gagal memuat notifikasi NOC:', e);
-
                         }
-
                     } finally {
-
                         clearTimeout(timeoutId);
-
                         this.isFetching = false;
-
                         if (!silent) this.isLoading = false;
-
                     }
-
                 },
-
-
 
                 checkAndPlayRecovery(newRecoveries, newAlerts) {
-
                     if (!Array.isArray(newRecoveries) || newRecoveries.length === 0) return;
 
-
-
                     let playedRecKeys = [];
-
                     try {
-
                         playedRecKeys = JSON.parse(localStorage.getItem('ims_noc_recovery_played_keys') || '[]');
-
                     } catch (e) {
-
                         playedRecKeys = [];
-
                     }
-
-
 
                     // Inisialisasi awal agar pemulihan lama yang sudah lewat tidak langsung bersuara saat browser baru dibuka
-
                     if (!localStorage.getItem('ims_noc_recovery_initialized')) {
-
                         newRecoveries.forEach(r => {
-
                             if (r.id) playedRecKeys.push(r.id);
-
                             if (r.device_key) playedRecKeys.push(r.device_key);
-
                         });
-
                         localStorage.setItem('ims_noc_recovery_initialized', '1');
-
                         localStorage.setItem('ims_noc_recovery_played_keys', JSON.stringify(playedRecKeys.slice(-150)));
-
                         return;
-
                     }
-
-
 
                     const unplayed = newRecoveries.filter(r => !playedRecKeys.includes(r.id) && !playedRecKeys.includes(r.device_key));
-
                     if (unplayed.length > 0) {
-
                         const recKey = 'rec_' + unplayed.map(r => r.id || r.device_key).sort().join('_');
-
                         const canClaim = !window.ImsTabCoordinator || window.ImsTabCoordinator.claimEvent(recKey, 15000);
 
-
-
                         if (canClaim) {
-
                             if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-
                                 window.ImsTabCoordinator.delegateToActive('playNocRecoverySound', [unplayed[0], unplayed.length]);
-
                             } else if (typeof window.playNocRecoverySound === "function") {
-
                                 window.playNocRecoverySound(unplayed[0], unplayed.length);
-
                             }
-
                         }
-
-
 
                         unplayed.forEach(r => {
-
                             if (r.id) playedRecKeys.push(r.id);
-
                             if (r.device_key) playedRecKeys.push(r.device_key);
-
                         });
-
                         if (playedRecKeys.length > 150) playedRecKeys = playedRecKeys.slice(-150);
-
                         try {
-
                             localStorage.setItem('ims_noc_recovery_played_keys', JSON.stringify(playedRecKeys));
-
                         } catch (e) {}
-
-
 
                         // Bersihkan dari playedKeys insiden agar jika di masa depan perangkat down lagi, alarm bisa berbunyi
-
                         try {
-
                             let playedAlarmKeys = JSON.parse(localStorage.getItem('ims_noc_sound_played_keys') || '[]');
-
                             const recDevKeys = new Set(unplayed.map(r => r.device_key).filter(Boolean));
-
                             playedAlarmKeys = playedAlarmKeys.filter(k => !recDevKeys.has(k));
-
                             localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedAlarmKeys));
-
                         } catch (e) {}
-
                     }
-
                 },
-
-
 
                 checkAndPlaySound(alerts) {
-
                     if (!Array.isArray(alerts) || alerts.length === 0) return;
-
                     
-
                     let playedKeys = [];
-
                     try {
-
                         playedKeys = JSON.parse(localStorage.getItem('ims_noc_sound_played_keys') || '[]');
-
                     } catch (e) {
-
                         playedKeys = [];
-
                     }
-
-
 
                     // Ambil alert aktif yang berstatus LOS atau DOWN dan bukan dimute / intentional
-
                     const losDownAlerts = alerts.filter(a => {
-
                         if (a.is_intentional) return false;
-
                         const st = (a.status || '').toUpperCase();
-
                         return st === 'LOS' || st === 'DOWN';
-
                     });
-
-
 
                     // Inisialisasi awal: Jangan bunyikan alarm untuk gangguan lama yang sudah terjadi saat browser dibuka
-
                     if (!localStorage.getItem('ims_noc_sound_initialized')) {
-
                         losDownAlerts.forEach(a => {
-
                             if (a.id) playedKeys.push(a.id);
-
                             if (a.device_key) playedKeys.push(a.device_key);
-
                         });
-
                         localStorage.setItem('ims_noc_sound_initialized', '1');
-
                         localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedKeys.slice(-300)));
-
                         return;
-
                     }
-
-
 
                     // Cari yang benar-benar BARU muncul
-
                     const unplayed = losDownAlerts.filter(a => !playedKeys.includes(a.id) && !playedKeys.includes(a.device_key));
 
-
-
                     if (unplayed.length > 0) {
-
                         const emergKey = 'emerg_' + unplayed.map(u => u.id || u.device_key).sort().join('_');
-
                         const canClaim = !window.ImsTabCoordinator || window.ImsTabCoordinator.claimEvent(emergKey, 15000);
 
-
-
                         if (canClaim) {
-
                             if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-
                                 window.ImsTabCoordinator.delegateToActive('playNocEmergencySound', [unplayed[0]]);
-
                             } else if (typeof window.playNocEmergencySound === 'function') {
-
                                 window.playNocEmergencySound(unplayed[0]);
-
                             }
-
                         }
-
-
 
                         // Tandai segera agar tidak berulang
-
                         unplayed.forEach(a => {
-
                             if (a.id) playedKeys.push(a.id);
-
                             if (a.device_key) playedKeys.push(a.device_key);
-
                         });
-
                         if (playedKeys.length > 300) playedKeys = playedKeys.slice(-300);
-
                         try {
-
                             localStorage.setItem('ims_noc_sound_played_keys', JSON.stringify(playedKeys));
-
                         } catch (e) {}
-
                     }
-
                 },
-
-
 
                 markRead(item) {
-
                     const id = typeof item === 'object' && item !== null ? item.id : item;
-
                     const key = typeof item === 'object' && item !== null ? item.device_key : null;
-
                     let changed = false;
-
                     if (id && !this.readKeys.includes(id)) {
-
                         this.readKeys.push(id);
-
                         changed = true;
-
                     }
-
                     if (key && !this.readKeys.includes(key)) {
-
                         this.readKeys.push(key);
-
                         changed = true;
-
                     }
-
                     if (changed) {
-
                         if (this.readKeys.length > 300) {
-
                             this.readKeys = this.readKeys.slice(-300);
-
                         }
-
                         localStorage.setItem('ims_read_noc_alert_keys', JSON.stringify(this.readKeys));
-
                         window.dispatchEvent(new CustomEvent('ims-noc-read-updated'));
-
                     }
-
                 },
-
-
 
                 markAllAsRead() {
-
                     let changed = false;
-
                     const allItems = [...this.alerts, ...this.recoveries];
-
                     allItems.forEach(a => {
-
                         if (a.id && !this.readKeys.includes(a.id)) {
-
                             this.readKeys.push(a.id);
-
                             changed = true;
-
                         }
-
                         if (a.device_key && !this.readKeys.includes(a.device_key)) {
-
                             this.readKeys.push(a.device_key);
-
                             changed = true;
-
                         }
-
                     });
-
                     if (changed) {
-
                         if (this.readKeys.length > 300) {
-
                             this.readKeys = this.readKeys.slice(-300);
-
                         }
-
                         localStorage.setItem('ims_read_noc_alert_keys', JSON.stringify(this.readKeys));
-
                         window.dispatchEvent(new CustomEvent('ims-noc-read-updated'));
-
                     }
-
                     this.hasNewAlert = false;
-
                 },
-
-
 
                 async markIntentionalQuick(item) {
-
                     const reason = prompt(`Tandai ${item.device_name} sebagai Intentional (Pemeliharaan)?\n\nMasukkan alasan (misal: Maintenance, Pemindahan Kabel, dsb):`, 'Maintenance / Pekerjaan Pemindahan Kabel');
-
                     if (reason === null) return;
 
-
-
                     try {
-
                         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
                         const res = await fetch('{{ route("noc.api.notifications.intentional") }}', {
-
                             method: 'POST',
-
                             headers: {
-
                                 'Content-Type': 'application/json',
-
                                 'Accept': 'application/json',
-
                                 'X-CSRF-TOKEN': token,
-
                                 'X-Requested-With': 'XMLHttpRequest'
-
                             },
-
                             body: JSON.stringify({
-
                                 device_key: item.device_key,
-
                                 device_type: item.device_type,
-
                                 device_name: item.device_name,
-
                                 olt_kode: item.olt_kode,
-
                                 pon_index: item.pon_index,
-
                                 onu_id: item.onu_id,
-
                                 interface_name: item.interface_name,
-
                                 nomor_internet: item.nomor_internet,
-
                                 reason: reason || 'Pemeliharaan perangkat oleh NOC'
-
                             })
-
                         });
 
-
-
                         if (res.ok) {
-
                             await this.fetchAlerts(true);
-
                             window.dispatchEvent(new CustomEvent('noc-notifications-updated'));
-
                         } else {
-
                             alert('Gagal menandai perangkat sebagai intentional.');
-
                         }
-
                     } catch (e) {
-
                         alert('Terjadi kesalahan: ' + e.message);
-
                     }
-
                 },
 
-
-
                 toggleOpen() {
-
                     this.open = !this.open;
-
                     if (this.open) {
-
                         this.hasNewAlert = false;
-
                         this.fetchAlerts(true);
-
                     }
-
                 }
-
             };
-
         }
-
     </script>
-
     @endif
-
     <style>
-
         [x-cloak] { display: none !important; }
 
-
-
         @keyframes imsToastProgress {
-
             from { width: 100%; }
-
             to { width: 0%; }
-
         }
-
         .ims-toast-progress-bar {
-
             width: 100%;
-
             animation: imsToastProgress 8s linear forwards;
-
         }
-
-
 
         /* Responsive helpers for Desktop Table vs Mobile Cards */
-
         @media (min-width: 768px) {
-
             .ims-mobile-only {
-
                 display: none !important;
-
             }
-
             .ims-desktop-only {
-
                 display: block !important;
-
             }
-
         }
-
         @media (max-width: 767.98px) {
-
             .ims-desktop-only {
-
                 display: none !important;
-
             }
-
             .ims-mobile-only {
-
                 display: block !important;
-
             }
-
         }
-
-
 
         /* Custom Ultra-Thin Scrollbar for Sidebar (1px) */
-
         .ims-sidebar-nav {
-
             scrollbar-width: thin !important;
-
             scrollbar-color: rgba(56, 189, 248, 0.4) transparent !important;
-
         }
-
         .ims-sidebar-nav::-webkit-scrollbar {
-
             width: 1px !important;
-
             height: 1px !important;
-
         }
-
         .ims-sidebar-nav::-webkit-scrollbar-button {
-
             display: none !important;
-
             width: 0 !important;
-
             height: 0 !important;
-
         }
-
         .ims-sidebar-nav::-webkit-scrollbar-track {
-
             background: transparent !important;
-
         }
-
         .ims-sidebar-nav::-webkit-scrollbar-thumb {
-
             background: rgba(56, 189, 248, 0.45) !important;
-
             border-radius: 9999px !important;
-
             border: none !important;
-
         }
-
         .ims-sidebar-nav::-webkit-scrollbar-thumb:hover {
-
             background: rgba(56, 189, 248, 0.9) !important;
-
         }
-
-
 
         /* Sidebar Styling & Animation */
-
         .ims-sidebar {
-
             width: 16rem;
-
             background-color: #061d28 !important;
-
             border-right: 1px solid #0d2a38 !important;
-
             transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
         }
-
         .ims-sidebar.collapsed {
-
             width: 4.75rem !important;
-
         }
-
-
 
         @media (max-width: 1023.98px) {
-
             .ims-sidebar {
-
                 transform: translateX(-100%);
-
                 width: 16rem !important;
-
                 position: fixed !important;
-
                 top: 0 !important;
-
                 bottom: 0 !important;
-
                 left: 0 !important;
-
                 height: 100vh !important;
-
                 height: 100dvh !important;
-
                 z-index: 60 !important;
-
             }
-
             .ims-sidebar.mobile-open {
-
                 transform: translateX(0) !important;
-
             }
-
             html, body {
-
                 min-height: 100% !important;
-
                 overflow-x: hidden !important;
-
             }
-
             .ims-layout-root {
-
                 min-height: 100vh !important;
-
                 min-height: 100dvh !important;
-
                 height: auto !important;
-
                 overflow-x: hidden !important;
-
                 max-width: 100vw !important;
-
             }
-
             .ims-main-scroll {
-
                 height: auto !important;
-
                 overflow-x: hidden !important;
-
                 max-width: 100vw !important;
-
             }
-
         }
-
-
 
         @media (min-width: 1024px) {
-
             html, body {
-
                 height: 100% !important;
-
                 overflow: hidden !important;
-
             }
-
             .ims-layout-root {
-
                 height: 100vh !important;
-
                 max-height: 100vh !important;
-
                 overflow: hidden !important;
-
             }
-
             .ims-sidebar {
-
                 position: sticky !important;
-
                 top: 0 !important;
-
                 height: 100vh !important;
-
                 max-height: 100vh !important;
-
                 flex-shrink: 0 !important;
-
                 align-self: flex-start !important;
-
                 z-index: 40 !important;
-
             }
-
             .ims-main-scroll {
-
                 height: 100vh !important;
-
                 max-height: 100vh !important;
-
                 overflow-y: auto !important;
-
                 overflow-x: hidden !important;
-
             }
-
         }
-
-
 
         /* Nav Item Styles */
-
         .ims-nav-item {
-
             display: flex;
-
             align-items: center;
-
             gap: 0.85rem;
-
             padding: 0.65rem 0.85rem;
-
             border-radius: 0.75rem;
-
             font-size: 0.875rem;
-
             font-weight: 500;
-
             color: #CBD5E1 !important;
-
             text-decoration: none;
-
             transition: all 0.15s ease;
-
             white-space: nowrap;
-
             position: relative;
-
         }
-
         .ims-nav-item svg {
-
             color: #94A3B8 !important;
-
             transition: color 0.15s ease;
-
         }
-
         .ims-nav-item:hover {
-
             background-color: rgba(255, 255, 255, 0.08) !important;
-
             color: #FFFFFF !important;
-
         }
-
         .ims-nav-item:hover svg,
-
         .ims-nav-item:hover .ims-nav-arrow {
-
             color: #FFFFFF !important;
-
         }
-
         .ims-nav-item.active {
-
             background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%) !important;
-
             color: #FFFFFF !important;
-
             box-shadow: 0 4px 18px rgba(8, 145, 178, 0.35) !important;
-
         }
-
         .ims-nav-item.active span,
-
         .ims-nav-item.active svg,
-
         .ims-nav-item.active .ims-nav-arrow {
-
             color: #FFFFFF !important;
-
         }
-
-
 
         /* Sidebar Section Header & Submenus */
-
         .ims-sidebar .ims-section-header {
-
             color: #38BDF8 !important;
-
             font-weight: 700 !important;
-
         }
-
         .ims-sidebar .ims-section-title {
-
             color: #38BDF8 !important;
-
             font-weight: 700 !important;
-
         }
-
         .ims-sidebar .ims-submenu a {
-
             color: #CBD5E1 !important;
-
             font-weight: 500;
-
         }
-
         .ims-sidebar .ims-submenu a:hover {
-
             color: #FFFFFF !important;
-
             background-color: rgba(255, 255, 255, 0.08) !important;
-
         }
-
         .ims-sidebar .ims-submenu a.active {
-
             background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%) !important;
-
             color: #FFFFFF !important;
-
             font-weight: 600 !important;
-
         }
-
         .ims-sidebar .ims-logo-text span:last-child {
-
             color: #94A3B8 !important;
-
         }
-
-
 
         /* Collapsed Mode Adjustments */
-
         .ims-sidebar.collapsed .ims-nav-item {
-
             justify-content: center;
-
             padding: 0.65rem 0;
-
             width: 2.75rem;
-
             height: 2.75rem;
-
             margin: 0 auto;
-
         }
-
         .ims-sidebar.collapsed .ims-nav-text,
-
         .ims-sidebar.collapsed .ims-nav-arrow,
-
         .ims-sidebar.collapsed .ims-logo-text,
-
         .ims-sidebar.collapsed .ims-section-title,
-
         .ims-sidebar.collapsed .ims-submenu,
-
         .ims-sidebar.collapsed .ims-footer-full {
-
             display: none !important;
-
         }
-
         .ims-sidebar.collapsed .ims-section-header {
-
             justify-content: center !important;
-
             padding: 0.4rem 0 !important;
-
         }
-
         .ims-sidebar.collapsed .ims-footer-mini {
-
             display: block !important;
-
         }
-
         .ims-footer-mini {
-
             display: none;
-
         }
-
-
 
         /* Floating Tooltip in Collapsed Mode */
-
         .ims-nav-wrapper {
-
             position: relative;
-
         }
-
         .ims-tooltip {
-
             display: none;
-
             position: absolute;
-
             left: calc(100% + 0.75rem);
-
             top: 50%;
-
             transform: translateY(-50%);
-
             background-color: #0F172A;
-
             border: 1px solid rgba(255, 255, 255, 0.12);
-
             color: #FFFFFF;
-
             font-size: 0.75rem;
-
             font-weight: 600;
-
             padding: 0.4rem 0.75rem;
-
             border-radius: 0.5rem;
-
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
-
             white-space: nowrap;
-
             z-index: 99999;
-
             pointer-events: none;
-
         }
-
         .ims-sidebar.collapsed .ims-nav-wrapper:hover .ims-tooltip {
-
             display: block;
-
         }
-
         .ims-sidebar.collapsed .ims-has-flyout:hover .ims-tooltip {
-
             display: none !important;
-
         }
-
         .ims-flyout-portal {
-
             position: fixed !important;
-
             z-index: 9999999 !important;
-
             background-color: #061d28 !important;
-
             border: 1px solid #0d2a38 !important;
-
         }
-
-
 
         /* ==========================================================
-
            DUAL THEME HARMONIZATION: LIGHT & DARK MODE
-
            ========================================================== */
-
         
-
         /* Light Mode High Contrast */
-
         html:not(.dark) body {
-
             background-color: #F8FAFC;
-
             color: #0F172A;
-
         }
-
-
 
         html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-
         html:not(.dark) select,
-
         html:not(.dark) textarea {
-
             background-color: #FFFFFF;
-
             border-color: #CBD5E1;
-
             color: #0F172A;
-
         }
-
-
 
         html:not(.dark) input::placeholder,
-
         html:not(.dark) textarea::placeholder {
-
             color: #94A3B8;
-
         }
-
         
-
         /* Dark Mode High Contrast */
-
         html.dark body {
-
             background-color: #071520;
-
             color: #F1F5F9;
-
         }
-
-
 
         html.dark main {
-
             background-color: #071520;
-
         }
-
-
 
         /* Dark Mode Form Inputs & Selects */
-
         html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-
         html.dark select,
-
         html.dark textarea {
-
             background-color: #071926;
-
             border-color: #1c4969;
-
             color: #F1F5F9;
-
         }
-
-
 
         html.dark input::placeholder,
-
         html.dark textarea::placeholder {
-
             color: #64748B;
-
         }
-
-
 
         /* Status Badge Utilities - Bold for maximum legibility */
-
         span[class*="bg-amber-"],
-
         span[class*="bg-emerald-"],
-
         span[class*="bg-cyan-"],
-
         span[class*="bg-sky-"],
-
         span[class*="bg-blue-"],
-
         span[class*="bg-purple-"],
-
         span[class*="bg-rose-"] {
-
             font-weight: 600;
-
         }
-
-
 
         /* Primary Action Buttons Keep Bright White Text */
-
         .btn-primary-theme,
-
         button[type="submit"].bg-blue-600,
-
         button[type="submit"].bg-cyan-600,
-
         button[type="submit"].bg-[#0891b2],
-
         button[type="submit"].bg-gradient-to-r,
-
         a.bg-blue-600,
-
         a.bg-cyan-600,
-
         a.bg-teal-600,
-
         a.bg-[#0891b2],
-
         a.bg-gradient-to-r {
-
             color: #FFFFFF !important;
-
         }
-
     </style>
-
 </head>
-
 <body class="h-full font-sans antialiased selection:bg-blue-600 selection:text-white bg-[#F8FAFC] dark:bg-[#071520] text-slate-800 dark:text-slate-100 transition-colors duration-200"
-
       x-data="{ 
-
           isDarkMode: localStorage.getItem('theme') === 'dark',
-
           toggleTheme() {
-
               this.isDarkMode = !this.isDarkMode;
-
               if (this.isDarkMode) {
-
                   document.documentElement.classList.add('dark');
-
                   localStorage.setItem('theme', 'dark');
-
               } else {
-
                   document.documentElement.classList.remove('dark');
-
                   localStorage.setItem('theme', 'light');
-
               }
-
           },
-
           sidebarCollapsed: false,
-
           mobileSidebarOpen: false,
-
           activeFlyout: null,
-
           flyoutTop: 0,
-
           flyoutTitle: '',
-
           flyoutItems: [],
-
           flyoutTimeout: null,
-
           toggleSidebar() {
-
               if (window.innerWidth < 1024) {
-
                   this.mobileSidebarOpen = !this.mobileSidebarOpen;
-
               } else {
-
                   this.sidebarCollapsed = !this.sidebarCollapsed;
-
                   if (!this.sidebarCollapsed) {
-
                       this.activeFlyout = null;
-
                   }
-
               }
-
           },
-
           openFlyout(el, title, items) {
-
               if (!this.sidebarCollapsed || window.innerWidth < 1024) return;
-
               if (this.flyoutTimeout) {
-
                   clearTimeout(this.flyoutTimeout);
-
                   this.flyoutTimeout = null;
-
               }
-
               const rect = el.getBoundingClientRect();
-
               const maxTop = window.innerHeight - 280;
-
               this.flyoutTop = Math.max(12, Math.min(rect.top - 6, maxTop));
-
               this.flyoutTitle = title;
-
               this.flyoutItems = items;
-
               this.activeFlyout = title;
-
           },
-
           closeFlyoutWithDelay() {
-
               if (this.flyoutTimeout) clearTimeout(this.flyoutTimeout);
-
-              this.flyoutTimeout = setTimeout(() =>
-
-    <!-- Instant Top Page Transition Progress Bar -->
-
-    <div id="ims-page-loader" aria-hidden="true"></div>
-
- {
-
+              this.flyoutTimeout = setTimeout(() => {
                   this.activeFlyout = null;
-
               }, 180);
-
           },
-
           cancelFlyoutClose() {
-
               if (this.flyoutTimeout) {
-
                   clearTimeout(this.flyoutTimeout);
-
                   this.flyoutTimeout = null;
-
               }
-
           }
-
       }">
 
+    <!-- Instant Top Page Transition Progress Bar -->
+    <div id="ims-page-loader" aria-hidden="true"></div>
+
     <div class="min-h-full h-screen flex flex-col overflow-hidden ims-layout-root">
-
         <div class="flex-1 flex overflow-hidden min-h-0 h-full">
-
             <!-- Mobile Sidebar Backdrop -->
-
             <div x-show="mobileSidebarOpen"
-
                  x-cloak
-
                  @click="mobileSidebarOpen = false"
-
                  class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm lg:hidden transition-opacity"></div>
 
-
-
             <!-- Sidebar (Deep Oceanic Navy Charcoal & Cyan Highlights) -->
-
             <aside :class="{ 'collapsed': sidebarCollapsed, 'mobile-open': mobileSidebarOpen }"
-
                    class="ims-sidebar fixed inset-y-0 left-0 z-[60] lg:z-40 bg-[#061d28] border-r border-[#0d2a38] flex flex-col lg:sticky lg:top-0 lg:h-screen shrink-0 overflow-visible">
-
                 
-
                 <!-- Sidebar Header / Logo -->
-
                 <div class="h-16 px-3.5 flex items-center justify-between border-b border-[#0d2a38] shrink-0">
-
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 overflow-hidden" title="IMS-V2 Management">
-
                         <div class="w-9 h-9 rounded-xl bg-[#0c2f42] border border-cyan-400/30 p-1 shadow-md shadow-cyan-500/20 flex items-center justify-center flex-shrink-0">
-
                             <img src="{{ asset('assets/images/logo.png') }}" alt="IMS Logo" class="w-full h-full object-contain">
-
                         </div>
-
                         <div class="ims-logo-text whitespace-nowrap">
-
                             <span class="font-bold text-white tracking-tight text-base">IMS<span class="text-blue-500 font-extrabold">-V2</span></span>
-
                             <span class="block text-[9.5px] text-[#94A3B8] tracking-normal font-medium leading-tight">Integrated Management System</span>
-
                         </div>
-
                     </a>
 
-
-
                     <!-- Mobile Close Button -->
-
                     <button type="button" 
-
                             @click="mobileSidebarOpen = false"
-
                             class="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
-
                             title="Tutup Menu">
-
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-
                         </svg>
-
                     </button>
-
                 </div>
 
-
-
                 <!-- Sidebar Navigation Menu -->
-
                 <nav class="ims-sidebar-nav flex-1 min-h-0 px-2.5 py-3 space-y-1.5 overflow-y-auto overflow-x-visible"
-
                      x-data="{
-
                          permintaanOpen: {{ request()->routeIs('teknik.permintaan.*') ? 'true' : 'false' }}
-
                      }">
-
                     
-
                     <!-- 1. Dashboard (All Users) -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('dashboard') }}"
-
                            class="ims-nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-
                            title="Dashboard">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('dashboard') ? 'text-white' : 'text-[#94A3B8]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Dashboard</span>
-
                         </a>
-
                         <div class="ims-tooltip">Dashboard</div>
-
                     </div>
-
-
 
                     @if(auth()->user()?->isCeo())
-
                     <!-- ============================================== -->
-
                     <!-- MENU EKSEKUTIF (KHUSUS CEO MONITORING)         -->
-
                     <!-- ============================================== -->
-
-
 
                     <!-- 1. Data Pelanggan -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('teknik.pelanggan') }}"
-
                            class="ims-nav-item {{ request()->routeIs('teknik.pelanggan*', 'finance.pelanggan*') ? 'active' : '' }}"
-
                            title="Data Pelanggan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pelanggan*', 'finance.pelanggan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Data Pelanggan</span>
-
                         </a>
-
                         <div class="ims-tooltip">Data Pelanggan</div>
-
                     </div>
-
-
 
                     <!-- Section Keuangan & Billing -->
-
                     <div class="pt-2.5 pb-1">
-
                         <div class="ims-section-header px-3 text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center justify-between">
-
                             <span class="ims-section-title">Keuangan & Billing</span>
-
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-
                         </div>
-
                     </div>
-
-
 
                     <!-- Billing Layanan -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('finance.billing-layanan') }}"
-
                            class="ims-nav-item {{ request()->routeIs('finance.billing-layanan*') ? 'active' : '' }}"
-
                            title="Billing Layanan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.billing-layanan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Billing Layanan</span>
-
                         </a>
-
                         <div class="ims-tooltip">Billing Layanan (Tagihan Bulanan)</div>
-
                     </div>
-
-
 
                     <!-- Notifikasi & Approval (Finance) -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('finance.notifikasi') }}"
-
                            class="ims-nav-item {{ request()->routeIs('finance.notifikasi*') ? 'active' : '' }}"
-
                            title="Konfirmasi Pembayaran">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-
                             </svg>
-
                             <span class="ims-nav-text">Konfirmasi Pembayaran</span>
-
                         </a>
-
                         <div class="ims-tooltip">Konfirmasi Pembayaran</div>
-
                     </div>
-
-
 
                     <!-- Section Layanan & Gangguan -->
-
                     <div class="pt-2.5 pb-1">
-
                         <div class="ims-section-header px-3 text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between">
-
                             <span class="ims-section-title">Layanan & Gangguan</span>
-
                             <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-
                         </div>
-
                     </div>
-
-
 
                     <!-- Tiket Gangguan & Keluhan -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('teknik.tiket.gangguan') }}"
-
                            class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
-
                            title="Tiket Gangguan & Keluhan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#94A3B8]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Tiket Gangguan</span>
-
                         </a>
-
                         <div class="ims-tooltip">Tiket Gangguan & Keluhan</div>
-
                     </div>
-
-
 
                     <!-- Pusat Notifikasi / Radar Outage -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('noc.notifikasi') }}"
-
                            class="ims-nav-item {{ request()->routeIs('noc.notifikasi*') ? 'active' : '' }}"
-
                            title="Pusat Notifikasi Jaringan (Radar Outage)">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-
                             </svg>
-
                             <span class="ims-nav-text">Radar Notifikasi</span>
-
                         </a>
-
                         <div class="ims-tooltip">Radar Notifikasi Jaringan</div>
-
                     </div>
-
-
 
                     @else
-
                     <!-- ============================================== -->
-
                     <!-- MENU OPERASIONAL (STAFF NON-CEO)               -->
-
                     <!-- ============================================== -->
-
-
 
                     @if(auth()->user()?->hasRole(['teknik', 'noc', 'direktur', 'admin']))
-
                     <!-- 2. Data Pelanggan -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('teknik.pelanggan') }}"
-
                            class="ims-nav-item {{ request()->routeIs('teknik.pelanggan*') ? 'active' : '' }}"
-
                            title="Data Pelanggan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pelanggan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Data Pelanggan</span>
-
                         </a>
-
                         <div class="ims-tooltip">Data Pelanggan</div>
-
                     </div>
-
                     @endif
-
-
 
                     @if(auth()->user()?->hasRole(['teknik', 'direktur', 'admin']))
-
                     <!-- ============================================== -->
-
                     <!-- TEKNIK SECTION                                 -->
-
                     <!-- ============================================== -->
-
                     <div class="pt-2.5 pb-1">
-
                         <div class="ims-section-header px-3 text-[10px] font-bold text-[#38BDF8] uppercase tracking-wider flex items-center justify-between">
-
                             <span class="ims-section-title">Modul Teknik</span>
-
                             <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-
                         </div>
-
                     </div>
-
-
 
                     @if(!auth()->user() || !auth()->user()->isNoc())
-
                         <!-- 2. Pendaftaran -->
-
                         <div class="ims-nav-wrapper">
-
                             <a href="{{ route('teknik.pendaftaran') }}"
-
                                class="ims-nav-item {{ request()->routeIs('teknik.pendaftaran*') ? 'active' : '' }}"
-
                                title="Pendaftaran / Registrasi">
-
                                 <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pendaftaran*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-
                                 </svg>
-
                                 <span class="ims-nav-text">Pendaftaran</span>
-
                             </a>
-
                             <div class="ims-tooltip">Pendaftaran</div>
-
                         </div>
-
                     @endif
-
-
 
                     <!-- 3. Tiket -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('teknik.tiket') }}"
-
                            class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
-
                            title="Tiket & Permintaan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#94A3B8]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Tiket</span>
-
                         </a>
-
                         <div class="ims-tooltip">Tiket & Permintaan</div>
-
                     </div>
-
-
 
                     <!-- 5. Permintaan -->
-
                     <div class="ims-nav-wrapper ims-has-flyout"
-
                          @mouseenter="openFlyout($el, 'Permintaan Layanan', [
-
                              @if(auth()->user()?->hasRole(['noc', 'direktur']))
-
                              { label: 'Aktivasi Jaringan', url: '{{ route('noc.aktivasi') }}', active: {{ request()->routeIs('noc.aktivasi*') ? 'true' : 'false' }} },
-
                              @endif
-
                              { label: 'UP / Downgrade', url: '{{ route('teknik.permintaan.up-downgrade') }}', active: {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'true' : 'false' }} },
-
                              { label: 'Terminasi', url: '{{ route('teknik.permintaan.terminasi') }}', active: {{ request()->routeIs('teknik.permintaan.terminasi*') ? 'true' : 'false' }} },
-
                              { label: 'Suspend', url: '{{ route('teknik.permintaan.suspend') }}', active: {{ request()->routeIs('teknik.permintaan.suspend*') ? 'true' : 'false' }} }
-
                          ])"
-
                          @mouseleave="closeFlyoutWithDelay()">
-
                         <button type="button"
-
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, permintaanOpen = true) : (permintaanOpen = !permintaanOpen)"
-
                                 class="w-full ims-nav-item {{ request()->routeIs('teknik.permintaan.*', 'noc.aktivasi*') ? 'active' : '' }} justify-between"
-
                                 title="Permintaan">
-
                             <span class="flex items-center gap-3.5">
-
                                 <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.permintaan.*', 'noc.aktivasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
-
                                 </svg>
-
                                 <span class="ims-nav-text">Permintaan</span>
-
                             </span>
-
                             <svg class="ims-nav-arrow w-4 h-4 transition-transform duration-200"
-
                                  :class="permintaanOpen ? 'rotate-180 text-white' : 'text-[#9CA3AF]'"
-
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-
                             </svg>
-
                         </button>
-
                         <div class="ims-tooltip">Permintaan Layanan</div>
 
-
-
                         <!-- Expanded Accordion -->
-
                         <div x-show="permintaanOpen"
-
                              x-cloak
-
                              x-transition:enter="transition ease-out duration-150"
-
                              x-transition:enter-start="opacity-0 -translate-y-1"
-
                              x-transition:enter-end="opacity-100 translate-y-0"
-
                              x-transition:leave="transition ease-in duration-100"
-
                              x-transition:leave-start="opacity-100 translate-y-0"
-
                              x-transition:leave-end="opacity-0 -translate-y-1"
-
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
-
                             
-
                             @if(auth()->user()?->hasRole(['noc', 'direktur']))
-
                             <a href="{{ route('noc.aktivasi') }}"
-
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.aktivasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.aktivasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Aktivasi Jaringan</span>
-
                             </a>
-
                             @endif
 
-
-
                             <a href="{{ route('teknik.permintaan.up-downgrade') }}"
-
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('teknik.permintaan.up-downgrade') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('teknik.permintaan.up-downgrade') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>UP/Downgrade</span>
-
                             </a>
-
-
 
                             <a href="{{ route('teknik.permintaan.terminasi') }}"
-
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('teknik.permintaan.terminasi') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('teknik.permintaan.terminasi') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Terminasi</span>
-
                             </a>
-
-
 
                             <a href="{{ route('teknik.permintaan.suspend') }}"
-
                                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('teknik.permintaan.suspend') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('teknik.permintaan.suspend') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Suspend</span>
-
                             </a>
-
                         </div>
-
                     </div>
-
-
 
                     <!-- 6. Cek Coverage ODP -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('teknik.coverage') }}"
-
                            class="ims-nav-item {{ request()->routeIs('teknik.coverage*') ? 'active' : '' }}"
-
                            title="Cek Coverage ODP">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.coverage*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Cek Coverage</span>
-
                         </a>
-
                         <div class="ims-tooltip">Cek Coverage ODP</div>
-
                     </div>
-
                     @endif
 
-
-
                     @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
-
                     <!-- ============================================== -->
-
                     <!-- NOC SECTION                                    -->
-
                     <!-- ============================================== -->
-
                     <div class="pt-2.5 pb-1">
-
                         <div class="ims-section-header px-3 text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider flex items-center justify-between">
-
                             <span class="ims-section-title">Modul NOC</span>
-
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-
                         </div>
-
                     </div>
-
-
 
                     <!-- 1. Pendaftaran Pelanggan Baru -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('teknik.pendaftaran') }}"
-
                            class="ims-nav-item {{ request()->routeIs('teknik.pendaftaran*') ? 'active' : '' }}"
-
                            title="Pendaftaran / Registrasi Pelanggan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.pendaftaran*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Pendaftaran</span>
-
                         </a>
-
                         <div class="ims-tooltip">Pendaftaran / Registrasi Pelanggan</div>
-
                     </div>
-
-
 
                     <!-- 2. Tiket -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('teknik.tiket') }}"
-
                            class="ims-nav-item {{ request()->routeIs('teknik.tiket*') ? 'active' : '' }}"
-
                            title="Tiket & Permintaan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('teknik.tiket*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Tiket</span>
-
                         </a>
-
                         <div class="ims-tooltip">Tiket & Permintaan</div>
-
                     </div>
-
-
 
                     <!-- 2. Permintaan NOC Dropdown -->
-
                     <div class="ims-nav-wrapper ims-has-flyout"
-
                          x-data="{ permintaanNocOpen: {{ request()->routeIs('noc.aktivasi*', 'noc.monitoring-instalasi-onu*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'true' : 'false' }} }"
-
                          @mouseenter="openFlyout($el, 'Permintaan NOC', [
-
                              { label: 'Monitoring Instalasi ONU', url: '{{ route('noc.monitoring-instalasi-onu') }}', active: {{ request()->routeIs('noc.monitoring-instalasi-onu*') ? 'true' : 'false' }} },
-
                              { label: 'Aktivasi Jaringan', url: '{{ route('noc.aktivasi') }}', active: {{ request()->routeIs('noc.aktivasi*') ? 'true' : 'false' }} },
-
                              { label: 'UP / Downgrade', url: '{{ route('teknik.permintaan.up-downgrade') }}', active: {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'true' : 'false' }} },
-
                              { label: 'Suspend', url: '{{ route('noc.suspend') }}', active: {{ request()->routeIs('noc.suspend*') ? 'true' : 'false' }} },
-
                              { label: 'Terminasi', url: '{{ route('noc.terminasi') }}', active: {{ request()->routeIs('noc.terminasi*') ? 'true' : 'false' }} }
-
                          ])"
-
                          @mouseleave="closeFlyoutWithDelay()">
-
                         <button type="button"
-
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, permintaanNocOpen = true) : (permintaanNocOpen = !permintaanNocOpen)"
-
                                 class="w-full ims-nav-item {{ request()->routeIs('noc.aktivasi*', 'noc.monitoring-instalasi-onu*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'active' : '' }} justify-between"
-
                                 title="Permintaan NOC">
-
                             <span class="flex items-center gap-3.5">
-
                                 <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.aktivasi*', 'noc.monitoring-instalasi-onu*', 'noc.suspend*', 'noc.terminasi*', 'teknik.permintaan.*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
-
                                 </svg>
-
                                 <span class="ims-nav-text">Permintaan</span>
-
                             </span>
-
                             <svg class="ims-nav-arrow w-4 h-4 transition-transform duration-200"
-
                                  :class="permintaanNocOpen ? 'rotate-180 text-white' : 'text-[#9CA3AF]'"
-
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-
                             </svg>
-
                         </button>
-
                         <div class="ims-tooltip">Permintaan NOC</div>
 
-
-
                         <!-- Submenu -->
-
                         <div x-show="permintaanNocOpen"
-
                              x-cloak
-
                              x-transition:enter="transition ease-out duration-150"
-
                              x-transition:enter-start="opacity-0 -translate-y-1"
-
                              x-transition:enter-end="opacity-100 translate-y-0"
-
                              x-transition:leave="transition ease-in duration-100"
-
                              x-transition:leave-start="opacity-100 translate-y-0"
-
                              x-transition:leave-end="opacity-0 -translate-y-1"
-
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
-
                             <a href="{{ route('noc.monitoring-instalasi-onu') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.monitoring-instalasi-onu*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.monitoring-instalasi-onu*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Monitoring Instalasi ONU</span>
-
                             </a>
-
                             <a href="{{ route('noc.aktivasi') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.aktivasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.aktivasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Aktivasi Jaringan</span>
-
                             </a>
-
                             <a href="{{ route('teknik.permintaan.up-downgrade') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('teknik.permintaan.up-downgrade*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>UP / Downgrade</span>
-
                             </a>
-
                             <a href="{{ route('noc.suspend') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.suspend*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.suspend*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Suspend</span>
-
                             </a>
-
                             <a href="{{ route('noc.terminasi') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.terminasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.terminasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Terminasi</span>
-
                             </a>
-
                         </div>
-
                     </div>
-
-
-
 
 
                     <!-- 4. Menu OLT (Dropdown Pilihan OLT dari Master OLT) -->
-
                     <div class="ims-nav-wrapper ims-has-flyout"
-
                          x-data="{ oltMenuOpen: {{ request()->routeIs('noc.network-olt*') ? 'true' : 'false' }} }"
-
                          @mouseenter="openFlyout($el, 'Menu OLT', [
-
                              @if(isset($sidebarOlts))
-
                                   @foreach($sidebarOlts as $sOlt)
-
                                   @php
-
                                       $sOltId = is_array($sOlt) ? ($sOlt['olt_id'] ?? '') : ($sOlt->olt_id ?? '');
-
                                       $sOltNama = is_array($sOlt) ? ($sOlt['nama_olt'] ?? '') : ($sOlt->nama_olt ?? '');
-
                                   @endphp
-
                                   { label: 'OLT {{ $sOltId }} - {{ strtoupper($sOltNama) }}', url: '{{ route('noc.network-olt', ['olt_id' => $sOltId]) }}', active: {{ request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOltId) ? 'true' : 'false' }} },
-
                                   @endforeach
-
                              @endif
-
                          ])"
-
                          @mouseleave="closeFlyoutWithDelay()">
-
                         <button type="button"
-
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, oltMenuOpen = true) : (oltMenuOpen = !oltMenuOpen)"
-
                                 class="w-full ims-nav-item {{ request()->routeIs('noc.network-olt*') ? 'active' : '' }} justify-between"
-
                                 title="Menu OLT">
-
                             <span class="flex items-center gap-3.5">
-
                                 <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.network-olt*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.75 5.1a2.25 2.25 0 0 1 1.8-.85h8.9a2.25 2.25 0 0 1 1.8.85l2.1 3.15a4.5 4.5 0 0 1 .9 2.7" />
-
                                 </svg>
-
                                 <span class="ims-nav-text">OLT</span>
-
                             </span>
-
                             <svg class="ims-nav-arrow w-4 h-4 transition-transform duration-200"
-
                                  :class="oltMenuOpen ? 'rotate-180 text-white' : 'text-[#9CA3AF]'"
-
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-
                             </svg>
-
                         </button>
-
                         <div class="ims-tooltip">Daftar OLT</div>
 
-
-
                         <!-- Submenu Pilihan OLT -->
-
                         <div x-show="oltMenuOpen"
-
                              x-cloak
-
                              x-transition:enter="transition ease-out duration-150"
-
                              x-transition:enter-start="opacity-0 -translate-y-1"
-
                              x-transition:enter-end="opacity-100 translate-y-0"
-
                              x-transition:leave="transition ease-in duration-100"
-
                              x-transition:leave-start="opacity-100 translate-y-0"
-
                              x-transition:leave-end="opacity-0 -translate-y-1"
-
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
-
                             @if(isset($sidebarOlts) && (is_countable($sidebarOlts) ? count($sidebarOlts) > 0 : !empty($sidebarOlts)))
-
                                 @foreach($sidebarOlts as $sOlt)
-
                                     @php
-
                                         $sOltId = is_array($sOlt) ? ($sOlt['olt_id'] ?? '') : ($sOlt->olt_id ?? '');
-
                                         $sOltNama = is_array($sOlt) ? ($sOlt['nama_olt'] ?? '') : ($sOlt->nama_olt ?? '');
-
                                         $isCurrentOlt = request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOltId);
-
                                     @endphp
-
                                     <a href="{{ route('noc.network-olt', ['olt_id' => $sOltId]) }}" 
-
                                        class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ $isCurrentOlt ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                         <span class="w-1.5 h-1.5 rounded-full border {{ $isCurrentOlt ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                         <span class="uppercase">OLT {{ $sOltId }} - {{ $sOltNama }}</span>
-
                                     </a>
-
                                 @endforeach
-
                             @else
-
                                 <span class="block px-3 py-2 text-[11px] text-slate-500 italic">Belum ada data OLT</span>
-
                             @endif
-
                         </div>
-
                     </div>
-
-
 
                     <!-- 5. Infrastruktur Dropdown -->
-
                     <div class="ims-nav-wrapper ims-has-flyout"
-
                          x-data="{ infraOpen: {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit', 'noc.gpon*', 'noc.pop*', 'noc.wilayah*', 'noc.router*', 'noc.activity-log*') ? 'true' : 'false' }} }"
-
                          @mouseenter="openFlyout($el, 'Infrastruktur Jaringan', [
-
                              { label: 'Topologi & GPON Port', url: '{{ route('noc.gpon') }}', active: {{ request()->routeIs('noc.gpon*') ? 'true' : 'false' }} },
-
                              { label: 'Network Monitoring', url: '{{ route('noc.olt') }}', active: {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit') ? 'true' : 'false' }} },
-
                              { label: 'Router MikroTik', url: '{{ route('noc.router') }}', active: {{ request()->routeIs('noc.router*') ? 'true' : 'false' }} },
-
                              { label: 'Activity Log Router', url: '{{ route('noc.activity-log') }}', active: {{ request()->routeIs('noc.activity-log*') ? 'true' : 'false' }} },
-
                              { label: 'POP (Point of Presence)', url: '{{ route('noc.pop') }}', active: {{ request()->routeIs('noc.pop*') ? 'true' : 'false' }} },
-
                              { label: 'Wilayah Perangkat', url: '{{ route('noc.wilayah') }}', active: {{ request()->routeIs('noc.wilayah*') ? 'true' : 'false' }} }
-
                          ])"
-
                          @mouseleave="closeFlyoutWithDelay()">
-
                         <button type="button"
-
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, infraOpen = true) : (infraOpen = !infraOpen)"
-
                                 class="w-full ims-nav-item {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit', 'noc.gpon*', 'noc.pop*', 'noc.wilayah*', 'noc.router*', 'noc.activity-log*') ? 'active' : '' }} justify-between"
-
                                 title="Infrastruktur">
-
                             <span class="flex items-center gap-3.5">
-
                                 <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.olt', 'noc.olt.create', 'noc.olt.edit', 'noc.gpon*', 'noc.pop*', 'noc.wilayah*', 'noc.router*', 'noc.activity-log*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-.778.099-1.533.284-2.253" />
-
                                 </svg>
-
                                 <span class="ims-nav-text">Infrastruktur</span>
-
                             </span>
-
                             <svg class="ims-nav-arrow w-4 h-4 transition-transform duration-200"
-
                                  :class="infraOpen ? 'rotate-180 text-white' : 'text-[#9CA3AF]'"
-
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-
                             </svg>
-
                         </button>
-
                         <div class="ims-tooltip">Infrastruktur Jaringan</div>
 
-
-
                         <!-- Submenu -->
-
                         <div x-show="infraOpen"
-
                              x-cloak
-
                              x-transition:enter="transition ease-out duration-150"
-
                              x-transition:enter-start="opacity-0 -translate-y-1"
-
                              x-transition:enter-end="opacity-100 translate-y-0"
-
                              x-transition:leave="transition ease-in duration-100"
-
                              x-transition:leave-start="opacity-100 translate-y-0"
-
                              x-transition:leave-end="opacity-0 -translate-y-1"
-
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
-
                             <a href="{{ route('noc.gpon') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.gpon*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.gpon*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Topologi & GPON Port</span>
-
                             </a>
-
                             <a href="{{ route('noc.olt') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.olt*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.olt*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Network Monitoring</span>
-
                             </a>
-
                             <a href="{{ route('noc.router') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.router*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.router*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Router MikroTik</span>
-
                             </a>
-
                             <a href="{{ route('noc.activity-log') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.activity-log*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.activity-log*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Activity Log Router</span>
-
                             </a>
-
                             <a href="{{ route('noc.pop') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.pop*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.pop*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>POP (Point of Presence)</span>
-
                             </a>
-
                             <a href="{{ route('noc.wilayah') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.wilayah*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.wilayah*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Wilayah Perangkat</span>
-
                             </a>
-
                         </div>
-
                     </div>
 
-
-
                     @endif
-
-
 
                     @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin']))
-
                     <!-- ============================================== -->
-
                     <!-- FINANCE SECTION                                -->
-
                     <!-- ============================================== -->
-
                     <div class="pt-2.5 pb-1">
-
                         <div class="ims-section-header px-3 text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider flex items-center justify-between">
-
                             <span class="ims-section-title">Modul Finance</span>
-
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-
                         </div>
-
                     </div>
-
-
 
                     <!-- Data Pelanggan (Finance) -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('finance.pelanggan') }}"
-
                            class="ims-nav-item {{ request()->routeIs('finance.pelanggan*') ? 'active' : '' }}"
-
                            title="Data Pelanggan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.pelanggan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Data Pelanggan</span>
-
                         </a>
-
                         <div class="ims-tooltip">Data Pelanggan</div>
-
                     </div>
-
-
 
                     <!-- Billing Layanan -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('finance.billing-layanan') }}"
-
                            class="ims-nav-item {{ request()->routeIs('finance.billing-layanan*') ? 'active' : '' }}"
-
                            title="Billing Layanan">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.billing-layanan*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v10.5m0-10.5h6.75a.75.75 0 0 1 .75.75v.75m0 0v8.25m0-8.25h12.75a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75H2.25M6 9h.008v.008H6V9Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.008v.008H6v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Billing Layanan</span>
-
                         </a>
-
                         <div class="ims-tooltip">Billing Layanan</div>
-
                     </div>
-
-
 
                     <!-- Billing Registrasi -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('finance.billing-registrasi') }}"
-
                            class="ims-nav-item {{ request()->routeIs('finance.billing-registrasi*') ? 'active' : '' }}"
-
                            title="Billing Registrasi">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.billing-registrasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Billing Registrasi</span>
-
                         </a>
-
                         <div class="ims-tooltip">Billing Registrasi</div>
-
                     </div>
-
-
 
                     <!-- Notifikasi & Approval (Finance) -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('finance.notifikasi') }}"
-
                            class="ims-nav-item {{ request()->routeIs('finance.notifikasi*') ? 'active' : '' }}"
-
                            title="Notifikasi & Approval">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-
                             </svg>
-
                             <span class="ims-nav-text">Notifikasi & Approval</span>
-
                         </a>
-
                         <div class="ims-tooltip">Notifikasi & Approval</div>
-
                     </div>
-
-
 
                     <!-- Permintaan Finance Dropdown -->
-
                     <div class="ims-nav-wrapper ims-has-flyout"
-
                          x-data="{ permintaanFinanceOpen: {{ request()->routeIs('finance.permintaan.*') ? 'true' : 'false' }} }"
-
                          @mouseenter="openFlyout($el, 'Permintaan ke NOC', [
-
                              { label: 'UP / Downgrade', url: '{{ route('finance.permintaan.up-downgrade') }}', active: {{ request()->routeIs('finance.permintaan.up-downgrade*') ? 'true' : 'false' }} },
-
                              { label: 'Suspend', url: '{{ route('finance.permintaan.suspend') }}', active: {{ request()->routeIs('finance.permintaan.suspend*') ? 'true' : 'false' }} },
-
                              { label: 'Terminasi', url: '{{ route('finance.permintaan.terminasi') }}', active: {{ request()->routeIs('finance.permintaan.terminasi*') ? 'true' : 'false' }} }
-
                          ])"
-
                          @mouseleave="closeFlyoutWithDelay()">
-
                         <button type="button"
-
                                 @click="sidebarCollapsed ? (sidebarCollapsed = false, permintaanFinanceOpen = true) : (permintaanFinanceOpen = !permintaanFinanceOpen)"
-
                                 class="w-full ims-nav-item {{ request()->routeIs('finance.permintaan.*') ? 'active' : '' }} justify-between"
-
                                 title="Permintaan ke NOC">
-
                             <span class="flex items-center gap-3.5">
-
                                 <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('finance.permintaan.*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-
                                 </svg>
-
                                 <span class="ims-nav-text">Permintaan ke NOC</span>
-
                             </span>
-
                             <svg class="ims-nav-arrow w-4 h-4 transition-transform duration-200"
-
                                  :class="permintaanFinanceOpen ? 'rotate-180 text-white' : 'text-[#9CA3AF]'"
-
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                  <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-
                             </svg>
-
                         </button>
-
                         <div class="ims-tooltip">Permintaan ke NOC</div>
 
-
-
                         <!-- Submenu -->
-
                         <div x-show="permintaanFinanceOpen"
-
                              x-cloak
-
                              x-transition:enter="transition ease-out duration-150"
-
                              x-transition:enter-start="opacity-0 -translate-y-1"
-
                              x-transition:enter-end="opacity-100 translate-y-0"
-
                              x-transition:leave="transition ease-in duration-100"
-
                              x-transition:leave-start="opacity-100 translate-y-0"
-
                              x-transition:leave-end="opacity-0 -translate-y-1"
-
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
-
                             <a href="{{ route('finance.permintaan.up-downgrade') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('finance.permintaan.up-downgrade*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('finance.permintaan.up-downgrade*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>UP / Downgrade</span>
-
                             </a>
-
                             <a href="{{ route('finance.permintaan.suspend') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('finance.permintaan.suspend*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('finance.permintaan.suspend*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Suspend</span>
-
                             </a>
-
                             <a href="{{ route('finance.permintaan.terminasi') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('finance.permintaan.terminasi*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
-
                                 <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('finance.permintaan.terminasi*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
-
                                 <span>Terminasi</span>
-
                             </a>
-
                         </div>
-
                     </div>
-
                     @endif
-
-
 
                     @if(auth()->user()?->hasRole(['admin', 'direktur']))
-
                     <!-- ============================================== -->
-
                     <!-- MASTER ADMIN SECTION                           -->
-
                     <!-- ============================================== -->
-
                     <div class="pt-2.5 pb-1">
-
                         <div class="ims-section-header px-3 text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider flex items-center justify-between">
-
                             <span class="ims-section-title">Master Admin</span>
-
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-
                         </div>
-
                     </div>
-
-
 
                     <!-- 1. Manajemen User -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('admin.users') }}"
-
                            class="ims-nav-item {{ request()->routeIs('admin.users*') ? 'active' : '' }}"
-
                            title="Manajemen User">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.users*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.765l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Manajemen User</span>
-
                         </a>
-
                         <div class="ims-tooltip">Manajemen User</div>
-
                     </div>
-
-
 
                     <!-- 2. Master Paket Internet -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('admin.paket') }}"
-
                            class="ims-nav-item {{ request()->routeIs('admin.paket*') ? 'active' : '' }}"
-
                            title="Master Paket Internet">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.paket*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
-
                             </svg>
-
                             <span class="ims-nav-text">Master Paket</span>
-
                         </a>
-
                         <div class="ims-tooltip">Master Paket Internet</div>
-
                     </div>
-
-
 
                     <!-- 3. Broadcast WhatsApp -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('admin.broadcast') }}"
-
                            class="ims-nav-item {{ request()->routeIs('admin.broadcast*') ? 'active' : '' }}"
-
                            title="Broadcast WhatsApp">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.broadcast*') ? 'text-emerald-400' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-
                             </svg>
-
                             <span class="ims-nav-text flex items-center justify-between w-full">
-
                                 <span>Broadcast WA</span>
-
                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">NEW</span>
-
                             </span>
-
                         </a>
-
                         <div class="ims-tooltip">Broadcast WhatsApp (Jatuh Tempo & Pengumuman)</div>
-
                     </div>
-
-
 
                     <!-- 4. Monitoring AI (Gemini Multi-Key & Quota Pool) -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('admin.ai-monitor') }}"
-
                            class="ims-nav-item {{ request()->routeIs('admin.ai-monitor*') ? 'active' : '' }}"
-
                            title="Monitoring AI (Gemini Quota & Multi-Key Pool)">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.ai-monitor*') ? 'text-cyan-400' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
-
                             </svg>
-
                             <span class="ims-nav-text flex items-center justify-between w-full">
-
                                 <span>Monitoring AI</span>
-
                                 <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">POOL</span>
-
                             </span>
-
                         </a>
-
                         <div class="ims-tooltip">Monitoring AI & Sisa Token Gemini</div>
-
                     </div>
-
                     @endif
-
-
 
                     @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
-
                     <!-- Pusat Notifikasi NOC -->
-
                     <div class="ims-nav-wrapper">
-
                         <a href="{{ route('noc.notifikasi') }}"
-
                            class="ims-nav-item {{ request()->routeIs('noc.notifikasi*') ? 'active' : '' }}"
-
                            title="Pusat Notifikasi NOC (Radar Outage & Tiket)">
-
                             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('noc.notifikasi*') ? 'text-white' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-
                             </svg>
-
                             <span class="ims-nav-text">Pusat Notifikasi</span>
-
                         </a>
-
                         <div class="ims-tooltip">Pusat Notifikasi NOC</div>
-
                     </div>
-
                     @endif
 
-
-
                     @endif
-
-
 
                     <!-- Logout / Keluar -->
-
                     <div class="pt-2">
-
                         <div class="ims-nav-wrapper">
-
                             <form action="{{ route('logout') }}" method="POST" onsubmit="localStorage.removeItem('theme');">
-
                                 @csrf
-
                                 <button type="submit"
-
                                         class="w-full ims-nav-item hover:bg-rose-500/10 hover:text-rose-400 text-[#9CA3AF] cursor-pointer"
-
                                         title="Keluar dari Sistem">
-
                                     <svg class="w-5 h-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-
                                     </svg>
-
                                     <span class="ims-nav-text">Keluar</span>
-
                                 </button>
-
                             </form>
-
                             <div class="ims-tooltip bg-[#0F172A] text-rose-400 border border-rose-900/50">Keluar</div>
-
                         </div>
-
                     </div>
-
                 </nav>
 
-
-
                 <!-- Sidebar Footer Info -->
-
                 <div class="p-3 border-t border-[#0d2a38] text-center overflow-hidden shrink-0">
-
                     <div class="ims-footer-full whitespace-nowrap">
-
                         <span class="text-[11px] text-blue-400/90 font-medium">IMS-v2</span>
-
                     </div>
-
                     <div class="ims-footer-mini text-[10px] text-[#9CA3AF] font-mono font-bold">
-
                         v2
-
                     </div>
-
                 </div>
-
             </aside>
 
-
-
             <!-- Main Content Area -->
-
             <div class="flex-1 flex flex-col min-w-0 overflow-y-auto ims-main-scroll">
-
                 <!-- Top Navbar (Mobile Dashboard Green Gradient, Desktop Dual Mode) -->
-
                 <header class="ims-top-navbar min-h-14 sm:min-h-16 shrink-0 flex items-center justify-between px-3 sm:px-6 lg:px-8 sticky top-0 z-50 py-2 shadow-xs transition-colors duration-200">
-
                     <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-
                         <!-- Sidebar Toggle Button in Navbar (Tombol Hamburger) -->
-
                         <button @click="toggleSidebar()" 
-
                                 :title="sidebarCollapsed ? 'Buka Sidebar Penuh' : 'Tutup Sidebar ke Mode Ikon'"
-
                                 class="ims-nav-btn p-2 rounded-xl transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs">
-
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-
                             </svg>
-
                         </button>
-
-
 
                         <div class="min-w-0">
-
                             <h1 class="ims-nav-title text-sm sm:text-base font-bold leading-tight truncate">@yield('page_title', 'Dashboard')</h1>
-
                             <p class="ims-nav-sub text-xs hidden sm:block">Integrated Management System &middot; Portal</p>
-
                         </div>
-
                     </div>
 
-
-
                     <!-- Right Side Navbar -->
-
                     <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-
                         
-
                         @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))
-
                         <!-- Tombol Lonceng Notifikasi NOC (Radar Outage LOS/DOWN & Tiket Masuk) -->
-
                         <div class="relative" x-data="nocNotificationBell()">
-
                             <button @click="toggleOpen()"
-
                                     type="button"
-
                                     :title="activeCount > 0 ? (activeCount + ' Isu Jaringan / Tiket Perlu Atensi NOC') : 'Radar Alarm NOC (Normal)'"
-
                                     class="ims-nav-btn p-2 rounded-xl transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs relative group"
-
                                     aria-label="Notifikasi NOC">
-
                                 <!-- Bell SVG Icon -->
-
                                 <svg class="w-4 h-4 group-hover:scale-110 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-
                                 </svg>
-
                                 
-
                                 <!-- Distinct NOC Indicator Dot (Cyan only when idle/normal, hidden if active alert badge is shown) -->
-
                                 <span x-show="activeCount === 0" x-cloak
-
                                       class="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-cyan-500 shadow-2xs"></span>
 
-
-
                                 <!-- Ripple Ping Effect for New / Unread Outage Alert -->
-
                                 <span x-show="activeCount > 0 && hasNewAlert" x-cloak
-
                                       class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-400 opacity-75 animate-ping"></span>
-
-
 
                                 <!-- Badge Active Issues Count -->
-
                                 <span x-show="activeCount > 0" x-cloak
-
                                       class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900 font-mono"
-
                                       x-text="activeCount > 99 ? '99+' : activeCount">
-
                                 </span>
-
                             </button>
 
-
-
                             <!-- Mobile Backdrop Overlay -->
-
                             <div x-show="open"
-
                                  x-cloak
-
                                  @click="open = false"
-
                                  class="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs z-40 sm:hidden"></div>
-
-
 
                             <!-- Dropdown Menu Notifikasi NOC -->
-
                             <div x-show="open"
-
                                  x-cloak
-
                                  @click.away="open = false"
-
                                  x-transition:enter="transition ease-out duration-150"
-
                                  x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
-
                                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-
                                  x-transition:leave="transition ease-in duration-100"
-
                                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-
                                  x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-
                                  class="ims-notif-dropdown fixed inset-x-2.5 top-[58px] sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[410px] sm:max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/20 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
-
                                 
-
                                 <!-- Header Dropdown -->
-
                                 <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 border-b flex items-center justify-between gap-2 text-white"
-
                                      style="background-color: #0b192c !important; color: #ffffff !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important;">
-
                                     <div class="flex items-center gap-2 min-w-0">
-
                                         <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-
                                              style="background-color: rgba(8, 145, 178, 0.2) !important; color: #22d3ee !important; border: 1px solid rgba(34, 211, 238, 0.3) !important;">
-
                                             <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.122a6.75 6.75 0 0 1 0-9.548m9.546 0a6.75 6.75 0 0 1 0 9.548M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-
                                             </svg>
-
                                         </div>
-
                                         <div class="min-w-0">
-
                                             <div class="flex items-center gap-1.5 flex-nowrap">
-
                                                 <h4 class="text-xs font-bold text-white leading-none whitespace-nowrap" style="color: #ffffff !important;">Radar Alarm NOC</h4>
-
                                                 <span x-show="activeCount > 0" x-cloak
-
                                                       class="px-2 py-0.5 rounded-full text-[9px] font-bold text-white whitespace-nowrap leading-none font-mono"
-
                                                       style="background-color: #e11d48 !important; color: #ffffff !important;"
-
                                                       x-text="activeCount + ' Isu Aktif'"></span>
-
                                                 <span x-show="activeCount === 0" x-cloak
-
                                                       class="px-2 py-0.5 rounded-full text-[9px] font-bold text-white whitespace-nowrap leading-none"
-
                                                       style="background-color: #059669 !important; color: #ffffff !important;">
-
                                                     Normal
-
                                                 </span>
-
                                             </div>
-
                                             <p class="text-[9.5px] sm:text-[10px] truncate mt-1" style="color: #cbd5e1 !important;">Deteksi LOS/DOWN &amp; Tiket Gangguan</p>
-
                                         </div>
-
                                     </div>
-
                                     <div class="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
-
                                         <!-- Tombol Tes Suara Notifikasi -->
-
                                         <button @click="testSound()" 
-
                                                 type="button"
-
                                                 title="Uji Coba Notifikasi Suara"
-
                                                 style="background-color: rgba(255,255,255,0.12) !important; color: #ffffff !important;"
-
                                                 class="p-1.5 rounded-lg hover:opacity-90 transition cursor-pointer text-cyan-300">
-
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
-
                                             </svg>
-
                                         </button>
-
                                         <!-- Tombol Baca Semua -->
-
                                         <button x-show="unreadCount > 0" x-cloak
-
                                                 @click="markAllAsRead()"
-
                                                 type="button"
-
                                                 title="Tandai Semua Dibaca"
-
                                                 style="background-color: rgba(255,255,255,0.12) !important; color: #ffffff !important;"
-
                                                 class="px-2 sm:px-2.5 py-1 rounded-lg text-[9.5px] sm:text-[10px] font-semibold hover:opacity-90 transition flex items-center gap-1 cursor-pointer">
-
                                             <svg class="w-3 h-3 text-cyan-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-
                                             </svg>
-
                                             <span>Baca Semua</span>
-
                                         </button>
-
                                         <!-- Tombol Refresh -->
-
                                         <button @click="fetchAlerts()" 
-
                                                 type="button"
-
                                                 title="Muat Ulang Data NOC"
-
                                                 style="background-color: rgba(255,255,255,0.12) !important; color: #ffffff !important;"
-
                                                 class="p-1.5 rounded-lg hover:opacity-90 transition cursor-pointer">
-
                                             <svg class="w-3.5 h-3.5" :class="isLoading ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-
                                             </svg>
-
                                         </button>
-
                                     </div>
-
                                 </div>
-
-
 
                                 <!-- Mini Bar Stats (Pemisahan LOS, DOWN, Tiket, dan Pulih) -->
-
                                 <div class="px-3.5 py-1.5 border-b flex items-center justify-between text-[10.5px] sm:text-[11px] bg-slate-50 dark:bg-slate-800/80 border-slate-200/80 dark:border-slate-800 font-medium overflow-x-auto">
-
                                     <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
-
                                         <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
-
                                             <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-
                                             <span>LOS:</span>
-
                                             <b class="font-mono text-rose-600 dark:text-rose-400 font-bold" x-text="summary.total_los || 0"></b>
-
                                         </span>
-
                                         <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
-
                                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-
                                             <span>DOWN:</span>
-
                                             <b class="font-mono text-amber-600 dark:text-amber-400 font-bold" x-text="summary.total_down || 0"></b>
-
                                         </span>
-
                                         <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
-
                                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-
                                             <span>Tiket:</span>
-
                                             <b class="font-mono text-blue-600 dark:text-blue-400 font-bold" x-text="summary.total_tickets || 0"></b>
-
                                         </span>
-
                                         <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
-
                                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-
                                             <span>Pulih:</span>
-
                                             <b class="font-mono text-emerald-600 dark:text-emerald-400 font-bold" x-text="summary.total_recoveries || 0"></b>
-
                                         </span>
-
                                     </div>
-
                                     <span class="text-[10px] text-slate-400 font-medium shrink-0 ml-2">Radar NOC</span>
-
                                 </div>
-
-
 
                                 <!-- Filter Tabs (Semua, Isu Aktif, Pulih & Selesai) -->
-
                                 <div class="px-3.5 py-1 bg-slate-100/70 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-1.5">
-
                                     <button type="button" @click="activeTab = 'semua'"
-
                                             class="px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
-
                                             :class="activeTab === 'semua' ? 'bg-[#0891b2] text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
-
                                         <span>Semua</span>
-
                                         <span class="px-1 py-0.2 rounded-full text-[9px] font-mono"
-
                                               :class="activeTab === 'semua' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'"
-
                                               x-text="activeCount + (summary.total_recoveries || 0)"></span>
-
                                     </button>
-
                                     <button type="button" @click="activeTab = 'aktif'"
-
                                             class="px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
-
                                             :class="activeTab === 'aktif' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
-
                                         <span>Isu Aktif</span>
-
                                         <span class="px-1 py-0.2 rounded-full text-[9px] font-mono"
-
                                               :class="activeTab === 'aktif' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'"
-
                                               x-text="activeCount"></span>
-
                                     </button>
-
                                     <button type="button" @click="activeTab = 'pulih'"
-
                                             class="px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
-
                                             :class="activeTab === 'pulih' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'">
-
                                         <span>Pulih &amp; Selesai</span>
-
                                         <span class="px-1 py-0.2 rounded-full text-[9px] font-mono"
-
                                               :class="activeTab === 'pulih' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700'"
-
                                               x-text="summary.total_recoveries || 0"></span>
-
                                     </button>
-
                                 </div>
 
-
-
                                 <!-- Body Notifikasi List -->
-
                                 <div class="max-h-[calc(100dvh-210px)] sm:max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
-
                                     <!-- Loading State -->
-
                                     <template x-if="isLoading && displayItems.length === 0">
-
                                         <div class="p-6 text-center">
-
                                             <svg class="w-6 h-6 mx-auto animate-spin text-teal-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-
                                             </svg>
-
                                             <p class="text-xs text-slate-500 dark:text-slate-400">Memindai status perangkat &amp; tiket...</p>
-
                                         </div>
-
                                     </template>
-
-
 
                                     <!-- Empty State (Semua Normal) -->
-
                                     <template x-if="!isLoading && displayItems.length === 0">
-
                                         <div class="py-9 px-5 text-center">
-
                                             <div class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-2.5 shadow-xs"
-
                                                  style="background-color: #ecfdf5 !important; color: #10b981 !important;">
-
                                                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-
                                                 </svg>
-
                                             </div>
-
                                             <p class="text-xs font-bold text-slate-800 dark:text-slate-100">Kondisi Jaringan Prima</p>
-
                                             <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[260px] mx-auto leading-relaxed">Tidak ada isu jaringan baru pada tab ini.</p>
-
                                         </div>
-
                                     </template>
-
-
 
                                     <!-- Notification Items (Menampilkan Isu Aktif & Riwayat Pemulihan / Selesai) -->
-
                                     <template x-for="item in displayItems" :key="item.id">
-
                                         <a :href="item.url || '{{ route('noc.notifikasi') }}'"
-
                                            @click="markRead(item); open = false"
-
                                            class="px-3.5 py-2.5 flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group cursor-pointer border-b border-slate-100 dark:border-slate-800/60 last:border-b-0"
-
                                            :class="isUnread(item.id, item.device_key) ? (item.is_recovery ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : 'bg-rose-50/40 dark:bg-rose-950/20') : ''">
-
                                             
-
                                             <!-- Mini Status Icon -->
-
                                             <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-
                                                  :class="item.is_recovery ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/70 dark:text-emerald-400 ring-1 ring-emerald-200/80 dark:ring-emerald-800/80' : (item.status === 'LOS' ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400 ring-1 ring-rose-200/80 dark:ring-rose-800/80' : (item.status === 'DOWN' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-400 ring-1 ring-amber-200/80 dark:ring-amber-800/80' : 'bg-blue-100 text-blue-700 dark:bg-blue-950/70 dark:text-blue-400 ring-1 ring-blue-200/80 dark:ring-blue-800/80'))">
-
                                                 <template x-if="item.is_recovery && item.status === 'UP'">
-
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-
                                                     </svg>
-
                                                 </template>
-
                                                 <template x-if="item.is_recovery && item.status === 'SELESAI'">
-
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-
                                                     </svg>
-
                                                 </template>
-
                                                 <template x-if="!item.is_recovery && item.status === 'LOS'">
-
                                                     <svg class="w-3.5 h-3.5 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-
                                                     </svg>
-
                                                 </template>
-
                                                 <template x-if="!item.is_recovery && item.status === 'DOWN'">
-
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
-
                                                     </svg>
-
                                                 </template>
-
                                                 <template x-if="!item.is_recovery && item.device_type === 'tiket'">
-
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
-
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-
                                                     </svg>
-
                                                 </template>
-
                                             </div>
-
-
 
                                             <!-- Content Info -->
-
                                             <div class="flex-1 min-w-0">
-
                                                 <div class="flex items-center gap-1.5 leading-none">
-
                                                     <!-- Badge Status Ringkas -->
-
                                                     <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider leading-none flex-shrink-0"
-
                                                           :class="item.is_recovery ? 'bg-emerald-500 text-white' : (item.status === 'LOS' ? 'bg-rose-500 text-white' : (item.status === 'DOWN' ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white'))"
-
                                                           x-text="item.status"></span>
-
                                                     
-
                                                     <!-- Nama Pelanggan / Device -->
-
                                                     <span class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition"
-
                                                           x-text="item.device_name"></span>
-
                                                     
-
                                                     <!-- Unread Dot -->
-
                                                     <span x-show="isUnread(item.id, item.device_key)" class="w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse"
-
                                                           :class="item.is_recovery ? 'bg-emerald-500' : 'bg-rose-500'" title="Belum dibaca"></span>
-
                                                 </div>
-
-
 
                                                 <!-- Subtitle (Port PON & Nomor Pelanggan / OLT) -->
-
                                                 <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-1 leading-tight"
-
                                                    x-text="item.subtitle || item.title"></p>
-
                                             </div>
-
-
 
                                             <!-- Right Column: Waktu Kejadian & Chevron -->
-
                                             <div class="flex items-center gap-1.5 flex-shrink-0 text-right">
-
                                                 <div class="flex flex-col items-end">
-
                                                     <span class="text-[10px] font-semibold whitespace-nowrap"
-
                                                           :class="item.is_recovery ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-600 dark:text-slate-300'"
-
                                                           x-text="formatDuration(item)"></span>
-
                                                     <span class="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap"
-
                                                           x-text="item.created_at"></span>
-
                                                 </div>
-
                                                 <svg class="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 group-hover:translate-x-0.5 transition flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-
                                                 </svg>
-
                                             </div>
 
-
-
                                         </a>
-
                                     </template>
-
                                 </div>
-
-
 
                                 <!-- Footer Dropdown Terpadu -->
-
                                 <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
-
                                     <a href="{{ route('noc.notifikasi') }}"
-
                                        @click="open = false"
-
                                        style="background: #0891b2 !important; color: #ffffff !important; box-shadow: 0 2px 8px rgba(8, 145, 178, 0.25) !important;"
-
                                        class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-1.5 rounded-xl text-xs font-bold hover:brightness-110 active:scale-95 transition cursor-pointer">
-
                                         <span style="color: #ffffff !important;">Buka Pusat Notifikasi</span>
-
                                         <svg class="w-3.5 h-3.5" style="color: #ffffff !important;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-
                                         </svg>
-
                                     </a>
-
                                 </div>
 
-
-
                             </div>
-
                         </div>
-
                         @endif
-
-
 
                         @if(auth()->user()?->hasRole(['finance', 'direktur', 'admin']))
-
                         <!-- Tombol Lonceng Notifikasi Pembayaran Masuk (Finance) -->
-
                         <div class="relative" x-data="financeNotificationBell()">
-
                             <button @click="toggleOpen()"
-
                                     type="button"
-
                                     :title="unreadCount > 0 ? (unreadCount + ' Pembayaran Masuk Belum Dibaca') : 'Notifikasi Pembayaran Masuk'"
-
                                     class="ims-nav-btn p-2 rounded-xl transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs relative group"
-
                                     aria-label="Notifikasi Pembayaran">
-
                                 <!-- Bell SVG Icon -->
-
                                 <svg class="w-4 h-4 group-hover:scale-110 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-
                                 </svg>
-
                                 
-
                                 <!-- Ripple Ping Effect for New Incoming Payment -->
-
                                 <span x-show="unreadCount > 0 && hasNewAlert" x-cloak
-
                                       class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-400 opacity-75 animate-ping"></span>
 
-
-
                                 <!-- Badge Unread Count -->
-
                                 <span x-show="unreadCount > 0" x-cloak
-
                                       class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900"
-
                                       x-text="unreadCount > 99 ? '99+' : unreadCount">
-
                                 </span>
-
                             </button>
-
-
 
                             <!-- Mobile Backdrop Overlay -->
-
                             <div x-show="open"
-
                                  x-cloak
-
                                  @click="open = false"
-
                                  class="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs z-40 sm:hidden"></div>
 
-
-
                             <!-- Dropdown Menu Notifikasi -->
-
                             <div x-show="open"
-
                                  x-cloak
-
                                  @click.away="open = false"
-
                                  x-transition:enter="transition ease-out duration-150"
-
                                  x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
-
                                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-
                                  x-transition:leave="transition ease-in duration-100"
-
                                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-
                                  x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-
                                  class="ims-notif-dropdown fixed inset-x-2.5 top-[58px] sm:absolute sm:inset-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[390px] sm:max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/20 dark:shadow-black/70 p-0 z-50 overflow-hidden flex flex-col">
-
                                 
-
                                 <!-- Header Dropdown -->
-
                                 <div class="px-3.5 py-2.5 bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
-
                                     <div class="flex items-center gap-2 min-w-0">
-
                                         <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-
                                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-
                                             </svg>
-
                                         </div>
-
                                         <div class="min-w-0">
-
                                             <div class="flex items-center gap-1.5 flex-nowrap">
-
                                                 <h4 class="text-xs font-bold text-slate-900 dark:text-white leading-none whitespace-nowrap">Pembayaran Masuk</h4>
-
                                                 <span x-show="unreadCount > 0" x-cloak
-
                                                       class="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-500 text-white whitespace-nowrap leading-none shadow-2xs"
-
                                                       x-text="unreadCount + ' Baru'"></span>
-
                                             </div>
-
                                             <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Notifikasi & konfirmasi pembayaran</p>
-
                                         </div>
-
                                     </div>
-
                                     <div class="flex items-center gap-1 flex-shrink-0">
-
                                         <!-- Tombol Tandai Semua Dibaca -->
-
                                         <button x-show="unreadCount > 0" x-cloak
-
                                                 @click="markAllAsRead()"
-
                                                 type="button"
-
                                                 title="Tandai Semua Dibaca"
-
                                                 class="px-2 py-1 rounded-md text-[10px] font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700 transition flex items-center gap-1 cursor-pointer">
-
                                             <svg class="w-3 h-3 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-
                                             </svg>
-
                                             <span>Baca Semua</span>
-
                                         </button>
-
                                         <!-- Tombol Refresh -->
-
                                         <button @click="fetchPayments()" 
-
                                                 type="button"
-
                                                 title="Muat Ulang Data"
-
                                                 class="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition cursor-pointer">
-
                                             <svg class="w-3.5 h-3.5" :class="isLoading ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-
                                             </svg>
-
                                         </button>
-
                                     </div>
-
                                 </div>
-
-
 
                                 <!-- Body Notifikasi List -->
-
                                 <div class="max-h-[calc(100dvh-210px)] sm:max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
-
                                     <!-- Loading State -->
-
                                     <template x-if="isLoading && payments.length === 0">
-
                                         <div class="p-6 text-center">
-
                                             <svg class="w-6 h-6 mx-auto animate-spin text-[#0891b2] mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-
                                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-
                                             </svg>
-
                                             <p class="text-xs text-slate-500 dark:text-slate-400">Memeriksa pembayaran masuk...</p>
-
                                         </div>
-
                                     </template>
-
-
 
                                     <!-- Empty State -->
-
                                     <template x-if="!isLoading && payments.length === 0">
-
                                         <div class="py-8 px-4 text-center">
-
                                             <div class="w-10 h-10 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mb-2">
-
                                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v9.75c0 .414.336.75.75.75h.75m0-11.25H12m6.75 0H21m0 0v9.75a.75.75 0 0 1-.75.75h-.75m0-10.5v-.75A.75.75 0 0 0 19.5 4.5H18" />
-
                                                 </svg>
-
                                             </div>
-
                                             <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Belum ada pembayaran masuk</p>
-
                                             <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Data pembayaran terbaru akan tampil otomatis di sini.</p>
-
                                         </div>
-
                                     </template>
-
-
 
                                     <!-- Payment Items (Maksimal 3 notifikasi) -->
-
                                     <template x-for="item in payments.slice(0, 3)" :key="item.id">
-
                                         <a :href="item.url"
-
                                            @click="markRead(item)"
-
                                            class="p-3 flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group cursor-pointer block relative"
-
                                            :class="isUnread(item.id, item.kode_billing) ? 'bg-sky-50/40 dark:bg-sky-950/20' : ''">
-
                                             
-
                                             <!-- Status Icon -->
-
                                             <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-
                                                  :class="item.status === 'paid' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 ring-1 ring-emerald-200/60 dark:ring-emerald-800/60' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 ring-1 ring-amber-200/60 dark:ring-amber-800/60'">
-
                                                 <template x-if="item.status === 'paid'">
-
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-
                                                     </svg>
-
                                                 </template>
-
                                                 <template x-if="item.status !== 'paid'">
-
                                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-
                                                     </svg>
-
                                                 </template>
-
                                             </div>
-
-
 
                                             <!-- Content Detail -->
-
                                             <div class="flex-1 min-w-0">
-
                                                 <!-- Baris 1: Nama & Waktu -->
-
                                                 <div class="flex items-center justify-between gap-1 mb-0.5">
-
                                                     <div class="flex items-center gap-1.5 min-w-0">
-
                                                         <span class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="item.nama_pelanggan"></span>
-
                                                         <span x-show="isUnread(item.id, item.kode_billing)" class="w-1.5 h-1.5 rounded-full bg-[#0891b2] flex-shrink-0" title="Belum dibaca"></span>
-
                                                     </div>
-
                                                     <span class="text-[10px] text-slate-400 dark:text-slate-500 flex-shrink-0 whitespace-nowrap" x-text="item.time_ago"></span>
-
                                                 </div>
-
-
 
                                                 <!-- Baris 2: Nomor Internet, Invoice, dan Nominal -->
-
                                                 <div class="flex items-center justify-between gap-2 mt-0.5">
-
                                                     <p class="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">
-
                                                         <span x-text="item.nomor_internet"></span> &middot; <span class="font-medium text-slate-700 dark:text-slate-300" x-text="item.kode_billing"></span>
-
                                                     </p>
-
                                                     <span class="text-xs font-bold flex-shrink-0" 
-
                                                           :class="item.status === 'paid' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'"
-
                                                           x-text="item.nominal_formatted"></span>
-
                                                 </div>
-
-
 
                                                 <!-- Baris 3: Metode / Bank & Status Label -->
-
                                                 <div class="flex items-center justify-between gap-2 mt-1.5">
-
                                                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 truncate max-w-[160px]">
-
                                                         <svg class="w-2.5 h-2.5 text-[#0891b2] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
-
                                                         </svg>
-
                                                         <span class="truncate" x-text="item.merchant"></span>
-
                                                     </span>
-
                                                     <span class="px-1.5 py-0.5 rounded text-[9px] font-bold flex-shrink-0"
-
                                                           :class="item.status === 'paid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'"
-
                                                           x-text="item.status_label"></span>
-
                                                 </div>
-
                                             </div>
-
                                         </a>
-
                                     </template>
-
                                 </div>
-
-
 
                                 <!-- Footer Dropdown Terpadu -->
-
                                 <div class="px-3.5 py-2.5 bg-slate-50/90 dark:bg-slate-800/80 border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2">
-
                                     <a href="{{ route('finance.billing-layanan') }}"
-
                                        @click="open = false"
-
                                        class="text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition">
-
                                         Billing Layanan
-
                                     </a>
-
                                     <a href="{{ route('finance.notifikasi') }}"
-
                                        @click="open = false"
-
                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-[#0891b2] to-[#0284c7] hover:from-[#0e7490] hover:to-[#0369a1] shadow-2xs hover:shadow-xs transition">
-
                                         <span>Lihat Semua Notifikasi</span>
-
                                         <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-
                                         </svg>
-
                                     </a>
-
                                 </div>
 
-
-
                             </div>
-
                         </div>
-
                         @endif
 
-
-
                         <!-- Theme Toggle Button (Light / Dark Mode) -->
-
                         <button @click="toggleTheme()" 
-
                                 type="button"
-
                                 :title="isDarkMode ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'"
-
                                 class="ims-nav-btn p-2 rounded-xl transition flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xs group"
-
                                 aria-label="Toggle Theme">
-
                             <!-- Sun Icon (Active in Dark Mode) -->
-
                             <svg x-show="isDarkMode" x-cloak class="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-
                             </svg>
-
                             <!-- Moon Icon (Active in Light Mode) -->
-
                             <svg x-show="!isDarkMode" class="w-4 h-4 group-hover:-rotate-12 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
-
                             </svg>
-
                         </button>
 
-
-
                         <!-- Status Gateway & Jam Realtime WIB (Hidden on small mobile screens to keep navbar tidy) -->
-
                         <div class="hidden lg:flex flex-col items-end gap-0.5"
-
                              x-data="{
-
                                  timeWib: '',
-
                                  dateWib: '',
-
                                  updateClock() {
-
                                      const now = new Date();
-
                                      
-
                                      // Format Waktu WIB (Asia/Jakarta)
-
                                      const timeFormatter = new Intl.DateTimeFormat('id-ID', {
-
                                          timeZone: 'Asia/Jakarta',
-
                                          hour12: false,
-
                                          hour: '2-digit',
-
                                          minute: '2-digit',
-
                                          second: '2-digit',
-
                                      });
-
-
 
                                      // Format Tanggal
-
                                      const dateFormatter = new Intl.DateTimeFormat('id-ID', {
-
                                          timeZone: 'Asia/Jakarta',
-
                                          weekday: 'short',
-
                                          day: 'numeric',
-
                                          month: 'short',
-
                                          year: 'numeric',
-
                                      });
 
-
-
                                      this.timeWib = timeFormatter.format(now).replace(/\./g, ':') + ' WIB';
-
                                      this.dateWib = dateFormatter.format(now);
-
                                  }
-
                              }"
-
                              x-init="updateClock(); setInterval(() => updateClock(), 1000)">
-
                             
-
                             <!-- 1. Status Gateway -->
-
                             <div class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px]">
-
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-
                                 <span class="text-emerald-700 dark:text-emerald-400 font-semibold">Online</span>
-
                             </div>
-
-
 
                             <!-- 2. Jam Realtime WIB -->
-
                             <div class="flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-400 font-medium tracking-wide">
-
                                 <svg class="w-3.5 h-3.5 text-[#0891b2] flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-
                                 </svg>
-
                                 <span class="font-mono text-slate-900 dark:text-slate-100 font-bold" x-text="timeWib">--:--:-- WIB</span>
-
                                 <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden xl:inline" x-text="'&middot; ' + dateWib"></span>
-
                             </div>
-
                         </div>
 
-
-
                         <!-- User Profile Dropdown -->
-
                         <div class="relative" x-data="{ open: false }">
-
                             <button @click="open = !open"
-
                                     type="button"
-
                                     class="ims-nav-btn flex items-center gap-2 p-1 sm:p-1.5 rounded-xl transition cursor-pointer">
-
                                 @if(auth()->user()?->foto_url)
-
                                     <div class="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-white/30 md:ring-slate-200 md:dark:ring-slate-700 flex-shrink-0 shadow-xs bg-slate-100 dark:bg-slate-800">
-
                                         <img src="{{ auth()->user()->foto_url }}" alt="{{ auth()->user()->nama }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-
                                         <div class="w-full h-full hidden items-center justify-center font-bold text-xs text-white bg-gradient-to-tr from-[#05404f] to-[#0891b2]">
-
                                             {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
-
                                         </div>
-
                                     </div>
-
                                 @else
-
                                     <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-xs text-white flex-shrink-0 shadow-xs ring-1 ring-white/20 md:ring-0">
-
                                         {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
-
                                     </div>
-
                                 @endif
-
                                 <div class="text-left hidden md:block">
-
                                     <span class="ims-nav-title block text-xs font-bold leading-tight truncate max-w-[140px]">{{ auth()->user()?->nama }}</span>
-
                                     <span class="block text-[10px] text-[#0891b2] dark:text-cyan-400 font-semibold">{{ auth()->user()?->nama_level }}</span>
-
                                 </div>
-
                                 <svg class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-
                                 </svg>
-
                             </button>
 
-
-
                             <!-- Dropdown Menu -->
-
                             <div x-show="open"
-
                                  x-cloak
-
                                  @click.away="open = false"
-
                                  x-transition:enter="transition ease-out duration-150"
-
                                  x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
-
                                  x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-
                                  x-transition:leave="transition ease-in duration-100"
-
                                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-
                                  x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
-
                                  class="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 p-2 z-50">
-
                                 
-
                                 <!-- User Header Card -->
-
                                 <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex items-center gap-3 mb-1.5">
-
                                     @if(auth()->user()?->foto_url)
-
                                         <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white dark:ring-slate-700 shadow-xs bg-slate-100 dark:bg-slate-800">
-
                                             <img src="{{ auth()->user()->foto_url }}" alt="{{ auth()->user()->nama }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-
                                             <div class="w-full h-full hidden items-center justify-center font-bold text-sm text-white bg-gradient-to-tr from-[#05404f] to-[#0891b2]">
-
                                                 {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
-
                                             </div>
-
                                         </div>
-
                                     @else
-
                                         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#05404f] to-[#0891b2] flex items-center justify-center font-bold text-sm text-white flex-shrink-0 shadow-xs">
-
                                             {{ strtoupper(substr(auth()->user()?->nama ?? 'U', 0, 1)) }}
-
                                         </div>
-
                                     @endif
-
                                     <div class="min-w-0 flex-1">
-
                                         <p class="font-bold text-xs text-slate-900 dark:text-white truncate" title="{{ auth()->user()?->nama }}">{{ auth()->user()?->nama }}</p>
-
                                         <p class="text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate" title="{{ auth()->user()?->username }}">{{ auth()->user()?->username }}</p>
-
                                         <div class="mt-1">
-
                                             <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-blue-100/70 dark:bg-blue-900/40 text-blue-700 dark:text-cyan-300">
-
                                                 {{ auth()->user()?->nama_level }}
-
                                             </span>
-
                                         </div>
-
                                     </div>
-
                                 </div>
 
-
-
                                 <!-- Action Buttons List -->
-
                                 <div class="space-y-1">
-
                                     <!-- 1. Profil Saya -->
-
                                     <a href="{{ route('profile') }}"
-
                                        @click="open = false"
-
                                        class="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-cyan-400 flex items-center justify-between group transition cursor-pointer {{ request()->routeIs('profile*') ? 'bg-blue-50 dark:bg-blue-950/40 font-bold text-blue-600 dark:text-cyan-400' : '' }}">
-
                                         <div class="flex items-center gap-2.5">
-
                                             <div class="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-cyan-400 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-
                                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-
                                                 </svg>
-
                                             </div>
-
                                             <span>Profil Saya</span>
-
                                         </div>
-
                                         <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-
                                     </a>
-
-
 
                                     <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
 
-
-
                                     <!-- 2. Keluar -->
-
                                     <form action="{{ route('logout') }}" method="POST" onsubmit="localStorage.removeItem('theme');">
-
                                         @csrf
-
                                         <button type="submit"
-
                                                 class="w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-between group transition cursor-pointer">
-
                                             <div class="flex items-center gap-2.5">
-
                                                 <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-
                                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-
                                                     </svg>
-
                                                 </div>
-
                                                 <span>Keluar</span>
-
                                             </div>
-
                                             <svg class="w-3.5 h-3.5 text-rose-300 dark:text-rose-500/70 group-hover:text-rose-500 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-
                                         </button>
-
                                     </form>
-
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
-
                 </header>
 
-
-
                 <!-- Spacer for Fixed Mobile Navbar (Locks Navbar at the Top Without Overlapping Content) -->
-
                 <div class="ims-top-nav-spacer" aria-hidden="true"></div>
 
-
-
                 <!-- Page Content (Dual Light & Dark Mode Container) -->
-
                 <main class="flex-1 ims-page-enter {{ request()->routeIs('dashboard') ? 'px-3 pt-1.5 pb-2 sm:px-4 sm:pt-2 sm:pb-2.5 lg:px-5 lg:pt-2 lg:pb-2.5' : 'p-3.5 sm:p-6 lg:p-8' }} bg-[#F8FAFC] dark:bg-[#071520] transition-colors duration-200">
-
                     <!-- Flash Message -->
-
                     <!-- Flash Message -->
-
                     @if(session('success'))
-
                         <div x-data="{ show: true }" x-show="show" class="mb-5 p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm backdrop-blur-sm transition-all duration-300">
-
                             <div class="flex items-center gap-3">
-
                                 <div class="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 font-bold">
-
                                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-
                                     </svg>
-
                                 </div>
-
                                 <span class="font-medium leading-relaxed">{{ session('success') }}</span>
-
                             </div>
-
                             <button @click="show = false" type="button" class="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 text-lg font-bold p-1 leading-none shrink-0 transition cursor-pointer">&times;</button>
-
                         </div>
-
                     @endif
-
-
 
                     @if(session('warning'))
-
                         <div x-data="{ show: true }" x-show="show" class="mb-5 p-3.5 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm backdrop-blur-sm transition-all duration-300">
-
                             <div class="flex items-center gap-3">
-
                                 <div class="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 font-bold">
-
                                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-
                                         <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
-
                                     </svg>
-
                                 </div>
-
                                 <span class="font-medium leading-relaxed">{{ session('warning') }}</span>
-
                             </div>
-
                             <button @click="show = false" type="button" class="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 text-lg font-bold p-1 leading-none shrink-0 transition cursor-pointer">&times;</button>
-
                         </div>
-
                     @endif
-
-
 
                     @if(session('info'))
-
                         <div x-data="{ show: true }" x-show="show" class="mb-5 p-3.5 sm:p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-300 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm backdrop-blur-sm transition-all duration-300">
-
                             <div class="flex items-center gap-3">
-
                                 <div class="w-8 h-8 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0 text-blue-600 dark:text-blue-400 font-bold">
-
                                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-
                                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd" />
-
                                     </svg>
-
                                 </div>
-
                                 <span class="font-medium leading-relaxed">{{ session('info') }}</span>
-
                             </div>
-
                             <button @click="show = false" type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 text-lg font-bold p-1 leading-none shrink-0 transition cursor-pointer">&times;</button>
-
                         </div>
-
                     @endif
-
-
 
                     @if(session('error'))
-
                         <div x-data="{ show: true }" x-show="show" class="mb-5 p-3.5 sm:p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs sm:text-sm flex items-center justify-between gap-3 shadow-sm backdrop-blur-sm transition-all duration-300">
-
                             <div class="flex items-center gap-3">
-
                                 <div class="w-8 h-8 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400 font-bold">
-
                                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-
                                     </svg>
-
                                 </div>
-
                                 <span class="font-medium leading-relaxed">{{ session('error') }}</span>
-
                             </div>
-
                             <button @click="show = false" type="button" class="text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-200 text-lg font-bold p-1 leading-none shrink-0 transition cursor-pointer">&times;</button>
-
                         </div>
-
                     @endif
-
-
 
                     @if($errors->any())
-
                         <div x-data="{ show: true }" x-show="show" class="mb-5 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-sm shadow-sm backdrop-blur-sm">
-
                             <div class="flex items-center justify-between gap-2 font-bold mb-1.5">
-
                                 <div class="flex items-center gap-2">
-
                                     <svg class="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-
                                     </svg>
-
                                     <span>Perhatian: Gagal memproses permintaan</span>
-
                                 </div>
-
                                 <button @click="show = false" type="button" class="text-rose-600 hover:text-rose-800 dark:text-rose-400 dark:hover:text-rose-200 text-lg font-bold p-1 leading-none transition cursor-pointer">&times;</button>
-
                             </div>
-
                             <ul class="list-disc list-inside space-y-1 text-xs text-rose-600 dark:text-rose-400 ml-1">
-
                                 @foreach($errors->all() as $errorItem)
-
                                     <li>{{ $errorItem }}</li>
-
                                 @endforeach
-
                             </ul>
-
                         </div>
-
                     @endif
 
-
-
                     @yield('content')
-
                 </main>
 
-
-
                 @unless(request()->routeIs('dashboard') || View::hasSection('no_footer'))
-
                 <!-- Bottom Footer (Dual Light & Dark Mode) -->
-
                 <footer class="mt-auto shrink-0 px-6 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2 transition-colors duration-200">
-
                     <div>
-
                         &copy; {{ date('Y') }} Media Solusi Network
-
                     </div>
-
                     <div>
-
                         IMS-v2 &middot; v3.0.1
-
                     </div>
-
                 </footer>
-
                 @endunless
-
             </div>
-
         </div>
-
     </div>
-
-
 
     <!-- Collapsed Sidebar Floating Flyout Submenu Portal (Root of Body) -->
-
     <div x-show="sidebarCollapsed && activeFlyout"
-
          x-cloak
-
          x-transition:enter="transition ease-out duration-150"
-
          x-transition:enter-start="opacity-0 translate-x-1"
-
          x-transition:enter-end="opacity-100 translate-x-0"
-
          x-transition:leave="transition ease-in duration-100"
-
          x-transition:leave-start="opacity-100 translate-x-0"
-
          x-transition:leave-end="opacity-0 translate-x-1"
-
          @mouseenter="cancelFlyoutClose()"
-
          @mouseleave="closeFlyoutWithDelay()"
-
          class="ims-flyout-portal w-56 rounded-2xl bg-[#061d28] border border-[#0d2a38] shadow-2xl shadow-black p-2.5 space-y-1"
-
          :style="`top: ${flyoutTop}px; left: 4.85rem; position: fixed !important; z-index: 9999999 !important;`">
-
         
-
         <!-- Flyout Header / Title -->
-
         <div class="px-3 py-1.5 mb-1 border-b border-[#0d2a38] flex items-center justify-between">
-
             <span class="text-xs font-bold text-white tracking-wide" x-text="flyoutTitle"></span>
-
             <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-
         </div>
-
-
 
         <!-- Flyout Menu Items -->
-
         <div class="space-y-0.5">
-
             <template x-for="(item, idx) in flyoutItems" :key="idx">
-
                 <a :href="item.url"
-
                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition duration-150"
-
                    :class="item.active ? 'bg-gradient-to-r from-[#0891b2] to-[#0284c7] text-white font-semibold shadow-md shadow-cyan-900/40' : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'">
-
                     <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
-
                           :class="item.active ? 'bg-white shadow-xs shadow-white' : 'bg-slate-500'"></span>
-
                     <span class="truncate" x-text="item.label"></span>
-
                 </a>
-
             </template>
-
         </div>
-
     </div>
-
-
 
     @auth
-
         {{-- Floating IMS AI Copilot Widget Portal --}}
-
         @include('components.ai-copilot')
-
     @endauth
 
-
-
     <!-- Toast Notification Portal Container (Fixed Top Right) -->
-
     <div x-data="{
-
              toasts: [],
-
              addToast(detail) {
-
                  if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-
                      return;
-
                  }
-
                  const id = detail.id || ('t_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
-
                  const now = new Date();
-
                  const formattedTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
                  const toast = { ...detail, id, formattedTime };
-
                  this.toasts.unshift(toast);
-
                  if (this.toasts.length > 5) this.toasts.pop();
-
                  setTimeout(() => this.removeToast(id), 8000);
-
              },
-
              removeToast(id) {
-
                  this.toasts = this.toasts.filter(t => t.id !== id);
-
              },
-
              getTypeConfig(t) {
-
                  const type = (t.type || '').toLowerCase();
-
                  const status = (t.status || '').toUpperCase();
-
                  const title = (t.title || '').toLowerCase();
 
-
-
                  // 1. Critical Alarm / LOS / Down / Danger
-
                  if (type === 'noc_alarm' || status === 'LOS' || type === 'danger' || type === 'error') {
-
                      return {
-
                          bar: 'bg-rose-500',
-
                          badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
-
                          iconBox: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
-
                          progressBar: 'bg-rose-500',
-
                          label: t.badge_label || (status === 'LOS' ? 'Radar LOS Alert' : 'Alarm Gangguan'),
-
                          icon: 'alarm',
-
                          ping: true,
-
                          pingColor: 'bg-rose-500'
-
                      };
-
                  }
-
                  if (status === 'DOWN' || type === 'down') {
-
                      return {
-
                          bar: 'bg-amber-500',
-
                          badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
-
                          iconBox: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
-
                          progressBar: 'bg-amber-500',
-
                          label: t.badge_label || 'Device Down',
-
                          icon: 'down',
-
                          ping: true,
-
                          pingColor: 'bg-amber-500'
-
                      };
-
                  }
-
-
 
                  // 2. Tiket
-
                  if (type === 'tiket' || title.includes('tiket')) {
-
                      return {
-
                          bar: 'bg-rose-500',
-
                          badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
-
                          iconBox: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
-
                          progressBar: 'bg-rose-500',
-
                          label: t.badge_label || 'Tiket Gangguan',
-
                          icon: 'tiket',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 3. Recovery / Selesai
-
                  if (type === 'noc_recovery' || title.includes('pulih') || type === 'success') {
-
                      return {
-
                          bar: 'bg-emerald-500',
-
                          badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
-
                          iconBox: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
-
                          progressBar: 'bg-emerald-500',
-
                          label: t.badge_label || 'Koneksi Pulih',
-
                          icon: 'recovery',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 4. Pembayaran
-
                  if (type === 'pembayaran' || title.includes('pembayaran') || title.includes('lunas') || title.includes('bayar')) {
-
                      return {
-
                          bar: 'bg-emerald-500',
-
                          badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
-
                          iconBox: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
-
                          progressBar: 'bg-emerald-500',
-
                          label: t.badge_label || 'Pembayaran Masuk',
-
                          icon: 'pembayaran',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 5. Pendaftaran Pelanggan Baru
-
                  if (type === 'pendaftaran' || title.includes('pendaftaran')) {
-
                      return {
-
                          bar: 'bg-blue-600',
-
                          badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
-
                          iconBox: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
-
                          progressBar: 'bg-blue-600',
-
                          label: t.badge_label || 'Pelanggan Baru',
-
                          icon: 'pendaftaran',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 6. Instalasi Selesai
-
                  if (type === 'instalasi' || title.includes('instalasi')) {
-
                      return {
-
                          bar: 'bg-cyan-500',
-
                          badge: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25',
-
                          iconBox: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25',
-
                          progressBar: 'bg-cyan-500',
-
                          label: t.badge_label || 'Instalasi Selesai',
-
                          icon: 'instalasi',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 7. Ubah Bandwidth (UpDown)
-
                  if (type === 'updown' || title.includes('bandwidth') || title.includes('layanan')) {
-
                      return {
-
                          bar: 'bg-cyan-500',
-
                          badge: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25',
-
                          iconBox: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/25',
-
                          progressBar: 'bg-cyan-500',
-
                          label: t.badge_label || 'Ubah Layanan',
-
                          icon: 'updown',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 8. Suspend (Isolir)
-
                  if (type === 'suspend' || title.includes('isolir')) {
-
                      return {
-
                          bar: 'bg-amber-500',
-
                          badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
-
                          iconBox: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
-
                          progressBar: 'bg-amber-500',
-
                          label: t.badge_label || 'Isolir Jaringan',
-
                          icon: 'suspend',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 9. Terminasi
-
                  if (type === 'terminasi' || title.includes('terminasi')) {
-
                      return {
-
                          bar: 'bg-rose-500',
-
                          badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
-
                          iconBox: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/25',
-
                          progressBar: 'bg-rose-500',
-
                          label: t.badge_label || 'Terminasi',
-
                          icon: 'terminasi',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 10. Request Invoice
-
                  if (type === 'request_invoice' || title.includes('invoice')) {
-
                      return {
-
                          bar: 'bg-indigo-500',
-
                          badge: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25',
-
                          iconBox: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25',
-
                          progressBar: 'bg-indigo-500',
-
                          label: t.badge_label || 'Invoice Tagihan',
-
                          icon: 'invoice',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 11. Test Sound / Voice
-
                  if (type === 'test') {
-
                      return {
-
                          bar: 'bg-blue-600',
-
                          badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
-
                          iconBox: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
-
                          progressBar: 'bg-blue-600',
-
                          label: t.badge_label || 'Uji Coba Suara',
-
                          icon: 'sound',
-
                          ping: false
-
                      };
-
                  }
-
-
 
                  // 12. Warning
-
                  if (type === 'warning') {
-
                      return {
-
                          bar: 'bg-amber-500',
-
                          badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
-
                          iconBox: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
-
                          progressBar: 'bg-amber-500',
-
                          label: t.badge_label || 'Perhatian',
-
                          icon: 'warning',
-
                          ping: false
-
                      };
-
                  }
 
-
-
                  // Default / Info
-
                  return {
-
                      bar: 'bg-blue-500',
-
                      badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
-
                      iconBox: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25',
-
                      progressBar: 'bg-blue-500',
-
                      label: t.badge_label || 'Notifikasi IMS',
-
                      icon: 'bell',
-
                      ping: false
-
                  };
-
              }
-
          }"
-
          @ims-new-toast.window="addToast($event.detail)"
-
          class="fixed top-4 sm:top-6 inset-x-3 sm:inset-x-auto sm:right-6 sm:w-[410px] max-w-full sm:max-w-md z-[999999] flex flex-col gap-2.5 pointer-events-none select-none">
-
         
-
         <template x-for="t in toasts" :key="t.id">
-
             <div x-data="{ cfg: getTypeConfig(t) }"
-
                  class="pointer-events-auto relative overflow-hidden w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/50 transition-all duration-300 transform"
-
                  x-transition:enter="transition ease-out duration-300"
-
                  x-transition:enter-start="opacity-0 translate-y-2 sm:-translate-y-2 scale-95"
-
                  x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-
                  x-transition:leave="transition ease-in duration-200"
-
                  x-transition:leave-start="opacity-100 scale-100"
-
                  x-transition:leave-end="opacity-0 scale-95">
 
-
-
                 <!-- Crisp Left Accent Strip (Conforms to container's rounded-2xl) -->
-
                 <div class="absolute left-0 top-0 bottom-0 w-1.5" :class="cfg.bar"></div>
 
-
-
                 <!-- Card Body -->
-
                 <div class="p-3.5 sm:p-4 pl-4 sm:pl-4.5">
-
                     <div class="flex items-start gap-3">
 
-
-
                         <!-- Icon Container with Glow Accent -->
-
                         <div class="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-2xs"
-
                              :class="cfg.iconBox">
 
-
-
                             <!-- Pulsing Alert Beacon on Top Right of Icon (for urgent alerts) -->
-
                             <template x-if="cfg.ping">
-
                                 <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" :class="cfg.pingColor"></span>
-
                                     <span class="relative inline-flex rounded-full h-2.5 w-2.5" :class="cfg.pingColor"></span>
-
                                 </span>
-
                             </template>
-
-
 
                             <!-- Icon: Alarm / LOS / Down -->
-
                             <template x-if="cfg.icon === 'alarm' || cfg.icon === 'down'">
-
                                 <svg class="w-5 h-5 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Recovery / Success -->
-
                             <template x-if="cfg.icon === 'recovery'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Tiket -->
-
                             <template x-if="cfg.icon === 'tiket'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Pembayaran -->
-
                             <template x-if="cfg.icon === 'pembayaran'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v8.25m0-8.25h16.5m0 0v8.25m0-8.25h1.5a.75.75 0 0 1 .75.75v.75m-2.25 0h2.25m-2.25 0a60.07 60.07 0 0 0-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V8.25m2.25 0H21M9 12.75a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Pendaftaran -->
-
                             <template x-if="cfg.icon === 'pendaftaran'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.765Z" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Instalasi -->
-
                             <template x-if="cfg.icon === 'instalasi'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.07a4.5 4.5 0 0 0 4.486-6.32l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.32 4.486c.118.58.094 1.193-.07 1.743" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: UpDown -->
-
                             <template x-if="cfg.icon === 'updown'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Suspend -->
-
                             <template x-if="cfg.icon === 'suspend'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Terminasi -->
-
                             <template x-if="cfg.icon === 'terminasi'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Invoice -->
-
                             <template x-if="cfg.icon === 'invoice'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Sound Test -->
-
                             <template x-if="cfg.icon === 'sound'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon: Warning -->
-
                             <template x-if="cfg.icon === 'warning'">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-
                                 </svg>
-
                             </template>
-
-
 
                             <!-- Icon Default / Fallback: Bell -->
-
                             <template x-if="!['alarm', 'down', 'recovery', 'tiket', 'pembayaran', 'pendaftaran', 'instalasi', 'updown', 'suspend', 'terminasi', 'invoice', 'sound', 'warning'].includes(cfg.icon)">
-
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-
                                 </svg>
-
                             </template>
-
                         </div>
-
-
 
                         <!-- Toast Content Body -->
-
                         <div class="flex-1 min-w-0">
-
                             <!-- Top Pill Category & Close Button -->
-
                             <div class="flex items-center justify-between gap-2 mb-1">
-
                                 <div class="flex items-center gap-1.5 flex-wrap min-w-0">
-
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider font-mono border"
-
                                           :class="cfg.badge"
-
                                           x-text="cfg.label"></span>
-
                                     <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono" x-text="t.formattedTime || ''"></span>
-
                                 </div>
-
-
 
                                 <!-- Close Button -->
-
                                 <button type="button" 
-
                                         @click="removeToast(t.id)" 
-
                                         class="w-6 h-6 -mr-1 -mt-1 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition cursor-pointer flex-shrink-0"
-
                                         title="Tutup Notifikasi">
-
                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-
                                     </svg>
-
                                 </button>
-
                             </div>
 
-
-
                             <!-- Title -->
-
                             <h5 class="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-slate-100 leading-snug break-words" x-text="t.title"></h5>
 
-
-
                             <!-- Message Body -->
-
                             <p class="text-[11.5px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed break-words line-clamp-3" x-text="t.message"></p>
 
-
-
                             <!-- Link Action Button -->
-
                             <template x-if="t.url">
-
                                 <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-
                                     <a :href="t.url" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition">
-
                                         <span>Lihat Detail</span>
-
                                         <svg class="w-3 h-3 text-slate-500 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-
                                         </svg>
-
                                     </a>
-
                                 </div>
-
                             </template>
-
                         </div>
-
                     </div>
-
                 </div>
-
-
 
                 <!-- Animated Auto-Close Bottom Progress Bar -->
-
                 <div class="absolute bottom-0 left-0 right-0 h-[2.5px] bg-slate-100 dark:bg-slate-800/80 overflow-hidden">
-
                     <div class="h-full ims-toast-progress-bar" :class="cfg.progressBar"></div>
-
                 </div>
-
             </div>
-
         </template>
-
     </div>
 
-
-
     <!-- IMS Multi-Tab Notification Coordinator (Leader Election & Single Active Tab Dispatcher) -->
-
     <script>
-
         window.ImsTabCoordinator = {
-
             tabId: 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8),
-
             channel: null,
 
-
-
             init() {
-
                 try {
-
                     if (typeof BroadcastChannel !== 'undefined') {
-
                         this.channel = new BroadcastChannel('ims_multi_tab_notifications');
-
                     }
-
                 } catch (e) {
-
                     this.channel = null;
-
                 }
 
-
-
                 try {
-
                     sessionStorage.setItem('ims_current_tab_id', this.tabId);
-
                 } catch (e) {}
-
-
 
                 const updateActive = () => {
-
                     if (!document.hidden) {
-
                         this.claimActive();
-
                     }
-
                 };
-
-
 
                 window.addEventListener('focus', updateActive);
-
                 window.addEventListener('click', updateActive);
-
                 window.addEventListener('keydown', updateActive);
-
                 document.addEventListener('visibilitychange', updateActive);
 
-
-
                 if (!document.hidden) {
-
                     this.claimActive();
-
                 }
-
-
 
                 // Heartbeat periodic checking
-
                 this.runHeartbeat();
-
                 setInterval(() => this.runHeartbeat(), 2500);
 
-
-
                 // Handle cleanup
-
                 window.addEventListener('beforeunload', () => {
-
                     try {
-
                         if (this.isActive()) {
-
                             localStorage.removeItem('ims_active_tab_id');
-
                             localStorage.removeItem('ims_active_tab_heartbeat');
-
                         }
-
                         if (this.isLeader()) {
-
                             localStorage.removeItem('ims_tab_leader_id');
-
                             localStorage.removeItem('ims_tab_leader_heartbeat');
-
                         }
-
                     } catch (e) {}
-
                 });
-
-
 
                 // Listen to channel messages from background tabs
-
                 if (this.channel) {
-
                     this.channel.onmessage = (event) => {
-
                         const data = event.data || {};
-
                         if (data.type === 'delegate_notification') {
-
                             if (this.isAllowedToNotify()) {
-
                                 if (data.action === 'playNocRecoverySound' && typeof window.playNocRecoverySound === 'function') {
-
                                     window.playNocRecoverySound(data.payload?.[0], data.payload?.[1], true);
-
                                 } else if (data.action === 'playNocEmergencySound' && typeof window.playNocEmergencySound === 'function') {
-
                                     window.playNocEmergencySound(data.payload?.[0], true);
-
                                 } else if (data.action === 'enqueueNotification' && window.ImsVoice) {
-
                                     window.ImsVoice.enqueueNotification(data.payload, true);
-
                                 }
-
                             }
-
                         }
-
                     };
-
                 }
-
             },
-
-
 
             claimActive() {
-
                 try {
-
                     localStorage.setItem('ims_active_tab_id', this.tabId);
-
                     localStorage.setItem('ims_active_tab_heartbeat', String(Date.now()));
-
                 } catch (e) {}
-
             },
-
-
 
             isActive() {
-
                 try {
-
                     return localStorage.getItem('ims_active_tab_id') === this.tabId;
-
                 } catch (e) {
-
                     return true;
-
                 }
-
             },
-
-
 
             isLeader() {
-
                 try {
-
                     return localStorage.getItem('ims_tab_leader_id') === this.tabId;
-
                 } catch (e) {
-
                     return true;
-
                 }
-
             },
-
-
 
             runHeartbeat() {
-
                 const now = Date.now();
-
                 if (!document.hidden && this.isActive()) {
-
                     try {
-
                         localStorage.setItem('ims_active_tab_heartbeat', String(now));
-
                     } catch (e) {}
-
                 }
 
-
-
                 try {
-
                     const currentLeader = localStorage.getItem('ims_tab_leader_id');
-
                     const leaderHeartbeat = parseInt(localStorage.getItem('ims_tab_leader_heartbeat') || '0', 10);
-
                     if (!currentLeader || (now - leaderHeartbeat) > 6000 || currentLeader === this.tabId) {
-
                         localStorage.setItem('ims_tab_leader_id', this.tabId);
-
                         localStorage.setItem('ims_tab_leader_heartbeat', String(now));
-
                     }
-
                 } catch (e) {}
-
             },
-
-
 
             isAllowedToNotify() {
-
                 // 1. Tab ini sedang terlihat di depan mata pengguna -> Pasti boleh
-
                 if (!document.hidden) {
-
                     this.claimActive();
-
                     return true;
-
                 }
-
-
 
                 // 2. Tab ini di background. Cek apakah ada tab IMS lain yang aktif terlihat
-
                 const now = Date.now();
-
                 let activeTabId = null;
-
                 let activeHeartbeat = 0;
-
                 try {
-
                     activeTabId = localStorage.getItem('ims_active_tab_id');
-
                     activeHeartbeat = parseInt(localStorage.getItem('ims_active_tab_heartbeat') || '0', 10);
-
                 } catch (e) {}
-
-
 
                 const isActiveTabAlive = activeTabId && activeTabId !== this.tabId && (now - activeHeartbeat) < 6000;
-
                 if (isActiveTabAlive) {
-
                     // Ada tab lain yang sedang terlihat di depan mata pengguna, biarkan tab tersebut yang bunyi
-
                     return false;
-
                 }
-
-
 
                 // 3. Semua tab sedang di background (browser diminimize/buka app lain) -> Tab Leader yang bertugas
-
                 return this.isLeader();
-
             },
-
-
 
             claimEvent(eventId, ttlMs = 15000) {
-
                 if (!eventId) return false;
-
                 const now = Date.now();
-
                 const storageKey = 'ims_evt_lock_' + eventId;
-
                 let lastClaimed = 0;
-
                 try {
-
                     lastClaimed = parseInt(localStorage.getItem(storageKey) || '0', 10);
-
                 } catch (e) {}
-
-
 
                 if (lastClaimed && (now - lastClaimed) < ttlMs) {
-
                     return false; // Sudah diklaim dan diproses oleh tab lain
-
                 }
 
-
-
                 try {
-
                     localStorage.setItem(storageKey, String(now));
-
                 } catch (e) {}
 
-
-
                 return true;
-
             },
-
-
 
             delegateToActive(action, payload) {
-
                 if (this.channel) {
-
                     try {
-
                         this.channel.postMessage({
-
                             type: 'delegate_notification',
-
                             action: action,
-
                             payload: payload
-
                         });
-
                     } catch (e) {}
-
                 }
-
             }
-
         };
-
     </script>
 
-
-
     <!-- IMS Web Speech Voice Engine & Notification Poller -->
-
     <script>
-
         window.ImsVoice = {
-
             soundEnabled: localStorage.getItem('ims_voice_sound_enabled') !== 'false',
-
             lastCheck: Math.max(
-
                 parseInt(localStorage.getItem('ims_last_notif_poll_ts') || '0', 10),
-
                 Math.floor(Date.now() / 1000) - 60
-
             ),
-
             chimeAudio: new Audio('{{ asset("assets/sound/anoun.mp3") }}'),
-
             audioUnlocked: false,
-
             speechUnlocked: false,
-
             voicesReady: false,
-
             queue: [],
-
             isProcessingQueue: false,
 
-
-
             getPlayedIds() {
-
                 try {
-
                     const stored = localStorage.getItem('ims_played_notifications');
-
                     return stored ? JSON.parse(stored) : [];
-
                 } catch(e) {
-
                     return [];
-
                 }
-
             },
-
-
 
             markAsPlayed(id) {
-
                 if (!id) return;
-
                 try {
-
                     const list = this.getPlayedIds();
-
                     if (!list.includes(id)) {
-
                         list.push(id);
-
                         if (list.length > 200) list.shift();
-
                         localStorage.setItem('ims_played_notifications', JSON.stringify(list));
-
                     }
-
                 } catch(e) {}
-
             },
-
-
 
             hasPlayed(id) {
-
                 if (!id) return false;
-
                 return this.getPlayedIds().includes(id);
-
             },
-
-
 
             init() {
-
                 // Muat daftar suara browser secara proaktif
-
                 if ('speechSynthesis' in window) {
-
                     try {
-
                         const vList = window.speechSynthesis.getVoices();
-
                         if (vList && vList.length > 0) this.voicesReady = true;
-
                     } catch(e) {}
-
                     window.speechSynthesis.onvoiceschanged = () => {
-
                         this.voicesReady = true;
-
                     };
-
                 }
-
-
 
                 // Unlock audio autoplay & Web Speech API saat ada interaksi pengguna nyata
-
                 const unlockEvents = ['click', 'touchstart', 'keydown'];
-
                 const unlock = () => {
-
                     window._hasUserGesture = true;
-
                     try {
-
                         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-
                         if (AudioCtx) {
-
                             if (!window._sharedAudioCtx) {
-
                                 window._sharedAudioCtx = new AudioCtx();
-
                             }
-
                             if (window._sharedAudioCtx && window._sharedAudioCtx.state === 'suspended') {
-
                                 window._sharedAudioCtx.resume().catch(() => {});
-
                             }
-
                         }
-
                     } catch(e) {}
 
-
-
                     if (!this.audioUnlocked) {
-
                         try {
-
                             this.chimeAudio.muted = true;
-
                             this.chimeAudio.play().then(() => {
-
                                 this.chimeAudio.pause();
-
                                 this.chimeAudio.currentTime = 0;
-
                                 this.chimeAudio.muted = false;
-
                                 this.audioUnlocked = true;
-
                             }).catch(() => {});
-
                         } catch(e) {}
-
                     }
-
-
 
                     if (!this.speechUnlocked && 'speechSynthesis' in window) {
-
                         try {
-
                             if (window.speechSynthesis.paused) {
-
                                 window.speechSynthesis.resume();
-
                             }
-
                             const primeUtterance = new SpeechSynthesisUtterance(' ');
-
                             primeUtterance.volume = 0.01;
-
                             primeUtterance.rate = 10;
-
                             window.speechSynthesis.speak(primeUtterance);
-
                             this.speechUnlocked = true;
-
                         } catch(e) {}
-
                     }
-
-
 
                     if (this.audioUnlocked && this.speechUnlocked && window._sharedAudioCtx?.state === 'running') {
-
                         unlockEvents.forEach(evt => document.removeEventListener(evt, unlock));
-
                     }
-
                 };
-
                 unlockEvents.forEach(evt => {
-
                     document.addEventListener(evt, unlock, { passive: true });
-
                 });
-
-
 
                 // Initial check once on load, then periodic background polling
-
                 setTimeout(() => {
-
                     this.pollNotifications();
-
                 }, 1000);
 
-
-
                 // Periodic check every 25 seconds when browser tab is active
-
                 setInterval(() => {
-
                     if (!document.hidden) {
-
                         this.pollNotifications();
-
                     }
-
                 }, 25000);
 
-
-
                 // Check immediately when user switches back to this tab
-
                 document.addEventListener('visibilitychange', () => {
-
                     if (!document.hidden) {
-
                         this.pollNotifications();
-
                     }
-
                 });
-
             },
-
-
 
             testSound() {
-
                 this.soundEnabled = true;
-
                 localStorage.setItem('ims_voice_sound_enabled', 'true');
-
                 this.enqueueNotification({
-
                     type: 'test',
-
                     title: 'Uji Coba Suara IMS',
-
                     message: 'Sistem notifikasi suara Web Speech API & Chime berfungsi dengan baik.',
-
                     speech_text: 'Tes notifikasi suara IMS berhasil. Sistem siap memantau.',
-
                 }, true);
-
             },
-
-
 
             enqueueNotification(item, force = false) {
-
                 if (force) {
-
                     item._forcePlay = true;
-
                 }
-
                 this.queue.push(item);
-
                 this.processQueue();
-
             },
-
-
 
             async processQueue() {
-
                 if (this.isProcessingQueue || this.queue.length === 0) return;
-
                 this.isProcessingQueue = true;
-
                 const item = this.queue.shift();
 
-
-
                 try {
-
                     const allowNotify = item._forcePlay || !window.ImsTabCoordinator || window.ImsTabCoordinator.isAllowedToNotify();
 
-
-
                     if (allowNotify) {
-
                         window.dispatchEvent(new CustomEvent('ims-new-toast', { detail: item }));
-
                     }
-
-
 
                     if (this.soundEnabled && allowNotify) {
-
                         await this.playChimeAndSpeak(item);
-
                     }
-
                 } catch (e) {
-
                     console.warn('Notification play error:', e);
-
                 } finally {
-
                     setTimeout(() => {
-
                         this.isProcessingQueue = false;
-
                         this.processQueue();
-
                     }, 500);
-
                 }
-
             },
-
-
 
             // Fallback audio jika Web Speech API tidak bersuara / tidak ada voice di OS
-
             playFallbackAudio(item) {
-
                 return new Promise((resolve) => {
-
                     try {
-
                         const type = (item.type || '').toLowerCase();
-
                         const title = (item.title || '').toLowerCase();
-
                         const text = (item.speech_text || '').toLowerCase();
-
                         let audioFile = null;
 
-
-
                         if (type === 'test' || text.includes('tes notifikasi')) {
-
                             audioFile = '{{ asset("assets/sound/notifikasi_tes_ims.mp3") }}';
-
                         } else if (type === 'pembayaran' || title.includes('pembayaran') || text.includes('pembayaran tagihan') || text.includes('pembayaran biaya registrasi')) {
-
                             audioFile = '{{ asset("assets/sound/notifikasi_pembayaran_masuk.mp3") }}';
-
                         } else if (type === 'tiket' || title.includes('tiket') || text.includes('tiket gangguan') || type === 'noc_alarm') {
-
                             audioFile = '{{ asset("assets/sound/notifikasi_tiket_gangguan.mp3") }}';
-
                         } else if (type === 'noc_recovery' || text.includes('pulih') || text.includes('kembali online')) {
-
                             audioFile = '{{ asset("assets/sound/anoun.mp3") }}';
-
                         } else if (type === 'transfer' || text.includes('transfer') || text.includes('konfirmasi')) {
-
                             audioFile = '{{ asset("assets/sound/notifikasi_konfirmasi_transfer.mp3") }}';
-
                         } else {
-
                             audioFile = '{{ asset("assets/sound/anoun.mp3") }}';
-
                         }
-
-
 
                         if (audioFile) {
-
                             const audio = new Audio(audioFile);
-
                             let resolved = false;
-
                             const finish = () => {
-
                                 if (!resolved) {
-
                                     resolved = true;
-
                                     resolve();
-
                                 }
-
                             };
-
                             audio.onended = finish;
-
                             audio.onerror = finish;
-
                             audio.play().catch(finish);
-
                             setTimeout(finish, 6000);
-
                         } else {
-
                             resolve();
-
                         }
-
                     } catch(e) {
-
                         resolve();
-
                     }
-
                 });
-
             },
 
-
-
             playChimeAndSpeak(item) {
-
                 return new Promise((resolve) => {
-
                     const text = item.speech_text || item.title;
-
                     if (!text) {
-
                         resolve();
-
                         return;
-
                     }
 
-
-
                     let resolved = false;
-
                     const done = () => {
-
                         if (!resolved) {
-
                             resolved = true;
-
                             resolve();
-
                         }
-
                     };
 
-
-
                     const executeSpeech = () => {
-
                         if (!('speechSynthesis' in window)) {
-
                             this.playFallbackAudio(item).finally(done);
-
                             return;
-
                         }
 
-
-
                         try {
-
                             if (window.speechSynthesis.paused) {
-
                                 window.speechSynthesis.resume();
-
                             }
-
-
 
                             if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-
                                 window.speechSynthesis.cancel();
-
                             }
 
-
-
                             setTimeout(() => {
-
                                 try {
-
                                     if (window.speechSynthesis.paused) {
-
                                         window.speechSynthesis.resume();
-
                                     }
-
-
 
                                     const utterance = new SpeechSynthesisUtterance(text);
-
                                     utterance.rate = 1.0;
-
                                     utterance.pitch = 1.0;
-
                                     utterance.volume = 1.0;
 
-
-
                                     // Deteksi suara bahasa Indonesia atau fallback default sistem
-
                                     const voices = window.speechSynthesis.getVoices() || [];
-
                                     let targetVoice = null;
-
                                     if (voices.length > 0) {
-
                                         targetVoice = voices.find(v => 
-
                                             v.lang === 'id-ID' || 
-
                                             v.lang === 'id_ID' || 
-
                                             (v.lang && v.lang.toLowerCase().startsWith('id')) || 
-
                                             /indonesia/i.test(v.name)
-
                                         );
-
                                         if (!targetVoice) {
-
                                             targetVoice = voices.find(v => v.default) || 
-
                                                           voices.find(v => v.lang && v.lang.startsWith('en')) || 
-
                                                           voices[0];
-
                                         }
-
                                     }
-
-
 
                                     if (targetVoice) {
-
                                         utterance.voice = targetVoice;
-
                                         // Jangan paksakan 'id-ID' jika suara yang ada adalah bahasa lain (misal Windows English),
-
                                         // agar tidak memicu error voice/language-unavailable pada engine Chromium SAPI
-
                                         utterance.lang = targetVoice.lang;
-
                                     }
 
-
-
                                     let hasStarted = false;
-
                                     utterance.onstart = () => {
-
                                         hasStarted = true;
-
                                     };
-
-
 
                                     utterance.onend = () => {
-
                                         window._activeUtterance = null;
-
                                         done();
-
                                     };
-
-
 
                                     utterance.onerror = (err) => {
-
                                         console.warn('SpeechSynthesis error:', err?.error || err);
-
                                         window._activeUtterance = null;
-
                                         if (!hasStarted) {
-
                                             this.playFallbackAudio(item).finally(done);
-
                                         } else {
-
                                             done();
-
                                         }
-
                                     };
-
-
 
                                     window._activeUtterance = utterance;
 
-
-
                                     const hbInterval = setInterval(() => {
-
                                         if (window.speechSynthesis.speaking && window.speechSynthesis.paused) {
-
                                             window.speechSynthesis.resume();
-
                                         }
-
                                     }, 800);
 
-
-
                                     setTimeout(() => {
-
                                         clearInterval(hbInterval);
-
                                         if (!hasStarted) {
-
                                             this.playFallbackAudio(item).finally(done);
-
                                         } else {
-
                                             done();
-
                                         }
-
                                     }, 9000);
 
-
-
                                     window.speechSynthesis.speak(utterance);
-
                                 } catch(errInner) {
-
                                     console.warn('Speech speak exception:', errInner);
-
                                     this.playFallbackAudio(item).finally(done);
-
                                 }
-
                             }, 80);
-
                         } catch(e) {
-
                             console.warn('SpeechSynthesis setup error:', e);
-
                             this.playFallbackAudio(item).finally(done);
-
                         }
-
                     };
 
-
-
                     if (item.skipChime || item.type === 'noc_recovery' || item.type === 'noc_alarm') {
-
                         setTimeout(executeSpeech, 450);
-
                         return;
-
                     }
-
-
 
                     try {
-
                         this.chimeAudio.currentTime = 0;
-
                         this.chimeAudio.volume = 0.8;
-
                         this.chimeAudio.play().then(() => {
-
                             setTimeout(() => {
-
                                 try {
-
                                     if (this.chimeAudio && !this.chimeAudio.paused) {
-
                                         this.chimeAudio.pause();
-
                                         this.chimeAudio.currentTime = 0;
-
                                     }
-
                                 } catch(e) {}
-
                                 executeSpeech();
-
                             }, 1300);
-
                         }).catch(() => {
-
                             executeSpeech();
-
                         });
-
                     } catch(e) {
-
                         executeSpeech();
-
                     }
-
                 });
-
             },
 
-
-
             async pollNotifications() {
-
                 try {
-
                     const res = await fetch(`{{ route('api.notifications.poll') }}?since=${this.lastCheck}`, {
-
                         headers: {
-
                             'Accept': 'application/json',
-
                             'X-Requested-With': 'XMLHttpRequest'
-
                         }
-
                     });
-
                     if (!res.ok) return;
-
                     const data = await res.json();
-
                     if (data.status === 'success') {
-
                         this.lastCheck = data.timestamp;
-
                         localStorage.setItem('ims_last_notif_poll_ts', String(data.timestamp));
 
-
-
                         if (Array.isArray(data.notifications) && data.notifications.length > 0) {
-
                             data.notifications.forEach((notif) => {
-
                                 const notifId = notif.id;
-
                                 if (notifId && !this.hasPlayed(notifId)) {
-
                                     this.markAsPlayed(notifId);
 
-
-
                                     if (window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-
                                         window.ImsTabCoordinator.delegateToActive('enqueueNotification', notif);
-
                                     } else {
-
                                         this.enqueueNotification(notif);
-
                                     }
-
                                 }
-
                             });
-
                         }
-
                     }
-
                 } catch (e) {
-
                     // silent fail on network blips
-
                 }
-
             }
-
         };
-
-
 
         document.addEventListener('DOMContentLoaded', () => {
-
             if (window.ImsTabCoordinator) window.ImsTabCoordinator.init();
-
             window.ImsVoice.init();
-
         });
-
-
 
         // Helper global mengekstrak nama pelanggan yang bersih untuk Text-to-Speech
-
         window.extractCleanNocUserName = function(item) {
-
             if (!item) return 'Pelanggan';
-
             if (item.user_name && typeof item.user_name === 'string' && item.user_name.trim()) {
-
                 return item.user_name.trim();
-
             }
-
             if (item.nama_pelanggan && typeof item.nama_pelanggan === 'string' && item.nama_pelanggan.trim()) {
-
                 return item.nama_pelanggan.trim();
-
             }
-
             let raw = item.device_name || item.title || '';
-
             if (typeof raw === 'string') {
-
                 let clean = raw.replace(/^(?:gpon[-_]onu|gpon[-_]olt|onu|port)[^\s\-:]*[\s\-:]+/i, '');
-
                 clean = clean.replace(/^(?:\d+\/\d+\/\d+:\d+)\s*[-:]*\s*/i, '');
-
                 clean = clean.replace(/^tiket\s*#?\d+\s*[-:]*\s*/i, '');
-
                 clean = clean.trim();
-
                 if (clean.includes(' - ')) {
-
                     const parts = clean.split(' - ');
-
                     clean = parts[parts.length - 1].trim();
-
                 }
-
                 if (clean.length > 0 && !clean.toLowerCase().startsWith('gpon')) {
-
                     return clean;
-
                 }
-
             }
-
             return 'Pelanggan';
-
         };
-
-
 
         // Global NOC Recovery Alert Audio Synthesizer & Voice Chime (Saat perangkat pulih atau tiket selesai)
-
         window.playNocRecoverySound = function(recoveredItem, totalRecoveredCount = 1, force = false) {
-
             if (!force && window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-
                 return;
-
             }
-
-
 
             // 1. Web Audio Synthesizer: Nada Harmoni Sukses Naik (C5 -> E5 -> G5 -> C6)
-
             try {
-
                 const hasActivation = !!((navigator.userActivation && navigator.userActivation.hasBeenActive) || window._hasUserGesture);
-
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
-
                 if (AudioCtx && (hasActivation || (window._sharedAudioCtx && window._sharedAudioCtx.state === 'running'))) {
-
                     if (!window._sharedAudioCtx && hasActivation) {
-
                         window._sharedAudioCtx = new AudioCtx();
-
                     }
-
                     const ctx = window._sharedAudioCtx;
-
                     if (ctx) {
-
                         if (ctx.state === 'suspended' && hasActivation) {
-
                             ctx.resume().catch(() => {});
-
                         }
-
                         if (ctx.state === 'running') {
-
                             const now = ctx.currentTime;
-
                             const notes = [
-
                                 { freq: 523.25, start: 0.00, dur: 0.14 }, // C5
-
                                 { freq: 659.25, start: 0.12, dur: 0.14 }, // E5
-
                                 { freq: 783.99, start: 0.24, dur: 0.16 }, // G5
-
                                 { freq: 1046.50, start: 0.38, dur: 0.40 } // C6 (Puncak Sukses)
-
                             ];
-
-
 
                             notes.forEach(n => {
-
                                 const osc = ctx.createOscillator();
-
                                 const gain = ctx.createGain();
-
                                 osc.type = "sine";
-
                                 osc.frequency.setValueAtTime(n.freq, now + n.start);
-
                                 gain.gain.setValueAtTime(0.25, now + n.start);
-
                                 gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
-
                                 osc.connect(gain);
-
                                 gain.connect(ctx.destination);
-
                                 osc.start(now + n.start);
-
                                 osc.stop(now + n.start + n.dur);
-
                             });
-
                         }
-
                     }
-
                 }
-
             } catch (e) {
-
                 // Silently skip if audio context is not allowed to run
-
             }
-
-
 
             // 2. Play speech via window.ImsVoice & Toast Banner
-
             try {
-
                 const item = recoveredItem || {};
-
                 const userName = window.extractCleanNocUserName(item);
-
                 const displayName = item.device_name || userName;
-
                 const isTicket = item.status === 'SELESAI' || (item.device_key && item.device_key.startsWith('ticket_'));
 
-
-
                 let speechText = '';
-
                 let title = '';
-
                 let message = '';
 
-
-
                 if (isTicket) {
-
                     speechText = `Tiket selesai. Gangguan pelanggan ${userName} telah berhasil diselesaikan.`;
-
                     title = 'Tiket Gangguan Selesai';
-
                     message = `Tiket gangguan ${displayName} telah diselesaikan.`;
-
                 } else {
-
                     speechText = totalRecoveredCount > 1 
-
                         ? `Koneksi pulih. ${totalRecoveredCount} pelanggan telah normal kembali termasuk ${userName}.`
-
                         : `Koneksi pulih. Pelanggan ${userName} telah kembali online dan normal.`;
-
                     title = 'Koneksi Pulih (Normal)';
-
                     message = totalRecoveredCount > 1 
-
                         ? `${totalRecoveredCount} perangkat telah pulih dan kembali normal.` 
-
                         : `${displayName} telah kembali online dan normal.`;
-
                 }
-
-
 
                 if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === "function") {
-
                     window.ImsVoice.enqueueNotification({
-
                         type: "noc_recovery",
-
                         status: isTicket ? "SELESAI" : "UP",
-
                         title: title,
-
                         message: message,
-
                         speech_text: speechText,
-
                         device_name: displayName,
-
                         user_name: userName,
-
                         skipChime: true,
-
                         url: item.url || null
-
                     }, force);
-
                 } else if (typeof window.showToast === "function") {
-
                     window.showToast("success", `${title}: ${displayName}`);
-
                 }
-
             } catch (e) {}
-
         };
-
-
 
         // Global NOC Emergency Alert Audio Synthesizer & Voice Chime (LOS & DOWN)
-
         window.playNocEmergencySound = function(alertItem, force = false) {
-
             if (!force && window.ImsTabCoordinator && !window.ImsTabCoordinator.isAllowedToNotify()) {
-
                 return;
-
             }
-
-
 
             // 1. Synthesize Web Audio Alarm Tone (3-tone alert beeps)
-
             try {
-
                 const hasActivation = !!((navigator.userActivation && navigator.userActivation.hasBeenActive) || window._hasUserGesture);
-
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
-
                 if (AudioCtx && (hasActivation || (window._sharedAudioCtx && window._sharedAudioCtx.state === 'running'))) {
-
                     if (!window._sharedAudioCtx && hasActivation) {
-
                         window._sharedAudioCtx = new AudioCtx();
-
                     }
-
                     const ctx = window._sharedAudioCtx;
-
                     if (ctx) {
-
                         if (ctx.state === 'suspended' && hasActivation) {
-
                             ctx.resume().catch(() => {});
-
                         }
-
                         if (ctx.state === 'running') {
-
                             const now = ctx.currentTime;
-
                             
-
                             const tones = [
-
                                 { freq: 1318.51, start: 0.00, dur: 0.18, type: 'sawtooth' },
-
                                 { freq: 1046.50, start: 0.20, dur: 0.18, type: 'sine' },
-
                                 { freq: 1318.51, start: 0.40, dur: 0.25, type: 'sawtooth' }
-
                             ];
 
-
-
                             tones.forEach(t => {
-
                                 const osc = ctx.createOscillator();
-
                                 const gain = ctx.createGain();
-
                                 osc.type = t.type;
-
                                 osc.frequency.setValueAtTime(t.freq, now + t.start);
-
                                 gain.gain.setValueAtTime(0.3, now + t.start);
-
                                 gain.gain.exponentialRampToValueAtTime(0.001, now + t.start + t.dur);
-
                                 osc.connect(gain);
-
                                 gain.connect(ctx.destination);
-
                                 osc.start(now + t.start);
-
                                 osc.stop(now + t.start + t.dur);
-
                             });
-
                         }
-
                     }
-
                 }
-
             } catch (e) {
-
                 // Silently skip if audio context is not allowed to run
-
             }
 
-
-
             // 2. Play speech via window.ImsVoice if available
-
             try {
-
                 if (window.ImsVoice && typeof window.ImsVoice.enqueueNotification === 'function') {
-
                     const item = alertItem || {};
-
                     const st = (item.status || 'LOS').toUpperCase();
-
                     const statusLabel = st === 'LOS' ? 'Loss of Signal' : 'Down';
-
                     const userName = window.extractCleanNocUserName(item);
-
                     const displayName = item.device_name || userName;
-
                     const speechText = item.speech_text || `Perhatian! Terdeteksi ${statusLabel} pada pelanggan ${userName}.`;
 
-
-
                     window.ImsVoice.enqueueNotification({
-
                         type: 'noc_alarm',
-
                         status: st,
-
                         title: item.title || (st === 'LOS' ? 'LOS (Loss of Signal) Terdeteksi' : 'Perangkat DOWN Terdeteksi'),
-
                         message: item.message || `${displayName} mengalami gangguan ${st}`,
-
                         speech_text: speechText,
-
                         device_name: displayName,
-
                         user_name: userName,
-
                         skipChime: true,
-
                         url: item.url || null
-
                     }, force);
-
                 }
-
             } catch (e) {}
-
         };
-
     </script>
-
-
 
     <!-- SweetAlert2 Global Notification -->
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-
         document.addEventListener('DOMContentLoaded', function () {
-
             const Toast = Swal.mixin({
-
                 toast: true,
-
                 position: 'top-end',
-
                 showConfirmButton: false,
-
                 timer: 4000,
-
                 timerProgressBar: true,
-
                 didOpen: (toast) => {
-
                     toast.addEventListener('mouseenter', Swal.stopTimer)
-
                     toast.addEventListener('mouseleave', Swal.resumeTimer)
-
                 }
-
             });
 
-
-
             window.Toast = Toast;
-
             window.showToast = function(icon, title) {
-
                 Toast.fire({
-
                     icon: icon || 'info',
-
                     title: title
-
                 });
-
             };
 
-
-
             @if(session('success'))
-
                 Toast.fire({
-
                     icon: 'success',
-
                     title: {!! json_encode(session('success')) !!}
-
                 });
-
             @endif
-
-
 
             @if(session('warning'))
-
                 Toast.fire({
-
                     icon: 'warning',
-
                     title: {!! json_encode(session('warning')) !!}
-
                 });
-
             @endif
-
-
 
             @if(session('info'))
-
                 Toast.fire({
-
                     icon: 'info',
-
                     title: {!! json_encode(session('info')) !!}
-
                 });
-
             @endif
-
-
 
             @if(session('error'))
-
                 Toast.fire({
-
                     icon: 'error',
-
                     title: {!! json_encode(session('error')) !!}
-
                 });
-
             @endif
-
-
 
             @if($errors->any())
-
                 Toast.fire({
-
                     icon: 'error',
-
                     title: {!! json_encode($errors->first()) !!}
-
                 });
-
             @endif
-
         });
-
     </script>
-
-
-
 
 
     <!-- Global Debounced Auto-Search & Focus Restoration Engine -->
-
     <script>
-
         (function() {
-
             // 1. Restore input focus and cursor position after debounced auto-reload
-
             document.addEventListener('DOMContentLoaded', function() {
-
                 const savedFocus = sessionStorage.getItem('ims_auto_search_focus');
-
                 if (savedFocus) {
-
                     sessionStorage.removeItem('ims_auto_search_focus');
-
                     try {
-
                         const data = JSON.parse(savedFocus);
-
                         const input = document.querySelector(data.selector);
-
                         if (input) {
-
                             input.focus();
-
                             const pos = (typeof data.cursor === 'number' && data.cursor <= input.value.length) ? data.cursor : input.value.length;
-
                             input.setSelectionRange(pos, pos);
-
                         }
-
                     } catch (e) {}
-
                 }
-
             });
-
-
 
             // 2. Global Debounced Auto-Submit for filter search inputs (3 seconds delay)
-
             let autoSearchTimer = null;
 
-
-
             // Immediately cancel auto-search timer if user opens AI modal
-
             window.addEventListener('ims-cancel-auto-search', function() {
-
                 if (autoSearchTimer) {
-
                     clearTimeout(autoSearchTimer);
-
                     autoSearchTimer = null;
-
                 }
-
             });
-
-
 
             document.addEventListener('input', function(e) {
-
                 const target = e.target;
-
                 if (!target || target.tagName !== 'INPUT') return;
 
-
-
                 const inputType = (target.getAttribute('type') || 'text').toLowerCase();
-
                 if (inputType !== 'text' && inputType !== 'search') return;
 
-
-
                 const form = target.form;
-
                 if (!form || (form.method || '').toUpperCase() !== 'GET') return;
 
-
-
                 // Ignore modals, date pickers, AI copilot widget, or explicitly excluded inputs
-
                 if (target.hasAttribute('data-no-auto-search') 
-
                     || target.closest('.ims-ai-modal-box') 
-
                     || target.closest('.ims-ai-trigger-container') 
-
                     || target.closest('[data-ai-widget]')
-
                     || target.closest('[role="dialog"]') 
-
                     || target.closest('.modal')) {
-
                     return;
-
                 }
-
-
 
                 clearTimeout(autoSearchTimer);
-
                 autoSearchTimer = setTimeout(function() {
-
                     const selector = target.id ? '#' + target.id : (target.name ? `input[name="${target.name}"]` : null);
-
                     if (selector) {
-
                         sessionStorage.setItem('ims_auto_search_focus', JSON.stringify({
-
                             selector: selector,
-
                             cursor: target.selectionStart ?? target.value.length
-
                         }));
-
                     }
-
                     form.submit();
-
                 }, 3000); // Tunggu 3 detik setelah ketukan terakhir sebelum auto-refresh
-
             });
-
-
 
             // 3. Keep focus position if user submits via Enter, or cancel timer on Escape
-
             document.addEventListener('keydown', function(e) {
-
                 if (e.key === 'Enter') {
-
                     clearTimeout(autoSearchTimer);
-
                     const target = e.target;
-
                     if (target && target.tagName === 'INPUT' && target.form && (target.form.method || '').toUpperCase() === 'GET') {
-
                         const selector = target.id ? '#' + target.id : (target.name ? `input[name="${target.name}"]` : null);
-
                         if (selector) {
-
                             sessionStorage.setItem('ims_auto_search_focus', JSON.stringify({
-
                                 selector: selector,
-
                                 cursor: target.selectionStart ?? target.value.length
-
                             }));
-
                         }
-
                     }
-
                 } else if (e.key === 'Escape') {
-
                     clearTimeout(autoSearchTimer);
-
                 }
-
             });
-
         })();
 
-    </script>
-
-
-
-    @stack('scripts')
-
-
-
-    <!-- Ultra-Smooth Non-Blocking Page Transition Loader -->
-
-    <script>
-
+        // Ultra-Smooth Non-Blocking Page Transition Loader
         (function() {
-
             const loader = document.getElementById('ims-page-loader');
-
             if (!loader) return;
-
-
 
             let loaderTimeout = null;
 
-
-
             function startLoader() {
-
                 clearTimeout(loaderTimeout);
-
                 loader.classList.remove('finish');
-
                 loader.classList.add('active');
-
                 loaderTimeout = setTimeout(finishLoader, 8000);
-
             }
-
-
 
             function finishLoader() {
-
                 clearTimeout(loaderTimeout);
-
                 loader.classList.add('finish');
-
                 setTimeout(function() {
-
                     loader.classList.remove('active', 'finish');
-
                     loader.style.width = '0%';
-
                 }, 260);
-
             }
-
-
 
             // 1. Link Clicks (Sidebar, Navbar, Tabs, Pagination Links, dll)
-
             document.addEventListener('click', function(e) {
-
                 const a = e.target.closest('a[href]');
-
                 if (!a || !a.href || a.target === '_blank' || a.hasAttribute('download')) return;
 
-
-
                 const href = a.getAttribute('href');
-
                 if (!href || href.startsWith('javascript:') || href.startsWith('#') || href.startsWith('data:')) return;
 
-
-
                 try {
-
                     const targetUrl = new URL(a.href, window.location.origin);
-
                     const currentUrl = new URL(window.location.href);
 
-
-
                     if (targetUrl.origin === currentUrl.origin) {
-
                         if (targetUrl.pathname !== currentUrl.pathname || targetUrl.search !== currentUrl.search) {
-
                             startLoader();
-
                         }
-
                     }
-
                 } catch(err) {}
-
             });
-
-
 
             // 2. Form Submissions (Pencarian, Filter, Pagination Forms)
-
             document.addEventListener('submit', function(e) {
-
                 const form = e.target;
-
                 if (!form || form.target === '_blank') return;
-
                 startLoader();
-
             });
 
-
-
             // 3. Reset loader saat halaman selesai di-load
-
             window.addEventListener('pageshow', finishLoader);
-
             if (document.readyState === 'complete') {
-
                 finishLoader();
-
             } else {
-
                 window.addEventListener('load', finishLoader);
-
             }
-
         })();
-
     </script>
 
-
-
+    @stack('scripts')
 </body>
-
 </html>
-
-
 

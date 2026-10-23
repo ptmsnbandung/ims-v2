@@ -533,7 +533,26 @@
             <!-- 6 Kolom Filter Responsif -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
                 
-                <!-- 1. Dropdown Semua Layanan -->
+                <!-- 1. Search No Internet / Nama / NIK / HP (Paling Kiri) -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cari Pelanggan</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                            </svg>
+                        </div>
+                        <input type="text" 
+                               name="search" 
+                               x-model="searchQuery"
+                               @input="applyFilter(300)"
+                               value="{{ $filters['search'] ?? '' }}" 
+                               placeholder="No Internet, Nama, NIK..." 
+                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- 2. Dropdown Semua Layanan -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Layanan</label>
                     <select name="layanan" 
@@ -553,7 +572,7 @@
                     </select>
                 </div>
 
-                <!-- 2. Dropdown Group Layanan -->
+                <!-- 3. Dropdown Group Layanan -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Group Layanan</label>
                     <select name="group_layanan" 
@@ -567,25 +586,6 @@
                             </option>
                         @endforeach
                     </select>
-                </div>
-
-                <!-- 3. Search No Internet / Nama / NIK / HP -->
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cari Pelanggan</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
-                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                            </svg>
-                        </div>
-                        <input type="text" 
-                               name="search" 
-                               x-model="searchQuery"
-                               @input="applyFilter(300)"
-                               value="{{ $filters['search'] ?? '' }}" 
-                               placeholder="No Internet, Nama, NIK..." 
-                               class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
-                    </div>
                 </div>
 
                 <!-- 4. Input Alamat -->
@@ -622,7 +622,7 @@
                     </select>
                 </div>
 
-                <!-- 5. Dropdown Semua Wilayah -->
+                <!-- 6. Dropdown Semua Wilayah -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Wilayah</label>
                     <select name="wilayah" 

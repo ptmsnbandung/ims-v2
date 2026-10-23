@@ -131,6 +131,9 @@
 
     /* Halo Year Select Frosted Pill */
     .ims-halo-select {
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
         background: rgba(255, 255, 255, 0.14) !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
@@ -140,27 +143,23 @@
         color: #ffffff !important;
         font-weight: 700 !important;
         font-size: 10.5px !important;
+        height: 30px !important;
+        padding-left: 12px !important;
+        padding-right: 26px !important;
+        cursor: pointer !important;
+        outline: none !important;
+        transition: all 0.15s ease;
+    }
+    .ims-halo-select:hover {
+        background: rgba(255, 255, 255, 0.22) !important;
+        border-color: rgba(255, 255, 255, 0.35) !important;
+    }
+    .ims-halo-select::-ms-expand {
+        display: none !important;
     }
     .ims-halo-select option {
         color: #0f172a !important;
         background: #ffffff !important;
-    }
-
-    /* Halo Status Layanan Button Pill (Crisp White Pill with Deep Teal Text) */
-    .ims-halo-btn-status {
-        background: #ffffff !important;
-        color: #043b49 !important;
-        border: 1px solid rgba(255, 255, 255, 0.95) !important;
-        border-radius: 9999px !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
-        font-weight: 700 !important;
-        font-size: 10.5px !important;
-        transition: all 0.2s ease;
-    }
-    .ims-halo-btn-status:hover {
-        background: #f0f8fa !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16) !important;
-        transform: translateY(-0.5px);
     }
 
     /* Halo Avatar Initial Circle */
@@ -244,35 +243,24 @@
                     </button>
                 </div>
 
-                <!-- Secondary Actions: Year Selector & Status Layanan -->
-                <div class="grid grid-cols-2 sm:flex items-center gap-1.5 w-full sm:w-auto">
-                    <!-- Year Selector Form in Matching Glass Pill -->
-                    <form action="{{ route('dashboard') }}" method="GET" class="m-0 p-0 w-full sm:w-auto flex">
-                        <div class="relative w-full sm:w-auto flex items-center h-[30px]">
-                            <select name="tahun" onchange="this.form.submit()" 
-                                    class="ims-halo-select focus:ring-1 focus:ring-white/40"
-                                    style="height: 30px; padding-left: 12px; padding-right: 24px; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important; cursor: pointer; outline: none; width: 100%; text-align: center; text-align-last: center;">
-                                @foreach($availableYears as $year)
-                                    <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }} style="color: #0f172a; background: #ffffff;">
-                                        Tahun {{ $year }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/90 flex items-center justify-center">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M6 9l6 6 6-6"/>
-                                </svg>
-                            </span>
-                        </div>
-                    </form>
-
-                    <!-- Status Layanan Button (Pristine White Pill with Deep Teal Text) -->
-                    <a href="{{ route('teknik.tiket') }}" 
-                       class="ims-halo-btn-status px-3 flex items-center justify-center gap-1.5 transition no-underline h-[30px]">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#055366] animate-pulse"></span>
-                        <span class="truncate">Status Layanan</span>
-                    </a>
-                </div>
+                <!-- Year Filter Selector -->
+                <form action="{{ route('dashboard') }}" method="GET" class="m-0 p-0 shrink-0 self-end sm:self-auto">
+                    <div class="relative inline-flex items-center">
+                        <select name="tahun" onchange="this.form.submit()" 
+                                class="ims-halo-select focus:ring-1 focus:ring-white/40">
+                            @foreach($availableYears as $year)
+                                <option value="{{ $year }}" {{ $selectedTahun == (string)$year ? 'selected' : '' }}>
+                                    Tahun {{ $year }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/80 flex items-center justify-center">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </span>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -1338,8 +1338,8 @@
                          alt="Bukti Transfer" 
                          class="max-w-full max-h-[65vh] object-contain rounded-lg shadow-sm"
                          x-show="!previewImgError"
-                         @load="previewImgError = false"
-                         @error="handlePreviewError($event)">
+                         x-on:load="previewImgError = false"
+                         x-on:error="handlePreviewError($event)">
 
                     <div x-show="previewImgError" class="p-6 text-center space-y-2">
                         <div class="w-10 h-10 mx-auto rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">

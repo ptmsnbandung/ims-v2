@@ -712,10 +712,10 @@ class FinanceController extends Controller
                         $filename = 'proof_' . preg_replace('/[^a-zA-Z0-9]/', '_', $decodedKode) . '_' . time() . '.' . $ext;
                         $uploadPath = public_path('uploads/bukti_transfer');
                         if (!file_exists($uploadPath)) {
-                            mkdir($uploadPath, 0755, true);
+                            \Illuminate\Support\Facades\File::ensureDirectoryExists($uploadPath, 0775, true);
                         }
                         $file->move($uploadPath, $filename);
-                        $proofUrl = '/uploads/bukti_transfer/' . $filename;
+                        $proofUrl = asset('uploads/bukti_transfer/' . $filename);
 
                         if (Schema::hasTable('payment_confirmations')) {
                             $existPc = DB::table('payment_confirmations')
@@ -4623,6 +4623,10 @@ class FinanceController extends Controller
                 $bankLower = strtolower((string)$bankDest);
                 $merchantLower = strtolower((string)($billObj?->merchant_type ?? ''));
                 $paymentType = (string)($billObj?->payment_type ?? '');
+                $proofStr = (string)$proof;
+                $adminNotes = (string)($confObj?->admin_notes ?? '');
+                $notes = (string)($confObj?->notes ?? ($confObj?->keterangan ?? ''));
+                $userUpdate = (string)($billObj?->user_update ?? '');
 
                 // 1. CASH / Kolektor / Kasir loket selalu BUKAN PORTAL
                 if ($paymentType === '3' 
@@ -4639,22 +4643,18 @@ class FinanceController extends Controller
                     return false;
                 }
 
-                // 2. Jejak tindakan internal (admin, finance, approval manual di IMS2)
-                $adminNotes = (string)($confObj?->admin_notes ?? '');
-                $notes = (string)($confObj?->notes ?? ($confObj?->keterangan ?? ''));
-                $internalMarkers = [
-                    'manual', 'admin', 'finance', 'kasir', 'kolektor', 'collector',
-                    'diupload oleh', 'diverifikasi oleh', 'approval billing layanan', 
-                    'approval notifikasi', 'diinput oleh', 'staf', 'staff', 'petugas'
-                ];
-                foreach ($internalMarkers as $marker) {
-                    if (stripos($adminNotes, $marker) !== false || stripos($notes, $marker) !== false) {
-                        return false;
-                    }
+                // 2. Bukti transfer yang diupload MANUAL oleh internal staf / admin di menu IMS2 -> BUKAN PORTAL
+                // Ditandai oleh notes 'Upload bukti transfer manual oleh admin' atau admin_notes 'Diupload oleh'
+                $isManualAdminUpload = stripos($notes, 'manual oleh admin') !== false 
+                    || stripos($adminNotes, 'diupload oleh') !== false 
+                    || stripos($adminNotes, 'diperbarui oleh') !== false
+                    || stripos($notes, 'diinput oleh admin') !== false;
+
+                if ($isManualAdminUpload) {
+                    return false;
                 }
 
-                // 3. Online Payment Gateway (QRIS, Midtrans, Snap, Gopay, ShopeePay) dari portal pelanggan
-                $userUpdate = (string)($billObj?->user_update ?? '');
+                // 3. Online Payment Gateway (QRIS, Midtrans, Snap, Gopay, ShopeePay) -> PORTAL PELANGGAN
                 if ($paymentType === '1'
                     || in_array($merchantLower, ['qris', 'gopay', 'shopeepay', 'midtrans', 'snap', 'bank_transfer'])
                     || str_contains($merchantLower, 'qris')
@@ -4664,22 +4664,22 @@ class FinanceController extends Controller
                     return true;
                 }
 
-                // 4. Konfirmasi mandiri yang berasal dari database portal pelanggan (ptmsn)
-                if (!empty($confObj?->is_ptmsn_source)) {
+                // 4. Bukti transfer dengan prefix portal 'tf_' atau domain portal -> PORTAL PELANGGAN
+                if (!empty($proofStr)) {
+                    if (str_contains($proofStr, 'tf_') 
+                        || str_contains($proofStr, 'portal.ptmsn.co.id') 
+                        || str_contains($proofStr, 'ptmsn.co.id')) {
+                        return true;
+                    }
+                }
+
+                // 5. Konfirmasi yang tercatat di tabel payment_confirmations:
+                // Selama bukan manual admin upload (sudah dicek di Rule 2), konfirmasi ini dikirim oleh pelanggan via Portal Pelanggan
+                if ($confObj) {
                     return true;
                 }
 
-                // 5. Bukti transfer yang diunggah mandiri oleh pelanggan (tanpa admin_notes dari staf)
-                if ($confObj) {
-                    $statusConf = strtolower((string)($confObj->status ?? ''));
-                    if (!empty($proof) && empty($adminNotes)) {
-                        return true;
-                    }
-                    if ($statusConf === 'pending' || $statusConf === 'waiting') {
-                        return true;
-                    }
-                }
-
+                // 6. Transaksi billing langsung di IMS tanpa konfirmasi/upload dari pelanggan -> BUKAN PORTAL
                 return false;
             };
 
@@ -4897,10 +4897,10 @@ class FinanceController extends Controller
                         $filename = 'proof_' . $cleanKode . '_' . time() . '.' . $ext;
                         $uploadPath = public_path('uploads/bukti_transfer');
                         if (!file_exists($uploadPath)) {
-                            mkdir($uploadPath, 0755, true);
+                            \Illuminate\Support\Facades\File::ensureDirectoryExists($uploadPath, 0775, true);
                         }
                         $file->move($uploadPath, $filename);
-                        $proofUrl = '/uploads/bukti_transfer/' . $filename;
+                        $proofUrl = asset('uploads/bukti_transfer/' . $filename);
                     }
                 } catch (\Throwable $fe) {
                     Log::warning("Gagal menyimpan foto bukti di approve notifikasi: " . $fe->getMessage());

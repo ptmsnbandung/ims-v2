@@ -127,6 +127,11 @@
         border: 1px solid rgba(255, 255, 255, 0.16) !important;
         border-radius: 9999px !important;
         box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+    .ims-halo-pill-container::-webkit-scrollbar {
+        display: none !important;
     }
 
     /* Halo Year Select Frosted Pill */
@@ -134,32 +139,42 @@
         -webkit-appearance: none !important;
         -moz-appearance: none !important;
         appearance: none !important;
-        background-color: rgba(255, 255, 255, 0.14) !important;
+        background-color: rgba(0, 0, 0, 0.25) !important;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
         background-repeat: no-repeat !important;
-        background-position: right 10px center !important;
-        background-size: 10px 10px !important;
+        background-position: right 9px center !important;
+        background-size: 9px 9px !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.22) !important;
+        border: 1px solid rgba(255, 255, 255, 0.16) !important;
         border-radius: 9999px !important;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
         color: #ffffff !important;
         font-weight: 700 !important;
-        font-size: 11px !important;
+        font-size: 10px !important;
         height: 30px !important;
         line-height: 28px !important;
-        padding-left: 14px !important;
-        padding-right: 28px !important;
+        padding-left: 11px !important;
+        padding-right: 23px !important;
         cursor: pointer !important;
         outline: none !important;
         display: inline-block !important;
         width: auto !important;
+        white-space: nowrap !important;
         transition: all 0.15s ease;
     }
+    @media (min-width: 640px) {
+        .ims-halo-select {
+            font-size: 10.5px !important;
+            padding-left: 13px !important;
+            padding-right: 26px !important;
+            background-position: right 10px center !important;
+            background-size: 10px 10px !important;
+        }
+    }
     .ims-halo-select:hover {
-        background-color: rgba(255, 255, 255, 0.22) !important;
-        border-color: rgba(255, 255, 255, 0.4) !important;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.35) !important;
     }
     .ims-halo-select:focus {
         background-color: rgba(255, 255, 255, 0.22) !important;
@@ -220,38 +235,41 @@
             </div>
 
             <!-- Right: View Tabs & Year Filter -->
-            <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end shrink-0 mt-1 md:mt-0">
+            <div class="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto justify-between md:justify-end shrink-0 mt-1 md:mt-0">
                 <!-- View Tabs Switcher Pill Container -->
-                <div class="ims-halo-pill-container flex items-center"
+                <div class="ims-halo-pill-container flex items-center overflow-x-auto"
                      style="height: 30px; padding: 2px; box-sizing: border-box;">
                     @if($canSeeFinanceTraffic ?? false)
                         <button type="button" 
                                 @click="activeTab = 'finance'" 
                                 :style="activeTab === 'finance' 
-                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10.5px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); transition: all 0.15s ease;' 
-                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10.5px; font-weight: 500; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                                class="px-2.5 sm:px-3 hover:text-white">
+                                    ? 'display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); white-space: nowrap !important; transition: all 0.15s ease;' 
+                                    : 'display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10px; font-weight: 500; border: none; cursor: pointer; white-space: nowrap !important; transition: all 0.15s ease;'"
+                                class="px-2 sm:px-3 hover:text-white shrink-0">
                             <svg class="w-3 h-3 shrink-0" :style="activeTab === 'finance' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <span :style="activeTab === 'finance' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Traffic Keuangan</span>
+                            <span class="sm:hidden">Keuangan</span>
+                            <span class="hidden sm:inline">Traffic Keuangan</span>
                         </button>
                     @endif
                     <button type="button" 
                             @click="activeTab = 'charts'" 
                             :style="activeTab === 'charts' 
-                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10.5px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); transition: all 0.15s ease;' 
-                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10.5px; font-weight: 500; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                            class="px-2.5 sm:px-3 hover:text-white">
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); white-space: nowrap !important; transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10px; font-weight: 500; border: none; cursor: pointer; white-space: nowrap !important; transition: all 0.15s ease;'"
+                            class="px-2 sm:px-3 hover:text-white shrink-0">
                         <svg class="w-3 h-3 shrink-0" :style="activeTab === 'charts' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                        <span :style="activeTab === 'charts' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Grafik Utama</span>
+                        <span class="sm:hidden">Grafik</span>
+                        <span class="hidden sm:inline">Grafik Utama</span>
                     </button>
                     <button type="button" 
                             @click="activeTab = 'tables'" 
                             :style="activeTab === 'tables' 
-                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10.5px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); transition: all 0.15s ease;' 
-                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10.5px; font-weight: 500; border: none; cursor: pointer; transition: all 0.15s ease;'"
-                            class="px-2.5 sm:px-3 hover:text-white">
+                                ? 'display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 26px; border-radius: 9999px; background: #ffffff !important; color: #043b49 !important; font-size: 10px; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.18); white-space: nowrap !important; transition: all 0.15s ease;' 
+                                : 'display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 26px; border-radius: 9999px; background: transparent; color: rgba(255,255,255,0.85) !important; font-size: 10px; font-weight: 500; border: none; cursor: pointer; white-space: nowrap !important; transition: all 0.15s ease;'"
+                            class="px-2 sm:px-3 hover:text-white shrink-0">
                         <svg class="w-3 h-3 shrink-0" :style="activeTab === 'tables' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <span :style="activeTab === 'tables' ? 'color: #043b49 !important;' : 'color: rgba(255,255,255,0.85) !important;'">Data Pendaftaran</span>
+                        <span class="sm:hidden">Data</span>
+                        <span class="hidden sm:inline">Data Pendaftaran</span>
                     </button>
                 </div>
 

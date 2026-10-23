@@ -3675,6 +3675,7 @@ function billingLayananPage() {
         payNamaPelanggan: '',
         payNominal: 0,
         payMetode: 'transfer',
+        payDestinationBank: '',
         payBank: 'BCA',
         payNamaKolektor: '',
         payNoKwitansi: '',

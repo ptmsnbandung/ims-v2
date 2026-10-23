@@ -26,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Pagination\Paginator::useTailwind();
+
         View::composer('layouts.app', function ($view) {
             try {
                 $olts = Cache::remember('global_sidebar_olts_array_v1', 600, function () {

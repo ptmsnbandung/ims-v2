@@ -739,9 +739,13 @@
                                         @php
                                             $rawProof = (string) $confirmation->proof_file;
                                             if (str_starts_with($rawProof, 'http://') || str_starts_with($rawProof, 'https://') || str_starts_with($rawProof, 'data:')) {
-                                                $resolvedProofUrl = $rawProof;
+                                                $resolvedProofUrl = str_replace(
+                                                    ['https://www.ptmsn.co.id', 'https://ptmsn.co.id', 'http://www.ptmsn.co.id', 'http://ptmsn.co.id'],
+                                                    'https://portal.ptmsn.co.id',
+                                                    $rawProof
+                                                );
                                             } else {
-                                                $resolvedProofUrl = asset(ltrim($rawProof, '/'));
+                                                $resolvedProofUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawProof, '/');
                                             }
                                         @endphp
                                         <button type="button"
@@ -1285,9 +1289,13 @@
                                 @php
                                     $rawProofMob = (string) $confirmation->proof_file;
                                     if (str_starts_with($rawProofMob, 'http://') || str_starts_with($rawProofMob, 'https://') || str_starts_with($rawProofMob, 'data:')) {
-                                        $resolvedProofMobUrl = $rawProofMob;
+                                        $resolvedProofMobUrl = str_replace(
+                                            ['https://www.ptmsn.co.id', 'https://ptmsn.co.id', 'http://www.ptmsn.co.id', 'http://ptmsn.co.id'],
+                                            'https://portal.ptmsn.co.id',
+                                            $rawProofMob
+                                        );
                                     } else {
-                                        $resolvedProofMobUrl = asset(ltrim($rawProofMob, '/'));
+                                        $resolvedProofMobUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawProofMob, '/');
                                     }
                                 @endphp
                                 <button type="button"

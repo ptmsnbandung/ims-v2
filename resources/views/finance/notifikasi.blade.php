@@ -545,9 +545,15 @@
                                 @if($item->proof_file)
                                     @php
                                         $rawPf = (string)$item->proof_file;
-                                        $pfUrl = (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:'))
-                                            ? $rawPf
-                                            : asset(ltrim($rawPf, '/'));
+                                        if (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:')) {
+                                            $pfUrl = str_replace(
+                                                ['https://www.ptmsn.co.id', 'https://ptmsn.co.id', 'http://www.ptmsn.co.id', 'http://ptmsn.co.id'],
+                                                'https://portal.ptmsn.co.id',
+                                                $rawPf
+                                            );
+                                        } else {
+                                            $pfUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawPf, '/');
+                                        }
                                     @endphp
                                     <button type="button"
                                             @click="openPreviewModal('{{ $pfUrl }}', 'Bukti Transfer: {{ $item->kode_billing }}', '{{ $item->id }}', '{{ $item->kode_billing }}', {
@@ -787,9 +793,15 @@
                                 @if($item->proof_file)
                                     @php
                                         $rawPf = (string)$item->proof_file;
-                                        $pfUrl = (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:'))
-                                            ? $rawPf
-                                            : asset(ltrim($rawPf, '/'));
+                                        if (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:')) {
+                                            $pfUrl = str_replace(
+                                                ['https://www.ptmsn.co.id', 'https://ptmsn.co.id', 'http://www.ptmsn.co.id', 'http://ptmsn.co.id'],
+                                                'https://portal.ptmsn.co.id',
+                                                $rawPf
+                                            );
+                                        } else {
+                                            $pfUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawPf, '/');
+                                        }
                                     @endphp
                                     <button type="button"
                                             @click="openPreviewModal('{{ $pfUrl }}', 'Bukti: {{ $item->kode_billing }}', '{{ $item->id }}', '{{ $item->kode_billing }}', {

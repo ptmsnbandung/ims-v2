@@ -739,11 +739,7 @@
                                         @php
                                             $rawProof = (string) $confirmation->proof_file;
                                             if (str_starts_with($rawProof, 'http://') || str_starts_with($rawProof, 'https://') || str_starts_with($rawProof, 'data:')) {
-                                                $resolvedProofUrl = str_replace(
-                                                    ['https://www.ptmsn.co.id', 'https://ptmsn.co.id', 'http://www.ptmsn.co.id', 'http://ptmsn.co.id'],
-                                                    'https://portal.ptmsn.co.id',
-                                                    $rawProof
-                                                );
+                                                $resolvedProofUrl = $rawProof;
                                             } else {
                                                 $resolvedProofUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawProof, '/');
                                             }
@@ -1289,11 +1285,7 @@
                                 @php
                                     $rawProofMob = (string) $confirmation->proof_file;
                                     if (str_starts_with($rawProofMob, 'http://') || str_starts_with($rawProofMob, 'https://') || str_starts_with($rawProofMob, 'data:')) {
-                                        $resolvedProofMobUrl = str_replace(
-                                            ['https://www.ptmsn.co.id', 'https://ptmsn.co.id', 'http://www.ptmsn.co.id', 'http://ptmsn.co.id'],
-                                            'https://portal.ptmsn.co.id',
-                                            $rawProofMob
-                                        );
+                                        $resolvedProofMobUrl = $rawProofMob;
                                     } else {
                                         $resolvedProofMobUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawProofMob, '/');
                                     }
@@ -2623,7 +2615,7 @@
                             <img :src="proofUrl"
                                  x-show="!proofImgError"
                                  x-on:load="proofImgError = false"
-                                 x-on:error="proofImgError = true"
+                                 x-on:error="handleProofImageError($event)"
                                  alt="Bukti Transfer"
                                  class="max-h-[380px] w-auto rounded-lg object-contain shadow-sm hover:scale-[1.01] transition duration-200 cursor-pointer"
                                  @click="window.open(proofUrl, '_blank')">
@@ -3852,6 +3844,7 @@ function billingLayananPage() {
         proofStatus: '',
         proofDestinationBank: '',
         proofImgError: false,
+        proofFallbackAttempted: false,
         showUploadForm: false,
         uploadLoading: false,
         openProofModalFromEl(el) {
@@ -3865,9 +3858,25 @@ function billingLayananPage() {
             this.proofStatus = el.dataset.status || '';
             this.proofDestinationBank = el.dataset.destinationBank || '';
             this.proofImgError = false;
+            this.proofFallbackAttempted = false;
             this.showUploadForm = false;
             this.uploadLoading = false;
             this.proofModalOpen = true;
+        },
+        handleProofImageError(event) {
+            if (this.proofFallbackAttempted) {
+                this.proofImgError = true;
+                return;
+            }
+            this.proofFallbackAttempted = true;
+            const src = this.proofUrl || '';
+            if (src.includes('portal.ptmsn.co.id')) {
+                this.proofUrl = src.replace('portal.ptmsn.co.id', 'ptmsn.co.id');
+            } else if (src.includes('ptmsn.co.id')) {
+                this.proofUrl = src.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://portal.ptmsn.co.id');
+            } else {
+                this.proofImgError = true;
+            }
         },
         async submitProofUpload(e) {
             const formEl = e.target;

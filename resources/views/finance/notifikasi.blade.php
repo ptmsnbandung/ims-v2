@@ -9,6 +9,9 @@
     previewModalOpen: false,
     previewImageUrl: '',
     previewTitle: '',
+    previewItem: null,
+    previewImgError: false,
+    fallbackAttempted: false,
 
     // Read state synchronization
     readIds: [],
@@ -182,7 +185,25 @@
         this.previewImageUrl = url;
         this.previewTitle = title;
         this.previewItem = item;
+        this.previewImgError = false;
+        this.fallbackAttempted = false;
         this.previewModalOpen = true;
+    },
+
+    handlePreviewError(event) {
+        if (this.fallbackAttempted) {
+            this.previewImgError = true;
+            return;
+        }
+        this.fallbackAttempted = true;
+        const src = this.previewImageUrl || '';
+        if (src.includes('portal.ptmsn.co.id')) {
+            this.previewImageUrl = src.replace('portal.ptmsn.co.id', 'ptmsn.co.id');
+        } else if (src.includes('ptmsn.co.id')) {
+            this.previewImageUrl = src.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://portal.ptmsn.co.id');
+        } else {
+            this.previewImgError = true;
+        }
     }
 }">
 
@@ -546,11 +567,7 @@
                                     @php
                                         $rawPf = (string)$item->proof_file;
                                         if (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:')) {
-                                            $pfUrl = str_replace(
-                                                ['https://www.ptmsn.co.id', 'https://ptmsn.co.id', 'http://www.ptmsn.co.id', 'http://ptmsn.co.id'],
-                                                'https://portal.ptmsn.co.id',
-                                                $rawPf
-                                            );
+                                            $pfUrl = $rawPf;
                                         } else {
                                             $pfUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawPf, '/');
                                         }
@@ -794,11 +811,7 @@
                                     @php
                                         $rawPf = (string)$item->proof_file;
                                         if (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:')) {
-                                            $pfUrl = str_replace(
-                                                ['https://www.ptmsn.co.id', 'https://ptmsn.co.id', 'http://www.ptmsn.co.id', 'http://ptmsn.co.id'],
-                                                'https://portal.ptmsn.co.id',
-                                                $rawPf
-                                            );
+                                            $pfUrl = $rawPf;
                                         } else {
                                             $pfUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawPf, '/');
                                         }
@@ -1320,8 +1333,23 @@
                     </div>
                 </div>
 
-                <div class="p-3 flex items-center justify-center bg-slate-950 max-h-[70vh] overflow-auto">
-                    <img :src="previewImageUrl" alt="Bukti Transfer" class="max-w-full max-h-[65vh] object-contain rounded-lg">
+                <div class="p-3 flex items-center justify-center bg-slate-950 min-h-[160px] max-h-[70vh] overflow-auto">
+                    <img :src="previewImageUrl" 
+                         alt="Bukti Transfer" 
+                         class="max-w-full max-h-[65vh] object-contain rounded-lg shadow-sm"
+                         x-show="!previewImgError"
+                         @load="previewImgError = false"
+                         @error="handlePreviewError($event)">
+
+                    <div x-show="previewImgError" class="p-6 text-center space-y-2">
+                        <div class="w-10 h-10 mx-auto rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                            </svg>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-200">File bukti transfer tidak ditemukan</p>
+                        <p class="text-[11px] text-slate-400 font-mono truncate max-w-sm mx-auto" x-text="previewImageUrl"></p>
+                    </div>
                 </div>
 
                 <!-- Footer with direct Approve button if not yet approved -->

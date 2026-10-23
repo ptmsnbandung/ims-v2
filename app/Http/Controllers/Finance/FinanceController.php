@@ -4287,10 +4287,10 @@ class FinanceController extends Controller
                 $filename = 'proof_' . preg_replace('/[^a-zA-Z0-9]/', '_', $decodedKode) . '_' . time() . '.' . $ext;
                 $uploadPath = public_path('uploads/bukti_transfer');
                 if (!file_exists($uploadPath)) {
-                    mkdir($uploadPath, 0755, true);
+                    \Illuminate\Support\Facades\File::ensureDirectoryExists($uploadPath, 0775, true);
                 }
                 $file->move($uploadPath, $filename);
-                $proofUrl = '/uploads/bukti_transfer/' . $filename;
+                $proofUrl = asset('uploads/bukti_transfer/' . $filename);
 
                 if (Schema::hasTable('payment_confirmations')) {
                     $existPc = DB::table('payment_confirmations')

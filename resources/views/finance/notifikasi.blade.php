@@ -186,21 +186,32 @@
         this.previewTitle = title;
         this.previewItem = item;
         this.previewImgError = false;
-        this.fallbackAttempted = false;
+        this.fallbackStep = 0;
         this.previewModalOpen = true;
     },
 
     handlePreviewError(event) {
-        if (this.fallbackAttempted) {
-            this.previewImgError = true;
-            return;
-        }
-        this.fallbackAttempted = true;
-        const src = this.previewImageUrl || '';
-        if (src.includes('portal.ptmsn.co.id')) {
-            this.previewImageUrl = src.replace('portal.ptmsn.co.id', 'ptmsn.co.id');
-        } else if (src.includes('ptmsn.co.id')) {
-            this.previewImageUrl = src.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://portal.ptmsn.co.id');
+        const step = this.fallbackStep || 0;
+        const currentSrc = this.previewImageUrl || '';
+
+        if (step === 0) {
+            this.fallbackStep = 1;
+            if (currentSrc.includes('portal.ptmsn.co.id')) {
+                this.previewImageUrl = currentSrc.replace('portal.ptmsn.co.id', 'ims-v2.ptmsn.co.id');
+            } else if (currentSrc.includes('ims-v2.ptmsn.co.id')) {
+                this.previewImageUrl = currentSrc.replace('ims-v2.ptmsn.co.id', 'portal.ptmsn.co.id');
+            } else {
+                this.previewImageUrl = currentSrc.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://ims-v2.ptmsn.co.id');
+            }
+        } else if (step === 1) {
+            this.fallbackStep = 2;
+            if (currentSrc.includes('portal.ptmsn.co.id')) {
+                this.previewImageUrl = currentSrc.replace('portal.ptmsn.co.id', 'ptmsn.co.id');
+            } else if (currentSrc.includes('ims-v2.ptmsn.co.id')) {
+                this.previewImageUrl = currentSrc.replace('ims-v2.ptmsn.co.id', 'ptmsn.co.id');
+            } else {
+                this.previewImageUrl = currentSrc.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://portal.ptmsn.co.id');
+            }
         } else {
             this.previewImgError = true;
         }
@@ -569,7 +580,7 @@
                                         if (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:')) {
                                             $pfUrl = $rawPf;
                                         } else {
-                                            $pfUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawPf, '/');
+                                            $pfUrl = asset(ltrim($rawPf, '/'));
                                         }
                                     @endphp
                                     <button type="button"
@@ -813,7 +824,7 @@
                                         if (str_starts_with($rawPf, 'http://') || str_starts_with($rawPf, 'https://') || str_starts_with($rawPf, 'data:')) {
                                             $pfUrl = $rawPf;
                                         } else {
-                                            $pfUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawPf, '/');
+                                            $pfUrl = asset(ltrim($rawPf, '/'));
                                         }
                                     @endphp
                                     <button type="button"

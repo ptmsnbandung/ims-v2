@@ -741,7 +741,7 @@
                                             if (str_starts_with($rawProof, 'http://') || str_starts_with($rawProof, 'https://') || str_starts_with($rawProof, 'data:')) {
                                                 $resolvedProofUrl = $rawProof;
                                             } else {
-                                                $resolvedProofUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawProof, '/');
+                                                $resolvedProofUrl = asset(ltrim($rawProof, '/'));
                                             }
                                         @endphp
                                         <button type="button"
@@ -1287,7 +1287,7 @@
                                     if (str_starts_with($rawProofMob, 'http://') || str_starts_with($rawProofMob, 'https://') || str_starts_with($rawProofMob, 'data:')) {
                                         $resolvedProofMobUrl = $rawProofMob;
                                     } else {
-                                        $resolvedProofMobUrl = 'https://portal.ptmsn.co.id/' . ltrim($rawProofMob, '/');
+                                        $resolvedProofMobUrl = asset(ltrim($rawProofMob, '/'));
                                     }
                                 @endphp
                                 <button type="button"
@@ -3844,7 +3844,7 @@ function billingLayananPage() {
         proofStatus: '',
         proofDestinationBank: '',
         proofImgError: false,
-        proofFallbackAttempted: false,
+        proofFallbackStep: 0,
         showUploadForm: false,
         uploadLoading: false,
         openProofModalFromEl(el) {
@@ -3858,22 +3858,33 @@ function billingLayananPage() {
             this.proofStatus = el.dataset.status || '';
             this.proofDestinationBank = el.dataset.destinationBank || '';
             this.proofImgError = false;
-            this.proofFallbackAttempted = false;
+            this.proofFallbackStep = 0;
             this.showUploadForm = false;
             this.uploadLoading = false;
             this.proofModalOpen = true;
         },
         handleProofImageError(event) {
-            if (this.proofFallbackAttempted) {
-                this.proofImgError = true;
-                return;
-            }
-            this.proofFallbackAttempted = true;
+            const step = this.proofFallbackStep || 0;
             const src = this.proofUrl || '';
-            if (src.includes('portal.ptmsn.co.id')) {
-                this.proofUrl = src.replace('portal.ptmsn.co.id', 'ptmsn.co.id');
-            } else if (src.includes('ptmsn.co.id')) {
-                this.proofUrl = src.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://portal.ptmsn.co.id');
+
+            if (step === 0) {
+                this.proofFallbackStep = 1;
+                if (src.includes('portal.ptmsn.co.id')) {
+                    this.proofUrl = src.replace('portal.ptmsn.co.id', 'ims-v2.ptmsn.co.id');
+                } else if (src.includes('ims-v2.ptmsn.co.id')) {
+                    this.proofUrl = src.replace('ims-v2.ptmsn.co.id', 'portal.ptmsn.co.id');
+                } else {
+                    this.proofUrl = src.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://ims-v2.ptmsn.co.id');
+                }
+            } else if (step === 1) {
+                this.proofFallbackStep = 2;
+                if (src.includes('portal.ptmsn.co.id')) {
+                    this.proofUrl = src.replace('portal.ptmsn.co.id', 'ptmsn.co.id');
+                } else if (src.includes('ims-v2.ptmsn.co.id')) {
+                    this.proofUrl = src.replace('ims-v2.ptmsn.co.id', 'ptmsn.co.id');
+                } else {
+                    this.proofUrl = src.replace(/https?:\/\/(www\.)?ptmsn\.co\.id/, 'https://portal.ptmsn.co.id');
+                }
             } else {
                 this.proofImgError = true;
             }

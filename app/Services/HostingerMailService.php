@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
 class HostingerMailService
 {
+    protected string $baseUrl = 'https://api.mail.hostinger.com';
     protected string $token;
     protected string $from;
 
@@ -26,7 +28,66 @@ class HostingerMailService
     }
 
     /**
-     * Kirim email menggunakan Hostinger Mail REST API (HTTPS POST /v1/emails)
+     * Dapatkan Mailbox Resource ID dari Hostinger API (GET /api/v1/me)
+     *
+     * @return string
+     * @throws Exception
+     */
+    public function getMailboxResourceId(): string
+    {
+        if (!$this->isConfigured()) {
+            throw new Exception("Hostinger Mail API: HOSTINGER_MAIL_TOKEN belum disetel di file .env");
+        }
+
+        $cacheKey = 'hostinger_mailbox_resource_id_' . md5($this->token);
+
+        return Cache::remember($cacheKey, 86400, function () {
+            $response = Http::withToken($this->token)
+                ->timeout(15)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                ])
+                ->get("{$this->baseUrl}/api/v1/me");
+
+            if (!$response->successful()) {
+                $status = $response->status();
+                $body = $response->body();
+                throw new Exception("Hostinger Mail API Gagal mendapatkan informasi akun [HTTP {$status}]: {$body}");
+            }
+
+            $json = $response->json();
+            $mailboxes = $json['data']['mailboxes'] ?? [];
+
+            if (empty($mailboxes)) {
+                throw new Exception("Hostinger Mail API: Tidak ada mailbox yang ditemukan untuk token API ini.");
+            }
+
+            // Cari mailbox yang cocok dengan alamat 'from' (misal: info@ptmsn.co.id)
+            $matched = null;
+            $fromAddress = strtolower(trim($this->from));
+            foreach ($mailboxes as $mb) {
+                if (strtolower(trim($mb['address'] ?? '')) === $fromAddress) {
+                    $matched = $mb['resourceId'];
+                    break;
+                }
+            }
+
+            // Jika tidak ada yang cocok persis, gunakan mailbox pertama
+            if (!$matched && !empty($mailboxes[0]['resourceId'])) {
+                $matched = $mailboxes[0]['resourceId'];
+            }
+
+            if (!$matched) {
+                throw new Exception("Hostinger Mail API: Gagal mendeteksi Resource ID dari mailbox.");
+            }
+
+            return $matched;
+        });
+    }
+
+    /**
+     * Kirim email menggunakan Hostinger Mail REST API
+     * POST /api/v1/mailboxes/{mailboxResourceId}/send
      *
      * @param string $to Alamat email penerima
      * @param string $subject Judul email
@@ -43,31 +104,31 @@ class HostingerMailService
             return false;
         }
 
-        if (!$this->isConfigured()) {
-            throw new Exception("Hostinger Mail API: HOSTINGER_MAIL_TOKEN belum disetel di file .env");
-        }
+        $mailboxResourceId = $this->getMailboxResourceId();
+        $companyName = config('company.name', 'PT Media Solusi Network');
 
         $payload = [
-            'to'      => $cleanTo,
-            'subject' => $subject,
-            'html'    => $htmlContent,
-            'body'    => $plainText ?: strip_tags($htmlContent),
+            'to'          => [$cleanTo],
+            'displayName' => $companyName,
+            'subject'     => $subject,
+            'html'        => $htmlContent,
+            'text'        => $plainText ?: strip_tags($htmlContent),
         ];
 
         try {
             $response = Http::withToken($this->token)
-                ->timeout(20)
+                ->timeout(25)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'Accept'       => 'application/json',
                 ])
-                ->post('https://api.mail.hostinger.com/v1/emails', $payload);
+                ->post("{$this->baseUrl}/api/v1/mailboxes/{$mailboxResourceId}/send", $payload);
 
             $status = $response->status();
 
-            // Status 200, 201, atau 202 (Accepted for delivery) menandakan sukses
-            if ($response->successful() || in_array($status, [200, 201, 202])) {
-                Log::info("Hostinger Mail API: Email berhasil dikirim ke {$cleanTo} - Subjek: '{$subject}' (HTTP {$status})");
+            // Status 200, 201, 202, atau 204 No Content menandakan pesan berhasil terkirim
+            if ($response->successful() || in_array($status, [200, 201, 202, 204])) {
+                Log::info("Hostinger Mail API: Email berhasil dikirim ke {$cleanTo} via mailbox {$mailboxResourceId} (HTTP {$status})");
                 return true;
             }
 
@@ -75,9 +136,7 @@ class HostingerMailService
             Log::error($errMsg);
             throw new Exception($errMsg);
         } catch (\Throwable $e) {
-            Log::error("Hostinger Mail API Request Exception ke {$cleanTo}: " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
+            Log::error("Hostinger Mail API Exception ke {$cleanTo}: " . $e->getMessage());
             throw $e;
         }
     }

@@ -51,7 +51,17 @@ class TestHostingerMailCommand extends Command
         $maskedToken = substr($token, 0, 6) . '...' . substr($token, -4);
         $this->line("Token API: {$maskedToken}");
 
-        // Jika ada kode billing, ambil data aslinya
+        $service = app(HostingerMailService::class);
+
+        $this->line("Mendeteksi Mailbox Resource ID via GET /api/v1/me...");
+        try {
+            $mailboxId = $service->getMailboxResourceId();
+            $this->info("Mailbox ID : {$mailboxId}");
+        } catch (\Throwable $me) {
+            $this->error("Gagal mendeteksi Mailbox: " . $me->getMessage());
+            return 1;
+        }
+
         $billing = null;
         $customer = null;
 
@@ -94,7 +104,6 @@ class TestHostingerMailCommand extends Command
         }
 
         if (!$billing) {
-            // Data dummy tes
             $billing = (object) [
                 'kode_billing_layanan' => $kodeBilling ?: 'INV/TEST/' . date('YmdHis'),
                 'nomor_internet' => '100001',
@@ -132,10 +141,9 @@ class TestHostingerMailCommand extends Command
             return 1;
         }
 
-        $this->line("Mengirim request ke https://api.mail.hostinger.com/v1/emails...");
+        $this->line("Mengirim request ke https://api.mail.hostinger.com/api/v1/mailboxes/{$mailboxId}/send...");
 
         try {
-            $service = app(HostingerMailService::class);
             $result = $service->send($to, $subject, $html);
 
             if ($result) {

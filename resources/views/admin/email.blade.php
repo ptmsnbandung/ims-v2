@@ -204,9 +204,10 @@
                             <select name="bulan"
                                     onchange="this.form.submit()"
                                     class="w-full py-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                                <option value="all" {{ ($bulanFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Bulan Tagihan</option>
+                                <option value="all" {{ (string)($bulanFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Bulan Tagihan</option>
                                 @foreach($bulanList as $bKey => $bLabel)
-                                    <option value="{{ $bKey }}" {{ ($bulanFilter ?? 'all') === $bKey ? 'selected' : '' }}>
+                                    @php $bVal = str_pad((string)$bKey, 2, '0', STR_PAD_LEFT); @endphp
+                                    <option value="{{ $bVal }}" {{ (string)($bulanFilter ?? 'all') === $bVal ? 'selected' : '' }}>
                                         Bulan {{ $bLabel }}
                                     </option>
                                 @endforeach

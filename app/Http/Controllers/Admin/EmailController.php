@@ -94,7 +94,8 @@ class EmailController extends Controller
 
         // Filter Bulan & Tahun Tagihan
         if ($hasBilling && $bulanFilter !== 'all') {
-            $query->where('inv.bulan_tagihan', $bulanFilter);
+            $bulanVariants = array_values(array_unique([$bulanFilter, (string) (int) $bulanFilter]));
+            $query->whereIn('inv.bulan_tagihan', $bulanVariants);
             if ($tahunFilter !== 'all' && $tahunFilter !== '') {
                 $query->where('inv.tahun_tagihan', $tahunFilter);
             }
@@ -433,9 +434,10 @@ class EmailController extends Controller
 
             if ($selectedBulan !== 'all' && $selectedBulan !== '') {
                 $paddedMonth = str_pad((string) (int) $selectedBulan, 2, '0', STR_PAD_LEFT);
-                $query->leftJoin('trx_billing_layanan as inv', function ($join) use ($paddedMonth, $selectedTahun) {
+                $bulanVariants = array_values(array_unique([$paddedMonth, (string) (int) $selectedBulan]));
+                $query->leftJoin('trx_billing_layanan as inv', function ($join) use ($bulanVariants, $selectedTahun) {
                     $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
-                         ->where('inv.bulan_tagihan', '=', $paddedMonth);
+                         ->whereIn('inv.bulan_tagihan', $bulanVariants);
                     if ($selectedTahun !== 'all' && $selectedTahun !== '') {
                         $join->where('inv.tahun_tagihan', '=', (string) $selectedTahun);
                     }

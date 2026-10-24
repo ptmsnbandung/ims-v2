@@ -816,6 +816,89 @@
             </div>
         </div>
     </template>
+
+    <!-- Modal 3: Konfirmasi Pengiriman Email (Menggantikan Browser confirm() Bawaan) -->
+    <template x-teleport="body">
+        <div x-show="confirmModalOpen"
+             x-cloak
+             @keydown.escape.window="if (!isSending) confirmModalOpen = false"
+             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 100000; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden"
+                 style="margin: auto;"
+                 @click.away="if (!isSending) confirmModalOpen = false">
+
+                <!-- Top Header Banner -->
+                <div class="p-5 pb-4 text-center">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/80 border border-sky-200/70 dark:border-sky-800/60 text-sky-600 dark:text-sky-400 flex items-center justify-center mx-auto mb-3 shadow-xs">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                        </svg>
+                    </div>
+                    <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
+                        Konfirmasi Pengiriman Email
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Pastikan detail pesan dan jumlah penerima di bawah ini sudah sesuai sebelum dikirim.
+                    </p>
+                </div>
+
+                <!-- Summary Detail Box -->
+                <div class="px-5 pb-4">
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/60 space-y-2 text-xs">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-slate-500 dark:text-slate-400 font-medium">Target Penerima:</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/60"
+                                  x-text="confirmPayload.label"></span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-slate-500 dark:text-slate-400 font-medium">Label Header:</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[220px]"
+                                  x-text="form.badge_text || 'PEMBERITAHUAN RESMI'"></span>
+                        </div>
+                        <div class="pt-1.5 border-t border-slate-200/70 dark:border-slate-700/60">
+                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Subjek Email:</span>
+                            <p class="font-bold text-slate-900 dark:text-white leading-snug line-clamp-2"
+                               x-text="form.subject"></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 text-[11px] text-amber-700 dark:text-amber-300">
+                        <svg class="w-4 h-4 shrink-0 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                        <span>Tugas pengiriman akan langsung diproses otomatis di latar belakang.</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex items-center justify-end gap-2.5">
+                    <button type="button"
+                            @click="confirmModalOpen = false"
+                            :disabled="isSending"
+                            class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-50 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="button"
+                            @click="executeSendEmail()"
+                            :disabled="isSending"
+                            class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-sky-600/25 transition cursor-pointer">
+                        <template x-if="!isSending">
+                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                            </svg>
+                        </template>
+                        <template x-if="isSending">
+                            <svg class="w-3.5 h-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                        </template>
+                        <span x-text="isSending ? 'Memproses Antrean...' : 'Ya, Kirim Sekarang'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
 
 @php
@@ -869,6 +952,13 @@ function emailManagement() {
         testEmail: '{{ auth()->user()->email ?? "m.azmi.f12345@gmail.com" }}',
         isTestSending: false,
         isSending: false,
+
+        confirmModalOpen: false,
+        confirmPayload: {
+            mode: 'bulk', // 'bulk' | 'single'
+            targets: [],
+            label: ''
+        },
 
         init() {
             // Pulihkan daftar pelanggan yang sudah dicentang lintas halaman / filter
@@ -957,13 +1047,36 @@ function emailManagement() {
             this.form.message += ' ' + tag;
         },
 
+        showNotice(icon, title, text = '', reloadAfter = false) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: icon,
+                    title: title,
+                    text: text,
+                    confirmButtonText: 'Tutup',
+                    confirmButtonColor: '#0284c7',
+                    customClass: {
+                        popup: 'rounded-2xl'
+                    }
+                }).then(() => {
+                    if (reloadAfter) {
+                        window.location.reload();
+                    }
+                });
+            } else {
+                alert((title ? title + '\n' : '') + text);
+                if (reloadAfter) {
+                    window.location.reload();
+                }
+            }
+        },
+
         async openPreviewModal(nomorInternet = null) {
             this.previewMode = 'composer';
 
             if (nomorInternet) {
                 this.previewCustomerId = String(nomorInternet);
             } else if (!this.previewCustomerId) {
-                // Jika klik tombol Pratinjau umum, gunakan pelanggan pertama yang dicentang di halaman ini atau pelanggan pertama di tabel
                 const firstSelectedOnPage = this.pageCustomers.find(c => this.selectedTargets.includes(String(c.nomor_internet)));
                 if (firstSelectedOnPage) {
                     this.previewCustomerId = String(firstSelectedOnPage.nomor_internet);
@@ -997,21 +1110,42 @@ function emailManagement() {
                     this.previewModalOpen = true;
                 }
             } catch (e) {
-                alert('Gagal memuat pratinjau: ' + e.message);
+                this.showNotice('error', 'Gagal Memuat Pratinjau', e.message);
             }
         },
 
-        async sendSingleFromPreview() {
+        sendSingleFromPreview() {
             if (!this.previewCustomer || !this.previewCustomer.nomor_internet) return;
-            if (!confirm(`Kirim email ini sekarang ke ${this.previewCustomer.nama_pelanggan} (${this.previewCustomer.email})?`)) {
+            this.confirmPayload = {
+                mode: 'single',
+                targets: [String(this.previewCustomer.nomor_internet)],
+                label: `${this.previewCustomer.nama_pelanggan} (${this.previewCustomer.email})`
+            };
+            this.confirmModalOpen = true;
+        },
+
+        sendBroadcast() {
+            if (this.selectedTargets.length === 0) {
+                this.showNotice('warning', 'Belum Ada Penerima', 'Silakan pilih minimal 1 pelanggan penerima email terlebih dahulu.');
                 return;
             }
+
+            this.confirmPayload = {
+                mode: 'bulk',
+                targets: [...this.selectedTargets],
+                label: `${this.selectedTargets.length} Pelanggan Terpilih`
+            };
+            this.confirmModalOpen = true;
+        },
+
+        async executeSendEmail() {
+            if (!this.confirmPayload.targets || this.confirmPayload.targets.length === 0) return;
 
             this.isSending = true;
             try {
                 const payload = {
                     ...this.form,
-                    targets: [String(this.previewCustomer.nomor_internet)],
+                    targets: this.confirmPayload.targets,
                     bulan: '{{ $bulanFilter ?? "all" }}',
                     tahun: '{{ $tahunFilter ?? date("Y") }}'
                 };
@@ -1025,14 +1159,17 @@ function emailManagement() {
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert(data.message);
+                    this.confirmModalOpen = false;
                     this.previewModalOpen = false;
-                    window.location.reload();
+                    if (this.confirmPayload.mode === 'bulk') {
+                        this.clearSelection();
+                    }
+                    this.showNotice('success', 'Berhasil Masuk Antrean!', data.message, true);
                 } else {
-                    alert('Gagal: ' + data.message);
+                    this.showNotice('error', 'Pengiriman Gagal', data.message || 'Gagal memproses pengiriman email.');
                 }
             } catch (e) {
-                alert('Terjadi kesalahan pengiriman: ' + e.message);
+                this.showNotice('error', 'Terjadi Kesalahan', e.message);
             } finally {
                 this.isSending = false;
             }
@@ -1044,7 +1181,7 @@ function emailManagement() {
 
         async submitTestSend() {
             if (!this.testEmail) {
-                alert('Masukkan alamat email pengujian.');
+                this.showNotice('warning', 'Email Kosong', 'Masukkan alamat email tujuan pengujian.');
                 return;
             }
             this.isTestSending = true;
@@ -1064,56 +1201,15 @@ function emailManagement() {
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert(data.message);
                     this.testModalOpen = false;
+                    this.showNotice('success', 'Email Uji Coba Dikirim!', data.message);
                 } else {
-                    alert('Gagal: ' + data.message);
+                    this.showNotice('error', 'Gagal Mengirim Uji Coba', data.message);
                 }
             } catch (e) {
-                alert('Terjadi kesalahan: ' + e.message);
+                this.showNotice('error', 'Terjadi Kesalahan', e.message);
             } finally {
                 this.isTestSending = false;
-            }
-        },
-
-        async sendBroadcast() {
-            if (this.selectedTargets.length === 0) {
-                alert('Silakan pilih minimal 1 pelanggan penerima email.');
-                return;
-            }
-
-            if (!confirm(`Apakah Anda yakin ingin mengirim email ini ke ${this.selectedTargets.length} pelanggan terpilih? Tugas pengiriman akan langsung diproses di latar belakang.`)) {
-                return;
-            }
-
-            this.isSending = true;
-            try {
-                const payload = {
-                    ...this.form,
-                    targets: this.selectedTargets,
-                    bulan: '{{ $bulanFilter ?? "all" }}',
-                    tahun: '{{ $tahunFilter ?? date("Y") }}'
-                };
-                const res = await fetch('{{ route("admin.email.send") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert(data.message);
-                    this.clearSelection();
-                    window.location.reload();
-                } else {
-                    alert('Gagal: ' + data.message);
-                }
-            } catch (e) {
-                alert('Terjadi kesalahan pengiriman: ' + e.message);
-            } finally {
-                this.isSending = false;
             }
         },
 
@@ -1127,7 +1223,7 @@ function emailManagement() {
                     this.previewModalOpen = true;
                 }
             } catch (e) {
-                alert('Gagal memuat detail log: ' + e.message);
+                this.showNotice('error', 'Gagal Memuat Detail Log', e.message);
             }
         }
     };

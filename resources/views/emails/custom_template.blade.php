@@ -17,7 +17,8 @@
             width: 100%;
             table-layout: fixed;
             background-color: #f1f5f9;
-            padding: 40px 0;
+            padding: 16px 10px;
+            box-sizing: border-box;
         }
         .main-card {
             background-color: #ffffff;

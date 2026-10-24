@@ -66,6 +66,8 @@ class EmailController extends Controller
         $search = trim((string) $request->input('search', ''));
         $statusFilter = (string) $request->input('status', 'all'); // all, lunas, jatuh_tempo, suspend, active
         $emailFilter = (string) $request->input('email_status', 'all'); // all, with_email, without_email
+        $statusKirimFilter = (string) $request->input('status_kirim', 'all'); // all, sent, unsent
+        $jumlahKirimFilter = (string) $request->input('jumlah_kirim', 'all'); // all, 0, 1, 2, 3, 4, 5plus
 
         // Backward-compatibility jika with_email / without_email dikirim lewat parameter status
         if (in_array($statusFilter, ['with_email', 'without_email'])) {
@@ -83,13 +85,14 @@ class EmailController extends Controller
             $perPage = 25;
         }
 
-        // Query Pelanggan dengan deteksi kolom dinamis & join tagihan
+        // Query Pelanggan dengan deteksi kolom dinamis & join tagihan + log email
         $context = $this->getCustomerQueryContext($bulanFilter, $tahunFilter);
         $query = $context['query'];
         $emailCol = $context['emailCol'];
         $phoneCol = $context['phoneCol'];
         $statusCol = $context['statusCol'];
         $hasBilling = $context['hasBilling'];
+        $hasEmailLog = $context['hasEmailLog'];
 
         if ($search !== '') {
             $query->where(function ($q) use ($search, $emailCol, $phoneCol) {
@@ -136,6 +139,25 @@ class EmailController extends Controller
             });
         }
 
+        // Filter Status Kirim Email (Sudah / Belum Menerima Email)
+        if ($hasEmailLog) {
+            if ($statusKirimFilter === 'sent') {
+                $query->whereRaw('COALESCE(log_email.email_sent_count, 0) > 0');
+            } elseif ($statusKirimFilter === 'unsent') {
+                $query->whereRaw('COALESCE(log_email.email_sent_count, 0) = 0');
+            }
+
+            // Filter Frekuensi / Berapa Kali Menerima Email (0x, 1x, 2x, 3x, 4x, >= 5x)
+            if ($jumlahKirimFilter !== 'all' && $jumlahKirimFilter !== '') {
+                if ($jumlahKirimFilter === '5plus' || $jumlahKirimFilter === '>=5') {
+                    $query->whereRaw('COALESCE(log_email.email_sent_count, 0) >= 5');
+                } elseif (is_numeric($jumlahKirimFilter)) {
+                    $val = (int) $jumlahKirimFilter;
+                    $query->whereRaw("COALESCE(log_email.email_sent_count, 0) = {$val}");
+                }
+            }
+        }
+
         // Ambil seluruh ID pelanggan hasil filter yang punya email valid (untuk fitur pilih lintas halaman)
         $allFilteredTargetIds = (clone $query)
             ->whereNotNull($emailCol)
@@ -176,6 +198,8 @@ class EmailController extends Controller
             'search',
             'statusFilter',
             'emailFilter',
+            'statusKirimFilter',
+            'jumlahKirimFilter',
             'bulanFilter',
             'tahunFilter',
             'perPage'
@@ -449,6 +473,7 @@ class EmailController extends Controller
     {
         $hasTrxBilling = Schema::hasTable('trx_billing_layanan');
         $invCols = $hasTrxBilling ? Schema::getColumnListing('trx_billing_layanan') : [];
+        $hasEmailLog = Schema::hasTable('tb_broadcast_email_log');
 
         // Helper untuk menyambungkan tabel trx_billing_layanan (inv)
         $attachBillingJoin = function ($query) use ($hasTrxBilling, $selectedBulan, $selectedTahun) {
@@ -486,11 +511,32 @@ class EmailController extends Controller
             }
         };
 
-        $billStatusSelect  = ($hasTrxBilling && in_array('status_bill_lay', $invCols)) ? 'inv.status_bill_lay' : DB::raw("NULL as status_bill_lay");
-        $billBulanSelect   = ($hasTrxBilling && in_array('bulan_tagihan', $invCols)) ? 'inv.bulan_tagihan' : DB::raw("NULL as bulan_tagihan");
-        $billTahunSelect   = ($hasTrxBilling && in_array('tahun_tagihan', $invCols)) ? 'inv.tahun_tagihan' : DB::raw("NULL as tahun_tagihan");
-        $billNominalSelect = ($hasTrxBilling && in_array('total_layanan', $invCols)) ? 'inv.total_layanan' : DB::raw("0 as total_layanan");
-        $billPeriodeSelect = ($hasTrxBilling && in_array('periode_tagihan', $invCols)) ? 'inv.periode_tagihan' : DB::raw("NULL as periode_tagihan");
+        // Helper untuk menyambungkan rekap log pengiriman email per pelanggan (log_email)
+        $attachEmailLogJoin = function ($query) use ($hasEmailLog) {
+            if (!$hasEmailLog) {
+                return;
+            }
+
+            $subEmailLog = DB::table('tb_broadcast_email_log as el')
+                ->selectRaw("el.nomor_internet, COUNT(*) as email_sent_count, MAX(el.created_at) as last_email_sent_at")
+                ->whereIn('el.status', ['sent', 'queued'])
+                ->whereNotNull('el.nomor_internet')
+                ->where('el.nomor_internet', '!=', '')
+                ->where('el.nomor_internet', '!=', 'TEST')
+                ->groupBy('el.nomor_internet');
+
+            $query->leftJoinSub($subEmailLog, 'log_email', function ($join) {
+                $join->on('c.nomor_internet', '=', 'log_email.nomor_internet');
+            });
+        };
+
+        $billStatusSelect     = ($hasTrxBilling && in_array('status_bill_lay', $invCols)) ? 'inv.status_bill_lay' : DB::raw("NULL as status_bill_lay");
+        $billBulanSelect      = ($hasTrxBilling && in_array('bulan_tagihan', $invCols)) ? 'inv.bulan_tagihan' : DB::raw("NULL as bulan_tagihan");
+        $billTahunSelect      = ($hasTrxBilling && in_array('tahun_tagihan', $invCols)) ? 'inv.tahun_tagihan' : DB::raw("NULL as tahun_tagihan");
+        $billNominalSelect    = ($hasTrxBilling && in_array('total_layanan', $invCols)) ? 'inv.total_layanan' : DB::raw("0 as total_layanan");
+        $billPeriodeSelect    = ($hasTrxBilling && in_array('periode_tagihan', $invCols)) ? 'inv.periode_tagihan' : DB::raw("NULL as periode_tagihan");
+        $emailSentCountSelect = $hasEmailLog ? DB::raw('COALESCE(log_email.email_sent_count, 0) as email_sent_count') : DB::raw('0 as email_sent_count');
+        $lastEmailSentSelect  = $hasEmailLog ? 'log_email.last_email_sent_at' : DB::raw('NULL as last_email_sent_at');
 
         if (Schema::hasTable('view_batchjob')) {
             $cols = Schema::getColumnListing('view_batchjob');
@@ -501,6 +547,7 @@ class EmailController extends Controller
 
             $query = DB::table('view_batchjob as c');
             $attachBillingJoin($query);
+            $attachEmailLogJoin($query);
 
             $query->select(
                 'c.nomor_internet',
@@ -514,15 +561,18 @@ class EmailController extends Controller
                 $billBulanSelect,
                 $billTahunSelect,
                 $billNominalSelect,
-                $billPeriodeSelect
+                $billPeriodeSelect,
+                $emailSentCountSelect,
+                $lastEmailSentSelect
             )->orderBy('c.nomor_internet', 'desc');
 
             return [
-                'query'      => $query,
-                'emailCol'   => 'c.email',
-                'phoneCol'   => 'c.nomor_hp',
-                'statusCol'  => $statusColName ?? 'c.status_reg',
-                'hasBilling' => $hasTrxBilling,
+                'query'       => $query,
+                'emailCol'    => 'c.email',
+                'phoneCol'    => 'c.nomor_hp',
+                'statusCol'   => $statusColName ?? 'c.status_reg',
+                'hasBilling'  => $hasTrxBilling,
+                'hasEmailLog' => $hasEmailLog,
             ];
         }
 
@@ -535,6 +585,7 @@ class EmailController extends Controller
             $query->leftJoin('m_bandwith as b', 'c.kode_bandwith', '=', 'b.kode_bandwith');
         }
         $attachBillingJoin($query);
+        $attachEmailLogJoin($query);
 
         $regCols = Schema::getColumnListing('trx_batchjob_register');
         $statusColName = in_array('status_reg', $regCols) ? 'c.status_reg' : (in_array('status_user', $regCols) ? 'c.status_user' : null);
@@ -554,15 +605,18 @@ class EmailController extends Controller
             $billBulanSelect,
             $billTahunSelect,
             $billNominalSelect,
-            $billPeriodeSelect
+            $billPeriodeSelect,
+            $emailSentCountSelect,
+            $lastEmailSentSelect
         )->orderBy('c.nomor_internet', 'desc');
 
         return [
-            'query'      => $query,
-            'emailCol'   => 'p.email',
-            'phoneCol'   => $phoneCol,
-            'statusCol'  => $statusColName ?? 'c.status_reg',
-            'hasBilling' => $hasTrxBilling,
+            'query'       => $query,
+            'emailCol'    => 'p.email',
+            'phoneCol'    => $phoneCol,
+            'statusCol'   => $statusColName ?? 'c.status_reg',
+            'hasBilling'  => $hasTrxBilling,
+            'hasEmailLog' => $hasEmailLog,
         ];
     }
 

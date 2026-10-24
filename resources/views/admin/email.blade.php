@@ -318,7 +318,7 @@
                     </div>
                 </div>
 
-                <!-- Search & Filters -->
+                <!-- Filter Toolbar (Seragam dengan Broadcast WA) -->
                 @php
                     $bulanList = [
                         '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
@@ -327,77 +327,119 @@
                     ];
                     $curYear = (int) date('Y');
                 @endphp
-                <form method="GET" action="{{ route('admin.email.index') }}#daftar-pelanggan" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                    <!-- Search Input -->
-                    <div class="sm:col-span-3 relative">
-                        <input type="text"
-                               name="search"
-                               value="{{ $search }}"
-                               placeholder="Cari nama, nomor, email..."
-                               class="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                        </svg>
+                <form method="GET" action="{{ route('admin.email.index') }}#daftar-pelanggan" class="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700/60 space-y-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2.5">
+                        <!-- 1. Filter Status Tagihan / Layanan -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Status Pelanggan:</label>
+                            <select name="status"
+                                    onchange="this.form.submit()"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                                <option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>Semua Pelanggan</option>
+                                <option value="jatuh_tempo" {{ $statusFilter === 'jatuh_tempo' ? 'selected' : '' }}>&#9888; Jatuh Tempo (Belum Lunas)</option>
+                                <option value="lunas" {{ $statusFilter === 'lunas' ? 'selected' : '' }}>&#10003; Lunas (Sudah Bayar)</option>
+                                <option value="suspend" {{ $statusFilter === 'suspend' ? 'selected' : '' }}>&#9940; Suspend / Isolir</option>
+                                <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Pelanggan Aktif</option>
+                            </select>
+                        </div>
+
+                        <!-- 2. Filter Kepemilikan Email -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Kepemilikan Email:</label>
+                            <select name="email_status"
+                                    onchange="this.form.submit()"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                                <option value="all" {{ ($emailFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua (Punya &amp; Tanpa)</option>
+                                <option value="with_email" {{ ($emailFilter ?? 'all') === 'with_email' ? 'selected' : '' }}>&#9993; Punya Email</option>
+                                <option value="without_email" {{ ($emailFilter ?? 'all') === 'without_email' ? 'selected' : '' }}>Tanpa Email</option>
+                            </select>
+                        </div>
+
+                        <!-- 3. Filter Status Terima Email (Sudah / Belum) -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Status Kirim Email:</label>
+                            <select name="status_kirim"
+                                    onchange="this.form.submit()"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                                <option value="all" {{ ($statusKirimFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Status Kirim</option>
+                                <option value="sent" {{ ($statusKirimFilter ?? '') === 'sent' ? 'selected' : '' }}>&#10003; Sudah Menerima Email</option>
+                                <option value="unsent" {{ ($statusKirimFilter ?? '') === 'unsent' ? 'selected' : '' }}>&#9203; Belum Pernah Dikirim</option>
+                            </select>
+                        </div>
+
+                        <!-- 4. Filter Jumlah / Berapa Kali Menerima Email -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Jumlah Kirim Email:</label>
+                            <select name="jumlah_kirim"
+                                    onchange="this.form.submit()"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                                <option value="all" {{ ($jumlahKirimFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Frekuensi</option>
+                                <option value="0" {{ ($jumlahKirimFilter ?? '') === '0' ? 'selected' : '' }}>Belum Pernah (0x)</option>
+                                <option value="1" {{ ($jumlahKirimFilter ?? '') === '1' ? 'selected' : '' }}>1x Kirim</option>
+                                <option value="2" {{ ($jumlahKirimFilter ?? '') === '2' ? 'selected' : '' }}>2x Kirim</option>
+                                <option value="3" {{ ($jumlahKirimFilter ?? '') === '3' ? 'selected' : '' }}>3x Kirim</option>
+                                <option value="4" {{ ($jumlahKirimFilter ?? '') === '4' ? 'selected' : '' }}>4x Kirim</option>
+                                <option value="5plus" {{ ($jumlahKirimFilter ?? '') === '5plus' ? 'selected' : '' }}>&ge; 5x Kirim (5x ke atas)</option>
+                            </select>
+                        </div>
+
+                        <!-- 5. Filter Bulan Tagihan -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Bulan Tagihan:</label>
+                            <select name="bulan"
+                                    onchange="this.form.submit()"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                                <option value="all" {{ (string)($bulanFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Bulan</option>
+                                @foreach($bulanList as $bKey => $bLabel)
+                                    @php $bVal = str_pad((string)$bKey, 2, '0', STR_PAD_LEFT); @endphp
+                                    <option value="{{ $bVal }}" {{ (string)($bulanFilter ?? 'all') === $bVal ? 'selected' : '' }}>
+                                        {{ $bLabel }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- 6. Filter Tahun Tagihan -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Tahun Tagihan:</label>
+                            <select name="tahun"
+                                    onchange="this.form.submit()"
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                                @for($y = $curYear + 1; $y >= $curYear - 2; $y--)
+                                    <option value="{{ $y }}" {{ (string)($tahunFilter ?? $curYear) === (string)$y ? 'selected' : '' }}>
+                                        {{ $y }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+
+                        <!-- 7. Pencarian Pelanggan -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">Pencarian Pelanggan:</label>
+                            <input type="text"
+                                   name="search"
+                                   value="{{ $search }}"
+                                   placeholder="Nama, ID, Email..."
+                                   class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
                     </div>
 
-                    <!-- Filter Status Tagihan / Layanan (Lunas, Jatuh Tempo, Suspend, Aktif) -->
-                    <div class="sm:col-span-3">
-                        <select name="status"
-                                onchange="this.form.submit()"
-                                class="w-full py-2 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                            <option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>Semua Status Tagihan</option>
-                            <option value="lunas" {{ $statusFilter === 'lunas' ? 'selected' : '' }}>&#10003; Lunas (Sudah Bayar)</option>
-                            <option value="jatuh_tempo" {{ $statusFilter === 'jatuh_tempo' ? 'selected' : '' }}>&#9888; Jatuh Tempo (Belum Lunas)</option>
-                            <option value="suspend" {{ $statusFilter === 'suspend' ? 'selected' : '' }}>&#128683; Suspend / Isolir</option>
-                            <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Pelanggan Aktif</option>
-                        </select>
-                    </div>
+                    <div class="flex items-center justify-between pt-1 flex-wrap gap-2 border-t border-slate-200/70 dark:border-slate-700/50">
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                            Menampilkan <strong class="text-slate-700 dark:text-slate-200">{{ $customers->count() }}</strong> dari <strong class="text-slate-700 dark:text-slate-200">{{ number_format($customers->total(), 0, ',', '.') }}</strong> pelanggan sesuai filter
+                        </div>
 
-                    <!-- Filter Kepemilikan Email (Punya Email / Tanpa Email) -->
-                    <div class="sm:col-span-2">
-                        <select name="email_status"
-                                onchange="this.form.submit()"
-                                class="w-full py-2 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                            <option value="all" {{ ($emailFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Email</option>
-                            <option value="with_email" {{ ($emailFilter ?? 'all') === 'with_email' ? 'selected' : '' }}>&#9993; Punya Email</option>
-                            <option value="without_email" {{ ($emailFilter ?? 'all') === 'without_email' ? 'selected' : '' }}>Tanpa Email</option>
-                        </select>
-                    </div>
-
-                    <!-- Filter Bulan Tagihan -->
-                    <div class="sm:col-span-2">
-                        <select name="bulan"
-                                onchange="this.form.submit()"
-                                class="w-full py-2 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                            <option value="all" {{ (string)($bulanFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Bulan</option>
-                            @foreach($bulanList as $bKey => $bLabel)
-                                @php $bVal = str_pad((string)$bKey, 2, '0', STR_PAD_LEFT); @endphp
-                                <option value="{{ $bVal }}" {{ (string)($bulanFilter ?? 'all') === $bVal ? 'selected' : '' }}>
-                                    Bulan {{ $bLabel }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Filter Tahun Tagihan & Reset -->
-                    <div class="sm:col-span-2 flex items-center gap-1.5">
-                        <select name="tahun"
-                                onchange="this.form.submit()"
-                                class="w-full py-2 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                            @for($y = $curYear + 1; $y >= $curYear - 2; $y--)
-                                <option value="{{ $y }}" {{ (string)($tahunFilter ?? $curYear) === (string)$y ? 'selected' : '' }}>
-                                    {{ $y }}
-                                </option>
-                            @endfor
-                        </select>
-
-                        @if($search !== '' || $statusFilter !== 'all' || ($emailFilter ?? 'all') !== 'all' || ($bulanFilter ?? 'all') !== 'all')
-                            <a href="{{ route('admin.email.index') }}#daftar-pelanggan"
-                               title="Reset Filter"
-                               class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 text-xs font-semibold border border-rose-200 dark:border-rose-800/50 transition shrink-0">
-                                Reset
-                            </a>
-                        @endif
+                        <div class="flex items-center gap-1.5">
+                            <button type="submit" class="px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition cursor-pointer">
+                                Terapkan
+                            </button>
+                            @if($search !== '' || $statusFilter !== 'all' || ($emailFilter ?? 'all') !== 'all' || ($statusKirimFilter ?? 'all') !== 'all' || ($jumlahKirimFilter ?? 'all') !== 'all' || ($bulanFilter ?? 'all') !== 'all')
+                                <a href="{{ route('admin.email.index') }}#daftar-pelanggan"
+                                   class="px-2.5 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-semibold transition">
+                                    Reset Filter
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </form>
             </div>
@@ -409,6 +451,7 @@
                     $hasEmail = !empty($c->email) && filter_var($c->email, FILTER_VALIDATE_EMAIL);
                     $isSuspend = in_array((string)($c->status_reg ?? ''), ['23', '23.1']);
                     $billStatus = (string)($c->status_bill_lay ?? '');
+                    $sentCount = (int)($c->email_sent_count ?? 0);
                     $bulanShort = [
                         1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
                         5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu',
@@ -434,8 +477,19 @@
                                 <span class="text-[10px] font-mono text-slate-400 shrink-0">#{{ $c->nomor_internet }}</span>
                             </div>
 
-                            <!-- Status Badges (Lunas / Jatuh Tempo / Suspend) -->
-                            <div class="flex items-center gap-1 shrink-0">
+                            <!-- Status Badges (Email Sent Count + Lunas / Jatuh Tempo / Suspend) -->
+                            <div class="flex flex-wrap items-center gap-1 shrink-0">
+                                @if($sentCount > 0)
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/50"
+                                          title="Terakhir dikirim: {{ $c->last_email_sent_at ?? '-' }}">
+                                        &#9993; {{ $sentCount }}x Terkirim
+                                    </span>
+                                @else
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                                        0x Kirim
+                                    </span>
+                                @endif
+
                                 @if($isSuspend)
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/50">
                                         Suspend

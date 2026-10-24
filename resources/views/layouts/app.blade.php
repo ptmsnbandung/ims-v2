@@ -60,7 +60,7 @@
             animation: imsPageEnter 0.15s ease-out;
         }
 
-        /* Isolated View Transition API (Navbar & Sidebar stay rock solid without flashing) */
+        /* Isolated View Transition API (Navbar & Sidebar stay rock solid without flashing; main excluded so position:fixed modals are never trapped) */
         @view-transition {
             navigation: auto;
         }
@@ -69,23 +69,6 @@
         }
         aside.ims-sidebar {
             view-transition-name: ims-sidebar;
-        }
-        main.ims-page-enter {
-            view-transition-name: ims-main-content;
-        }
-        ::view-transition-old(ims-main-content) {
-            animation: 90ms cubic-bezier(0.4, 0, 1, 1) both imsFadeOut;
-        }
-        ::view-transition-new(ims-main-content) {
-            animation: 200ms cubic-bezier(0, 0, 0.2, 1) both imsFadeInUp;
-        }
-        @keyframes imsFadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-4px); }
-        }
-        @keyframes imsFadeInUp {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Custom Elegant Blue Scrollbar menempel di ujung kanan */

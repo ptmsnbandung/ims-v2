@@ -135,25 +135,187 @@
         </div>
     </div>
 
-    <!-- Main Workspace: 2 Columns (Pelanggan Selector + Email Composer) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Left: Customer Selector (7 Columns) -->
-        <div class="lg:col-span-6 xl:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
+    <!-- Main Workspace: Stacked Full-Width (1. Formulir Pesan Email di Atas, 2. Pilih Pelanggan di Bawah) -->
+    <div class="space-y-6">
+        <!-- 1. TOP: Email Composer (Formulir Pesan Email) -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-900 dark:text-white">1. Formulir Pesan Email</h2>
+                    <p class="text-xs text-slate-500">Tulis isi pengumuman atau pilih preset template resmi sebelum memilih pelanggan penerima.</p>
+                </div>
+
+                <!-- Template Preset Selector -->
+                <select x-model="selectedPresetId"
+                        @change="applyPreset()"
+                        class="text-xs py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-medium text-slate-800 dark:text-slate-200 sm:min-w-[280px]">
+                    <option value="">-- Pilih Template Preset --</option>
+                    @foreach($presets as $p)
+                        <option value="{{ $p['id'] }}">{{ $p['name'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <!-- Sisa Limit Kirim Alert Banner -->
+                <div class="p-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full {{ $kpi['remaining_today'] > 50 ? 'bg-emerald-500' : 'bg-amber-500' }}"></span>
+                        <span class="text-slate-700 dark:text-slate-300">
+                            Sisa limit Hostinger hari ini: <strong class="text-sky-900 dark:text-sky-200 font-bold">{{ number_format($kpi['remaining_today'], 0, ',', '.') }}</strong> / {{ number_format($kpi['daily_limit'], 0, ',', '.') }} email
+                        </span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400"
+                          :class="selectedTargets.length > {{ $kpi['remaining_today'] }} ? 'text-rose-600 dark:text-rose-400 font-bold' : ''"
+                          x-text="selectedTargets.length > 0 ? ('Terpilih: ' + selectedTargets.length + ' pelanggan') : 'Maks 100/batch'"></span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <!-- Left Inputs (Subjek, Badge, Tombol Aksi) -->
+                    <div class="lg:col-span-5 space-y-3.5">
+                        <!-- Subjek Email -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                Subjek Email <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text"
+                                   x-model="form.subject"
+                                   placeholder="Contoh: Pemberitahuan Pemeliharaan Jaringan - PT Media Solusi Network"
+                                   class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <!-- Badge Title Pill (Header) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    Label / Badge Header
+                                </label>
+                                <input type="text"
+                                       x-model="form.badge_text"
+                                       placeholder="Contoh: PEMBERITAHUAN RESMI"
+                                       class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                    Teks Tombol Aksi (Opsional)
+                                </label>
+                                <input type="text"
+                                       x-model="form.action_text"
+                                       placeholder="Contoh: Buka Portal Tagihan"
+                                       class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                        </div>
+
+                        <!-- URL Tombol Aksi -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                URL Tombol Aksi (Opsional)
+                            </label>
+                            <input type="url"
+                                   x-model="form.action_url"
+                                   placeholder="https://portal.ptmsn.co.id"
+                                   class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                    </div>
+
+                    <!-- Right Textarea (Isi Pesan Email) -->
+                    <div class="lg:col-span-7 flex flex-col">
+                        <div class="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                Isi Pesan Email <span class="text-rose-500">*</span>
+                            </label>
+                            <!-- Variabel Tags Helper -->
+                            <div class="flex flex-wrap items-center gap-1 text-[11px] text-slate-400">
+                                <span>Variabel:</span>
+                                <button type="button" @click="insertTag('{nama_pelanggan}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nama_pelanggan}</button>
+                                <button type="button" @click="insertTag('{nomor_internet}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nomor_internet}</button>
+                                <button type="button" @click="insertTag('{paket}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{paket}</button>
+                                <button type="button" @click="insertTag('{periode}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{periode}</button>
+                                <button type="button" @click="insertTag('{nominal}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nominal}</button>
+                            </div>
+                        </div>
+                        <textarea x-model="form.message"
+                                  rows="6"
+                                  placeholder="Tuliskan isi pesan pengumuman di sini..."
+                                  class="w-full flex-1 p-3.5 rounded-xl text-xs leading-relaxed bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-sans"></textarea>
+                        <p class="text-[11px] text-slate-400 mt-1">Gunakan baris baru (Enter) ganda untuk memisahkan paragraf. Variabel akan otomatis digantikan sesuai profil pelanggan.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Composer Footer Actions -->
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3">
+                <button type="button"
+                        @click="openPreviewModal()"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition cursor-pointer">
+                    <svg class="w-4 h-4 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                    <span>Pratinjau (Preview)</span>
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <button type="button"
+                            @click="sendBroadcast()"
+                            :disabled="isSending || selectedTargets.length === 0"
+                            class="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md shadow-sky-600/25 transition cursor-pointer">
+                        <template x-if="!isSending">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                            </svg>
+                        </template>
+                        <template x-if="isSending">
+                            <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                        </template>
+                        <span x-text="isSending ? 'Memproses...' : 'Kirim ke ' + selectedTargets.length + ' Pelanggan'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. BOTTOM: Customer Selector (Pilih Pelanggan Penerima) -->
+        <div id="daftar-pelanggan" class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
             <!-- Filter Bar -->
             <div class="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>Pilih Pelanggan Penerima</span>
-                        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300"
-                              x-text="selectedTargets.length + ' dipilih'"></span>
-                    </h2>
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-bold text-slate-900 dark:text-white">2. Pilih Pelanggan Penerima</h2>
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300"
+                              x-text="selectedTargets.length + ' dipilih (Tersimpan Lintas Halaman)'"></span>
+                    </div>
 
-                    <!-- Select / Unselect all on current page -->
-                    <button @click="toggleSelectAll()"
-                            type="button"
-                            class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer">
-                        <span x-text="isAllSelected() ? 'Batal Pilih Semua' : 'Pilih Semua di Halaman Ini'"></span>
-                    </button>
+                    <!-- Quick Selection Actions -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button @click="toggleSelectAll()"
+                                type="button"
+                                class="text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline cursor-pointer">
+                            <span x-text="isAllSelected() ? 'Batal Pilih Halaman Ini' : 'Pilih Semua di Halaman Ini'"></span>
+                        </button>
+
+                        @if(count($allFilteredTargetIds ?? []) > 0)
+                            <span class="text-slate-300 dark:text-slate-700">|</span>
+                            <button @click="selectAllFiltered()"
+                                    type="button"
+                                    class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer">
+                                Pilih Semua Hasil Filter ({{ count($allFilteredTargetIds) }} punya email)
+                            </button>
+                        @endif
+
+                        <template x-if="selectedTargets.length > 0">
+                            <div class="inline-flex items-center gap-2">
+                                <span class="text-slate-300 dark:text-slate-700">|</span>
+                                <button @click="clearSelection()"
+                                        type="button"
+                                        class="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer">
+                                    Reset Pilihan
+                                </button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 <!-- Search & Filters -->
@@ -165,73 +327,83 @@
                     ];
                     $curYear = (int) date('Y');
                 @endphp
-                <form method="GET" action="{{ route('admin.email.index') }}" class="space-y-2">
-                    <div class="relative">
+                <form method="GET" action="{{ route('admin.email.index') }}#daftar-pelanggan" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                    <!-- Search Input -->
+                    <div class="sm:col-span-3 relative">
                         <input type="text"
                                name="search"
                                value="{{ $search }}"
-                               placeholder="Cari nama, nomor internet, email..."
-                               class="w-full pl-9 pr-16 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                               placeholder="Cari nama, nomor, email..."
+                               class="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
                         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                         </svg>
-                        @if($search !== '' || $statusFilter !== 'all' || ($bulanFilter ?? 'all') !== 'all')
-                            <a href="{{ route('admin.email.index') }}"
-                               class="absolute right-2.5 top-2 px-2 py-0.5 rounded-lg bg-slate-200/80 dark:bg-slate-700 text-[10px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition">
+                    </div>
+
+                    <!-- Filter Status Tagihan / Layanan (Lunas, Jatuh Tempo, Suspend, Aktif) -->
+                    <div class="sm:col-span-3">
+                        <select name="status"
+                                onchange="this.form.submit()"
+                                class="w-full py-2 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                            <option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>Semua Status Tagihan</option>
+                            <option value="lunas" {{ $statusFilter === 'lunas' ? 'selected' : '' }}>&#10003; Lunas (Sudah Bayar)</option>
+                            <option value="jatuh_tempo" {{ $statusFilter === 'jatuh_tempo' ? 'selected' : '' }}>&#9888; Jatuh Tempo (Belum Lunas)</option>
+                            <option value="suspend" {{ $statusFilter === 'suspend' ? 'selected' : '' }}>&#128683; Suspend / Isolir</option>
+                            <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Pelanggan Aktif</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Kepemilikan Email (Punya Email / Tanpa Email) -->
+                    <div class="sm:col-span-2">
+                        <select name="email_status"
+                                onchange="this.form.submit()"
+                                class="w-full py-2 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                            <option value="all" {{ ($emailFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Email</option>
+                            <option value="with_email" {{ ($emailFilter ?? 'all') === 'with_email' ? 'selected' : '' }}>&#9993; Punya Email</option>
+                            <option value="without_email" {{ ($emailFilter ?? 'all') === 'without_email' ? 'selected' : '' }}>Tanpa Email</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Bulan Tagihan -->
+                    <div class="sm:col-span-2">
+                        <select name="bulan"
+                                onchange="this.form.submit()"
+                                class="w-full py-2 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                            <option value="all" {{ (string)($bulanFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Bulan</option>
+                            @foreach($bulanList as $bKey => $bLabel)
+                                @php $bVal = str_pad((string)$bKey, 2, '0', STR_PAD_LEFT); @endphp
+                                <option value="{{ $bVal }}" {{ (string)($bulanFilter ?? 'all') === $bVal ? 'selected' : '' }}>
+                                    Bulan {{ $bLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Filter Tahun Tagihan & Reset -->
+                    <div class="sm:col-span-2 flex items-center gap-1.5">
+                        <select name="tahun"
+                                onchange="this.form.submit()"
+                                class="w-full py-2 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                            @for($y = $curYear + 1; $y >= $curYear - 2; $y--)
+                                <option value="{{ $y }}" {{ (string)($tahunFilter ?? $curYear) === (string)$y ? 'selected' : '' }}>
+                                    {{ $y }}
+                                </option>
+                            @endfor
+                        </select>
+
+                        @if($search !== '' || $statusFilter !== 'all' || ($emailFilter ?? 'all') !== 'all' || ($bulanFilter ?? 'all') !== 'all')
+                            <a href="{{ route('admin.email.index') }}#daftar-pelanggan"
+                               title="Reset Filter"
+                               class="px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 text-xs font-semibold border border-rose-200 dark:border-rose-800/50 transition shrink-0">
                                 Reset
                             </a>
                         @endif
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                        <!-- Filter Status (Lunas, Jatuh Tempo, Suspend, dll) -->
-                        <div class="sm:col-span-5">
-                            <select name="status"
-                                    onchange="this.form.submit()"
-                                    class="w-full py-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                                <option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>Semua Pelanggan</option>
-                                <option value="lunas" {{ $statusFilter === 'lunas' ? 'selected' : '' }}>&#10003; Lunas (Sudah Bayar)</option>
-                                <option value="jatuh_tempo" {{ $statusFilter === 'jatuh_tempo' ? 'selected' : '' }}>&#9888; Jatuh Tempo (Belum Lunas)</option>
-                                <option value="suspend" {{ $statusFilter === 'suspend' ? 'selected' : '' }}>&#128683; Suspend / Isolir</option>
-                                <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Pelanggan Aktif</option>
-                                <option value="with_email" {{ $statusFilter === 'with_email' ? 'selected' : '' }}>Hanya Punya Email</option>
-                                <option value="without_email" {{ $statusFilter === 'without_email' ? 'selected' : '' }}>Tanpa Email</option>
-                            </select>
-                        </div>
-
-                        <!-- Filter Bulan Tagihan -->
-                        <div class="sm:col-span-4">
-                            <select name="bulan"
-                                    onchange="this.form.submit()"
-                                    class="w-full py-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                                <option value="all" {{ (string)($bulanFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Bulan Tagihan</option>
-                                @foreach($bulanList as $bKey => $bLabel)
-                                    @php $bVal = str_pad((string)$bKey, 2, '0', STR_PAD_LEFT); @endphp
-                                    <option value="{{ $bVal }}" {{ (string)($bulanFilter ?? 'all') === $bVal ? 'selected' : '' }}>
-                                        Bulan {{ $bLabel }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Filter Tahun Tagihan -->
-                        <div class="sm:col-span-3">
-                            <select name="tahun"
-                                    onchange="this.form.submit()"
-                                    class="w-full py-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
-                                @for($y = $curYear + 1; $y >= $curYear - 2; $y--)
-                                    <option value="{{ $y }}" {{ (string)($tahunFilter ?? $curYear) === (string)$y ? 'selected' : '' }}>
-                                        {{ $y }}
-                                    </option>
-                                @endfor
-                            </select>
-                        </div>
                     </div>
                 </form>
             </div>
 
             <!-- Customer List Table -->
-            <div class="flex-1 overflow-x-auto divide-y divide-slate-100 dark:divide-slate-800 max-h-[560px] overflow-y-auto">
+            <div class="flex-1 overflow-x-auto divide-y divide-slate-100 dark:divide-slate-800 max-h-[540px] overflow-y-auto">
                 @forelse($customers as $c)
                 @php
                     $hasEmail = !empty($c->email) && filter_var($c->email, FILTER_VALIDATE_EMAIL);
@@ -248,7 +420,7 @@
                 @endphp
                 <label class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer transition select-none">
                     <input type="checkbox"
-                           value="{{ $c->nomor_internet }}"
+                           value="{{ (string) $c->nomor_internet }}"
                            x-model="selectedTargets"
                            @if(!$hasEmail) disabled @endif
                            class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 dark:border-slate-700 {{ !$hasEmail ? 'opacity-30 cursor-not-allowed' : '' }}">
@@ -318,144 +490,21 @@
                 @endforelse
             </div>
 
-            <!-- Pagination -->
-            <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-xs">
-                {{ $customers->links() }}
-            </div>
-        </div>
-
-        <!-- Right: Email Composer (6 Columns) -->
-        <div class="lg:col-span-6 xl:col-span-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col">
-            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <div>
-                    <h2 class="text-sm font-bold text-slate-900 dark:text-white">Formulir Pesan Email</h2>
-                    <p class="text-xs text-slate-500">Tulis isi pengumuman atau pilih preset template resmi.</p>
+            <!-- Pagination & Bottom Action Bar -->
+            <div class="p-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+                <div class="flex-1">
+                    {{ $customers->links() }}
                 </div>
 
-                <!-- Template Preset Selector -->
-                <select x-model="selectedPresetId"
-                        @change="applyPreset()"
-                        class="text-xs py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-medium text-slate-800 dark:text-slate-200">
-                    <option value="">-- Pilih Template Preset --</option>
-                    @foreach($presets as $p)
-                        <option value="{{ $p['id'] }}">{{ $p['name'] }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="p-5 space-y-4 flex-1">
-                <!-- Sisa Limit Kirim Alert Banner -->
-                <div class="p-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 flex items-center justify-between text-xs">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full {{ $kpi['remaining_today'] > 50 ? 'bg-emerald-500' : 'bg-amber-500' }}"></span>
-                        <span class="text-slate-700 dark:text-slate-300">
-                            Sisa limit Hostinger hari ini: <strong class="text-sky-900 dark:text-sky-200 font-bold">{{ number_format($kpi['remaining_today'], 0, ',', '.') }}</strong> / {{ number_format($kpi['daily_limit'], 0, ',', '.') }} email
-                        </span>
-                    </div>
-                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400"
-                          :class="selectedTargets.length > {{ $kpi['remaining_today'] }} ? 'text-rose-600 dark:text-rose-400 font-bold' : ''"
-                          x-text="selectedTargets.length > 0 ? ('Pakai: ' + selectedTargets.length + ' kuota') : 'Maks 100/batch'"></span>
-                </div>
-
-                <!-- Subjek Email -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Subjek Email <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text"
-                           x-model="form.subject"
-                           placeholder="Contoh: Pemberitahuan Pemeliharaan Jaringan - PT Media Solusi Network"
-                           class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-
-                <!-- Badge Title Pill (Header) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Label / Badge Header
-                        </label>
-                        <input type="text"
-                               x-model="form.badge_text"
-                               placeholder="Contoh: PEMBERITAHUAN RESMI"
-                               class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                            Teks Tombol Aksi (Opsional)
-                        </label>
-                        <input type="text"
-                               x-model="form.action_text"
-                               placeholder="Contoh: Buka Portal Tagihan"
-                               class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                    </div>
-                </div>
-
-                <!-- URL Tombol Aksi -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        URL Tombol Aksi (Opsional)
-                    </label>
-                    <input type="url"
-                           x-model="form.action_url"
-                           placeholder="https://portal.ptmsn.co.id"
-                           class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
-                </div>
-
-                <!-- Isi Pesan -->
-                <div>
-                    <div class="flex flex-wrap items-center justify-between gap-1 mb-1.5">
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Isi Pesan Email <span class="text-rose-500">*</span>
-                        </label>
-                        <!-- Variabel Tags Helper -->
-                        <div class="flex flex-wrap items-center gap-1 text-[11px] text-slate-400">
-                            <span>Variabel:</span>
-                            <button type="button" @click="insertTag('{nama_pelanggan}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nama_pelanggan}</button>
-                            <button type="button" @click="insertTag('{nomor_internet}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nomor_internet}</button>
-                            <button type="button" @click="insertTag('{paket}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{paket}</button>
-                            <button type="button" @click="insertTag('{periode}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{periode}</button>
-                            <button type="button" @click="insertTag('{nominal}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nominal}</button>
-                        </div>
-                    </div>
-                    <textarea x-model="form.message"
-                              rows="9"
-                              placeholder="Tuliskan isi pesan pengumuman di sini..."
-                              class="w-full p-3.5 rounded-xl text-xs leading-relaxed bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-sans"></textarea>
-                    <p class="text-[11px] text-slate-400 mt-1">Gunakan baris baru (Enter) ganda untuk memisahkan paragraf. Variabel akan otomatis digantikan sesuai profil pelanggan.</p>
-                </div>
-            </div>
-
-            <!-- Composer Footer Actions -->
-            <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3">
                 <button type="button"
-                        @click="openPreviewModal()"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition cursor-pointer">
-                    <svg class="w-4 h-4 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        @click="sendBroadcast()"
+                        :disabled="isSending || selectedTargets.length === 0"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md shadow-sky-600/25 transition cursor-pointer shrink-0">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                     </svg>
-                    <span>Pratinjau (Preview)</span>
+                    <span x-text="isSending ? 'Memproses...' : 'Kirim Email ke ' + selectedTargets.length + ' Pelanggan'"></span>
                 </button>
-
-                <div class="flex items-center gap-2">
-                    <button type="button"
-                            @click="sendBroadcast()"
-                            :disabled="isSending || selectedTargets.length === 0"
-                            class="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md shadow-sky-600/25 transition cursor-pointer">
-                        <template x-if="!isSending">
-                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
-                            </svg>
-                        </template>
-                        <template x-if="isSending">
-                            <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                            </svg>
-                        </template>
-                        <span x-text="isSending ? 'Memproses...' : 'Kirim ke ' + selectedTargets.length + ' Pelanggan'"></span>
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -617,7 +666,8 @@ function emailManagement() {
         selectedTargets: [],
         selectedPresetId: '',
         presets: @json($presets),
-        pageTargetIds: @json($customers->whereNotNull('email')->where('email', '!=', '')->pluck('nomor_internet')->toArray()),
+        pageTargetIds: @json($customers->whereNotNull('email')->where('email', '!=', '')->pluck('nomor_internet')->map(fn($v) => (string)$v)->values()->toArray()),
+        allFilteredTargetIds: @json($allFilteredTargetIds ?? []),
 
         form: {
             subject: 'Pemberitahuan Resmi - PT Media Solusi Network',
@@ -635,6 +685,51 @@ function emailManagement() {
         isTestSending: false,
         isSending: false,
 
+        init() {
+            // Pulihkan daftar pelanggan yang sudah dicentang lintas halaman / filter
+            try {
+                const savedTargets = sessionStorage.getItem('ims_email_selected_targets_v1');
+                if (savedTargets) {
+                    const parsed = JSON.parse(savedTargets);
+                    if (Array.isArray(parsed)) {
+                        this.selectedTargets = Array.from(new Set(parsed.map(String)));
+                    }
+                }
+
+                const savedPreset = sessionStorage.getItem('ims_email_preset_v1');
+                if (savedPreset !== null) {
+                    this.selectedPresetId = savedPreset;
+                }
+
+                const savedForm = sessionStorage.getItem('ims_email_form_v1');
+                if (savedForm) {
+                    const parsedForm = JSON.parse(savedForm);
+                    if (parsedForm && typeof parsedForm === 'object') {
+                        this.form = { ...this.form, ...parsedForm };
+                    }
+                }
+            } catch (e) {}
+
+            // Simpan perubahan otomatis ke sessionStorage saat berpindah halaman / filter
+            this.$watch('selectedTargets', (val) => {
+                try {
+                    sessionStorage.setItem('ims_email_selected_targets_v1', JSON.stringify(val.map(String)));
+                } catch (e) {}
+            });
+
+            this.$watch('selectedPresetId', (val) => {
+                try {
+                    sessionStorage.setItem('ims_email_preset_v1', val || '');
+                } catch (e) {}
+            });
+
+            this.$watch('form', (val) => {
+                try {
+                    sessionStorage.setItem('ims_email_form_v1', JSON.stringify(val));
+                } catch (e) {}
+            }, { deep: true });
+        },
+
         isAllSelected() {
             if (this.pageTargetIds.length === 0) return false;
             return this.pageTargetIds.every(id => this.selectedTargets.includes(String(id)));
@@ -642,11 +737,23 @@ function emailManagement() {
 
         toggleSelectAll() {
             if (this.isAllSelected()) {
-                this.selectedTargets = this.selectedTargets.filter(id => !this.pageTargetIds.includes(String(id)) && !this.pageTargetIds.includes(Number(id)));
+                this.selectedTargets = this.selectedTargets.filter(id => !this.pageTargetIds.includes(String(id)));
             } else {
-                const combined = new Set([...this.selectedTargets, ...this.pageTargetIds.map(String)]);
+                const combined = new Set([...this.selectedTargets.map(String), ...this.pageTargetIds.map(String)]);
                 this.selectedTargets = Array.from(combined);
             }
+        },
+
+        selectAllFiltered() {
+            const combined = new Set([...this.selectedTargets.map(String), ...this.allFilteredTargetIds.map(String)]);
+            this.selectedTargets = Array.from(combined);
+        },
+
+        clearSelection() {
+            this.selectedTargets = [];
+            try {
+                sessionStorage.removeItem('ims_email_selected_targets_v1');
+            } catch (e) {}
         },
 
         applyPreset() {
@@ -752,7 +859,7 @@ function emailManagement() {
                 const data = await res.json();
                 if (data.success) {
                     alert(data.message);
-                    this.selectedTargets = [];
+                    this.clearSelection();
                     window.location.reload();
                 } else {
                     alert('Gagal: ' + data.message);

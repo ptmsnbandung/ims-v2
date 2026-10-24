@@ -64,7 +64,15 @@ class EmailController extends Controller
         $this->ensureSchema();
 
         $search = trim((string) $request->input('search', ''));
-        $statusFilter = (string) $request->input('status', 'all'); // all, lunas, jatuh_tempo, suspend, active, with_email, without_email
+        $statusFilter = (string) $request->input('status', 'all'); // all, lunas, jatuh_tempo, suspend, active
+        $emailFilter = (string) $request->input('email_status', 'all'); // all, with_email, without_email
+
+        // Backward-compatibility jika with_email / without_email dikirim lewat parameter status
+        if (in_array($statusFilter, ['with_email', 'without_email'])) {
+            $emailFilter = $statusFilter;
+            $statusFilter = 'all';
+        }
+
         $bulanFilter = $request->filled('bulan') && $request->input('bulan') !== 'all'
             ? str_pad((string) (int) $request->input('bulan'), 2, '0', STR_PAD_LEFT)
             : 'all';
@@ -113,11 +121,14 @@ class EmailController extends Controller
                 $q->where($statusCol, '20')
                   ->orWhere($statusCol, 'like', '%aktif%');
             });
-        } elseif ($statusFilter === 'with_email') {
+        }
+
+        // Filter Kepemilikan Email (Punya Email / Tanpa Email)
+        if ($emailFilter === 'with_email') {
             $query->whereNotNull($emailCol)
                   ->where($emailCol, '!=', '')
                   ->where($emailCol, 'like', '%@%');
-        } elseif ($statusFilter === 'without_email') {
+        } elseif ($emailFilter === 'without_email') {
             $query->where(function ($q) use ($emailCol) {
                 $q->whereNull($emailCol)
                   ->orWhere($emailCol, '=', '')
@@ -125,7 +136,18 @@ class EmailController extends Controller
             });
         }
 
-        $customers = $query->paginate($perPage)->withQueryString();
+        // Ambil seluruh ID pelanggan hasil filter yang punya email valid (untuk fitur pilih lintas halaman)
+        $allFilteredTargetIds = (clone $query)
+            ->whereNotNull($emailCol)
+            ->where($emailCol, '!=', '')
+            ->where($emailCol, 'like', '%@%')
+            ->pluck('c.nomor_internet')
+            ->map(fn($id) => (string) $id)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $customers = $query->paginate($perPage)->withQueryString()->fragment('daftar-pelanggan');
 
         // Hitung KPI
         $kpi = $this->calculateKpi();
@@ -146,12 +168,14 @@ class EmailController extends Controller
 
         return view('admin.email', compact(
             'customers',
+            'allFilteredTargetIds',
             'kpi',
             'presets',
             'recentLogs',
             'isHostingerReady',
             'search',
             'statusFilter',
+            'emailFilter',
             'bulanFilter',
             'tahunFilter',
             'perPage'

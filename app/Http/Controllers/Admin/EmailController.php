@@ -70,32 +70,36 @@ class EmailController extends Controller
             $perPage = 25;
         }
 
-        // Query Pelanggan
-        $query = $this->getBaseCustomerQuery();
+        // Query Pelanggan dengan deteksi kolom dinamis
+        $context = $this->getCustomerQueryContext();
+        $query = $context['query'];
+        $emailCol = $context['emailCol'];
+        $phoneCol = $context['phoneCol'];
+        $statusCol = $context['statusCol'];
 
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search, $emailCol, $phoneCol) {
                 $q->where('c.nomor_internet', 'like', "%{$search}%")
                   ->orWhere('c.nama_pelanggan', 'like', "%{$search}%")
-                  ->orWhere('c.email', 'like', "%{$search}%")
-                  ->orWhere('c.nomor_hp', 'like', "%{$search}%");
+                  ->orWhere($emailCol, 'like', "%{$search}%")
+                  ->orWhere($phoneCol, 'like', "%{$search}%");
             });
         }
 
         if ($statusFilter === 'with_email') {
-            $query->whereNotNull('c.email')
-                  ->where('c.email', '!=', '')
-                  ->where('c.email', 'like', '%@%');
+            $query->whereNotNull($emailCol)
+                  ->where($emailCol, '!=', '')
+                  ->where($emailCol, 'like', '%@%');
         } elseif ($statusFilter === 'without_email') {
-            $query->where(function ($q) {
-                $q->whereNull('c.email')
-                  ->orWhere('c.email', '=', '')
-                  ->orWhere('c.email', 'not like', '%@%');
+            $query->where(function ($q) use ($emailCol) {
+                $q->whereNull($emailCol)
+                  ->orWhere($emailCol, '=', '')
+                  ->orWhere($emailCol, 'not like', '%@%');
             });
         } elseif ($statusFilter === 'active') {
-            $query->where(function ($q) {
-                $q->where('c.status_reg', '20')
-                  ->orWhere('c.status_reg', 'like', '%aktif%');
+            $query->where(function ($q) use ($statusCol) {
+                $q->where($statusCol, '20')
+                  ->orWhere($statusCol, 'like', '%aktif%');
             });
         }
 
@@ -376,9 +380,9 @@ class EmailController extends Controller
     }
 
     /**
-     * Query Builder Dasar untuk Pelanggan (dengan Email dari m_pelanggan)
+     * Query Builder Konteks untuk Pelanggan (dengan deteksi kolom dinamis aman)
      */
-    protected function getBaseCustomerQuery()
+    protected function getCustomerQueryContext(): array
     {
         if (Schema::hasTable('view_batchjob')) {
             $cols = Schema::getColumnListing('view_batchjob');
@@ -386,7 +390,7 @@ class EmailController extends Controller
             $bandwithCol = in_array('nama_bandwith', $cols) ? 'c.nama_bandwith' : (in_array('nama_kategori_bandwith', $cols) ? 'c.nama_kategori_bandwith' : DB::raw("'Internet Fiber' as nama_bandwith"));
             $alamatCol = in_array('alamat_pasang', $cols) ? 'c.alamat_pasang' : DB::raw("'' as alamat_pasang");
 
-            return DB::table('view_batchjob as c')
+            $query = DB::table('view_batchjob as c')
                 ->select(
                     'c.nomor_internet',
                     'c.nama_pelanggan',
@@ -397,6 +401,13 @@ class EmailController extends Controller
                     $alamatCol
                 )
                 ->orderBy('c.nomor_internet', 'desc');
+
+            return [
+                'query'     => $query,
+                'emailCol'  => 'c.email',
+                'phoneCol'  => 'c.nomor_hp',
+                'statusCol' => in_array('status_reg', $cols) ? 'c.status_reg' : 'c.status_user',
+            ];
         }
 
         // Fallback jika view_batchjob belum ada
@@ -411,16 +422,32 @@ class EmailController extends Controller
         $regCols = Schema::getColumnListing('trx_batchjob_register');
         $regStatusCol = in_array('status_reg', $regCols) ? 'c.status_reg' : (in_array('status_user', $regCols) ? 'c.status_user' : DB::raw("'20' as status_reg"));
         $alamatCol = in_array('alamat_pasang', $regCols) ? 'c.alamat_pasang' : DB::raw("'' as alamat_pasang");
+        $phoneCol = in_array('nomor_hp', $regCols) ? 'c.nomor_hp' : 'p.nomor_hp';
 
-        return $query->select(
+        $query->select(
             'c.nomor_internet',
-            DB::raw('COALESCE(c.nama_pelanggan, p.nama_penduduk, "Pelanggan") as nama_pelanggan'),
+            DB::raw('COALESCE(NULLIF(c.nama_pelanggan, ""), p.nama_penduduk, "Pelanggan") as nama_pelanggan'),
             'p.email',
-            'p.nomor_hp',
+            $phoneCol,
             DB::raw('COALESCE(b.nama_bandwith, "Internet Fiber") as nama_bandwith'),
             $regStatusCol,
             $alamatCol
         )->orderBy('c.nomor_internet', 'desc');
+
+        return [
+            'query'     => $query,
+            'emailCol'  => 'p.email',
+            'phoneCol'  => $phoneCol,
+            'statusCol' => in_array('status_reg', $regCols) ? 'c.status_reg' : 'c.status_user',
+        ];
+    }
+
+    /**
+     * Helper backward-compatibility
+     */
+    protected function getBaseCustomerQuery()
+    {
+        return $this->getCustomerQueryContext()['query'];
     }
 
     /**

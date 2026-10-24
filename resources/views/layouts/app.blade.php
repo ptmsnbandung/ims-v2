@@ -1871,6 +1871,22 @@
                         </a>
                         <div class="ims-tooltip">Monitoring AI & Sisa Token Gemini</div>
                     </div>
+
+                    <!-- 5. Kelola Email (Kirim Custom & Broadcast Email ke Pelanggan) -->
+                    <div class="ims-nav-wrapper">
+                        <a href="{{ route('admin.email.index') }}"
+                           class="ims-nav-item {{ request()->routeIs('admin.email*') ? 'active' : '' }}"
+                           title="Kelola & Kirim Email Pelanggan">
+                            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.email*') ? 'text-sky-400' : 'text-[#9CA3AF]' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                            </svg>
+                            <span class="ims-nav-text flex items-center justify-between w-full">
+                                <span>Kelola Email</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">MAIL</span>
+                            </span>
+                        </a>
+                        <div class="ims-tooltip">Kelola & Kirim Email Pelanggan</div>
+                    </div>
                     @endif
 
                     @if(auth()->user()?->hasRole(['noc', 'direktur', 'admin']))

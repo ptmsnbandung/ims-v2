@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BroadcastController;
+use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -68,6 +69,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/ai-monitor', [AiAssistantController::class, 'monitorView'])->name('ai-monitor');
         Route::post('/ai-monitor/ping', [AiAssistantController::class, 'monitorPing'])->name('ai-monitor.ping');
         Route::post('/ai-monitor/reset-metrics', [AiAssistantController::class, 'resetMetrics'])->name('ai-monitor.reset');
+
+        // 5. Kelola Email (Kirim Custom & Broadcast Email ke Pelanggan)
+        Route::prefix('email')->name('email.')->group(function () {
+            Route::get('/', [EmailController::class, 'index'])->name('index');
+            Route::post('/send', [EmailController::class, 'send'])->name('send');
+            Route::post('/preview', [EmailController::class, 'preview'])->name('preview');
+            Route::get('/history', [EmailController::class, 'history'])->name('history');
+            Route::get('/history/{id}', [EmailController::class, 'getHistoryDetail'])->name('history.detail');
+        });
     });
 
     // WhatsApp Cloud API Webhook (Public Callback Endpoint)

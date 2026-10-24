@@ -36,3 +36,4 @@ class PaymentSuccessMail extends Mailable
                     ->view('emails.payment_success');
     }
 }
+

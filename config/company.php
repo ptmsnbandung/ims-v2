@@ -14,3 +14,4 @@ return [
     'billing_whatsapp' => env('COMPANY_BILLING_WHATSAPP', '6285188358385'),
     'billing_whatsapp_display' => env('COMPANY_BILLING_WHATSAPP_DISPLAY', '+62 851-8835-8385'),
 ];
+

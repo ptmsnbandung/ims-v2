@@ -176,7 +176,7 @@
                             <tr>
                                 <td align="center">
                                     <div style="display: inline-block; background-color: #ffffff; width: 50px; height: 50px; border-radius: 12px; line-height: 50px; text-align: center; margin-bottom: 8px;">
-                                        <img src="https://ptmsn.net.id/images/logo/logo-icon.png" alt="MSN Logo" width="36" height="36" style="vertical-align: middle; margin-top: 7px;">
+                                        <img src="https://ptmsn.co.id/images/logo/logo-icon.png" alt="MSN Logo" width="36" height="36" style="vertical-align: middle; margin-top: 7px;">
                                     </div>
                                     <h1>My<span style="color: #38bdf8;">MSN</span></h1>
                                     <p>{{ config('company.name', 'PT MEDIA SOLUSI NETWORK') }}</p>
@@ -273,3 +273,4 @@
 
 </body>
 </html>
+

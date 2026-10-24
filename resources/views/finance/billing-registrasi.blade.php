@@ -654,71 +654,75 @@
     </div>
 
     <!-- 2. MODAL CHANGE PAYMENT METHOD (MATCHING EXACT SCREENSHOT DESIGN) -->
-    <div x-show="changePayModalOpen"
-         x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-        <div @click.away="changePayModalOpen = false"
-             class="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
-            
-            <form action="{{ route('finance.billing-registrasi.change-payment-method.post') }}" method="POST">
-                @csrf
-                <input type="hidden" name="kode_billing" :value="changePayKodeBilling">
-                <div class="p-6 space-y-4">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-                        <!-- Title Label matching screenshot -->
-                        <div class="text-sm font-semibold text-slate-600 dark:text-slate-400">
-                            Change Payment Method
+    <template x-teleport="body">
+        <div x-show="changePayModalOpen"
+             x-cloak
+             @keydown.escape.window="changePayModalOpen = false"
+             class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+             style="position: fixed; inset: 0; z-index: 99999;">
+            <div @click.away="changePayModalOpen = false"
+                 class="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto">
+                
+                <form action="{{ route('finance.billing-registrasi.change-payment-method.post') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="kode_billing" :value="changePayKodeBilling">
+                    <div class="p-5 sm:p-6 space-y-4">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                            <!-- Title Label matching screenshot -->
+                            <div class="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                                Change Payment Method
+                            </div>
+
+                            <!-- 3 Radio Options matching screenshot -->
+                            <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs font-medium text-slate-700 dark:text-slate-200">
+                                <!-- Option 1: Midtrans -->
+                                <label class="inline-flex items-center gap-2 cursor-pointer group">
+                                    <input type="radio" name="payment_type" value="1" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                                    <span class="group-hover:text-blue-500 transition">Midtrans</span>
+                                </label>
+
+                                <!-- Option 2: Manual Transfer -->
+                                <label class="inline-flex items-center gap-2 cursor-pointer group">
+                                    <input type="radio" name="payment_type" value="2" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                                    <span class="group-hover:text-blue-500 transition">Manual Transfer</span>
+                                </label>
+
+                                <!-- Option 3: Cash To Collector -->
+                                <label class="inline-flex items-center gap-2 cursor-pointer group">
+                                    <input type="radio" name="payment_type" value="3" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
+                                    <span class="group-hover:text-blue-500 transition">Cash To Collector</span>
+                                </label>
+                            </div>
+
+                            <!-- Buttons matching screenshot: Blue [Update] & Amber [Batal] -->
+                            <div class="flex items-center gap-2">
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-700/20 transition cursor-pointer">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                                    </svg>
+                                    <span>Update</span>
+                                </button>
+                                <button type="button"
+                                        @click="changePayModalOpen = false"
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold shadow-md shadow-amber-500/20 transition cursor-pointer">
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                    <span>Batal</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- 3 Radio Options matching screenshot -->
-                        <div class="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700 dark:text-slate-200">
-                            <!-- Option 1: Midtrans -->
-                            <label class="inline-flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" name="payment_type" value="1" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
-                                <span class="group-hover:text-blue-500 transition">Midtrans</span>
-                            </label>
-
-                            <!-- Option 2: Manual Transfer -->
-                            <label class="inline-flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" name="payment_type" value="2" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
-                                <span class="group-hover:text-blue-500 transition">Manual Transfer</span>
-                            </label>
-
-                            <!-- Option 3: Cash To Collector -->
-                            <label class="inline-flex items-center gap-2 cursor-pointer group">
-                                <input type="radio" name="payment_type" value="3" x-model="changePayType" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 cursor-pointer">
-                                <span class="group-hover:text-blue-500 transition">Cash To Collector</span>
-                            </label>
-                        </div>
-
-                        <!-- Buttons matching screenshot: Blue [Update] & Amber [Batal] -->
-                        <div class="flex items-center gap-2">
-                            <button type="submit"
-                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-700/20 transition cursor-pointer">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                                </svg>
-                                <span>Update</span>
-                            </button>
-                            <button type="button"
-                                    @click="changePayModalOpen = false"
-                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold shadow-md shadow-amber-500/20 transition cursor-pointer">
-                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                                </svg>
-                                <span>Batal</span>
-                            </button>
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs flex flex-wrap items-center justify-between gap-2">
+                            <span class="text-slate-500 dark:text-slate-400">Kode Registrasi: <strong class="text-slate-800 dark:text-white font-mono" x-text="changePayKodeBilling"></strong></span>
+                            <span class="text-slate-500 dark:text-slate-400">Pelanggan: <strong class="text-blue-600 dark:text-blue-400" x-text="changePayNamaPelanggan"></strong></span>
                         </div>
                     </div>
-
-                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-slate-500 dark:text-slate-400">Kode Registrasi: <strong class="text-slate-800 dark:text-white font-mono" x-text="changePayKodeBilling"></strong></span>
-                        <span class="text-slate-500 dark:text-slate-400">Pelanggan: <strong class="text-blue-600 dark:text-blue-400" x-text="changePayNamaPelanggan"></strong></span>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
+    </template>
 
 </div>
 @endsection

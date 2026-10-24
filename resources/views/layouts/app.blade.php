@@ -47,20 +47,17 @@
             opacity: 0;
         }
 
-        /* Smooth Content Entrance Animation */
+        /* Smooth Content Entrance Animation (Fade only to prevent trapping position:fixed modals) */
         @keyframes imsPageEnter {
             0% {
                 opacity: 0;
-                transform: translateY(5px);
             }
             100% {
                 opacity: 1;
-                transform: translateY(0);
             }
         }
         .ims-page-enter {
-            animation: imsPageEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-            will-change: opacity, transform;
+            animation: imsPageEnter 0.15s ease-out;
         }
 
         /* Isolated View Transition API (Navbar & Sidebar stay rock solid without flashing) */

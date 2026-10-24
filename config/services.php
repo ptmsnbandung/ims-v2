@@ -55,4 +55,9 @@ return [
         'timeout' => (int)env('GEMINI_TIMEOUT', 60),
     ],
 
+    'hostinger_mail' => [
+        'token' => env('HOSTINGER_MAIL_TOKEN', ''),
+        'from'  => env('HOSTINGER_MAIL_FROM', 'info@ptmsn.co.id'),
+    ],
+
 ];

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Mail\PaymentSuccessMail;
+use App\Services\HostingerMailService;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,7 +23,7 @@ class SendPaymentSuccessMailJob implements ShouldQueue
     public array $paymentData;
 
     /**
-     * Jumlah percobaan maksimal jika terjadi kegagalan jaringan SMTP
+     * Jumlah percobaan maksimal jika terjadi kegagalan jaringan
      */
     public int $tries = 3;
 
@@ -58,7 +59,6 @@ class SendPaymentSuccessMailJob implements ShouldQueue
             ->first();
 
         // Jika tidak ditemukan di billing layanan, cari di billing registrasi (pasang baru)
-        $isRegistrasi = false;
         if (!$billing && Schema::hasTable('trx_billing_registrasi')) {
             $billing = DB::table('trx_billing_registrasi')
                 ->where('kode_billing_registrasi', $this->kodeBilling)
@@ -67,8 +67,6 @@ class SendPaymentSuccessMailJob implements ShouldQueue
                 ->first();
 
             if ($billing) {
-                $isRegistrasi = true;
-                // Petakan kolom agar seragam dengan billing layanan
                 $billing->kode_billing_layanan = $billing->kode_billing_registrasi;
                 $billing->period = 'Tagihan Registrasi / Pasang Baru';
                 $billing->total_layanan = $billing->total_registrasi ?? 0;
@@ -133,11 +131,28 @@ class SendPaymentSuccessMailJob implements ShouldQueue
             return;
         }
 
-        // 3. Kirim Email Konfirmasi Pembayaran Lunas
-        try {
-            Mail::to($recipientEmail)->send(new PaymentSuccessMail($billing, $customer, $this->paymentData));
+        // 3. Render Template Email & Tentukan Subjek
+        $invoiceNumber = $billing->kode_billing_layanan ?? 'INVOICE';
+        $companyName = config('company.name', 'PT Media Solusi Network');
+        $subject = "[LUNAS] Bukti Pembayaran Tagihan Internet - {$invoiceNumber} - {$companyName}";
 
-            Log::info("SendPaymentSuccessMailJob: Berhasil mengirim bukti pembayaran lunas ke {$recipientEmail} untuk invoice {$this->kodeBilling}.");
+        $htmlContent = view('emails.payment_success', [
+            'billing'     => $billing,
+            'customer'    => $customer,
+            'paymentData' => $this->paymentData,
+        ])->render();
+
+        // 4. Kirim Email (Utamakan Hostinger Mail REST API, fallback ke SMTP jika token belum disetel)
+        try {
+            $hostingerService = app(HostingerMailService::class);
+
+            if ($hostingerService->isConfigured()) {
+                $hostingerService->send($recipientEmail, $subject, $htmlContent);
+                Log::info("SendPaymentSuccessMailJob: Berhasil mengirim bukti pembayaran via Hostinger Mail API ke {$recipientEmail} untuk invoice {$this->kodeBilling}.");
+            } else {
+                Mail::to($recipientEmail)->send(new PaymentSuccessMail($billing, $customer, $this->paymentData));
+                Log::info("SendPaymentSuccessMailJob: Berhasil mengirim bukti pembayaran via SMTP ke {$recipientEmail} untuk invoice {$this->kodeBilling}.");
+            }
         } catch (\Throwable $e) {
             Log::error("SendPaymentSuccessMailJob Gagal untuk invoice {$this->kodeBilling} ({$recipientEmail}): " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()

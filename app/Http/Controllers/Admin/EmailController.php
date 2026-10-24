@@ -30,13 +30,15 @@ class EmailController extends Controller
      */
     protected function ensureSchema(): void
     {
-        if (Cache::has('ims_broadcast_email_schema_v1')) {
+        if (Cache::has('ims_broadcast_email_schema_v2')) {
             return;
         }
 
         try {
             if (!Schema::hasTable('tb_broadcast_email_log')) {
                 Schema::create('tb_broadcast_email_log', function (Blueprint $table) {
+                    $table->charset = 'utf8mb4';
+                    $table->collation = 'utf8mb4_general_ci';
                     $table->id();
                     $table->string('nomor_internet', 50)->nullable()->index();
                     $table->string('nama_pelanggan', 255)->nullable();
@@ -49,8 +51,11 @@ class EmailController extends Controller
                     $table->string('sender_user', 100)->nullable();
                     $table->timestamps();
                 });
+            } else {
+                // Samakan collation tabel log dengan tabel utama (utf8mb4_general_ci) agar tidak error Illegal mix of collations (1267)
+                DB::statement('ALTER TABLE tb_broadcast_email_log CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');
             }
-            Cache::put('ims_broadcast_email_schema_v1', true, 86400);
+            Cache::put('ims_broadcast_email_schema_v2', true, 86400);
         } catch (\Throwable $e) {
             Log::warning("ensureSchema tb_broadcast_email_log note: " . $e->getMessage());
         }
@@ -518,15 +523,19 @@ class EmailController extends Controller
             }
 
             $subEmailLog = DB::table('tb_broadcast_email_log as el')
-                ->selectRaw("el.nomor_internet, COUNT(*) as email_sent_count, MAX(el.created_at) as last_email_sent_at")
+                ->selectRaw("CONVERT(el.nomor_internet USING utf8mb4) COLLATE utf8mb4_general_ci as nomor_internet, COUNT(*) as email_sent_count, MAX(el.created_at) as last_email_sent_at")
                 ->whereIn('el.status', ['sent', 'queued'])
                 ->whereNotNull('el.nomor_internet')
                 ->where('el.nomor_internet', '!=', '')
                 ->where('el.nomor_internet', '!=', 'TEST')
-                ->groupBy('el.nomor_internet');
+                ->groupBy(DB::raw("CONVERT(el.nomor_internet USING utf8mb4) COLLATE utf8mb4_general_ci"));
 
             $query->leftJoinSub($subEmailLog, 'log_email', function ($join) {
-                $join->on('c.nomor_internet', '=', 'log_email.nomor_internet');
+                $join->on(
+                    DB::raw('CONVERT(c.nomor_internet USING utf8mb4) COLLATE utf8mb4_general_ci'),
+                    '=',
+                    DB::raw('log_email.nomor_internet')
+                );
             });
         };
 

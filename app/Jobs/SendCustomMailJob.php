@@ -132,3 +132,4 @@ class SendCustomMailJob implements ShouldQueue
         }
     }
 }
+

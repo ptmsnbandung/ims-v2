@@ -94,8 +94,8 @@ class EmailController extends Controller
             });
         } elseif ($statusFilter === 'active') {
             $query->where(function ($q) {
-                $q->where('c.status_user', '1')
-                  ->orWhere('c.status_user', 'like', '%aktif%');
+                $q->where('c.status_reg', '20')
+                  ->orWhere('c.status_reg', 'like', '%aktif%');
             });
         }
 
@@ -381,15 +381,20 @@ class EmailController extends Controller
     protected function getBaseCustomerQuery()
     {
         if (Schema::hasTable('view_batchjob')) {
+            $cols = Schema::getColumnListing('view_batchjob');
+            $statusCol = in_array('status_reg', $cols) ? 'c.status_reg' : (in_array('status_user', $cols) ? 'c.status_user' : DB::raw("'20' as status_reg"));
+            $bandwithCol = in_array('nama_bandwith', $cols) ? 'c.nama_bandwith' : (in_array('nama_kategori_bandwith', $cols) ? 'c.nama_kategori_bandwith' : DB::raw("'Internet Fiber' as nama_bandwith"));
+            $alamatCol = in_array('alamat_pasang', $cols) ? 'c.alamat_pasang' : DB::raw("'' as alamat_pasang");
+
             return DB::table('view_batchjob as c')
                 ->select(
                     'c.nomor_internet',
                     'c.nama_pelanggan',
                     'c.email',
                     'c.nomor_hp',
-                    'c.nama_bandwith',
-                    'c.status_user',
-                    'c.alamat_pasang'
+                    $bandwithCol,
+                    $statusCol,
+                    $alamatCol
                 )
                 ->orderBy('c.nomor_internet', 'desc');
         }
@@ -403,14 +408,18 @@ class EmailController extends Controller
             $query->leftJoin('m_bandwith as b', 'c.kode_bandwith', '=', 'b.kode_bandwith');
         }
 
+        $regCols = Schema::getColumnListing('trx_batchjob_register');
+        $regStatusCol = in_array('status_reg', $regCols) ? 'c.status_reg' : (in_array('status_user', $regCols) ? 'c.status_user' : DB::raw("'20' as status_reg"));
+        $alamatCol = in_array('alamat_pasang', $regCols) ? 'c.alamat_pasang' : DB::raw("'' as alamat_pasang");
+
         return $query->select(
             'c.nomor_internet',
             DB::raw('COALESCE(c.nama_pelanggan, p.nama_penduduk, "Pelanggan") as nama_pelanggan'),
             'p.email',
             'p.nomor_hp',
-            'b.nama_bandwith',
-            'c.status_user',
-            'c.alamat_pasang'
+            DB::raw('COALESCE(b.nama_bandwith, "Internet Fiber") as nama_bandwith'),
+            $regStatusCol,
+            $alamatCol
         )->orderBy('c.nomor_internet', 'desc');
     }
 
@@ -546,3 +555,4 @@ class EmailController extends Controller
         ];
     }
 }
+

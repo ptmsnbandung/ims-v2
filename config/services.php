@@ -56,8 +56,9 @@ return [
     ],
 
     'hostinger_mail' => [
-        'token' => env('HOSTINGER_MAIL_TOKEN', ''),
-        'from'  => env('HOSTINGER_MAIL_FROM', 'info@ptmsn.co.id'),
+        'token'       => env('HOSTINGER_MAIL_TOKEN', ''),
+        'from'        => env('HOSTINGER_MAIL_FROM', 'info@ptmsn.co.id'),
+        'daily_limit' => (int) env('HOSTINGER_MAIL_DAILY_LIMIT', 1000),
     ],
 
 ];

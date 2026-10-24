@@ -86,6 +86,40 @@ class HostingerMailService
     }
 
     /**
+     * Dapatkan informasi kuota mailbox dari Hostinger Mail API (GET /api/v1/mailboxes/{mailboxResourceId}/quota)
+     *
+     * @return array|null
+     */
+    public function getMailboxQuota(): ?array
+    {
+        if (!$this->isConfigured()) {
+            return null;
+        }
+
+        try {
+            $mailboxId = $this->getMailboxResourceId();
+            $cacheKey = 'hostinger_mailbox_quota_' . md5($this->token . '_' . $mailboxId);
+
+            return Cache::remember($cacheKey, 180, function () use ($mailboxId) {
+                $response = Http::withToken($this->token)
+                    ->timeout(10)
+                    ->withHeaders([
+                        'Accept' => 'application/json',
+                    ])
+                    ->get("{$this->baseUrl}/api/v1/mailboxes/{$mailboxId}/quota");
+
+                if ($response->successful()) {
+                    return $response->json();
+                }
+                return null;
+            });
+        } catch (\Throwable $e) {
+            Log::info("Hostinger Mail API getMailboxQuota notice: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Kirim email menggunakan Hostinger Mail REST API
      * POST /api/v1/mailboxes/{mailboxResourceId}/send
      *

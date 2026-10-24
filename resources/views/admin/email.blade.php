@@ -46,14 +46,16 @@
         </div>
     </div>
 
-    <!-- 4 KPI Stat Cards -->
+    <!-- 4 KPI Stat Cards & Sisa Limit Kirim -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- 1. Total Pelanggan -->
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs flex items-center justify-between">
             <div class="space-y-1">
                 <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Pelanggan</p>
                 <p class="text-2xl font-extrabold text-slate-900 dark:text-white">{{ number_format($kpi['total_customers'], 0, ',', '.') }}</p>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500">Seluruh basis pelanggan</p>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500">
+                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ number_format($kpi['with_email'], 0, ',', '.') }}</span> memiliki email
+                </p>
             </div>
             <div class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -62,26 +64,43 @@
             </div>
         </div>
 
-        <!-- 2. Memiliki Email -->
-        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs flex items-center justify-between">
-            <div class="space-y-1">
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Memiliki Email</p>
-                <p class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">{{ number_format($kpi['with_email'], 0, ',', '.') }}</p>
-                <p class="text-[11px] text-emerald-600/70 dark:text-emerald-400/70">Siap menerima notifikasi email</p>
+        <!-- 2. Sisa Limit Kirim Hari Ini (Hostinger Mail API Quota) -->
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs flex flex-col justify-between relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Sisa Limit Hari Ini</p>
+                    <p class="text-2xl font-extrabold {{ $kpi['remaining_today'] > 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500' }}">
+                        {{ number_format($kpi['remaining_today'], 0, ',', '.') }}
+                        <span class="text-xs font-medium text-slate-400">/ {{ number_format($kpi['daily_limit'], 0, ',', '.') }}</span>
+                    </p>
+                </div>
+                <div class="w-11 h-11 rounded-xl {{ $kpi['remaining_today'] > 100 ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 border border-emerald-200 dark:border-emerald-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 border border-amber-200 dark:border-amber-500/20' }} flex items-center justify-center">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                </div>
             </div>
-            <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
+            <!-- Progress Bar -->
+            <div class="mt-2.5">
+                <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500 {{ $kpi['remaining_today'] > 100 ? 'bg-emerald-500' : 'bg-amber-500' }}"
+                         style="width: {{ 100 - $kpi['usage_percent'] }}%"></div>
+                </div>
+                <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+                    <span>{{ 100 - $kpi['usage_percent'] }}% kuota tersedia</span>
+                    <span>Reset 24 Jam</span>
+                </div>
             </div>
         </div>
 
-        <!-- 3. Total Email Terkirim -->
+        <!-- 3. Email Terkirim Hari Ini & Kumulatif -->
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs flex items-center justify-between">
             <div class="space-y-1">
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Terkirim</p>
-                <p class="text-2xl font-extrabold text-sky-600 dark:text-sky-400">{{ number_format($kpi['total_sent'], 0, ',', '.') }}</p>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500">Tercatat di riwayat broadcast</p>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Terkirim Hari Ini</p>
+                <p class="text-2xl font-extrabold text-sky-600 dark:text-sky-400">{{ number_format($kpi['sent_today'], 0, ',', '.') }}</p>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500">
+                    Total kumulatif: <span class="font-semibold text-slate-600 dark:text-slate-300">{{ number_format($kpi['total_sent'], 0, ',', '.') }}</span>
+                </p>
             </div>
             <div class="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 flex items-center justify-center text-sky-600 dark:text-sky-400">
                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -99,7 +118,7 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         Terhubung (Aktif)
                     </p>
-                    <p class="text-[11px] text-slate-400 dark:text-slate-500">{{ config('services.hostinger_mail.from_address', 'info@ptmsn.co.id') }}</p>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 truncate max-w-[140px]">{{ config('services.hostinger_mail.from', 'info@ptmsn.co.id') }}</p>
                 @else
                     <p class="text-base font-bold text-amber-500 flex items-center gap-1.5">
                         <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
@@ -236,6 +255,19 @@
             </div>
 
             <div class="p-5 space-y-4 flex-1">
+                <!-- Sisa Limit Kirim Alert Banner -->
+                <div class="p-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full {{ $kpi['remaining_today'] > 50 ? 'bg-emerald-500' : 'bg-amber-500' }}"></span>
+                        <span class="text-slate-700 dark:text-slate-300">
+                            Sisa limit Hostinger hari ini: <strong class="text-sky-900 dark:text-sky-200 font-bold">{{ number_format($kpi['remaining_today'], 0, ',', '.') }}</strong> / {{ number_format($kpi['daily_limit'], 0, ',', '.') }} email
+                        </span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400"
+                          :class="selectedTargets.length > {{ $kpi['remaining_today'] }} ? 'text-rose-600 dark:text-rose-400 font-bold' : ''"
+                          x-text="selectedTargets.length > 0 ? ('Pakai: ' + selectedTargets.length + ' kuota') : 'Maks 100/batch'"></span>
+                </div>
+
                 <!-- Subjek Email -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">

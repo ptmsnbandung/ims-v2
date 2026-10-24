@@ -459,13 +459,15 @@ class EmailController extends Controller
     }
 
     /**
-     * Hitung KPI untuk Header Card
+     * Hitung KPI untuk Header Card & Sisa Limit Pengiriman
      */
     protected function calculateKpi(): array
     {
         $totalCustomers = 0;
         $withEmail = 0;
         $totalSent = 0;
+        $sentToday = 0;
+        $today = Carbon::today()->toDateString();
 
         try {
             if (Schema::hasTable('view_batchjob')) {
@@ -490,14 +492,35 @@ class EmailController extends Controller
                 $totalSent = DB::table('tb_broadcast_email_log')
                     ->where('status', 'sent')
                     ->count();
+
+                $sentToday = DB::table('tb_broadcast_email_log')
+                    ->where('status', 'sent')
+                    ->whereDate('created_at', $today)
+                    ->count();
             }
         } catch (\Throwable $e) {}
 
+        // Hitung limit harian Hostinger Mail
+        $dailyLimit = (int) (config('services.hostinger_mail.daily_limit') ?: 1000);
+        $remainingToday = max(0, $dailyLimit - $sentToday);
+        $usagePercent = min(100, round(($sentToday / max(1, $dailyLimit)) * 100, 1));
+
+        // Ambil data kuota mailbox langsung dari Hostinger jika ada
+        $hostingerQuota = null;
+        try {
+            $hostingerQuota = $this->hostingerService->getMailboxQuota();
+        } catch (\Throwable $e) {}
+
         return [
-            'total_customers' => $totalCustomers,
-            'with_email'      => $withEmail,
-            'without_email'   => max(0, $totalCustomers - $withEmail),
-            'total_sent'      => $totalSent,
+            'total_customers'  => $totalCustomers,
+            'with_email'       => $withEmail,
+            'without_email'    => max(0, $totalCustomers - $withEmail),
+            'total_sent'       => $totalSent,
+            'sent_today'       => $sentToday,
+            'daily_limit'      => $dailyLimit,
+            'remaining_today'  => $remainingToday,
+            'usage_percent'    => $usagePercent,
+            'hostinger_quota'  => $hostingerQuota,
         ];
     }
 

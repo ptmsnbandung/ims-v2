@@ -325,6 +325,10 @@ class EmailController extends Controller
 
         $queuedCount = 0;
         $skippedCount = 0;
+        $isSyncQueue = config('queue.default') === 'sync';
+        if ($isSyncQueue) {
+            @set_time_limit(300);
+        }
 
         foreach ($customers as $cust) {
             $email = trim((string)($cust->email ?? ''));
@@ -332,6 +336,11 @@ class EmailController extends Controller
             if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $skippedCount++;
                 continue;
+            }
+
+            // Jeda antar pengiriman jika queue sync agar tidak terkena burst rate-limit Hostinger
+            if ($isSyncQueue && $queuedCount > 0) {
+                usleep(1200000); // 1.2 detik
             }
 
             // Ganti tag variabel template pada subjek dan isi pesan
@@ -354,7 +363,7 @@ class EmailController extends Controller
                 ]);
             }
 
-            SendCustomMailJob::dispatch(
+            $pendingDispatch = SendCustomMailJob::dispatch(
                 $email,
                 $formattedSubject,
                 $formattedHtml,
@@ -366,6 +375,11 @@ class EmailController extends Controller
                 $senderUser,
                 $logId
             );
+
+            // Stagger (beri jeda bertahap 3 detik per email) pada background queue agar aman dari Rate Limit Hostinger
+            if (!$isSyncQueue && $queuedCount > 0) {
+                $pendingDispatch->delay(Carbon::now()->addSeconds($queuedCount * 3));
+            }
 
             $queuedCount++;
         }

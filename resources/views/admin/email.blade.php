@@ -637,9 +637,15 @@
                                     <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span> Queued
                                 </span>
                             @else
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300" title="{{ $log->error_message }}">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Gagal
-                                </span>
+                                <div class="space-y-1">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Gagal
+                                    </span>
+                                    <div class="text-[10.5px] text-rose-600 dark:text-rose-400 bg-rose-50/90 dark:bg-rose-950/40 border border-rose-200/70 dark:border-rose-800/50 rounded-lg px-2 py-1 max-w-xs leading-snug break-words">
+                                        <strong class="font-bold">Alasan:</strong>
+                                        {{ $log->error_message ?: 'Terkena batas kecepatan kirim (Rate Limit) atau koneksi ke server email terputus.' }}
+                                    </div>
+                                </div>
                             @endif
                         </td>
                         <td class="p-3 text-right">
@@ -738,7 +744,54 @@
                                 style="width: 100%; flex: 1 1 auto; height: 100%; border: 0; display: block; background-color: #f1f5f9;"></iframe>
                     </template>
                     <template x-if="previewMode === 'log'">
-                        <div class="p-4" style="flex: 1 1 auto; overflow-y: auto;">
+                        <div class="p-4 space-y-3" style="flex: 1 1 auto; overflow-y: auto;">
+                            <template x-if="previewLog">
+                                <div class="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <span class="text-slate-400">Penerima:</span>
+                                            <strong class="text-slate-900 dark:text-white" x-text="previewLog.nama_pelanggan || '-'"></strong>
+                                            <span class="font-mono text-sky-600 dark:text-sky-400 ml-1" x-text="'(' + (previewLog.email_tujuan || '-') + ')'"></span>
+                                        </div>
+                                        <div>
+                                            <template x-if="previewLog.status === 'sent'">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Terkirim (Sent)
+                                                </span>
+                                            </template>
+                                            <template x-if="previewLog.status === 'queued'">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span> Dalam Antrean (Queued)
+                                                </span>
+                                            </template>
+                                            <template x-if="previewLog.status === 'failed'">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Gagal Terkirim
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                                        <span class="text-slate-400">Subjek:</span>
+                                        <strong class="text-slate-900 dark:text-white" x-text="previewLog.subjek || '-'"></strong>
+                                    </div>
+
+                                    <!-- Kotak Alasan Kegagalan -->
+                                    <template x-if="previewLog.status === 'failed' || previewLog.error_message">
+                                        <div class="mt-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/70 text-rose-700 dark:text-rose-300 text-xs">
+                                            <div class="font-bold flex items-center gap-1.5 mb-1 text-rose-800 dark:text-rose-200">
+                                                <svg class="w-4 h-4 shrink-0 text-rose-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                                </svg>
+                                                <span>Alasan Kegagalan Pengiriman:</span>
+                                            </div>
+                                            <p class="leading-relaxed break-words font-medium"
+                                               x-text="previewLog.error_message || 'Terkena batas kecepatan kirim (Rate Limit) atau koneksi ke server email terputus saat pengiriman massal.'"></p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
                             <div class="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs leading-relaxed text-slate-700 dark:text-slate-200"
                                  x-html="previewHtml"></div>
                         </div>
@@ -947,6 +1000,7 @@ function emailManagement() {
         previewCustomer: null,
         previewSubject: '',
         previewHtml: '',
+        previewLog: null,
 
         testModalOpen: false,
         testEmail: '{{ auth()->user()->email ?? "m.azmi.f12345@gmail.com" }}',
@@ -1219,6 +1273,7 @@ function emailManagement() {
                 const data = await res.json();
                 if (data.success && data.data) {
                     this.previewMode = 'log';
+                    this.previewLog = data.data;
                     this.previewHtml = data.data.pesan_html;
                     this.previewModalOpen = true;
                 }

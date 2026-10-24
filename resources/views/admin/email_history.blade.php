@@ -102,9 +102,15 @@
                                     <span class="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span> Queued
                                 </span>
                             @else
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300" title="{{ $log->error_message }}">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Gagal
-                                </span>
+                                <div class="space-y-1">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Gagal
+                                    </span>
+                                    <div class="text-[10.5px] text-rose-600 dark:text-rose-400 bg-rose-50/90 dark:bg-rose-950/40 border border-rose-200/70 dark:border-rose-800/50 rounded-lg px-2 py-1 max-w-xs leading-snug break-words">
+                                        <strong class="font-bold">Alasan:</strong>
+                                        {{ $log->error_message ?: 'Terkena batas kecepatan kirim (Rate Limit) atau koneksi ke server email terputus.' }}
+                                    </div>
+                                </div>
                             @endif
                         </td>
                         <td class="p-3.5 text-right">
@@ -130,32 +136,51 @@
         </div>
     </div>
 
-    <!-- Modal Lihat Pesan -->
-    <div x-show="modalOpen"
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
-             @click.away="modalOpen = false">
-            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white" x-text="modalContent?.subjek"></h3>
-                    <p class="text-xs text-slate-500 font-mono" x-text="'Penerima: ' + modalContent?.email_tujuan"></p>
+    <!-- Modal Lihat Pesan (Teleport ke body agar selalu di tengah layar penuh) -->
+    <template x-teleport="body">
+        <div x-show="modalOpen"
+             x-cloak
+             @keydown.escape.window="modalOpen = false"
+             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col"
+                 style="max-height: 88vh; margin: auto;"
+                 @click.away="modalOpen = false">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3" style="flex-shrink: 0;">
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white truncate" x-text="modalContent?.subjek"></h3>
+                        <p class="text-xs text-slate-500 font-mono truncate" x-text="'Penerima: ' + (modalContent?.nama_pelanggan || '-') + ' (' + (modalContent?.email_tujuan || '-') + ')'"></p>
+                    </div>
+                    <button @click="modalOpen = false" class="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 dark:bg-slate-800 dark:text-slate-300 font-bold text-base cursor-pointer shrink-0">&times;</button>
                 </div>
-                <button @click="modalOpen = false" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
-            </div>
 
-            <div class="p-4 overflow-y-auto flex-1 bg-slate-100 dark:bg-slate-950">
-                <div x-html="modalContent?.pesan_html"></div>
-            </div>
+                <div class="p-4 overflow-y-auto flex-1 bg-slate-100 dark:bg-slate-950 space-y-3" style="min-height: 0;">
+                    <!-- Kotak Alasan Kegagalan -->
+                    <template x-if="modalContent && (modalContent.status === 'failed' || modalContent.error_message)">
+                        <div class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs">
+                            <div class="font-bold flex items-center gap-1.5 mb-1 text-rose-800 dark:text-rose-200">
+                                <svg class="w-4 h-4 shrink-0 text-rose-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                </svg>
+                                <span>Alasan Kegagalan Pengiriman:</span>
+                            </div>
+                            <p class="leading-relaxed break-words font-medium"
+                               x-text="modalContent.error_message || 'Terkena batas kecepatan kirim (Rate Limit) atau koneksi ke server email terputus saat pengiriman massal.'"></p>
+                        </div>
+                    </template>
 
-            <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end">
-                <button @click="modalOpen = false"
-                        class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold">
-                    Tutup
-                </button>
+                    <div class="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs leading-relaxed text-slate-700 dark:text-slate-200"
+                         x-html="modalContent?.pesan_html"></div>
+                </div>
+
+                <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end" style="flex-shrink: 0;">
+                    <button @click="modalOpen = false"
+                            class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+    </template>
 </div>
 @endsection
 

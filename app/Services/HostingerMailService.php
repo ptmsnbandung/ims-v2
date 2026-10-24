@@ -134,24 +134,37 @@ class HostingerMailService
     {
         $cleanTo = trim($to);
         if (empty($cleanTo) || !filter_var($cleanTo, FILTER_VALIDATE_EMAIL)) {
-            Log::warning("Hostinger Mail API: Format alamat email penerima tidak valid ({$cleanTo}).");
-            return false;
+            throw new Exception("Format alamat email penerima tidak valid ({$cleanTo}).");
         }
 
         $mailboxResourceId = $this->getMailboxResourceId();
         $companyName = config('company.name', 'PT Media Solusi Network');
+
+        $plainBody = $plainText;
+        if (empty($plainBody)) {
+            $cleanedHtml = preg_replace('/<(style|script|head)\b[^>]*>.*?<\/\1>/is', '', $htmlContent);
+            $plainBody = trim(preg_replace('/\s+/', ' ', strip_tags($cleanedHtml ?? $htmlContent)));
+        }
 
         $payload = [
             'to'          => [$cleanTo],
             'displayName' => $companyName,
             'subject'     => $subject,
             'html'        => $htmlContent,
-            'text'        => $plainText ?: strip_tags($htmlContent),
+            'text'        => $plainBody ?: $subject,
         ];
 
         try {
             $response = Http::withToken($this->token)
                 ->timeout(25)
+                ->retry(2, 2000, function ($exception) {
+                    // Retry otomatis jika koneksi timeout atau HTTP 429 (Rate Limit) / 5xx
+                    if ($exception instanceof \Illuminate\Http\Client\RequestException && $exception->response) {
+                        $code = $exception->response->status();
+                        return $code === 429 || $code >= 500;
+                    }
+                    return $exception instanceof \Illuminate\Http\Client\ConnectionException;
+                }, throw: false)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'Accept'       => 'application/json',
@@ -166,7 +179,23 @@ class HostingerMailService
                 return true;
             }
 
-            $errMsg = "Hostinger Mail API Error [HTTP {$status}]: " . $response->body();
+            $jsonBody = $response->json();
+            $apiDetail = is_array($jsonBody)
+                ? ($jsonBody['message'] ?? $jsonBody['error'] ?? json_encode($jsonBody))
+                : trim((string) $response->body());
+
+            if ($status === 429) {
+                $errMsg = "Batas kecepatan pengiriman (Rate Limit Hostinger HTTP 429): Terlalu banyak email dikirim bersamaan. Detail: {$apiDetail}";
+            } elseif (in_array($status, [401, 403])) {
+                $errMsg = "Otorisasi Hostinger Mail API ditolak (HTTP {$status}): Token API kedaluwarsa atau tidak memiliki izin. Detail: {$apiDetail}";
+            } elseif ($status === 422 || $status === 400) {
+                $errMsg = "Alamat email atau konten ditolak server (HTTP {$status}): {$apiDetail}";
+            } elseif ($status >= 500) {
+                $errMsg = "Server Hostinger Mail sedang mengalami gangguan/sibuk (HTTP {$status}): {$apiDetail}";
+            } else {
+                $errMsg = "Hostinger Mail API Error (HTTP {$status}): {$apiDetail}";
+            }
+
             Log::error($errMsg);
             throw new Exception($errMsg);
         } catch (\Throwable $e) {

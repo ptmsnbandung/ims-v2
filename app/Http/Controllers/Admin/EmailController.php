@@ -64,18 +64,24 @@ class EmailController extends Controller
         $this->ensureSchema();
 
         $search = trim((string) $request->input('search', ''));
-        $statusFilter = (string) $request->input('status', 'all'); // all, with_email, without_email, active
+        $statusFilter = (string) $request->input('status', 'all'); // all, lunas, jatuh_tempo, suspend, active, with_email, without_email
+        $bulanFilter = $request->filled('bulan') && $request->input('bulan') !== 'all'
+            ? str_pad((string) (int) $request->input('bulan'), 2, '0', STR_PAD_LEFT)
+            : 'all';
+        $tahunFilter = $request->filled('tahun') ? (string) $request->input('tahun') : (string) date('Y');
+
         $perPage = (int) $request->input('per_page', 25);
         if (!in_array($perPage, [10, 25, 50, 100, 250])) {
             $perPage = 25;
         }
 
-        // Query Pelanggan dengan deteksi kolom dinamis
-        $context = $this->getCustomerQueryContext();
+        // Query Pelanggan dengan deteksi kolom dinamis & join tagihan
+        $context = $this->getCustomerQueryContext($bulanFilter, $tahunFilter);
         $query = $context['query'];
         $emailCol = $context['emailCol'];
         $phoneCol = $context['phoneCol'];
         $statusCol = $context['statusCol'];
+        $hasBilling = $context['hasBilling'];
 
         if ($search !== '') {
             $query->where(function ($q) use ($search, $emailCol, $phoneCol) {
@@ -86,7 +92,27 @@ class EmailController extends Controller
             });
         }
 
-        if ($statusFilter === 'with_email') {
+        // Filter Bulan & Tahun Tagihan
+        if ($hasBilling && $bulanFilter !== 'all') {
+            $query->where('inv.bulan_tagihan', $bulanFilter);
+            if ($tahunFilter !== 'all' && $tahunFilter !== '') {
+                $query->where('inv.tahun_tagihan', $tahunFilter);
+            }
+        }
+
+        // Filter Status Pelanggan / Tagihan
+        if ($statusFilter === 'lunas' && $hasBilling) {
+            $query->where('inv.status_bill_lay', '15');
+        } elseif ($statusFilter === 'jatuh_tempo' && $hasBilling) {
+            $query->whereIn('inv.status_bill_lay', ['13', '14']);
+        } elseif ($statusFilter === 'suspend') {
+            $query->whereIn($statusCol, ['23', '23.1']);
+        } elseif ($statusFilter === 'active') {
+            $query->where(function ($q) use ($statusCol) {
+                $q->where($statusCol, '20')
+                  ->orWhere($statusCol, 'like', '%aktif%');
+            });
+        } elseif ($statusFilter === 'with_email') {
             $query->whereNotNull($emailCol)
                   ->where($emailCol, '!=', '')
                   ->where($emailCol, 'like', '%@%');
@@ -95,11 +121,6 @@ class EmailController extends Controller
                 $q->whereNull($emailCol)
                   ->orWhere($emailCol, '=', '')
                   ->orWhere($emailCol, 'not like', '%@%');
-            });
-        } elseif ($statusFilter === 'active') {
-            $query->where(function ($q) use ($statusCol) {
-                $q->where($statusCol, '20')
-                  ->orWhere($statusCol, 'like', '%aktif%');
             });
         }
 
@@ -130,6 +151,8 @@ class EmailController extends Controller
             'isHostingerReady',
             'search',
             'statusFilter',
+            'bulanFilter',
+            'tahunFilter',
             'perPage'
         ));
     }
@@ -171,8 +194,12 @@ class EmailController extends Controller
                 'nomor_internet' => '100000',
                 'nama_bandwith'  => 'PAKET 50 Mbps',
                 'email'          => $testEmail,
+                'bulan_tagihan'  => date('m'),
+                'tahun_tagihan'  => date('Y'),
+                'total_layanan'  => 166500,
             ];
 
+            $formattedSubject = '[TEST] ' . strip_tags($this->replacePlaceholders($subject, $testCustomer));
             $formattedHtml = $this->formatMessageHtml($rawMessage, $testCustomer);
 
             $logId = null;
@@ -181,7 +208,7 @@ class EmailController extends Controller
                     'nomor_internet' => 'TEST',
                     'nama_pelanggan' => 'Admin Test (' . $senderUser . ')',
                     'email_tujuan'   => $testEmail,
-                    'subjek'         => '[TEST] ' . $subject,
+                    'subjek'         => $formattedSubject,
                     'badge_text'     => $badgeText . ' (TEST)',
                     'pesan_html'     => $formattedHtml,
                     'status'         => 'queued',
@@ -193,7 +220,7 @@ class EmailController extends Controller
 
             SendCustomMailJob::dispatch(
                 $testEmail,
-                '[TEST] ' . $subject,
+                $formattedSubject,
                 $formattedHtml,
                 $testCustomer->nama_pelanggan,
                 $testCustomer->nomor_internet,
@@ -224,10 +251,16 @@ class EmailController extends Controller
             ], 422);
         }
 
-        // Ambil data pelanggan dari database
-        $customers = $this->getBaseCustomerQuery()
+        // Ambil data pelanggan dari database (dengan konteks bulan & tahun tagihan jika ada)
+        $bulanParam = $request->filled('bulan') && $request->input('bulan') !== 'all'
+            ? str_pad((string) (int) $request->input('bulan'), 2, '0', STR_PAD_LEFT)
+            : 'all';
+        $tahunParam = $request->filled('tahun') ? (string) $request->input('tahun') : (string) date('Y');
+
+        $customers = $this->getBaseCustomerQuery($bulanParam, $tahunParam)
             ->whereIn('c.nomor_internet', $targetIds)
-            ->get();
+            ->get()
+            ->unique('nomor_internet');
 
         if ($customers->isEmpty()) {
             return response()->json([
@@ -247,7 +280,8 @@ class EmailController extends Controller
                 continue;
             }
 
-            // Ganti tag variabel template
+            // Ganti tag variabel template pada subjek dan isi pesan
+            $formattedSubject = strip_tags($this->replacePlaceholders($subject, $cust));
             $formattedHtml = $this->formatMessageHtml($rawMessage, $cust);
 
             $logId = null;
@@ -256,7 +290,7 @@ class EmailController extends Controller
                     'nomor_internet' => $cust->nomor_internet,
                     'nama_pelanggan' => $cust->nama_pelanggan,
                     'email_tujuan'   => $email,
-                    'subjek'         => $subject,
+                    'subjek'         => $formattedSubject,
                     'badge_text'     => $badgeText,
                     'pesan_html'     => $formattedHtml,
                     'status'         => 'queued',
@@ -268,7 +302,7 @@ class EmailController extends Controller
 
             SendCustomMailJob::dispatch(
                 $email,
-                $subject,
+                $formattedSubject,
                 $formattedHtml,
                 $cust->nama_pelanggan,
                 $cust->nomor_internet,
@@ -311,12 +345,16 @@ class EmailController extends Controller
             'nomor_internet' => '200019',
             'nama_bandwith'  => 'CORPORATE 50 Mbps',
             'email'          => 'pelanggan@example.com',
+            'bulan_tagihan'  => date('m'),
+            'tahun_tagihan'  => date('Y'),
+            'total_layanan'  => 166500,
         ];
 
+        $formattedSubject = strip_tags($this->replacePlaceholders($subject, $sampleCustomer));
         $htmlBody = $this->formatMessageHtml($rawMessage, $sampleCustomer);
 
         $rendered = view('emails.custom_template', [
-            'subject'       => $subject,
+            'subject'       => $formattedSubject,
             'htmlBody'      => $htmlBody,
             'recipientName' => $sampleCustomer->nama_pelanggan,
             'nomorInternet' => $sampleCustomer->nomor_internet,
@@ -380,33 +418,85 @@ class EmailController extends Controller
     }
 
     /**
-     * Query Builder Konteks untuk Pelanggan (dengan deteksi kolom dinamis aman)
+     * Query Builder Konteks untuk Pelanggan (dengan deteksi kolom dinamis aman & join tagihan)
      */
-    protected function getCustomerQueryContext(): array
+    protected function getCustomerQueryContext(string $selectedBulan = 'all', string $selectedTahun = 'all'): array
     {
+        $hasTrxBilling = Schema::hasTable('trx_billing_layanan');
+        $invCols = $hasTrxBilling ? Schema::getColumnListing('trx_billing_layanan') : [];
+
+        // Helper untuk menyambungkan tabel trx_billing_layanan (inv)
+        $attachBillingJoin = function ($query) use ($hasTrxBilling, $selectedBulan, $selectedTahun) {
+            if (!$hasTrxBilling) {
+                return;
+            }
+
+            if ($selectedBulan !== 'all' && $selectedBulan !== '') {
+                $paddedMonth = str_pad((string) (int) $selectedBulan, 2, '0', STR_PAD_LEFT);
+                $query->leftJoin('trx_billing_layanan as inv', function ($join) use ($paddedMonth, $selectedTahun) {
+                    $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
+                         ->where('inv.bulan_tagihan', '=', $paddedMonth);
+                    if ($selectedTahun !== 'all' && $selectedTahun !== '') {
+                        $join->where('inv.tahun_tagihan', '=', (string) $selectedTahun);
+                    }
+                });
+            } else {
+                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
+                    ->selectRaw("
+                        tbl_sub.nomor_internet,
+                        COALESCE(
+                            MAX(CASE WHEN tbl_sub.status_bill_lay IN ('13', '14') THEN CONCAT(tbl_sub.tahun_tagihan, LPAD(tbl_sub.bulan_tagihan, 2, '0')) END),
+                            MAX(CONCAT(tbl_sub.tahun_tagihan, LPAD(tbl_sub.bulan_tagihan, 2, '0')))
+                        ) as target_period
+                    ")
+                    ->groupBy('tbl_sub.nomor_internet');
+
+                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
+                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+                })->leftJoin('trx_billing_layanan as inv', function ($join) {
+                    $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
+                         ->on(DB::raw("CONCAT(inv.tahun_tagihan, LPAD(inv.bulan_tagihan, 2, '0'))"), '=', 'sub_inv.target_period');
+                });
+            }
+        };
+
+        $billStatusSelect  = ($hasTrxBilling && in_array('status_bill_lay', $invCols)) ? 'inv.status_bill_lay' : DB::raw("NULL as status_bill_lay");
+        $billBulanSelect   = ($hasTrxBilling && in_array('bulan_tagihan', $invCols)) ? 'inv.bulan_tagihan' : DB::raw("NULL as bulan_tagihan");
+        $billTahunSelect   = ($hasTrxBilling && in_array('tahun_tagihan', $invCols)) ? 'inv.tahun_tagihan' : DB::raw("NULL as tahun_tagihan");
+        $billNominalSelect = ($hasTrxBilling && in_array('total_layanan', $invCols)) ? 'inv.total_layanan' : DB::raw("0 as total_layanan");
+        $billPeriodeSelect = ($hasTrxBilling && in_array('periode_tagihan', $invCols)) ? 'inv.periode_tagihan' : DB::raw("NULL as periode_tagihan");
+
         if (Schema::hasTable('view_batchjob')) {
             $cols = Schema::getColumnListing('view_batchjob');
-            $statusCol = in_array('status_reg', $cols) ? 'c.status_reg' : (in_array('status_user', $cols) ? 'c.status_user' : DB::raw("'20' as status_reg"));
-            $bandwithCol = in_array('nama_bandwith', $cols) ? 'c.nama_bandwith' : (in_array('nama_kategori_bandwith', $cols) ? 'c.nama_kategori_bandwith' : DB::raw("'Internet Fiber' as nama_bandwith"));
+            $statusColName = in_array('status_reg', $cols) ? 'c.status_reg' : (in_array('status_user', $cols) ? 'c.status_user' : null);
+            $statusSelect = $statusColName ? "{$statusColName} as status_reg" : DB::raw("'20' as status_reg");
+            $bandwithCol = in_array('nama_bandwith', $cols) ? 'c.nama_bandwith' : (in_array('nama_kategori_bandwith', $cols) ? 'c.nama_kategori_bandwith as nama_bandwith' : DB::raw("'Internet Fiber' as nama_bandwith"));
             $alamatCol = in_array('alamat_pasang', $cols) ? 'c.alamat_pasang' : DB::raw("'' as alamat_pasang");
 
-            $query = DB::table('view_batchjob as c')
-                ->select(
-                    'c.nomor_internet',
-                    'c.nama_pelanggan',
-                    'c.email',
-                    'c.nomor_hp',
-                    $bandwithCol,
-                    $statusCol,
-                    $alamatCol
-                )
-                ->orderBy('c.nomor_internet', 'desc');
+            $query = DB::table('view_batchjob as c');
+            $attachBillingJoin($query);
+
+            $query->select(
+                'c.nomor_internet',
+                'c.nama_pelanggan',
+                'c.email',
+                'c.nomor_hp',
+                $bandwithCol,
+                $statusSelect,
+                $alamatCol,
+                $billStatusSelect,
+                $billBulanSelect,
+                $billTahunSelect,
+                $billNominalSelect,
+                $billPeriodeSelect
+            )->orderBy('c.nomor_internet', 'desc');
 
             return [
-                'query'     => $query,
-                'emailCol'  => 'c.email',
-                'phoneCol'  => 'c.nomor_hp',
-                'statusCol' => in_array('status_reg', $cols) ? 'c.status_reg' : 'c.status_user',
+                'query'      => $query,
+                'emailCol'   => 'c.email',
+                'phoneCol'   => 'c.nomor_hp',
+                'statusCol'  => $statusColName ?? 'c.status_reg',
+                'hasBilling' => $hasTrxBilling,
             ];
         }
 
@@ -418,9 +508,11 @@ class EmailController extends Controller
         if (Schema::hasTable('m_bandwith')) {
             $query->leftJoin('m_bandwith as b', 'c.kode_bandwith', '=', 'b.kode_bandwith');
         }
+        $attachBillingJoin($query);
 
         $regCols = Schema::getColumnListing('trx_batchjob_register');
-        $regStatusCol = in_array('status_reg', $regCols) ? 'c.status_reg' : (in_array('status_user', $regCols) ? 'c.status_user' : DB::raw("'20' as status_reg"));
+        $statusColName = in_array('status_reg', $regCols) ? 'c.status_reg' : (in_array('status_user', $regCols) ? 'c.status_user' : null);
+        $regStatusSelect = $statusColName ? "{$statusColName} as status_reg" : DB::raw("'20' as status_reg");
         $alamatCol = in_array('alamat_pasang', $regCols) ? 'c.alamat_pasang' : DB::raw("'' as alamat_pasang");
         $phoneCol = in_array('nomor_hp', $regCols) ? 'c.nomor_hp' : 'p.nomor_hp';
 
@@ -430,24 +522,68 @@ class EmailController extends Controller
             'p.email',
             $phoneCol,
             DB::raw('COALESCE(b.nama_bandwith, "Internet Fiber") as nama_bandwith'),
-            $regStatusCol,
-            $alamatCol
+            $regStatusSelect,
+            $alamatCol,
+            $billStatusSelect,
+            $billBulanSelect,
+            $billTahunSelect,
+            $billNominalSelect,
+            $billPeriodeSelect
         )->orderBy('c.nomor_internet', 'desc');
 
         return [
-            'query'     => $query,
-            'emailCol'  => 'p.email',
-            'phoneCol'  => $phoneCol,
-            'statusCol' => in_array('status_reg', $regCols) ? 'c.status_reg' : 'c.status_user',
+            'query'      => $query,
+            'emailCol'   => 'p.email',
+            'phoneCol'   => $phoneCol,
+            'statusCol'  => $statusColName ?? 'c.status_reg',
+            'hasBilling' => $hasTrxBilling,
         ];
     }
 
     /**
      * Helper backward-compatibility
      */
-    protected function getBaseCustomerQuery()
+    protected function getBaseCustomerQuery(string $selectedBulan = 'all', string $selectedTahun = 'all')
     {
-        return $this->getCustomerQueryContext()['query'];
+        return $this->getCustomerQueryContext($selectedBulan, $selectedTahun)['query'];
+    }
+
+    /**
+     * Gantikan placeholder variabel pada teks atau subjek
+     */
+    protected function replacePlaceholders(string $text, object $cust): string
+    {
+        $bulanNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        if (!empty($cust->bulan_tagihan) && !empty($cust->tahun_tagihan)) {
+            $bNum = (int) $cust->bulan_tagihan;
+            $periode = ($bulanNames[$bNum] ?? date('F')) . ' ' . $cust->tahun_tagihan;
+        } elseif (!empty($cust->periode_tagihan)) {
+            $periode = $cust->periode_tagihan;
+        } else {
+            $periode = ($bulanNames[(int) date('n')] ?? date('F')) . ' ' . date('Y');
+        }
+
+        $nominalVal = isset($cust->total_layanan) && (float) $cust->total_layanan > 0
+            ? 'Rp ' . number_format((float) $cust->total_layanan, 0, ',', '.')
+            : '-';
+
+        $replacements = [
+            '{nama_pelanggan}' => e($cust->nama_pelanggan ?? 'Pelanggan'),
+            '{nomor_internet}' => e($cust->nomor_internet ?? '-'),
+            '{paket}'          => e($cust->nama_bandwith ?? 'Internet Fiber'),
+            '{email}'          => e($cust->email ?? '-'),
+            '{periode}'        => e($periode),
+            '{nominal}'        => e($nominalVal),
+            '{portal_url}'     => config('company.portal_url', 'https://portal.ptmsn.co.id'),
+            '{perusahaan}'     => config('company.name', 'PT Media Solusi Network'),
+        ];
+
+        return strtr($text, $replacements);
     }
 
     /**
@@ -455,16 +591,7 @@ class EmailController extends Controller
      */
     protected function formatMessageHtml(string $text, object $cust): string
     {
-        $replacements = [
-            '{nama_pelanggan}' => e($cust->nama_pelanggan ?? 'Pelanggan'),
-            '{nomor_internet}' => e($cust->nomor_internet ?? '-'),
-            '{paket}'          => e($cust->nama_bandwith ?? 'Internet Fiber'),
-            '{email}'          => e($cust->email ?? '-'),
-            '{portal_url}'     => config('company.portal_url', 'https://portal.ptmsn.co.id'),
-            '{perusahaan}'     => config('company.name', 'PT Media Solusi Network'),
-        ];
-
-        $replaced = strtr($text, $replacements);
+        $replaced = $this->replacePlaceholders($text, $cust);
 
         // Jika teks sudah berisi tag HTML dasar (seperti <p> atau <br>), jangan di-nl2br ganda
         if (str_contains($replaced, '<p>') || str_contains($replaced, '<br>')) {
@@ -557,6 +684,33 @@ class EmailController extends Controller
     protected function getEmailPresets(): array
     {
         return [
+            [
+                'id'         => 'jatuh_tempo',
+                'name'       => 'Pengingat Tagihan Jatuh Tempo (Belum Lunas)',
+                'badge'      => 'PENGINGAT TAGIHAN',
+                'subject'    => 'Pengingat Pembayaran Tagihan Internet Periode {periode} - PT Media Solusi Network',
+                'body'       => "Halo {nama_pelanggan},\n\nKami mengingatkan bahwa tagihan layanan internet Anda #{nomor_internet} ({paket}) untuk periode {periode} sebesar {nominal} telah terbit dan memasuki masa jatuh tempo.\n\nAgar koneksi internet Anda tetap aktif tanpa kendala (terhindar dari isolir otomatis), mohon segera melakukan pembayaran melalui Portal Pelanggan MyMSN.\n\nAbaikan pesan ini apabila Anda telah melakukan pembayaran. Terima kasih atas kerja sama Anda.",
+                'action_url' => config('company.portal_url', 'https://portal.ptmsn.co.id'),
+                'action_text'=> 'Bayar Tagihan di Portal',
+            ],
+            [
+                'id'         => 'suspend',
+                'name'       => 'Pemberitahuan Layanan Terisolir / Suspend',
+                'badge'      => 'STATUS LAYANAN ISOLIR',
+                'subject'    => 'Pemberitahuan Nonaktif Sementara (Suspend) Layanan Internet #{nomor_internet}',
+                'body'       => "Kepada Yth. {nama_pelanggan},\n\nKami menginformasikan bahwa layanan internet Anda #{nomor_internet} ({paket}) saat ini sedang dinonaktifkan sementara (Suspend / Isolir) dikarenakan adanya tagihan periode {periode} sebesar {nominal} yang melewati batas waktu pembayaran.\n\nUntuk mengaktifkan kembali koneksi internet Anda secara otomatis, silakan selesaikan pembayaran tagihan melalui Portal Pelanggan atau hubungi tim Admin Billing kami.",
+                'action_url' => config('company.portal_url', 'https://portal.ptmsn.co.id'),
+                'action_text'=> 'Cek & Bayar Tagihan Sekarang',
+            ],
+            [
+                'id'         => 'lunas',
+                'name'       => 'Ucapan Terima Kasih Pembayaran Lunas',
+                'badge'      => 'KONFIRMASI PEMBAYARAN',
+                'subject'    => 'Terima Kasih! Pembayaran Tagihan Periode {periode} Telah Kami Terima',
+                'body'       => "Halo {nama_pelanggan},\n\nTerima kasih! Pembayaran tagihan layanan internet Anda #{nomor_internet} ({paket}) untuk periode {periode} sebesar {nominal} telah tercatat LUNAS di sistem kami.\n\nAnda dapat mengunduh bukti kwitansi / invoice resmi kapan saja melalui Portal Pelanggan MyMSN.\n\nSelamat menikmati layanan internet dari PT Media Solusi Network.",
+                'action_url' => config('company.portal_url', 'https://portal.ptmsn.co.id'),
+                'action_text'=> 'Lihat Kwitansi di Portal',
+            ],
             [
                 'id'         => 'maintenance',
                 'name'       => 'Pemberitahuan Pemeliharaan Jaringan (Maintenance)',

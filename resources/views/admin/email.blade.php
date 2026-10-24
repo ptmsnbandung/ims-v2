@@ -157,27 +157,74 @@
                 </div>
 
                 <!-- Search & Filters -->
-                <form method="GET" action="{{ route('admin.email.index') }}" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                    <div class="sm:col-span-7 relative">
+                @php
+                    $bulanList = [
+                        '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+                        '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+                        '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+                    ];
+                    $curYear = (int) date('Y');
+                @endphp
+                <form method="GET" action="{{ route('admin.email.index') }}" class="space-y-2">
+                    <div class="relative">
                         <input type="text"
                                name="search"
                                value="{{ $search }}"
-                               placeholder="Cari nama, nomor, email..."
-                               class="w-full pl-9 pr-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                               placeholder="Cari nama, nomor internet, email..."
+                               class="w-full pl-9 pr-16 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
                         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                         </svg>
+                        @if($search !== '' || $statusFilter !== 'all' || ($bulanFilter ?? 'all') !== 'all')
+                            <a href="{{ route('admin.email.index') }}"
+                               class="absolute right-2.5 top-2 px-2 py-0.5 rounded-lg bg-slate-200/80 dark:bg-slate-700 text-[10px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition">
+                                Reset
+                            </a>
+                        @endif
                     </div>
 
-                    <div class="sm:col-span-5 flex items-center gap-1.5">
-                        <select name="status"
-                                onchange="this.form.submit()"
-                                class="w-full py-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                            <option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>Semua Pelanggan</option>
-                            <option value="with_email" {{ $statusFilter === 'with_email' ? 'selected' : '' }}>Hanya Punya Email</option>
-                            <option value="without_email" {{ $statusFilter === 'without_email' ? 'selected' : '' }}>Tanpa Email</option>
-                            <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Pelanggan Aktif</option>
-                        </select>
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                        <!-- Filter Status (Lunas, Jatuh Tempo, Suspend, dll) -->
+                        <div class="sm:col-span-5">
+                            <select name="status"
+                                    onchange="this.form.submit()"
+                                    class="w-full py-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                                <option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>Semua Pelanggan</option>
+                                <option value="lunas" {{ $statusFilter === 'lunas' ? 'selected' : '' }}>&#10003; Lunas (Sudah Bayar)</option>
+                                <option value="jatuh_tempo" {{ $statusFilter === 'jatuh_tempo' ? 'selected' : '' }}>&#9888; Jatuh Tempo (Belum Lunas)</option>
+                                <option value="suspend" {{ $statusFilter === 'suspend' ? 'selected' : '' }}>&#128683; Suspend / Isolir</option>
+                                <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Pelanggan Aktif</option>
+                                <option value="with_email" {{ $statusFilter === 'with_email' ? 'selected' : '' }}>Hanya Punya Email</option>
+                                <option value="without_email" {{ $statusFilter === 'without_email' ? 'selected' : '' }}>Tanpa Email</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter Bulan Tagihan -->
+                        <div class="sm:col-span-4">
+                            <select name="bulan"
+                                    onchange="this.form.submit()"
+                                    class="w-full py-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                                <option value="all" {{ ($bulanFilter ?? 'all') === 'all' ? 'selected' : '' }}>Semua Bulan Tagihan</option>
+                                @foreach($bulanList as $bKey => $bLabel)
+                                    <option value="{{ $bKey }}" {{ ($bulanFilter ?? 'all') === $bKey ? 'selected' : '' }}>
+                                        Bulan {{ $bLabel }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Filter Tahun Tagihan -->
+                        <div class="sm:col-span-3">
+                            <select name="tahun"
+                                    onchange="this.form.submit()"
+                                    class="w-full py-1.5 px-2.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium">
+                                @for($y = $curYear + 1; $y >= $curYear - 2; $y--)
+                                    <option value="{{ $y }}" {{ (string)($tahunFilter ?? $curYear) === (string)$y ? 'selected' : '' }}>
+                                        {{ $y }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -187,6 +234,16 @@
                 @forelse($customers as $c)
                 @php
                     $hasEmail = !empty($c->email) && filter_var($c->email, FILTER_VALIDATE_EMAIL);
+                    $isSuspend = in_array((string)($c->status_reg ?? ''), ['23', '23.1']);
+                    $billStatus = (string)($c->status_bill_lay ?? '');
+                    $bulanShort = [
+                        1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
+                        5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu',
+                        9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+                    ];
+                    $periodeLabel = (!empty($c->bulan_tagihan) && !empty($c->tahun_tagihan))
+                        ? ($bulanShort[(int)$c->bulan_tagihan] ?? $c->bulan_tagihan) . ' ' . $c->tahun_tagihan
+                        : null;
                 @endphp
                 <label class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer transition select-none">
                     <input type="checkbox"
@@ -196,13 +253,35 @@
                            class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 dark:border-slate-700 {{ !$hasEmail ? 'opacity-30 cursor-not-allowed' : '' }}">
 
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <p class="text-xs font-bold text-slate-900 dark:text-white truncate">
-                                {{ $c->nama_pelanggan }}
-                            </p>
-                            <span class="text-[10px] font-mono text-slate-400">#{{ $c->nomor_internet }}</span>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <p class="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                    {{ $c->nama_pelanggan }}
+                                </p>
+                                <span class="text-[10px] font-mono text-slate-400 shrink-0">#{{ $c->nomor_internet }}</span>
+                            </div>
+
+                            <!-- Status Badges (Lunas / Jatuh Tempo / Suspend) -->
+                            <div class="flex items-center gap-1 shrink-0">
+                                @if($isSuspend)
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/50">
+                                        Suspend
+                                    </span>
+                                @endif
+
+                                @if($billStatus === '15')
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+                                        Lunas
+                                    </span>
+                                @elseif(in_array($billStatus, ['13', '14']))
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50">
+                                        Jatuh Tempo
+                                    </span>
+                                @endif
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2 mt-0.5">
+
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
                             @if($hasEmail)
                                 <span class="text-[11px] text-sky-600 dark:text-sky-400 truncate flex items-center gap-1 font-mono">
                                     <svg class="w-3 h-3 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -218,6 +297,15 @@
 
                             @if(!empty($c->nama_bandwith))
                                 <span class="text-[10px] text-slate-400 truncate">&bull; {{ $c->nama_bandwith }}</span>
+                            @endif
+
+                            @if($periodeLabel)
+                                <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                                    &bull; {{ $periodeLabel }}
+                                    @if(!empty($c->total_layanan) && (float)$c->total_layanan > 0)
+                                        (Rp {{ number_format((float)$c->total_layanan, 0, ',', '.') }})
+                                    @endif
+                                </span>
                             @endif
                         </div>
                     </div>
@@ -314,16 +402,18 @@
 
                 <!-- Isi Pesan -->
                 <div>
-                    <div class="flex items-center justify-between mb-1">
+                    <div class="flex flex-wrap items-center justify-between gap-1 mb-1.5">
                         <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                             Isi Pesan Email <span class="text-rose-500">*</span>
                         </label>
                         <!-- Variabel Tags Helper -->
-                        <div class="flex items-center gap-1 text-[11px] text-slate-400">
+                        <div class="flex flex-wrap items-center gap-1 text-[11px] text-slate-400">
                             <span>Variabel:</span>
                             <button type="button" @click="insertTag('{nama_pelanggan}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nama_pelanggan}</button>
                             <button type="button" @click="insertTag('{nomor_internet}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nomor_internet}</button>
                             <button type="button" @click="insertTag('{paket}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{paket}</button>
+                            <button type="button" @click="insertTag('{periode}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{periode}</button>
+                            <button type="button" @click="insertTag('{nominal}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nominal}</button>
                         </div>
                     </div>
                     <textarea x-model="form.message"
@@ -646,7 +736,9 @@ function emailManagement() {
             try {
                 const payload = {
                     ...this.form,
-                    targets: this.selectedTargets
+                    targets: this.selectedTargets,
+                    bulan: '{{ $bulanFilter ?? "all" }}',
+                    tahun: '{{ $tahunFilter ?? date("Y") }}'
                 };
                 const res = await fetch('{{ route("admin.email.send") }}', {
                     method: 'POST',

@@ -124,8 +124,21 @@ class SendPaymentSuccessMailJob implements ShouldQueue
             }
         }
 
-        // Cek apakah alamat email pelanggan valid
+        // Cek juga ke m_pelanggan langsung menggunakan nomor_internet jika NIK sama dengan nomor_internet
         $recipientEmail = trim((string)($customer?->email ?? ''));
+        if (empty($recipientEmail) && $nomorInternet && Schema::hasTable('m_pelanggan')) {
+            $emailDirect = DB::table('m_pelanggan')
+                ->where('nik_penduduk', $nomorInternet)
+                ->value('email');
+            if (!empty($emailDirect)) {
+                $recipientEmail = trim($emailDirect);
+                if ($customer) {
+                    $customer->email = $recipientEmail;
+                }
+            }
+        }
+
+        // Cek apakah alamat email pelanggan valid
         if (empty($recipientEmail) || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL)) {
             Log::info("SendPaymentSuccessMailJob: Dilewati karena pelanggan #{$nomorInternet} (" . ($customer?->nama_pelanggan ?? 'Tanpa Nama') . ") belum memiliki email valid di sistem.");
             return;

@@ -376,9 +376,9 @@ class EmailController extends Controller
                 $logId
             );
 
-            // Stagger (beri jeda bertahap 3 detik per email) pada background queue agar aman dari Rate Limit Hostinger
+            // Stagger (beri jeda bertahap 6 detik per email = maks 10 email/menit) pada background queue agar aman dari Rate Limit Hostinger
             if (!$isSyncQueue && $queuedCount > 0) {
-                $pendingDispatch->delay(Carbon::now()->addSeconds($queuedCount * 3));
+                $pendingDispatch->delay(Carbon::now()->addSeconds($queuedCount * 6));
             }
 
             $queuedCount++;
@@ -527,6 +527,128 @@ class EmailController extends Controller
         return response()->json([
             'success' => true,
             'data'    => $log,
+        ]);
+    }
+
+    /**
+     * AJAX / POST: Kirim Ulang (Retry) 1 Log Email yang Gagal
+     */
+    public function retry(Request $request, $id): JsonResponse
+    {
+        $this->ensureSchema();
+
+        $log = DB::table('tb_broadcast_email_log')->where('id', $id)->first();
+        if (!$log) {
+            return response()->json(['success' => false, 'message' => 'Data riwayat email tidak ditemukan.'], 404);
+        }
+
+        $email = trim((string) ($log->email_tujuan ?? ''));
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['success' => false, 'message' => 'Alamat email tujuan pada riwayat ini tidak valid.'], 422);
+        }
+
+        $senderUser = Auth::user()?->nama ?? Auth::user()?->username ?? ($log->sender_user ?? 'ADMIN');
+        $portalUrl  = config('company.portal_url', 'https://portal.ptmsn.co.id');
+
+        DB::table('tb_broadcast_email_log')
+            ->where('id', $log->id)
+            ->update([
+                'status'        => 'queued',
+                'error_message' => null,
+                'updated_at'    => Carbon::now()->toDateTimeString(),
+            ]);
+
+        SendCustomMailJob::dispatch(
+            $email,
+            (string) $log->subjek,
+            (string) $log->pesan_html,
+            $log->nama_pelanggan,
+            $log->nomor_internet === 'TEST' ? null : $log->nomor_internet,
+            $log->badge_text ?: 'PEMBERITAHUAN RESMI',
+            $portalUrl,
+            'Buka Portal Pelanggan',
+            $senderUser,
+            (int) $log->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "Email untuk {$log->nama_pelanggan} ({$email}) berhasil dimasukkan kembali ke antrean pengiriman!",
+        ]);
+    }
+
+    /**
+     * AJAX / POST: Kirim Ulang Semua Log Email yang Berstatus Gagal (dengan jeda anti Rate-Limit)
+     */
+    public function retryAllFailed(Request $request): JsonResponse
+    {
+        $this->ensureSchema();
+
+        $failedLogs = DB::table('tb_broadcast_email_log')
+            ->where('status', 'failed')
+            ->orderBy('id', 'asc')
+            ->limit(50)
+            ->get();
+
+        if ($failedLogs->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada riwayat email berstatus Gagal yang perlu dikirim ulang.',
+            ], 422);
+        }
+
+        $senderUser  = Auth::user()?->nama ?? Auth::user()?->username ?? 'ADMIN';
+        $portalUrl   = config('company.portal_url', 'https://portal.ptmsn.co.id');
+        $isSyncQueue = config('queue.default') === 'sync';
+        if ($isSyncQueue) {
+            @set_time_limit(300);
+        }
+
+        $retriedCount = 0;
+
+        foreach ($failedLogs as $log) {
+            $email = trim((string) ($log->email_tujuan ?? ''));
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+
+            if ($isSyncQueue && $retriedCount > 0) {
+                usleep(1500000); // 1.5 detik jeda jika sync
+            }
+
+            DB::table('tb_broadcast_email_log')
+                ->where('id', $log->id)
+                ->update([
+                    'status'        => 'queued',
+                    'error_message' => null,
+                    'updated_at'    => Carbon::now()->toDateTimeString(),
+                ]);
+
+            $pending = SendCustomMailJob::dispatch(
+                $email,
+                (string) $log->subjek,
+                (string) $log->pesan_html,
+                $log->nama_pelanggan,
+                $log->nomor_internet === 'TEST' ? null : $log->nomor_internet,
+                $log->badge_text ?: 'PEMBERITAHUAN RESMI',
+                $portalUrl,
+                'Buka Portal Pelanggan',
+                $senderUser,
+                (int) $log->id
+            );
+
+            // Beri jeda bertahap 6 detik per email agar tidak memicu HTTP 429 ERR_RATE_LIMITED Hostinger
+            if (!$isSyncQueue && $retriedCount > 0) {
+                $pending->delay(Carbon::now()->addSeconds($retriedCount * 6));
+            }
+
+            $retriedCount++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'retried' => $retriedCount,
+            'message' => "Berhasil menjadwalkan pengiriman ulang untuk {$retriedCount} email yang gagal (dengan jeda otomatis 6 detik per email agar aman dari Rate Limit)!",
         ]);
     }
 

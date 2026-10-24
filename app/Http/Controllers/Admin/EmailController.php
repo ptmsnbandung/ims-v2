@@ -384,7 +384,7 @@ class EmailController extends Controller
     }
 
     /**
-     * AJAX: Live Preview Email HTML
+     * AJAX: Live Preview Email HTML (Spesifik per Pelanggan atau Contoh)
      */
     public function preview(Request $request): JsonResponse
     {
@@ -394,32 +394,77 @@ class EmailController extends Controller
         $actionUrl  = $request->filled('action_url') ? trim($request->input('action_url')) : null;
         $actionText = $request->filled('action_text') ? trim($request->input('action_text')) : null;
 
-        $sampleCustomer = (object) [
-            'nama_pelanggan' => 'Ahmad Suhendar',
-            'nomor_internet' => '200019',
-            'nama_bandwith'  => 'CORPORATE 50 Mbps',
-            'email'          => 'pelanggan@example.com',
-            'bulan_tagihan'  => date('m'),
-            'tahun_tagihan'  => date('Y'),
-            'total_layanan'  => 166500,
-        ];
+        $nomorInternet = trim((string)$request->input('nomor_internet', ''));
+        $bulanParam = $request->filled('bulan') && $request->input('bulan') !== 'all'
+            ? str_pad((string) (int) $request->input('bulan'), 2, '0', STR_PAD_LEFT)
+            : 'all';
+        $tahunParam = $request->filled('tahun') ? (string) $request->input('tahun') : (string) date('Y');
 
-        $formattedSubject = strip_tags($this->replacePlaceholders($subject, $sampleCustomer));
-        $htmlBody = $this->formatMessageHtml($rawMessage, $sampleCustomer);
+        $targetCustomer = null;
+
+        // 1. Jika data baris pelanggan dikirim langsung dari halaman
+        if ($request->filled('customer_data') && is_array($request->input('customer_data'))) {
+            $cd = $request->input('customer_data');
+            if (!empty($cd['nomor_internet'])) {
+                $targetCustomer = (object) [
+                    'nama_pelanggan' => $cd['nama_pelanggan'] ?? 'Pelanggan',
+                    'nomor_internet' => $cd['nomor_internet'] ?? '-',
+                    'nama_bandwith'  => !empty($cd['nama_bandwith']) ? $cd['nama_bandwith'] : 'LAYANAN',
+                    'email'          => $cd['email'] ?? '-',
+                    'bulan_tagihan'  => !empty($cd['bulan_tagihan']) ? $cd['bulan_tagihan'] : ($bulanParam !== 'all' ? $bulanParam : date('m')),
+                    'tahun_tagihan'  => !empty($cd['tahun_tagihan']) ? $cd['tahun_tagihan'] : ($tahunParam !== 'all' ? $tahunParam : date('Y')),
+                    'total_layanan'  => $cd['total_layanan'] ?? 0,
+                ];
+            }
+        }
+
+        // 2. Jika hanya nomor_internet yang dikirim, cari dari database
+        if (!$targetCustomer && $nomorInternet !== '') {
+            try {
+                $targetCustomer = $this->getBaseCustomerQuery($bulanParam, $tahunParam)
+                    ->where('c.nomor_internet', $nomorInternet)
+                    ->first();
+            } catch (\Throwable $e) {}
+        }
+
+        // 3. Fallback contoh pelanggan jika belum ada pelanggan yang dipilih
+        if (!$targetCustomer) {
+            $targetCustomer = (object) [
+                'nama_pelanggan' => 'Ahmad Suhendar (Contoh)',
+                'nomor_internet' => '200019',
+                'nama_bandwith'  => 'UP TO NEW 20 Mbps',
+                'email'          => 'pelanggan@example.com',
+                'bulan_tagihan'  => $bulanParam !== 'all' ? $bulanParam : date('m'),
+                'tahun_tagihan'  => $tahunParam !== 'all' ? $tahunParam : date('Y'),
+                'total_layanan'  => 200000,
+            ];
+        }
+
+        $formattedSubject = strip_tags($this->replacePlaceholders($subject, $targetCustomer));
+        $htmlBody = $this->formatMessageHtml($rawMessage, $targetCustomer);
 
         $rendered = view('emails.custom_template', [
             'subject'       => $formattedSubject,
             'htmlBody'      => $htmlBody,
-            'recipientName' => $sampleCustomer->nama_pelanggan,
-            'nomorInternet' => $sampleCustomer->nomor_internet,
+            'recipientName' => $targetCustomer->nama_pelanggan,
+            'nomorInternet' => $targetCustomer->nomor_internet,
             'badgeText'     => $badgeText,
             'actionUrl'     => $actionUrl,
             'actionText'    => $actionText,
         ])->render();
 
         return response()->json([
-            'success' => true,
-            'html'    => $rendered,
+            'success'  => true,
+            'html'     => $rendered,
+            'subject'  => $formattedSubject,
+            'customer' => [
+                'nomor_internet' => (string) ($targetCustomer->nomor_internet ?? '-'),
+                'nama_pelanggan' => (string) ($targetCustomer->nama_pelanggan ?? 'Pelanggan'),
+                'email'          => (string) ($targetCustomer->email ?? '-'),
+                'paket'          => (string) ($targetCustomer->nama_bandwith ?? 'LAYANAN'),
+                'periode'        => $this->replacePlaceholders('{periode}', $targetCustomer),
+                'nominal'        => $this->replacePlaceholders('{nominal}', $targetCustomer),
+            ],
         ]);
     }
 

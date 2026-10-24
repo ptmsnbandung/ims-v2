@@ -477,8 +477,19 @@
                                 <span class="text-[10px] font-mono text-slate-400 shrink-0">#{{ $c->nomor_internet }}</span>
                             </div>
 
-                            <!-- Status Badges (Email Sent Count + Lunas / Jatuh Tempo / Suspend) -->
-                            <div class="flex flex-wrap items-center gap-1 shrink-0">
+                            <!-- Status Badges + Tombol Pratinjau per Pelanggan -->
+                            <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                                <button type="button"
+                                        @click.stop.prevent="openPreviewModal('{{ (string) $c->nomor_internet }}')"
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:hover:bg-sky-900/80 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60 transition cursor-pointer"
+                                        title="Pratinjau tampilan email sesuai data {{ $c->nama_pelanggan }}">
+                                    <svg class="w-3 h-3 text-sky-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+                                    <span>Pratinjau</span>
+                                </button>
+
                                 @if($sentCount > 0)
                                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/50"
                                           title="Terakhir dikirim: {{ $c->last_email_sent_at ?? '-' }}">
@@ -654,25 +665,84 @@
     <div x-show="previewModalOpen"
          x-cloak
          class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
              @click.away="previewModalOpen = false">
-            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-4 h-4 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <svg class="w-4 h-4 text-sky-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                     </svg>
-                    <span>Pratinjau Tampilan Email Resmi PT MSN</span>
+                    <span x-text="previewMode === 'log' ? 'Detail Riwayat Pesan Email' : 'Pratinjau Email Sesuai Data Pelanggan'"></span>
                 </h3>
-                <button @click="previewModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">&times;</button>
+                <button @click="previewModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg cursor-pointer">&times;</button>
             </div>
+
+            <!-- Bar Info & Pemilih Pelanggan Pratinjau (Hanya muncul saat mode composer preview) -->
+            <template x-if="previewMode === 'composer'">
+                <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 shrink-0">
+                            Simulasi Data Pelanggan:
+                        </label>
+                        <select x-model="previewCustomerId"
+                                @change="openPreviewModal(previewCustomerId)"
+                                class="flex-1 sm:max-w-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                            <template x-for="cust in pageCustomers" :key="cust.nomor_internet">
+                                <option :value="cust.nomor_internet" x-text="cust.nama_pelanggan + ' (#' + cust.nomor_internet + ') - ' + cust.nama_bandwith"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <template x-if="previewCustomer">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 text-[11px] border-t border-slate-200/70 dark:border-slate-700/60">
+                            <div class="truncate">
+                                <span class="text-slate-400">Penerima:</span>
+                                <strong class="text-slate-800 dark:text-slate-200" x-text="previewCustomer.nama_pelanggan"></strong>
+                                <span class="font-mono text-slate-400" x-text="'(#' + previewCustomer.nomor_internet + ')'"></span>
+                            </div>
+                            <div class="truncate">
+                                <span class="text-slate-400">Email:</span>
+                                <span class="font-mono font-semibold text-sky-600 dark:text-sky-400" x-text="previewCustomer.email || 'Belum ada email'"></span>
+                            </div>
+                            <div class="truncate">
+                                <span class="text-slate-400">Paket:</span>
+                                <strong class="text-slate-800 dark:text-slate-200" x-text="previewCustomer.paket"></strong>
+                            </div>
+                            <div class="truncate">
+                                <span class="text-slate-400">Tagihan:</span>
+                                <strong class="text-slate-800 dark:text-slate-200" x-text="previewCustomer.periode + ' (' + previewCustomer.nominal + ')'"></strong>
+                            </div>
+                            <div class="sm:col-span-2 truncate">
+                                <span class="text-slate-400">Subjek:</span>
+                                <strong class="text-slate-900 dark:text-white" x-text="previewSubject"></strong>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
 
             <div class="p-4 overflow-y-auto flex-1 bg-slate-100 dark:bg-slate-950">
                 <div x-html="previewHtml" class="w-full"></div>
             </div>
 
-            <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end">
+            <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <template x-if="previewMode === 'composer' && previewCustomer && previewCustomer.email && previewCustomer.email.includes('@')">
+                        <button type="button"
+                                @click="sendSingleFromPreview()"
+                                :disabled="isSending"
+                                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition cursor-pointer">
+                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                            </svg>
+                            <span x-text="isSending ? 'Mengirim...' : 'Kirim ke ' + previewCustomer.nama_pelanggan"></span>
+                        </button>
+                    </template>
+                </div>
+
                 <button @click="previewModalOpen = false"
-                        class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold">
+                        class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold cursor-pointer">
                     Tutup Pratinjau
                 </button>
             </div>
@@ -721,12 +791,35 @@
     </div>
 </div>
 
+@php
+    $pageCustomersJson = $customers->map(function ($c) {
+        $kat = trim((string) ($c->nama_kategori_bandwith ?? ''));
+        $nom = trim((string) ($c->nominal_bandwith ?? ''));
+        if ($kat !== '' || $nom !== '') {
+            $paketLabel = trim(($kat !== '' ? $kat : 'LAYANAN') . ($nom !== '' && $nom !== '0' ? ' ' . $nom . ' Mbps' : ''));
+        } else {
+            $paketLabel = (string) ($c->nama_bandwith ?? 'LAYANAN');
+        }
+
+        return [
+            'nomor_internet' => (string) ($c->nomor_internet ?? ''),
+            'nama_pelanggan' => (string) ($c->nama_pelanggan ?? 'Pelanggan'),
+            'email'          => (string) ($c->email ?? ''),
+            'nama_bandwith'  => $paketLabel,
+            'bulan_tagihan'  => (string) ($c->bulan_tagihan ?? ''),
+            'tahun_tagihan'  => (string) ($c->tahun_tagihan ?? ''),
+            'total_layanan'  => (float) ($c->total_layanan ?? 0),
+        ];
+    })->values()->all();
+@endphp
+
 <script>
 function emailManagement() {
     return {
         selectedTargets: [],
         selectedPresetId: '',
         presets: @json($presets),
+        pageCustomers: @json($pageCustomersJson),
         pageTargetIds: @json($customers->whereNotNull('email')->where('email', '!=', '')->pluck('nomor_internet')->map(fn($v) => (string)$v)->values()->toArray()),
         allFilteredTargetIds: @json($allFilteredTargetIds ?? []),
 
@@ -739,6 +832,10 @@ function emailManagement() {
         },
 
         previewModalOpen: false,
+        previewMode: 'composer',
+        previewCustomerId: '',
+        previewCustomer: null,
+        previewSubject: '',
         previewHtml: '',
 
         testModalOpen: false,
@@ -833,7 +930,23 @@ function emailManagement() {
             this.form.message += ' ' + tag;
         },
 
-        async openPreviewModal() {
+        async openPreviewModal(nomorInternet = null) {
+            this.previewMode = 'composer';
+
+            if (nomorInternet) {
+                this.previewCustomerId = String(nomorInternet);
+            } else if (!this.previewCustomerId) {
+                // Jika klik tombol Pratinjau umum, gunakan pelanggan pertama yang dicentang di halaman ini atau pelanggan pertama di tabel
+                const firstSelectedOnPage = this.pageCustomers.find(c => this.selectedTargets.includes(String(c.nomor_internet)));
+                if (firstSelectedOnPage) {
+                    this.previewCustomerId = String(firstSelectedOnPage.nomor_internet);
+                } else if (this.pageCustomers.length > 0) {
+                    this.previewCustomerId = String(this.pageCustomers[0].nomor_internet);
+                }
+            }
+
+            const matchedCust = this.pageCustomers.find(c => String(c.nomor_internet) === String(this.previewCustomerId)) || null;
+
             try {
                 const res = await fetch('{{ route("admin.email.preview") }}', {
                     method: 'POST',
@@ -841,15 +954,60 @@ function emailManagement() {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify(this.form)
+                    body: JSON.stringify({
+                        ...this.form,
+                        nomor_internet: this.previewCustomerId || '',
+                        customer_data: matchedCust,
+                        bulan: '{{ $bulanFilter ?? "all" }}',
+                        tahun: '{{ $tahunFilter ?? date("Y") }}'
+                    })
                 });
                 const data = await res.json();
                 if (data.success) {
                     this.previewHtml = data.html;
+                    this.previewSubject = data.subject || this.form.subject;
+                    this.previewCustomer = data.customer || null;
                     this.previewModalOpen = true;
                 }
             } catch (e) {
                 alert('Gagal memuat pratinjau: ' + e.message);
+            }
+        },
+
+        async sendSingleFromPreview() {
+            if (!this.previewCustomer || !this.previewCustomer.nomor_internet) return;
+            if (!confirm(`Kirim email ini sekarang ke ${this.previewCustomer.nama_pelanggan} (${this.previewCustomer.email})?`)) {
+                return;
+            }
+
+            this.isSending = true;
+            try {
+                const payload = {
+                    ...this.form,
+                    targets: [String(this.previewCustomer.nomor_internet)],
+                    bulan: '{{ $bulanFilter ?? "all" }}',
+                    tahun: '{{ $tahunFilter ?? date("Y") }}'
+                };
+                const res = await fetch('{{ route("admin.email.send") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message);
+                    this.previewModalOpen = false;
+                    window.location.reload();
+                } else {
+                    alert('Gagal: ' + data.message);
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan pengiriman: ' + e.message);
+            } finally {
+                this.isSending = false;
             }
         },
 
@@ -937,6 +1095,7 @@ function emailManagement() {
                 const res = await fetch(`/admin/email/history/${id}`);
                 const data = await res.json();
                 if (data.success && data.data) {
+                    this.previewMode = 'log';
                     this.previewHtml = data.data.pesan_html;
                     this.previewModalOpen = true;
                 }

@@ -810,6 +810,18 @@ class FinanceController extends Controller
                 $unsuspendInfo = $this->handleAutoUnsuspendAndProrate($nomorInternet, $userUpdate, $decodedKode, $bank);
             }
 
+            // Dispatch background job kirim email konfirmasi pembayaran lunas ke pelanggan
+            try {
+                \App\Jobs\SendPaymentSuccessMailJob::dispatch($decodedKode, [
+                    'nominal' => $nominal,
+                    'metode_bayar' => $bank,
+                    'catatan' => $catatan,
+                    'user' => $userUpdate,
+                ]);
+            } catch (\Throwable $qe) {
+                Log::warning("Gagal dispatch SendPaymentSuccessMailJob di konfirmasiBayarLayanan: " . $qe->getMessage());
+            }
+
             return redirect()->back()->with('success', "Pembayaran invoice {$decodedKode} sebesar Rp " . number_format($nominal, 0, ',', '.') . " berhasil diverifikasi{$unsuspendInfo}");
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal konfirmasi pembayaran: ' . $e->getMessage());
@@ -1769,6 +1781,18 @@ class FinanceController extends Controller
                         $unsuspendInfo = " (Catatan: Layanan tetap terisolir karena masih terdapat tagihan/tunggakan lain yang belum lunas).";
                     }
                 }
+            }
+
+            // Dispatch background job kirim email konfirmasi pembayaran lunas ke pelanggan
+            try {
+                \App\Jobs\SendPaymentSuccessMailJob::dispatch($decodedKode, [
+                    'nominal' => $nominal,
+                    'metode_bayar' => $bank,
+                    'catatan' => $catatan,
+                    'user' => $userUpdate,
+                ]);
+            } catch (\Throwable $qe) {
+                Log::warning("Gagal dispatch SendPaymentSuccessMailJob di konfirmasiBayarRegistrasi: " . $qe->getMessage());
             }
 
             return redirect()->back()->with('success', "Pembayaran Registrasi {$decodedKode} sebesar Rp " . number_format($nominal, 0, ',', '.') . " berhasil diverifikasi{$unsuspendInfo}");
@@ -5063,6 +5087,18 @@ class FinanceController extends Controller
             $nomorInternet = $inv?->nomor_internet;
             if ($nomorInternet) {
                 $unsuspendInfo = $this->handleAutoUnsuspendAndProrate($nomorInternet, $userUpdate, $kodeBilling, $bank);
+            }
+
+            // Dispatch background job kirim email konfirmasi pembayaran lunas ke pelanggan
+            try {
+                \App\Jobs\SendPaymentSuccessMailJob::dispatch($kodeBilling, [
+                    'nominal' => $nominal,
+                    'metode_bayar' => $bank,
+                    'catatan' => $catatan,
+                    'user' => $userUpdate,
+                ]);
+            } catch (\Throwable $qe) {
+                Log::warning("Gagal dispatch SendPaymentSuccessMailJob di approvePaymentNotification: " . $qe->getMessage());
             }
 
             $msg = "Pembayaran untuk {$kodeBilling} sebesar Rp " . number_format($nominal, 0, ',', '.') . " berhasil disetujui! Invoice telah ditandai LUNAS.{$unsuspendInfo}";

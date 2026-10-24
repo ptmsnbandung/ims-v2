@@ -542,8 +542,24 @@ class EmailController extends Controller
             $cols = Schema::getColumnListing('view_batchjob');
             $statusColName = in_array('status_reg', $cols) ? 'c.status_reg' : (in_array('status_user', $cols) ? 'c.status_user' : null);
             $statusSelect = $statusColName ? "{$statusColName} as status_reg" : DB::raw("'20' as status_reg");
-            $bandwithCol = in_array('nama_bandwith', $cols) ? 'c.nama_bandwith' : (in_array('nama_kategori_bandwith', $cols) ? 'c.nama_kategori_bandwith as nama_bandwith' : DB::raw("'Internet Fiber' as nama_bandwith"));
             $alamatCol = in_array('alamat_pasang', $cols) ? 'c.alamat_pasang' : DB::raw("'' as alamat_pasang");
+
+            $hasKatCol = in_array('nama_kategori_bandwith', $cols);
+            $hasNomCol = in_array('nominal_bandwith', $cols);
+            $hasNamaBwCol = in_array('nama_bandwith', $cols);
+
+            $katSelect = $hasKatCol ? 'c.nama_kategori_bandwith' : DB::raw("NULL as nama_kategori_bandwith");
+            $nomSelect = $hasNomCol ? 'c.nominal_bandwith' : DB::raw("NULL as nominal_bandwith");
+
+            if ($hasKatCol && $hasNomCol) {
+                $bandwithCol = DB::raw("TRIM(CONCAT(COALESCE(NULLIF(c.nama_kategori_bandwith, ''), 'LAYANAN'), CASE WHEN c.nominal_bandwith IS NOT NULL AND c.nominal_bandwith != '' AND c.nominal_bandwith != '0' THEN CONCAT(' ', c.nominal_bandwith, ' Mbps') ELSE '' END)) as nama_bandwith");
+            } elseif ($hasKatCol) {
+                $bandwithCol = DB::raw("COALESCE(NULLIF(c.nama_kategori_bandwith, ''), 'LAYANAN') as nama_bandwith");
+            } elseif ($hasNamaBwCol) {
+                $bandwithCol = 'c.nama_bandwith';
+            } else {
+                $bandwithCol = DB::raw("'LAYANAN' as nama_bandwith");
+            }
 
             $query = DB::table('view_batchjob as c');
             $attachBillingJoin($query);
@@ -555,6 +571,8 @@ class EmailController extends Controller
                 'c.email',
                 'c.nomor_hp',
                 $bandwithCol,
+                $katSelect,
+                $nomSelect,
                 $statusSelect,
                 $alamatCol,
                 $billStatusSelect,
@@ -581,8 +599,19 @@ class EmailController extends Controller
         if (Schema::hasTable('m_pelanggan')) {
             $query->leftJoin('m_pelanggan as p', 'c.nik_penduduk', '=', 'p.nik_penduduk');
         }
-        if (Schema::hasTable('m_bandwith')) {
+        $hasBandwithTable = Schema::hasTable('m_bandwith');
+        $hasKategoriTable = Schema::hasTable('m_bandwith_kategori');
+        $bwCols = $hasBandwithTable ? Schema::getColumnListing('m_bandwith') : [];
+        $katCols = $hasKategoriTable ? Schema::getColumnListing('m_bandwith_kategori') : [];
+
+        if ($hasBandwithTable) {
             $query->leftJoin('m_bandwith as b', 'c.kode_bandwith', '=', 'b.kode_bandwith');
+            if ($hasKategoriTable) {
+                $bKatJoinCol = in_array('kode_kategori_bandwith', $bwCols) ? 'b.kode_kategori_bandwith' : (in_array('kode_kategori_bandwit', $bwCols) ? 'b.kode_kategori_bandwit' : null);
+                if ($bKatJoinCol && in_array('kode_kategori_bandwith', $katCols)) {
+                    $query->leftJoin('m_bandwith_kategori as k', $bKatJoinCol, '=', 'k.kode_kategori_bandwith');
+                }
+            }
         }
         $attachBillingJoin($query);
         $attachEmailLogJoin($query);
@@ -593,12 +622,31 @@ class EmailController extends Controller
         $alamatCol = in_array('alamat_pasang', $regCols) ? 'c.alamat_pasang' : DB::raw("'' as alamat_pasang");
         $phoneCol = in_array('nomor_hp', $regCols) ? 'c.nomor_hp' : 'p.nomor_hp';
 
+        $hasKatName = $hasKategoriTable && in_array('nama_kategori_bandwith', $katCols);
+        $hasBwNom   = $hasBandwithTable && in_array('nominal_bandwith', $bwCols);
+        $hasBwName  = $hasBandwithTable && in_array('nama_bandwith', $bwCols);
+
+        $katSelect = $hasKatName ? 'k.nama_kategori_bandwith' : DB::raw("NULL as nama_kategori_bandwith");
+        $nomSelect = $hasBwNom ? 'b.nominal_bandwith' : DB::raw("NULL as nominal_bandwith");
+
+        if ($hasKatName && $hasBwNom) {
+            $bwFullSelect = DB::raw("TRIM(CONCAT(COALESCE(NULLIF(k.nama_kategori_bandwith, ''), 'LAYANAN'), CASE WHEN b.nominal_bandwith IS NOT NULL AND b.nominal_bandwith != '' AND b.nominal_bandwith != '0' THEN CONCAT(' ', b.nominal_bandwith, ' Mbps') ELSE '' END)) as nama_bandwith");
+        } elseif ($hasBwNom) {
+            $bwFullSelect = DB::raw("CASE WHEN b.nominal_bandwith IS NOT NULL AND b.nominal_bandwith != '' THEN CONCAT('PAKET ', b.nominal_bandwith, ' Mbps') ELSE 'LAYANAN' END as nama_bandwith");
+        } elseif ($hasBwName) {
+            $bwFullSelect = DB::raw("COALESCE(NULLIF(b.nama_bandwith, ''), 'LAYANAN') as nama_bandwith");
+        } else {
+            $bwFullSelect = DB::raw("'LAYANAN' as nama_bandwith");
+        }
+
         $query->select(
             'c.nomor_internet',
             DB::raw('COALESCE(NULLIF(c.nama_pelanggan, ""), p.nama_penduduk, "Pelanggan") as nama_pelanggan'),
             'p.email',
             $phoneCol,
-            DB::raw('COALESCE(b.nama_bandwith, "Internet Fiber") as nama_bandwith'),
+            $bwFullSelect,
+            $katSelect,
+            $nomSelect,
             $regStatusSelect,
             $alamatCol,
             $billStatusSelect,

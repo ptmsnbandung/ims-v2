@@ -522,8 +522,15 @@
                                 </span>
                             @endif
 
-                            @if(!empty($c->nama_bandwith))
-                                <span class="text-[10px] text-slate-400 truncate">&bull; {{ $c->nama_bandwith }}</span>
+                            @if(!empty($c->nama_kategori_bandwith) || !empty($c->nominal_bandwith))
+                                <span class="text-[11px] text-slate-600 dark:text-slate-400 font-medium truncate">
+                                    &bull; {{ $c->nama_kategori_bandwith ?? 'LAYANAN' }}
+                                    @if(!empty($c->nominal_bandwith))
+                                        <strong class="text-slate-900 dark:text-slate-200 font-bold">{{ $c->nominal_bandwith }} Mbps</strong>
+                                    @endif
+                                </span>
+                            @elseif(!empty($c->nama_bandwith))
+                                <span class="text-[11px] text-slate-600 dark:text-slate-400 font-medium truncate">&bull; {{ $c->nama_bandwith }}</span>
                             @endif
 
                             @if($periodeLabel)

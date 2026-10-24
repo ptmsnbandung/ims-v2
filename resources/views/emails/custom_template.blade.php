@@ -181,7 +181,7 @@
 
                 <p style="margin: 0; font-size: 13px; color: #64748b;">
                     Jika ada pertanyaan lebih lanjut, silakan hubungi Customer Support kami melalui WhatsApp 
-                    <strong style="color: #0f172a;">{{ config('company.phone', '+62 851-8835-8385') }}</strong> atau melalui Portal Pelanggan.
+                    <strong style="color: #0f172a;">+62 895-0841-6636</strong> atau melalui Portal Pelanggan.
                 </p>
             </div>
 
@@ -194,7 +194,7 @@
                 <div class="footer-links">
                     <a href="{{ config('company.portal_url', 'https://portal.ptmsn.co.id') }}" target="_blank">Portal Pelanggan</a> &bull;
                     <a href="{{ config('company.website', 'https://ptmsn.co.id') }}" target="_blank">Website Resmi</a> &bull;
-                    <a href="https://wa.me/{{ config('company.billing_whatsapp', '6285188358385') }}" target="_blank">WhatsApp CS</a>
+                    <a href="https://wa.me/6289508416636" target="_blank">WhatsApp CS</a>
                 </div>
                 <div class="footer-copy">
                     &copy; {{ date('Y') }} PT Media Solusi Network. All rights reserved.

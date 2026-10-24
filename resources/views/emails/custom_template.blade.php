@@ -13,53 +13,67 @@
             color: #334155;
             -webkit-font-smoothing: antialiased;
         }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
         .wrapper {
             width: 100%;
             table-layout: fixed;
             background-color: #f1f5f9;
-            padding: 16px 10px;
+            padding: 16px 14px;
             box-sizing: border-box;
         }
         .main-card {
             background-color: #ffffff;
             margin: 0 auto;
             width: 100%;
-            max-width: 620px;
-            border-radius: 16px;
+            max-width: 600px;
+            border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
             border: 1px solid #e2e8f0;
         }
         .header {
             background: linear-gradient(135deg, #091a28 0%, #0f2d4a 100%);
-            padding: 36px 30px 30px;
+            padding: 22px 24px 20px;
             text-align: center;
         }
         .logo-box {
             display: inline-block;
             background-color: #ffffff;
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            line-height: 52px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            line-height: 44px;
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
         .brand-name {
             color: #ffffff;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
             margin: 0;
             letter-spacing: -0.5px;
         }
         .brand-sub {
             color: #94a3b8;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
-            letter-spacing: 1.5px;
+            letter-spacing: 1.4px;
             text-transform: uppercase;
-            margin-top: 4px;
+            margin-top: 3px;
         }
         .badge-pill {
             display: inline-block;
@@ -67,37 +81,37 @@
             color: #38bdf8;
             border: 1px solid rgba(56, 189, 248, 0.3);
             border-radius: 9999px;
-            padding: 6px 16px;
-            font-size: 12px;
+            padding: 4px 14px;
+            font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.5px;
-            margin-top: 14px;
+            margin-top: 10px;
         }
         .body-content {
-            padding: 36px 32px 28px;
-            line-height: 1.7;
-            font-size: 14.5px;
+            padding: 24px 28px 20px;
+            line-height: 1.65;
+            font-size: 14px;
             color: #334155;
         }
         .body-content p {
-            margin: 0 0 16px;
+            margin: 0 0 14px;
         }
         .body-content strong {
             color: #0f172a;
         }
         .customer-greeting {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #0f172a;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
         }
         .highlight-box {
             background-color: #f8fafc;
             border-left: 4px solid #0284c7;
             border-radius: 0 10px 10px 0;
-            padding: 16px 20px;
-            margin: 20px 0;
-            font-size: 14px;
+            padding: 14px 18px;
+            margin: 16px 0;
+            font-size: 13.5px;
         }
         .btn-portal {
             display: inline-block;
@@ -105,21 +119,21 @@
             color: #ffffff !important;
             text-decoration: none;
             font-weight: 700;
-            font-size: 14px;
-            padding: 12px 28px;
+            font-size: 13.5px;
+            padding: 11px 24px;
             border-radius: 10px;
-            margin-top: 10px;
+            margin-top: 6px;
             box-shadow: 0 4px 10px rgba(2, 132, 199, 0.25);
         }
         .divider {
             border: 0;
             height: 1px;
             background-color: #e2e8f0;
-            margin: 28px 0;
+            margin: 20px 0;
         }
         .footer {
             background-color: #f8fafc;
-            padding: 24px 32px;
+            padding: 18px 24px;
             text-align: center;
             border-top: 1px solid #e2e8f0;
         }
@@ -149,7 +163,7 @@
             <!-- Header -->
             <div class="header">
                 <div class="logo-box">
-                    <img src="https://ptmsn.co.id/images/logo/logo-icon.png" alt="MSN Logo" width="36" height="36" style="vertical-align: middle; margin-top: 8px;">
+                    <img src="https://ptmsn.co.id/images/logo/logo-icon.png" alt="MSN Logo" width="30" height="30" style="vertical-align: middle; margin-top: 7px;">
                 </div>
                 <h1 class="brand-name">My<span style="color: #38bdf8;">MSN</span></h1>
                 <div class="brand-sub">{{ config('company.name', 'PT MEDIA SOLUSI NETWORK') }}</div>
@@ -173,7 +187,7 @@
                 {!! $htmlBody !!}
 
                 @if(!empty($actionUrl) && !empty($actionText))
-                    <div style="text-align: center; margin: 28px 0 10px;">
+                    <div style="text-align: center; margin: 18px 0 6px;">
                         <a href="{{ $actionUrl }}" class="btn-portal" target="_blank">{{ $actionText }}</a>
                     </div>
                 @endif

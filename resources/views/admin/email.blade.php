@@ -666,20 +666,22 @@
         <div x-show="previewModalOpen"
              x-cloak
              @keydown.escape.window="previewModalOpen = false"
-             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 14px; box-sizing: border-box;">
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl"
-                 style="width: 100%; max-width: 680px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; margin: auto;"
+                 style="width: 100%; max-width: 720px; height: 88vh; max-height: 780px; display: flex; flex-direction: column; overflow: hidden; margin: auto;"
                  @click.away="previewModalOpen = false">
 
                 <!-- Modal Header (Pinned) -->
-                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-white dark:bg-slate-900"
+                <div class="px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-white dark:bg-slate-900"
                      style="flex-shrink: 0;">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <svg class="w-4 h-4 text-sky-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
-                        <span x-text="previewMode === 'log' ? 'Detail Riwayat Pesan Email' : 'Pratinjau Email Sesuai Data Pelanggan'"></span>
+                    <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-lg bg-sky-50 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </span>
+                        <span x-text="previewMode === 'log' ? 'Detail Riwayat Pesan Email' : 'Pratinjau Email Pelanggan'"></span>
                     </h3>
                     <button type="button"
                             @click="previewModalOpen = false"
@@ -687,61 +689,56 @@
                             title="Tutup">&times;</button>
                 </div>
 
-                <!-- Bar Info & Pemilih Pelanggan Pratinjau (Pinned) -->
+                <!-- Bar Info Amplop Email & Pemilih Pelanggan (Pinned & Compact) -->
                 <template x-if="previewMode === 'composer'">
-                    <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 space-y-2 text-xs"
+                    <div class="px-4 py-2.5 bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 space-y-1.5 text-xs"
                          style="flex-shrink: 0;">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <label class="text-[11px] font-bold text-slate-600 dark:text-slate-300 shrink-0">
-                                Pilih Pelanggan Pratinjau:
-                            </label>
-                            <select x-model="previewCustomerId"
-                                    @change="openPreviewModal(previewCustomerId)"
-                                    class="flex-1 sm:max-w-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
-                                <template x-for="cust in pageCustomers" :key="cust.nomor_internet">
-                                    <option :value="cust.nomor_internet" x-text="cust.nama_pelanggan + ' (#' + cust.nomor_internet + ') - ' + cust.nama_bandwith"></option>
-                                </template>
-                            </select>
+                        <!-- Baris 1: Pilih Pelanggan + Badge Rincian -->
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0 w-12">Kepada:</span>
+                                <select x-model="previewCustomerId"
+                                        @change="openPreviewModal(previewCustomerId)"
+                                        class="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                                    <template x-for="cust in pageCustomers" :key="cust.nomor_internet">
+                                        <option :value="cust.nomor_internet" x-text="cust.nama_pelanggan + ' (#' + cust.nomor_internet + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <template x-if="previewCustomer">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-sky-50 text-sky-700 dark:bg-sky-950/70 dark:text-sky-300 border border-sky-200/70 dark:border-sky-800/60">
+                                        &#9993; <span x-text="previewCustomer.email || 'Belum ada email'"></span>
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-200/70 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+                                          x-text="previewCustomer.paket"></span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/60"
+                                          x-text="previewCustomer.periode + ' • ' + previewCustomer.nominal"></span>
+                                </div>
+                            </template>
                         </div>
 
+                        <!-- Baris 2: Subjek Email -->
                         <template x-if="previewCustomer">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1 pt-1.5 text-[11px] border-t border-slate-200/80 dark:border-slate-700/60">
-                                <div class="truncate">
-                                    <span class="text-slate-400">Penerima:</span>
-                                    <strong class="text-slate-800 dark:text-slate-200" x-text="previewCustomer.nama_pelanggan"></strong>
-                                    <span class="font-mono text-slate-400" x-text="'(#' + previewCustomer.nomor_internet + ')'"></span>
-                                </div>
-                                <div class="truncate">
-                                    <span class="text-slate-400">Email:</span>
-                                    <span class="font-mono font-semibold text-sky-600 dark:text-sky-400" x-text="previewCustomer.email || 'Belum ada email'"></span>
-                                </div>
-                                <div class="truncate">
-                                    <span class="text-slate-400">Paket:</span>
-                                    <strong class="text-slate-800 dark:text-slate-200" x-text="previewCustomer.paket"></strong>
-                                </div>
-                                <div class="truncate">
-                                    <span class="text-slate-400">Tagihan:</span>
-                                    <strong class="text-slate-800 dark:text-slate-200" x-text="previewCustomer.periode + ' (' + previewCustomer.nominal + ')'"></strong>
-                                </div>
-                                <div class="sm:col-span-2 truncate">
-                                    <span class="text-slate-400">Subjek:</span>
-                                    <strong class="text-slate-900 dark:text-white" x-text="previewSubject"></strong>
-                                </div>
+                            <div class="flex items-center gap-2 pt-1 border-t border-slate-200/70 dark:border-slate-700/60">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0 w-12">Subjek:</span>
+                                <p class="text-xs font-bold text-slate-900 dark:text-white truncate" x-text="previewSubject"></p>
                             </div>
                         </template>
                     </div>
                 </template>
 
-                <!-- Area Konten Email (Terisolasi & Scrollable) -->
+                <!-- Area Konten Email (Single Clean Scrollbar) -->
                 <div class="bg-slate-100 dark:bg-slate-950"
-                     style="flex: 1 1 auto; min-height: 0; overflow-y: auto;">
+                     style="flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
                     <template x-if="previewMode === 'composer'">
                         <iframe :srcdoc="previewHtml"
                                 title="Pratinjau Email"
-                                style="width: 100%; height: 420px; border: 0; display: block; background-color: #f1f5f9;"></iframe>
+                                style="width: 100%; flex: 1 1 auto; height: 100%; border: 0; display: block; background-color: #f1f5f9;"></iframe>
                     </template>
                     <template x-if="previewMode === 'log'">
-                        <div class="p-4">
+                        <div class="p-4" style="flex: 1 1 auto; overflow-y: auto;">
                             <div class="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs leading-relaxed text-slate-700 dark:text-slate-200"
                                  x-html="previewHtml"></div>
                         </div>
@@ -749,7 +746,7 @@
                 </div>
 
                 <!-- Modal Footer (Pinned) -->
-                <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-2"
+                <div class="px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-2"
                      style="flex-shrink: 0;">
                     <div>
                         <template x-if="previewMode === 'composer' && previewCustomer && previewCustomer.email && previewCustomer.email.includes('@')">

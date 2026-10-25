@@ -3287,7 +3287,9 @@ class TeknikController extends Controller
         $usedPerPort = [];
         foreach ($occupiedData as $row) {
             $clean = trim($row->index_olt);
-            if (!str_starts_with($clean, 'gpon-onu_') && str_starts_with($clean, '1/')) {
+            if (str_starts_with($clean, 'gpon-olt_')) {
+                $clean = str_replace('gpon-olt_', 'gpon-onu_', $clean);
+            } elseif (!str_starts_with($clean, 'gpon-onu_') && str_starts_with($clean, '1/')) {
                 $clean = 'gpon-onu_' . $clean;
             }
             $occupiedMap[$clean] = [
@@ -3401,12 +3403,21 @@ class TeknikController extends Controller
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'TEKNIK';
 
+        $indexOlt = $request->index_olt ? trim($request->index_olt) : null;
+        if ($indexOlt) {
+            if (str_starts_with($indexOlt, 'gpon-olt_')) {
+                $indexOlt = str_replace('gpon-olt_', 'gpon-onu_', $indexOlt);
+            } elseif (!str_starts_with($indexOlt, 'gpon-onu_') && str_starts_with($indexOlt, '1/')) {
+                $indexOlt = 'gpon-onu_' . $indexOlt;
+            }
+        }
+
         $updateData = [
             'ont_us' => $request->ont_us,
             'ont_ps' => $request->ont_ps,
             'kode_pop' => $request->kode_pop,
             'media_akses' => $request->media_akses,
-            'index_olt' => $request->index_olt,
+            'index_olt' => $indexOlt,
             'date_update' => $now,
             'user_update' => $currentUser,
         ];

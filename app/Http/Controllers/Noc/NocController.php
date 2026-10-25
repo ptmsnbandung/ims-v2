@@ -320,7 +320,9 @@ class NocController extends Controller
         $usedPerPort = [];
         foreach ($occupiedRaw as $raw) {
             $clean = trim($raw);
-            if (!str_starts_with($clean, 'gpon-onu_') && str_starts_with($clean, '1/')) {
+            if (str_starts_with($clean, 'gpon-olt_')) {
+                $clean = str_replace('gpon-olt_', 'gpon-onu_', $clean);
+            } elseif (!str_starts_with($clean, 'gpon-onu_') && str_starts_with($clean, '1/')) {
                 $clean = 'gpon-onu_' . $clean;
             }
             $occupiedMap[$clean] = true;
@@ -462,7 +464,9 @@ class NocController extends Controller
 
         foreach ($allCustomers as $cust) {
             $rawIndex = trim($cust->index_olt);
-            if (!str_starts_with($rawIndex, 'gpon-onu_') && str_starts_with($rawIndex, '1/')) {
+            if (str_starts_with($rawIndex, 'gpon-olt_')) {
+                $rawIndex = str_replace('gpon-olt_', 'gpon-onu_', $rawIndex);
+            } elseif (!str_starts_with($rawIndex, 'gpon-onu_') && str_starts_with($rawIndex, '1/')) {
                 $rawIndex = 'gpon-onu_' . $rawIndex;
             }
 
@@ -1504,7 +1508,13 @@ class NocController extends Controller
             if ($request->media_akses === 'PTP FO') {
                 $updateData['index_olt'] = '';
             } elseif ($request->filled('index_olt')) {
-                $updateData['index_olt'] = $request->index_olt;
+                $idx = trim($request->index_olt);
+                if (str_starts_with($idx, 'gpon-olt_')) {
+                    $idx = str_replace('gpon-olt_', 'gpon-onu_', $idx);
+                } elseif (!str_starts_with($idx, 'gpon-onu_') && str_starts_with($idx, '1/')) {
+                    $idx = 'gpon-onu_' . $idx;
+                }
+                $updateData['index_olt'] = $idx;
             }
         }
         if ($request->filled('olt')) {
@@ -1582,11 +1592,21 @@ class NocController extends Controller
         $ontPs = $request->filled('pppoe_password') ? $request->pppoe_password : ((!empty($currentCust->ont_ps)) ? $currentCust->ont_ps : (string)rand(100000, 999999));
 
         // 1. Update trx_batchjob_register -> Langsung Aktif (#20) karena aktivasi & reboot dieksekusi otomatis di background
+        $normalizedIndexOlt = '';
+        if ($request->media_akses !== 'PTP FO' && $request->filled('index_olt')) {
+            $normalizedIndexOlt = trim($request->index_olt);
+            if (str_starts_with($normalizedIndexOlt, 'gpon-olt_')) {
+                $normalizedIndexOlt = str_replace('gpon-olt_', 'gpon-onu_', $normalizedIndexOlt);
+            } elseif (!str_starts_with($normalizedIndexOlt, 'gpon-onu_') && str_starts_with($normalizedIndexOlt, '1/')) {
+                $normalizedIndexOlt = 'gpon-onu_' . $normalizedIndexOlt;
+            }
+        }
+
         $updateData = [
             'status_reg' => '20', // Pelanggan Aktif Online
             'kode_pop' => $request->kode_pop,
             'media_akses' => $request->media_akses,
-            'index_olt' => ($request->media_akses === 'PTP FO') ? '' : $request->index_olt,
+            'index_olt' => $normalizedIndexOlt,
             'note_request' => $request->sn_modem ?: ($request->catatan_aktivasi ?: $request->catatan),
             'ont_us' => $ontUs,
             'ont_ps' => $ontPs,
@@ -1722,10 +1742,10 @@ class NocController extends Controller
         }
 
         // 4a. Eksekusi Remote Reboot OLT ONU jika port dan OLT diisi
-        if (!empty($request->index_olt) && in_array($request->media_akses, ['FTTH', 'FTTH MSN', 'GPON'])) {
+        if (!empty($normalizedIndexOlt) && in_array($request->media_akses, ['FTTH', 'FTTH MSN', 'GPON'])) {
             try {
                 $oltService = app(OltConnectionService::class);
-                $oltService->rebootOnu($request->index_olt, $request->olt);
+                $oltService->rebootOnu($normalizedIndexOlt, $request->olt);
             } catch (\Throwable $oltErr) {
                 \Illuminate\Support\Facades\Log::warning("OLT Reboot on aktivasi failed for {$nomorInternet}: " . $oltErr->getMessage());
             }
@@ -1739,7 +1759,7 @@ class NocController extends Controller
                 'nomor_internet' => $nomorInternet,
                 'status_reg' => '19',
                 'kat_log' => '19',
-                'note_schedule' => "REPORT AKTIVASI SELESAI: OLT: {$request->olt}, Index: {$request->index_olt}, SN: {$request->sn_modem} (Team: {$teamAktivasi})",
+                'note_schedule' => "REPORT AKTIVASI SELESAI: OLT: {$request->olt}, Index: {$normalizedIndexOlt}, SN: {$request->sn_modem} (Team: {$teamAktivasi})",
                 'date_schedule' => $request->jadwal_aktivasi ?: now()->format('Y-m-d'),
                 'time_schedule' => $request->waktu_aktivasi ?: now()->format('H:i:s'),
                 'date_create' => $now,
@@ -1758,7 +1778,7 @@ class NocController extends Controller
                 'nomor_internet' => $nomorInternet,
                 'status_reg' => '20',
                 'kat_log' => '20',
-                'note_schedule' => "REBOOT & AKTIVASI OTOMATIS: OLT: {$request->olt}, Index: {$request->index_olt}, SN Modem: {$request->sn_modem}, User PPPoE: {$ontUs}{$routerInfo}{$profileInfo}{$remoteInfo}{$commentInfo} - [{$statusMikrotik}] Layanan AKTIF (#20)",
+                'note_schedule' => "REBOOT & AKTIVASI OTOMATIS: OLT: {$request->olt}, Index: {$normalizedIndexOlt}, SN Modem: {$request->sn_modem}, User PPPoE: {$ontUs}{$routerInfo}{$profileInfo}{$remoteInfo}{$commentInfo} - [{$statusMikrotik}] Layanan AKTIF (#20)",
                 'date_schedule' => now()->format('Y-m-d'),
                 'time_schedule' => now()->format('H:i:s'),
                 'date_create' => $now,
@@ -1775,7 +1795,7 @@ class NocController extends Controller
                     'action' => 'activate',
                     'old_status' => $currentCust->status_reg ?? '19',
                     'new_status' => '20',
-                    'description' => "Aktivasi Layanan: PPPoE '{$ontUs}', Router: " . ($routerName ?: ($request->router_id ?: '-')) . ", Profile: " . ($request->ppp_profile ?: '-') . ($request->remote_address ? ", Remote IP: {$request->remote_address}" : '') . ($request->pppoe_comment ? ", Comment: {$request->pppoe_comment}" : '') . ", OLT: {$request->olt}, Index: {$request->index_olt}",
+                    'description' => "Aktivasi Layanan: PPPoE '{$ontUs}', Router: " . ($routerName ?: ($request->router_id ?: '-')) . ", Profile: " . ($request->ppp_profile ?: '-') . ($request->remote_address ? ", Remote IP: {$request->remote_address}" : '') . ($request->pppoe_comment ? ", Comment: {$request->pppoe_comment}" : '') . ", OLT: {$request->olt}, Index: {$normalizedIndexOlt}",
                     'router_response' => $mikrotikResult['message'] ?? 'PPPoE Secret dikonfigurasi',
                     'router_success' => (bool)($mikrotikResult['success'] ?? false),
                 ]);

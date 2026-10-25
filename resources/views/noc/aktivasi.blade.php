@@ -314,7 +314,9 @@
              if (val && val.includes(':')) {
                  let parts = val.trim().split(':');
                  let portPart = parts[0];
-                 if (!portPart.startsWith('gpon-onu_') && portPart.startsWith('1/')) {
+                 if (portPart.startsWith('gpon-olt_')) {
+                     portPart = portPart.replace('gpon-olt_', 'gpon-onu_');
+                 } else if (!portPart.startsWith('gpon-onu_') && portPart.startsWith('1/')) {
                      portPart = 'gpon-onu_' + portPart;
                  }
                  this.selectedGponPort = portPart;

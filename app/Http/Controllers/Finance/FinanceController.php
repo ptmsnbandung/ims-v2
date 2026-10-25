@@ -4153,39 +4153,24 @@ class FinanceController extends Controller
         }
 
         // 2. Evaluasi status pelanggan:
-        // HANYA dianggap SUSPEND jika status_reg di trx_batchjob_register adalah 21, 21.1, 22
-        // ATAU is_suspend == '1'.
-        // Jika pelanggan sebelumnya AKTIF (status_reg == '20' dan bukan suspend),
-        // TIDAK PERLU ADA HUBUNGAN DENGAN ROUTER (cukup update database saja).
+        // Dianggap SUSPEND jika:
+        // - Ada data di trx_suspend (status 11, 12, atau 18), ATAU
+        // - is_suspend == '1', ATAU
+        // - status_reg di trx_batchjob_register adalah 21, 21.1, 22.
         $isSuspended = false;
+        if ($activeSuspend) {
+            $isSuspended = true;
+        }
         if ($customerReg) {
             $regStatus = (string)($customerReg->status_reg ?? '');
             $isSusp = (string)($customerReg->is_suspend ?? '0');
             if (in_array($regStatus, ['21', '21.1', '22']) || $isSusp === '1') {
                 $isSuspended = true;
             }
-        } elseif ($activeSuspend) {
-            // Fallback jika data pelanggan tidak ada di trx_batchjob_register
-            $isSuspended = true;
         }
 
-        // JIKA PELANGGAN SEBELUMNYA AKTIF (TIDAK SUSPEND):
-        // Tidak perlu ada hubungan dengan router (tidak kick / tidak reboot ONU). Cukup database saja.
+        // Jika pelanggan sebelumnya memang aktif normal dan tidak ada catatan suspend sama sekali:
         if (!$isSuspended) {
-            // Bersihkan sisa data trx_suspend jika ada yang masih gantung agar tidak menjadi false-flag di kemudian hari
-            if ($activeSuspend && Schema::hasTable('trx_suspend')) {
-                try {
-                    DB::table('trx_suspend')
-                        ->where('kode_suspend', $activeSuspend->kode_suspend)
-                        ->update([
-                            'status_suspend' => '13',
-                            'suspend_end' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
-                            'desc_suspend_cancel' => "Ditutup otomatis saat verifikasi pembayaran ({$kodeBilling}): Pelanggan sudah berstatus aktif",
-                            'date_update' => Carbon::now('Asia/Jakarta')->toDateTimeString(),
-                            'user_update' => $userUpdate,
-                        ]);
-                } catch (\Throwable $th) {}
-            }
             return '';
         }
 
@@ -4193,13 +4178,13 @@ class FinanceController extends Controller
         $currentYear = (int)$now->format('Y');
         $currentMonth = (int)$now->format('m');
 
-        // 2. Cek apakah masih ada tunggakan bulan-bulan sebelumnya (sebelum bulan berjalan saat ini)
+        // Cek apakah masih ada tunggakan bulan-bulan sebelumnya yang belum lunas (hanya status_bill_lay = '13')
         $hasPastArrears = false;
         if (Schema::hasTable('trx_billing_layanan')) {
             $hasPastArrears = DB::table('trx_billing_layanan')
                 ->where('nomor_internet', $nomorInternet)
                 ->where('hide', '!=', '1')
-                ->whereNotIn('status_bill_lay', ['15', '2'])
+                ->where('status_bill_lay', '13')
                 ->where(function ($q) use ($currentYear, $currentMonth) {
                     $q->where(DB::raw('CAST(tahun_tagihan AS UNSIGNED)'), '<', $currentYear)
                       ->orWhere(function ($sub) use ($currentYear, $currentMonth) {
@@ -4233,9 +4218,10 @@ class FinanceController extends Controller
         }
 
         // Update status di trx_suspend menjadi 13 (Selesai Unsuspend)
-        if (Schema::hasTable('trx_suspend') && $activeSuspend) {
+        if (Schema::hasTable('trx_suspend')) {
             DB::table('trx_suspend')
-                ->where('kode_suspend', $activeSuspend->kode_suspend)
+                ->where('nomor_internet', $nomorInternet)
+                ->whereIn('status_suspend', ['11', '12', '18'])
                 ->update([
                     'status_suspend' => '13',
                     'suspend_end' => $now->format('Y-m-d'),

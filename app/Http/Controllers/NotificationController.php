@@ -62,6 +62,10 @@ class NotificationController extends Controller
                     Cache::lock('auto_unsuspend_process_lock', 20)->get(function () {
                         app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
                     });
+                } elseif (Cache::add('periodic_auto_unsuspend_check', true, 60)) {
+                    Cache::lock('auto_unsuspend_process_lock', 20)->get(function () {
+                        app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
+                    });
                 }
             } catch (\Throwable $th) {}
         }

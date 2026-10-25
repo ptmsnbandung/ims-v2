@@ -135,7 +135,7 @@ class CustomerProvisioningService
                     }, [
                         'status_suspend' => '13',
                         'suspend_end' => now()->format('Y-m-d'),
-                        'desc_suspend_cancel' => "Otomatis dibuka isolir" . ($notes ? " ({$notes})" : ""),
+                        'desc_suspend_cancel' => "Otomatis dibuka isolir" . ($note ? " ({$note})" : ""),
                         'date_update' => $now,
                         'user_update' => $operator,
                     ]);
@@ -941,20 +941,99 @@ class CustomerProvisioningService
         }
 
         try {
-            $pending = DB::table('trx_suspend')
+            // 1. Ambil seluruh permohonan status 18 (Req. Unsuspend)
+            $reqUnsuspendNumbers = DB::table('trx_suspend')
                 ->where('status_suspend', '18')
-                ->orderBy('date_create', 'asc')
-                ->get();
+                ->where(function ($q) {
+                    $q->whereNull('hide')->orWhere('hide', '0');
+                })
+                ->pluck('nomor_internet')
+                ->filter()
+                ->unique()
+                ->toArray();
 
-            if ($pending->isEmpty()) {
+            // 2. Ambil pelanggan yang masih berstatus suspend (status 11 atau 12 di trx_suspend)
+            //    tetapi SELURUH tagihannya sudah lunas (tidak ada tagihan berstatus publish 13)
+            $stuckSuspendNumbers = [];
+            $activeSuspends = DB::table('trx_suspend')
+                ->whereIn('status_suspend', ['11', '12'])
+                ->where(function ($q) {
+                    $q->whereNull('hide')->orWhere('hide', '0');
+                })
+                ->pluck('nomor_internet')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            if (!empty($activeSuspends) && Schema::hasTable('trx_billing_layanan')) {
+                $unpaidNumbers = DB::table('trx_billing_layanan')
+                    ->whereIn('nomor_internet', $activeSuspends)
+                    ->where('hide', '!=', '1')
+                    ->where('status_bill_lay', '13')
+                    ->pluck('nomor_internet')
+                    ->unique()
+                    ->toArray();
+
+                $unpaidLookup = array_flip($unpaidNumbers);
+                foreach ($activeSuspends as $num) {
+                    if (!isset($unpaidLookup[$num])) {
+                        $stuckSuspendNumbers[] = $num;
+                    }
+                }
+            }
+
+            // 3. Ambil juga pelanggan di trx_batchjob_register yang is_suspend = '1' atau status_reg suspend (21, 21.1, 22)
+            //    tetapi tidak memiliki tagihan tertunggak (status 13)
+            $stuckRegNumbers = [];
+            if (Schema::hasTable('trx_batchjob_register') && Schema::hasTable('trx_billing_layanan')) {
+                $suspendedRegs = DB::table('trx_batchjob_register')
+                    ->where(function ($q) {
+                        if (Schema::hasColumn('trx_batchjob_register', 'is_suspend')) {
+                            $q->where('is_suspend', '1')
+                              ->orWhereIn('status_reg', ['21', '21.1', '22']);
+                        } else {
+                            $q->whereIn('status_reg', ['21', '21.1', '22']);
+                        }
+                    })
+                    ->pluck('nomor_internet')
+                    ->filter()
+                    ->unique()
+                    ->toArray();
+
+                if (!empty($suspendedRegs)) {
+                    $unpaidRegs = DB::table('trx_billing_layanan')
+                        ->whereIn('nomor_internet', $suspendedRegs)
+                        ->where('hide', '!=', '1')
+                        ->where('status_bill_lay', '13')
+                        ->pluck('nomor_internet')
+                        ->unique()
+                        ->toArray();
+
+                    $unpaidRegLookup = array_flip($unpaidRegs);
+                    foreach ($suspendedRegs as $num) {
+                        if (!isset($unpaidRegLookup[$num])) {
+                            $stuckRegNumbers[] = $num;
+                        }
+                    }
+                }
+            }
+
+            // Gabungkan seluruh kandidat pelanggan yang berhak di-unsuspend
+            $allCandidates = array_values(array_unique(array_filter(array_merge(
+                $reqUnsuspendNumbers,
+                $stuckSuspendNumbers,
+                $stuckRegNumbers
+            ))));
+
+            if (empty($allCandidates)) {
                 return ['processed' => 0, 'results' => []];
             }
 
             $results = [];
             $now = Carbon::now('Asia/Jakarta');
 
-            foreach ($pending as $item) {
-                $nomorInternet = trim((string)($item->nomor_internet ?? ''));
+            foreach ($allCandidates as $nomorInternet) {
+                $nomorInternet = trim((string)$nomorInternet);
                 if (empty($nomorInternet)) {
                     continue;
                 }
@@ -964,17 +1043,17 @@ class CustomerProvisioningService
                     $res = $this->activateCustomer(
                         $nomorInternet,
                         'Auto Unsuspend System',
-                        'Otomatis Buka Isolir dari Request Unsuspend (Tanpa Approve Manual)'
+                        'Otomatis Buka Isolir (Tagihan Lunas / Req Unsuspend)'
                     );
 
-                    // Pastikan record trx_suspend langsung berubah menjadi 13 (Selesai Buka Isolir)
+                    // Pastikan seluruh baris suspend pelanggan di trx_suspend berubah menjadi 13 (Selesai Buka Isolir)
                     DB::table('trx_suspend')
                         ->where('nomor_internet', $nomorInternet)
                         ->whereIn('status_suspend', ['11', '12', '18'])
                         ->update([
                             'status_suspend' => '13',
                             'suspend_end' => $now->format('Y-m-d'),
-                            'desc_suspend_cancel' => 'Otomatis dibuka isolir oleh sistem (Req. Unsuspend diproses otomatis tanpa approve)',
+                            'desc_suspend_cancel' => 'Otomatis dibuka isolir oleh sistem (Tagihan Lunas / Tanpa Approve Manual)',
                             'date_update' => $now->toDateTimeString(),
                             'user_update' => 'System (Auto)',
                         ]);
@@ -982,12 +1061,17 @@ class CustomerProvisioningService
                     // Catat ke trx_suspend_log jika ada
                     if (Schema::hasTable('trx_suspend_log')) {
                         try {
+                            $suspendRow = DB::table('trx_suspend')
+                                ->where('nomor_internet', $nomorInternet)
+                                ->orderBy('date_create', 'desc')
+                                ->first();
+
                             $logCode = 'SL-' . $nomorInternet . rand(1000, 9999);
                             DB::table('trx_suspend_log')->insert([
                                 'kode_suspend_log' => $logCode,
-                                'kode_suspend' => $item->kode_suspend,
+                                'kode_suspend' => $suspendRow->kode_suspend ?? ('SUS-' . $nomorInternet),
                                 'status_suspend' => '13',
-                                'desc_suspend_cancel' => 'Otomatis Buka Isolir (Tanpa Approve Manual)',
+                                'desc_suspend_cancel' => 'Otomatis Buka Isolir (Tagihan Lunas / Tanpa Approve Manual)',
                                 'date_create' => $now->toDateTimeString(),
                                 'user_create' => 'System (Auto)',
                                 'hide' => '0',

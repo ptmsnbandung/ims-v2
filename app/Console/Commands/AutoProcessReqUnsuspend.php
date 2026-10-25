@@ -26,18 +26,18 @@ class AutoProcessReqUnsuspend extends Command
      */
     public function handle(CustomerProvisioningService $provisioning): int
     {
-        $this->info('Memeriksa antrean permohonan Req. Unsuspend (status 18)...');
+        $this->info('Memeriksa antrean permohonan Req. Unsuspend dan pelanggan suspend yang sudah lunas...');
 
         $result = $provisioning->processAutoUnsuspendQueue();
 
         if ($result['processed'] > 0) {
-            $this->info("Berhasil memproses {$result['processed']} permohonan unsuspend:");
+            $this->info("Berhasil memproses {$result['processed']} pelanggan untuk auto-unsuspend:");
             foreach ($result['results'] as $nomorInternet => $info) {
                 $status = ($info['success'] ?? false) ? 'BERHASIL' : 'GAGAL';
                 $this->line("- [{$status}] {$nomorInternet}: " . ($info['summary'] ?? ''));
             }
         } else {
-            $this->info('Tidak ada permohonan Req. Unsuspend (status 18) yang pending.');
+            $this->info('Tidak ada antrean Req. Unsuspend atau pelanggan suspend lunas yang pending.');
         }
 
         return 0;

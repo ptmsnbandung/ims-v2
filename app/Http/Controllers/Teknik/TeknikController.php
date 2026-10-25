@@ -4412,6 +4412,7 @@ class TeknikController extends Controller
     public function suspend(Request $request): View
     {
         \App\Services\Network\CustomerProvisioningService::reconcilePendingSuspendRequests();
+        app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
 
         $search = $request->query('search');
         $layanan = $request->query('layanan');

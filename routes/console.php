@@ -20,4 +20,11 @@ Schedule::command('suspend:unpaid-customers')
     ->timezone('Asia/Jakarta')
     ->description('Otomatis Request Suspend ke NOC untuk Pelanggan Belum Bayar (Jatuh Tempo Tanggal 25 jam 06:00 WIB)');
 
+// Otomatis Buka Isolir (Unsuspend) untuk Permohonan Req. Unsuspend (status 18) setiap menit tanpa perlu approve manual
+Schedule::command('unsuspend:process-requests')
+    ->everyMinute()
+    ->runInBackground()
+    ->description('Otomatis Eksekusi Buka Isolir ke MikroTik & OLT untuk Status Req. Unsuspend');
+
+
 

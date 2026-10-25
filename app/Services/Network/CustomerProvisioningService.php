@@ -111,13 +111,20 @@ class CustomerProvisioningService
 
         // 3. Update Database: Status Reg -> 20 (Aktif) HANYA JIKA ROUTER BERHASIL
         try {
-            $this->safeDbUpdate('trx_batchjob_register', function ($q) use ($nomorInternet) {
-                $q->where('nomor_internet', $nomorInternet);
-            }, [
+            $regUpdate = [
                 'status_reg' => '20',
                 'date_update' => $now,
                 'user_update' => $operator,
-            ]);
+            ];
+            if (Schema::hasColumn('trx_batchjob_register', 'is_suspend')) {
+                $regUpdate['is_suspend'] = '0';
+            }
+            if (Schema::hasColumn('trx_batchjob_register', 'prorate')) {
+                $regUpdate['prorate'] = '0';
+            }
+            $this->safeDbUpdate('trx_batchjob_register', function ($q) use ($nomorInternet) {
+                $q->where('nomor_internet', $nomorInternet);
+            }, $regUpdate);
 
             // Jika ada data suspend yang aktif, update status_suspend ke selesai (13)
             if (Schema::hasTable('trx_suspend')) {
@@ -128,6 +135,7 @@ class CustomerProvisioningService
                     }, [
                         'status_suspend' => '13',
                         'suspend_end' => now()->format('Y-m-d'),
+                        'desc_suspend_cancel' => "Otomatis dibuka isolir" . ($notes ? " ({$notes})" : ""),
                         'date_update' => $now,
                         'user_update' => $operator,
                     ]);
@@ -919,6 +927,111 @@ class CustomerProvisioningService
         } catch (\Throwable $e) {
             Log::warning('reconcilePendingSuspendRequests notice: ' . $e->getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * Otomatis memproses seluruh permohonan Req. Unsuspend (status 18)
+     * langsung ke router MikroTik & OLT tanpa perlu menunggu approval manual.
+     */
+    public function processAutoUnsuspendQueue(): array
+    {
+        if (!Schema::hasTable('trx_suspend')) {
+            return ['processed' => 0, 'results' => []];
+        }
+
+        try {
+            $pending = DB::table('trx_suspend')
+                ->where('status_suspend', '18')
+                ->where(function ($q) {
+                    $q->whereNull('hide')->orWhere('hide', '0');
+                })
+                ->orderBy('date_create', 'asc')
+                ->get();
+
+            if ($pending->isEmpty()) {
+                return ['processed' => 0, 'results' => []];
+            }
+
+            $results = [];
+            $now = Carbon::now('Asia/Jakarta');
+
+            foreach ($pending as $item) {
+                $nomorInternet = trim((string)($item->nomor_internet ?? ''));
+                if (empty($nomorInternet)) {
+                    continue;
+                }
+
+                try {
+                    // Eksekusi buka isolir lengkap: Router MikroTik enable secret + kick connection + OLT reboot
+                    $res = $this->activateCustomer(
+                        $nomorInternet,
+                        'Auto Unsuspend System',
+                        'Otomatis Buka Isolir dari Request Unsuspend (Tanpa Approve Manual)'
+                    );
+
+                    // Pastikan record trx_suspend langsung berubah menjadi 13 (Selesai Buka Isolir)
+                    DB::table('trx_suspend')
+                        ->where('kode_suspend', $item->kode_suspend)
+                        ->update([
+                            'status_suspend' => '13',
+                            'suspend_end' => $now->format('Y-m-d'),
+                            'desc_suspend_cancel' => 'Otomatis dibuka isolir oleh sistem (Req. Unsuspend diproses otomatis tanpa approve)',
+                            'date_update' => $now->toDateTimeString(),
+                            'user_update' => 'System (Auto)',
+                        ]);
+
+                    // Catat ke trx_suspend_log jika ada
+                    if (Schema::hasTable('trx_suspend_log')) {
+                        try {
+                            $logCode = 'SL-' . $nomorInternet . rand(1000, 9999);
+                            DB::table('trx_suspend_log')->insert([
+                                'kode_suspend_log' => $logCode,
+                                'kode_suspend' => $item->kode_suspend,
+                                'status_suspend' => '13',
+                                'desc_suspend_cancel' => 'Otomatis Buka Isolir (Tanpa Approve Manual)',
+                                'date_create' => $now->toDateTimeString(),
+                                'user_create' => 'System (Auto)',
+                                'hide' => '0',
+                            ]);
+                        } catch (\Throwable $th) {}
+                    }
+
+                    // Pastikan trx_batchjob_register aktif (#20)
+                    if (Schema::hasTable('trx_batchjob_register')) {
+                        $regUp = [
+                            'status_reg' => '20',
+                            'date_update' => $now->toDateTimeString(),
+                            'user_update' => 'System (Auto)',
+                        ];
+                        if (Schema::hasColumn('trx_batchjob_register', 'is_suspend')) {
+                            $regUp['is_suspend'] = '0';
+                        }
+                        if (Schema::hasColumn('trx_batchjob_register', 'prorate')) {
+                            $regUp['prorate'] = '0';
+                        }
+                        DB::table('trx_batchjob_register')
+                            ->where('nomor_internet', $nomorInternet)
+                            ->update($regUp);
+                    }
+
+                    $results[$nomorInternet] = [
+                        'success' => $res['success'] ?? true,
+                        'summary' => $res['summary'] ?? 'Berhasil dibuka isolir otomatis',
+                    ];
+                } catch (\Throwable $err) {
+                    Log::error("Gagal auto unsuspend untuk {$nomorInternet}: " . $err->getMessage());
+                    $results[$nomorInternet] = [
+                        'success' => false,
+                        'summary' => $err->getMessage(),
+                    ];
+                }
+            }
+
+            return ['processed' => count($results), 'results' => $results];
+        } catch (\Throwable $e) {
+            Log::warning('processAutoUnsuspendQueue error: ' . $e->getMessage());
+            return ['processed' => 0, 'results' => []];
         }
     }
 }

@@ -2075,6 +2075,21 @@ class FinanceController extends Controller
             $perPage = 10;
         }
 
+        // Otomatis proses antrean Req. Unsuspend (status 18) tanpa perlu approve manual
+        if (Schema::hasTable('trx_suspend')) {
+            try {
+                $hasReqUnsuspend = DB::table('trx_suspend')
+                    ->where('status_suspend', '18')
+                    ->where(function ($q) {
+                        $q->whereNull('hide')->orWhere('hide', '0');
+                    })
+                    ->exists();
+                if ($hasReqUnsuspend) {
+                    app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
+                }
+            } catch (\Throwable $th) {}
+        }
+
         $query = DB::table('view_suspend');
 
         if ($layanan) {

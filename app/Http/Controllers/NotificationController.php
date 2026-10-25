@@ -48,6 +48,24 @@ class NotificationController extends Controller
             $since = Carbon::now($tz)->subSeconds(30);
         }
 
+        // Otomatis proses antrean Req. Unsuspend (status 18) jika ada dan belum diproses
+        if ($this->hasTableFast('trx_suspend')) {
+            try {
+                $hasReqUnsuspend = DB::table('trx_suspend')
+                    ->where('status_suspend', '18')
+                    ->where(function ($q) {
+                        $q->whereNull('hide')->orWhere('hide', '0');
+                    })
+                    ->exists();
+
+                if ($hasReqUnsuspend) {
+                    Cache::lock('auto_unsuspend_process_lock', 20)->get(function () {
+                        app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
+                    });
+                }
+            } catch (\Throwable $th) {}
+        }
+
         $notifications = $this->getRecentNotifications($user, $since);
 
         return response()->json([

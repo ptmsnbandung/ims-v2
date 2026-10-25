@@ -1939,6 +1939,10 @@ class NocController extends Controller
         $layanan = $request->query('layanan');
         $wilayah = $request->query('wilayah');
         $status = $request->query('status');
+        $perPage = (int) $request->query('per_page', 10);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 10;
+        }
 
         $query = DB::table('view_suspend');
 
@@ -1955,7 +1959,17 @@ class NocController extends Controller
         }
 
         if ($wilayah) {
-            $query->where('alamat_p', 'like', "%{$wilayah}%");
+            $query->where(function ($q) use ($wilayah) {
+                $q->where('alamat_p', 'like', "%{$wilayah}%");
+                if (Schema::hasTable('view_batchjob')) {
+                    $q->orWhereIn('nomor_internet', function ($sub) use ($wilayah) {
+                        $sub->select('nomor_internet')
+                            ->from('view_batchjob')
+                            ->where('nama_kota_pasang', 'like', "%{$wilayah}%")
+                            ->orWhere('kode_wilayah_kota_pasang', 'like', "%{$wilayah}%");
+                    });
+                }
+            });
         }
 
         if ($status) {
@@ -1975,15 +1989,21 @@ class NocController extends Controller
                 'status_suspend',
             ]);
 
-        $suspends = $query->orderBy('date_create', 'desc')->paginate(10)->withQueryString();
+        $suspends = $query->orderBy('date_create', 'desc')->paginate($perPage)->withQueryString();
 
         // 3 Summary Pill Counts (matching screenshot)
         $countRequest = DB::table('view_suspend')->where('status_suspend', '11')->count();
         $countSuspend = DB::table('view_suspend')->where('status_suspend', '12')->count();
         $countReqUnsuspend = DB::table('view_suspend')->where('status_suspend', '18')->count();
 
-        // Distinct Layanan List
+        // Distinct Layanan List & Wilayah List
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
+        $wilayahList = Schema::hasTable('m_wilayah_perangkat')
+            ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->values()
+            : collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT']);
+        if ($wilayahList->isEmpty()) {
+            $wilayahList = collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT']);
+        }
         $statusList = Schema::hasTable('m_status_suspend') ? DB::table('m_status_suspend')->get() : collect();
 
         return view('noc.suspend', [
@@ -1994,10 +2014,12 @@ class NocController extends Controller
             'layanan' => $layanan,
             'wilayah' => $wilayah,
             'status' => $status,
+            'perPage' => $perPage,
             'countRequest' => $countRequest,
             'countSuspend' => $countSuspend,
             'countReqUnsuspend' => $countReqUnsuspend,
             'layananList' => $layananList,
+            'wilayahList' => $wilayahList,
             'statusList' => $statusList,
         ]);
     }

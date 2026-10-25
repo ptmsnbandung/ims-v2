@@ -37,6 +37,7 @@
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-xl p-3 sm:p-3.5 shadow-xs">
         <form method="GET" action="{{ route('teknik.permintaan.suspend') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-2.5 items-center">
+            <input type="hidden" name="per_page" value="{{ $perPage ?? 10 }}">
             
             <!-- 1. Dropdown Semua Layanan -->
             <div class="lg:col-span-3">
@@ -59,13 +60,14 @@
                        class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
-            <!-- 3. Dropdown / Input Semua Wilayah -->
+            <!-- 3. Dropdown Semua Wilayah -->
             <div class="lg:col-span-3">
-                <input type="text" 
-                       name="wilayah" 
-                       value="{{ request('wilayah') }}"
-                       placeholder="SEMUA WILAYAH" 
-                       class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="wilayah" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    <option value="">SEMUA WILAYAH</option>
+                    @foreach(($wilayahList ?? collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT'])) as $wil)
+                        <option value="{{ $wil }}" {{ request('wilayah') === $wil ? 'selected' : '' }}>{{ strtoupper($wil) }}</option>
+                    @endforeach
+                </select>
             </div>
 
             <!-- 4. Dropdown Semua Status -->
@@ -135,8 +137,15 @@
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-xl shadow-xs overflow-hidden">
         
         <div class="px-3.5 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-            <div>
-                show <span class="font-bold text-slate-800 dark:text-slate-200">10</span> entries
+            <div class="inline-flex items-center gap-1.5">
+                <span>Show</span>
+                <select onchange="const u = new URL(window.location.href); u.searchParams.set('per_page', this.value); u.searchParams.delete('page'); window.location.href = u.toString();"
+                        class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-0.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    @foreach([10, 20, 50, 100] as $size)
+                        <option value="{{ $size }}" {{ ($perPage ?? 10) == $size ? 'selected' : '' }}>{{ $size }}</option>
+                    @endforeach
+                </select>
+                <span>entries</span>
             </div>
             <div class="font-mono">
                 Total: <strong class="text-slate-800 dark:text-slate-200">{{ $suspends->total() }}</strong> User

@@ -4403,8 +4403,18 @@ class TeknikController extends Controller
         \App\Services\Network\CustomerProvisioningService::reconcilePendingSuspendRequests();
 
         $search = $request->query('search');
+        $layanan = $request->query('layanan');
+        $wilayah = $request->query('wilayah');
+        $status = $request->query('status');
+        $perPage = (int) $request->query('per_page', 10);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 10;
+        }
 
         $query = DB::table('view_suspend');
+        if ($layanan) {
+            $query->where('nama_kategori_bandwith', $layanan);
+        }
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('nomor_internet', 'like', "%{$search}%")
@@ -4412,12 +4422,43 @@ class TeknikController extends Controller
                   ->orWhere('desc_suspend', 'like', "%{$search}%");
             });
         }
-        $suspends = $query->orderBy('date_create', 'desc')->paginate(15)->withQueryString();
+        if ($wilayah) {
+            $query->where(function ($q) use ($wilayah) {
+                $q->where('alamat_p', 'like', "%{$wilayah}%");
+                if (Schema::hasTable('view_batchjob')) {
+                    $q->orWhereIn('nomor_internet', function ($sub) use ($wilayah) {
+                        $sub->select('nomor_internet')
+                            ->from('view_batchjob')
+                            ->where('nama_kota_pasang', 'like', "%{$wilayah}%")
+                            ->orWhere('kode_wilayah_kota_pasang', 'like', "%{$wilayah}%");
+                    });
+                }
+            });
+        }
+        if ($status) {
+            $query->where('status_suspend', $status);
+        }
+
+        $suspends = $query->orderBy('date_create', 'desc')->paginate($perPage)->withQueryString();
+
+        $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
+        $wilayahList = Schema::hasTable('m_wilayah_perangkat')
+            ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->values()
+            : collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT']);
+        if ($wilayahList->isEmpty()) {
+            $wilayahList = collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT']);
+        }
 
         return view('teknik.permintaan.suspend', [
             'user' => $request->user(),
             'suspends' => $suspends,
             'search' => $search,
+            'layanan' => $layanan,
+            'wilayah' => $wilayah,
+            'status' => $status,
+            'perPage' => $perPage,
+            'layananList' => $layananList,
+            'wilayahList' => $wilayahList,
         ]);
     }
 

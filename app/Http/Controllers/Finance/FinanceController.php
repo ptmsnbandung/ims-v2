@@ -2067,13 +2067,36 @@ class FinanceController extends Controller
 
         $search = $request->query('search');
         $layanan = $request->query('layanan');
+        $groupLayanan = $request->query('group_layanan');
         $wilayah = $request->query('wilayah');
         $status = $request->query('status');
+        $perPage = (int) $request->query('per_page', 10);
+        if (!in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 10;
+        }
 
         $query = DB::table('view_suspend');
 
         if ($layanan) {
             $query->where('nama_kategori_bandwith', $layanan);
+        }
+
+        if ($groupLayanan) {
+            $custTable = Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : (Schema::hasTable('view_batchjob') ? 'view_batchjob' : null);
+            if ($custTable && Schema::hasColumn($custTable, 'group_layanan')) {
+                $query->whereIn('nomor_internet', function ($sub) use ($custTable, $groupLayanan) {
+                    $sub->select('nomor_internet')->from($custTable);
+                    if (strtoupper($groupLayanan) === 'MEDIANET') {
+                        $sub->where(function ($q) {
+                            $q->where('group_layanan', 'MEDIANET')
+                              ->orWhereNull('group_layanan')
+                              ->orWhere('group_layanan', '');
+                        });
+                    } else {
+                        $sub->where('group_layanan', $groupLayanan);
+                    }
+                });
+            }
         }
 
         if ($search) {
@@ -2085,14 +2108,24 @@ class FinanceController extends Controller
         }
 
         if ($wilayah) {
-            $query->where('alamat_p', 'like', "%{$wilayah}%");
+            $query->where(function ($q) use ($wilayah) {
+                $q->where('alamat_p', 'like', "%{$wilayah}%");
+                if (Schema::hasTable('view_batchjob')) {
+                    $q->orWhereIn('nomor_internet', function ($sub) use ($wilayah) {
+                        $sub->select('nomor_internet')
+                            ->from('view_batchjob')
+                            ->where('nama_kota_pasang', 'like', "%{$wilayah}%")
+                            ->orWhere('kode_wilayah_kota_pasang', 'like', "%{$wilayah}%");
+                    });
+                }
+            });
         }
 
         if ($status) {
             $query->where('status_suspend', $status);
         }
 
-        $suspends = $query->orderBy('date_create', 'desc')->paginate(10)->withQueryString();
+        $suspends = $query->orderBy('date_create', 'desc')->paginate($perPage)->withQueryString();
 
         // HIGH PERFORMANCE: Single aggregated query for Suspend KPIs
         $counts = DB::table('trx_suspend')
@@ -2110,19 +2143,41 @@ class FinanceController extends Controller
         $countUnsuspend = (int) ($counts->cUnsuspend ?? 0);
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
+        $groupSourceTable = Schema::hasTable('view_batchjob') ? 'view_batchjob' : (Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : null);
+        $groupLayananList = ($groupSourceTable && Schema::hasColumn($groupSourceTable, 'group_layanan'))
+            ? DB::table($groupSourceTable)
+                ->whereNotNull('group_layanan')
+                ->where('group_layanan', '!=', '')
+                ->distinct()
+                ->orderBy('group_layanan')
+                ->pluck('group_layanan')
+            : collect(['MEDIANET']);
+        if (!$groupLayananList->contains('MEDIANET')) {
+            $groupLayananList->prepend('MEDIANET');
+        }
+        $wilayahList = Schema::hasTable('m_wilayah_perangkat')
+            ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->values()
+            : collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT']);
+        if ($wilayahList->isEmpty()) {
+            $wilayahList = collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT']);
+        }
 
         return view('finance.permintaan.suspend', [
             'user' => $request->user(),
             'suspends' => $suspends,
             'search' => $search,
             'layanan' => $layanan,
+            'groupLayanan' => $groupLayanan,
             'wilayah' => $wilayah,
             'status' => $status,
+            'perPage' => $perPage,
             'countRequest' => $countRequest,
             'countSuspend' => $countSuspend,
             'countReqUnsuspend' => $countReqUnsuspend,
             'countUnsuspend' => $countUnsuspend,
             'layananList' => $layananList,
+            'groupLayananList' => $groupLayananList,
+            'wilayahList' => $wilayahList,
         ]);
     }
 

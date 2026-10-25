@@ -1937,6 +1937,7 @@ class NocController extends Controller
 
         $search = $request->query('search');
         $layanan = $request->query('layanan');
+        $groupLayanan = $request->query('group_layanan');
         $wilayah = $request->query('wilayah');
         $status = $request->query('status');
         $perPage = (int) $request->query('per_page', 10);
@@ -1948,6 +1949,24 @@ class NocController extends Controller
 
         if ($layanan) {
             $query->where('nama_kategori_bandwith', $layanan);
+        }
+
+        if ($groupLayanan) {
+            $custTable = Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : (Schema::hasTable('view_batchjob') ? 'view_batchjob' : null);
+            if ($custTable && Schema::hasColumn($custTable, 'group_layanan')) {
+                $query->whereIn('nomor_internet', function ($sub) use ($custTable, $groupLayanan) {
+                    $sub->select('nomor_internet')->from($custTable);
+                    if (strtoupper($groupLayanan) === 'MEDIANET') {
+                        $sub->where(function ($q) {
+                            $q->where('group_layanan', 'MEDIANET')
+                              ->orWhereNull('group_layanan')
+                              ->orWhere('group_layanan', '');
+                        });
+                    } else {
+                        $sub->where('group_layanan', $groupLayanan);
+                    }
+                });
+            }
         }
 
         if ($search) {
@@ -1996,8 +2015,21 @@ class NocController extends Controller
         $countSuspend = DB::table('view_suspend')->where('status_suspend', '12')->count();
         $countReqUnsuspend = DB::table('view_suspend')->where('status_suspend', '18')->count();
 
-        // Distinct Layanan List & Wilayah List
+        // Distinct Layanan List, Group Layanan List, & Wilayah List
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
+        $groupSourceTable = Schema::hasTable('view_batchjob') ? 'view_batchjob' : (Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : null);
+        $groupLayananList = ($groupSourceTable && Schema::hasColumn($groupSourceTable, 'group_layanan'))
+            ? DB::table($groupSourceTable)
+                ->whereNotNull('group_layanan')
+                ->where('group_layanan', '!=', '')
+                ->distinct()
+                ->orderBy('group_layanan')
+                ->pluck('group_layanan')
+            : collect(['MEDIANET']);
+        if (!$groupLayananList->contains('MEDIANET')) {
+            $groupLayananList->prepend('MEDIANET');
+        }
+
         $wilayahList = Schema::hasTable('m_wilayah_perangkat')
             ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->values()
             : collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT']);
@@ -2012,6 +2044,7 @@ class NocController extends Controller
             'allSelectableItems' => $allSelectableItems,
             'search' => $search,
             'layanan' => $layanan,
+            'groupLayanan' => $groupLayanan,
             'wilayah' => $wilayah,
             'status' => $status,
             'perPage' => $perPage,
@@ -2019,6 +2052,7 @@ class NocController extends Controller
             'countSuspend' => $countSuspend,
             'countReqUnsuspend' => $countReqUnsuspend,
             'layananList' => $layananList,
+            'groupLayananList' => $groupLayananList,
             'wilayahList' => $wilayahList,
             'statusList' => $statusList,
         ]);

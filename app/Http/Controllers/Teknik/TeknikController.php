@@ -4404,6 +4404,7 @@ class TeknikController extends Controller
 
         $search = $request->query('search');
         $layanan = $request->query('layanan');
+        $groupLayanan = $request->query('group_layanan');
         $wilayah = $request->query('wilayah');
         $status = $request->query('status');
         $perPage = (int) $request->query('per_page', 10);
@@ -4414,6 +4415,23 @@ class TeknikController extends Controller
         $query = DB::table('view_suspend');
         if ($layanan) {
             $query->where('nama_kategori_bandwith', $layanan);
+        }
+        if ($groupLayanan) {
+            $custTable = Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : (Schema::hasTable('view_batchjob') ? 'view_batchjob' : null);
+            if ($custTable && Schema::hasColumn($custTable, 'group_layanan')) {
+                $query->whereIn('nomor_internet', function ($sub) use ($custTable, $groupLayanan) {
+                    $sub->select('nomor_internet')->from($custTable);
+                    if (strtoupper($groupLayanan) === 'MEDIANET') {
+                        $sub->where(function ($q) {
+                            $q->where('group_layanan', 'MEDIANET')
+                              ->orWhereNull('group_layanan')
+                              ->orWhere('group_layanan', '');
+                        });
+                    } else {
+                        $sub->where('group_layanan', $groupLayanan);
+                    }
+                });
+            }
         }
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -4442,6 +4460,18 @@ class TeknikController extends Controller
         $suspends = $query->orderBy('date_create', 'desc')->paginate($perPage)->withQueryString();
 
         $layananList = DB::table('m_bandwith_kategori')->pluck('nama_kategori_bandwith')->filter()->unique();
+        $groupSourceTable = Schema::hasTable('view_batchjob') ? 'view_batchjob' : (Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : null);
+        $groupLayananList = ($groupSourceTable && Schema::hasColumn($groupSourceTable, 'group_layanan'))
+            ? DB::table($groupSourceTable)
+                ->whereNotNull('group_layanan')
+                ->where('group_layanan', '!=', '')
+                ->distinct()
+                ->orderBy('group_layanan')
+                ->pluck('group_layanan')
+            : collect(['MEDIANET']);
+        if (!$groupLayananList->contains('MEDIANET')) {
+            $groupLayananList->prepend('MEDIANET');
+        }
         $wilayahList = Schema::hasTable('m_wilayah_perangkat')
             ? DB::table('m_wilayah_perangkat')->pluck('name_w')->filter()->unique()->values()
             : collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT']);
@@ -4454,10 +4484,12 @@ class TeknikController extends Controller
             'suspends' => $suspends,
             'search' => $search,
             'layanan' => $layanan,
+            'groupLayanan' => $groupLayanan,
             'wilayah' => $wilayah,
             'status' => $status,
             'perPage' => $perPage,
             'layananList' => $layananList,
+            'groupLayananList' => $groupLayananList,
             'wilayahList' => $wilayahList,
         ]);
     }

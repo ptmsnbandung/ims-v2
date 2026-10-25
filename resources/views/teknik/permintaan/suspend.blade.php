@@ -40,7 +40,7 @@
             <input type="hidden" name="per_page" value="{{ $perPage ?? 10 }}">
             
             <!-- 1. Dropdown Semua Layanan -->
-            <div class="lg:col-span-3">
+            <div class="lg:col-span-2">
                 <select name="layanan" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="">SEMUA LAYANAN</option>
                     @if(isset($layananList))
@@ -51,7 +51,17 @@
                 </select>
             </div>
 
-            <!-- 2. Input Nama / Nomor Layanan -->
+            <!-- 2. Dropdown Group Layanan -->
+            <div class="lg:col-span-2">
+                <select name="group_layanan" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    <option value="">SEMUA GROUP</option>
+                    @foreach(($groupLayananList ?? collect(['MEDIANET'])) as $grp)
+                        <option value="{{ $grp }}" {{ ($groupLayanan ?? request('group_layanan')) === $grp ? 'selected' : '' }}>{{ strtoupper($grp) }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- 3. Input Nama / Nomor Layanan -->
             <div class="lg:col-span-3">
                 <input type="text" 
                        name="search" 
@@ -60,8 +70,8 @@
                        class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 uppercase font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
-            <!-- 3. Dropdown Semua Wilayah -->
-            <div class="lg:col-span-3">
+            <!-- 4. Dropdown Semua Wilayah -->
+            <div class="lg:col-span-2">
                 <select name="wilayah" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="">SEMUA WILAYAH</option>
                     @foreach(($wilayahList ?? collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT'])) as $wil)
@@ -70,7 +80,7 @@
                 </select>
             </div>
 
-            <!-- 4. Dropdown Semua Status -->
+            <!-- 5. Dropdown Semua Status -->
             <div class="lg:col-span-2">
                 <select name="status" onchange="this.form.submit()" class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="">SEMUA STATUS</option>
@@ -82,7 +92,7 @@
                 </select>
             </div>
 
-            <!-- 5. Action Buttons (Reset) -->
+            <!-- 6. Action Buttons (Reset) -->
             <div class="lg:col-span-1 flex items-center gap-1.5">
                 <a href="{{ route('teknik.permintaan.suspend') }}" 
                    class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-xs transition cursor-pointer"

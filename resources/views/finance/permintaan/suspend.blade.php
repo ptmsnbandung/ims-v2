@@ -140,8 +140,10 @@
     <!-- Filter Bar -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl shadow-black/5">
         <form method="GET" action="{{ route('finance.permintaan.suspend') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
-            <div class="lg:col-span-3">
-                <select name="layanan" onchange="this.form.submit()" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+            <input type="hidden" name="per_page" value="{{ $perPage ?? 10 }}">
+
+            <div class="lg:col-span-2">
+                <select name="layanan" onchange="this.form.submit()" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="">SEMUA LAYANAN</option>
                     @foreach($layananList as $lay)
                         <option value="{{ $lay }}" {{ request('layanan') === $lay ? 'selected' : '' }}>{{ strtoupper($lay) }}</option>
@@ -149,16 +151,34 @@
                 </select>
             </div>
 
-            <div class="lg:col-span-5">
-                <input type="text"
-                       name="search"
-                       value="{{ $search }}"
-                       placeholder="Cari Kode Suspend / No. Internet / Nama / Alasan... (Enter)"
-                       class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="lg:col-span-2">
+                <select name="group_layanan" onchange="this.form.submit()" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    <option value="">SEMUA GROUP</option>
+                    @foreach(($groupLayananList ?? collect(['MEDIANET'])) as $grp)
+                        <option value="{{ $grp }}" {{ ($groupLayanan ?? request('group_layanan')) === $grp ? 'selected' : '' }}>{{ strtoupper($grp) }}</option>
+                    @endforeach
+                </select>
             </div>
 
             <div class="lg:col-span-3">
-                <select name="status" onchange="this.form.submit()" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                <input type="text"
+                       name="search"
+                       value="{{ $search }}"
+                       placeholder="Cari Kode Suspend / No. Internet / Nama... (Enter)"
+                       class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="lg:col-span-2">
+                <select name="wilayah" onchange="this.form.submit()" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    <option value="">SEMUA WILAYAH</option>
+                    @foreach(($wilayahList ?? collect(['KOTA BANDUNG', 'KAB. BANDUNG', 'KAB. BANDUNG BARAT'])) as $wil)
+                        <option value="{{ $wil }}" {{ ($wilayah ?? request('wilayah')) === $wil ? 'selected' : '' }}>{{ strtoupper($wil) }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="lg:col-span-2">
+                <select name="status" onchange="this.form.submit()" class="w-full text-xs px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="">SEMUA STATUS</option>
                     <option value="11" {{ request('status') === '11' ? 'selected' : '' }}>(1011) Request Suspend</option>
                     <option value="12" {{ request('status') === '12' ? 'selected' : '' }}>(1012) Suspend</option>
@@ -179,6 +199,21 @@
 
     <!-- Data Table -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl shadow-black/5">
+        <div class="px-4 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+            <div class="inline-flex items-center gap-1.5">
+                <span>Show</span>
+                <select onchange="const u = new URL(window.location.href); u.searchParams.set('per_page', this.value); u.searchParams.delete('page'); window.location.href = u.toString();"
+                        class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-0.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    @foreach([10, 20, 50, 100] as $size)
+                        <option value="{{ $size }}" {{ ($perPage ?? 20) == $size ? 'selected' : '' }}>{{ $size }}</option>
+                    @endforeach
+                </select>
+                <span>entries</span>
+            </div>
+            <div class="font-mono">
+                Total: <strong class="text-slate-800 dark:text-slate-200">{{ $suspends->total() }}</strong> User
+            </div>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>

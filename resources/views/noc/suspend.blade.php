@@ -1233,185 +1233,189 @@ class="space-y-3.5 relative">
     <!-- =================================================================== -->
     <!-- 7. LIVE QUEUE MONITOR MODAL / DRAWER (TAMPILAN QUEUE BACKGROUND)   -->
     <!-- =================================================================== -->
-    <div x-show="queueModalOpen"
-         x-cloak
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
-        <div @click.away="closeQueueModal()"
-             class="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[88vh]">
-            
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white shrink-0">
-                <div class="flex items-center gap-2.5">
-                    <span class="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
-                        </svg>
-                    </span>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 class="text-sm font-bold tracking-wide">
-                                Antrean Remote Reboot ONT (OLT)
-                            </h3>
-                            <!-- Pulsing State -->
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                  :class="queueSummary.is_completed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse'">
-                                <span class="h-1.5 w-1.5 rounded-full" :class="queueSummary.is_completed ? 'bg-emerald-400' : 'bg-cyan-400'"></span>
-                                <span x-text="queueSummary.is_completed ? 'Selesai' : 'Sedang Berjalan'"></span>
-                            </span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 font-mono mt-0.5" x-text="currentBatchId ? ('Batch ID: ' + currentBatchId) : 'Menampilkan Seluruh Antrean 24 Jam'"></p>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button type="button" 
-                            @click="fetchQueueStatus()" 
-                            class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                            title="Segarkan Data">
-                        <svg class="w-4 h-4" :class="isPolling ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                        </svg>
-                    </button>
-                    <button type="button" @click="closeQueueModal()" class="text-slate-400 hover:text-white text-xl font-bold p-1 leading-none transition">
-                        &times;
-                    </button>
-                </div>
-            </div>
-
-            <!-- Modal Body -->
-            <div class="p-5 space-y-4 overflow-y-auto flex-1">
+    <template x-teleport="body">
+        <div x-show="queueModalOpen"
+             x-cloak
+             @keydown.escape.window="closeQueueModal()"
+             class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+             style="position: fixed; inset: 0; z-index: 99999;">
+            <div @click.away="closeQueueModal()"
+                 class="relative w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
                 
-                <!-- KPI Status Counters -->
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
-                        <span class="text-[10px] text-slate-500 font-bold block uppercase">Total</span>
-                        <span class="text-base font-bold font-mono text-slate-800 dark:text-slate-100" x-text="queueSummary.total"></span>
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <span class="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+                            </svg>
+                        </span>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-bold tracking-wide">
+                                    Antrean Remote Reboot ONT (OLT)
+                                </h3>
+                                <!-- Pulsing State -->
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                      :class="queueSummary.is_completed ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse'">
+                                    <span class="h-1.5 w-1.5 rounded-full" :class="queueSummary.is_completed ? 'bg-emerald-400' : 'bg-cyan-400'"></span>
+                                    <span x-text="queueSummary.is_completed ? 'Selesai' : 'Sedang Berjalan'"></span>
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 font-mono mt-0.5" x-text="currentBatchId ? ('Batch ID: ' + currentBatchId) : 'Menampilkan Seluruh Antrean 24 Jam'"></p>
+                        </div>
                     </div>
-                    <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-                        <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold block uppercase">Pending</span>
-                        <span class="text-base font-bold font-mono text-amber-600 dark:text-amber-400" x-text="queueSummary.pending"></span>
-                    </div>
-                    <div class="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
-                        <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold block uppercase">Processing</span>
-                        <span class="text-base font-bold font-mono text-blue-600 dark:text-blue-400" x-text="queueSummary.processing"></span>
-                    </div>
-                    <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block uppercase">Sukses</span>
-                        <span class="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400" x-text="queueSummary.success"></span>
-                    </div>
-                    <div class="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-center">
-                        <span class="text-[10px] text-rose-600 dark:text-rose-400 font-bold block uppercase">Gagal</span>
-                        <span class="text-base font-bold font-mono text-rose-600 dark:text-rose-400" x-text="queueSummary.failed"></span>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" 
+                                @click="fetchQueueStatus()" 
+                                class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
+                                title="Segarkan Data">
+                            <svg class="w-4 h-4" :class="isPolling ? 'animate-spin' : ''" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                        </button>
+                        <button type="button" @click="closeQueueModal()" class="text-slate-400 hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">
+                            &times;
+                        </button>
                     </div>
                 </div>
 
-                <!-- Animated Progress Bar -->
-                <div class="space-y-1.5">
-                    <div class="flex items-center justify-between text-xs font-semibold">
-                        <span class="text-slate-600 dark:text-slate-400">Kemajuan Eksekusi Reboot ONT</span>
-                        <span class="font-mono text-blue-600 dark:text-cyan-400 font-bold" x-text="queueSummary.progress_percentage + '%'"></span>
+                <!-- Modal Body -->
+                <div class="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                    
+                    <!-- KPI Status Counters -->
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-center">
+                            <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Total</span>
+                            <span class="text-lg font-bold font-mono text-slate-800 dark:text-slate-100" x-text="queueSummary.total"></span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                            <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold block uppercase tracking-wider">Pending</span>
+                            <span class="text-lg font-bold font-mono text-amber-600 dark:text-amber-400" x-text="queueSummary.pending"></span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
+                            <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold block uppercase tracking-wider">Processing</span>
+                            <span class="text-lg font-bold font-mono text-blue-600 dark:text-blue-400" x-text="queueSummary.processing"></span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                            <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block uppercase tracking-wider">Sukses</span>
+                            <span class="text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400" x-text="queueSummary.success"></span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-center">
+                            <span class="text-[10px] text-rose-600 dark:text-rose-400 font-bold block uppercase tracking-wider">Gagal</span>
+                            <span class="text-lg font-bold font-mono text-rose-600 dark:text-rose-400" x-text="queueSummary.failed"></span>
+                        </div>
                     </div>
-                    <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden p-0.5">
-                        <div class="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 transition-all duration-500"
-                             :style="'width: ' + queueSummary.progress_percentage + '%'"></div>
+
+                    <!-- Animated Progress Bar -->
+                    <div class="space-y-1.5 pt-1">
+                        <div class="flex items-center justify-between text-xs font-semibold">
+                            <span class="text-slate-600 dark:text-slate-400">Kemajuan Eksekusi Reboot ONT</span>
+                            <span class="font-mono text-blue-600 dark:text-cyan-400 font-bold" x-text="queueSummary.progress_percentage + '%'"></span>
+                        </div>
+                        <div class="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden p-0.5">
+                            <div class="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-400 transition-all duration-500"
+                                 :style="'width: ' + queueSummary.progress_percentage + '%'"></div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Queue Items Table -->
-                <div class="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
-                    <div class="max-h-64 overflow-y-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead class="bg-slate-50 dark:bg-slate-950/80 sticky top-0 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                                <tr>
-                                    <th class="py-2 px-3">Pelanggan</th>
-                                    <th class="py-2 px-3">Index OLT</th>
-                                    <th class="py-2 px-3">Status</th>
-                                    <th class="py-2 px-3">Respon OLT</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80 font-mono text-[11px]">
-                                <template x-for="item in queueItems" :key="item.id">
-                                    <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
-                                        
-                                        <!-- Customer -->
-                                        <td class="py-2 px-3 align-top font-sans">
-                                            <div class="font-mono font-bold text-blue-600 dark:text-blue-400" x-text="item.nomor_internet"></div>
-                                            <div class="text-[10px] text-slate-700 dark:text-slate-300 uppercase font-semibold mt-0.5" x-text="item.nama_pelanggan || '-'"></div>
-                                        </td>
-
-                                        <!-- Index OLT -->
-                                        <td class="py-2 px-3 align-top">
-                                            <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono" x-text="item.index_olt || '-'"></span>
-                                        </td>
-
-                                        <!-- Status Badge -->
-                                        <td class="py-2 px-3 align-top font-sans">
-                                            <template x-if="item.status === 'pending'">
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                                    <span>Menunggu</span>
-                                                </span>
-                                            </template>
-                                            <template x-if="item.status === 'processing'">
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 animate-pulse">
-                                                    <svg class="animate-spin w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    <span>Rebooting...</span>
-                                                </span>
-                                            </template>
-                                            <template x-if="item.status === 'success'">
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                                                    <span>Sukses</span>
-                                                </span>
-                                            </template>
-                                            <template x-if="item.status === 'failed'">
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
-                                                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18 18 6M6 6l12 12"/></svg>
-                                                    <span>Gagal</span>
-                                                </span>
-                                            </template>
-                                        </td>
-
-                                        <!-- Response Message -->
-                                        <td class="py-2 px-3 align-top font-sans text-[10px] text-slate-600 dark:text-slate-400">
-                                            <span x-text="item.response_message || '-'"></span>
-                                        </td>
-                                    </tr>
-                                </template>
-                                <template x-if="queueItems.length === 0">
+                    <!-- Queue Items Table -->
+                    <div class="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+                        <div class="max-h-80 sm:max-h-96 overflow-y-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-slate-50 dark:bg-slate-950/80 sticky top-0 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400">
                                     <tr>
-                                        <td colspan="4" class="py-6 text-center text-slate-400 text-xs font-sans">
-                                            Tidak ada antrean reboot yang aktif saat ini.
-                                        </td>
+                                        <th class="py-2.5 px-3.5">Pelanggan</th>
+                                        <th class="py-2.5 px-3.5">Index OLT</th>
+                                        <th class="py-2.5 px-3.5">Status</th>
+                                        <th class="py-2.5 px-3.5">Respon OLT</th>
                                     </tr>
-                                </template>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80 font-mono text-[11px]">
+                                    <template x-for="item in queueItems" :key="item.id">
+                                        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+                                            
+                                            <!-- Customer -->
+                                            <td class="py-2.5 px-3.5 align-top font-sans">
+                                                <div class="font-mono font-bold text-blue-600 dark:text-blue-400" x-text="item.nomor_internet"></div>
+                                                <div class="text-[10px] text-slate-700 dark:text-slate-300 uppercase font-semibold mt-0.5" x-text="item.nama_pelanggan || '-'"></div>
+                                            </td>
+
+                                            <!-- Index OLT -->
+                                            <td class="py-2.5 px-3.5 align-top">
+                                                <span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono" x-text="item.index_olt || '-'"></span>
+                                            </td>
+
+                                            <!-- Status Badge -->
+                                            <td class="py-2.5 px-3.5 align-top font-sans">
+                                                <template x-if="item.status === 'pending'">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                                        <span>Menunggu</span>
+                                                    </span>
+                                                </template>
+                                                <template x-if="item.status === 'processing'">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 animate-pulse">
+                                                        <svg class="animate-spin w-2.5 h-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        <span>Rebooting...</span>
+                                                    </span>
+                                                </template>
+                                                <template x-if="item.status === 'success'">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                                                        <span>Sukses</span>
+                                                    </span>
+                                                </template>
+                                                <template x-if="item.status === 'failed'">
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18 18 6M6 6l12 12"/></svg>
+                                                        <span>Gagal</span>
+                                                    </span>
+                                                </template>
+                                            </td>
+
+                                            <!-- Response Message -->
+                                            <td class="py-2.5 px-3.5 align-top font-sans text-[10px] text-slate-600 dark:text-slate-400">
+                                                <span x-text="item.response_message || '-'"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="queueItems.length === 0">
+                                        <tr>
+                                            <td colspan="4" class="py-8 text-center text-slate-400 text-xs font-sans">
+                                                Tidak ada antrean reboot yang aktif saat ini.
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
                 </div>
 
-            </div>
+                <!-- Footer -->
+                <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>Auto-update setiap 2 detik</span>
+                    </div>
 
-            <!-- Footer -->
-            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span>Auto-update setiap 2 detik</span>
+                    <button type="button" 
+                            @click="closeQueueModal()" 
+                            class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition cursor-pointer">
+                        Tutup
+                    </button>
                 </div>
-
-                <button type="button" 
-                        @click="closeQueueModal()" 
-                        class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition cursor-pointer">
-                    Tutup
-                </button>
             </div>
         </div>
-    </div>
+    </template>
 
 </div>
 @endsection

@@ -1029,26 +1029,19 @@ class CustomerProvisioningService
                 }
 
                 try {
-                    // Eksekusi buka isolir lengkap: Router MikroTik enable secret + kick connection + OLT reboot
+                    // activateCustomer: enable PPPoE + kick + reboot OLT, lalu set status_reg=20 & trx_suspend=13 HANYA jika router sukses
                     $res = $this->activateCustomer(
                         $nomorInternet,
                         'Auto Unsuspend System',
                         'Otomatis Buka Isolir (Tagihan Lunas / Req Unsuspend)'
                     );
 
-                    // Pastikan seluruh baris suspend pelanggan di trx_suspend berubah menjadi 13 (Selesai Buka Isolir)
-                    DB::table('trx_suspend')
-                        ->where('nomor_internet', $nomorInternet)
-                        ->whereIn('status_suspend', ['11', '12', '18'])
-                        ->update([
-                            'status_suspend' => '13',
-                            'suspend_end' => $now->format('Y-m-d'),
-                            'desc_suspend_cancel' => 'Otomatis dibuka isolir oleh sistem (Tagihan Lunas / Tanpa Approve Manual)',
-                            'date_update' => $now->toDateTimeString(),
-                            'user_update' => 'System (Auto)',
-                        ]);
+                    if (!($res['success'] ?? false)) {
+                        Log::warning("Auto unsuspend {$nomorInternet} gagal di router: " . ($res['summary'] ?? ''));
+                        $results[$nomorInternet] = ['success' => false, 'summary' => $res['summary'] ?? 'Gagal aktivasi router'];
+                        continue;
+                    }
 
-                    // Catat ke trx_suspend_log jika ada
                     if (Schema::hasTable('trx_suspend_log')) {
                         try {
                             $suspendRow = DB::table('trx_suspend')
@@ -1069,23 +1062,8 @@ class CustomerProvisioningService
                         } catch (\Throwable $th) {}
                     }
 
-                    // Pastikan trx_batchjob_register aktif (#20)
-                    if (Schema::hasTable('trx_batchjob_register')) {
-                        $regUp = [
-                            'status_reg' => '20',
-                            'date_update' => $now->toDateTimeString(),
-                            'user_update' => 'System (Auto)',
-                        ];
-                        if (Schema::hasColumn('trx_batchjob_register', 'prorate')) {
-                            $regUp['prorate'] = '0';
-                        }
-                        DB::table('trx_batchjob_register')
-                            ->where('nomor_internet', $nomorInternet)
-                            ->update($regUp);
-                    }
-
                     $results[$nomorInternet] = [
-                        'success' => $res['success'] ?? true,
+                        'success' => true,
                         'summary' => $res['summary'] ?? 'Berhasil dibuka isolir otomatis',
                     ];
                 } catch (\Throwable $err) {

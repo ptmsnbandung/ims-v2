@@ -949,11 +949,11 @@ class CustomerProvisioningService
                 ->unique()
                 ->toArray();
 
-            // 2. Ambil pelanggan yang masih berstatus suspend (status 11 atau 12 di trx_suspend)
+            // 2. Ambil pelanggan yang sedang terisolir (status 12 di trx_suspend; status 11 hanyalah request, pelanggan masih aktif)
             //    tetapi SELURUH tagihannya sudah lunas (tidak ada tagihan berstatus publish 13)
             $stuckSuspendNumbers = [];
             $activeSuspends = DB::table('trx_suspend')
-                ->whereIn('status_suspend', ['11', '12'])
+                ->where('status_suspend', '12')
                 ->where(function ($q) {
                     $q->whereNull('hide')->orWhere('hide', '0');
                 })

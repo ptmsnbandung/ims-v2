@@ -76,7 +76,7 @@ class AutoSuspendUnpaidCustomersTest extends TestCase
         DB::table('trx_billing_layanan')->insert([
             'kode_billing_layanan' => 'INV/' . $nomorActive . '/10/2026',
             'nomor_internet'       => $nomorActive,
-            'status_bill_lay'      => '12', // Belum bayar
+            'status_bill_lay'      => '13', // Publish, belum bayar
             'total_layanan'        => 200000,
             'hide'                 => '0',
             'date_create'          => now(),
@@ -95,7 +95,7 @@ class AutoSuspendUnpaidCustomersTest extends TestCase
         DB::table('trx_billing_layanan')->insert([
             'kode_billing_layanan' => 'INV/' . $nomorTerminated . '/10/2026',
             'nomor_internet'       => $nomorTerminated,
-            'status_bill_lay'      => '12', // Belum bayar
+            'status_bill_lay'      => '13', // Publish, belum bayar
             'total_layanan'        => 200000,
             'hide'                 => '0',
             'date_create'          => now(),

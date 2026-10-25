@@ -43,10 +43,10 @@ class AutoSuspendUnpaidCustomers extends Command
 
         $customerTable = Schema::hasTable('trx_batchjob_register') ? 'trx_batchjob_register' : 'view_batchjob';
 
-        // 1. Ambil nomor internet pelanggan AKTIF (status_reg = '20') yang memiliki tagihan belum lunas (status_bill_lay != '15')
+        // 1. Ambil nomor internet pelanggan AKTIF (status_reg = '20') yang memiliki tagihan Publish belum dibayar (status_bill_lay = '13')
         $unpaidQuery = DB::table('trx_billing_layanan as b')
             ->join("{$customerTable} as r", 'b.nomor_internet', '=', 'r.nomor_internet')
-            ->where('b.status_bill_lay', '!=', '15')
+            ->where('b.status_bill_lay', '13')
             ->where(function ($q) {
                 $q->whereNull('b.hide')->orWhere('b.hide', '0');
             })

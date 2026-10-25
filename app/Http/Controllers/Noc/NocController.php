@@ -1970,9 +1970,6 @@ class NocController extends Controller
             try {
                 $hasReqUnsuspend = DB::table('trx_suspend')
                     ->where('status_suspend', '18')
-                    ->where(function ($q) {
-                        $q->whereNull('hide')->orWhere('hide', '0');
-                    })
                     ->exists();
                 if ($hasReqUnsuspend) {
                     app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();

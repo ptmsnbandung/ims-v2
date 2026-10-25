@@ -23,7 +23,6 @@ Schedule::command('suspend:unpaid-customers')
 // Otomatis Buka Isolir (Unsuspend) untuk Permohonan Req. Unsuspend (status 18) setiap menit tanpa perlu approve manual
 Schedule::command('unsuspend:process-requests')
     ->everyMinute()
-    ->runInBackground()
     ->description('Otomatis Eksekusi Buka Isolir ke MikroTik & OLT untuk Status Req. Unsuspend');
 
 

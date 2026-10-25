@@ -30,7 +30,7 @@ class CustomerProvisioningService
     public function activateCustomer(string $nomorInternet, ?string $operator = null, ?string $note = null): array
     {
         $now = now()->format('Y-m-d H:i:s');
-        $operator = mb_substr(trim($operator ?: (auth()->user()->nama ?? 'System NOC')), 0, 100);
+        $operator = mb_substr(trim($operator ?: (auth()->user()->nama ?? 'System NOC')), 0, 20);
 
         // 1. Ambil data pelanggan
         $customer = DB::table('trx_batchjob_register')
@@ -75,6 +75,32 @@ class CustomerProvisioningService
             } catch (Exception $e) {
                 $results['mikrotik_enable'] = false;
                 $results['messages'][] = 'MikroTik Enable Error: ' . $e->getMessage();
+            }
+
+            // Fallback: jika router utama gagal meng-enable, coba router aktif lain yang ada di database
+            if (!$results['mikrotik_enable'] && Schema::hasTable('routers')) {
+                try {
+                    $allRouters = DB::table('routers')->where('is_active', 1)->get();
+                    foreach ($allRouters as $otherR) {
+                        $this->applyRouterConfig($otherR);
+                        $tryOther = $this->mikrotik->enableUser($usernameCandidates);
+                        if ($tryOther['success'] ?? false) {
+                            $results['mikrotik_enable'] = true;
+                            $results['messages'][] = "MikroTik Enable (Fallback ke {$otherR->name}): " . ($tryOther['message'] ?? '');
+                            if (!empty($tryOther['matched_user'])) {
+                                $pppoeUsername = $tryOther['matched_user'];
+                            }
+                            try {
+                                DB::table('trx_batchjob_register')
+                                    ->where('nomor_internet', $nomorInternet)
+                                    ->update(['router_id' => $otherR->id]);
+                            } catch (\Throwable $th) {}
+                            break;
+                        }
+                    }
+                } catch (\Throwable $fbErr) {
+                    Log::warning("[CustomerProvisioning] Fallback router search error: " . $fbErr->getMessage());
+                }
             }
 
             // JIKA ROUTER GAGAL: JANGAN UBAH DATABASE!
@@ -702,8 +728,10 @@ class CustomerProvisioningService
                 $candidates[] = $val;
                 // Add version without 'MS' or 'ms' prefix
                 $stripped = preg_replace('/^MS/i', '', $val);
-                if ($stripped !== '' && $stripped !== $val) {
+                if ($stripped !== '') {
                     $candidates[] = $stripped;
+                    // Add version WITH 'MS' prefix
+                    $candidates[] = 'MS' . $stripped;
                 }
             }
         }
@@ -938,12 +966,9 @@ class CustomerProvisioningService
         }
 
         try {
-            // 1. Ambil seluruh permohonan status 18 (Req. Unsuspend)
+            // 1. Ambil seluruh permohonan status 18 (Req. Unsuspend) tanpa filter hide
             $reqUnsuspendNumbers = DB::table('trx_suspend')
                 ->where('status_suspend', '18')
-                ->where(function ($q) {
-                    $q->whereNull('hide')->orWhere('hide', '0');
-                })
                 ->pluck('nomor_internet')
                 ->filter()
                 ->unique()
@@ -954,9 +979,6 @@ class CustomerProvisioningService
             $stuckSuspendNumbers = [];
             $activeSuspends = DB::table('trx_suspend')
                 ->where('status_suspend', '12')
-                ->where(function ($q) {
-                    $q->whereNull('hide')->orWhere('hide', '0');
-                })
                 ->pluck('nomor_internet')
                 ->filter()
                 ->unique()
@@ -1032,12 +1054,22 @@ class CustomerProvisioningService
                     // activateCustomer: enable PPPoE + kick + reboot OLT, lalu set status_reg=20 & trx_suspend=13 HANYA jika router sukses
                     $res = $this->activateCustomer(
                         $nomorInternet,
-                        'Auto Unsuspend System',
+                        'System (Auto)',
                         'Otomatis Buka Isolir (Tagihan Lunas / Req Unsuspend)'
                     );
 
                     if (!($res['success'] ?? false)) {
                         Log::warning("Auto unsuspend {$nomorInternet} gagal di router: " . ($res['summary'] ?? ''));
+                        try {
+                            DB::table('trx_suspend')
+                                ->where('nomor_internet', $nomorInternet)
+                                ->where('status_suspend', '18')
+                                ->update([
+                                    'desc_suspend_cancel' => 'Gagal auto-unsuspend: ' . mb_substr($res['summary'] ?? 'Router tidak dapat dijangkau', 0, 200),
+                                    'date_update' => $now->toDateTimeString(),
+                                ]);
+                        } catch (\Throwable $th) {}
+
                         $results[$nomorInternet] = ['success' => false, 'summary' => $res['summary'] ?? 'Gagal aktivasi router'];
                         continue;
                     }

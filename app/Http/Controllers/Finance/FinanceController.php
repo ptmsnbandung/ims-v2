@@ -2079,9 +2079,6 @@ class FinanceController extends Controller
             try {
                 $hasReqUnsuspend = DB::table('trx_suspend')
                     ->where('status_suspend', '18')
-                    ->where(function ($q) {
-                        $q->whereNull('hide')->orWhere('hide', '0');
-                    })
                     ->exists();
                 if ($hasReqUnsuspend) {
                     app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
@@ -4225,7 +4222,7 @@ class FinanceController extends Controller
                     'suspend_end' => $now->format('Y-m-d'),
                     'desc_suspend_cancel' => "Otomatis dibuka isolir: Pembayaran tunggakan telah lunas ({$kodeBilling})",
                     'date_update' => $now->toDateTimeString(),
-                    'user_update' => $userUpdate,
+                    'user_update' => mb_substr($userUpdate, 0, 20),
                 ]);
         }
 
@@ -4237,7 +4234,7 @@ class FinanceController extends Controller
                     'status_reg' => '20',
                     'prorate' => '0',
                     'date_update' => $now->toDateTimeString(),
-                    'user_update' => $userUpdate,
+                    'user_update' => mb_substr($userUpdate, 0, 20),
                 ]);
         }
 

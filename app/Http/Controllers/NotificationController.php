@@ -53,9 +53,6 @@ class NotificationController extends Controller
             try {
                 $hasReqUnsuspend = DB::table('trx_suspend')
                     ->where('status_suspend', '18')
-                    ->where(function ($q) {
-                        $q->whereNull('hide')->orWhere('hide', '0');
-                    })
                     ->exists();
 
                 if ($hasReqUnsuspend) {

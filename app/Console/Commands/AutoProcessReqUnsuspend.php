@@ -12,7 +12,7 @@ class AutoProcessReqUnsuspend extends Command
      *
      * @var string
      */
-    protected $signature = 'unsuspend:process-requests';
+    protected $signature = 'unsuspend:process-requests {nomor_internet?}';
 
     /**
      * The console command description.
@@ -26,7 +26,41 @@ class AutoProcessReqUnsuspend extends Command
      */
     public function handle(CustomerProvisioningService $provisioning): int
     {
+        $targetNumber = trim((string)$this->argument('nomor_internet'));
+        if ($targetNumber !== '') {
+            $this->info("Menjalankan unsuspend langsung untuk nomor internet: {$targetNumber}...");
+            $res = $provisioning->activateCustomer($targetNumber, 'Manual CLI', 'Eksekusi unsuspend via artisan');
+            $status = ($res['success'] ?? false) ? 'BERHASIL' : 'GAGAL';
+            $this->line("- [{$status}] {$targetNumber}: " . ($res['summary'] ?? ''));
+            return ($res['success'] ?? false) ? 0 : 1;
+        }
+
         $this->info('Memeriksa antrean permohonan Req. Unsuspend dan pelanggan suspend yang sudah lunas...');
+
+        try {
+            $dbName = \Illuminate\Support\Facades\DB::connection()->getDatabaseName();
+            $this->line("<comment>Database terhubung:</comment> {$dbName}");
+
+            $vCount = \Illuminate\Support\Facades\DB::table('view_suspend')
+                ->where(function($q) {
+                    $q->where('status_suspend', '18')
+                      ->orWhere('status_suspend', 18)
+                      ->orWhere('status_suspend', '1018')
+                      ->orWhere('status_suspend', 'like', '%18%');
+                })->count();
+            $this->line("Data status 18 di view_suspend: {$vCount}");
+
+            $tCount = \Illuminate\Support\Facades\DB::table('trx_suspend')
+                ->where(function($q) {
+                    $q->where('status_suspend', '18')
+                      ->orWhere('status_suspend', 18)
+                      ->orWhere('status_suspend', '1018')
+                      ->orWhere('status_suspend', 'like', '%18%');
+                })->count();
+            $this->line("Data status 18 di trx_suspend: {$tCount}");
+        } catch (\Throwable $diagErr) {
+            $this->warn("Diagnostik antrean info: " . $diagErr->getMessage());
+        }
 
         $result = $provisioning->processAutoUnsuspendQueue();
 

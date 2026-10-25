@@ -967,7 +967,9 @@ class CustomerProvisioningService
                 $fromView = DB::table('view_suspend')
                     ->where(function ($q) {
                         $q->where('status_suspend', '18')
-                          ->orWhere('status_suspend', 18);
+                          ->orWhere('status_suspend', 18)
+                          ->orWhere('status_suspend', '1018')
+                          ->orWhere('status_suspend', 'like', '%18%');
                     })
                     ->pluck('nomor_internet')
                     ->filter()
@@ -980,7 +982,9 @@ class CustomerProvisioningService
                 $fromTrx = DB::table('trx_suspend')
                     ->where(function ($q) {
                         $q->where('status_suspend', '18')
-                          ->orWhere('status_suspend', 18);
+                          ->orWhere('status_suspend', 18)
+                          ->orWhere('status_suspend', '1018')
+                          ->orWhere('status_suspend', 'like', '%18%');
                     })
                     ->pluck('nomor_internet')
                     ->filter()

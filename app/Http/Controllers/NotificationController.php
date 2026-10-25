@@ -49,23 +49,28 @@ class NotificationController extends Controller
         }
 
         // Otomatis proses antrean Req. Unsuspend (status 18) jika ada dan belum diproses
-        if ($this->hasTableFast('trx_suspend')) {
+        try {
+            $hasReqUnsuspend = false;
             try {
-                $hasReqUnsuspend = DB::table('trx_suspend')
-                    ->where('status_suspend', '18')
-                    ->exists();
-
-                if ($hasReqUnsuspend) {
-                    Cache::lock('auto_unsuspend_process_lock', 20)->get(function () {
-                        app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
-                    });
-                } elseif (Cache::add('periodic_auto_unsuspend_check', true, 60)) {
-                    Cache::lock('auto_unsuspend_process_lock', 20)->get(function () {
-                        app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
-                    });
-                }
+                $hasReqUnsuspend = DB::table('view_suspend')->whereIn('status_suspend', ['18', 18])->exists();
             } catch (\Throwable $th) {}
-        }
+
+            if (!$hasReqUnsuspend) {
+                try {
+                    $hasReqUnsuspend = DB::table('trx_suspend')->whereIn('status_suspend', ['18', 18])->exists();
+                } catch (\Throwable $th) {}
+            }
+
+            if ($hasReqUnsuspend) {
+                Cache::lock('auto_unsuspend_process_lock', 20)->get(function () {
+                    app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
+                });
+            } elseif (Cache::add('periodic_auto_unsuspend_check', true, 60)) {
+                Cache::lock('auto_unsuspend_process_lock', 20)->get(function () {
+                    app(\App\Services\Network\CustomerProvisioningService::class)->processAutoUnsuspendQueue();
+                });
+            }
+        } catch (\Throwable $th) {}
 
         $notifications = $this->getRecentNotifications($user, $since);
 

@@ -150,20 +150,18 @@ class CustomerProvisioningService
             }, $regUpdate);
 
             // Jika ada data suspend yang aktif, update status_suspend ke selesai (13)
-            if (Schema::hasTable('trx_suspend')) {
-                try {
-                    $this->safeDbUpdate('trx_suspend', function ($q) use ($nomorInternet) {
-                        $q->where('nomor_internet', $nomorInternet)
-                            ->whereIn('status_suspend', ['11', '12', '18']);
-                    }, [
-                        'status_suspend' => '13',
-                        'suspend_end' => now()->format('Y-m-d'),
-                        'desc_suspend_cancel' => "Otomatis dibuka isolir" . ($note ? " ({$note})" : ""),
-                        'date_update' => $now,
-                        'user_update' => $operator,
-                    ]);
-                } catch (\Throwable $th) {}
-            }
+            try {
+                $this->safeDbUpdate('trx_suspend', function ($q) use ($nomorInternet) {
+                    $q->where('nomor_internet', $nomorInternet)
+                        ->whereIn('status_suspend', ['11', '12', '18', 11, 12, 18]);
+                }, [
+                    'status_suspend' => '13',
+                    'suspend_end' => now()->format('Y-m-d'),
+                    'desc_suspend_cancel' => "Otomatis dibuka isolir" . ($note ? " ({$note})" : ""),
+                    'date_update' => $now,
+                    'user_update' => $operator,
+                ]);
+            } catch (\Throwable $th) {}
 
             $results['database'] = true;
             $results['messages'][] = 'Status database berhasil diubah menjadi AKTIF (#20)';
@@ -961,44 +959,85 @@ class CustomerProvisioningService
      */
     public function processAutoUnsuspendQueue(): array
     {
-        if (!Schema::hasTable('trx_suspend')) {
-            return ['processed' => 0, 'results' => []];
-        }
-
         try {
-            // 1. Ambil seluruh permohonan status 18 (Req. Unsuspend) tanpa filter hide
-            $reqUnsuspendNumbers = DB::table('trx_suspend')
-                ->where('status_suspend', '18')
-                ->pluck('nomor_internet')
-                ->filter()
-                ->unique()
-                ->toArray();
-
-            // 2. Ambil pelanggan yang sedang terisolir (status 12 di trx_suspend; status 11 hanyalah request, pelanggan masih aktif)
-            //    tetapi SELURUH tagihannya sudah lunas (tidak ada tagihan berstatus publish 13)
-            $stuckSuspendNumbers = [];
-            $activeSuspends = DB::table('trx_suspend')
-                ->where('status_suspend', '12')
-                ->pluck('nomor_internet')
-                ->filter()
-                ->unique()
-                ->toArray();
-
-            if (!empty($activeSuspends) && Schema::hasTable('trx_billing_layanan')) {
-                $unpaidNumbers = DB::table('trx_billing_layanan')
-                    ->whereIn('nomor_internet', $activeSuspends)
-                    ->where('hide', '!=', '1')
-                    ->where('status_bill_lay', '13')
+            // 1. Ambil seluruh permohonan status 18 (Req. Unsuspend)
+            // Query dari view_suspend (sumber data UI NOC & Finance) dan fallback ke trx_suspend
+            $reqUnsuspendNumbers = [];
+            try {
+                $fromView = DB::table('view_suspend')
+                    ->where(function ($q) {
+                        $q->where('status_suspend', '18')
+                          ->orWhere('status_suspend', 18);
+                    })
                     ->pluck('nomor_internet')
+                    ->filter()
                     ->unique()
                     ->toArray();
+                $reqUnsuspendNumbers = array_merge($reqUnsuspendNumbers, $fromView);
+            } catch (\Throwable $th) {}
 
-                $unpaidLookup = array_flip($unpaidNumbers);
-                foreach ($activeSuspends as $num) {
-                    if (!isset($unpaidLookup[$num])) {
-                        $stuckSuspendNumbers[] = $num;
+            try {
+                $fromTrx = DB::table('trx_suspend')
+                    ->where(function ($q) {
+                        $q->where('status_suspend', '18')
+                          ->orWhere('status_suspend', 18);
+                    })
+                    ->pluck('nomor_internet')
+                    ->filter()
+                    ->unique()
+                    ->toArray();
+                $reqUnsuspendNumbers = array_merge($reqUnsuspendNumbers, $fromTrx);
+            } catch (\Throwable $th) {}
+
+            $reqUnsuspendNumbers = array_values(array_unique(array_filter($reqUnsuspendNumbers)));
+
+            // 2. Ambil pelanggan yang sedang terisolir (status 12 di view_suspend / trx_suspend)
+            //    tetapi SELURUH tagihannya sudah lunas (tidak ada tagihan berstatus publish 13)
+            $stuckSuspendNumbers = [];
+            $activeSuspends = [];
+            try {
+                $fromView12 = DB::table('view_suspend')
+                    ->where(function ($q) {
+                        $q->where('status_suspend', '12')->orWhere('status_suspend', 12);
+                    })
+                    ->pluck('nomor_internet')
+                    ->filter()
+                    ->unique()
+                    ->toArray();
+                $activeSuspends = array_merge($activeSuspends, $fromView12);
+            } catch (\Throwable $th) {}
+
+            try {
+                $fromTrx12 = DB::table('trx_suspend')
+                    ->where(function ($q) {
+                        $q->where('status_suspend', '12')->orWhere('status_suspend', 12);
+                    })
+                    ->pluck('nomor_internet')
+                    ->filter()
+                    ->unique()
+                    ->toArray();
+                $activeSuspends = array_merge($activeSuspends, $fromTrx12);
+            } catch (\Throwable $th) {}
+
+            $activeSuspends = array_values(array_unique(array_filter($activeSuspends)));
+
+            if (!empty($activeSuspends)) {
+                try {
+                    $unpaidNumbers = DB::table('trx_billing_layanan')
+                        ->whereIn('nomor_internet', $activeSuspends)
+                        ->where('hide', '!=', '1')
+                        ->where('status_bill_lay', '13')
+                        ->pluck('nomor_internet')
+                        ->unique()
+                        ->toArray();
+
+                    $unpaidLookup = array_flip($unpaidNumbers);
+                    foreach ($activeSuspends as $num) {
+                        if (!isset($unpaidLookup[$num])) {
+                            $stuckSuspendNumbers[] = $num;
+                        }
                     }
-                }
+                } catch (\Throwable $th) {}
             }
 
             // 3. Ambil juga pelanggan di trx_batchjob_register yang status_reg suspend (21, 21.1, 22)

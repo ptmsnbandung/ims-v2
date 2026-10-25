@@ -4400,6 +4400,8 @@ class TeknikController extends Controller
      */
     public function suspend(Request $request): View
     {
+        \App\Services\Network\CustomerProvisioningService::reconcilePendingSuspendRequests();
+
         $search = $request->query('search');
 
         $query = DB::table('view_suspend');

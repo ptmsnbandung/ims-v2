@@ -36,6 +36,7 @@
 
     // Queue Monitor Modal State
     queueModalOpen: false,
+    hasExecutedBulk: false,
     currentBatchId: '',
     queueSummary: {
         total: 0,
@@ -109,6 +110,19 @@
         this.selectAll = false;
     },
 
+    selectAllAcrossPages(allItems) {
+        const selectable = (allItems || []).filter(i => i.status_suspend === '11' || i.status_suspend === '18');
+        this.selectedKodes = selectable.map(i => i.kode_suspend);
+        this.selectedItems = selectable.map(i => ({
+            kode_suspend: i.kode_suspend,
+            nomor_internet: i.nomor_internet,
+            nama_pelanggan: i.nama_pelanggan,
+            paket: i.paket,
+            status_suspend: i.status_suspend
+        }));
+        this.selectAll = selectable.length > 0;
+    },
+
     // Submit Bulk Suspend
     async executeBulkSuspend() {
         if (this.selectedKodes.length === 0) return;
@@ -135,6 +149,7 @@
 
             if (data.success) {
                 const batchId = data.batch_id || '';
+                this.hasExecutedBulk = true;
                 this.clearSelection();
                 
                 // Buka Queue Monitor Modal langsung & mulai polling
@@ -159,6 +174,9 @@
     closeQueueModal() {
         this.queueModalOpen = false;
         this.stopQueuePolling();
+        if (this.hasExecutedBulk) {
+            window.location.reload();
+        }
     },
 
     startQueuePolling() {
@@ -377,6 +395,16 @@ class="space-y-3.5 relative">
                 'status_suspend' => (string)$i->status_suspend,
             ];
         });
+
+        $jsAllSelectableItems = ($allSelectableItems ?? collect())->map(function($i) {
+            return [
+                'kode_suspend' => (string)$i->kode_suspend,
+                'nomor_internet' => (string)$i->nomor_internet,
+                'nama_pelanggan' => (string)$i->nama_pelanggan,
+                'paket' => (string)(($i->nama_kategori_bandwith ?: 'BROADBAND') . ($i->nominal_bandwith ? ' ' . $i->nominal_bandwith . ' Mbps' : '')),
+                'status_suspend' => (string)$i->status_suspend,
+            ];
+        })->values();
     @endphp
 
     <!-- =================================================================== -->
@@ -385,9 +413,17 @@ class="space-y-3.5 relative">
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800/90 rounded-xl shadow-xs overflow-hidden">
         
         <div class="px-3.5 py-2 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <span>show <strong class="font-bold text-slate-800 dark:text-slate-200">10</strong> entries</span>
                 
+                @if($jsAllSelectableItems->count() > 0)
+                    <button type="button"
+                            @click="selectAllAcrossPages({{ json_encode($jsAllSelectableItems) }})"
+                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 font-bold text-[11px] transition cursor-pointer">
+                        <span>Pilih Semua Request ({{ $jsAllSelectableItems->count() }} User)</span>
+                    </button>
+                @endif
+
                 <!-- Multi-select Count Indicator in Table Header -->
                 <span x-show="selectedKodes.length > 0" x-cloak class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold">
                     <span x-text="selectedKodes.length"></span> terpilih

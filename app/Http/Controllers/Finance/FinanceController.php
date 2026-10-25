@@ -2063,6 +2063,8 @@ class FinanceController extends Controller
      */
     public function suspend(Request $request): View
     {
+        CustomerProvisioningService::reconcilePendingSuspendRequests();
+
         $search = $request->query('search');
         $layanan = $request->query('layanan');
         $wilayah = $request->query('wilayah');

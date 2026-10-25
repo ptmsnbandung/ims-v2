@@ -1932,6 +1932,9 @@ class NocController extends Controller
      */
     public function suspend(Request $request): View
     {
+        // Sinkronisasi otomatis baris Request Suspend (11) yang pelanggannya sudah berhasil terisolir (status_reg = 21)
+        CustomerProvisioningService::reconcilePendingSuspendRequests();
+
         $search = $request->query('search');
         $layanan = $request->query('layanan');
         $wilayah = $request->query('wilayah');
@@ -1959,6 +1962,19 @@ class NocController extends Controller
             $query->where('status_suspend', $status);
         }
 
+        // Ambil seluruh item yang bisa dipilih (status 11 / 18) sesuai filter untuk tombol "Pilih Semua Request (Semua Halaman)"
+        $allSelectableItems = (clone $query)
+            ->whereIn('status_suspend', ['11', '18'])
+            ->orderBy('date_create', 'desc')
+            ->get([
+                'kode_suspend',
+                'nomor_internet',
+                'nama_pelanggan',
+                'nama_kategori_bandwith',
+                'nominal_bandwith',
+                'status_suspend',
+            ]);
+
         $suspends = $query->orderBy('date_create', 'desc')->paginate(10)->withQueryString();
 
         // 3 Summary Pill Counts (matching screenshot)
@@ -1973,6 +1989,7 @@ class NocController extends Controller
         return view('noc.suspend', [
             'user' => $request->user(),
             'suspends' => $suspends,
+            'allSelectableItems' => $allSelectableItems,
             'search' => $search,
             'layanan' => $layanan,
             'wilayah' => $wilayah,
@@ -2005,6 +2022,14 @@ class NocController extends Controller
             if (!($res['success'] ?? false)) {
                 return redirect()->back()->with('error', "Gagal buka isolir {$nomorInternet}: " . ($res['summary'] ?? 'Gagal pada router MikroTik'));
             }
+
+            DB::table('trx_suspend')->where('kode_suspend', $kodeSuspend)->update([
+                'status_suspend' => '13',
+                'suspend_end'    => now()->format('Y-m-d'),
+                'date_update'    => $now,
+                'user_update'    => mb_substr($currentUser, 0, 20),
+            ]);
+
             return redirect()->back()->with('success', "Buka isolir {$nomorInternet} berhasil! PPPoE di-enable, koneksi di-kick, dan ONU OLT berhasil direboot.");
         } else {
             // Suspend / Isolir
@@ -2012,6 +2037,22 @@ class NocController extends Controller
             if (!($res['success'] ?? false)) {
                 return redirect()->back()->with('error', "Gagal suspend {$nomorInternet}: " . ($res['summary'] ?? 'Gagal pada router MikroTik'));
             }
+
+            // Pastikan baris kode_suspend yang di-approve langsung berubah menjadi '12' (Terisolir Aktif)
+            DB::table('trx_suspend')->where('kode_suspend', $kodeSuspend)->update([
+                'status_suspend' => '12',
+                'suspend_start'  => $suspend->suspend_start ?: ($request->input('date') ?: now()->format('Y-m-d')),
+                'date_update'    => $now,
+                'user_update'    => mb_substr($currentUser, 0, 20),
+            ]);
+
+            // Bersihkan jika ada sisa baris '11' lain untuk nomor_internet yang sama
+            DB::table('trx_suspend')
+                ->where('nomor_internet', $nomorInternet)
+                ->where('status_suspend', '11')
+                ->where('kode_suspend', '!=', $kodeSuspend)
+                ->delete();
+
             return redirect()->back()->with('success', "Suspend {$nomorInternet} berhasil! PPPoE di-disable, sesi aktif seketika diputus (kicked), dan ONU OLT berhasil direboot.");
         }
     }
@@ -2036,6 +2077,7 @@ class NocController extends Controller
         $now = now()->format('Y-m-d H:i:s');
         $currentUser = auth()->user()->nama ?? 'NOC';
         $batchId = 'BATCH-' . date('YmdHis') . '-' . rand(100, 999);
+        $suspendDate = $request->input('date') ?: now()->format('Y-m-d');
 
         $suspendList = DB::table('trx_suspend')
             ->whereIn('kode_suspend', $kodes)
@@ -2053,6 +2095,12 @@ class NocController extends Controller
                 // UNsuspend / Buka Isolir
                 $res = $provisioning->activateCustomer($nomorInternet, $currentUser, 'Bulk Approve Unsuspend dari NOC');
                 if ($res['success'] ?? false) {
+                    DB::table('trx_suspend')->where('kode_suspend', $suspend->kode_suspend)->update([
+                        'status_suspend' => '13',
+                        'suspend_end'    => now()->format('Y-m-d'),
+                        'date_update'    => $now,
+                        'user_update'    => mb_substr($currentUser, 0, 20),
+                    ]);
                     $successCount++;
                 } else {
                     $failedCount++;
@@ -2063,6 +2111,24 @@ class NocController extends Controller
                 $res = $provisioning->suspendCustomer($nomorInternet, $currentUser, $suspend->desc_suspend ?: 'Bulk Suspend Massal NOC', true);
 
                 if ($res['success'] ?? false) {
+                    // Pastikan baris kode_suspend yang dipilih langsung berubah statusnya menjadi '12' (Terisolir Aktif)
+                    DB::table('trx_suspend')->where('kode_suspend', $suspend->kode_suspend)->update([
+                        'status_suspend' => '12',
+                        'suspend_start'  => $suspend->suspend_start ?: $suspendDate,
+                        'date_update'    => $now,
+                        'user_update'    => mb_substr($currentUser, 0, 20),
+                    ]);
+
+                    // Hapus sisa baris '11' lain atau duplikat 'SUS-%' pada nomor_internet yang sama
+                    DB::table('trx_suspend')
+                        ->where('nomor_internet', $nomorInternet)
+                        ->where('kode_suspend', '!=', $suspend->kode_suspend)
+                        ->where(function ($q) {
+                            $q->where('status_suspend', '11')
+                              ->orWhere('kode_suspend', 'like', 'SUS-%');
+                        })
+                        ->delete();
+
                     $successCount++;
 
                     // Ambil detail pelanggan untuk antrean OLT reboot

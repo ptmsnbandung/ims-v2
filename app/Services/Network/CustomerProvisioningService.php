@@ -332,22 +332,38 @@ class CustomerProvisioningService
             $results['database'] = true;
             $results['messages'][] = 'Status database berhasil diubah menjadi SUSPEND (#21)';
 
-            // Jika ada tabel trx_suspend, buat atau perbarui record suspend aktif (12)
+            // Jika ada tabel trx_suspend, perbarui request suspend (11) atau suspend aktif (12) menjadi 12
             if (Schema::hasTable('trx_suspend')) {
                 try {
-                    $activeSuspend = DB::table('trx_suspend')
+                    // Cari record yang sedang Request Suspend (11) atau sudah Suspend Aktif (12)
+                    // Prioritaskan baris '11' (Request dari Finance / Auto-Suspend Tgl 25) agar tidak tertinggal di tabel Request
+                    $existingSuspends = DB::table('trx_suspend')
                         ->where('nomor_internet', $nomorInternet)
-                        ->where('status_suspend', '12')
-                        ->first();
+                        ->whereIn('status_suspend', ['11', '12'])
+                        ->orderByRaw("CASE WHEN status_suspend = '11' THEN 0 ELSE 1 END")
+                        ->orderBy('date_create', 'desc')
+                        ->get();
 
-                    if ($activeSuspend) {
-                        $this->safeDbUpdate('trx_suspend', function ($q) use ($activeSuspend) {
-                            $q->where('kode_suspend', $activeSuspend->kode_suspend);
+                    if ($existingSuspends->isNotEmpty()) {
+                        $primarySuspend = $existingSuspends->first();
+                        $this->safeDbUpdate('trx_suspend', function ($q) use ($primarySuspend) {
+                            $q->where('kode_suspend', $primarySuspend->kode_suspend);
                         }, [
-                            'desc_suspend' => $reason,
-                            'date_update'  => $now,
-                            'user_update'  => $operator,
+                            'status_suspend' => '12',
+                            'desc_suspend'   => !empty($primarySuspend->desc_suspend) ? $primarySuspend->desc_suspend : $reason,
+                            'suspend_start'  => !empty($primarySuspend->suspend_start) ? $primarySuspend->suspend_start : now()->format('Y-m-d'),
+                            'suspend_end'    => null,
+                            'date_update'    => $now,
+                            'user_update'    => $operator,
                         ]);
+
+                        // Bersihkan baris duplikat (baik sisa '11' maupun baris 'SUS-%' ganda) untuk nomor_internet yang sama
+                        if ($existingSuspends->count() > 1) {
+                            $otherKodes = $existingSuspends->slice(1)->pluck('kode_suspend')->all();
+                            DB::table('trx_suspend')
+                                ->whereIn('kode_suspend', $otherKodes)
+                                ->delete();
+                        }
                     } else {
                         $baseKode = 'SUS-' . $nomorInternet . '-' . date('Ymd');
                         $existingByKode = DB::table('trx_suspend')->where('kode_suspend', $baseKode)->first();
@@ -826,6 +842,83 @@ class CustomerProvisioningService
                 return DB::table($table)->insert($trimmed);
             }
             throw $qe;
+        }
+    }
+
+    /**
+     * Sinkronisasi otomatis baris trx_suspend yang masih berstatus '11' (Request Suspend)
+     * padahal pelanggan tersebut sudah berhasil di-suspend (status_reg = '21' atau sudah punya baris status_suspend = '12').
+     * Sekaligus membersihkan baris duplikat 'SUS-%' hasil eksekusi sebelumnya agar tidak ganda.
+     */
+    public static function reconcilePendingSuspendRequests(): int
+    {
+        try {
+            if (!Schema::hasTable('trx_suspend') || !Schema::hasTable('trx_batchjob_register')) {
+                return 0;
+            }
+
+            // Cari nomor_internet yang punya baris status_suspend = '11'
+            // TETAPI di trx_batchjob_register sudah status_reg = '21' (Terisolir)
+            // ATAU sudah punya baris lain dengan status_suspend = '12'
+            $stuckNumbers = DB::table('trx_suspend as s11')
+                ->leftJoin('trx_batchjob_register as r', 's11.nomor_internet', '=', 'r.nomor_internet')
+                ->leftJoin('trx_suspend as s12', function ($join) {
+                    $join->on('s11.nomor_internet', '=', 's12.nomor_internet')
+                         ->where('s12.status_suspend', '=', '12');
+                })
+                ->where('s11.status_suspend', '11')
+                ->where(function ($q) {
+                    $q->where('r.status_reg', '21')
+                      ->orWhereNotNull('s12.kode_suspend');
+                })
+                ->distinct()
+                ->pluck('s11.nomor_internet')
+                ->filter()
+                ->values();
+
+            if ($stuckNumbers->isEmpty()) {
+                return 0;
+            }
+
+            $now = now()->format('Y-m-d H:i:s');
+            $reconciled = 0;
+
+            foreach ($stuckNumbers as $nomorInternet) {
+                $rows = DB::table('trx_suspend')
+                    ->where('nomor_internet', $nomorInternet)
+                    ->whereIn('status_suspend', ['11', '12'])
+                    ->orderByRaw("CASE WHEN kode_suspend LIKE 'SUS-%' THEN 1 ELSE 0 END")
+                    ->orderBy('date_create', 'desc')
+                    ->get();
+
+                if ($rows->isEmpty()) {
+                    continue;
+                }
+
+                $primary = $rows->first();
+
+                DB::table('trx_suspend')
+                    ->where('kode_suspend', $primary->kode_suspend)
+                    ->update([
+                        'status_suspend' => '12',
+                        'suspend_start'  => $primary->suspend_start ?: now()->format('Y-m-d'),
+                        'date_update'    => $now,
+                    ]);
+
+                if ($rows->count() > 1) {
+                    $duplicateKodes = $rows->slice(1)->pluck('kode_suspend')->all();
+                    DB::table('trx_suspend')
+                        ->whereIn('kode_suspend', $duplicateKodes)
+                        ->delete();
+                }
+
+                $reconciled++;
+            }
+
+            return $reconciled;
+        } catch (\Throwable $e) {
+            Log::warning('reconcilePendingSuspendRequests notice: ' . $e->getMessage());
+            return 0;
         }
     }
 }

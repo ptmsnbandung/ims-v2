@@ -1737,8 +1737,7 @@ class FinanceController extends Controller
                 $isCustSuspended = false;
                 if ($customerReg) {
                     $regStatus = (string)($customerReg->status_reg ?? '');
-                    $isSusp = (string)($customerReg->is_suspend ?? '0');
-                    if (in_array($regStatus, ['21', '21.1', '22']) || $isSusp === '1') {
+                    if (in_array($regStatus, ['21', '21.1', '22'])) {
                         $isCustSuspended = true;
                     }
                 }
@@ -4155,16 +4154,15 @@ class FinanceController extends Controller
         // 2. Evaluasi status pelanggan:
         // Dianggap SUSPEND jika:
         // - Ada data di trx_suspend (status 11, 12, atau 18), ATAU
-        // - is_suspend == '1', ATAU
-        // - status_reg di trx_batchjob_register adalah 21, 21.1, 22.
+        // - status_reg di trx_batchjob_register adalah status suspend (21, 21.1, 22).
+        // (Catatan: is_suspend adalah counter berapa kali pernah disuspend, bukan status aktif/tidaknya)
         $isSuspended = false;
         if ($activeSuspend) {
             $isSuspended = true;
         }
         if ($customerReg) {
             $regStatus = (string)($customerReg->status_reg ?? '');
-            $isSusp = (string)($customerReg->is_suspend ?? '0');
-            if (in_array($regStatus, ['21', '21.1', '22']) || $isSusp === '1') {
+            if (in_array($regStatus, ['21', '21.1', '22'])) {
                 $isSuspended = true;
             }
         }
@@ -4237,7 +4235,6 @@ class FinanceController extends Controller
                 ->where('nomor_internet', $nomorInternet)
                 ->update([
                     'status_reg' => '20',
-                    'is_suspend' => '0',
                     'prorate' => '0',
                     'date_update' => $now->toDateTimeString(),
                     'user_update' => $userUpdate,

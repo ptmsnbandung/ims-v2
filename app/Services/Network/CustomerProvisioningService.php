@@ -116,9 +116,6 @@ class CustomerProvisioningService
                 'date_update' => $now,
                 'user_update' => $operator,
             ];
-            if (Schema::hasColumn('trx_batchjob_register', 'is_suspend')) {
-                $regUpdate['is_suspend'] = '0';
-            }
             if (Schema::hasColumn('trx_batchjob_register', 'prorate')) {
                 $regUpdate['prorate'] = '0';
             }
@@ -982,19 +979,12 @@ class CustomerProvisioningService
                 }
             }
 
-            // 3. Ambil juga pelanggan di trx_batchjob_register yang is_suspend = '1' atau status_reg suspend (21, 21.1, 22)
+            // 3. Ambil juga pelanggan di trx_batchjob_register yang status_reg suspend (21, 21.1, 22)
             //    tetapi tidak memiliki tagihan tertunggak (status 13)
             $stuckRegNumbers = [];
             if (Schema::hasTable('trx_batchjob_register') && Schema::hasTable('trx_billing_layanan')) {
                 $suspendedRegs = DB::table('trx_batchjob_register')
-                    ->where(function ($q) {
-                        if (Schema::hasColumn('trx_batchjob_register', 'is_suspend')) {
-                            $q->where('is_suspend', '1')
-                              ->orWhereIn('status_reg', ['21', '21.1', '22']);
-                        } else {
-                            $q->whereIn('status_reg', ['21', '21.1', '22']);
-                        }
-                    })
+                    ->whereIn('status_reg', ['21', '21.1', '22'])
                     ->pluck('nomor_internet')
                     ->filter()
                     ->unique()
@@ -1086,9 +1076,6 @@ class CustomerProvisioningService
                             'date_update' => $now->toDateTimeString(),
                             'user_update' => 'System (Auto)',
                         ];
-                        if (Schema::hasColumn('trx_batchjob_register', 'is_suspend')) {
-                            $regUp['is_suspend'] = '0';
-                        }
                         if (Schema::hasColumn('trx_batchjob_register', 'prorate')) {
                             $regUp['prorate'] = '0';
                         }

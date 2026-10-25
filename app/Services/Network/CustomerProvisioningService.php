@@ -943,9 +943,6 @@ class CustomerProvisioningService
         try {
             $pending = DB::table('trx_suspend')
                 ->where('status_suspend', '18')
-                ->where(function ($q) {
-                    $q->whereNull('hide')->orWhere('hide', '0');
-                })
                 ->orderBy('date_create', 'asc')
                 ->get();
 
@@ -972,7 +969,8 @@ class CustomerProvisioningService
 
                     // Pastikan record trx_suspend langsung berubah menjadi 13 (Selesai Buka Isolir)
                     DB::table('trx_suspend')
-                        ->where('kode_suspend', $item->kode_suspend)
+                        ->where('nomor_internet', $nomorInternet)
+                        ->whereIn('status_suspend', ['11', '12', '18'])
                         ->update([
                             'status_suspend' => '13',
                             'suspend_end' => $now->format('Y-m-d'),

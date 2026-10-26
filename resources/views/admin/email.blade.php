@@ -152,9 +152,9 @@
                                 @change="applyPreset()"
                                 class="w-full text-xs py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
                             <option value="">-- Pilih Template Preset --</option>
-                            <template x-for="p in presets" :key="p.id">
-                                <option :value="p.id" x-text="(p.is_system ? '⚡ ' : '📋 ') + p.name" :selected="String(p.id) === String(selectedPresetId) || p.slug === selectedPresetId"></option>
-                            </template>
+                            @foreach($presets as $p)
+                                <option value="{{ $p['id'] }}">{{ (!empty($p['is_system']) ? '⚡ ' : '📋 ') . $p['name'] }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -1044,6 +1044,9 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </template>
+
     <!-- Modal 4: Kelola Template Email (Tambah / Ubah Template) -->
     <template x-teleport="body">
         <div x-show="templateModalOpen"
@@ -1420,9 +1423,12 @@ function emailManagement() {
                 if (data.success) {
                     this.presets = data.presets;
                     this.selectedPresetId = String(data.template.id);
+                    try {
+                        sessionStorage.setItem('ims_email_preset_v1', String(data.template.id));
+                    } catch (e) {}
                     this.applyPreset();
                     this.templateModalOpen = false;
-                    this.showNotice('success', 'Berhasil Disimpan!', data.message);
+                    this.showNotice('success', 'Berhasil Disimpan!', data.message, true);
                 } else {
                     this.showNotice('error', 'Gagal Menyimpan', data.message || 'Terjadi kesalahan saat menyimpan template.');
                 }
@@ -1452,7 +1458,10 @@ function emailManagement() {
                     if (data.success) {
                         this.presets = data.presets;
                         this.selectedPresetId = '';
-                        this.showNotice('success', 'Berhasil Dihapus', data.message);
+                        try {
+                            sessionStorage.removeItem('ims_email_preset_v1');
+                        } catch (e) {}
+                        this.showNotice('success', 'Berhasil Dihapus', data.message, true);
                     } else {
                         this.showNotice('error', 'Gagal Menghapus', data.message || 'Gagal menghapus template.');
                     }

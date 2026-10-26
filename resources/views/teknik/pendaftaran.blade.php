@@ -305,8 +305,26 @@
                                         @else
                                             bg-slate-50 dark:bg-slate-950/50 text-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-800
                                         @endif">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                        <span>{{ ($item->status_reg == '18' && !empty($item->aktivasi_note)) ? 'Menunggu Jadwal NOC (#18)' : ($item->desc_registrasi ?: 'Pendaftaran #' . $item->status_reg) }}</span>
+                                        @php
+                                            $pendaftaranStatusDesc = ($item->desc_registrasi ?? null) ?: match((string)$item->status_reg) {
+                                                '11' => 'Menunggu Verifikasi',
+                                                '11.1' => 'Belum Valid',
+                                                '12' => 'Data Input',
+                                                '13' => 'Jadwal Survey',
+                                                '13.1' => 'Reschedule Survey',
+                                                '14' => 'Tidak Tercover',
+                                                '15' => 'Batal Pasang',
+                                                '16' => 'Selesai Survey',
+                                                '17' => 'Jadwal Instalasi',
+                                                '17.1' => 'Reschedule Instalasi',
+                                                '18' => (!empty($item->aktivasi_note) ? 'Menunggu Jadwal NOC (#18)' : 'Selesai Instalasi'),
+                                                '19' => 'Jadwal Aktivasi',
+                                                '19.1' => 'Reschedule Aktivasi',
+                                                '20' => 'Aktif',
+                                                default => ($item->status_reg ? 'Pendaftaran #' . $item->status_reg : 'Pendaftaran'),
+                                            };
+                                        @endphp
+                                        <span>{{ $pendaftaranStatusDesc }}</span>
                                     </span>
                                 </div>
 

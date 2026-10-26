@@ -12,6 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         if (Schema::hasTable('m_bandwith_kategori')) {
+            $hasCreatedAt = Schema::hasColumn('m_bandwith_kategori', 'created_at');
+            $hasUpdatedAt = Schema::hasColumn('m_bandwith_kategori', 'updated_at');
+
             $categories = [
                 ['kode_kategori_bandwith' => 'KB09212', 'nama_kategori_bandwith' => 'UP TO NEW', 'alias_nama_kategori' => 'UP TO NEW', 'biaya_reg' => 100000, 'disable' => 0],
                 ['kode_kategori_bandwith' => 'KB1682', 'nama_kategori_bandwith' => 'SMALL OFFICE HOME OFFICE', 'alias_nama_kategori' => 'UPTO SOHO', 'biaya_reg' => 500000, 'disable' => 0],
@@ -24,12 +27,17 @@ return new class extends Migration
             ];
 
             foreach ($categories as $cat) {
+                $payload = $cat;
+                if ($hasCreatedAt) {
+                    $payload['created_at'] = now();
+                }
+                if ($hasUpdatedAt) {
+                    $payload['updated_at'] = now();
+                }
+
                 DB::table('m_bandwith_kategori')->updateOrInsert(
                     ['kode_kategori_bandwith' => $cat['kode_kategori_bandwith']],
-                    array_merge($cat, [
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ])
+                    $payload
                 );
             }
         }

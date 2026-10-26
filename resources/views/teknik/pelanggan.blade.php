@@ -779,8 +779,17 @@
                                         @else
                                              bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700
                                         @endif">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                                        <span>{{ ($item->desc_registrasi ?? null) ?: 'Status #' . $item->status_reg }}</span>
+                                        @php
+                                            $cleanStatusDesc = ($item->desc_registrasi ?? null) ?: match((string)$item->status_reg) {
+                                                '20' => 'Aktif',
+                                                '21' => 'Suspend',
+                                                '21.1' => 'Req. Suspend',
+                                                '23' => 'Terminasi',
+                                                '23.1' => 'Req. Terminasi',
+                                                default => ($item->status_reg ? 'Status #' . $item->status_reg : 'Aktif'),
+                                            };
+                                        @endphp
+                                        <span>{{ $cleanStatusDesc }}</span>
                                     </span>
                                 </div>
 
@@ -996,8 +1005,18 @@
                                 @else
                                      bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700
                                 @endif">
+                                @php
+                                    $cleanStatusDescMobile = ($item->desc_registrasi ?? null) ?: match((string)$item->status_reg) {
+                                        '20' => 'Aktif',
+                                        '21' => 'Suspend',
+                                        '21.1' => 'Req. Suspend',
+                                        '23' => 'Terminasi',
+                                        '23.1' => 'Req. Terminasi',
+                                        default => ($item->status_reg ? 'Status #' . $item->status_reg : 'Aktif'),
+                                    };
+                                @endphp
                                 <span class="w-1.5 h-1.5 rounded-full {{ $isStatusAktif ? 'bg-emerald-500' : ($isStatusSuspend ? 'bg-amber-500' : 'bg-rose-500') }}"></span>
-                                <span>{{ ($item->desc_registrasi ?? null) ?: 'Status #' . $item->status_reg }}</span>
+                                <span>{{ $cleanStatusDescMobile }}</span>
                             </span>
                         </div>
                     </div>

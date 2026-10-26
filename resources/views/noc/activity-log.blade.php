@@ -150,7 +150,7 @@
                 <input type="text" 
                        name="search" 
                        value="{{ $search }}"
-                       placeholder="Cari ID Internet, Pelanggan, Operator..." 
+                       placeholder="Cari ID Internet, Pelanggan, Operator, Respons..." 
                        class="w-full text-xs px-2.5 py-1.5 pl-8 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -217,79 +217,7 @@
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
         
         <!-- Desktop Table (Hidden on small screens) -->
-        <div class="hidden md:block overflow-x-auto">
-            
-            <!-- Search Text (Col 4) -->
-            <div class="md:col-span-4 relative">
-                <input type="text" 
-                       name="search" 
-                       value="{{ $search }}"
-                       placeholder="Cari ID Internet, Pelanggan, Operator, Respons..." 
-                       class="w-full text-xs px-2.5 py-1.5 pl-8 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>
-            </div>
-
-            <!-- Filter Action (Col 3) -->
-            <div class="md:col-span-3">
-                <select name="action" 
-                        onchange="this.form.submit()"
-                        class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                    <option value="">-- Semua Aksi --</option>
-                    <option value="activate" {{ $action === 'activate' ? 'selected' : '' }}>Aktivasi Layanan</option>
-                    <option value="suspend" {{ $action === 'suspend' ? 'selected' : '' }}>Suspend / Isolir</option>
-                    <option value="pppoe_activate" {{ $action === 'pppoe_activate' ? 'selected' : '' }}>PPPoE Secret Creation</option>
-                    <option value="test_connection" {{ $action === 'test_connection' ? 'selected' : '' }}>Tes Koneksi</option>
-                    <option value="sync_router" {{ $action === 'sync_router' ? 'selected' : '' }}>Sinkronisasi Pelanggan</option>
-                    <option value="create_router" {{ $action === 'create_router' ? 'selected' : '' }}>Tambah Router</option>
-                    <option value="update_router" {{ $action === 'update_router' ? 'selected' : '' }}>Update Router</option>
-                    <option value="delete_router" {{ $action === 'delete_router' ? 'selected' : '' }}>Hapus Router</option>
-                </select>
-            </div>
-
-            <!-- Filter Status (Col 2) -->
-            <div class="md:col-span-2">
-                <select name="status" 
-                        onchange="this.form.submit()"
-                        class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                    <option value="">-- Status Router --</option>
-                    <option value="1" {{ $status === '1' ? 'selected' : '' }}>✓ Berhasil (Sukses)</option>
-                    <option value="0" {{ $status === '0' ? 'selected' : '' }}>✕ Gagal (Error)</option>
-                </select>
-            </div>
-
-            <!-- Tanggal Mulai (Col 2) -->
-            <div class="md:col-span-2">
-                <input type="date" 
-                       name="start_date" 
-                       value="{{ $startDate }}"
-                       onchange="this.form.submit()"
-                       title="Tanggal Mulai"
-                       class="w-full text-xs px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-            </div>
-
-            <!-- Actions Reset (Col 1) -->
-            <div class="md:col-span-1 flex items-center justify-end">
-                @if($search || $action || ($status !== null && $status !== '') || $startDate || $endDate)
-                    <a href="{{ route('noc.activity-log') }}" 
-                       title="Reset Filter"
-                       class="w-full inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-xs">
-                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                        </svg>
-                        <span>Reset</span>
-                    </a>
-                @endif
-            </div>
-        </form>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- 4. ACTIVITY LOG DATA TABLE                                          -->
-    <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="ims-desktop-only hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
@@ -476,7 +404,7 @@
         </div>
 
         <!-- Mobile Cards List View (Shown on screens < md) -->
-        <div class="block md:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
+        <div class="ims-mobile-only block md:hidden divide-y divide-slate-100 dark:divide-slate-800/60">
             @forelse($logs as $index => $log)
                 @php
                     $actionName = strtolower((string)$log->action);

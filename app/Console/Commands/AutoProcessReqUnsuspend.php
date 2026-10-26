@@ -29,7 +29,7 @@ class AutoProcessReqUnsuspend extends Command
         $targetNumber = trim((string)$this->argument('nomor_internet'));
         if ($targetNumber !== '') {
             $this->info("Menjalankan unsuspend langsung untuk nomor internet: {$targetNumber}...");
-            $res = $provisioning->activateCustomer($targetNumber, 'Manual CLI', 'Eksekusi unsuspend via artisan');
+            $res = $provisioning->activateCustomer($targetNumber, 'Manual CLI', 'Eksekusi unsuspend via artisan', true);
             $status = ($res['success'] ?? false) ? 'BERHASIL' : 'GAGAL';
             $this->line("- [{$status}] {$targetNumber}: " . ($res['summary'] ?? ''));
             return ($res['success'] ?? false) ? 0 : 1;

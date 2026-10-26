@@ -2112,7 +2112,7 @@ class NocController extends Controller
 
         if ($suspend->status_suspend == '18') {
             // UNsuspend / Buka Isolir -> Aktifkan
-            $res = $provisioning->activateCustomer($nomorInternet, $currentUser, 'Approve Unsuspend dari NOC');
+            $res = $provisioning->activateCustomer($nomorInternet, $currentUser, 'Approve Unsuspend dari NOC', true);
             if (!($res['success'] ?? false)) {
                 return redirect()->back()->with('error', "Gagal buka isolir {$nomorInternet}: " . ($res['summary'] ?? 'Gagal pada router MikroTik'));
             }
@@ -2187,7 +2187,7 @@ class NocController extends Controller
 
             if ($suspend->status_suspend == '18') {
                 // UNsuspend / Buka Isolir
-                $res = $provisioning->activateCustomer($nomorInternet, $currentUser, 'Bulk Approve Unsuspend dari NOC');
+                $res = $provisioning->activateCustomer($nomorInternet, $currentUser, 'Bulk Approve Unsuspend dari NOC', true);
                 if ($res['success'] ?? false) {
                     DB::table('trx_suspend')->where('kode_suspend', $suspend->kode_suspend)->update([
                         'status_suspend' => '13',

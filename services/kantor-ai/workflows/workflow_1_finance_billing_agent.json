@@ -1,0 +1,206 @@
+{
+  "name": "Kantor AI - Finance & Billing Reminder Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "e1f13b69-8012-40a2-b2a1-120e2ef50001",
+      "name": "Schedule - Tiap Jam 09:00 Pagi",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  b.kode_billing_layanan,\n  b.nomor_internet,\n  COALESCE(c.nama_pelanggan, 'Pelanggan') AS nama_pelanggan,\n  COALESCE(c.nomor_hp, c.no_wa, '') AS nomor_hp,\n  b.periode_tagihan,\n  CAST(b.total_layanan AS DECIMAL(15,2)) AS total_tagihan,\n  b.status_bill_lay\nFROM trx_billing_layanan b\nLEFT JOIN view_batchjob c ON b.nomor_internet = c.nomor_internet\nWHERE b.status_bill_lay = '13'\n  AND CAST(b.total_layanan AS DECIMAL(15,2)) > 0\n  AND (b.hide IS NULL OR b.hide = '0')\n  AND (b.kode_bandwith NOT LIKE '%FREE%')\nORDER BY b.date_create DESC\nLIMIT 50;"
+      },
+      "id": "e1f13b69-8012-40a2-b2a1-120e2ef50002",
+      "name": "MySQL - Tarik Tagihan Belum Lunas",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "IMS_MYSQL_CREDENTIALS",
+          "name": "MySQL IMS Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1f13b69-8012-40a2-b2a1-120e2ef50010",
+              "leftValue": "={{ $json.nomor_hp }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e1f13b69-8012-40a2-b2a1-120e2ef50003",
+      "name": "Filter - Pelanggan Ada No HP",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $env.GEMINI_API_KEY || 'MASUKKAN_GEMINI_API_KEY_ANDA' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"Kamu adalah Asisten Finansial AI PT Media Solusi Network (MSN). Buatkan pesan WhatsApp pengingat tagihan internet yang sopan, ramah, dan profesional dalam Bahasa Indonesia.\\n\\nData Pelanggan:\\n- Nama: {{ $json.nama_pelanggan }}\\n- ID Internet: {{ $json.nomor_internet }}\\n- Periode: {{ $json.periode_tagihan }}\\n- Tagihan: Rp {{ Number($json.total_tagihan).toLocaleString('id-ID') }}\\n- Batas Pembayaran: Tanggal 25 bulan ini.\\n\\nInstruksi:\\n1. Gunakan salam hangat dari PT MSN.\\n2. Tuliskan rincian di atas dengan format rapi dan mudah dibaca.\\n3. Cantumkan imbauan bahwa layanan akan diisolir otomatis jika lewat tanggal 25.\\n4. Jangan gunakan markdown berlebihan, hanya format teks WhatsApp (seperti *bold*).\\n5. Kembalikan HANYA teks isi pesan WhatsApp tanpa kalimat pembuka obrolan.\"\n    }]\n  }]\n}",
+        "options": {}
+      },
+      "id": "e1f13b69-8012-40a2-b2a1-120e2ef50004",
+      "name": "Gemini AI - Buat Pesan Ramah",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const geminiReply = $input.item.json.candidates?.[0]?.content?.parts?.[0]?.text || 'Halo Pelanggan PT MSN, tagihan internet Anda telah terbit. Silakan lakukan pembayaran sebelum tanggal 25.';\nconst rawPhone = $('Filter - Pelanggan Ada No HP').item.json.nomor_hp.toString().replace(/[^0-9]/g, '');\nlet formattedPhone = rawPhone;\nif (formattedPhone.startsWith('0')) {\n  formattedPhone = '62' + formattedPhone.substring(1);\n} else if (!formattedPhone.startsWith('62')) {\n  formattedPhone = '62' + formattedPhone;\n}\n\nreturn {\n  nomor_internet: $('Filter - Pelanggan Ada No HP').item.json.nomor_internet,\n  nama_pelanggan: $('Filter - Pelanggan Ada No HP').item.json.nama_pelanggan,\n  nomor_hp: formattedPhone,\n  total_tagihan: $('Filter - Pelanggan Ada No HP').item.json.total_tagihan,\n  pesan_whatsapp: geminiReply\n};"
+      },
+      "id": "e1f13b69-8012-40a2-b2a1-120e2ef50005",
+      "name": "Format Nomor & Pesan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/botYOUR_TELEGRAM_BOT_TOKEN/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"YOUR_TELEGRAM_CHAT_ID\",\n  \"text\": \"📢 *[NOTIFIKASI FINANSIAL KANTOR AI]*\\n\\nPesan pengingat tagihan siap dikirim:\\n👤 *Pelanggan:* {{ $json.nama_pelanggan }} ({{ $json.nomor_internet }})\\n📱 *Target WA:* +{{ $json.nomor_hp }}\\n💵 *Nominal:* Rp {{ Number($json.total_tagihan).toLocaleString('id-ID') }}\\n\\n*Preview Pesan AI:*\\n{{ $json.pesan_whatsapp }}\",\n  \"parse_mode\": \"Markdown\"\n}",
+        "options": {}
+      },
+      "id": "e1f13b69-8012-40a2-b2a1-120e2ef50006",
+      "name": "Kirim Notifikasi Telegram / WA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1420,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule - Tiap Jam 09:00 Pagi": {
+      "main": [
+        [
+          {
+            "node": "MySQL - Tarik Tagihan Belum Lunas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MySQL - Tarik Tagihan Belum Lunas": {
+      "main": [
+        [
+          {
+            "node": "Filter - Pelanggan Ada No HP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter - Pelanggan Ada No HP": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI - Buat Pesan Ramah",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI - Buat Pesan Ramah": {
+      "main": [
+        [
+          {
+            "node": "Format Nomor & Pesan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Nomor & Pesan": {
+      "main": [
+        [
+          {
+            "node": "Kirim Notifikasi Telegram / WA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

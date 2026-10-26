@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -11,126 +10,121 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $rCols = Schema::hasTable('trx_batchjob_register') ? Schema::getColumnListing('trx_batchjob_register') : [];
-        $pCols = Schema::hasTable('m_pelanggan') ? Schema::getColumnListing('m_pelanggan') : [];
-
-        $hasR = fn($col) => in_array($col, $rCols, true);
-        $hasP = fn($col) => in_array($col, $pCols, true);
-
-        // PPPoE Username & Password
-        if ($hasR('pppoe_username') && $hasP('pppoe_username')) {
-            $pppoeUserSql = "COALESCE(r.pppoe_username, p.pppoe_username) AS pppoe_username";
-        } elseif ($hasR('pppoe_username')) {
-            $pppoeUserSql = "r.pppoe_username AS pppoe_username";
-        } elseif ($hasP('pppoe_username')) {
-            $pppoeUserSql = "p.pppoe_username AS pppoe_username";
-        } else {
-            $pppoeUserSql = "NULL AS pppoe_username";
-        }
-
-        if ($hasR('pppoe_password') && $hasP('pppoe_password')) {
-            $pppoePassSql = "COALESCE(r.pppoe_password, p.pppoe_password) AS pppoe_password";
-        } elseif ($hasR('pppoe_password')) {
-            $pppoePassSql = "r.pppoe_password AS pppoe_password";
-        } elseif ($hasP('pppoe_password')) {
-            $pppoePassSql = "p.pppoe_password AS pppoe_password";
-        } else {
-            $pppoePassSql = "NULL AS pppoe_password";
-        }
-
-        // Nama Pelanggan
-        if ($hasR('nama_pelanggan')) {
-            $namaPelangganSql = "COALESCE(NULLIF(r.nama_pelanggan, ''), p.nama_penduduk, 'Tanpa Nama') AS nama_pelanggan";
-        } else {
-            $namaPelangganSql = "COALESCE(p.nama_penduduk, 'Tanpa Nama') AS nama_pelanggan";
-        }
-
-        $selectFields = [
-            $hasR('nomor_internet') ? 'r.nomor_internet' : 'NULL AS nomor_internet',
-            $hasR('nik_penduduk') ? 'r.nik_penduduk' : 'NULL AS nik_penduduk',
-            $namaPelangganSql,
-            $hasR('rt_pasang') ? 'r.rt_pasang' : 'NULL AS rt_pasang',
-            $hasR('rw_pasang') ? 'r.rw_pasang' : 'NULL AS rw_pasang',
-            $hasR('nomor_bangunan') ? 'r.nomor_bangunan' : 'NULL AS nomor_bangunan',
-            $hasR('alamat_pasang') ? 'r.alamat_pasang' : 'NULL AS alamat_pasang',
-            $hasR('kode_wilayah_kelurahan_pasang') ? 'r.kode_wilayah_kelurahan_pasang' : 'NULL AS kode_wilayah_kelurahan_pasang',
-            $hasR('kode_wilayah_kota_pasang') ? 'r.kode_wilayah_kota_pasang' : 'NULL AS kode_wilayah_kota_pasang',
-            $hasR('jenis_bangunan') ? 'r.jenis_bangunan' : 'NULL AS jenis_bangunan',
-            $hasR('lon_lat') ? 'r.lon_lat' : 'NULL AS lon_lat',
-            $hasR('loc_maps') ? 'r.loc_maps' : 'NULL AS loc_maps',
-            $hasR('note_request') ? 'r.note_request' : 'NULL AS note_request',
-            $pppoeUserSql,
-            $pppoePassSql,
-            $hasR('kode_bandwith') ? 'r.kode_bandwith' : 'NULL AS kode_bandwith',
-            $hasR('kode_pop') ? 'r.kode_pop' : 'NULL AS kode_pop',
-            $hasR('ont_us') ? 'r.ont_us' : 'NULL AS ont_us',
-            $hasR('ont_ps') ? 'r.ont_ps' : 'NULL AS ont_ps',
-            $hasR('status_reg') ? 'r.status_reg' : 'NULL AS status_reg',
-            $hasR('media_akses') ? 'r.media_akses' : 'NULL AS media_akses',
-            $hasR('ppn') ? 'r.ppn' : 'NULL AS ppn',
-            $hasR('ppn_nom') ? 'r.ppn_nom' : 'NULL AS ppn_nom',
-            $hasR('potongan') ? 'r.potongan' : 'NULL AS potongan',
-            $hasR('potongan_note') ? 'r.potongan_note' : 'NULL AS potongan_note',
-            $hasR('last_month_billing') ? 'r.last_month_billing' : 'NULL AS last_month_billing',
-            $hasR('last_year_billing') ? 'r.last_year_billing' : 'NULL AS last_year_billing',
-            $hasR('periode_billing') ? 'r.periode_billing' : 'NULL AS periode_billing',
-            $hasR('jns_notif') ? 'r.jns_notif' : 'NULL AS jns_notif',
-            $hasR('is_termin') ? 'r.is_termin' : 'NULL AS is_termin',
-            $hasR('is_suspend') ? 'r.is_suspend' : 'NULL AS is_suspend',
-            $hasR('count_suspend') ? 'r.count_suspend' : 'NULL AS count_suspend',
-            $hasR('is_denda') ? 'r.is_denda' : 'NULL AS is_denda',
-            $hasR('islock') ? 'r.islock' : 'NULL AS islock',
-            $hasR('prorate') ? 'r.prorate' : 'NULL AS prorate',
-            $hasR('date_create') ? 'r.date_create' : 'NULL AS date_create',
-            $hasR('user_create') ? 'r.user_create' : 'NULL AS user_create',
-            $hasR('date_update') ? 'r.date_update' : 'NULL AS date_update',
-            $hasR('user_update') ? 'r.user_update' : 'NULL AS user_update',
-            $hasR('hide') ? 'r.hide' : 'NULL AS hide',
-            $hasR('mitra') ? 'r.mitra' : 'NULL AS mitra',
-            $hasR('group_layanan') ? 'r.group_layanan' : 'NULL AS group_layanan',
-            $hasR('nama_sales') ? 'r.nama_sales' : 'NULL AS nama_sales',
-            $hasR('olt') ? 'r.olt' : 'NULL AS olt',
-            $hasR('router_id') ? 'r.router_id' : 'NULL AS router_id',
-            $hasR('index_olt') ? 'r.index_olt' : 'NULL AS index_olt',
-            $hasR('scan_dokumen_survey') ? 'r.scan_dokumen_survey' : 'NULL AS scan_dokumen_survey',
-            $hasR('scan_dokumen_instalasi') ? 'r.scan_dokumen_instalasi' : 'NULL AS scan_dokumen_instalasi',
-            $hasR('scan_dokumen_aktivasi') ? 'r.scan_dokumen_aktivasi' : 'NULL AS scan_dokumen_aktivasi',
-            $hasR('is_login') ? 'r.is_login' : 'NULL AS is_login',
-            'p.nama_penduduk',
-            'p.email',
-            'p.nomor_hp',
-            'p.nomor_hp_2',
-            $hasP('jenis_kelamin') ? 'p.jenis_kelamin' : ($hasR('jenis_kelamin') ? 'r.jenis_kelamin' : 'NULL AS jenis_kelamin'),
-            $hasP('pic') ? 'p.pic' : ($hasR('pic') ? 'r.pic' : 'NULL AS pic'),
-            $hasP('alamat_ktp') ? 'p.alamat_ktp' : ($hasR('alamat_ktp') ? 'r.alamat_ktp' : 'NULL AS alamat_ktp'),
-            $hasP('alamat_ktp') ? 'p.alamat_ktp AS alamat_k' : ($hasR('alamat_ktp') ? 'r.alamat_ktp AS alamat_k' : 'NULL AS alamat_k'),
-            'p.alamat_ktp AS alamat_p',
-            'p.kode_wilayah_kelurahan_ktp',
-            $hasR('nama_kota_pasang') ? 'r.nama_kota_pasang' : 'NULL AS nama_kota_pasang',
-            $hasR('desc_registrasi') ? 'r.desc_registrasi' : 'NULL AS desc_registrasi',
-            $hasR('aktivasi_date_finish') ? 'r.aktivasi_date_finish' : 'NULL AS aktivasi_date_finish',
-            'b.nama_bandwith',
-            'b.kode_kategori_bandwith',
-            'b.nominal_bandwith',
-            'b.harga_bandwith',
-            'k.nama_kategori_bandwith',
-            'k.alias_nama_kategori',
-        ];
-
-        $selectClause = implode(",\n    ", $selectFields);
-
-        $sql = "CREATE OR REPLACE VIEW view_batchjob AS
+        $sql = "CREATE OR REPLACE VIEW `view_batchjob` AS 
 SELECT 
-    {$selectClause}
-FROM trx_batchjob_register r
-LEFT JOIN m_pelanggan p ON r.nik_penduduk = p.nik_penduduk
-LEFT JOIN m_bandwith b ON r.kode_bandwith = b.kode_bandwith
-LEFT JOIN m_bandwith_kategori k ON b.kode_kategori_bandwith = k.kode_kategori_bandwith";
+  `br`.`nomor_internet` AS `nomor_internet`, 
+  `br`.`status_reg` AS `status_reg`, 
+  `sr`.`desc_registrasi` AS `desc_registrasi`, 
+  `br`.`nik_penduduk` AS `nik_penduduk`, 
+  `br`.`nama_pelanggan` AS `nama_pelanggan`, 
+  `p`.`nama_penduduk` AS `nama_penduduk`, 
+  `p`.`nomor_hp` AS `nomor_hp`, 
+  `p`.`nomor_hp_2` AS `nomor_hp_2`, 
+  `p`.`email` AS `email`, 
+  `p`.`jenis_kelamin` AS `jenis_kelamin`, 
+  `p`.`tanggal_lahir` AS `tanggal_lahir`, 
+  `p`.`pic` AS `pic`, 
+  `p`.`rt_ktp` AS `rt_ktp`, 
+  `p`.`rw_ktp` AS `rw_ktp`, 
+  `p`.`alamat_ktp` AS `alamat_ktp`, 
+  concat(`p`.`alamat_ktp`,', RT',`p`.`rt_ktp`,'/RW',`p`.`rw_ktp`,', KEL. ',`p`.`nama_kelurahan`,', KEC. ',`p`.`nama_kecamatan`,', ',`p`.`nama_kota`,', ',`p`.`nama_provinsi`) AS `alamat_k`, 
+  `p`.`kode_wilayah_kelurahan_ktp` AS `kode_wilayah_kelurahan_ktp`, 
+  `p`.`nama_kelurahan` AS `nama_kelurahan`, 
+  `p`.`nama_kecamatan` AS `nama_kecamatan`, 
+  `p`.`nama_kota` AS `nama_kota`, 
+  `p`.`nama_provinsi` AS `nama_provinsi`, 
+  `b`.`kode_kategori_bandwith` AS `kode_kategori_bandwith`, 
+  `b`.`nama_kategori_bandwith` AS `nama_kategori_bandwith`, 
+  `b`.`alias_nama_kategori` AS `alias_nama_kategori`, 
+  `b`.`biaya_reg` AS `biaya_reg`, 
+  `b`.`kode_bandwith` AS `kode_bandwith`, 
+  `b`.`nominal_bandwith` AS `nominal_bandwith`, 
+  `b`.`harga_bandwith` AS `harga_bandwith`, 
+  `br`.`jenis_bangunan` AS `jenis_bangunan`, 
+  `br`.`rt_pasang` AS `rt_pasang`, 
+  `br`.`rw_pasang` AS `rw_pasang`, 
+  `br`.`alamat_pasang` AS `alamat_pasang`, 
+  concat(`br`.`alamat_pasang`,' NO. ',`br`.`nomor_bangunan`,', RT',`br`.`rt_pasang`,'/RW',`br`.`rw_pasang`,', KEL. ',`w`.`nama_kelurahan`,', KEC. ',`w`.`nama_kecamatan`,', ',`w`.`nama_kota`,', ',`w`.`nama_provinsi`) AS `alamat_p`, 
+  `br`.`kode_wilayah_kelurahan_pasang` AS `kode_wilayah_kelurahan_pasang`, 
+  `br`.`loc_maps` AS `loc_maps`, 
+  `br`.`nomor_bangunan` AS `nomor_bangunan`, 
+  `br`.`lon_lat` AS `lon_lat`, 
+  `w`.`nama_kelurahan` AS `nama_kelurahan_pasang`, 
+  `w`.`nama_kecamatan` AS `nama_kecamatan_pasang`, 
+  `w`.`nama_kota` AS `nama_kota_pasang`, 
+  `w`.`kode_wilayah_kota` AS `kode_wilayah_kota_pasang`, 
+  `w`.`nama_provinsi` AS `nama_provinsi_pasang`, 
+  `br`.`note_request` AS `note_request`, 
+  `br`.`ppn` AS `ppn`, 
+  `br`.`ppn_nom` AS `ppn_nom`, 
+  `br`.`potongan` AS `potongan`, 
+  `br`.`potongan_note` AS `potongan_note`, 
+  `br`.`last_month_billing` AS `last_month_billing`, 
+  `br`.`last_year_billing` AS `last_year_billing`, 
+  `br`.`periode_billing` AS `periode_billing`, 
+  `br`.`jns_notif` AS `jns_notif`, 
+  `br`.`is_denda` AS `is_denda`, 
+  `br`.`is_suspend` AS `is_suspend`, 
+  `br`.`count_suspend` AS `count_suspend`, 
+  `br`.`is_termin` AS `is_termin`, 
+  `i`.`kode_instalasi` AS `kode_instalasi`, 
+  `i`.`verifikasi_date` AS `verifikasi_date`, 
+  `i`.`verifikasi_note` AS `verifikasi_note`, 
+  `i`.`survey_date_start` AS `survey_date_start`, 
+  `i`.`survey_time` AS `survey_time`, 
+  `i`.`survey_team` AS `survey_team`, 
+  `i`.`survey_note` AS `survey_note`, 
+  `i`.`survey_date_finish` AS `survey_date_finish`, 
+  `i`.`survey_note_finish` AS `survey_note_finish`, 
+  `i`.`doc_survey` AS `doc_survey`, 
+  `i`.`instalasi_date_start` AS `instalasi_date_start`, 
+  `i`.`instalasi_time` AS `instalasi_time`, 
+  `i`.`instalasi_team` AS `instalasi_team`, 
+  `i`.`instalasi_note` AS `instalasi_note`, 
+  `i`.`instalasi_date_finish` AS `instalasi_date_finish`, 
+  `i`.`instalasi_note_finish` AS `instalasi_note_finish`, 
+  `i`.`doc_instalasi` AS `doc_instalasi`, 
+  `i`.`aktivasi_date_start` AS `aktivasi_date_start`, 
+  `i`.`aktivasi_time` AS `aktivasi_time`, 
+  `i`.`aktivasi_team` AS `aktivasi_team`, 
+  `i`.`aktivasi_note` AS `aktivasi_note`, 
+  `i`.`aktivasi_date_finish` AS `aktivasi_date_finish`, 
+  `i`.`aktivasi_note_finish` AS `aktivasi_note_finish`, 
+  `i`.`doc_aktivasi` AS `doc_aktivasi`, 
+  `i`.`doc_berlangganan` AS `doc_berlangganan`, 
+  `i`.`foto_rumah` AS `foto_rumah`, 
+  `i`.`foto_ktp` AS `foto_ktp`, 
+  `i`.`foto_peta` AS `foto_peta`, 
+  `br`.`kode_pop` AS `kode_pop`, 
+  `po`.`nama_pop` AS `nama_pop`, 
+  `po`.`desc_pop` AS `desc_pop`, 
+  `br`.`ont_us` AS `ont_us`, 
+  `br`.`ont_ps` AS `ont_ps`, 
+  `br`.`media_akses` AS `media_akses`, 
+  `br`.`index_olt` AS `index_olt`, 
+  `br`.`group_layanan` AS `group_layanan`, 
+  `br`.`nama_sales` AS `nama_sales`, 
+  `br`.`islock` AS `islock`, 
+  `br`.`prorate` AS `prorate`, 
+  `br`.`hide` AS `hide`, 
+  `br`.`user_create` AS `user_create`, 
+  `br`.`date_create` AS `date_create`, 
+  `br`.`date_update` AS `date_update`, 
+  `br`.`user_update` AS `user_update`, 
+  `h`.`desc_hide` AS `desc_hide` 
+FROM (((((((`trx_batchjob_register` `br` 
+  left join `m_status_registrasi` `sr` on((`br`.`status_reg` = `sr`.`status_reg`))) 
+  left join `trx_instalasi` `i` on((`br`.`nomor_internet` = `i`.`nomor_internet`))) 
+  left join `view_bandwith` `b` on((`br`.`kode_bandwith` = `b`.`kode_bandwith`))) 
+  left join `m_wilayah` `w` on((`br`.`kode_wilayah_kelurahan_pasang` = `w`.`kode_wilayah_kelurahan`))) 
+  left join `view_pelanggan` `p` on((`br`.`nik_penduduk` = `p`.`nik_penduduk`))) 
+  left join `m_status_hide` `h` on((`br`.`hide` = `h`.`hide`))) 
+  left join `m_pop` `po` on((`po`.`kode_pop` = `br`.`kode_pop`)))";
 
         try {
             DB::statement($sql);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning("view_batchjob fix note: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning("view_batchjob restore note: " . $e->getMessage());
         }
     }
 
@@ -139,6 +133,5 @@ LEFT JOIN m_bandwith_kategori k ON b.kode_kategori_bandwith = k.kode_kategori_ba
      */
     public function down(): void
     {
-        // View remains intact
     }
 };

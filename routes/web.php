@@ -79,6 +79,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/history/retry-all-failed', [EmailController::class, 'retryAllFailed'])->name('history.retry-all');
             Route::post('/history/{id}/retry', [EmailController::class, 'retry'])->name('history.retry');
             Route::get('/history/{id}', [EmailController::class, 'getHistoryDetail'])->name('history.detail');
+            Route::post('/templates/save', [EmailController::class, 'saveTemplate'])->name('templates.save');
+            Route::match(['post', 'delete'], '/templates/{id}/delete', [EmailController::class, 'deleteTemplate'])->name('templates.delete');
         });
     });
 

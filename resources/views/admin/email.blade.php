@@ -145,15 +145,57 @@
                     <p class="text-xs text-slate-500">Tulis isi pengumuman atau pilih preset template resmi sebelum memilih pelanggan penerima.</p>
                 </div>
 
-                <!-- Template Preset Selector -->
-                <select x-model="selectedPresetId"
-                        @change="applyPreset()"
-                        class="text-xs py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-medium text-slate-800 dark:text-slate-200 sm:min-w-[280px]">
-                    <option value="">-- Pilih Template Preset --</option>
-                    @foreach($presets as $p)
-                        <option value="{{ $p['id'] }}">{{ $p['name'] }}</option>
-                    @endforeach
-                </select>
+                <!-- Template Preset Selector & Actions -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative min-w-[200px] sm:min-w-[270px]">
+                        <select x-model="selectedPresetId"
+                                @change="applyPreset()"
+                                class="w-full text-xs py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+                            <option value="">-- Pilih Template Preset --</option>
+                            <template x-for="p in presets" :key="p.id">
+                                <option :value="p.id" x-text="(p.is_system ? '⚡ ' : '📋 ') + p.name" :selected="String(p.id) === String(selectedPresetId) || p.slug === selectedPresetId"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Tombol Ubah Template Terpilih -->
+                    <button type="button"
+                            x-show="selectedPresetId"
+                            x-cloak
+                            @click="openEditTemplateModal()"
+                            title="Ubah / Edit Template Ini"
+                            class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-semibold transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        <span>Ubah</span>
+                    </button>
+
+                    <!-- Tombol Hapus Template Terpilih -->
+                    <button type="button"
+                            x-show="selectedPresetId"
+                            x-cloak
+                            @click="deleteSelectedTemplate()"
+                            :disabled="isDeletingTemplate"
+                            title="Hapus Template Ini"
+                            class="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60 text-xs font-semibold transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span>Hapus</span>
+                    </button>
+
+                    <!-- Tombol Tambah Template Baru -->
+                    <button type="button"
+                            @click="openCreateTemplateModal(false)"
+                            title="Buat Template Email Baru"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-xs shadow-sky-600/30 transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Template Baru</span>
+                    </button>
+                </div>
             </div>
 
             <div class="p-5 space-y-4">
@@ -245,15 +287,28 @@
 
             <!-- Composer Footer Actions -->
             <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3">
-                <button type="button"
-                        @click="openPreviewModal()"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition cursor-pointer">
-                    <svg class="w-4 h-4 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    </svg>
-                    <span>Pratinjau (Preview)</span>
-                </button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button"
+                            @click="openPreviewModal()"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition cursor-pointer">
+                        <svg class="w-4 h-4 text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                        <span>Pratinjau (Preview)</span>
+                    </button>
+
+                    <!-- Simpan Sebagai Template Baru -->
+                    <button type="button"
+                            @click="openCreateTemplateModal(true)"
+                            title="Simpan pesan saat ini sebagai preset template baru"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 text-xs font-semibold transition cursor-pointer">
+                        <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                        </svg>
+                        <span class="hidden sm:inline">Simpan Sebagai Template</span>
+                    </button>
+                </div>
 
                 <div class="flex items-center gap-2">
                     <button type="button"
@@ -989,6 +1044,142 @@
                     </button>
                 </div>
             </div>
+    <!-- Modal 4: Kelola Template Email (Tambah / Ubah Template) -->
+    <template x-teleport="body">
+        <div x-show="templateModalOpen"
+             x-cloak
+             @keydown.escape.window="if (!isSavingTemplate) templateModalOpen = false"
+             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 100000; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                 style="margin: auto;"
+                 @click.away="if (!isSavingTemplate) templateModalOpen = false">
+
+                <!-- Header Modal -->
+                <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-800/40">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-950/80 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white"
+                                x-text="templateModalMode === 'edit' ? 'Ubah Template Email' : 'Tambah Template Email Baru'"></h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400"
+                               x-text="templateModalMode === 'edit' ? 'Perbarui informasi dan isi template pesan email resmi.' : 'Simpan template baru agar dapat langsung digunakan kapan saja.'"></p>
+                        </div>
+                    </div>
+                    <button type="button"
+                            @click="templateModalOpen = false"
+                            class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body Modal (Scrollable) -->
+                <div class="p-5 space-y-4 overflow-y-auto flex-1">
+                    <!-- Nama Template & Subjek -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                Nama Template <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text"
+                                   x-model="templateForm.name"
+                                   placeholder="Contoh: Pemberitahuan Maaf & Aktivasi Jaringan"
+                                   class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                Label / Badge Header
+                            </label>
+                            <input type="text"
+                                   x-model="templateForm.badge"
+                                   placeholder="Contoh: PEMBERITAHUAN RESMI"
+                                   class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                    </div>
+
+                    <!-- Subjek Email -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            Subjek Email <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text"
+                               x-model="templateForm.subject"
+                               placeholder="Contoh: Pemberitahuan Resmi - PT Media Solusi Network"
+                               class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    </div>
+
+                    <!-- Tombol Aksi Opsional -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                Teks Tombol Aksi (Opsional)
+                            </label>
+                            <input type="text"
+                                   x-model="templateForm.action_text"
+                                   placeholder="Contoh: Kunjungi Portal Pelanggan"
+                                   class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                                URL Tombol Aksi (Opsional)
+                            </label>
+                            <input type="url"
+                                   x-model="templateForm.action_url"
+                                   placeholder="https://portal.ptmsn.co.id"
+                                   class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                    </div>
+
+                    <!-- Isi Pesan Email -->
+                    <div>
+                        <div class="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                Isi Pesan Email <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="flex flex-wrap items-center gap-1 text-[11px] text-slate-400">
+                                <span>Variabel:</span>
+                                <button type="button" @click="insertTemplateTag('{nama_pelanggan}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nama_pelanggan}</button>
+                                <button type="button" @click="insertTemplateTag('{nomor_internet}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nomor_internet}</button>
+                                <button type="button" @click="insertTemplateTag('{paket}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{paket}</button>
+                                <button type="button" @click="insertTemplateTag('{periode}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{periode}</button>
+                                <button type="button" @click="insertTemplateTag('{nominal}')" class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-sky-100 dark:hover:bg-sky-950 hover:text-sky-600 font-mono cursor-pointer">{nominal}</button>
+                            </div>
+                        </div>
+                        <textarea x-model="templateForm.body"
+                                  rows="6"
+                                  placeholder="Tuliskan isi pesan template di sini..."
+                                  class="w-full p-3.5 rounded-xl text-xs leading-relaxed bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 font-sans"></textarea>
+                        <p class="text-[11px] text-slate-400 mt-1">Gunakan baris baru (Enter) ganda untuk memisahkan paragraf pesan email.</p>
+                    </div>
+                </div>
+
+                <!-- Footer Modal -->
+                <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex items-center justify-end gap-2.5">
+                    <button type="button"
+                            @click="templateModalOpen = false"
+                            :disabled="isSavingTemplate"
+                            class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-50 text-slate-700 dark:text-slate-300 text-xs font-bold transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="button"
+                            @click="saveTemplateSubmit()"
+                            :disabled="isSavingTemplate"
+                            class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-sky-600/25 transition cursor-pointer">
+                        <template x-if="isSavingTemplate">
+                            <svg class="w-3.5 h-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                        </template>
+                        <span x-text="isSavingTemplate ? 'Menyimpan...' : (templateModalMode === 'edit' ? 'Simpan Perubahan' : 'Simpan Template Baru')"></span>
+                    </button>
+                </div>
+            </div>
         </div>
     </template>
 </div>
@@ -1054,6 +1245,21 @@ function emailManagement() {
             targets: [],
             label: ''
         },
+
+        // Template CRUD State
+        templateModalOpen: false,
+        templateModalMode: 'create', // 'create' | 'edit'
+        templateForm: {
+            id: null,
+            name: '',
+            subject: '',
+            badge: 'PEMBERITAHUAN RESMI',
+            action_text: '',
+            action_url: '',
+            body: ''
+        },
+        isSavingTemplate: false,
+        isDeletingTemplate: false,
 
         init() {
             // Pulihkan daftar pelanggan yang sudah dicentang lintas halaman / filter
@@ -1128,13 +1334,155 @@ function emailManagement() {
 
         applyPreset() {
             if (!this.selectedPresetId) return;
-            const p = this.presets.find(item => item.id === this.selectedPresetId);
+            const p = this.presets.find(item => String(item.id) === String(this.selectedPresetId) || item.slug === this.selectedPresetId);
             if (p) {
                 this.form.subject = p.subject;
                 this.form.badge_text = p.badge;
                 this.form.message = p.body;
                 this.form.action_text = p.action_text;
                 this.form.action_url = p.action_url;
+            }
+        },
+
+        openCreateTemplateModal(fromComposer = false) {
+            this.templateModalMode = 'create';
+            if (fromComposer) {
+                this.templateForm = {
+                    id: null,
+                    name: this.form.subject ? this.form.subject.substring(0, 50) : '',
+                    subject: this.form.subject || '',
+                    badge: this.form.badge_text || 'PEMBERITAHUAN RESMI',
+                    action_text: this.form.action_text || '',
+                    action_url: this.form.action_url || '',
+                    body: this.form.message || ''
+                };
+            } else {
+                this.templateForm = {
+                    id: null,
+                    name: '',
+                    subject: '',
+                    badge: 'PEMBERITAHUAN RESMI',
+                    action_text: '',
+                    action_url: '',
+                    body: ''
+                };
+            }
+            this.templateModalOpen = true;
+        },
+
+        openEditTemplateModal() {
+            if (!this.selectedPresetId) return;
+            const p = this.presets.find(item => String(item.id) === String(this.selectedPresetId) || item.slug === this.selectedPresetId);
+            if (!p) return;
+
+            this.templateModalMode = 'edit';
+            this.templateForm = {
+                id: p.id,
+                name: p.name,
+                subject: p.subject,
+                badge: p.badge || 'PEMBERITAHUAN RESMI',
+                action_text: p.action_text || '',
+                action_url: p.action_url || '',
+                body: p.body
+            };
+            this.templateModalOpen = true;
+        },
+
+        insertTemplateTag(tag) {
+            this.templateForm.body = (this.templateForm.body ? this.templateForm.body + ' ' : '') + tag;
+        },
+
+        async saveTemplateSubmit() {
+            if (!this.templateForm.name || !this.templateForm.name.trim()) {
+                this.showNotice('warning', 'Nama Template Kosong', 'Harap masukkan nama template.');
+                return;
+            }
+            if (!this.templateForm.subject || !this.templateForm.subject.trim()) {
+                this.showNotice('warning', 'Subjek Kosong', 'Harap masukkan subjek email.');
+                return;
+            }
+            if (!this.templateForm.body || !this.templateForm.body.trim()) {
+                this.showNotice('warning', 'Pesan Kosong', 'Harap tuliskan isi pesan email untuk template ini.');
+                return;
+            }
+
+            this.isSavingTemplate = true;
+            try {
+                const res = await fetch('{{ route("admin.email.templates.save") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(this.templateForm)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.presets = data.presets;
+                    this.selectedPresetId = String(data.template.id);
+                    this.applyPreset();
+                    this.templateModalOpen = false;
+                    this.showNotice('success', 'Berhasil Disimpan!', data.message);
+                } else {
+                    this.showNotice('error', 'Gagal Menyimpan', data.message || 'Terjadi kesalahan saat menyimpan template.');
+                }
+            } catch (e) {
+                this.showNotice('error', 'Terjadi Kesalahan', e.message);
+            } finally {
+                this.isSavingTemplate = false;
+            }
+        },
+
+        async deleteSelectedTemplate() {
+            if (!this.selectedPresetId) return;
+            const p = this.presets.find(item => String(item.id) === String(this.selectedPresetId) || item.slug === this.selectedPresetId);
+            if (!p) return;
+
+            const executeDelete = async () => {
+                this.isDeletingTemplate = true;
+                try {
+                    const res = await fetch(`/admin/email/templates/${p.id}/delete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        this.presets = data.presets;
+                        this.selectedPresetId = '';
+                        this.showNotice('success', 'Berhasil Dihapus', data.message);
+                    } else {
+                        this.showNotice('error', 'Gagal Menghapus', data.message || 'Gagal menghapus template.');
+                    }
+                } catch (e) {
+                    this.showNotice('error', 'Terjadi Kesalahan', e.message);
+                } finally {
+                    this.isDeletingTemplate = false;
+                }
+            };
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Hapus Template Ini?',
+                    text: `Apakah Anda yakin ingin menghapus template "${p.name}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Hapus Template',
+                    cancelButtonText: 'Batal',
+                    customClass: { popup: 'rounded-2xl' }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        executeDelete();
+                    }
+                });
+            } else {
+                if (confirm(`Apakah Anda yakin ingin menghapus template "${p.name}"?`)) {
+                    executeDelete();
+                }
             }
         },
 

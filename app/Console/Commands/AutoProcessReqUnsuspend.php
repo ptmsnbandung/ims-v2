@@ -71,7 +71,11 @@ class AutoProcessReqUnsuspend extends Command
                 $this->line("- [{$status}] {$nomorInternet}: " . ($info['summary'] ?? ''));
             }
         } else {
-            $this->info('Tidak ada antrean Req. Unsuspend atau pelanggan suspend lunas yang pending.');
+            if (!empty($result['error'])) {
+                $this->error("Gagal memproses antrean auto-unsuspend: " . $result['error']);
+            } else {
+                $this->info('Tidak ada antrean Req. Unsuspend atau pelanggan suspend lunas yang pending.');
+            }
         }
 
         return 0;

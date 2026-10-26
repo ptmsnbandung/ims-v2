@@ -3,6 +3,7 @@
 namespace App\Services\Network;
 
 use App\Services\Olt\OltConnectionService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1093,7 +1094,7 @@ class CustomerProvisioningService
             }
 
             $results = [];
-            $now = Carbon::now('Asia/Jakarta');
+            $now = now('Asia/Jakarta');
 
             foreach ($allCandidates as $nomorInternet) {
                 $nomorInternet = trim((string)$nomorInternet);
@@ -1162,7 +1163,7 @@ class CustomerProvisioningService
             return ['processed' => count($results), 'results' => $results];
         } catch (\Throwable $e) {
             Log::warning('processAutoUnsuspendQueue error: ' . $e->getMessage());
-            return ['processed' => 0, 'results' => []];
+            return ['processed' => 0, 'results' => [], 'error' => $e->getMessage()];
         }
     }
 }

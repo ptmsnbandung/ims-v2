@@ -73,6 +73,57 @@ class EmailController extends Controller
                 });
             }
 
+            if (Schema::hasTable('tb_broadcast_email_template') && DB::table('tb_broadcast_email_template')->count() === 0) {
+                $portalUrl = config('company.portal_url', 'https://portal.ptmsn.co.id');
+                $billingWa = config('company.billing_whatsapp', '6285188358385');
+                $now = now();
+                $defaults = [
+                    [
+                        'slug' => 'jatuh_tempo', 'name' => 'Pengingat Tagihan Jatuh Tempo (Belum Lunas)', 'badge' => 'PENGINGAT TAGIHAN',
+                        'subject' => 'Pengingat Pembayaran Tagihan Internet Periode {periode} - PT Media Solusi Network',
+                        'body' => "Halo {nama_pelanggan},\n\nKami mengingatkan bahwa tagihan layanan internet Anda #{nomor_internet} ({paket}) untuk periode {periode} sebesar {nominal} telah terbit dan memasuki masa jatuh tempo.\n\nAgar koneksi internet Anda tetap aktif tanpa kendala (terhindar dari isolir otomatis), mohon segera melakukan pembayaran melalui Portal Pelanggan MyMSN.\n\nAbaikan pesan ini apabila Anda telah melakukan pembayaran. Terima kasih atas kerja sama Anda.",
+                        'action_text' => 'Bayar Tagihan di Portal', 'action_url' => $portalUrl, 'is_system' => 1, 'created_at' => $now, 'updated_at' => $now
+                    ],
+                    [
+                        'slug' => 'suspend', 'name' => 'Pemberitahuan Layanan Terisolir / Suspend', 'badge' => 'STATUS LAYANAN ISOLIR',
+                        'subject' => 'Pemberitahuan Nonaktif Sementara (Suspend) Layanan Internet #{nomor_internet}',
+                        'body' => "Kepada Yth. {nama_pelanggan},\n\nKami menginformasikan bahwa layanan internet Anda #{nomor_internet} ({paket}) saat ini sedang dinonaktifkan sementara (Suspend / Isolir) dikarenakan adanya tagihan periode {periode} sebesar {nominal} yang melewati batas waktu pembayaran.\n\nUntuk mengaktifkan kembali koneksi internet Anda secara otomatis, silakan selesaikan pembayaran tagihan melalui Portal Pelanggan atau hubungi tim Admin Billing kami.",
+                        'action_text' => 'Cek & Bayar Tagihan Sekarang', 'action_url' => $portalUrl, 'is_system' => 1, 'created_at' => $now, 'updated_at' => $now
+                    ],
+                    [
+                        'slug' => 'lunas', 'name' => 'Ucapan Terima Kasih Pembayaran Lunas', 'badge' => 'KONFIRMASI PEMBAYARAN',
+                        'subject' => 'Terima Kasih! Pembayaran Tagihan Periode {periode} Telah Kami Terima',
+                        'body' => "Halo {nama_pelanggan},\n\nTerima kasih! Pembayaran tagihan layanan internet Anda #{nomor_internet} ({paket}) untuk periode {periode} sebesar {nominal} telah tercatat LUNAS di sistem kami.\n\nAnda dapat mengunduh bukti kwitansi / invoice resmi kapan saja melalui Portal Pelanggan MyMSN.\n\nSelamat menikmati layanan internet dari PT Media Solusi Network.",
+                        'action_text' => 'Lihat Kwitansi di Portal', 'action_url' => $portalUrl, 'is_system' => 1, 'created_at' => $now, 'updated_at' => $now
+                    ],
+                    [
+                        'slug' => 'maintenance', 'name' => 'Pemberitahuan Pemeliharaan Jaringan (Maintenance)', 'badge' => 'PEMELIHARAAN JARINGAN',
+                        'subject' => 'Pemberitahuan Pemeliharaan Jaringan Berkala - PT Media Solusi Network',
+                        'body' => "Kepada Pelanggan Yang Terhormat,\n\nDalam rangka meningkatkan kualitas dan keandalan layanan internet, kami akan melakukan pemeliharaan jaringan berkala (scheduled maintenance).\n\nSelama proses ini berlangsung, kemungkinan akan terjadi penurunan kualitas atau pemutusan koneksi internet sesaat. Kami memohon maaf yang sebesar-besarnya atas ketidaknyamanan yang ditimbulkan.\n\nTerima kasih atas pengertian dan kerja sama Anda.",
+                        'action_text' => 'Cek Status Jaringan di Portal', 'action_url' => $portalUrl, 'is_system' => 1, 'created_at' => $now, 'updated_at' => $now
+                    ],
+                    [
+                        'slug' => 'gangguan', 'name' => 'Informasi Gangguan Jaringan (Incident)', 'badge' => 'GANGGUAN JARINGAN',
+                        'subject' => 'Informasi Penanganan Gangguan Jaringan - PT Media Solusi Network',
+                        'body' => "Kepada Pelanggan Yang Terhormat,\n\nKami menginformasikan bahwa saat ini sedang terjadi kendala teknis pada jalur utama jaringan internet di wilayah Anda, yang berdampak pada koneksi internet #{nomor_internet}.\n\nTim teknis kami sedang berada di lokasi untuk melakukan penanganan dan perbaikan sesegera mungkin. Estimasi perbaikan akan kami informasikan lebih lanjut.\n\nMohon maaf atas ketidaknyamanan yang terjadi.",
+                        'action_text' => 'Hubungi WhatsApp Support', 'action_url' => 'https://wa.me/' . $billingWa, 'is_system' => 1, 'created_at' => $now, 'updated_at' => $now
+                    ],
+                    [
+                        'slug' => 'apology_reactivation', 'name' => 'Aktivasi Jaringan & Permohonan Maaf Pembayaran', 'badge' => 'PEMBERITAHUAN RESMI',
+                        'subject' => 'Pemberitahuan Resmi - PT Media Solusi Network',
+                        'body' => "👋 Halo Bapak/Ibu {nama_pelanggan},\n\nKabar baik, layanan internet untuk ID Pelanggan {nomor_internet} saat ini sudah AKTIF KEMBALI.\n\nKami memohon maaf yang sebesar-besarnya atas keterlambatan aktivasi jaringan setelah pembayaran melalui Midtrans. Terjadi kendala sinkronisasi sistem sesaat pada router aktivasi kami. 🙏\n\nSaat ini perbaikan sistem telah kami selesaikan sehingga untuk pembayaran berikutnya layanan Anda akan langsung aktif secara otomatis tanpa kendala.\n\nTerima kasih banyak atas kesabaran dan pengertian Anda.",
+                        'action_text' => 'Kunjungi Portal Pelanggan', 'action_url' => $portalUrl, 'is_system' => 1, 'created_at' => $now, 'updated_at' => $now
+                    ],
+                    [
+                        'slug' => 'custom', 'name' => 'Pesan Bebas / Custom', 'badge' => 'PEMBERITAHUAN RESMI',
+                        'subject' => 'Pemberitahuan Resmi - PT Media Solusi Network',
+                        'body' => "Kepada Yth. {nama_pelanggan},\n\n(Tulis pesan pengumuman atau informasi Anda di sini...)\n\nTerima kasih atas perhatian dan kerja sama Anda.",
+                        'action_text' => 'Kunjungi Portal Pelanggan', 'action_url' => $portalUrl, 'is_system' => 1, 'created_at' => $now, 'updated_at' => $now
+                    ]
+                ];
+                DB::table('tb_broadcast_email_template')->insert($defaults);
+            }
+
             Cache::put('ims_broadcast_email_schema_v2', true, 86400);
         } catch (\Throwable $e) {
             Log::warning("ensureSchema tb_broadcast_email_log note: " . $e->getMessage());

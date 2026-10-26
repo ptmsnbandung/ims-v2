@@ -892,43 +892,53 @@ class TeknikController extends Controller
         // Status pendaftaran baru yang sedang berjalan (sebelum terkonfirmasi menjadi pelanggan tetap)
         $registrationStatuses = ['11', '11.1', '12', '13', '13.1', '16', '17', '17.1', '18', '19', '19.1'];
 
-        $query = DB::table('view_batchjob')
-            ->whereIn('status_reg', $registrationStatuses);
+        $query = DB::table('view_batchjob');
+
+        if (Schema::hasTable('trx_instalasi')) {
+            $query->leftJoin('trx_instalasi', 'view_batchjob.nomor_internet', '=', 'trx_instalasi.nomor_internet')
+                  ->select(
+                      'view_batchjob.*',
+                      'trx_instalasi.instalasi_date_start',
+                      'trx_instalasi.instalasi_time',
+                      'trx_instalasi.aktivasi_note'
+                  );
+        } else {
+            $query->select('view_batchjob.*');
+        }
+
+        $query->whereIn('view_batchjob.status_reg', $registrationStatuses);
 
         // Filter: Layanan (kategori bandwith)
         if ($request->filled('layanan')) {
-            $query->where('kode_kategori_bandwith', $request->layanan);
+            $query->where('view_batchjob.kode_kategori_bandwith', $request->layanan);
         }
 
         // Filter: Nama Pelanggan
         if ($request->filled('nama')) {
-            $query->where('nama_pelanggan', 'like', '%' . $request->nama . '%');
+            $query->where('view_batchjob.nama_pelanggan', 'like', '%' . $request->nama . '%');
         }
 
         // Filter: Alamat
         if ($request->filled('alamat')) {
             $query->where(function ($q) use ($request) {
-                $q->where('alamat_pasang', 'like', '%' . $request->alamat . '%')
-                  ->orWhere('alamat_p', 'like', '%' . $request->alamat . '%')
-                  ->orWhere('nama_kelurahan_pasang', 'like', '%' . $request->alamat . '%')
-                  ->orWhere('nama_kecamatan_pasang', 'like', '%' . $request->alamat . '%');
+                $q->where('view_batchjob.alamat_pasang', 'like', '%' . $request->alamat . '%')
+                  ->orWhere('view_batchjob.alamat_p', 'like', '%' . $request->alamat . '%');
             });
         }
 
         // Filter: Status Registrasi Spesifik (dari pilihan status pendaftaran)
         if ($request->filled('status')) {
-            $query->where('status_reg', $request->status);
+            $query->where('view_batchjob.status_reg', $request->status);
         }
 
         // Filter: Wilayah
         if ($request->filled('wilayah')) {
             $query->where(function ($q) use ($request) {
-                $q->where('nama_kota_pasang', 'like', '%' . $request->wilayah . '%')
-                  ->orWhere('kode_wilayah_kota_pasang', 'like', '%' . $request->wilayah . '%');
+                $q->where('view_batchjob.nama_kota_pasang', 'like', '%' . $request->wilayah . '%');
             });
         }
 
-        $registrasi = $query->orderBy('date_create', 'desc')
+        $registrasi = $query->orderBy('view_batchjob.date_create', 'desc')
                             ->paginate($perPage)
                             ->withQueryString();
 

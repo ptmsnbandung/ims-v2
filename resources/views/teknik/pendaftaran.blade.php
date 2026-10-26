@@ -310,10 +310,10 @@
                                     </span>
                                 </div>
 
-                                @if($item->instalasi_date_start)
+                                @if(!empty($item->instalasi_date_start))
                                     <div class="text-[10px] text-slate-600 dark:text-slate-400 font-medium">
                                         Jadwal: <strong class="text-slate-800 dark:text-slate-200">{{ \Carbon\Carbon::parse($item->instalasi_date_start)->translatedFormat('d M Y') }}</strong>
-                                        {{ $item->instalasi_time ?: '' }}
+                                        {{ $item->instalasi_time ?? '' }}
                                     </div>
                                 @endif
 

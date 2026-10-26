@@ -274,7 +274,7 @@ class CustomerProvisioningService
      * 4. OLT -> Remote Reboot ONU (mode pon-onu-mng)
      * 5. Log ke Activity Audit Trail
      */
-    public function suspendCustomer(string $nomorInternet, ?string $operator = null, ?string $reason = null, bool $skipOltReboot = false): array
+    public function suspendCustomer(string $nomorInternet, ?string $operator = null, ?string $reason = null, bool $skipOltReboot = false, bool $allowDbUpdateOnRouterFail = false): array
     {
         $now = now()->format('Y-m-d H:i:s');
         $operator = mb_substr(trim($operator ?: (auth()->user()->nama ?? 'System NOC')), 0, 100);
@@ -325,8 +325,8 @@ class CustomerProvisioningService
                 $results['messages'][] = 'MikroTik Disable Error: ' . $e->getMessage();
             }
 
-            // JIKA ROUTER GAGAL: JANGAN UBAH DATABASE!
-            if (!$results['mikrotik_disable']) {
+            // JIKA ROUTER GAGAL: JANGAN UBAH DATABASE! (Kecuali jika explicitly diperbolehkan seperti saat rollback/sync)
+            if (!$results['mikrotik_disable'] && !$allowDbUpdateOnRouterFail) {
                 $results['messages'][] = 'Database TIDAK diubah karena router MikroTik gagal menonaktifkan PPPoE secret.';
 
                 if (Schema::hasTable('activity_logs')) {
@@ -488,7 +488,7 @@ class CustomerProvisioningService
             }
         }
 
-        $isOverallSuccess = $results['database'] && ($results['mikrotik_disable'] || empty($usernameCandidates));
+        $isOverallSuccess = $results['database'] && ($results['mikrotik_disable'] || empty($usernameCandidates) || $allowDbUpdateOnRouterFail);
 
         // Format summary yang bersih dan ringkas untuk alert user
         if ($isOverallSuccess) {
@@ -1002,92 +1002,8 @@ class CustomerProvisioningService
                 $reqUnsuspendNumbers = array_merge($reqUnsuspendNumbers, $fromTrx);
             } catch (\Throwable $th) {}
 
-            $reqUnsuspendNumbers = array_values(array_unique(array_filter($reqUnsuspendNumbers)));
-
-            // 2. Ambil pelanggan yang sedang terisolir (status 12 di view_suspend / trx_suspend)
-            //    tetapi SELURUH tagihannya sudah lunas (tidak ada tagihan berstatus publish 13)
-            $stuckSuspendNumbers = [];
-            $activeSuspends = [];
-            try {
-                $fromView12 = DB::table('view_suspend')
-                    ->where(function ($q) {
-                        $q->where('status_suspend', '12')->orWhere('status_suspend', 12);
-                    })
-                    ->pluck('nomor_internet')
-                    ->filter()
-                    ->unique()
-                    ->toArray();
-                $activeSuspends = array_merge($activeSuspends, $fromView12);
-            } catch (\Throwable $th) {}
-
-            try {
-                $fromTrx12 = DB::table('trx_suspend')
-                    ->where(function ($q) {
-                        $q->where('status_suspend', '12')->orWhere('status_suspend', 12);
-                    })
-                    ->pluck('nomor_internet')
-                    ->filter()
-                    ->unique()
-                    ->toArray();
-                $activeSuspends = array_merge($activeSuspends, $fromTrx12);
-            } catch (\Throwable $th) {}
-
-            $activeSuspends = array_values(array_unique(array_filter($activeSuspends)));
-
-            if (!empty($activeSuspends)) {
-                try {
-                    $unpaidNumbers = DB::table('trx_billing_layanan')
-                        ->whereIn('nomor_internet', $activeSuspends)
-                        ->where('hide', '!=', '1')
-                        ->where('status_bill_lay', '13')
-                        ->pluck('nomor_internet')
-                        ->unique()
-                        ->toArray();
-
-                    $unpaidLookup = array_flip($unpaidNumbers);
-                    foreach ($activeSuspends as $num) {
-                        if (!isset($unpaidLookup[$num])) {
-                            $stuckSuspendNumbers[] = $num;
-                        }
-                    }
-                } catch (\Throwable $th) {}
-            }
-
-            // 3. Ambil juga pelanggan di trx_batchjob_register yang status_reg suspend (21, 21.1, 22)
-            //    tetapi tidak memiliki tagihan tertunggak (status 13)
-            $stuckRegNumbers = [];
-            if (Schema::hasTable('trx_batchjob_register') && Schema::hasTable('trx_billing_layanan')) {
-                $suspendedRegs = DB::table('trx_batchjob_register')
-                    ->whereIn('status_reg', ['21', '21.1', '22'])
-                    ->pluck('nomor_internet')
-                    ->filter()
-                    ->unique()
-                    ->toArray();
-
-                if (!empty($suspendedRegs)) {
-                    $unpaidRegs = DB::table('trx_billing_layanan')
-                        ->whereIn('nomor_internet', $suspendedRegs)
-                        ->where('hide', '!=', '1')
-                        ->where('status_bill_lay', '13')
-                        ->pluck('nomor_internet')
-                        ->unique()
-                        ->toArray();
-
-                    $unpaidRegLookup = array_flip($unpaidRegs);
-                    foreach ($suspendedRegs as $num) {
-                        if (!isset($unpaidRegLookup[$num])) {
-                            $stuckRegNumbers[] = $num;
-                        }
-                    }
-                }
-            }
-
-            // Gabungkan seluruh kandidat pelanggan yang berhak di-unsuspend
-            $allCandidates = array_values(array_unique(array_filter(array_merge(
-                $reqUnsuspendNumbers,
-                $stuckSuspendNumbers,
-                $stuckRegNumbers
-            ))));
+            // OPSI A (KETAT): HANYA memproses permohonan yang berstatus Req. Unsuspend (status 18)
+            $allCandidates = array_values(array_unique(array_filter($reqUnsuspendNumbers)));
 
             if (empty($allCandidates)) {
                 return ['processed' => 0, 'results' => []];

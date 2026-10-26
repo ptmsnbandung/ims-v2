@@ -46,8 +46,9 @@ services:
       # Webhook & URL Settings
       - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678
-      - N8N_PROTOCOL=${N8N_PROTOCOL:-https}
-      - WEBHOOK_URL=${WEBHOOK_URL:-https://ai.ptmsn.net/}
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
+      - N8N_SECURE_COOKIE=${N8N_SECURE_COOKIE:-false}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
       
       # Timezone & Regional Settings
       - GENERIC_TIMEZONE=Asia/Jakarta

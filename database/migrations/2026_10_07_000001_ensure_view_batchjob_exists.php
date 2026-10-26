@@ -61,6 +61,7 @@ return new class extends Migration
             $hasR('nomor_bangunan') ? 'r.nomor_bangunan' : 'NULL AS nomor_bangunan',
             $hasR('alamat_pasang') ? 'r.alamat_pasang' : 'NULL AS alamat_pasang',
             $hasR('kode_wilayah_kelurahan_pasang') ? 'r.kode_wilayah_kelurahan_pasang' : 'NULL AS kode_wilayah_kelurahan_pasang',
+            $hasR('kode_wilayah_kota_pasang') ? 'r.kode_wilayah_kota_pasang' : 'NULL AS kode_wilayah_kota_pasang',
             $hasR('jenis_bangunan') ? 'r.jenis_bangunan' : 'NULL AS jenis_bangunan',
             $hasR('lon_lat') ? 'r.lon_lat' : 'NULL AS lon_lat',
             $hasR('loc_maps') ? 'r.loc_maps' : 'NULL AS loc_maps',

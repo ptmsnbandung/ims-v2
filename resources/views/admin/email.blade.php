@@ -504,7 +504,7 @@
                 @forelse($customers as $c)
                 @php
                     $hasEmail = !empty($c->email) && filter_var($c->email, FILTER_VALIDATE_EMAIL);
-                    $isSuspend = in_array((string)($c->status_reg ?? ''), ['23', '23.1']);
+                    $isSuspend = in_array((string)($c->status_reg ?? ''), ['21', '21.1']);
                     $billStatus = (string)($c->status_bill_lay ?? '');
                     $sentCount = (int)($c->email_sent_count ?? 0);
                     $bulanShort = [

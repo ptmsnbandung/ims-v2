@@ -192,7 +192,7 @@ class EmailController extends Controller
         } elseif ($statusFilter === 'jatuh_tempo' && $hasBilling) {
             $query->whereIn('inv.status_bill_lay', ['13', '14']);
         } elseif ($statusFilter === 'suspend') {
-            $query->whereIn($statusCol, ['23', '23.1']);
+            $query->whereIn($statusCol, ['21', '21.1']);
         } elseif ($statusFilter === 'active') {
             $query->where(function ($q) use ($statusCol) {
                 $q->where($statusCol, '20')

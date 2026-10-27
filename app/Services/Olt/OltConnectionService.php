@@ -726,6 +726,17 @@ class OltConnectionService
     private function executeTelnetCommand(string $ip, int $port, ?string $username, ?string $password, ?string $enablePassword, array $commands): string
     {
         $socket = @fsockopen($ip, $port, $errno, $errstr, 4);
+
+        // Fallback otomatis jika IP privat tidak dapat dijangkau dari server cloud / hosting
+        $publicOltHost = env('OLT_HOST', '103.161.206.214');
+        if (!$socket && $ip !== $publicOltHost && !empty($publicOltHost)) {
+            Log::warning("Koneksi Telnet ke {$ip}:{$port} gagal ({$errstr}), mencoba fallback ke host publik {$publicOltHost}:{$port}");
+            $socket = @fsockopen($publicOltHost, $port, $errno, $errstr, 4);
+            if ($socket) {
+                $ip = $publicOltHost;
+            }
+        }
+
         if (!$socket) {
             $errDetail = $errstr ?: 'Connection timed out / Host Unreachable';
             $hint = '';
@@ -1203,6 +1214,14 @@ class OltConnectionService
             } else {
                 $port = (int)env('OLT_PORT', 45523);
             }
+        }
+
+        // Auto-fix: jika IP di database adalah IP privat LAN (seperti 10.10.10.x hasil seeder lama)
+        // sedangkan port adalah port NAT forward publik (>= 1024), otomatis arahkan ke OLT_HOST publik
+        $publicOltHost = env('OLT_HOST', '103.161.206.214');
+        $isPrivateIp = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
+        if ($isPrivateIp && ($port >= 1024 || str_starts_with($ip, '10.10.10.'))) {
+            $ip = $publicOltHost;
         }
 
         $rawUser = is_array($olt) ? ($olt['username'] ?? null) : ($olt->username ?? null);

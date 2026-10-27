@@ -18,6 +18,7 @@
      x-data="{
          // Tab Status Active: 'aktif', 'terminasi', 'suspend', 'all'
          activeTab: '{{ ($filters['status'] ?? 'all') == '23' ? 'terminasi' : (($filters['status'] ?? 'all') == '21' ? 'suspend' : (($filters['status'] ?? 'all') == '20' ? 'aktif' : 'all')) }}',
+         isOverviewOpen: false,
          
          // Filter & Search states
          layananFilter: '{{ $filters['layanan'] ?? '' }}',
@@ -294,14 +295,16 @@
     <!-- =================================================================== -->
     <!-- TAB CONTROLLER: BERSIH & RAPI                                       -->
     <!-- =================================================================== -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs space-y-3">
+    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs transition-all duration-200"
+         :class="isOverviewOpen ? 'space-y-3' : ''">
         
-        <!-- Segmented Tab Navigation -->
-        <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+        <!-- Segmented Tab Navigation & Dropdown Toggle -->
+        <div class="flex flex-wrap items-center justify-between gap-2.5"
+             :class="isOverviewOpen ? 'border-b border-slate-200 dark:border-slate-800 pb-2.5' : ''">
             <div class="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg overflow-x-auto max-w-full scrollbar-none">
                 <!-- Tab Aktif -->
                 <button type="button" 
-                        @click="activeTab = 'aktif'"
+                        @click="activeTab = 'aktif'; isOverviewOpen = true"
                         :class="activeTab === 'aktif' ? 'bg-blue-600 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
                         class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] transition duration-150 cursor-pointer flex-shrink-0">
                     <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'aktif' ? 'bg-white' : 'bg-blue-500'"></span>
@@ -313,7 +316,7 @@
 
                 <!-- Tab Terminasi -->
                 <button type="button" 
-                        @click="activeTab = 'terminasi'"
+                        @click="activeTab = 'terminasi'; isOverviewOpen = true"
                         :class="activeTab === 'terminasi' ? 'bg-rose-600 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
                         class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] transition duration-150 cursor-pointer flex-shrink-0">
                     <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'terminasi' ? 'bg-white' : 'bg-rose-500'"></span>
@@ -325,7 +328,7 @@
 
                 <!-- Tab Suspend -->
                 <button type="button" 
-                        @click="activeTab = 'suspend'"
+                        @click="activeTab = 'suspend'; isOverviewOpen = true"
                         :class="activeTab === 'suspend' ? 'bg-amber-500 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
                         class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] transition duration-150 cursor-pointer flex-shrink-0">
                     <span class="w-1.5 h-1.5 rounded-full" :class="activeTab === 'suspend' ? 'bg-white' : 'bg-amber-500'"></span>
@@ -337,7 +340,7 @@
 
                 <!-- Tab Semua Overview -->
                 <button type="button" 
-                        @click="activeTab = 'all'"
+                        @click="activeTab = 'all'; isOverviewOpen = true"
                         :class="activeTab === 'all' ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-xs font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'"
                         class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] transition duration-150 cursor-pointer flex-shrink-0">
                     <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -347,14 +350,28 @@
                 </button>
             </div>
 
-            <!-- Hint text -->
-            <span class="text-[10px] text-slate-500 dark:text-slate-400 hidden lg:inline-block">
-                💡 Klik kartu bandwidth di bawah untuk filter cepat ke tabel.
-            </span>
+            <!-- Hint text & Dropdown Toggle Button -->
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-500 dark:text-slate-400 hidden xl:inline-block">
+                    💡 Klik kartu bandwidth di bawah untuk filter cepat ke tabel.
+                </span>
+                <button type="button" 
+                        @click="isOverviewOpen = !isOverviewOpen"
+                        class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-300/70 dark:border-slate-700 transition duration-150 cursor-pointer shadow-2xs">
+                    <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform duration-200" 
+                         :class="isOverviewOpen ? 'rotate-180' : ''" 
+                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                    <span x-text="isOverviewOpen ? 'Tutup Rincian' : 'Buka Rincian Bandwidth'"></span>
+                </button>
+            </div>
         </div>
 
-        <!-- ==================== 1. PANEL AKTIF ==================== -->
-        <div x-show="activeTab === 'aktif' || activeTab === 'all'" x-cloak class="space-y-2.5">
+        <!-- Dropdown Body: Bandwidth Cards -->
+        <div x-show="isOverviewOpen" x-cloak class="space-y-3.5 pt-1">
+            <!-- ==================== 1. PANEL AKTIF ==================== -->
+            <div x-show="activeTab === 'aktif' || activeTab === 'all'" x-cloak class="space-y-2.5">
             <div class="flex items-center justify-between" x-show="activeTab === 'all'">
                 <h4 class="text-[11px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></span>
@@ -522,6 +539,8 @@
                     </div>
                 </a>
             </div>
+        </div>
+
         </div>
 
     </div>

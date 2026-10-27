@@ -3968,8 +3968,12 @@
                 const form = target.form;
                 if (!form || (form.method || '').toUpperCase() !== 'GET') return;
 
-                // Ignore modals, date pickers, AI copilot widget, or explicitly excluded inputs
+                // Ignore modals, date pickers, AI copilot widget, or explicitly excluded inputs / ajax forms
                 if (target.hasAttribute('data-no-auto-search') 
+                    || form.hasAttribute('data-no-auto-search')
+                    || form.hasAttribute('data-ajax')
+                    || (form.getAttribute('onsubmit') || '').includes('return false')
+                    || target.closest('[data-no-auto-search]')
                     || target.closest('.ims-ai-modal-box') 
                     || target.closest('.ims-ai-trigger-container') 
                     || target.closest('[data-ai-widget]')
@@ -3997,6 +4001,12 @@
                     clearTimeout(autoSearchTimer);
                     const target = e.target;
                     if (target && target.tagName === 'INPUT' && target.form && (target.form.method || '').toUpperCase() === 'GET') {
+                        if (target.hasAttribute('data-no-auto-search') 
+                            || target.form.hasAttribute('data-no-auto-search') 
+                            || target.form.hasAttribute('data-ajax')
+                            || (target.form.getAttribute('onsubmit') || '').includes('return false')) {
+                            return;
+                        }
                         const selector = target.id ? '#' + target.id : (target.name ? `input[name="${target.name}"]` : null);
                         if (selector) {
                             sessionStorage.setItem('ims_auto_search_focus', JSON.stringify({
@@ -4036,8 +4046,10 @@
 
             // 1. Link Clicks (Sidebar, Navbar, Tabs, Pagination Links, dll)
             document.addEventListener('click', function(e) {
+                if (e.defaultPrevented) return;
                 const a = e.target.closest('a[href]');
                 if (!a || !a.href || a.target === '_blank' || a.hasAttribute('download')) return;
+                if (a.closest('#customerTableContainer') || a.classList.contains('ims-pagination-link') || a.hasAttribute('data-ajax')) return;
 
                 const href = a.getAttribute('href');
                 if (!href || href.startsWith('javascript:') || href.startsWith('#') || href.startsWith('data:')) return;

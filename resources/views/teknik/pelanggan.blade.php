@@ -73,7 +73,11 @@
                      currentTable.innerHTML = newTable.innerHTML;
                      this.$nextTick(() => {
                          if (window.Alpine) {
-                             Alpine.initTree(currentTable);
+                             try {
+                                 Alpine.initTree(currentTable);
+                             } catch (err) {
+                                 console.warn('Alpine re-init skipped/handled:', err);
+                             }
                          }
                      });
                  }
@@ -109,6 +113,7 @@
          setQuickFilter(status, layanan = '') {
              this.statusFilter = status;
              this.layananFilter = layanan;
+             this.activeTab = status === '20' ? 'aktif' : (status === '23' ? 'terminasi' : (status === '21' ? 'suspend' : 'all'));
              this.fetchData();
          },
 
@@ -257,6 +262,7 @@
             <!-- Overall KPI Metric Pills -->
             <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto">
                 <a href="{{ route($pelangganRoute, ['status' => 'all']) }}" 
+                   @click.prevent="setQuickFilter('all')"
                    class="justify-center px-2.5 py-1 rounded-lg sm:rounded-full shadow-2xs flex items-center gap-1.5 text-[11px] font-bold hover:opacity-95 transition cursor-pointer"
                    style="background-color: #ffffff; color: #1e293b; border: 1px solid rgba(255,255,255,0.8);"
                    title="Lihat Semua Pelanggan">
@@ -265,6 +271,7 @@
                     <strong class="font-mono font-black text-xs" style="color: #0f172a;">{{ number_format($bwCounts['total_aktif'] + $bwCounts['total_terminasi'] + $bwCounts['total_suspend']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '20']) }}" 
+                   @click.prevent="setQuickFilter('20')"
                    class="justify-center px-2.5 py-1 rounded-lg sm:rounded-full shadow-2xs flex items-center gap-1.5 text-[11px] hover:opacity-95 transition cursor-pointer"
                    style="background-color: rgba(4, 51, 62, 0.9); color: #6ee7b7; border: 1px solid rgba(45, 212, 191, 0.5);"
                    title="Filter Pelanggan Aktif">
@@ -273,6 +280,7 @@
                     <strong class="font-mono font-bold text-xs" style="color: #d1fae5;">{{ number_format($bwCounts['total_aktif']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '23']) }}" 
+                   @click.prevent="setQuickFilter('23')"
                    class="justify-center px-2.5 py-1 rounded-lg sm:rounded-full shadow-2xs flex items-center gap-1.5 text-[11px] hover:opacity-95 transition cursor-pointer"
                    style="background-color: rgba(62, 4, 19, 0.9); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.7);"
                    title="Filter Pelanggan Terminasi">
@@ -281,6 +289,7 @@
                     <strong class="font-mono font-bold text-xs" style="color: #ffe4e6;">{{ number_format($bwCounts['total_terminasi']) }}</strong>
                 </a>
                 <a href="{{ route($pelangganRoute, ['status' => '21']) }}" 
+                   @click.prevent="setQuickFilter('21')"
                    class="justify-center px-2.5 py-1 rounded-lg sm:rounded-full shadow-2xs flex items-center gap-1.5 text-[11px] hover:opacity-95 transition cursor-pointer"
                    style="background-color: rgba(62, 46, 4, 0.9); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.6);"
                    title="Filter Pelanggan Suspend">
@@ -549,7 +558,7 @@
     <!-- FILTER BAR CONTAINER                                                -->
     <!-- =================================================================== -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 shadow-xs">
-        <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm" @submit.prevent="fetchData()">
+        <form method="GET" action="{{ route($pelangganRoute) }}" id="filterForm" @submit.prevent="fetchData()" onsubmit="return false;" data-no-auto-search="true" data-ajax="true">
             <!-- 6 Kolom Filter Responsif -->
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
                 
@@ -566,6 +575,8 @@
                                name="search" 
                                x-model="searchQuery"
                                @input="applyFilter(300)"
+                               @keydown.enter.prevent="fetchData()"
+                               data-no-auto-search="true"
                                value="{{ $filters['search'] ?? '' }}" 
                                placeholder="No Internet, Nama, NIK..." 
                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">
@@ -622,6 +633,8 @@
                                name="alamat" 
                                x-model="alamatQuery"
                                @input="applyFilter(300)"
+                               @keydown.enter.prevent="fetchData()"
+                               data-no-auto-search="true"
                                value="{{ $filters['alamat'] ?? '' }}" 
                                placeholder="Cari Alamat..." 
                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition">

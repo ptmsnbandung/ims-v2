@@ -24,6 +24,18 @@ class BillingService
         $namaBulanShort = Carbon::createFromDate((int) $tahun, (int) $bulan, 1)->format('M');
         $periodeTagihan = "{$namaBulanShort} {$tahun}";
 
+        $bulanInt = (int) $bulan;
+        $tahunInt = (int) $tahun;
+
+        // Bulan dan tahun sebelumnya (yang wajib sudah tercatat di last_month_billing & last_year_billing)
+        if ($bulanInt === 1) {
+            $prevMonthInt = 12;
+            $prevYearInt = $tahunInt - 1;
+        } else {
+            $prevMonthInt = $bulanInt - 1;
+            $prevYearInt = $tahunInt;
+        }
+
         if (!Schema::hasTable('trx_billing_layanan')) {
             return [
                 'success' => false,
@@ -54,6 +66,33 @@ class BillingService
             $now = Carbon::now()->toDateTimeString();
 
             foreach ($pelanggans as $p) {
+                // 1. Filter: Bukan Broadband Free (BF)
+                $kodeKategori = strtoupper(trim($p->kode_kategori_bandwith ?? ''));
+                $aliasKategori = strtoupper(trim($p->alias_nama_kategori ?? ''));
+                $namaKategori = strtoupper(trim($p->nama_kategori_bandwith ?? ''));
+                if ($kodeKategori === 'BF' || $aliasKategori === 'BF' || str_contains($namaKategori, 'BROADBAND FREE')) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                // 2. Filter: Tagihan Tidak Boleh Rp 0 (bukan pelanggan gratisan)
+                $hargaBandwith = (float) ($p->harga_bandwith ?? $p->nominal_bandwith ?? 0);
+                $potongan = (float) ($p->potongan ?? 0);
+                $totalLayanan = max(0, $hargaBandwith - $potongan);
+                if ($totalLayanan <= 0) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                // 3. Filter: Sequential Billing - last_month_billing & last_year_billing wajib tepat bulan sebelumnya
+                // Contoh: untuk invoice bulan 11 tahun 2026, last_month_billing harus 10 dan last_year_billing harus 2026
+                $custLastMonth = (int) ($p->last_month_billing ?? 0);
+                $custLastYear = (int) ($p->last_year_billing ?? 0);
+                if ($custLastMonth !== $prevMonthInt || $custLastYear !== $prevYearInt) {
+                    $skippedCount++;
+                    continue;
+                }
+
                 $kodeBilling = "INV/{$p->nomor_internet}/{$bulan}/{$tahun}";
 
                 // Cek apakah invoice periode ini sudah pernah digenerate
@@ -65,10 +104,6 @@ class BillingService
                     $skippedCount++;
                     continue;
                 }
-
-                $hargaBandwith = (float) ($p->harga_bandwith ?? 0);
-                $potongan = (float) ($p->potongan ?? 0);
-                $totalLayanan = max(0, $hargaBandwith - $potongan);
 
                 // Buat record di trx_billing_layanan
                 DB::table('trx_billing_layanan')->insert([
@@ -126,6 +161,16 @@ class BillingService
                         'user_create' => $userCreator,
                         'hide' => '0',
                     ]);
+                }
+
+                // Update riwayat last_month_billing dan last_year_billing di trx_batchjob_register
+                if (Schema::hasTable('trx_batchjob_register')) {
+                    DB::table('trx_batchjob_register')
+                        ->where('nomor_internet', $p->nomor_internet)
+                        ->update([
+                            'last_month_billing' => $bulan,
+                            'last_year_billing' => $tahun,
+                        ]);
                 }
 
                 $createdCount++;

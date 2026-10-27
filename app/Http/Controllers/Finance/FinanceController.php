@@ -453,6 +453,16 @@ class FinanceController extends Controller
                 'islock' => null,
             ]);
 
+            // Update riwayat last_month_billing dan last_year_billing di trx_batchjob_register
+            if (Schema::hasTable('trx_batchjob_register')) {
+                DB::table('trx_batchjob_register')
+                    ->where('nomor_internet', $p->nomor_internet)
+                    ->update([
+                        'last_month_billing' => $bulan,
+                        'last_year_billing' => $tahun,
+                    ]);
+            }
+
             return redirect()->route('finance.billing-layanan', [
                 'bulan' => $bulan,
                 'tahun' => $tahun,
@@ -3244,6 +3254,16 @@ class FinanceController extends Controller
         }
 
         $bulanPad = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
+        $bulanInt = (int)$bulan;
+        $tahunInt = (int)$tahun;
+        if ($bulanInt === 1) {
+            $prevMonthInt = 12;
+            $prevYearInt = $tahunInt - 1;
+        } else {
+            $prevMonthInt = $bulanInt - 1;
+            $prevYearInt = $tahunInt;
+        }
+
         $namaBulanShort = Carbon::createFromDate((int)$tahun, (int)$bulanPad, 1)->format('M');
         $periodeStr = "{$namaBulanShort} {$tahun}";
 
@@ -3267,12 +3287,36 @@ class FinanceController extends Controller
         $pelanggans = $query->select([
             'nomor_internet',
             'nama_pelanggan',
+            'kode_kategori_bandwith',
+            'alias_nama_kategori',
             'nama_kategori_bandwith',
             'nominal_bandwith',
             'harga_bandwith',
             'potongan',
             'status_reg',
+            'last_month_billing',
+            'last_year_billing',
         ])->orderBy('nama_pelanggan', 'asc')->limit(500)->get()->unique('nomor_internet');
+
+        // Filter kandidat: Bukan BF, tagihan > 0, dan last_month_billing tepat bulan sebelumnya
+        $pelanggans = $pelanggans->filter(function($p) use ($prevMonthInt, $prevYearInt) {
+            $kodeKategori = strtoupper(trim($p->kode_kategori_bandwith ?? ''));
+            $aliasKategori = strtoupper(trim($p->alias_nama_kategori ?? ''));
+            $namaKategori = strtoupper(trim($p->nama_kategori_bandwith ?? ''));
+            if ($kodeKategori === 'BF' || $aliasKategori === 'BF' || str_contains($namaKategori, 'BROADBAND FREE')) {
+                return false;
+            }
+
+            $harga = (float)($p->harga_bandwith ?? $p->nominal_bandwith ?? 0);
+            $pot = (float)($p->potongan ?? 0);
+            if (($harga - $pot) <= 0) {
+                return false;
+            }
+
+            $custLastMonth = (int) ($p->last_month_billing ?? 0);
+            $custLastYear = (int) ($p->last_year_billing ?? 0);
+            return ($custLastMonth === $prevMonthInt && $custLastYear === $prevYearInt);
+        })->values();
 
         // Check which ones already have invoices generated
         $existingInvoices = DB::table('trx_billing_layanan')

@@ -16,7 +16,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Services\ExcelExportService;
 
 class TeknikController extends Controller
 {
@@ -2624,9 +2626,9 @@ class TeknikController extends Controller
     }
 
     /**
-     * Export Data Pelanggan ke Excel / CSV
+     * Export Data Pelanggan ke Excel (.xlsx) Profesional
      */
-    public function exportPelanggan(Request $request): StreamedResponse
+    public function exportPelanggan(Request $request): BinaryFileResponse
     {
         $confirmedStatuses = ['20', '21', '21.1', '23', '23.1'];
         $query = DB::table('view_batchjob');
@@ -2636,15 +2638,20 @@ class TeknikController extends Controller
             $statusFilter = 'all';
         }
 
+        $filterLabel = 'Semua Status';
         if ($statusFilter !== 'all' && $statusFilter !== '') {
             if ($statusFilter == '21') {
                 $query->whereIn('status_reg', ['21', '21.1']);
+                $filterLabel = 'Status: Isolir / Suspend';
             } elseif ($statusFilter == '23') {
                 $query->whereIn('status_reg', ['23', '23.1']);
+                $filterLabel = 'Status: Non-Aktif';
             } elseif ($statusFilter == '20') {
                 $query->where('status_reg', '20');
+                $filterLabel = 'Status: Berlangganan (Aktif)';
             } else {
                 $query->where('status_reg', $statusFilter);
+                $filterLabel = 'Status: #' . $statusFilter;
             }
         } else {
             $query->whereIn('status_reg', $confirmedStatuses);
@@ -2693,75 +2700,89 @@ class TeknikController extends Controller
             });
         }
 
-        $filename = 'Data_Pelanggan_IMS_' . date('Ymd_His') . '.csv';
+        $totalRecords = (clone $query)->count();
+        $title = 'DATA PELANGGAN IMS (INTERNET MANAGEMENT SYSTEM)';
+        $subtitle = 'Diexport pada: ' . date('d/m/Y H:i') . ' WIB | Total: ' . number_format($totalRecords, 0, ',', '.') . ' Pelanggan | Filter: ' . $filterLabel;
 
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
+            'No',
+            'Nomor Internet',
+            'Nama Pelanggan',
+            'Jenis Kelamin',
+            'NIK Penduduk',
+            'No Handphone',
+            'Email',
+            'Layanan',
+            'Bandwidth (Mbps)',
+            'Group Layanan',
+            'Jenis Bangunan',
+            'Alamat Pemasangan',
+            'RT / RW',
+            'Kelurahan',
+            'Kecamatan',
+            'Kota / Kabupaten',
+            'Status',
+            'Nama Sales',
+            'Tanggal Registrasi',
+            'Terakhir Update',
         ];
 
-        return response()->stream(function () use ($query) {
-            $handle = fopen('php://output', 'w');
-            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+        $widths = [6, 18, 32, 14, 20, 18, 28, 26, 16, 16, 16, 40, 12, 20, 20, 20, 20, 22, 20, 20];
 
-            fputcsv($handle, [
-                'No',
-                'Nomor Internet',
-                'Nama Pelanggan',
-                'Jenis Kelamin',
-                'NIK Penduduk',
-                'No Handphone',
-                'Email',
-                'Layanan',
-                'Bandwidth (Mbps)',
-                'Group Layanan',
-                'Jenis Bangunan',
-                'Alamat Pemasangan',
-                'RT / RW',
-                'Kelurahan',
-                'Kecamatan',
-                'Kota / Kabupaten',
-                'Status',
-                'Nama Sales',
-                'Tanggal Registrasi',
-                'Terakhir Update',
-            ]);
+        $xlsxFile = ExcelExportService::generateXlsx(
+            $title,
+            $subtitle,
+            $headers,
+            $widths,
+            function (callable $writeRow) use ($query) {
+                $no = 1;
+                $query->orderBy('date_create', 'desc')->orderBy('nomor_internet', 'desc')->chunk(500, function ($rows) use ($writeRow, &$no) {
+                    foreach ($rows as $r) {
+                        $gender = isset($r->jenis_kelamin)
+                            ? ($r->jenis_kelamin == 1 ? 'Laki-Laki' : ($r->jenis_kelamin == 2 ? 'Perempuan' : '-'))
+                            : '-';
 
-            $no = 1;
-            $query->orderBy('date_create', 'desc')->orderBy('nomor_internet', 'desc')->chunk(500, function ($rows) use ($handle, &$no) {
-                foreach ($rows as $r) {
-                    $gender = $r->jenis_kelamin == 1 ? 'Laki-Laki' : ($r->jenis_kelamin == 2 ? 'Perempuan' : '-');
-                    
-                    fputcsv($handle, [
-                        $no++,
-                        "\t" . ($r->nomor_internet ?: '-'),
-                        $r->nama_pelanggan ?: '-',
-                        $gender,
-                        "\t" . ($r->nik_penduduk ?: '-'),
-                        "\t" . ($r->nomor_hp ?: '-'),
-                        $r->email ?: '-',
-                        $r->nama_kategori_bandwith ?: ($r->alias_nama_kategori ?: '-'),
-                        $r->nominal_bandwith ?: '-',
-                        $r->group_layanan ?: 'MEDIANET',
-                        $r->jenis_bangunan ?: '-',
-                        $r->alamat_p ?: ($r->alamat_pasang ?: '-'),
-                        ($r->rt_pasang ?: '00') . ' / ' . ($r->rw_pasang ?: '00'),
-                        $r->nama_kelurahan_pasang ?: '-',
-                        $r->nama_kecamatan_pasang ?: '-',
-                        $r->nama_kota_pasang ?: '-',
-                        $r->desc_registrasi ?: 'Status #' . $r->status_reg,
-                        $r->nama_sales ?: '-',
-                        $r->date_create ?: '-',
-                        $r->date_update ?: '-',
-                    ]);
-                }
-            });
+                        $statusText = ($r->desc_registrasi ?? null) ?: match ((string)($r->status_reg ?? '')) {
+                            '20' => 'Aktif',
+                            '21' => 'Suspend / Isolir',
+                            '21.1' => 'Req. Suspend',
+                            '23' => 'Terminasi',
+                            '23.1' => 'Req. Terminasi',
+                            default => (!empty($r->status_reg) ? 'Status #' . $r->status_reg : 'Aktif'),
+                        };
 
-            fclose($handle);
-        }, 200, $headers);
+                        $writeRow([
+                            $no++,
+                            $r->nomor_internet ?? '-',
+                            $r->nama_pelanggan ?? '-',
+                            $gender,
+                            $r->nik_penduduk ?? '-',
+                            $r->nomor_hp ?? '-',
+                            $r->email ?? '-',
+                            $r->nama_kategori_bandwith ?? ($r->alias_nama_kategori ?? '-'),
+                            $r->nominal_bandwith ?? '-',
+                            $r->group_layanan ?? 'MEDIANET',
+                            $r->jenis_bangunan ?? '-',
+                            $r->alamat_p ?? ($r->alamat_pasang ?? '-'),
+                            (($r->rt_pasang ?? '00') . ' / ' . ($r->rw_pasang ?? '00')),
+                            $r->nama_kelurahan_pasang ?? ($r->kode_wilayah_kelurahan_pasang ?? '-'),
+                            $r->nama_kecamatan_pasang ?? '-',
+                            $r->nama_kota_pasang ?? '-',
+                            $statusText,
+                            $r->nama_sales ?? '-',
+                            $r->date_create ?? '-',
+                            $r->date_update ?? '-',
+                        ]);
+                    }
+                });
+            }
+        );
+
+        $downloadFilename = 'Data_Pelanggan_IMS_' . date('Ymd_His') . '.xlsx';
+
+        return response()->download($xlsxFile, $downloadFilename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
     }
 
     /**

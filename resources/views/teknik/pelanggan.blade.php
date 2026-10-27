@@ -17,14 +17,14 @@
 <div class="space-y-3.5"
      x-data="{
          // Tab Status Active: 'aktif', 'terminasi', 'suspend', 'all'
-         activeTab: '{{ ($filters['status'] ?? '') == '23' ? 'terminasi' : (($filters['status'] ?? '') == '21' ? 'suspend' : 'aktif') }}',
+         activeTab: '{{ ($filters['status'] ?? 'all') == '23' ? 'terminasi' : (($filters['status'] ?? 'all') == '21' ? 'suspend' : (($filters['status'] ?? 'all') == '20' ? 'aktif' : 'all')) }}',
          
          // Filter & Search states
          layananFilter: '{{ $filters['layanan'] ?? '' }}',
          groupLayananFilter: '{{ $filters['group_layanan'] ?? '' }}',
          searchQuery: '{{ $filters['search'] ?? '' }}',
          alamatQuery: '{{ $filters['alamat'] ?? '' }}',
-         statusFilter: '{{ $filters['status'] ?? '20' }}',
+         statusFilter: '{{ $filters['status'] ?? 'all' }}',
          wilayahFilter: '{{ $filters['wilayah'] ?? '' }}',
          perPageFilter: '{{ $filters['per_page'] ?? '10' }}',
          isLoading: false,
@@ -98,10 +98,11 @@
              this.alamatQuery = '';
              this.layananFilter = '';
              this.groupLayananFilter = '';
-             this.statusFilter = '20';
+             this.statusFilter = 'all';
              this.wilayahFilter = '';
              this.perPageFilter = '10';
-             this.fetchData('{{ route($pelangganRoute) }}?status=20&per_page=10');
+             this.activeTab = 'all';
+             this.fetchData('{{ route($pelangganRoute) }}?status=all&per_page=10');
          },
 
          setQuickFilter(status, layanan = '') {
@@ -615,10 +616,10 @@
                             x-model="statusFilter"
                             @change="fetchData()"
                             class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-blue-600 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 outline-none transition cursor-pointer">
-                        <option value="20" {{ ($filters['status'] ?? '20') == '20' ? 'selected' : '' }}>Aktif (Default)</option>
+                        <option value="all" {{ ($filters['status'] ?? 'all') == 'all' ? 'selected' : '' }}>Semua Status (Default)</option>
+                        <option value="20" {{ ($filters['status'] ?? 'all') == '20' ? 'selected' : '' }}>Pelanggan Aktif</option>
                         <option value="21" {{ in_array(($filters['status'] ?? ''), ['21', '21.1']) ? 'selected' : '' }}>Suspend</option>
                         <option value="23" {{ in_array(($filters['status'] ?? ''), ['23', '23.1']) ? 'selected' : '' }}>Terminasi</option>
-                        <option value="all" {{ ($filters['status'] ?? '') == 'all' ? 'selected' : '' }}>SEMUA STATUS (EKSISTING)</option>
                     </select>
                 </div>
 

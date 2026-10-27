@@ -2463,10 +2463,10 @@ class TeknikController extends Controller
 
         $query = DB::table('view_batchjob');
 
-        // Status Filter: Default pelanggan AKTIF ('20') saat pertama kali masuk
+        // Status Filter: Default SEMUA STATUS ('all') saat pertama kali masuk
         $statusFilter = $request->get('status');
         if ($statusFilter === null) {
-            $statusFilter = '20'; // Default pelanggan aktif
+            $statusFilter = 'all'; // Default semua status
         }
 
         if ($statusFilter !== 'all' && $statusFilter !== '') {
@@ -2633,7 +2633,7 @@ class TeknikController extends Controller
 
         $statusFilter = $request->get('status');
         if ($statusFilter === null) {
-            $statusFilter = '20';
+            $statusFilter = 'all';
         }
 
         if ($statusFilter !== 'all' && $statusFilter !== '') {

@@ -194,6 +194,70 @@
         background-color: #ffffff !important;
         color: #043b49 !important;
     }
+
+    /* ------------------------------------------------------------- */
+    /* DARK MODE GLASSMORPHISM DASHBOARD THEME                       */
+    /* ------------------------------------------------------------- */
+    .dark .ims-glass-canvas {
+        background: radial-gradient(at 0% 0%, rgba(6, 78, 59, 0.28) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, rgba(14, 116, 144, 0.28) 0px, transparent 50%),
+                    radial-gradient(at 100% 100%, rgba(15, 23, 42, 0.9) 0px, transparent 50%),
+                    radial-gradient(at 0% 100%, rgba(4, 47, 46, 0.3) 0px, transparent 50%),
+                    radial-gradient(at 50% 50%, rgba(8, 47, 73, 0.35) 0px, transparent 50%),
+                    linear-gradient(135deg, #071520 0%, #0a2133 40%, #081a29 70%, #071520 100%) !important;
+    }
+
+    .dark .ims-glass-card {
+        background: rgba(11, 29, 44, 0.78) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .dark .ims-glass-item {
+        background: rgba(15, 36, 56, 0.65) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.07) !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+    }
+    .dark .ims-glass-item:hover {
+        background: rgba(22, 50, 77, 0.85) !important;
+        border-color: rgba(6, 182, 212, 0.35) !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    .dark .ims-glass-pill-container {
+        background: rgba(11, 29, 44, 0.85) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .dark .ims-glass-select {
+        background: rgba(11, 29, 44, 0.85) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #f1f5f9 !important;
+    }
+    .dark .ims-glass-select option {
+        background: #0b1d2c !important;
+        color: #f1f5f9 !important;
+    }
+
+    .dark .ims-glass-halo-banner {
+        background: linear-gradient(135deg, #02252e 0%, #033440 50%, #044252 100%) !important;
+        border-color: rgba(45, 212, 191, 0.25) !important;
+        box-shadow: 0 4px 20px -3px rgba(0, 0, 0, 0.5), 0 0 15px rgba(13, 148, 136, 0.15) !important;
+    }
+
+    .dark .ims-halo-select option {
+        background: #0b1d2c !important;
+        color: #ffffff !important;
+    }
 </style>
 
 <div class="ims-glass-canvas space-y-3 sm:space-y-3.5"
@@ -292,27 +356,27 @@
     <div x-show="activeTab === 'charts' || activeTab === 'all'" class="space-y-3 sm:space-y-3.5">
         @if($canSeeFinanceTraffic ?? false)
         <!-- Mini Financial Traffic Quick-Strip (Direktur, CEO, Finance) -->
-        <div class="ims-glass-card p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-slate-800">
+        <div class="ims-glass-card p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-slate-800 dark:text-slate-100">
             <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
+                <div class="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
                 <div class="min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Ringkasan Traffic Keuangan {{ $selectedTahun }}</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold font-mono bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Ringkasan Traffic Keuangan {{ $selectedTahun }}</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold font-mono bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
                             {{ $financeTrafficData['collectionRateYear'] ?? 0 }}% Terkumpul
                         </span>
                     </div>
-                    <p class="text-[11px] text-slate-600 truncate mt-0.5">
-                        Realisasi <span class="font-mono font-bold text-emerald-700">Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}</span> dari total tagihan <span class="font-mono font-bold text-slate-800">Rp {{ number_format($financeTrafficData['totalYearInvoiced'] ?? 0, 0, ',', '.') }}</span> &middot; Piutang: <span class="font-mono font-bold text-amber-700">Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}</span>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300 truncate mt-0.5">
+                        Realisasi <span class="font-mono font-bold text-emerald-700 dark:text-emerald-400">Rp {{ number_format($financeTrafficData['totalYearPaid'] ?? 0, 0, ',', '.') }}</span> dari total tagihan <span class="font-mono font-bold text-slate-800 dark:text-white">Rp {{ number_format($financeTrafficData['totalYearInvoiced'] ?? 0, 0, ',', '.') }}</span> &middot; Piutang: <span class="font-mono font-bold text-amber-700 dark:text-amber-400">Rp {{ number_format($financeTrafficData['totalYearUnpaid'] ?? 0, 0, ',', '.') }}</span>
                     </p>
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                <button type="button" @click="activeTab = 'finance'" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10.5px] font-bold bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 transition shadow-2xs cursor-pointer">
+                <button type="button" @click="activeTab = 'finance'" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10.5px] font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-2xs cursor-pointer">
                     <span>Lihat Rincian & Grafik</span>
-                    <svg class="w-3 h-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                    <svg class="w-3 h-3 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                 </button>
             </div>
         </div>
@@ -323,32 +387,32 @@
             <!-- 1. Grafik Tren User Baru per Bulan -->
             <div class="ims-glass-card md:col-span-7 lg:col-span-7 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2 sm:pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
-                                <span class="w-2 h-2 rounded-full bg-blue-600 shrink-0" style="display: inline-block;"></span>
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
+                                <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 shrink-0" style="display: inline-block;"></span>
                                 <span>Tren Pertumbuhan User Baru per Bulan</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                                 Registrasi vs aktivasi selesai sepanjang {{ $selectedTahun }}.
                             </p>
                         </div>
 
                         <!-- Mini KPI Badges: 2-column grid on mobile, inline on desktop -->
                         <div class="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-1.5 w-full sm:w-auto shrink-0">
-                            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-blue-50/80 border border-blue-200/60 shadow-2xs">
+                            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-blue-50/80 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800/60 shadow-2xs">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                    <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-blue-600 block leading-none">Registrasi</span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
+                                    <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-blue-600 dark:text-cyan-400 block leading-none">Registrasi</span>
                                 </div>
-                                <span class="text-xs font-black font-mono text-slate-800 leading-tight">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
+                                <span class="text-xs font-black font-mono text-slate-800 dark:text-white leading-tight">{{ number_format($chartData['totalTahunRegistrasi']) }}</span>
                             </div>
-                            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 shadow-2xs">
+                            <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs">
                                 <div class="flex items-center gap-1.5">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-emerald-600 block leading-none">Aktif Online</span>
+                                    <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 block leading-none">Aktif Online</span>
                                 </div>
-                                <span class="text-xs font-black font-mono text-slate-800 leading-tight">{{ number_format($chartData['totalTahunAktif']) }}</span>
+                                <span class="text-xs font-black font-mono text-slate-800 dark:text-white leading-tight">{{ number_format($chartData['totalTahunAktif']) }}</span>
                             </div>
                         </div>
                     </div>
@@ -360,30 +424,30 @@
                 </div>
 
                 <!-- Footer Note -->
-                <div class="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500 flex-wrap gap-2">
+                <div class="mt-1 pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500 dark:text-slate-400 flex-wrap gap-2">
                     <div class="flex items-center gap-2">
                         <span class="flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                            <span class="font-medium text-slate-700">Pendaftaran Baru</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-cyan-400"></span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">Pendaftaran Baru</span>
                         </span>
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            <span class="font-medium text-slate-700">Aktivasi Selesai (Aktif)</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">Aktivasi Selesai (Aktif)</span>
                         </span>
                     </div>
-                    <span class="font-mono text-slate-400">Jan - Des {{ $selectedTahun }}</span>
+                    <span class="font-mono text-slate-400 dark:text-slate-500">Jan - Des {{ $selectedTahun }}</span>
                 </div>
             </div>
 
             <!-- 2. Donut Kategori Bandwidth & Itemized List Side-by-Side -->
             <div class="ims-glass-card md:col-span-5 lg:col-span-5 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="border-b border-slate-200/60 pb-2 sm:pb-1.5">
-                        <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
+                    <div class="border-b border-slate-200/60 dark:border-slate-800 pb-2 sm:pb-1.5">
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
                             <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" style="display: inline-block;"></span>
                             <span>Distribusi Kategori Bandwidth</span>
                         </h4>
-                        <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
+                        <p class="text-[10px] sm:text-[9.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                             Pangsa paket layanan yang dipilih pelanggan.
                         </p>
                     </div>
@@ -408,14 +472,14 @@
                                         $pct = $totalBwAll > 0 ? round(($val / $totalBwAll) * 100, 1) : 0;
                                         $dotColor = $paletteColors[$idx % count($paletteColors)];
                                     @endphp
-                                    <div class="flex items-center justify-between text-[10.5px] sm:text-[9px] py-1.5 px-2.5 rounded-lg hover:bg-slate-100/70 transition" style="border: none !important; box-shadow: none !important;">
+                                    <div class="flex items-center justify-between text-[10.5px] sm:text-[9px] py-1.5 px-2.5 rounded-lg hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition" style="border: none !important; box-shadow: none !important;">
                                         <div class="flex items-center gap-2 min-w-0 pr-1">
                                             <span class="w-2 h-2 rounded-full shrink-0" style="background-color: {{ $dotColor }};"></span>
-                                            <span class="font-bold text-slate-700 truncate uppercase text-[9.5px]" title="{{ $label }}">{{ $label }}</span>
+                                            <span class="font-bold text-slate-700 dark:text-slate-300 truncate uppercase text-[9.5px]" title="{{ $label }}">{{ $label }}</span>
                                         </div>
                                         <div class="flex items-center gap-1 font-mono shrink-0 ml-1">
-                                            <span class="font-extrabold text-slate-800">{{ number_format($val) }}</span>
-                                            <span class="text-[8.5px] text-slate-500 font-semibold">({{ $pct }}%)</span>
+                                            <span class="font-extrabold text-slate-800 dark:text-white">{{ number_format($val) }}</span>
+                                            <span class="text-[8.5px] text-slate-500 dark:text-slate-400 font-semibold">({{ $pct }}%)</span>
                                         </div>
                                     </div>
                                 @endforeach
@@ -424,9 +488,9 @@
                     </div>
                 </div>
 
-                <div class="mt-2 sm:mt-0.5 pt-1.5 sm:pt-1 border-t border-slate-200/60 flex items-center justify-between text-[9px] sm:text-[8px] text-slate-500">
+                <div class="mt-2 sm:mt-0.5 pt-1.5 sm:pt-1 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-[8px] text-slate-500 dark:text-slate-400">
                     <span>Total Porsi Layanan</span>
-                    <span class="font-bold font-mono text-slate-700">{{ number_format($totalBwAll) }} User</span>
+                    <span class="font-bold font-mono text-slate-700 dark:text-slate-200">{{ number_format($totalBwAll) }} User</span>
                 </div>
             </div>
         </div>
@@ -436,24 +500,24 @@
             <!-- 3. Grafik Sebaran User per Kota / Wilayah Pasang -->
             <div class="ims-glass-card md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2 sm:pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
                                 <span class="w-2 h-2 rounded-full bg-cyan-500 shrink-0" style="display: inline-block;"></span>
                                 <span>Sebaran User per Wilayah</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                                 Distribusi per pola pasang.
                             </p>
                         </div>
 
                         <!-- Total City User Badge -->
-                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-sky-50/80 border border-sky-200/60 shadow-2xs w-full sm:w-auto shrink-0">
+                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-sky-50/80 dark:bg-sky-950/50 border border-sky-200/60 dark:border-sky-800/60 shadow-2xs w-full sm:w-auto shrink-0">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
-                                <span class="text-[8.5px] sm:text-[7.5px] uppercase font-bold tracking-wider text-sky-600 block leading-none">Total</span>
+                                <span class="text-[8.5px] sm:text-[7.5px] uppercase font-bold tracking-wider text-sky-600 dark:text-sky-400 block leading-none">Total</span>
                             </div>
-                            <span class="text-xs sm:text-[11px] font-black font-mono text-slate-800 leading-tight">{{ number_format($chartData['totalCityUsers']) }}</span>
+                            <span class="text-xs sm:text-[11px] font-black font-mono text-slate-800 dark:text-white leading-tight">{{ number_format($chartData['totalCityUsers']) }}</span>
                         </div>
                     </div>
 
@@ -463,18 +527,18 @@
                     </div>
                 </div>
 
-                <div class="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500">
+                <div class="mt-1 pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500 dark:text-slate-400">
                     <div class="flex items-center gap-1.5">
                         <span class="flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                            <span class="font-medium text-slate-700">Total</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400"></span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">Total</span>
                         </span>
                         <span class="flex items-center gap-1">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            <span class="font-medium text-slate-700">Aktif</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">Aktif</span>
                         </span>
                     </div>
-                    <a href="{{ route('teknik.pelanggan') }}" class="font-bold text-blue-600 hover:underline flex items-center gap-0.5">
+                    <a href="{{ route('teknik.pelanggan') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
                         <span>Data Pelanggan</span>
                         <span>&rarr;</span>
                     </a>
@@ -484,24 +548,24 @@
             <!-- 4. Status OLT Live (Cukup Nama OLT & Statusnya Saja) -->
             <div class="ims-glass-card md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2 sm:pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0" style="display: inline-block;"></span>
                                 <span>Status OLT Live</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                                 Status konektivitas OLT real-time.
                             </p>
                         </div>
 
                         <!-- Live Pulse Indicator Pill -->
-                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2 py-1 sm:py-0.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 shadow-2xs w-full sm:w-auto shrink-0">
+                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2 py-1 sm:py-0.5 rounded-full bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs w-full sm:w-auto shrink-0">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-emerald-600 leading-none">Live Ping</span>
+                                <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 leading-none">Live Ping</span>
                             </div>
-                            <span class="text-[10px] sm:text-[8px] font-mono text-emerald-600 font-bold sm:hidden">Online</span>
+                            <span class="text-[10px] sm:text-[8px] font-mono text-emerald-600 dark:text-emerald-400 font-bold sm:hidden">Online</span>
                         </div>
                     </div>
 
@@ -514,7 +578,7 @@
                                 <!-- Nama OLT -->
                                 <div class="flex items-center gap-2 min-w-0">
                                     <span class="w-2 h-2 rounded-full {{ $isUp ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }} shrink-0"></span>
-                                    <span class="font-bold text-[11px] text-slate-800 truncate" title="{{ $oltItem['name_olt'] ?? 'OLT' }}">
+                                    <span class="font-bold text-[11px] text-slate-800 dark:text-slate-200 truncate" title="{{ $oltItem['name_olt'] ?? 'OLT' }}">
                                         {{ $oltItem['name_olt'] ?? 'OLT' }}
                                     </span>
                                 </div>
@@ -522,12 +586,12 @@
                                 <!-- Status OLT -->
                                 <div class="flex-shrink-0">
                                     @if($isUp)
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100/90 text-emerald-700 border border-emerald-200/80">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100/90 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/70">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                             <span>UP</span>
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-100/90 text-rose-700 border border-rose-200/80">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-rose-100/90 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800/70">
                                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                             <span>DOWN</span>
                                         </span>
@@ -535,19 +599,19 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="p-3 text-center text-[10px] text-slate-400">
+                            <div class="p-3 text-center text-[10px] text-slate-400 dark:text-slate-500">
                                 Belum ada data OLT terdaftar
                             </div>
                         @endforelse
                     </div>
                 </div>
 
-                <div class="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500">
+                <div class="mt-1 pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[9px] sm:text-[8.5px] text-slate-500 dark:text-slate-400">
                     <span class="flex items-center gap-1">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        <span>Total: <strong class="text-slate-700 font-mono">{{ count($oltLiveStatus ?? []) }} OLT</strong></span>
+                        <span>Total: <strong class="text-slate-700 dark:text-slate-200 font-mono">{{ count($oltLiveStatus ?? []) }} OLT</strong></span>
                     </span>
-                    <a href="{{ route('noc.olt') }}" class="font-bold text-blue-600 hover:underline flex items-center gap-0.5">
+                    <a href="{{ route('noc.olt') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
                         <span>Data OLT</span>
                         <span>&rarr;</span>
                     </a>
@@ -557,23 +621,23 @@
             <!-- 5. Data Pelanggan Baru (5 User Terkini) -->
             <div class="ims-glass-card md:col-span-4 lg:col-span-4 p-3 sm:p-3.5 flex flex-col justify-between">
                 <div>
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2 sm:pb-1.5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2 sm:pb-1.5">
                         <div class="min-w-0">
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 tracking-tight flex items-center gap-2 leading-tight">
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2 leading-tight">
                                 <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0" style="display: inline-block;"></span>
                                 <span>Data Pelanggan Baru</span>
                             </h4>
-                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 mt-0.5 leading-snug">
+                            <p class="text-[10px] sm:text-[9.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                                 5 pendaftaran user terkini ({{ $selectedTahun }}).
                             </p>
                         </div>
 
-                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-indigo-50/80 border border-indigo-200/60 shadow-2xs w-full sm:w-auto shrink-0">
+                        <div class="flex items-center justify-between sm:justify-start gap-2 sm:gap-1.5 px-3 sm:px-2.5 py-1 sm:py-0.5 rounded-full bg-indigo-50/80 dark:bg-indigo-950/50 border border-indigo-200/60 dark:border-indigo-800/60 shadow-2xs w-full sm:w-auto shrink-0">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                                <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-indigo-700">Terkini</span>
+                                <span class="text-[8.5px] sm:text-[8px] uppercase font-bold tracking-wider text-indigo-700 dark:text-indigo-300">Terkini</span>
                             </div>
-                            <span class="text-xs sm:text-[8.5px] font-bold font-mono text-indigo-700">5 User</span>
+                            <span class="text-xs sm:text-[8.5px] font-bold font-mono text-indigo-700 dark:text-indigo-300">5 User</span>
                         </div>
                     </div>
 
@@ -600,34 +664,34 @@
                             @endphp
                             <div class="ims-glass-item flex items-center justify-between px-2.5 py-1.5 transition group">
                                 <div class="flex items-center gap-2.5 min-w-0 pr-2">
-                                    <span class="w-5 h-5 rounded-full bg-slate-100/90 border border-slate-200/80 text-slate-700 text-[9px] font-black flex items-center justify-center font-mono shrink-0 shadow-2xs">
+                                    <span class="w-5 h-5 rounded-full bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 text-[9px] font-black flex items-center justify-center font-mono shrink-0 shadow-2xs">
                                         {{ $loop->iteration }}
                                     </span>
-                                    <span class="text-[10.5px] font-bold text-slate-800 uppercase tracking-tight truncate group-hover:text-blue-600 transition" title="{{ $nuNama }}">
+                                    <span class="text-[10.5px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight truncate group-hover:text-blue-600 dark:group-hover:text-cyan-400 transition" title="{{ $nuNama }}">
                                         {{ $nuNama }}
                                     </span>
                                 </div>
                                 <div class="shrink-0">
                                     @if(!empty($nuNoInternet))
-                                        <a href="{{ $profileUrl }}" class="px-2.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-mono text-[9.5px] font-bold tracking-wider hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-2xs transition inline-block">
+                                        <a href="{{ $profileUrl }}" class="px-2.5 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-mono text-[9.5px] font-bold tracking-wider hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:bg-cyan-600 dark:hover:border-cyan-600 dark:hover:text-white shadow-2xs transition inline-block">
                                             {{ $nuNoInternet }}
                                         </a>
                                     @else
-                                        <span class="text-slate-400 text-[9px] font-mono">-</span>
+                                        <span class="text-slate-400 dark:text-slate-500 text-[9px] font-mono">-</span>
                                     @endif
                                 </div>
                             </div>
                         @empty
-                            <div class="p-2 text-center text-slate-400 text-[9px]">
+                            <div class="p-2 text-center text-slate-400 dark:text-slate-500 text-[9px]">
                                 Belum ada data pendaftaran tahun {{ $selectedTahun }}.
                             </div>
                         @endforelse
                     </div>
                 </div>
 
-                <div class="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[8.5px] text-slate-500">
-                    <span>Total <b>{{ number_format($newUserStats['totalBaru']) }}</b> User</span>
-                    <a href="{{ route('teknik.pendaftaran') }}" class="font-bold text-blue-600 hover:underline flex items-center gap-0.5">
+                <div class="mt-1 pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[8.5px] text-slate-500 dark:text-slate-400">
+                    <span>Total <b class="text-slate-700 dark:text-slate-200">{{ number_format($newUserStats['totalBaru']) }}</b> User</span>
+                    <a href="{{ route('teknik.pendaftaran') }}" class="font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-0.5">
                         <span>Semua Data</span>
                         <span>&rarr;</span>
                     </a>
@@ -1424,6 +1488,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const chartTrend = new ApexCharts(trendEl, optionsTrend);
         chartTrend.render();
+        window.chartTrend = chartTrend;
     }
 
     // -------------------------------------------------------------
@@ -1446,7 +1511,7 @@ document.addEventListener('DOMContentLoaded', function () {
             colors: ['#0284c7', '#00b074', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#64748b'],
             stroke: {
                 width: 2.5,
-                colors: isDark ? ['#0f172a'] : ['#ffffff']
+                colors: isDark ? ['#0b1d2c'] : ['#ffffff']
             },
             plotOptions: {
                 pie: {
@@ -1495,6 +1560,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const chartBw = new ApexCharts(bwEl, optionsBw);
         chartBw.render();
+        window.chartBw = chartBw;
     }
 
     // -------------------------------------------------------------
@@ -1595,6 +1661,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const chartCity = new ApexCharts(cityEl, optionsCity);
         chartCity.render();
+        window.chartCity = chartCity;
     }
 
     @if($canSeeFinanceTraffic ?? false)
@@ -1733,7 +1800,7 @@ document.addEventListener('DOMContentLoaded', function () {
             colors: hasData ? ['#10b981', '#f59e0b'] : ['#64748b'],
             stroke: {
                 width: 2.5,
-                colors: isDark ? ['#0f172a'] : ['#ffffff']
+                colors: isDark ? ['#0b1d2c'] : ['#ffffff']
             },
             plotOptions: {
                 pie: {
@@ -1786,6 +1853,84 @@ document.addEventListener('DOMContentLoaded', function () {
         window.chartFinDonut = chartFinDonut;
     }
     @endif
+
+    // Dynamic Theme Switch Listener for Live Chart Adaptability
+    function updateAllChartsTheme(isDarkNow) {
+        const newTextColor = isDarkNow ? '#94a3b8' : '#64748b';
+        const newGridColor = isDarkNow ? '#1e293b' : '#f1f5f9';
+        const newTooltipTheme = isDarkNow ? 'dark' : 'light';
+        const newStrokeColor = isDarkNow ? '#0b1d2c' : '#ffffff';
+
+        if (window.chartTrend) {
+            window.chartTrend.updateOptions({
+                xaxis: { labels: { style: { colors: newTextColor } } },
+                yaxis: { labels: { style: { colors: newTextColor } } },
+                grid: { borderColor: newGridColor },
+                tooltip: { theme: newTooltipTheme }
+            }, false, false);
+        }
+        if (window.chartBw) {
+            window.chartBw.updateOptions({
+                stroke: { colors: [newStrokeColor] },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                name: { color: newTextColor },
+                                value: { color: isDarkNow ? '#ffffff' : '#0f172a' },
+                                total: { color: newTextColor }
+                            }
+                        }
+                    }
+                },
+                tooltip: { theme: newTooltipTheme }
+            }, false, false);
+        }
+        if (window.chartCity) {
+            window.chartCity.updateOptions({
+                xaxis: { labels: { style: { colors: newTextColor } } },
+                grid: { borderColor: newGridColor },
+                dataLabels: { style: { colors: isDarkNow ? ['#e2e8f0'] : ['#1e293b'] } },
+                tooltip: { theme: newTooltipTheme }
+            }, false, false);
+        }
+        if (window.chartFinTrend) {
+            window.chartFinTrend.updateOptions({
+                xaxis: { labels: { style: { colors: newTextColor } } },
+                yaxis: { labels: { style: { colors: newTextColor } } },
+                grid: { borderColor: newGridColor },
+                tooltip: { theme: newTooltipTheme }
+            }, false, false);
+        }
+        if (window.chartFinDonut) {
+            window.chartFinDonut.updateOptions({
+                stroke: { colors: [newStrokeColor] },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                name: { color: newTextColor },
+                                value: { color: isDarkNow ? '#ffffff' : '#0f172a' },
+                                total: { color: newTextColor }
+                            }
+                        }
+                    }
+                },
+                tooltip: { theme: newTooltipTheme }
+            }, false, false);
+        }
+    }
+
+    const themeObserver = new MutationObserver(function(mutations) {
+        for (const mutation of mutations) {
+            if (mutation.attributeName === 'class') {
+                const isDarkNow = document.documentElement.classList.contains('dark');
+                updateAllChartsTheme(isDarkNow);
+                break;
+            }
+        }
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 });
 </script>
 @endpush

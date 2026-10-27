@@ -417,6 +417,23 @@ class FinanceController extends Controller
                 return redirect()->back()->with('info', "Invoice {$kodeBilling} sudah pernah diterbitkan sebelumnya.");
             }
 
+            // Validasi urutan bulan invoice (sequential billing)
+            $bulanInt = (int)$bulan;
+            $tahunInt = (int)$tahun;
+            $prevMonthInt = ($bulanInt === 1) ? 12 : ($bulanInt - 1);
+            $prevYearInt = ($bulanInt === 1) ? ($tahunInt - 1) : $tahunInt;
+
+            $custLastMonth = (int) ($p->last_month_billing ?? 0);
+            $custLastYear = (int) ($p->last_year_billing ?? 0);
+
+            if ($custLastMonth !== $prevMonthInt || $custLastYear !== $prevYearInt) {
+                $expectedName = Carbon::createFromDate($prevYearInt, $prevMonthInt, 1)->format('M Y');
+                $lastStr = ($custLastMonth > 0 && $custLastYear > 0)
+                    ? Carbon::createFromDate($custLastYear, $custLastMonth, 1)->format('M Y')
+                    : 'Belum Ada';
+                return redirect()->back()->with('error', "Invoice periode {$periodeTagihan} tidak dapat dibuat untuk {$p->nama_pelanggan} ({$p->nomor_internet}). Invoice bulan sebelumnya ({$expectedName}) belum di-generate. Last Billing: {$lastStr}.");
+            }
+
             $hargaBandwith = (float) ($p->harga_bandwith ?? $p->nominal_bandwith ?? 0);
             $potongan = (float) ($p->potongan ?? 0);
             $totalLayanan = max(0, $hargaBandwith - $potongan);
@@ -3298,8 +3315,8 @@ class FinanceController extends Controller
             'last_year_billing',
         ])->orderBy('nama_pelanggan', 'asc')->limit(500)->get()->unique('nomor_internet');
 
-        // Filter kandidat: Bukan BF, tagihan > 0, dan last_month_billing tepat bulan sebelumnya
-        $pelanggans = $pelanggans->filter(function($p) use ($prevMonthInt, $prevYearInt) {
+        // Filter kandidat: Bukan BF dan tagihan > 0
+        $pelanggans = $pelanggans->filter(function($p) {
             $kodeKategori = strtoupper(trim($p->kode_kategori_bandwith ?? ''));
             $aliasKategori = strtoupper(trim($p->alias_nama_kategori ?? ''));
             $namaKategori = strtoupper(trim($p->nama_kategori_bandwith ?? ''));
@@ -3309,13 +3326,7 @@ class FinanceController extends Controller
 
             $harga = (float)($p->harga_bandwith ?? $p->nominal_bandwith ?? 0);
             $pot = (float)($p->potongan ?? 0);
-            if (($harga - $pot) <= 0) {
-                return false;
-            }
-
-            $custLastMonth = (int) ($p->last_month_billing ?? 0);
-            $custLastYear = (int) ($p->last_year_billing ?? 0);
-            return ($custLastMonth === $prevMonthInt && $custLastYear === $prevYearInt);
+            return (($harga - $pot) > 0);
         })->values();
 
         // Check which ones already have invoices generated
@@ -3325,17 +3336,38 @@ class FinanceController extends Controller
             ->whereIn('nomor_internet', $pelanggans->pluck('nomor_internet'))
             ->pluck('status_bill_lay', 'nomor_internet');
 
-        $data = $pelanggans->map(function($p) use ($existingInvoices, $periodeStr) {
+        $expectedPrevStr = Carbon::createFromDate($prevYearInt, $prevMonthInt, 1)->format('M Y');
+
+        $data = $pelanggans->map(function($p) use ($existingInvoices, $periodeStr, $prevMonthInt, $prevYearInt, $expectedPrevStr) {
             $hasInv = $existingInvoices->has($p->nomor_internet);
             $harga = (float)($p->harga_bandwith ?? $p->nominal_bandwith ?? 0);
             $pot = (float)($p->potongan ?? 0);
             $pendingNominal = max(0, $harga - $pot);
+
+            $custLastMonth = (int) ($p->last_month_billing ?? 0);
+            $custLastYear = (int) ($p->last_year_billing ?? 0);
+
+            $lastBillingDisplay = '-';
+            if ($custLastMonth > 0 && $custLastYear > 0) {
+                try {
+                    $lastBillingDisplay = Carbon::createFromDate($custLastYear, $custLastMonth, 1)->format('M Y');
+                } catch (\Throwable $e) {
+                    $lastBillingDisplay = "{$custLastMonth}/{$custLastYear}";
+                }
+            }
+
+            $isSequentialValid = ($custLastMonth === $prevMonthInt && $custLastYear === $prevYearInt);
+            $canGenerate = !$hasInv && $isSequentialValid;
 
             return [
                 'nomor_internet' => $p->nomor_internet,
                 'nama_pelanggan' => $p->nama_pelanggan,
                 'layanan' => $p->nama_kategori_bandwith ?? '-',
                 'periode' => $periodeStr,
+                'last_billing' => $lastBillingDisplay,
+                'expected_prev_billing' => $expectedPrevStr,
+                'is_sequential_valid' => $isSequentialValid,
+                'can_generate' => $canGenerate,
                 'pending_nominal' => $pendingNominal,
                 'pending_formatted' => 'Rp ' . number_format($pendingNominal, 0, ',', '.'),
                 'is_generated' => $hasInv,

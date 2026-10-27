@@ -24,7 +24,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT \n  b.kode_billing_layanan,\n  b.nomor_internet,\n  COALESCE(c.nama_pelanggan, 'Pelanggan') AS nama_pelanggan,\n  COALESCE(c.nomor_hp, c.no_wa, '') AS nomor_hp,\n  b.periode_tagihan,\n  CAST(b.total_layanan AS DECIMAL(15,2)) AS total_tagihan,\n  b.status_bill_lay\nFROM trx_billing_layanan b\nLEFT JOIN view_batchjob c ON b.nomor_internet = c.nomor_internet\nWHERE b.status_bill_lay = '13'\n  AND CAST(b.total_layanan AS DECIMAL(15,2)) > 0\n  AND (b.hide IS NULL OR b.hide = '0')\n  AND (b.kode_bandwith NOT LIKE '%FREE%')\nORDER BY b.date_create DESC\nLIMIT 50;"
+        "query": "SELECT \n  b.kode_billing_layanan,\n  b.nomor_internet,\n  COALESCE(c.nama_pelanggan, 'Pelanggan') AS nama_pelanggan,\n  COALESCE(c.nomor_hp, '') AS nomor_hp,\n  b.periode_tagihan,\n  CAST(b.total_layanan AS DECIMAL(15,2)) AS total_tagihan,\n  b.status_bill_lay\nFROM trx_billing_layanan b\nLEFT JOIN view_batchjob c ON b.nomor_internet = c.nomor_internet\nWHERE b.status_bill_lay = '13'\n  AND CAST(b.total_layanan AS DECIMAL(15,2)) > 0\n  AND (b.hide IS NULL OR b.hide = '0')\n  AND (b.kode_bandwith NOT LIKE '%FREE%')\nORDER BY b.date_create DESC\nLIMIT 50;"
       },
       "id": "e1f13b69-8012-40a2-b2a1-120e2ef50002",
       "name": "MySQL - Tarik Tagihan Belum Lunas",
@@ -76,7 +76,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={{ $env.GEMINI_API_KEY || 'MASUKKAN_GEMINI_API_KEY_ANDA' }}",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={{ $env.GEMINI_API_KEY || 'MASUKKAN_GEMINI_API_KEY_ANDA' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

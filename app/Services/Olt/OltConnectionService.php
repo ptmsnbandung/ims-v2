@@ -769,11 +769,9 @@ class OltConnectionService
             }
         }
 
-        // Disable CLI Paging (terminal length 0 / screen-length 0)
+        // Disable CLI Paging (terminal length 0)
         fwrite($socket, "terminal length 0\r\n");
-        usleep(100000);
-        fwrite($socket, "screen-length 0 temporary\r\n");
-        usleep(100000);
+        $buffer .= $this->readUntilPrompt($socket, ['#', '>', '%'], 2);
 
         // Execute commands
         $output = '';
@@ -927,37 +925,64 @@ class OltConnectionService
 
     /**
      * Reboot ONU via OLT Telnet (mode pon-onu-mng)
-     * Contoh index_olt: "gpon-onu_1/2/6:3" atau "1/2/6:3"
+     * Contoh index_olt: "gpon-onu_1/2/6:3", "1/2/6:3", atau "GPON-ONU_1/2/6:3"
+     * Mendukung auto-resolusi OLT: kode_olt ('O1', 'O2', 'O3'), nama ('Soreang', 'Bagong', 'MSN'), atau slot index
      */
     public function rebootOnu(string $indexOlt, ?string $kodeOlt = null): array
     {
-        $cleanIndex = trim($indexOlt);
-        if (empty($cleanIndex)) {
+        $rawIndex = trim($indexOlt);
+        if (empty($rawIndex)) {
             return [
                 'success' => false,
                 'message' => 'Index OLT tidak valid atau kosong.',
             ];
         }
 
-        // Normalisasi format index_olt (pastikan format gpon-onu_X/X/X:X)
-        if (!str_starts_with($cleanIndex, 'gpon-onu_')) {
-            $cleanIndex = 'gpon-onu_' . ltrim($cleanIndex, '_');
-        }
-
-        // Validasi format index OLT (Cegah CR/LF command injection ke OLT telnet CLI)
-        if (!preg_match('/^gpon-onu_\d+\/\d+\/\d+:\d+$/', $cleanIndex)) {
-            Log::warning("Potential OLT command injection blocked in rebootOnu: " . addcslashes($indexOlt, "\r\n\t"));
+        // Normalisasi format index_olt (ekstrak rack/shelf/port:onu secara presisi & cegah injection)
+        if (preg_match('/(\d+)\/(\d+)\/(\d+):(\d+)/', $rawIndex, $matches)) {
+            $cleanIndex = "gpon-onu_{$matches[1]}/{$matches[2]}/{$matches[3]}:{$matches[4]}";
+        } else {
             return [
                 'success' => false,
-                'message' => 'Format index ONU tidak valid (harus sesuai format gpon-onu_x/x/x:x).',
+                'message' => "Format index ONU tidak valid ({$rawIndex}). Harus sesuai format gpon-onu_x/x/x:x.",
             ];
         }
 
-        // Cari konfigurasi OLT di database atau default
+        // Cari konfigurasi OLT di database dengan resolusi cerdas (kode_olt, nama_olt, alias wilayah, atau via slot)
         $olt = null;
-        if ($kodeOlt && Schema::hasTable('m_olt')) {
-            $olt = DB::table('m_olt')->where('kode_olt', $kodeOlt)->first();
+        $rawKode = trim($kodeOlt ?? '');
+        $lower = strtolower($rawKode);
+
+        if (!empty($rawKode) && Schema::hasTable('m_olt')) {
+            // 1. Direct kode_olt (e.g. O1, O2, O3)
+            $olt = DB::table('m_olt')->where('kode_olt', $rawKode)->first();
+
+            // 2. Alias matching
+            if (!$olt) {
+                if (str_contains($lower, 'soreang') || str_contains($lower, 'bbu') || str_contains($lower, 'bojong')) {
+                    $olt = DB::table('m_olt')->where('kode_olt', 'O3')->orWhere('name_olt', 'like', '%BBU%')->first();
+                } elseif (str_contains($lower, 'bagong') || str_contains($lower, 'babakan') || str_contains($lower, 'tarogong')) {
+                    $olt = DB::table('m_olt')->where('kode_olt', 'O2')->orWhere('name_olt', 'like', '%BABAKAN%')->first();
+                } elseif (str_contains($lower, 'msn') || str_contains($lower, 'kayu') || str_contains($lower, 'agung')) {
+                    $olt = DB::table('m_olt')->where('kode_olt', 'O1')->orWhere('name_olt', 'like', '%KAYU%')->first();
+                } else {
+                    $olt = DB::table('m_olt')->where('name_olt', 'like', "%{$rawKode}%")->first();
+                }
+            }
         }
+
+        // 3. Fallback resolusi OLT berdasarkan slot port pada index_olt
+        if (!$olt && Schema::hasTable('m_olt')) {
+            if (str_contains($cleanIndex, '1/2/')) {
+                // Slot 1/2 adalah OLT Soreang / BBU (O3)
+                $olt = DB::table('m_olt')->where('kode_olt', 'O3')->first();
+            } elseif (str_contains($cleanIndex, '1/1/')) {
+                // Slot 1/1 adalah OLT Babakan Tarogong / Bagong (O2)
+                $olt = DB::table('m_olt')->where('kode_olt', 'O2')->first();
+            }
+        }
+
+        // 4. Default fallback jika belum terpetakan
         if (!$olt && Schema::hasTable('m_olt')) {
             $query = DB::table('m_olt');
             if (Schema::hasColumn('m_olt', 'hide')) {
@@ -966,14 +991,16 @@ class OltConnectionService
             $olt = $query->first();
         }
 
-        $ip = $olt->ip_address ?? env('OLT_HOST', '103.161.206.214');
-        $port = (int)($olt->telnet_port ?? ($olt->port ?? env('OLT_PORT', 45523)));
-        $username = $olt->telnet_user ?? ($olt->username ?? env('OLT_USER', 'aplikasi'));
-        $password = $this->decryptPassword($olt->telnet_password ?? ($olt->password ?? env('OLT_PASS', 'kayuagung2-9')));
+        $params = $this->resolveOltConnectionParams($olt);
+        $ip = $params['ip'];
+        $port = $params['port'];
+        $username = $params['user'];
+        $password = $params['pass'];
         $enablePassword = $this->decryptPassword($olt->enable_password ?? null);
+        $oltName = $olt->name_olt ?? ($olt->kode_olt ?? "OLT {$ip}:{$port}");
 
         try {
-            Log::info("Executing OLT Remote Reboot on {$ip}:{$port} for ONU: {$cleanIndex}");
+            Log::info("Executing OLT Remote Reboot on {$oltName} ({$ip}:{$port}) for ONU: {$cleanIndex}");
 
             $commands = [
                 'configure terminal',
@@ -984,15 +1011,28 @@ class OltConnectionService
 
             $output = $this->executeTelnetCommand($ip, $port, $username, $password, $enablePassword, $commands);
 
-            Log::info("OLT Remote Reboot result for {$cleanIndex}: OK");
+            // Validasi apakah sesi berhasil masuk ke pon-onu-mng
+            $enteredMng = str_contains($output, '(gpon-onu-mng');
+            $hasOnuError = str_contains($output, '%Error 20202') || str_contains($output, 'Invalid parameter');
+
+            if (!$enteredMng || $hasOnuError) {
+                Log::warning("OLT Remote Reboot rejected for {$cleanIndex} on {$oltName}: ONU not found or invalid interface.");
+                return [
+                    'success' => false,
+                    'message' => "Gagal reboot ONU {$cleanIndex}: Interface/ONU tidak ditemukan di OLT {$oltName} ({$ip}:{$port}).",
+                    'output' => $output,
+                ];
+            }
+
+            Log::info("OLT Remote Reboot result for {$cleanIndex} on {$oltName}: OK");
 
             return [
                 'success' => true,
-                'message' => "Perintah reboot berhasil dikirim ke OLT ({$ip}) untuk ONU {$cleanIndex}.",
+                'message' => "Perintah reboot berhasil dikirim ke OLT {$oltName} ({$ip}:{$port}) untuk ONU {$cleanIndex}.",
                 'output' => $output,
             ];
         } catch (Exception $e) {
-            Log::error("OLT Remote Reboot error for {$cleanIndex}: " . $e->getMessage());
+            Log::error("OLT Remote Reboot error for {$cleanIndex} on {$oltName}: " . $e->getMessage());
 
             return [
                 'success' => false,

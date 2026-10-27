@@ -1,0 +1,202 @@
+{
+  "name": "Kantor AI - Revenue Leakage & Finance Audit Sentry",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a1f13b69-8012-40a2-b2a1-000000000001",
+      "name": "Schedule - Tiap Jam 07:00 Pagi",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  c.nomor_internet,\n  c.nama_pelanggan,\n  c.kode_bandwith,\n  COALESCE(c.nama_kategori_bandwith, 'INTERNET') AS kategori,\n  COALESCE(c.harga_bandwith, 0) AS harga_paket,\n  b.kode_billing_layanan,\n  COALESCE(b.total_layanan, 0) AS tagihan_terbit,\n  CASE \n    WHEN b.kode_billing_layanan IS NULL THEN 'Missing Invoice (Aktif Tanpa Tagihan)'\n    ELSE 'Tagihan Rp 0 Padahal Paket Berbayar'\n  END AS indikasi_kebocoran\nFROM view_batchjob c\nLEFT JOIN trx_billing_layanan b ON c.nomor_internet = b.nomor_internet \n  AND b.bulan_tagihan = LPAD(MONTH(CURRENT_DATE()), 2, '0')\n  AND b.tahun_tagihan = YEAR(CURRENT_DATE())\n  AND (b.hide IS NULL OR b.hide = '0')\nWHERE c.status_reg = '20'\n  AND (c.hide IS NULL OR c.hide = '0')\n  AND (c.kode_bandwith NOT LIKE '%FREE%')\n  AND (b.kode_billing_layanan IS NULL OR CAST(COALESCE(b.total_layanan, '0') AS DECIMAL(15,2)) <= 0)\nLIMIT 20;"
+      },
+      "id": "a1f13b69-8012-40a2-b2a1-000000000002",
+      "name": "Audit 1 - Internet Aktif Tanpa Tagihan",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        440,
+        200
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "IMS_MYSQL_CREDENTIALS",
+          "name": "MySQL IMS Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  b.kode_billing_layanan,\n  b.nomor_internet,\n  COALESCE(c.nama_pelanggan, 'Pelanggan') AS nama_pelanggan,\n  CAST(b.total_layanan AS DECIMAL(15,2)) AS nominal,\n  b.date_update,\n  TIMESTAMPDIFF(HOUR, b.date_update, NOW()) AS jam_menggantung\nFROM trx_billing_layanan b\nLEFT JOIN view_batchjob c ON b.nomor_internet = c.nomor_internet\nWHERE b.status_bill_lay = '14'\n  AND (b.hide IS NULL OR b.hide = '0')\n  AND (b.date_update <= NOW() - INTERVAL 2 HOUR OR b.date_create <= NOW() - INTERVAL 2 HOUR)\nLIMIT 10;"
+      },
+      "id": "a1f13b69-8012-40a2-b2a1-000000000003",
+      "name": "Audit 2 - Pembayaran Menggantung (>2 Jam)",
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        440,
+        400
+      ],
+      "credentials": {
+        "mySql": {
+          "id": "IMS_MYSQL_CREDENTIALS",
+          "name": "MySQL IMS Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const missingInvoices = $('Audit 1 - Internet Aktif Tanpa Tagihan').all().map(i => i.json).filter(i => i.nomor_internet);\nconst pendingPayments = $('Audit 2 - Pembayaran Menggantung (>2 Jam)').all().map(i => i.json).filter(i => i.kode_billing_layanan);\n\nlet totalPotentialLoss = 0;\nmissingInvoices.forEach(item => {\n  totalPotentialLoss += Number(item.harga_paket || 0);\n});\n\nlet totalPendingAmount = 0;\npendingPayments.forEach(item => {\n  totalPendingAmount += Number(item.nominal || 0);\n});\n\nreturn {\n  has_anomalies: (missingInvoices.length > 0 || pendingPayments.length > 0),\n  total_unbilled_cust: missingInvoices.length,\n  total_unbilled_amount: totalPotentialLoss,\n  unbilled_samples: missingInvoices.slice(0, 5),\n  total_pending_verif: pendingPayments.length,\n  total_pending_amount: totalPendingAmount,\n  pending_samples: pendingPayments.slice(0, 5)\n};"
+      },
+      "id": "a1f13b69-8012-40a2-b2a1-000000000004",
+      "name": "Rangkum Temuan Audit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=AQ.Ab8RN6IAfw4ankqPQGvlWyl7QNN9gg2NLhvvlRb1PsiA",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"Kamu adalah AI Internal Financial Auditor PT Media Solusi Network (MSN). Susun 'Laporan Peringatan Audit Kebocoran Pendapatan' yang tegas, jelas, dan profesional untuk Direksi dan Head of Finance berdasarkan temuan berikut:\\n\\nDATA TEMUAN AUDIT SISTEM:\\n1. Pelanggan Aktif Tanpa Tagihan (Missing Invoices):\\n- Jumlah Pelanggan: {{ $json.total_unbilled_cust }} pelanggan\\n- Estimasi Potensi Kerugian/Bulan: Rp {{ Number($json.total_unbilled_amount).toLocaleString('id-ID') }}\\n- Contoh Data Pelanggan: {{ JSON.stringify($json.unbilled_samples) }}\\n\\n2. Pembayaran Menggantung (> 2 Jam Tanpa Konfirmasi):\\n- Jumlah Transaksi Status 14: {{ $json.total_pending_verif }} transaksi\\n- Total Uang Tertahan: Rp {{ Number($json.total_pending_amount).toLocaleString('id-ID') }}\\n- Contoh Data: {{ JSON.stringify($json.pending_samples) }}\\n\\nINSTRUKSI PENULISAN LAPORAN:\\n- Gunakan format teks rapi dengan emoji penanda (🚨, ⚠️, 💡).\\n- Cantumkan estimasi kerugian nominal rupiah di bagian atas.\\n- Buatkan 3 poin rekomendasi tindakan tegas yang harus segera diambil oleh tim finance hari ini.\\n- Berikan salam penutup dari 'AI Financial Auditor PT MSN'.\"\n    }]\n  }]\n}",
+        "options": {}
+      },
+      "id": "a1f13b69-8012-40a2-b2a1-000000000005",
+      "name": "Gemini AI - Analisis Audit Eksekutif",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/botYOUR_TELEGRAM_BOT_TOKEN/sendMessage",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "fieldsBelow",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chat_id",
+              "value": "YOUR_TELEGRAM_CHAT_ID"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1f13b69-8012-40a2-b2a1-000000000006",
+      "name": "Kirim Laporan Audit ke Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule - Tiap Jam 07:00 Pagi": {
+      "main": [
+        [
+          {
+            "node": "Audit 1 - Internet Aktif Tanpa Tagihan",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Audit 2 - Pembayaran Menggantung (>2 Jam)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit 1 - Internet Aktif Tanpa Tagihan": {
+      "main": [
+        [
+          {
+            "node": "Rangkum Temuan Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit 2 - Pembayaran Menggantung (>2 Jam)": {
+      "main": [
+        [
+          {
+            "node": "Rangkum Temuan Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rangkum Temuan Audit": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI - Analisis Audit Eksekutif",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI - Analisis Audit Eksekutif": {
+      "main": [
+        [
+          {
+            "node": "Kirim Laporan Audit ke Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

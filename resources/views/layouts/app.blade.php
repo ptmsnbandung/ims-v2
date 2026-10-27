@@ -1681,7 +1681,7 @@
                         </div>
                     </div>
 
-                    @if(auth()->user()?->hasRole(['finance', 'direktur']))
+                    @if(auth()->user()?->hasRole('finance'))
                     <!-- Data Pelanggan (Finance) -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('finance.pelanggan') }}"
@@ -1722,7 +1722,7 @@
                         <div class="ims-tooltip">Billing Registrasi</div>
                     </div>
 
-                    @if(auth()->user()?->hasRole(['finance', 'direktur']))
+                    @if(auth()->user()?->hasRole('finance'))
                     <!-- Notifikasi & Approval (Finance) -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('finance.notifikasi') }}"

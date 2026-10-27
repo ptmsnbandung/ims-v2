@@ -747,19 +747,45 @@
                             <!-- 1. Pelanggan -->
                             <td class="py-2.5 px-3 align-top">
                                 @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
-                                <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
-                                   class="group block"
-                                   title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
-                                    <div class="font-bold font-mono text-blue-600 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 group-hover:underline tracking-wide text-xs">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
+                                       class="font-bold font-mono text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline tracking-wide text-xs"
+                                       title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
                                         {{ $item->nomor_internet }}
-                                    </div>
-                                    <div class="mt-0.5 font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline uppercase text-xs transition-colors">
-                                        <span>{{ $item->nama_pelanggan }}</span>
-                                        <span class="text-slate-500 dark:text-slate-400 font-normal no-underline">
-                                            ( {{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )
+                                    </a>
+                                    <button type="button"
+                                            x-data="{ copied: false }"
+                                            @click.stop.prevent="
+                                                copyToClipboard('{{ $item->nomor_internet }}');
+                                                copied = true;
+                                                setTimeout(() => copied = false, 2000);
+                                            "
+                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer"
+                                            :class="copied 
+                                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30' 
+                                                : 'text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'"
+                                            :title="copied ? 'Berhasil disalin!' : 'Salin Nomor Internet'">
+                                        <svg x-show="!copied" class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                                        </svg>
+                                        <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                        <span x-show="copied" x-cloak class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 leading-none">
+                                            Berhasil disalin
                                         </span>
-                                    </div>
-                                </a>
+                                    </button>
+                                </div>
+                                <div class="mt-0.5 font-bold text-slate-900 dark:text-white uppercase text-xs">
+                                    <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
+                                       class="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+                                       title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                        <span>{{ $item->nama_pelanggan }}</span>
+                                    </a>
+                                    <span class="text-slate-500 dark:text-slate-400 font-normal no-underline">
+                                        ( {{ ($item->jenis_kelamin ?? null) == 1 ? 'L' : (($item->jenis_kelamin ?? null) == 2 ? 'P' : '-') }} )
+                                    </span>
+                                </div>
                                 @else
                                 <div class="font-bold font-mono text-slate-400 text-xs tracking-wide">
                                     -
@@ -1005,22 +1031,50 @@
                             </div>
                             <div class="min-w-0">
                                 @if(!empty($item->nomor_internet) && $item->nomor_internet !== '-')
-                                <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
-                                   class="group block"
-                                   title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                <div>
                                     <div class="flex items-center gap-1.5 flex-wrap">
-                                        <h4 class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:underline text-sm tracking-tight truncate uppercase leading-tight transition-colors">
-                                            {{ $item->nama_pelanggan }}
+                                        <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-tight truncate uppercase leading-tight">
+                                            <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
+                                               class="hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+                                               title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                                {{ $item->nama_pelanggan }}
+                                            </a>
                                         </h4>
                                         <span class="px-1.5 py-0.5 rounded text-[10px] font-bold no-underline {{ ($item->jenis_kelamin ?? null) == 2 ? 'bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/20' : 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20' }}">
                                             {{ ($item->jenis_kelamin ?? null) == 2 ? 'P' : (($item->jenis_kelamin ?? null) == 1 ? 'L' : '-') }}
                                         </span>
                                     </div>
-                                    <div class="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 group-hover:underline inline-flex items-center gap-1 mt-0.5">
-                                        <span>#{{ $item->nomor_internet }}</span>
-                                        <svg class="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                                    <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                        <a href="{{ route($profileRoute, $item->nomor_internet) }}" 
+                                           class="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                                           title="Buka Profile Pelanggan ({{ $item->nomor_internet }})">
+                                            <span>#{{ $item->nomor_internet }}</span>
+                                            <svg class="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                                        </a>
+                                        <button type="button"
+                                                x-data="{ copied: false }"
+                                                @click.stop.prevent="
+                                                    copyToClipboard('{{ $item->nomor_internet }}');
+                                                    copied = true;
+                                                    setTimeout(() => copied = false, 2000);
+                                                "
+                                                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer"
+                                                :class="copied 
+                                                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30' 
+                                                    : 'text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'"
+                                                :title="copied ? 'Berhasil disalin!' : 'Salin Nomor Internet'">
+                                            <svg x-show="!copied" class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                                            </svg>
+                                            <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                            <span x-show="copied" x-cloak class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 leading-none">
+                                                Berhasil disalin
+                                            </span>
+                                        </button>
                                     </div>
-                                </a>
+                                </div>
                                 @else
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-tight truncate uppercase leading-tight">
@@ -1715,6 +1769,27 @@
 <!-- SweetAlert Script for 1-Click Unified Activate/Suspend -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text);
+    }
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        document.execCommand('copy');
+    } catch (err) {
+        console.error('Fallback copy error:', err);
+    }
+    document.body.removeChild(textArea);
+    return Promise.resolve();
+}
+
 function triggerUnifiedAction(nomorInternet, namaPelanggan, action) {
     const isActivate = (action === 'activate');
     const title = isActivate ? 'Aktifkan Layanan & Reboot ONT?' : 'Suspend / Isolir Layanan & Reboot ONT?';

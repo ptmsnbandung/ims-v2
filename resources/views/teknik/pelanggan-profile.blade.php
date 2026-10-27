@@ -211,7 +211,7 @@
                     </div>
 
                     <!-- Action Button: Edit Data Pelanggan for Teknik, or Unified Activate/Suspend for NOC/Admin/Direktur -->
-                    <div class="pt-2">
+                    <div class="pt-2 space-y-2">
                         @if($isTeknik)
                             <a href="{{ route('teknik.pendaftaran', ['edit' => $customer->nomor_internet, 'from' => 'profile']) }}"
                                class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-[0.98] transition cursor-pointer">
@@ -240,6 +240,19 @@
                                     <span>Suspend / Isolir (1-Click)</span>
                                 </button>
                             @endif
+                        @endif
+
+                        @if(!$isFinance)
+                            <!-- Tombol Manual Remote Reboot ONT/ONU OLT -->
+                            <button type="button" 
+                                    onclick="triggerProfileManualReboot('{{ $customer->nomor_internet }}', '{{ addslashes($customer->nama_pelanggan) }}', '{{ $customer->index_olt ?? '' }}', '{{ $customer->olt ?? '' }}')"
+                                    class="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-900/90 dark:hover:bg-slate-800/90 text-cyan-400 dark:text-cyan-300 border border-slate-700 dark:border-cyan-500/30 hover:border-cyan-400/60 font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-slate-900/30 active:scale-[0.98] transition cursor-pointer group"
+                                    title="Remote Reboot Modem ONT / ONU melalui OLT">
+                                <svg class="w-4 h-4 text-cyan-400 group-hover:rotate-180 transition-transform duration-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                                <span>Reboot ONT / Modem (Manual)</span>
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -2565,6 +2578,81 @@ function triggerProfileUnifiedAction(nomorInternet, namaPelanggan, action) {
                 confirmButtonColor: '#3b82f6'
             }).then(() => {
                 window.location.reload();
+            });
+        }
+    });
+}
+
+function triggerProfileManualReboot(nomorInternet, namaPelanggan, indexOlt, kodeOlt) {
+    if (!indexOlt) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Index OLT Kosong',
+            text: `Pelanggan ${namaPelanggan} (${nomorInternet}) belum memiliki Index OLT/ONU. Harap edit data pelanggan dan lengkapi Index OLT terlebih dahulu.`,
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Reboot ONT / Modem?',
+        html: `<div class="text-left text-xs text-slate-600 dark:text-slate-300 space-y-2.5 mt-2">
+            <p>Sistem akan mengirim perintah <b>remote reboot</b> langsung ke hardware OLT untuk me-restart modem ONT pelanggan.</p>
+            <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 font-mono text-[11px] space-y-1">
+                <div class="flex justify-between"><span class="text-slate-500">Target:</span> <b>${nomorInternet}</b> - ${namaPelanggan}</div>
+                <div class="flex justify-between"><span class="text-slate-500">Index OLT:</span> <b class="text-cyan-500">${indexOlt}</b></div>
+                ${kodeOlt ? `<div class="flex justify-between"><span class="text-slate-500">Node OLT:</span> <b class="text-indigo-400">${kodeOlt}</b></div>` : ''}
+            </div>
+            <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] flex items-start gap-1.5">
+                <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Koneksi internet pelanggan akan terputus sesaat selama proses restart modem (~1-2 menit).</span>
+            </div>
+        </div>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0ea5e9',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Reboot Sekarang',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            const url = `/teknik/pelanggan/${nomorInternet}/reboot-onu`;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
+            return fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                return response.json().then(data => {
+                    if (!response.ok && !data.message) {
+                        throw new Error(response.statusText);
+                    }
+                    return data;
+                });
+            })
+            .catch(error => {
+                Swal.showValidationMessage(`Gagal mengirim perintah reboot: ${error.message || error}`);
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            const res = result.value;
+            Swal.fire({
+                icon: res.success ? 'success' : 'error',
+                title: res.title || (res.success ? 'Perintah Reboot Berhasil' : 'Gagal Reboot ONT'),
+                text: res.message || res.summary || 'Perintah reboot telah dikirim ke OLT.',
+                confirmButtonColor: '#3b82f6'
+            }).then(() => {
+                if (res.success) {
+                    window.location.reload();
+                }
             });
         }
     });

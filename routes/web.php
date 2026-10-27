@@ -166,6 +166,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/pelanggan/{nomor_internet}/update-pppoe', [TeknikController::class, 'updatePppoe'])->name('pelanggan.update-pppoe');
         Route::post('/pelanggan/{nomor_internet}/unified-activate', [NocController::class, 'unifiedActivate'])->name('pelanggan.unified-activate');
         Route::post('/pelanggan/{nomor_internet}/unified-suspend', [NocController::class, 'unifiedSuspend'])->name('pelanggan.unified-suspend');
+        Route::post('/pelanggan/{nomor_internet}/reboot-onu', [NocController::class, 'manualRebootOnu'])->name('pelanggan.reboot-onu');
         Route::post('/pelanggan/adjust', [FinanceController::class, 'adjustCustomerPricing'])->name('pelanggan.adjust.post');
         Route::post('/pelanggan/{nomor_internet}/adjust', [FinanceController::class, 'adjustCustomerPricing'])->name('pelanggan.adjust');
 

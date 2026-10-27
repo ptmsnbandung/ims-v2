@@ -2483,6 +2483,94 @@ class NocController extends Controller
     }
 
     /**
+     * MANUAL REBOOT ONT/ONU Pelanggan via OLT (1-Click Troubleshooting)
+     */
+    public function manualRebootOnu(Request $request, string $nomorInternet, OltConnectionService $oltService): JsonResponse|RedirectResponse
+    {
+        $currentUser = auth()->user()->nama ?? 'OPERATOR';
+
+        $cust = DB::table('view_batchjob')->where('nomor_internet', $nomorInternet)->first();
+        if (!$cust) {
+            $cust = DB::table('trx_batchjob_register')->where('nomor_internet', $nomorInternet)->first();
+        }
+
+        if (!$cust) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'title' => 'Gagal Reboot',
+                    'message' => 'Data pelanggan tidak ditemukan.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Data pelanggan tidak ditemukan.');
+        }
+
+        $indexOlt = trim($cust->index_olt ?? '');
+        $kodeOlt = trim($cust->olt ?? '');
+        $namaPelanggan = $cust->nama_pelanggan ?? 'Pelanggan';
+
+        if (empty($indexOlt)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'title' => 'Index OLT Kosong',
+                    'message' => "Index OLT/ONU belum terdaftar untuk {$namaPelanggan} ({$nomorInternet}). Harap lengkapi index ONU terlebih dahulu."
+                ], 422);
+            }
+            return redirect()->back()->with('error', "Index OLT/ONU belum terdaftar untuk {$nomorInternet}.");
+        }
+
+        $result = $oltService->rebootOnu($indexOlt, $kodeOlt);
+
+        // Catat ke audit trail activity_logs
+        if (Schema::hasTable('activity_logs')) {
+            try {
+                DB::table('activity_logs')->insert([
+                    'customer_id' => $nomorInternet,
+                    'action' => 'reboot_onu',
+                    'router_success' => $result['success'] ? 1 : 0,
+                    'description' => "Manual Remote Reboot ONT ONU '{$indexOlt}' (OLT: {$kodeOlt}) oleh {$currentUser}",
+                    'router_response' => $result['message'] ?? '',
+                    'operator' => $currentUser,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning("Gagal log activity reboot: " . $e->getMessage());
+            }
+        }
+
+        // Catat ke trx_batchjob_register_log jika ada
+        if (Schema::hasTable('trx_batchjob_register_log')) {
+            try {
+                DB::table('trx_batchjob_register_log')->insert([
+                    'kode_batchjob_register_log' => 'L-RB-' . $nomorInternet . '-' . rand(1000, 9999),
+                    'nomor_internet' => $nomorInternet,
+                    'status_reg' => $cust->status_reg ?? '20',
+                    'kat_log' => '20',
+                    'note_schedule' => "MANUAL REMOTE REBOOT ONT/ONU '{$indexOlt}' (" . ($result['success'] ? 'BERHASIL' : 'GAGAL') . "): " . ($result['message'] ?? ''),
+                    'date_schedule' => now()->format('Y-m-d'),
+                    'time_schedule' => now()->format('H:i:s'),
+                    'date_create' => now()->format('Y-m-d H:i:s'),
+                    'user_create' => $currentUser,
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => $result['success'],
+                'title' => $result['success'] ? 'Reboot Berhasil Terkirim' : 'Gagal Reboot ONU',
+                'summary' => $result['message'] ?? '',
+                'message' => $result['message'] ?? '',
+                'output' => $result['output'] ?? '',
+            ]);
+        }
+
+        return redirect()->back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    /**
      * Cancel Suspend Request
      */
     public function cancelSuspend(Request $request, string $kodeSuspend): RedirectResponse

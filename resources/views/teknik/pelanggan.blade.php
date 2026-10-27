@@ -854,6 +854,17 @@
                                                 <span>Suspend</span>
                                             </button>
                                         @endif
+
+                                        <!-- Tombol Manual Reboot ONT/ONU -->
+                                        <button type="button" 
+                                                onclick="triggerManualReboot('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->index_olt ?? '' }}', '{{ $item->olt ?? '' }}')"
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 dark:bg-slate-900 text-cyan-400 border border-slate-700 dark:border-cyan-500/30 font-semibold text-[10px] shadow-2xs transition cursor-pointer whitespace-nowrap group"
+                                                title="Remote Reboot Modem ONT / ONU ({{ $item->index_olt ?? 'N/A' }})">
+                                            <svg class="w-3 h-3 text-cyan-400 group-hover:rotate-180 transition-transform duration-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                            </svg>
+                                            <span>Reboot</span>
+                                        </button>
                                     @endif
 
                                     @if($isFinance)
@@ -1735,6 +1746,77 @@ function triggerUnifiedAction(nomorInternet, namaPelanggan, action) {
                 confirmButtonColor: '#3b82f6'
             }).then(() => {
                 window.location.reload();
+            });
+        }
+    });
+}
+
+function triggerManualReboot(nomorInternet, namaPelanggan, indexOlt, kodeOlt) {
+    if (!indexOlt) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Index OLT Kosong',
+            text: `Pelanggan ${namaPelanggan} (${nomorInternet}) belum memiliki Index OLT/ONU. Harap edit data pelanggan dan lengkapi Index OLT terlebih dahulu.`,
+            confirmButtonColor: '#3b82f6'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Reboot ONT / Modem?',
+        html: `<div class="text-left text-xs text-slate-600 dark:text-slate-300 space-y-2 mt-2">
+            <p>Sistem akan mengirim perintah <b>remote reboot</b> langsung ke OLT hardware untuk me-restart modem ONT pelanggan.</p>
+            <div class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-[11px] space-y-1">
+                <div>Target: <b>${nomorInternet}</b> - ${namaPelanggan}</div>
+                <div>Index OLT: <b class="text-cyan-500">${indexOlt}</b> ${kodeOlt ? '(' + kodeOlt + ')' : ''}</div>
+            </div>
+            <p class="text-[11px] text-amber-600 dark:text-amber-400">⚠️ Koneksi internet pelanggan akan terputus sesaat selama proses restart modem (~1-2 menit).</p>
+        </div>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0ea5e9',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Reboot Sekarang',
+        cancelButtonText: 'Batal',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+            const url = `/teknik/pelanggan/${nomorInternet}/reboot-onu`;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
+            return fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                return response.json().then(data => {
+                    if (!response.ok && !data.message) {
+                        throw new Error(response.statusText);
+                    }
+                    return data;
+                });
+            })
+            .catch(error => {
+                Swal.showValidationMessage(`Gagal mengirim perintah reboot: ${error.message || error}`);
+            });
+        },
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            const res = result.value;
+            Swal.fire({
+                icon: res.success ? 'success' : 'error',
+                title: res.title || (res.success ? 'Perintah Reboot Berhasil' : 'Gagal Reboot ONT'),
+                text: res.message || res.summary || 'Perintah reboot telah dikirim ke OLT.',
+                confirmButtonColor: '#3b82f6'
+            }).then(() => {
+                if (res.success) {
+                    window.location.reload();
+                }
             });
         }
     });

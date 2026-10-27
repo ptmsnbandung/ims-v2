@@ -1343,6 +1343,7 @@
                         </div>
                     @endif
 
+                    @if(!auth()->user()?->hasRole(['direktur', 'admin']))
                     <!-- 3. Tiket -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('teknik.tiket') }}"
@@ -1423,6 +1424,7 @@
                             </a>
                         </div>
                     </div>
+                    @endif
 
                     <!-- 6. Cek Coverage ODP -->
                     <div class="ims-nav-wrapper">
@@ -1450,6 +1452,7 @@
                         </div>
                     </div>
 
+                    @if(!auth()->user()?->hasRole(['direktur', 'admin']))
                     <!-- 1. Pendaftaran Pelanggan Baru -->
                     <div class="ims-nav-wrapper">
                         <a href="{{ route('teknik.pendaftaran') }}"
@@ -1462,6 +1465,7 @@
                         </a>
                         <div class="ims-tooltip">Pendaftaran / Registrasi Pelanggan</div>
                     </div>
+                    @endif
 
                     <!-- 2. Tiket -->
                     <div class="ims-nav-wrapper">

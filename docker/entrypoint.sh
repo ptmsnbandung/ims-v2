@@ -15,8 +15,8 @@ chmod -R 775 /var/www/ims2/storage /var/www/ims2/bootstrap/cache
 php artisan storage:link || true
 
 # Setup Laravel crontab if not already set
-if [ ! -f /etc/crontabs/root ]; then
-    echo "* * * * * cd /var/www/ims2 && php artisan schedule:run >> /dev/null 2>&1" > /etc/crontabs/root
+if ! grep -q "schedule:run" /etc/crontabs/root 2>/dev/null; then
+    echo "* * * * * cd /var/www/ims2 && php artisan schedule:run >> /dev/null 2>&1" >> /etc/crontabs/root
 fi
 
 # Ensure olt-collector is executable

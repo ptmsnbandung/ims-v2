@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+vendor
+scratch
+tests
+.phpunit.result.cache
+*.sql
+*.docx
+*.bat
+.editorconfig
+.env
+.env.backup

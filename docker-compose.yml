@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ims2:latest
+    container_name: ims2_app
+    restart: always
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    volumes:
+      - ./storage:/var/www/ims2/storage
+      - ./.env:/var/www/ims2/.env

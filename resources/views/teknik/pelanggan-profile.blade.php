@@ -1481,6 +1481,109 @@
                         @endif
                     </div>
 
+                    <!-- Topologi Jaringan Full Width (Melebar Horizontal) -->
+                    <div class="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 sm:p-5 shadow-xs space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/60 dark:border-emerald-500/25">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                                            Topologi Jaringan
+                                        </h4>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/25">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            <span>FTTH ODN</span>
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Hierarki distribusi kabel optik dari OLT server pusat, port PON feeder, hingga titik ODP terpasang.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 Kolom Alur Pipeline Jaringan (Horizontal Melebar) -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            
+                            <!-- 1. SERVER OLT -->
+                            <div class="p-4 rounded-xl border border-blue-200/80 dark:border-blue-500/25 bg-blue-50/40 dark:bg-blue-950/20 flex flex-col justify-between space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        1. Server OLT
+                                    </span>
+                                    <svg class="w-4 h-4 text-blue-500 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 font-semibold uppercase block">Nama Host OLT</span>
+                                    <div class="text-sm font-bold font-mono text-blue-700 dark:text-blue-300 break-words mt-0.5">
+                                        {{ $networkInfo->olt_name ?? ($customer->olt ?: '-') }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. PORT PON / FEEDER -->
+                            <div class="p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-500/25 bg-emerald-50/40 dark:bg-emerald-950/20 flex flex-col justify-between space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        2. Port PON / Feeder
+                                    </span>
+                                    <svg class="w-4 h-4 text-emerald-500 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 font-semibold uppercase block">Kanal PON Feeder</span>
+                                    <div class="text-sm font-bold font-mono text-emerald-700 dark:text-emerald-300 break-words mt-0.5">
+                                        {{ $networkInfo->nama_pon ?? '-' }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. TITIK DISTRIBUSI ODP -->
+                            <div class="p-4 rounded-xl border border-purple-200/80 dark:border-purple-500/25 bg-purple-50/40 dark:bg-purple-950/20 flex flex-col justify-between space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300">
+                                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                                        3. Titik Distribusi ODP
+                                    </span>
+                                    <svg class="w-4 h-4 text-purple-500 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 font-semibold uppercase block">Lokasi / Nama Kotak ODP</span>
+                                    <div class="text-sm font-bold font-mono text-purple-700 dark:text-purple-300 break-words mt-0.5">
+                                        {{ $networkInfo->nama_odp ?? '-' }}
+                                    </div>
+                                </div>
+                                @if(!empty($networkInfo->latitude) && !empty($networkInfo->longitude))
+                                    <div class="pt-2 flex items-center justify-between gap-2 border-t border-purple-200/50 dark:border-purple-800/40 mt-1">
+                                        <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate" title="Koordinat: {{ $networkInfo->latitude }}, {{ $networkInfo->longitude }}">
+                                            📍 {{ number_format((float)$networkInfo->latitude, 5) }}, {{ number_format((float)$networkInfo->longitude, 5) }}
+                                        </span>
+                                        <a href="https://www.google.com/maps?q={{ $networkInfo->latitude }},{{ $networkInfo->longitude }}" 
+                                           target="_blank" 
+                                           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition shrink-0 shadow-xs"
+                                           title="Buka titik koordinat di Google Maps">
+                                            <span>Maps</span>
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+
+                        </div>
+                    </div>
+
                     <!-- Main Grid: Left Config Column & Right Perangkat Table Column -->
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         
@@ -1555,93 +1658,6 @@
                                 <ul class="space-y-1 text-slate-600 dark:text-slate-400 font-sans">
                                     <li>&mdash; <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold">{{ $instalasi->aktivasi_note_finish ?? ($instalasi->aktivasi_note ?? ($customer->note_request ?? '-')) }}</span></li>
                                 </ul>
-                            </div>
-
-                            <!-- 6. Data OLT / PON / ODP (Topologi Jaringan Modern) -->
-                            <div class="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 shadow-xs space-y-3.5">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <div class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                                                Topologi Jaringan
-                                            </h4>
-                                            <p class="text-[10px] text-slate-400">Hierarki distribusi kabel &amp; ODP</p>
-                                        </div>
-                                    </div>
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span>FTTH ODN</span>
-                                    </span>
-                                </div>
-
-                                <!-- Alur Pipeline Node Vertikal -->
-                                <div class="relative pl-6 space-y-2.5 before:absolute before:left-2 before:top-2.5 before:bottom-2.5 before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-emerald-500 before:to-purple-500">
-                                    
-                                    <!-- 1. Server OLT -->
-                                    <div class="relative group">
-                                        <span class="absolute -left-6 top-1.5 w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-blue-500 flex items-center justify-center shadow-xs">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                        </span>
-                                        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
-                                            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                                                Server OLT
-                                            </div>
-                                            <div class="text-xs font-bold font-mono text-blue-600 dark:text-blue-400 mt-0.5">
-                                                {{ $networkInfo->olt_name ?? ($customer->olt ?: '-') }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- 2. PON Feeder -->
-                                    <div class="relative group">
-                                        <span class="absolute -left-6 top-1.5 w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-emerald-500 flex items-center justify-center shadow-xs">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        </span>
-                                        <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80">
-                                            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                                                Port PON / Feeder
-                                            </div>
-                                            <div class="text-xs font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 break-words">
-                                                {{ $networkInfo->nama_pon ?? '-' }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- 3. Titik Distribusi ODP -->
-                                    <div class="relative group">
-                                        <span class="absolute -left-6 top-1.5 w-4 h-4 rounded-full bg-white dark:bg-slate-900 border-2 border-purple-500 flex items-center justify-center shadow-xs">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                                        </span>
-                                        <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 space-y-1.5">
-                                            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                                                Titik Distribusi ODP
-                                            </div>
-                                            <div class="text-xs font-bold font-mono text-purple-600 dark:text-purple-400 break-words">
-                                                {{ $networkInfo->nama_odp ?? '-' }}
-                                            </div>
-                                            @if(!empty($networkInfo->latitude) && !empty($networkInfo->longitude))
-                                                <div class="pt-1.5 flex items-center justify-between gap-2 border-t border-slate-200/60 dark:border-slate-800/60">
-                                                    <span class="text-[9px] font-mono text-slate-400 truncate" title="Koordinat: {{ $networkInfo->latitude }}, {{ $networkInfo->longitude }}">
-                                                        📍 {{ number_format((float)$networkInfo->latitude, 5) }}, {{ number_format((float)$networkInfo->longitude, 5) }}
-                                                    </span>
-                                                    <a href="https://www.google.com/maps?q={{ $networkInfo->latitude }},{{ $networkInfo->longitude }}" 
-                                                       target="_blank" 
-                                                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white dark:bg-blue-500/15 dark:hover:bg-blue-600 dark:text-blue-400 dark:hover:text-white text-[10px] font-semibold transition border border-blue-200 dark:border-blue-500/25 shrink-0 shadow-xs"
-                                                       title="Buka titik koordinat di Google Maps">
-                                                        <span>Maps</span>
-                                                        <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
-                                                    </a>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                </div>
                             </div>
 
                         </div>

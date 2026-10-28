@@ -2962,28 +2962,38 @@ class TeknikController extends Controller
             (string) ($customer->nomor_internet ?? ''),
         ]));
 
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'jfif'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'jfif', 'pdf'];
         foreach ($candidates as $cand) {
             $arsipDir = public_path('uploads/arsip/' . $cand);
             if (is_dir($arsipDir)) {
+                $realBase = realpath($arsipDir) ?: $arsipDir;
                 try {
-                    $rdi = new \RecursiveDirectoryIterator($arsipDir, \FilesystemIterator::SKIP_DOTS);
-                    $iterator = new \RecursiveIteratorIterator($rdi);
+                    $rdi = new \RecursiveDirectoryIterator($arsipDir, \FilesystemIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS);
+                    $iterator = new \RecursiveIteratorIterator($rdi, \RecursiveIteratorIterator::LEAVES_ONLY);
                     foreach ($iterator as $fileInfo) {
                         if ($fileInfo->isFile()) {
                             $ext = strtolower($fileInfo->getExtension());
                             if (in_array($ext, $allowedExtensions)) {
-                                $fullPath = $fileInfo->getRealPath();
-                                $relativePath = ltrim(str_replace(['\\', $arsipDir], ['/', ''], $fullPath), '/');
+                                $realFile = $fileInfo->getRealPath() ?: $fileInfo->getPathname();
+                                if ($realBase && strpos($realFile, $realBase) === 0) {
+                                    $rel = substr($realFile, strlen($realBase));
+                                } else {
+                                    $rel = $fileInfo->getFilename();
+                                }
+                                $cleanRel = ltrim(str_replace('\\', '/', $rel), '/');
+                                $folderName = dirname($cleanRel) !== '.' ? dirname($cleanRel) : null;
                                 $sizeBytes = $fileInfo->getSize();
+
                                 $arsipImages[] = [
-                                    'name' => $fileInfo->getFilename(),
-                                    'url' => asset('uploads/arsip/' . rawurlencode($cand) . '/' . implode('/', array_map('rawurlencode', explode('/', $relativePath)))),
-                                    'ext' => strtoupper($ext),
-                                    'size' => $sizeBytes > 1048576 
+                                    'name'      => $fileInfo->getFilename(),
+                                    'folder'    => $folderName,
+                                    'url'       => asset('uploads/arsip/' . rawurlencode($cand) . '/' . implode('/', array_map('rawurlencode', explode('/', $cleanRel)))),
+                                    'ext'       => strtoupper($ext),
+                                    'is_pdf'    => ($ext === 'pdf'),
+                                    'size'      => $sizeBytes > 1048576 
                                         ? number_format($sizeBytes / 1048576, 2) . ' MB' 
                                         : number_format($sizeBytes / 1024, 0) . ' KB',
-                                    'modified' => date('d M Y H:i', $fileInfo->getMTime()),
+                                    'modified'  => date('d M Y H:i', $fileInfo->getMTime()),
                                 ];
                             }
                         }
@@ -2999,13 +3009,15 @@ class TeknikController extends Controller
                             $fullPath = $arsipDir . DIRECTORY_SEPARATOR . $file;
                             $sizeBytes = @filesize($fullPath) ?: 0;
                             $arsipImages[] = [
-                                'name' => $file,
-                                'url' => asset('uploads/arsip/' . rawurlencode($cand) . '/' . rawurlencode($file)),
-                                'ext' => strtoupper($ext),
-                                'size' => $sizeBytes > 1048576 
+                                'name'      => $file,
+                                'folder'    => null,
+                                'url'       => asset('uploads/arsip/' . rawurlencode($cand) . '/' . rawurlencode($file)),
+                                'ext'       => strtoupper($ext),
+                                'is_pdf'    => ($ext === 'pdf'),
+                                'size'      => $sizeBytes > 1048576 
                                     ? number_format($sizeBytes / 1048576, 2) . ' MB' 
                                     : number_format($sizeBytes / 1024, 0) . ' KB',
-                                'modified' => @filemtime($fullPath) ? date('d M Y H:i', filemtime($fullPath)) : null,
+                                'modified'  => @filemtime($fullPath) ? date('d M Y H:i', filemtime($fullPath)) : null,
                             ];
                         }
                     }

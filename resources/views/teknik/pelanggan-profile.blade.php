@@ -1080,16 +1080,25 @@
                             @foreach($arsipImages as $img)
                                 <div class="group relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 overflow-hidden shadow-xs hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-200 flex flex-col justify-between">
                                     
-                                    <!-- Thumbnail Image Preview -->
+                                    <!-- Thumbnail Image / PDF Preview -->
                                     <div class="relative aspect-[4/3] bg-slate-100 dark:bg-slate-950/60 overflow-hidden flex items-center justify-center">
-                                        <img src="{{ $img['url'] }}" 
-                                             alt="{{ $img['name'] }}" 
-                                             loading="lazy"
-                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center text-slate-400 p-2 text-center\'><svg class=\'w-6 h-6 mb-1\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z\'/></svg><span class=\'text-[9px]\'>Foto tidak dapat dimuat</span></div>';">
+                                        @if(!empty($img['is_pdf']))
+                                            <div class="w-full h-full flex flex-col items-center justify-center p-3 text-red-500 bg-red-50/50 dark:bg-red-500/10">
+                                                <svg class="w-8 h-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                                </svg>
+                                                <span class="text-[10px] font-bold tracking-wider">DOKUMEN PDF</span>
+                                            </div>
+                                        @else
+                                            <img src="{{ $img['url'] }}" 
+                                                 alt="{{ $img['name'] }}" 
+                                                 loading="lazy"
+                                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center text-slate-400 p-2 text-center\'><svg class=\'w-6 h-6 mb-1\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z\'/></svg><span class=\'text-[9px]\'>Foto tidak dapat dimuat</span></div>';">
+                                        @endif
                                         
                                         <!-- Extension Badge -->
-                                        <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider bg-slate-900/80 text-white backdrop-blur-xs border border-white/10 shadow-xs">
+                                        <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider {{ !empty($img['is_pdf']) ? 'bg-red-600 text-white' : 'bg-slate-900/80 text-white' }} backdrop-blur-xs border border-white/10 shadow-xs">
                                             {{ $img['ext'] }}
                                         </span>
 
@@ -1097,7 +1106,7 @@
                                         <a href="{{ $img['url'] }}" 
                                            target="_blank" 
                                            class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white"
-                                           title="Buka Gambar Ukuran Penuh">
+                                           title="Buka Berkas Penuh">
                                             <span class="p-2 rounded-xl bg-white/20 backdrop-blur-md hover:bg-white/30 transition shadow-sm">
                                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
@@ -1106,8 +1115,16 @@
                                         </a>
                                     </div>
 
-                                    <!-- Filename & Details -->
+                                    <!-- Filename, Subfolder & Details -->
                                     <div class="p-2.5 space-y-1">
+                                        @if(!empty($img['folder']))
+                                            <div class="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-mono truncate" title="Folder: {{ $img['folder'] }}">
+                                                <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                                                </svg>
+                                                <span class="truncate">{{ $img['folder'] }}</span>
+                                            </div>
+                                        @endif
                                         <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100 truncate" title="{{ $img['name'] }}">
                                             {{ $img['name'] }}
                                         </span>
@@ -1124,7 +1141,7 @@
                                         <a href="{{ $img['url'] }}" 
                                            target="_blank" 
                                            class="py-1 px-2 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white dark:bg-blue-500/15 dark:hover:bg-blue-600 dark:text-blue-400 text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-blue-200 dark:border-blue-500/25"
-                                           title="Lihat Gambar">
+                                           title="Lihat Berkas">
                                             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                             <span>Lihat</span>
                                         </a>

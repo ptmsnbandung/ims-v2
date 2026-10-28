@@ -1058,100 +1058,109 @@
 
                     <!-- ================= SECTION 4: ARSIP BERKAS & FOTO PELANGGAN ================= -->
                     @if(!empty($arsipImages) && count($arsipImages) > 0)
-                    <div class="space-y-3 pt-3 border-t border-slate-200/80 dark:border-slate-800/80 mt-5">
+                    <div class="space-y-3 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 mt-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="flex items-center gap-2">
                                     <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
-                                        Arsip Berkas &amp; Foto Pelanggan
+                                        Arsip Berkas &amp; Foto Fisik
                                     </h3>
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/25">
-                                        {{ count($arsipImages) }} Foto
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/25">
+                                        <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                                        {{ count($arsipImages) }} Berkas
                                     </span>
                                 </div>
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Berkas arsip fisik/foto yang tersimpan di direktori server untuk nomor internet <span class="font-mono font-bold text-slate-700 dark:text-slate-300">#{{ $customer->nomor_internet }}</span>.
+                                    Berkas arsip fisik dan foto survei/instalasi di direktori server untuk pelanggan <span class="font-mono font-bold text-slate-700 dark:text-slate-300">#{{ $customer->nomor_internet }}</span>.
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Grid Gambar Arsip -->
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                        <!-- Grid Berkas Arsip (Sejajar dengan Grid Master Dokumen) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             @foreach($arsipImages as $img)
-                                <div class="group relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 overflow-hidden shadow-xs hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-200 flex flex-col justify-between">
+                                <div class="group rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 overflow-hidden shadow-xs hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-200 flex flex-col justify-between">
                                     
-                                    <!-- Thumbnail Image / PDF Preview -->
-                                    <div class="relative aspect-[4/3] bg-slate-100 dark:bg-slate-950/60 overflow-hidden flex items-center justify-center">
+                                    <!-- Thumbnail Container dengan Fixed Height agar Seluruh Kartu Seragam -->
+                                    <div class="relative w-full h-44 sm:h-48 bg-slate-100 dark:bg-slate-950/70 overflow-hidden flex items-center justify-center shrink-0">
                                         @if(!empty($img['is_pdf']))
-                                            <div class="w-full h-full flex flex-col items-center justify-center p-3 text-red-500 bg-red-50/50 dark:bg-red-500/10">
-                                                <svg class="w-8 h-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                                </svg>
-                                                <span class="text-[10px] font-bold tracking-wider">DOKUMEN PDF</span>
+                                            <div class="w-full h-full flex flex-col items-center justify-center p-4 text-rose-500 bg-rose-50/60 dark:bg-rose-500/10">
+                                                <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 shadow-xs border border-rose-200 dark:border-rose-500/30 mb-2">
+                                                    <svg class="w-8 h-8 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                                    </svg>
+                                                </div>
+                                                <span class="text-[10px] font-bold tracking-wider text-rose-700 dark:text-rose-300">DOKUMEN PDF</span>
                                             </div>
                                         @else
                                             <img src="{{ $img['url'] }}" 
                                                  alt="{{ $img['name'] }}" 
                                                  loading="lazy"
                                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center text-slate-400 p-2 text-center\'><svg class=\'w-6 h-6 mb-1\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z\'/></svg><span class=\'text-[9px]\'>Foto tidak dapat dimuat</span></div>';">
+                                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center text-slate-400 p-3 text-center bg-slate-50 dark:bg-slate-950\'><svg class=\'w-8 h-8 mb-1.5 opacity-60\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z\'/></svg><span class=\'text-[10px] font-medium\'>Foto tidak dapat dimuat</span></div>';">
                                         @endif
                                         
-                                        <!-- Extension Badge -->
-                                        <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider {{ !empty($img['is_pdf']) ? 'bg-red-600 text-white' : 'bg-slate-900/80 text-white' }} backdrop-blur-xs border border-white/10 shadow-xs">
-                                            {{ $img['ext'] }}
-                                        </span>
+                                        <!-- Top Badges Overlay: Subfolder (Kiri) & Extension (Kanan) -->
+                                        <div class="absolute top-2.5 inset-x-2.5 flex items-center justify-between gap-1 pointer-events-none">
+                                            @if(!empty($img['folder']))
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium font-mono bg-slate-900/80 text-amber-300 backdrop-blur-md border border-white/10 shadow-xs truncate max-w-[140px]" title="Folder: {{ $img['folder'] }}">
+                                                    <svg class="w-2.5 h-2.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                                                    <span class="truncate">{{ $img['folder'] }}</span>
+                                                </span>
+                                            @else
+                                                <span></span>
+                                            @endif
+                                            
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider {{ !empty($img['is_pdf']) ? 'bg-rose-600 text-white' : 'bg-slate-900/80 text-white' }} backdrop-blur-md border border-white/10 shadow-xs shrink-0">
+                                                {{ $img['ext'] }}
+                                            </span>
+                                        </div>
 
-                                        <!-- Hover Overlay Zoom / Open Full Image -->
+                                        <!-- Hover Overlay Zoom Button -->
                                         <a href="{{ $img['url'] }}" 
                                            target="_blank" 
-                                           class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white"
+                                           class="absolute inset-0 bg-slate-950/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white"
                                            title="Buka Berkas Penuh">
-                                            <span class="p-2 rounded-xl bg-white/20 backdrop-blur-md hover:bg-white/30 transition shadow-sm">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md transition text-xs font-semibold shadow-sm border border-white/20">
                                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
                                                 </svg>
+                                                <span>Perbesar</span>
                                             </span>
                                         </a>
                                     </div>
 
-                                    <!-- Filename, Subfolder & Details -->
-                                    <div class="p-2.5 space-y-1">
-                                        @if(!empty($img['folder']))
-                                            <div class="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-mono truncate" title="Folder: {{ $img['folder'] }}">
-                                                <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                                                </svg>
-                                                <span class="truncate">{{ $img['folder'] }}</span>
+                                    <!-- Filename & Details Content -->
+                                    <div class="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                                        <div>
+                                            <div class="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate" title="{{ $img['name'] }}">
+                                                {{ $img['name'] }}
                                             </div>
-                                        @endif
-                                        <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100 truncate" title="{{ $img['name'] }}">
-                                            {{ $img['name'] }}
-                                        </span>
-                                        <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                                            <span>{{ $img['size'] }}</span>
-                                            @if($img['modified'])
-                                                <span>{{ $img['modified'] }}</span>
-                                            @endif
+                                            <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                                                <span class="font-semibold text-slate-600 dark:text-slate-300">{{ $img['size'] }}</span>
+                                                @if($img['modified'])
+                                                    <span class="truncate ml-2 text-right">{{ $img['modified'] }}</span>
+                                                @endif
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Action Buttons -->
-                                    <div class="px-2.5 pb-2.5 pt-1 grid grid-cols-2 gap-1.5 border-t border-slate-100 dark:border-slate-800/60">
-                                        <a href="{{ $img['url'] }}" 
-                                           target="_blank" 
-                                           class="py-1 px-2 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white dark:bg-blue-500/15 dark:hover:bg-blue-600 dark:text-blue-400 text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-blue-200 dark:border-blue-500/25"
-                                           title="Lihat Berkas">
-                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                            <span>Lihat</span>
-                                        </a>
-                                        <a href="{{ $img['url'] }}" 
-                                           download 
-                                           class="py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-700 text-slate-700 hover:text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200 dark:border-slate-700/60"
-                                           title="Unduh File">
-                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
-                                            <span>Unduh</span>
-                                        </a>
+                                        <!-- Action Buttons: Buka / Unduh -->
+                                        <div class="grid grid-cols-2 gap-2 pt-2">
+                                            <a href="{{ $img['url'] }}" 
+                                               target="_blank" 
+                                               class="py-1.5 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition flex items-center justify-center gap-1.5 shadow-xs"
+                                               title="Buka Berkas di Tab Baru">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                                                <span>Lihat</span>
+                                            </a>
+                                            <a href="{{ $img['url'] }}" 
+                                               download 
+                                               class="py-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 text-[11px] font-semibold transition flex items-center justify-center gap-1.5 border border-slate-200 dark:border-slate-700/70"
+                                               title="Unduh Berkas ke Komputer">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                                <span>Unduh</span>
+                                            </a>
+                                        </div>
                                     </div>
 
                                 </div>

@@ -2955,27 +2955,63 @@ class TeknikController extends Controller
 
         // 12. Arsip Foto & Berkas Fisik Pelanggan (dari public/uploads/arsip/{nomorInternet})
         $arsipImages = [];
-        $arsipDir = public_path('uploads/arsip/' . $nomorInternet);
-        if (is_dir($arsipDir)) {
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
-            $files = @scandir($arsipDir) ?: [];
-            foreach ($files as $file) {
-                if ($file === '.' || $file === '..') {
-                    continue;
+        $candidates = array_unique(array_filter([
+            trim((string) $nomorInternet),
+            (string) $nomorInternet,
+            trim((string) ($customer->nomor_internet ?? '')),
+            (string) ($customer->nomor_internet ?? ''),
+        ]));
+
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'jfif'];
+        foreach ($candidates as $cand) {
+            $arsipDir = public_path('uploads/arsip/' . $cand);
+            if (is_dir($arsipDir)) {
+                try {
+                    $rdi = new \RecursiveDirectoryIterator($arsipDir, \FilesystemIterator::SKIP_DOTS);
+                    $iterator = new \RecursiveIteratorIterator($rdi);
+                    foreach ($iterator as $fileInfo) {
+                        if ($fileInfo->isFile()) {
+                            $ext = strtolower($fileInfo->getExtension());
+                            if (in_array($ext, $allowedExtensions)) {
+                                $fullPath = $fileInfo->getRealPath();
+                                $relativePath = ltrim(str_replace(['\\', $arsipDir], ['/', ''], $fullPath), '/');
+                                $sizeBytes = $fileInfo->getSize();
+                                $arsipImages[] = [
+                                    'name' => $fileInfo->getFilename(),
+                                    'url' => asset('uploads/arsip/' . rawurlencode($cand) . '/' . implode('/', array_map('rawurlencode', explode('/', $relativePath)))),
+                                    'ext' => strtoupper($ext),
+                                    'size' => $sizeBytes > 1048576 
+                                        ? number_format($sizeBytes / 1048576, 2) . ' MB' 
+                                        : number_format($sizeBytes / 1024, 0) . ' KB',
+                                    'modified' => date('d M Y H:i', $fileInfo->getMTime()),
+                                ];
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $files = @scandir($arsipDir) ?: [];
+                    foreach ($files as $file) {
+                        if ($file === '.' || $file === '..') {
+                            continue;
+                        }
+                        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                        if (in_array($ext, $allowedExtensions)) {
+                            $fullPath = $arsipDir . DIRECTORY_SEPARATOR . $file;
+                            $sizeBytes = @filesize($fullPath) ?: 0;
+                            $arsipImages[] = [
+                                'name' => $file,
+                                'url' => asset('uploads/arsip/' . rawurlencode($cand) . '/' . rawurlencode($file)),
+                                'ext' => strtoupper($ext),
+                                'size' => $sizeBytes > 1048576 
+                                    ? number_format($sizeBytes / 1048576, 2) . ' MB' 
+                                    : number_format($sizeBytes / 1024, 0) . ' KB',
+                                'modified' => @filemtime($fullPath) ? date('d M Y H:i', filemtime($fullPath)) : null,
+                            ];
+                        }
+                    }
                 }
-                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                if (in_array($ext, $allowedExtensions)) {
-                    $fullPath = $arsipDir . DIRECTORY_SEPARATOR . $file;
-                    $sizeBytes = @filesize($fullPath) ?: 0;
-                    $arsipImages[] = [
-                        'name' => $file,
-                        'url' => asset('uploads/arsip/' . rawurlencode($nomorInternet) . '/' . rawurlencode($file)),
-                        'ext' => strtoupper($ext),
-                        'size' => $sizeBytes > 1048576 
-                            ? number_format($sizeBytes / 1048576, 2) . ' MB' 
-                            : number_format($sizeBytes / 1024, 0) . ' KB',
-                        'modified' => @filemtime($fullPath) ? date('d M Y H:i', filemtime($fullPath)) : null,
-                    ];
+                if (!empty($arsipImages)) {
+                    break;
                 }
             }
         }

@@ -1,7 +1,7 @@
 # =========================================================================
 # Stage 1: Build OLT Telemetry Collector (Golang)
 # =========================================================================
-FROM golang:1.22-alpine AS go-builder
+FROM golang:1.24-alpine AS go-builder
 WORKDIR /build
 COPY services/olt-collector/go.mod ./
 COPY services/olt-collector/main.go ./

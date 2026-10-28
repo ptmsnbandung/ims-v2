@@ -59,7 +59,8 @@ COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN chmod +x /usr/local/bin/entrypoint.sh /var/www/ims2/services/olt-collector/olt-collector \
+RUN mkdir -p /var/www/ims2/storage /var/www/ims2/bootstrap/cache \
+    && chmod +x /usr/local/bin/entrypoint.sh /var/www/ims2/services/olt-collector/olt-collector \
     && chown -R www-data:www-data /var/www/ims2/storage /var/www/ims2/bootstrap/cache
 
 EXPOSE 8080 8088

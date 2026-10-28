@@ -16,4 +16,5 @@ services:
       - APP_DEBUG=false
     volumes:
       - ./storage:/var/www/ims2/storage
+      - ./public/uploads:/var/www/ims2/public/uploads
       - ./.env:/var/www/ims2/.env

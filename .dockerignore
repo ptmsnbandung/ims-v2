@@ -11,3 +11,6 @@ tests
 .editorconfig
 .env
 .env.backup
+public/uploads
+storage
+Portal

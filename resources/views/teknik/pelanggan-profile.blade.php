@@ -1056,6 +1056,93 @@
                         </div>
                     </div>
 
+                    <!-- ================= SECTION 4: ARSIP BERKAS & FOTO PELANGGAN ================= -->
+                    @if(!empty($arsipImages) && count($arsipImages) > 0)
+                    <div class="space-y-3 pt-3 border-t border-slate-200/80 dark:border-slate-800/80 mt-5">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                                        Arsip Berkas &amp; Foto Pelanggan
+                                    </h3>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/25">
+                                        {{ count($arsipImages) }} Foto
+                                    </span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                    Berkas arsip fisik/foto yang tersimpan di direktori server untuk nomor internet <span class="font-mono font-bold text-slate-700 dark:text-slate-300">#{{ $customer->nomor_internet }}</span>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Grid Gambar Arsip -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                            @foreach($arsipImages as $img)
+                                <div class="group relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/70 overflow-hidden shadow-xs hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500/50 transition-all duration-200 flex flex-col justify-between">
+                                    
+                                    <!-- Thumbnail Image Preview -->
+                                    <div class="relative aspect-[4/3] bg-slate-100 dark:bg-slate-950/60 overflow-hidden flex items-center justify-center">
+                                        <img src="{{ $img['url'] }}" 
+                                             alt="{{ $img['name'] }}" 
+                                             loading="lazy"
+                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center text-slate-400 p-2 text-center\'><svg class=\'w-6 h-6 mb-1\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z\'/></svg><span class=\'text-[9px]\'>Foto tidak dapat dimuat</span></div>';">
+                                        
+                                        <!-- Extension Badge -->
+                                        <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider bg-slate-900/80 text-white backdrop-blur-xs border border-white/10 shadow-xs">
+                                            {{ $img['ext'] }}
+                                        </span>
+
+                                        <!-- Hover Overlay Zoom / Open Full Image -->
+                                        <a href="{{ $img['url'] }}" 
+                                           target="_blank" 
+                                           class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white"
+                                           title="Buka Gambar Ukuran Penuh">
+                                            <span class="p-2 rounded-xl bg-white/20 backdrop-blur-md hover:bg-white/30 transition shadow-sm">
+                                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                                                </svg>
+                                            </span>
+                                        </a>
+                                    </div>
+
+                                    <!-- Filename & Details -->
+                                    <div class="p-2.5 space-y-1">
+                                        <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100 truncate" title="{{ $img['name'] }}">
+                                            {{ $img['name'] }}
+                                        </span>
+                                        <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                                            <span>{{ $img['size'] }}</span>
+                                            @if($img['modified'])
+                                                <span>{{ $img['modified'] }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="px-2.5 pb-2.5 pt-1 grid grid-cols-2 gap-1.5 border-t border-slate-100 dark:border-slate-800/60">
+                                        <a href="{{ $img['url'] }}" 
+                                           target="_blank" 
+                                           class="py-1 px-2 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white dark:bg-blue-500/15 dark:hover:bg-blue-600 dark:text-blue-400 text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-blue-200 dark:border-blue-500/25"
+                                           title="Lihat Gambar">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                            <span>Lihat</span>
+                                        </a>
+                                        <a href="{{ $img['url'] }}" 
+                                           download 
+                                           class="py-1 px-2 rounded-lg bg-slate-100 hover:bg-slate-700 text-slate-700 hover:text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white text-[10px] font-semibold transition flex items-center justify-center gap-1 border border-slate-200 dark:border-slate-700/60"
+                                           title="Unduh File">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                                            <span>Unduh</span>
+                                        </a>
+                                    </div>
+
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
                 </div>
 
                 <!-- ======================================================= -->

@@ -2953,6 +2953,33 @@ class TeknikController extends Controller
         // 11. Topologi Jaringan: OLT, PON, ODP dari database gomsn / external
         $networkInfo = $this->getNetworkInfo((string) $nomorInternet, $customer);
 
+        // 12. Arsip Foto & Berkas Fisik Pelanggan (dari public/uploads/arsip/{nomorInternet})
+        $arsipImages = [];
+        $arsipDir = public_path('uploads/arsip/' . $nomorInternet);
+        if (is_dir($arsipDir)) {
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+            $files = @scandir($arsipDir) ?: [];
+            foreach ($files as $file) {
+                if ($file === '.' || $file === '..') {
+                    continue;
+                }
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                if (in_array($ext, $allowedExtensions)) {
+                    $fullPath = $arsipDir . DIRECTORY_SEPARATOR . $file;
+                    $sizeBytes = @filesize($fullPath) ?: 0;
+                    $arsipImages[] = [
+                        'name' => $file,
+                        'url' => asset('uploads/arsip/' . rawurlencode($nomorInternet) . '/' . rawurlencode($file)),
+                        'ext' => strtoupper($ext),
+                        'size' => $sizeBytes > 1048576 
+                            ? number_format($sizeBytes / 1048576, 2) . ' MB' 
+                            : number_format($sizeBytes / 1024, 0) . ' KB',
+                        'modified' => @filemtime($fullPath) ? date('d M Y H:i', filemtime($fullPath)) : null,
+                    ];
+                }
+            }
+        }
+
         return view('teknik.pelanggan-profile', [
             'user'              => $request->user(),
             'customer'          => $customer,
@@ -2974,6 +3001,7 @@ class TeknikController extends Controller
             'allPorts'          => $indexOltData['allPorts'],
             'portStats'         => $indexOltData['portStats'],
             'customerActivityLogs' => $customerActivityLogs,
+            'arsipImages'       => $arsipImages,
         ]);
 
     }

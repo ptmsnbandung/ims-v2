@@ -95,6 +95,13 @@
             border-right: 1px solid #0d2a38 !important;
         }
 
+        /* Tutup/Sembunyikan sidebar di background layar mobile (< 1024px) */
+        @media (max-width: 1023.98px) {
+            .ims-sidebar {
+                display: none !important;
+            }
+        }
+
         /* Autofill Styling */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
@@ -136,8 +143,8 @@
         <div class="min-h-full h-screen flex flex-col overflow-hidden ims-layout-root w-full">
             <div class="flex-1 flex overflow-hidden min-h-0 h-full w-full">
 
-                <!-- Sidebar Kiri (Lebar 16rem persis app.blade.php) -->
-                <aside class="ims-sidebar fixed inset-y-0 left-0 z-[60] lg:z-40 bg-[#061d28] border-r border-[#0d2a38] flex flex-col lg:sticky lg:top-0 lg:h-screen shrink-0 overflow-visible text-slate-300">
+                <!-- Sidebar Kiri (Hanya tampil di desktop, tersembunyi/tertutup di mobile) -->
+                <aside class="ims-sidebar hidden lg:flex fixed inset-y-0 left-0 z-[60] lg:z-40 bg-[#061d28] border-r border-[#0d2a38] flex-col lg:sticky lg:top-0 lg:h-screen shrink-0 overflow-visible text-slate-300">
                     <!-- Sidebar Header / Logo (h-16 px-3.5) -->
                     <div class="h-16 px-3.5 flex items-center gap-3 border-b border-[#0d2a38] shrink-0">
                         <div class="w-9 h-9 rounded-xl bg-[#0c2f42] border border-cyan-400/30 p-1 shadow-md shadow-cyan-500/20 flex items-center justify-center shrink-0">

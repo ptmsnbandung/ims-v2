@@ -3504,59 +3504,101 @@ class TeknikController extends Controller
             'kode_pop' => 'nullable|string|max:50',
             'media_akses' => 'nullable|string|max:50',
             'index_olt' => 'nullable|string|max:100',
-            'catatan' => 'nullable|string',
+            'catatan' => 'nullable|string|max:500',
         ]);
 
-        $now = now()->format('Y-m-d H:i:s');
-        $currentUser = auth()->user()->nama ?? 'TEKNIK';
+        try {
+            $now = now()->format('Y-m-d H:i:s');
+            $currentUser = auth()->user()?->name ?? (auth()->user()?->nama ?? 'TEKNIK');
 
-        $indexOlt = $request->index_olt ? trim($request->index_olt) : null;
-        if ($indexOlt) {
-            if (str_starts_with($indexOlt, 'gpon-olt_')) {
-                $indexOlt = str_replace('gpon-olt_', 'gpon-onu_', $indexOlt);
-            } elseif (!str_starts_with($indexOlt, 'gpon-onu_') && str_starts_with($indexOlt, '1/')) {
-                $indexOlt = 'gpon-onu_' . $indexOlt;
+            $indexOlt = $request->index_olt ? trim($request->index_olt) : null;
+            if ($indexOlt) {
+                if (str_starts_with($indexOlt, 'gpon-olt_')) {
+                    $indexOlt = str_replace('gpon-olt_', 'gpon-onu_', $indexOlt);
+                } elseif (!str_starts_with($indexOlt, 'gpon-onu_') && str_starts_with($indexOlt, '1/')) {
+                    $indexOlt = 'gpon-onu_' . $indexOlt;
+                }
             }
-        }
 
-        $updateData = [
-            'ont_us' => $request->ont_us,
-            'ont_ps' => $request->ont_ps,
-            'kode_pop' => $request->kode_pop,
-            'media_akses' => $request->media_akses,
-            'index_olt' => $indexOlt,
-            'date_update' => $now,
-            'user_update' => $currentUser,
-        ];
+            $updateData = [
+                'kode_pop' => $request->kode_pop,
+                'media_akses' => $request->media_akses,
+                'index_olt' => $indexOlt,
+                'date_update' => $now,
+                'user_update' => $currentUser,
+            ];
 
-        if ($request->filled('olt')) {
-            $updateData['olt'] = $request->olt;
-        }
+            if ($request->has('ont_us')) {
+                $updateData['ont_us'] = $request->ont_us;
+                if (Schema::hasColumn('trx_batchjob_register', 'pppoe_username')) {
+                    $updateData['pppoe_username'] = $request->ont_us;
+                }
+            }
 
-        if ($request->filled('catatan')) {
-            $updateData['note_request'] = $request->catatan;
-        }
+            if ($request->has('ont_ps')) {
+                $updateData['ont_ps'] = $request->ont_ps;
+                if (Schema::hasColumn('trx_batchjob_register', 'pppoe_password')) {
+                    $updateData['pppoe_password'] = $request->ont_ps;
+                }
+            }
 
-        DB::table('trx_batchjob_register')
-            ->where('nomor_internet', $nomorInternet)
-            ->update($updateData);
+            if ($request->filled('olt')) {
+                $updateData['olt'] = $request->olt;
+            }
 
-        // Update trx_instalasi
-        if (Schema::hasTable('trx_instalasi')) {
-            DB::table('trx_instalasi')
-                ->updateOrInsert(
-                    ['nomor_internet' => $nomorInternet],
-                    [
-                        'kode_instalasi' => 'INS-' . $nomorInternet,
-                        'aktivasi_note' => $request->catatan,
-                        'aktivasi_note_finish' => $request->catatan,
+            if ($request->has('catatan')) {
+                $updateData['note_request'] = $request->catatan;
+            }
+
+            DB::table('trx_batchjob_register')
+                ->where('nomor_internet', $nomorInternet)
+                ->update($updateData);
+
+            // Update trx_instalasi jika tabel tersedia
+            if (Schema::hasTable('trx_instalasi')) {
+                try {
+                    $existing = DB::table('trx_instalasi')->where('nomor_internet', $nomorInternet)->first();
+                    $instalasiPayload = [
                         'date_update' => $now,
                         'user_update' => $currentUser,
-                    ]
-                );
-        }
+                    ];
 
-        return redirect()->back()->with('success', 'Data ID PPOE, POP/ODN, Media Akses, Index OLT, dan Catatan berhasil diperbarui!');
+                    if (Schema::hasColumn('trx_instalasi', 'aktivasi_note')) {
+                        $instalasiPayload['aktivasi_note'] = $request->catatan;
+                    }
+                    if (Schema::hasColumn('trx_instalasi', 'aktivasi_note_finish')) {
+                        $instalasiPayload['aktivasi_note_finish'] = $request->catatan;
+                    }
+
+                    if ($existing) {
+                        DB::table('trx_instalasi')
+                            ->where('nomor_internet', $nomorInternet)
+                            ->update($instalasiPayload);
+                    } else {
+                        $instalasiPayload['nomor_internet'] = $nomorInternet;
+                        $instalasiPayload['kode_instalasi'] = 'INS-' . $nomorInternet;
+                        $instalasiPayload['date_create'] = $now;
+                        $instalasiPayload['user_create'] = $currentUser;
+                        if (Schema::hasColumn('trx_instalasi', 'hide')) {
+                            $instalasiPayload['hide'] = '0';
+                        }
+                        DB::table('trx_instalasi')->insert($instalasiPayload);
+                    }
+                } catch (\Throwable $ie) {
+                    Log::warning("Update trx_instalasi non-fatal warning [{$nomorInternet}]: " . $ie->getMessage());
+                }
+            }
+
+            return redirect()->back()->with('success', 'Data ID PPOE, POP/ODN, Media Akses, Index OLT, dan Catatan berhasil diperbarui!');
+        } catch (\Throwable $e) {
+            Log::error("Error update PPPoE pelanggan [{$nomorInternet}]: " . $e->getMessage(), [
+                'exception' => $e
+            ]);
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal memperbarui data PPPoE: ' . $e->getMessage());
+        }
     }
 
     /**

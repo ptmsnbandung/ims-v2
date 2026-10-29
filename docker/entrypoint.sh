@@ -28,6 +28,9 @@ if [ -f /var/www/ims2/services/olt-collector/olt-collector ]; then
     chmod +x /var/www/ims2/services/olt-collector/olt-collector
 fi
 
+# Run database migrations
+php artisan migrate --force || true
+
 # Cache config & route if APP_KEY exists
 if [ -n "$APP_KEY" ]; then
     php artisan config:cache || true

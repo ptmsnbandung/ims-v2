@@ -236,7 +236,6 @@
              s = s.replace(/\b(?:KAB(?:UPATEN|\.)?|KOTA\.?)\s+[^,]+/gi, '');
              s = s.replace(/\b(?:PROV(?:INSI|\.)?|JAWA\s+BARAT)\b/gi, '');
 
-             // 3. Hapus dummy nomor bangunan seperti "NO. 00", "NO. 0", "NO. -"
              s = s.replace(/\b(?:NO|NOMOR)\.?\s*(?:0+|-)\b/gi, '');
 
              // 4. Hapus kode pos 5 digit (misal 40233)

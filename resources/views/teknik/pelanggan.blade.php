@@ -220,20 +220,52 @@
              paket: ''
          },
 
+         cleanAddress(addr) {
+             if (!addr) return '';
+             let s = (addr || '').replace(/[\r\n]+/g, ' ').trim();
+             
+             // 1. Hapus bagian suffix regional setelah tanda koma (Kelurahan, Desa, Kecamatan, Kab, Kota, Provinsi)
+             s = s.replace(/,\s*(?:KEL(?:URAHAN|\.)?|DES(?:A|\.)?)\b.*$/i, '');
+             s = s.replace(/,\s*(?:KEC(?:AMATAN|\.)?)\b.*$/i, '');
+             s = s.replace(/,\s*(?:KAB(?:UPATEN|\.)?|KOTA)\b.*$/i, '');
+             s = s.replace(/,\s*(?:PROV(?:INSI|\.)?|JAWA\s+BARAT)\b.*$/i, '');
+
+             // 2. Hapus penyebutan kelurahan, desa, kecamatan, kota, kabupaten, provinsi inline
+             s = s.replace(/\b(?:KEL(?:URAHAN|\.)?|DES(?:A|\.)?)\s+[^,]+/gi, '');
+             s = s.replace(/\b(?:KEC(?:AMATAN|\.)?)\s+[^,]+/gi, '');
+             s = s.replace(/\b(?:KAB(?:UPATEN|\.)?|KOTA\.?)\s+[^,]+/gi, '');
+             s = s.replace(/\b(?:PROV(?:INSI|\.)?|JAWA\s+BARAT)\b/gi, '');
+
+             // 3. Hapus dummy nomor bangunan seperti "NO. 00", "NO. 0", "NO. -"
+             s = s.replace(/\b(?:NO|NOMOR)\.?\s*(?:0+|-)\b/gi, '');
+
+             // 4. Hapus kode pos 5 digit (misal 40233)
+             s = s.replace(/\b\d{5}\b/g, '');
+
+             // 5. Bersihkan sisa koma berulang dan spasi berlebih
+             s = s.replace(/\s*,\s*,+/g, ', ');
+             s = s.replace(/^[\s,]+|[\s,]+$/g, '');
+             s = s.replace(/\s+/g, ' ');
+             return s.trim();
+         },
+
          openMaintenanceModal(cust) {
-             let cleanAddr = (cust.alamat || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+             let rawAddr = (cust.alamat || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
              const upperOlt = (cust.olt || '').toUpperCase();
-             const upperAddr = cleanAddr.toUpperCase();
+             const upperAddr = rawAddr.toUpperCase();
              const upperGroup = (cust.group_layanan || '').toUpperCase();
              const upperPkg = (cust.nama_kategori_bandwith || '').toUpperCase();
 
-             // Deteksi Kategori Otomatis dari Data Pelanggan (OLT, Alamat, Paket, Group)
+             // Deteksi Kategori Otomatis dari Data Pelanggan (OLT, Alamat Asli, Paket, Group)
              let autoCat = 'BROADBAND';
              if (upperOlt.includes('SOREANG') || upperAddr.includes('SOREANG')) {
                  autoCat = 'SOREANG';
              } else if (upperPkg.includes('CORPORATE') || upperPkg.includes('LASTMILE') || upperGroup.includes('CORPORATE') || upperGroup.includes('LASTMILE') || upperPkg.includes('METRO') || upperPkg.includes('DEDICATED')) {
                  autoCat = 'CORPORATE/LASTMILE';
              }
+
+             // Bersihkan alamat agar tidak menampilkan Kelurahan, Kecamatan, Kota, dan Provinsi
+             let cleanAddr = this.cleanAddress(rawAddr);
 
              this.currentMt = {
                  nomor_internet: cust.nomor_internet || '',
@@ -1906,8 +1938,7 @@
          x-cloak
          class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
          style="position: fixed; inset: 0; z-index: 99999;">
-        <div @click.away="maintenanceModalOpen = false"
-             class="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
+        <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
             
             <!-- Modal Header -->
             <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 shrink-0">

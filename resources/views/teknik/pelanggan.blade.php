@@ -203,6 +203,205 @@
                  return this.adjustSubtotal;
              }
              return this.adjustSubtotal + this.adjustPpnNominal;
+         },
+
+         // Modal Maintenance Request WhatsApp State
+         maintenanceModalOpen: false,
+         mtActiveTab: 'single', // 'single' or 'rekap'
+         copiedSingle: false,
+         copiedAll: false,
+         maintenanceList: (() => {
+             try {
+                 return JSON.parse(localStorage.getItem('noc_maintenance_requests_v1') || '[]');
+             } catch(e) {
+                 return [];
+             }
+         })(),
+         currentMt: {
+             nomor_internet: '',
+             nama_pelanggan: '',
+             alamat: '',
+             kategori: 'BROADBAND',
+             custom_kategori: '',
+             kendala: 'LOS'
+         },
+
+         openMaintenanceModal(cust) {
+             let cleanAddr = (cust.alamat || '').replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+             const upperAddr = cleanAddr.toUpperCase();
+             const upperGroup = (cust.group_layanan || '').toUpperCase();
+             const upperPkg = (cust.nama_kategori_bandwith || '').toUpperCase();
+
+             let defaultCat = 'BROADBAND';
+             if (upperGroup.includes('CORPORATE') || upperGroup.includes('LASTMILE') || upperPkg.includes('CORPORATE') || upperPkg.includes('METRO') || upperPkg.includes('DEDICATED')) {
+                 defaultCat = 'CORPORATE/LASTMILE';
+             } else if (upperAddr.includes('SOREANG') || upperAddr.includes('SANGKAN HURIP') || upperAddr.includes('KATAPANG') || upperAddr.includes('CANGKUANG') || upperAddr.includes('BANJARAN')) {
+                 defaultCat = 'SOREANG';
+             }
+
+             this.currentMt = {
+                 nomor_internet: cust.nomor_internet || '',
+                 nama_pelanggan: (cust.nama_pelanggan || '').toUpperCase(),
+                 alamat: cleanAddr,
+                 kategori: defaultCat,
+                 custom_kategori: '',
+                 kendala: 'LOS'
+             };
+             this.mtActiveTab = 'single';
+             this.maintenanceModalOpen = true;
+         },
+
+         openMaintenanceSummaryModal() {
+             this.mtActiveTab = 'rekap';
+             this.maintenanceModalOpen = true;
+         },
+
+         setQuickKendala(val) {
+             this.currentMt.kendala = val;
+         },
+
+         get mtSingleLine() {
+             const nama = (this.currentMt.nama_pelanggan || '').trim();
+             const no = (this.currentMt.nomor_internet || '').trim();
+             const addr = (this.currentMt.alamat || '').trim();
+             const k = (this.currentMt.kendala || '').trim();
+             return `- ${nama} ${no}/${addr} => ${k}`;
+         },
+
+         get mtCompiledText() {
+             const groups = {
+                 'CORPORATE/LASTMILE': [],
+                 'BROADBAND': [],
+                 'SOREANG': []
+             };
+
+             this.maintenanceList.forEach(item => {
+                 const cat = item.kategori || 'BROADBAND';
+                 if (!groups[cat]) {
+                     groups[cat] = [];
+                 }
+                 groups[cat].push(item);
+             });
+
+             if (this.maintenanceList.length === 0 && this.currentMt.nomor_internet) {
+                 const activeCat = (this.currentMt.kategori === 'CUSTOM' ? this.currentMt.custom_kategori : this.currentMt.kategori) || 'BROADBAND';
+                 const activeCatUpper = activeCat.toUpperCase().trim();
+                 if (!groups[activeCatUpper]) {
+                     groups[activeCatUpper] = [];
+                 }
+                 groups[activeCatUpper].push(this.currentMt);
+             }
+
+             let out = [];
+
+             // 1. CORPORATE/LASTMILE
+             out.push('====Maintenance Request CORPORATE/LASTMILE====');
+             if (groups['CORPORATE/LASTMILE'] && groups['CORPORATE/LASTMILE'].length > 0) {
+                 groups['CORPORATE/LASTMILE'].forEach(i => {
+                     out.push(`- ${i.nama_pelanggan} ${i.nomor_internet}/${i.alamat} => ${i.kendala}`);
+                 });
+             } else {
+                 out.push('- ');
+             }
+             out.push('');
+
+             // 2. BROADBAND
+             out.push('====Maintenance Request BROADBAND====');
+             if (groups['BROADBAND'] && groups['BROADBAND'].length > 0) {
+                 groups['BROADBAND'].forEach(i => {
+                     out.push(`- ${i.nama_pelanggan} ${i.nomor_internet}/${i.alamat} => ${i.kendala}`);
+                 });
+             } else {
+                 out.push('- ');
+             }
+             out.push('');
+             out.push('');
+
+             // 3. SOREANG
+             out.push('===Maintenance Request SOREANG=== ');
+             if (groups['SOREANG'] && groups['SOREANG'].length > 0) {
+                 groups['SOREANG'].forEach(i => {
+                     out.push(`- ${i.nama_pelanggan} ${i.nomor_internet}/${i.alamat} => ${i.kendala}`);
+                 });
+             } else {
+                 out.push('- ');
+             }
+
+             // 4. Custom categories
+             Object.keys(groups).forEach(cat => {
+                 if (!['CORPORATE/LASTMILE', 'BROADBAND', 'SOREANG'].includes(cat) && groups[cat].length > 0) {
+                     out.push('');
+                     out.push(`====Maintenance Request ${cat}====`);
+                     groups[cat].forEach(i => {
+                         out.push(`- ${i.nama_pelanggan} ${i.nomor_internet}/${i.alamat} => ${i.kendala}`);
+                     });
+                 }
+             });
+
+             return out.join('\n');
+         },
+
+         addToMaintenanceList() {
+             if (!this.currentMt.nomor_internet) return;
+             const cat = (this.currentMt.kategori === 'CUSTOM' ? this.currentMt.custom_kategori : this.currentMt.kategori) || 'BROADBAND';
+             const newItem = {
+                 id: Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+                 nomor_internet: this.currentMt.nomor_internet,
+                 nama_pelanggan: this.currentMt.nama_pelanggan,
+                 alamat: this.currentMt.alamat,
+                 kategori: cat.toUpperCase().trim(),
+                 kendala: this.currentMt.kendala
+             };
+             this.maintenanceList.push(newItem);
+             this.saveMaintenanceList();
+             this.mtActiveTab = 'rekap';
+         },
+
+         removeMaintenanceItem(id) {
+             this.maintenanceList = this.maintenanceList.filter(i => i.id !== id);
+             this.saveMaintenanceList();
+         },
+
+         clearMaintenanceList() {
+             if (confirm('Apakah Anda yakin ingin mengosongkan seluruh daftar rekap maintenance WhatsApp?')) {
+                 this.maintenanceList = [];
+                 this.saveMaintenanceList();
+             }
+         },
+
+         saveMaintenanceList() {
+             try {
+                 localStorage.setItem('noc_maintenance_requests_v1', JSON.stringify(this.maintenanceList));
+             } catch(e) {
+                 console.warn('Failed saving to localStorage:', e);
+             }
+         },
+
+         copyMtText(text, isSingle = true) {
+             if (navigator.clipboard && window.isSecureContext) {
+                 navigator.clipboard.writeText(text);
+             } else {
+                 const ta = document.createElement('textarea');
+                 ta.value = text;
+                 ta.style.position = 'fixed';
+                 ta.style.left = '-999999px';
+                 document.body.appendChild(ta);
+                 ta.select();
+                 document.execCommand('copy');
+                 document.body.removeChild(ta);
+             }
+             if (isSingle) {
+                 this.copiedSingle = true;
+                 setTimeout(() => this.copiedSingle = false, 2000);
+             } else {
+                 this.copiedAll = true;
+                 setTimeout(() => this.copiedAll = false, 2000);
+             }
+         },
+
+         sendMtToWhatsApp() {
+             const text = this.mtCompiledText;
+             window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
          }
      }">
     
@@ -710,6 +909,22 @@
                         </svg>
                         <span>Export Excel</span>
                     </a>
+
+                    @if(!$isFinance && !$isCeo)
+                    <!-- Tombol Cepat Buka Rekap Pesan WhatsApp Maintenance Request (Role NOC) -->
+                    <button type="button" 
+                            @click="openMaintenanceSummaryModal()"
+                            class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition duration-150 shadow-2xs cursor-pointer"
+                            title="Buka / Salin Format Pesan Rekap Maintenance Request (WhatsApp)">
+                        <svg class="w-3.5 h-3.5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-.974-.94 6.342 6.342 0 0 0 .651-2.42A7.172 7.172 0 0 1 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                        </svg>
+                        <span>Rekap MT WA</span>
+                        <span x-show="maintenanceList.length > 0" 
+                              x-text="maintenanceList.length" 
+                              class="px-1.5 py-0.2 rounded-full bg-white text-emerald-800 text-[10px] font-black font-mono"></span>
+                    </button>
+                    @endif
                 </div>
             </div>
         </form>
@@ -923,6 +1138,23 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                             </svg>
                                             <span>Reboot</span>
+                                        </button>
+
+                                        <!-- Tombol Format Maintenance Request WA (Khusus Role NOC / Non-Finance) -->
+                                        <button type="button" 
+                                                @click="openMaintenanceModal({
+                                                    nomor_internet: '{{ $item->nomor_internet }}',
+                                                    nama_pelanggan: '{{ addslashes($item->nama_pelanggan) }}',
+                                                    alamat: '{{ addslashes($item->alamat_p ?: ($item->alamat_pasang ?: '-')) }}',
+                                                    group_layanan: '{{ addslashes($item->group_layanan ?: 'MEDIANET') }}',
+                                                    nama_kategori_bandwith: '{{ addslashes($item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? '')) }}'
+                                                })"
+                                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 font-semibold text-[10px] shadow-2xs transition cursor-pointer whitespace-nowrap"
+                                                title="Buat Pesan Format WhatsApp Maintenance Request">
+                                            <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-.974-.94 6.342 6.342 0 0 0 .651-2.42A7.172 7.172 0 0 1 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                                            </svg>
+                                            <span>Req MT</span>
                                         </button>
                                     @endif
 
@@ -1229,6 +1461,22 @@
                                     <span>Suspend Pelanggan</span>
                                 </button>
                             @endif
+
+                            <!-- Tombol Format Maintenance Request WA (Mobile) -->
+                            <button type="button" 
+                                    @click="openMaintenanceModal({
+                                        nomor_internet: '{{ $item->nomor_internet }}',
+                                        nama_pelanggan: '{{ addslashes($item->nama_pelanggan) }}',
+                                        alamat: '{{ addslashes($item->alamat_p ?: ($item->alamat_pasang ?: '-')) }}',
+                                        group_layanan: '{{ addslashes($item->group_layanan ?: 'MEDIANET') }}',
+                                        nama_kategori_bandwith: '{{ addslashes($item->nama_kategori_bandwith ?? ($item->alias_nama_kategori ?? '')) }}'
+                                    })"
+                                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 font-bold text-xs transition cursor-pointer mt-1">
+                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-.974-.94 6.342 6.342 0 0 0 .651-2.42A7.172 7.172 0 0 1 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                                </svg>
+                                <span>Format Req Maintenance WA</span>
+                            </button>
                         @endif
 
                         @if($isFinance)
@@ -1764,6 +2012,321 @@
     </div>
     </template>
 
+    <!-- ======================================================================= -->
+    <!-- 5. MODAL: FORMAT PESAN MAINTENANCE REQUEST (WHATSAPP)                   -->
+    <!-- ======================================================================= -->
+    <template x-teleport="body">
+    <div x-show="maintenanceModalOpen"
+         x-cloak
+         class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto"
+         style="position: fixed; inset: 0; z-index: 99999;">
+        <div @click.away="maintenanceModalOpen = false"
+             class="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/90 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-.974-.94 6.342 6.342 0 0 0 .651-2.42A7.172 7.172 0 0 1 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>Format Maintenance Request WA</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                NOC Tools
+                            </span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Susun dan salin laporan kendala pelanggan untuk dikirim ke grup WhatsApp teknisi.</p>
+                    </div>
+                </div>
+                <button type="button" @click="maintenanceModalOpen = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1 leading-none transition cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Tab Switcher Header -->
+            <div class="px-5 pt-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-1">
+                    <button type="button"
+                            @click="mtActiveTab = 'single'"
+                            :class="mtActiveTab === 'single' ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700 shadow-2xs font-bold' : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'"
+                            class="px-3 py-1.5 rounded-t-lg border border-b-0 text-xs transition cursor-pointer flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                        </svg>
+                        <span>Input Pelanggan Ini</span>
+                    </button>
+                    <button type="button"
+                            @click="mtActiveTab = 'rekap'"
+                            :class="mtActiveTab === 'rekap' ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700 shadow-2xs font-bold' : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'"
+                            class="px-3 py-1.5 rounded-t-lg border border-b-0 text-xs transition cursor-pointer flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+                        </svg>
+                        <span>Rekap Pesan Grup WA</span>
+                        <span x-show="maintenanceList.length > 0" 
+                              x-text="maintenanceList.length" 
+                              class="px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 text-[10px] font-bold font-mono"></span>
+                    </button>
+                </div>
+
+                <div x-show="maintenanceList.length > 0" class="pb-1.5">
+                    <button type="button" 
+                            @click="clearMaintenanceList()"
+                            class="text-[10px] text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 font-semibold underline cursor-pointer">
+                        Kosongkan Rekap
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Content Area -->
+            <div class="p-5 space-y-4 overflow-y-auto flex-1">
+
+                <!-- ============================================== -->
+                <!-- TAB 1: INPUT PELANGGAN INI                     -->
+                <!-- ============================================== -->
+                <div x-show="mtActiveTab === 'single'" class="space-y-4">
+                    
+                    <!-- Customer Summary Card -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 dark:text-slate-400 font-medium">Pelanggan:</span>
+                            <span class="font-bold text-slate-900 dark:text-white font-mono" x-text="(currentMt.nomor_internet ? currentMt.nomor_internet + ' - ' : '') + currentMt.nama_pelanggan"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 dark:text-slate-400 font-medium">Alamat:</span>
+                            <span class="text-slate-700 dark:text-slate-300 font-medium truncate max-w-[320px]" x-text="currentMt.alamat || '-'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Kategori Maintenance Header -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Kategori Maintenance Request <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <label class="p-2.5 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center gap-1"
+                                   :class="currentMt.kategori === 'BROADBAND' ? 'bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400 ring-2 ring-blue-500/20 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'">
+                                <input type="radio" name="mt_kategori" value="BROADBAND" x-model="currentMt.kategori" class="sr-only">
+                                <span class="text-xs">BROADBAND</span>
+                            </label>
+                            <label class="p-2.5 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center gap-1"
+                                   :class="currentMt.kategori === 'CORPORATE/LASTMILE' ? 'bg-purple-500/10 border-purple-500 text-purple-600 dark:text-purple-400 ring-2 ring-purple-500/20 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'">
+                                <input type="radio" name="mt_kategori" value="CORPORATE/LASTMILE" x-model="currentMt.kategori" class="sr-only">
+                                <span class="text-xs">CORP / LASTMILE</span>
+                            </label>
+                            <label class="p-2.5 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center gap-1"
+                                   :class="currentMt.kategori === 'SOREANG' ? 'bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400 ring-2 ring-amber-500/20 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'">
+                                <input type="radio" name="mt_kategori" value="SOREANG" x-model="currentMt.kategori" class="sr-only">
+                                <span class="text-xs">SOREANG</span>
+                            </label>
+                            <label class="p-2.5 rounded-xl border text-center cursor-pointer transition flex flex-col items-center justify-center gap-1"
+                                   :class="currentMt.kategori === 'CUSTOM' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400 ring-2 ring-emerald-500/20 font-bold' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'">
+                                <input type="radio" name="mt_kategori" value="CUSTOM" x-model="currentMt.kategori" class="sr-only">
+                                <span class="text-xs">+ Kategori Lain</span>
+                            </label>
+                        </div>
+
+                        <!-- Custom Kategori Input -->
+                        <div x-show="currentMt.kategori === 'CUSTOM'" x-cloak class="mt-2">
+                            <input type="text"
+                                   x-model="currentMt.custom_kategori"
+                                   placeholder="Contoh: BALEENDAH, CIMAHI, DAGO..."
+                                   class="w-full text-xs px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 uppercase font-semibold">
+                        </div>
+                    </div>
+
+                    <!-- Alamat / Patokan (Dapat Diedit Sesuai Kebutuhan Pesan WA) -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                Alamat / Lokasi Pemasangan di Pesan <span class="text-rose-500">*</span>
+                            </label>
+                            <span class="text-[10px] text-slate-400">Dapat diedit agar ringkas di WhatsApp</span>
+                        </div>
+                        <input type="text"
+                               x-model="currentMt.alamat"
+                               placeholder="Contoh: JL BBK TAROGONG atau KP BARU RT.01/024 DES.SANGKAN HURIP"
+                               class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-medium">
+                    </div>
+
+                    <!-- Kendala / Kerusakan (Quick Chips + Custom Input) -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Kendala / Request Maintenance <span class="text-rose-500">*</span>
+                        </label>
+                        
+                        <!-- Quick Chips -->
+                        <div class="flex flex-wrap gap-1.5 mb-2">
+                            <button type="button" @click="setQuickKendala('LOS')"
+                                    :class="currentMt.kendala === 'LOS' ? 'bg-rose-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'"
+                                    class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                LOS
+                            </button>
+                            <button type="button" @click="setQuickKendala('Ganti Perangkat ONU')"
+                                    :class="currentMt.kendala === 'Ganti Perangkat ONU' ? 'bg-amber-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'"
+                                    class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                Ganti Perangkat ONU
+                            </button>
+                            <button type="button" @click="setQuickKendala('Redaman Tinggi / Drop')"
+                                    :class="currentMt.kendala === 'Redaman Tinggi / Drop' ? 'bg-orange-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'"
+                                    class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                Redaman Tinggi
+                            </button>
+                            <button type="button" @click="setQuickKendala('Modem Mati / Adaptor Rusak')"
+                                    :class="currentMt.kendala === 'Modem Mati / Adaptor Rusak' ? 'bg-purple-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'"
+                                    class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                Modem / Adaptor Mati
+                            </button>
+                            <button type="button" @click="setQuickKendala('Kabel Putus / FO Cut')"
+                                    :class="currentMt.kendala === 'Kabel Putus / FO Cut' ? 'bg-rose-700 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'"
+                                    class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                Kabel Putus
+                            </button>
+                            <button type="button" @click="setQuickKendala('Pindah Lokasi / Relokasi')"
+                                    :class="currentMt.kendala === 'Pindah Lokasi / Relokasi' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'"
+                                    class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+                                Relokasi
+                            </button>
+                        </div>
+
+                        <input type="text"
+                               x-model="currentMt.kendala"
+                               placeholder="Ketik deskripsi kendala / request..."
+                               class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-semibold focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <!-- Live Preview Single Line Output -->
+                    <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Format 1 Baris Pelanggan:</span>
+                            <button type="button"
+                                    @click="copyMtText(mtSingleLine, true)"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-2xs transition cursor-pointer">
+                                <svg x-show="!copiedSingle" class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                                </svg>
+                                <svg x-show="copiedSingle" x-cloak class="w-3.5 h-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                                <span x-text="copiedSingle ? 'Tersalin!' : 'Salin Baris Ini'"></span>
+                            </button>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-emerald-400 font-mono text-xs select-all break-all leading-relaxed"
+                             x-text="mtSingleLine">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================== -->
+                <!-- TAB 2: REKAP PESAN GRUP WA                     -->
+                <!-- ============================================== -->
+                <div x-show="mtActiveTab === 'rekap'" class="space-y-4">
+                    
+                    <!-- Compiled WA Message Preview -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                Pratinjau Pesan Grup WhatsApp:
+                            </label>
+                            <span class="text-[11px] font-mono text-slate-500">Format Grup NOC</span>
+                        </div>
+                        <pre class="w-full p-4 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono text-xs leading-relaxed whitespace-pre-wrap select-all max-h-64 overflow-y-auto"
+                             x-text="mtCompiledText"></pre>
+                    </div>
+
+                    <!-- List of Drafted Customers -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                Daftar Pelanggan di Rekap (<span x-text="maintenanceList.length"></span>):
+                            </span>
+                            <span class="text-[10px] text-slate-400">Tersimpan otomatis di browser</span>
+                        </div>
+
+                        <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                            <template x-for="(item, idx) in maintenanceList" :key="item.id">
+                                <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold shrink-0"
+                                              :class="item.kategori === 'CORPORATE/LASTMILE' ? 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300' : (item.kategori === 'SOREANG' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300')"
+                                              x-text="item.kategori"></span>
+                                        <div class="min-w-0">
+                                            <div class="font-bold text-slate-900 dark:text-white truncate">
+                                                <span x-text="item.nama_pelanggan"></span>
+                                                <span class="font-mono text-slate-500 font-normal ml-1" x-text="item.nomor_internet"></span>
+                                            </div>
+                                            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                                                <span x-text="item.alamat"></span> &rarr; <span class="font-semibold text-rose-500" x-text="item.kendala"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" 
+                                            @click="removeMaintenanceItem(item.id)"
+                                            class="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950 transition cursor-pointer shrink-0"
+                                            title="Hapus dari rekap">
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                            <div x-show="maintenanceList.length === 0" class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-dashed border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500">
+                                Belum ada pelanggan di daftar rekap. Klik "Tambah ke Rekap" dari tab Pelanggan Ini atau tombol "Req MT" di tabel.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer Buttons -->
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button type="button"
+                            @click="maintenanceModalOpen = false"
+                            class="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition cursor-pointer">
+                        Tutup
+                    </button>
+                    <button type="button"
+                            x-show="mtActiveTab === 'single'"
+                            @click="addToMaintenanceList()"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition cursor-pointer">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        <span>+ Tambah ke Rekap</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <!-- Button Salin Semua Rekap WA -->
+                    <button type="button"
+                            @click="copyMtText(mtCompiledText, false)"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer">
+                        <svg x-show="!copiedAll" class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                        </svg>
+                        <svg x-show="copiedAll" x-cloak class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                        <span x-text="copiedAll ? 'Format WA Tersalin!' : 'Salin Seluruh Format WA'"></span>
+                    </button>
+
+                    <!-- Button Kirim ke WhatsApp Web -->
+                    <button type="button"
+                            @click="sendMtToWhatsApp()"
+                            class="inline-flex items-center justify-center p-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition cursor-pointer"
+                            title="Buka Langsung di WhatsApp Web">
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.225 8.225 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.03-1.25-.75-.67-1.26-1.5-1.41-1.75-.14-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.11-.23-.17-.48-.3Z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </template>
 </div>
 
 <!-- SweetAlert Script for 1-Click Unified Activate/Suspend -->

@@ -801,31 +801,6 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                             </svg>
                                         </button>
-                                        @elseif($snapUrl && $isSnapExpired)
-                                        <button type="button"
-                                                @click="openMidtransModalFromEl($el)"
-                                                data-kode="{{ $inv->kode_billing_layanan }}"
-                                                data-nama="{{ $inv->nama_pelanggan }}"
-                                                data-nominal="{{ (float)($inv->total_layanan ?? $inv->harga_bandwith ?? 0) }}"
-                                                data-midtrans-url="{{ $snapUrl }}"
-                                                data-expiry="{{ $expiryFormatted }}"
-                                                data-is-expired="1"
-                                                data-wa-url="{{ $waUrl }}"
-                                                title="Link Kadaluarsa! Klik untuk melihat & renew link"
-                                                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 text-[9px] font-semibold hover:bg-rose-100 transition cursor-pointer">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                                            <span>Link Expired</span>
-                                        </button>
-                                        @elseif($inv->status_bill_lay != '15' && !auth()->user()?->isCeo())
-                                        <form method="POST" action="{{ route('finance.billing-layanan.generate-midtrans.post') }}" class="m-0 p-0 inline">
-                                            @csrf
-                                            <input type="hidden" name="kode_billing" value="{{ $inv->kode_billing_layanan }}">
-                                            <button type="submit"
-                                                    title="Generate Link Pembayaran Midtrans"
-                                                    class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20 text-[9px] font-semibold hover:bg-amber-100 transition cursor-pointer">
-                                                <span>+ Buat Link</span>
-                                            </button>
-                                        </form>
                                         @endif
                                     </div>
                                 </div>
@@ -869,13 +844,7 @@
                                         </button>
                                         @endif
                                     </div>
-                                    @elseif($isSnapExpired)
-                                    <div class="h-6 w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30 text-[10px] font-bold select-none" title="Link Pembayaran Midtrans Expired">
-                                        <svg class="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-                                        </svg>
-                                        <span>Expired</span>
-                                    </div>
+
                                     @elseif($inv->status_bill_lay == '14')
                                     <div class="h-6 w-full inline-flex items-center justify-center gap-1 px-1.5 rounded-md bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30 text-[10px] font-bold select-none" title="Menunggu Pembayaran Pelanggan">
                                         <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shrink-0"></span>
@@ -1349,10 +1318,7 @@
                                 </button>
                                 @endif
                             </div>
-                            @elseif($isSnapExpired)
-                            <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 text-xs font-bold">
-                                <span>Expired</span>
-                            </span>
+
                             @else
                             <span class="w-full inline-flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 text-xs font-bold">
                                 <span>Pending Midtrans</span>

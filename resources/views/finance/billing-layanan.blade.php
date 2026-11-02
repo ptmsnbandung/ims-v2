@@ -197,7 +197,7 @@
     </template>
 
     <!-- 4 KPI Financial Metric Cards (2x2 on Mobile, 4 Cols on Desktop) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+    <div id="billingKpisContainer" class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         <!-- 1. Generating / Draft (Yellow / Amber) -->
         <div class="p-3 rounded-xl bg-amber-50/70 dark:bg-slate-900/90 border border-amber-200 dark:border-amber-500/20 shadow-xs relative overflow-hidden group hover:border-amber-400 dark:hover:border-amber-500/40 transition flex flex-col justify-between">
             <div class="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
@@ -289,7 +289,7 @@
 
     <!-- Filter Bar Card -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        <form method="GET" action="{{ route('finance.billing-layanan') }}" class="space-y-3">
+        <form method="GET" action="{{ route('finance.billing-layanan') }}" class="space-y-3" id="billingFilterForm" @submit.prevent="fetchTableData()">
             <!-- Row 1: Primary Quick Filters -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                 <!-- 1. Real-time Search Box (Paling Kiri) -->
@@ -299,6 +299,7 @@
                         <input type="text"
                                name="search"
                                value="{{ request('search') }}"
+                               @input="applyTableFilter(400)"
                                placeholder="Nama / No Layanan / Inv..."
                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg pl-8 pr-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-slate-400 dark:placeholder-slate-500">
                         <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -310,7 +311,7 @@
                 <!-- 2. Bulan -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Bulan</label>
-                    <select name="bulan" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="bulan" @change="applyTableFilter(0)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Bulan</option>
                         @foreach($bulanList as $key => $name)
                         <option value="{{ $key }}" {{ ($selectedBulan ?? '') === (string)$key ? 'selected' : '' }}>{{ $key }} - {{ $name }}</option>
@@ -321,7 +322,7 @@
                 <!-- 3. Tahun -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Tahun</label>
-                    <select name="tahun" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="tahun" @change="applyTableFilter(0)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Tahun</option>
                         @foreach($tahunList as $thn)
                         <option value="{{ $thn }}" {{ ($selectedTahun ?? '') === (string)$thn ? 'selected' : '' }}>{{ $thn }}</option>
@@ -332,7 +333,7 @@
                 <!-- 4. Layanan / Kategori -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Kategori Layanan</label>
-                    <select name="layanan" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="layanan" @change="applyTableFilter(0)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Layanan</option>
                         @foreach($layananList as $lay)
                         <option value="{{ $lay }}" {{ request('layanan') === $lay ? 'selected' : '' }}>{{ $lay }}</option>
@@ -343,7 +344,7 @@
                 <!-- 5. Status Bayar -->
                 <div>
                     <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Status Bayar</label>
-                    <select name="status_bayar" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    <select name="status_bayar" @change="applyTableFilter(0)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                         <option value="">Semua Status Bayar</option>
                         <option value="menunggu_verifikasi" {{ request('status_bayar') === 'menunggu_verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
                         @foreach($statusBillList as $sb)
@@ -373,7 +374,7 @@
                     <!-- Wilayah / Kota -->
                     <div>
                         <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Semua Wilayah</label>
-                        <select name="wilayah" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="wilayah" @change="applyTableFilter(0)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Wilayah</option>
                             @foreach($wilayahList as $wil)
                             <option value="{{ $wil }}" {{ request('wilayah') === $wil ? 'selected' : '' }}>{{ $wil }}</option>
@@ -384,7 +385,7 @@
                     <!-- Status User -->
                     <div>
                         <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Status User</label>
-                        <select name="status_user" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="status_user" @change="applyTableFilter(0)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Status User</option>
                             @foreach($statusUserList as $code => $label)
                             <option value="{{ $code }}" {{ request('status_user') === (string)$code ? 'selected' : '' }}>{{ $label }}</option>
@@ -395,7 +396,7 @@
                     <!-- Metode Bayar -->
                     <div>
                         <label class="block text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Metode Bayar</label>
-                        <select name="metode_bayar" onchange="this.form.submit()" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <select name="metode_bayar" @change="applyTableFilter(0)" class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
                             <option value="">Semua Metode Bayar</option>
                             <option value="1" {{ request('metode_bayar') === '1' ? 'selected' : '' }}>Midtrans Payment Gateway</option>
                             <option value="2" {{ request('metode_bayar') === '2' ? 'selected' : '' }}>Manual Bank Transfer</option>
@@ -417,38 +418,41 @@
                 </button>
 
                 <div class="flex items-center gap-1.5">
-                    <a href="{{ route('finance.billing-layanan') }}"
-                       class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition">
+                    <button type="button"
+                            @click="resetTableFilters()"
+                            class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-slate-700 transition cursor-pointer">
                         Reset Filter
-                    </a>
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 
-    <!-- Invoices Data Table -->
-    <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <!-- Table Header Info & Per Page -->
-        <div class="py-2.5 px-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 bg-slate-50 dark:bg-slate-950/40">
-            <div class="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                Menampilkan <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->firstItem() ?? 0 }}</span> sampai <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->lastItem() ?? 0 }}</span> dari <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->total() }}</span> total invoice
-            </div>
+    <!-- Invoices Data Table Wrapper -->
+    <div class="relative">
+        <!-- Invoices Data Table -->
+        <div id="billingTableContainer" @click="handleTableClick($event)" class="bg-white dark:bg-slate-900/90 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <!-- Hidden Page Invoices JSON for script sync -->
+            <script id="pageInvoicesData" type="application/json">@json($pageInvoices)</script>
 
-            <!-- Per page selector form -->
-            <form method="GET" action="{{ route('finance.billing-layanan') }}" class="flex items-center gap-2">
-                @foreach(request()->except(['per_page', 'page']) as $k => $v)
-                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
-                @endforeach
-                <label class="text-xs text-slate-600 dark:text-slate-400">Tampilkan:</label>
-                <select name="per_page" onchange="this.form.submit()" class="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-300 text-xs rounded-lg px-2.5 py-1 focus:border-blue-500">
-                    <option value="10" {{ $invoices->perPage() == 10 ? 'selected' : '' }}>10</option>
-                    <option value="25" {{ $invoices->perPage() == 25 ? 'selected' : '' }}>25</option>
-                    <option value="50" {{ $invoices->perPage() == 50 ? 'selected' : '' }}>50</option>
-                    <option value="100" {{ $invoices->perPage() == 100 ? 'selected' : '' }}>100</option>
-                </select>
-                <span class="text-xs text-slate-600 dark:text-slate-400">entri</span>
-            </form>
-        </div>
+            <!-- Table Header Info & Per Page -->
+            <div class="py-2.5 px-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 bg-slate-50 dark:bg-slate-950/40">
+                <div class="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                    Menampilkan <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->firstItem() ?? 0 }}</span> sampai <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->lastItem() ?? 0 }}</span> dari <span class="text-slate-900 dark:text-white font-bold">{{ $invoices->total() }}</span> total invoice
+                </div>
+
+                <!-- Per page selector -->
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-slate-600 dark:text-slate-400">Tampilkan:</label>
+                    <select name="per_page" @change="applyTableFilter(0)" class="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-300 text-xs rounded-lg px-2.5 py-1 focus:border-blue-500 cursor-pointer">
+                        <option value="10" {{ $invoices->perPage() == 10 ? 'selected' : '' }}>10</option>
+                        <option value="25" {{ $invoices->perPage() == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ $invoices->perPage() == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ $invoices->perPage() == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                    <span class="text-xs text-slate-600 dark:text-slate-400">entri</span>
+                </div>
+            </div>
 
         <!-- Desktop Table View (Hidden on Mobile) -->
         <div class="ims-desktop-only hidden md:block overflow-x-auto">
@@ -1417,6 +1421,18 @@
         </div>
         @endif
     </div>
+
+    <!-- Smooth Table Loading Overlay -->
+    <div x-show="isLoadingTable" x-cloak class="absolute inset-0 bg-white/70 dark:bg-slate-950/70 backdrop-blur-[1px] z-30 flex items-center justify-center transition-opacity rounded-xl pointer-events-none">
+        <div class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 pointer-events-auto">
+            <svg class="animate-spin w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Memperbarui data tagihan...</span>
+        </div>
+    </div>
+</div>
 
     <!-- ======================================================================= -->
     <!-- MODALS SECTION                                                          -->
@@ -3292,6 +3308,136 @@
 function billingLayananPage() {
     return {
         actionDropdownOpen: false,
+
+        // AJAX Table & Filter State (Real-time, No-Reload)
+        isLoadingTable: false,
+        filterDebounceTimer: null,
+
+        init() {
+            window.addEventListener('popstate', () => {
+                this.fetchTableData(window.location.href, false);
+            });
+        },
+
+        applyTableFilter(delay = 300) {
+            clearTimeout(this.filterDebounceTimer);
+            if (delay === 0) {
+                this.fetchTableData();
+            } else {
+                this.filterDebounceTimer = setTimeout(() => {
+                    this.fetchTableData();
+                }, delay);
+            }
+        },
+
+        async fetchTableData(targetUrl = null, pushHistory = true) {
+            this.isLoadingTable = true;
+            let url = targetUrl;
+            if (!url) {
+                const formEl = document.getElementById('billingFilterForm');
+                const formData = new FormData(formEl);
+                const perPageEl = document.querySelector('select[name="per_page"]');
+                if (perPageEl && perPageEl.value) {
+                    formData.set('per_page', perPageEl.value);
+                }
+                const params = new URLSearchParams(formData);
+                url = '{{ route("finance.billing-layanan") }}?' + params.toString();
+            }
+
+            try {
+                const res = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const html = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newTable = doc.getElementById('billingTableContainer');
+                const currentTable = document.getElementById('billingTableContainer');
+                if (newTable && currentTable) {
+                    currentTable.innerHTML = newTable.innerHTML;
+                    this.$nextTick(() => {
+                        if (window.Alpine) {
+                            try {
+                                Alpine.initTree(currentTable);
+                            } catch (err) {
+                                console.warn('Alpine re-init skipped/handled:', err);
+                            }
+                        }
+                    });
+                }
+
+                const newKpis = doc.getElementById('billingKpisContainer');
+                const currentKpis = document.getElementById('billingKpisContainer');
+                if (newKpis && currentKpis) {
+                    currentKpis.innerHTML = newKpis.innerHTML;
+                }
+
+                // Sync pageInvoices if modal batch print needs it
+                const jsonEl = document.getElementById('pageInvoicesData');
+                if (jsonEl && jsonEl.textContent) {
+                    try {
+                        this.pageInvoices = JSON.parse(jsonEl.textContent);
+                    } catch (e) {}
+                }
+
+                if (pushHistory) {
+                    window.history.pushState(null, '', url);
+                }
+
+                this.syncFilterInputsFromUrl(url);
+            } catch (e) {
+                console.error('Gagal memuat data tagihan:', e);
+            } finally {
+                this.isLoadingTable = false;
+            }
+        },
+
+        resetTableFilters() {
+            const form = document.getElementById('billingFilterForm');
+            if (form) {
+                form.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
+                form.querySelectorAll('select').forEach(s => s.value = '');
+            }
+            const perPageEl = document.querySelector('select[name="per_page"]');
+            if (perPageEl) perPageEl.value = '10';
+            this.fetchTableData('{{ route("finance.billing-layanan") }}');
+        },
+
+        handleTableClick(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+            const href = link.getAttribute('href');
+            if (!href) return;
+
+            // Only intercept pagination links (page=X)
+            if (href.includes('page=') || (href.includes('billing-layanan?') && !href.includes('/dokumen/') && !href.includes('/pelanggan/'))) {
+                if (!link.target && !link.hasAttribute('download')) {
+                    e.preventDefault();
+                    this.fetchTableData(href);
+                }
+            }
+        },
+
+        syncFilterInputsFromUrl(urlStr) {
+            try {
+                const urlObj = new URL(urlStr, window.location.origin);
+                const form = document.getElementById('billingFilterForm');
+                if (!form) return;
+                ['search', 'bulan', 'tahun', 'layanan', 'status_bayar', 'wilayah', 'status_user', 'metode_bayar'].forEach(name => {
+                    const el = form.querySelector(`[name="${name}"]`);
+                    if (el && urlObj.searchParams.has(name)) {
+                        el.value = urlObj.searchParams.get(name) || '';
+                    }
+                });
+                const perPageEl = document.querySelector('select[name="per_page"]');
+                if (perPageEl && urlObj.searchParams.has('per_page')) {
+                    perPageEl.value = urlObj.searchParams.get('per_page');
+                }
+            } catch (e) {
+                console.warn('Sync filter input error:', e);
+            }
+        },
         // Modal Request Invoice Portal Pelanggan
         requestModalOpen: false,
         requestCount: {{ $pendingRequestCount ?? 0 }},

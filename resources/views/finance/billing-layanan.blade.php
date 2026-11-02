@@ -289,7 +289,7 @@
 
     <!-- Filter Bar Card -->
     <div class="bg-white dark:bg-slate-900/90 backdrop-blur-xl p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        <form method="GET" action="{{ route('finance.billing-layanan') }}" class="space-y-3" id="billingFilterForm" @submit.prevent="fetchTableData()">
+        <form method="GET" action="{{ route('finance.billing-layanan') }}" class="space-y-3" id="billingFilterForm" onsubmit="event.preventDefault(); return false;">
             <!-- Row 1: Primary Quick Filters -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
                 <!-- 1. Real-time Search Box (Paling Kiri) -->
@@ -299,7 +299,8 @@
                         <input type="text"
                                name="search"
                                value="{{ request('search') }}"
-                               @input="applyTableFilter(400)"
+                               @input="applyTableFilter(350)"
+                               @keydown.enter.prevent="applyTableFilter(0)"
                                placeholder="Nama / No Layanan / Inv..."
                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs rounded-lg pl-8 pr-2.5 py-1.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition placeholder-slate-400 dark:placeholder-slate-500">
                         <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-2.5 top-2.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -3312,10 +3313,11 @@ function billingLayananPage() {
         // AJAX Table & Filter State (Real-time, No-Reload)
         isLoadingTable: false,
         filterDebounceTimer: null,
+        currentFetchId: 0,
 
         init() {
             window.addEventListener('popstate', () => {
-                this.fetchTableData(window.location.href, false);
+                this.fetchTableData(window.location.href, false, true);
             });
         },
 
@@ -3330,7 +3332,8 @@ function billingLayananPage() {
             }
         },
 
-        async fetchTableData(targetUrl = null, pushHistory = true) {
+        async fetchTableData(targetUrl = null, pushHistory = true, syncSearch = false) {
+            const fetchId = ++this.currentFetchId;
             this.isLoadingTable = true;
             let url = targetUrl;
             if (!url) {
@@ -3348,6 +3351,9 @@ function billingLayananPage() {
                 const res = await fetch(url, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
+                if (fetchId !== this.currentFetchId) {
+                    return; // Ignore stale out-of-order response
+                }
                 const html = await res.text();
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
@@ -3385,11 +3391,13 @@ function billingLayananPage() {
                     window.history.pushState(null, '', url);
                 }
 
-                this.syncFilterInputsFromUrl(url);
+                this.syncFilterInputsFromUrl(url, syncSearch);
             } catch (e) {
                 console.error('Gagal memuat data tagihan:', e);
             } finally {
-                this.isLoadingTable = false;
+                if (fetchId === this.currentFetchId) {
+                    this.isLoadingTable = false;
+                }
             }
         },
 
@@ -3401,7 +3409,7 @@ function billingLayananPage() {
             }
             const perPageEl = document.querySelector('select[name="per_page"]');
             if (perPageEl) perPageEl.value = '10';
-            this.fetchTableData('{{ route("finance.billing-layanan") }}');
+            this.fetchTableData('{{ route("finance.billing-layanan") }}', true, true);
         },
 
         handleTableClick(e) {
@@ -3414,17 +3422,26 @@ function billingLayananPage() {
             if (href.includes('page=') || (href.includes('billing-layanan?') && !href.includes('/dokumen/') && !href.includes('/pelanggan/'))) {
                 if (!link.target && !link.hasAttribute('download')) {
                     e.preventDefault();
-                    this.fetchTableData(href);
+                    this.fetchTableData(href, true, true);
                 }
             }
         },
 
-        syncFilterInputsFromUrl(urlStr) {
+        syncFilterInputsFromUrl(urlStr, syncSearch = false) {
             try {
                 const urlObj = new URL(urlStr, window.location.origin);
                 const form = document.getElementById('billingFilterForm');
                 if (!form) return;
-                ['search', 'bulan', 'tahun', 'layanan', 'status_bayar', 'wilayah', 'status_user', 'metode_bayar'].forEach(name => {
+
+                // Only sync search if explicitly needed (e.g. popstate / pagination click), never while user is typing
+                if (syncSearch) {
+                    const searchEl = form.querySelector('[name="search"]');
+                    if (searchEl && document.activeElement !== searchEl) {
+                        searchEl.value = urlObj.searchParams.get('search') || '';
+                    }
+                }
+
+                ['bulan', 'tahun', 'layanan', 'status_bayar', 'wilayah', 'status_user', 'metode_bayar'].forEach(name => {
                     const el = form.querySelector(`[name="${name}"]`);
                     if (el && urlObj.searchParams.has(name)) {
                         el.value = urlObj.searchParams.get(name) || '';

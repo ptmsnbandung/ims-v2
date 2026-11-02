@@ -541,11 +541,16 @@
                                     <div class="inline-flex flex-col items-center justify-center gap-1">
                                         @if(($item->wa_sent_count ?? 0) > 0)
                                             <span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30 shadow-2xs"
-                                                  title="Pernah dikirim WhatsApp sebanyak {{ $item->wa_sent_count }} kali{{ $item->last_sent_at ? ' (Terakhir: ' . \Carbon\Carbon::parse($item->last_sent_at)->translatedFormat('d M Y H:i') . ')' : '' }}">
+                                                  title="Pernah dikirim WhatsApp sebanyak {{ $item->wa_sent_count }} kali pada bulan ini{{ $item->last_sent_at ? ' (Terakhir: ' . \Carbon\Carbon::parse($item->last_sent_at)->translatedFormat('d M Y H:i') . ')' : '' }}">
                                                 <svg class="w-2.5 h-2.5 text-blue-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
                                                 </svg>
                                                 <span>{{ $item->wa_sent_count }}x Kirim</span>
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 shadow-2xs"
+                                                  title="Belum pernah dikirim WhatsApp pada bulan ini">
+                                                <span>0x Kirim</span>
                                             </span>
                                         @endif
                                         <button @click="openSingleSendModal('{{ $item->nomor_internet }}', '{{ addslashes($item->nama_pelanggan) }}', '{{ $item->nomor_hp }}')" 
@@ -889,7 +894,7 @@ function broadcastApp() {
             this.singleTarget.hp = hp;
             this.singleTarget.metode = this.metodeKirim;
             
-            fetch("{{ route('admin.broadcast.preview') }}?nomor_internet=" + encodeURIComponent(noInternet) + "&template_id=" + this.selectedTemplateId + "&pesan=" + encodeURIComponent(this.customPesan), {
+            fetch("{{ route('admin.broadcast.preview') }}?nomor_internet=" + encodeURIComponent(noInternet) + "&template_id=" + this.selectedTemplateId + "&pesan=" + encodeURIComponent(this.customPesan) + "&bulan={{ $selectedBulan }}&tahun={{ $selectedTahun }}", {
                 headers: {
                     "Accept": "application/json"
                 }
@@ -926,7 +931,9 @@ function broadcastApp() {
                     pesan: this.singleTarget.renderedPesan,
                     template_id: this.selectedTemplateId,
                     metode_kirim: this.singleTarget.metode,
-                    kategori: "jatuh_tempo"
+                    kategori: "jatuh_tempo",
+                    bulan: "{{ $selectedBulan }}",
+                    tahun: "{{ $selectedTahun }}"
                 })
             })
             .then(async res => {
@@ -970,7 +977,9 @@ function broadcastApp() {
                     pesan: this.customPesan,
                     template_id: this.selectedTemplateId,
                     metode_kirim: this.metodeKirim,
-                    kategori: "jatuh_tempo"
+                    kategori: "jatuh_tempo",
+                    bulan: "{{ $selectedBulan }}",
+                    tahun: "{{ $selectedTahun }}"
                 })
             })
             .then(async res => {
@@ -1022,7 +1031,9 @@ function broadcastApp() {
                             meta_template_name: item.meta_template_name,
                             meta_language: item.meta_language,
                             meta_parameters: item.meta_parameters,
-                            kategori: item.kategori
+                            kategori: item.kategori,
+                            bulan: item.bulan,
+                            tahun: item.tahun
                         })
                     });
 

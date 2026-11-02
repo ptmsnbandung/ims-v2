@@ -160,11 +160,11 @@ class BroadcastController extends Controller
         $notifCol = ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('notif_wa', $cols)) ? 'c.notif_wa' : 'inv.notif_wa';
 
         if ($hasLogTable && $hasInvNotif) {
-            return "GREATEST(COALESCE(log_sent.total_sent_count, 0), COALESCE({$notifCol}, 0))";
+            return "GREATEST(COALESCE(log_sent.total_sent_count, 0), CAST(COALESCE({$notifCol}, 0) AS UNSIGNED))";
         } elseif ($hasLogTable) {
             return "COALESCE(log_sent.total_sent_count, 0)";
         } elseif ($hasInvNotif) {
-            return "COALESCE({$notifCol}, 0)";
+            return "CAST(COALESCE({$notifCol}, 0) AS UNSIGNED)";
         }
         return "0";
     }
@@ -488,6 +488,27 @@ class BroadcastController extends Controller
                          ->where('inv.bulan_tagihan', '=', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT))
                          ->where('inv.tahun_tagihan', '=', (string)$selectedTahun);
                 });
+            } elseif (!empty($selectedBulan) && $selectedBulan !== 'all') {
+                // When month is specified but year is 'all', join the latest invoice for that month
+                $mPad = str_pad($selectedBulan, 2, '0', STR_PAD_LEFT);
+                $subLatest = DB::table('trx_billing_layanan as tbl_sub')
+                    ->selectRaw("
+                        tbl_sub.nomor_internet,
+                        COALESCE(
+                            MAX(CASE WHEN tbl_sub.status_bill_lay IN ('13', '14') THEN tbl_sub.tahun_tagihan END),
+                            MAX(tbl_sub.tahun_tagihan)
+                        ) as target_year
+                    ")
+                    ->where('tbl_sub.bulan_tagihan', '=', $mPad)
+                    ->groupBy('tbl_sub.nomor_internet');
+
+                $query->leftJoinSub($subLatest, 'sub_inv', function ($join) {
+                    $join->on('c.nomor_internet', '=', 'sub_inv.nomor_internet');
+                })->leftJoin('trx_billing_layanan as inv', function ($join) use ($mPad) {
+                    $join->on('c.nomor_internet', '=', 'inv.nomor_internet')
+                         ->on('inv.tahun_tagihan', '=', 'sub_inv.target_year')
+                         ->where('inv.bulan_tagihan', '=', $mPad);
+                });
             } else {
                 // High performance subquery for latest invoice
                 $subLatest = DB::table('trx_billing_layanan as tbl_sub')
@@ -509,14 +530,30 @@ class BroadcastController extends Controller
             }
         }
 
-        // Join WA Broadcast sent log count
+        // Join WA Broadcast sent log count (filtered by selected month/year)
         if ($this->hasTableCached('tb_broadcast_wa_log')) {
             $subLog = DB::table('tb_broadcast_wa_log as tbl_log')
                 ->selectRaw("tbl_log.nomor_internet, COUNT(*) as total_sent_count, MAX(tbl_log.created_at) as last_sent_at")
                 ->where('tbl_log.status_kirim', 'sent')
                 ->whereNotNull('tbl_log.nomor_internet')
-                ->where('tbl_log.nomor_internet', '!=', '')
-                ->groupBy('tbl_log.nomor_internet');
+                ->where('tbl_log.nomor_internet', '!=', '');
+
+            if (!empty($selectedBulan) && $selectedBulan !== 'all' && !empty($selectedTahun) && $selectedTahun !== 'all') {
+                $m = str_pad($selectedBulan, 2, '0', STR_PAD_LEFT);
+                $y = (string)$selectedTahun;
+                $start = "{$y}-{$m}-01 00:00:00";
+                $end = Carbon::createFromDate((int)$y, (int)$m, 1)->endOfMonth()->toDateTimeString();
+                $subLog->whereBetween('tbl_log.created_at', [$start, $end]);
+            } else {
+                if (!empty($selectedBulan) && $selectedBulan !== 'all') {
+                    $subLog->whereMonth('tbl_log.created_at', (int)$selectedBulan);
+                }
+                if (!empty($selectedTahun) && $selectedTahun !== 'all') {
+                    $subLog->whereYear('tbl_log.created_at', (int)$selectedTahun);
+                }
+            }
+
+            $subLog->groupBy('tbl_log.nomor_internet');
 
             $query->leftJoinSub($subLog, 'log_sent', function ($join) {
                 $join->on('c.nomor_internet', '=', 'log_sent.nomor_internet');
@@ -992,7 +1029,9 @@ class BroadcastController extends Controller
 
         $baseTable = '';
         $cols = [];
-        $query = $this->buildCustomerQuery($baseTable, $cols);
+        $selectedBulan = $request->filled('bulan') ? str_pad((string)(int)$request->input('bulan'), 2, '0', STR_PAD_LEFT) : null;
+        $selectedTahun = $request->filled('tahun') ? (string)$request->input('tahun') : null;
+        $query = $this->buildCustomerQuery($baseTable, $cols, $selectedBulan, $selectedTahun);
         $query->where('c.nomor_internet', $nomorInternet);
 
         $this->selectCustomerFields($query, $baseTable);
@@ -1075,7 +1114,9 @@ class BroadcastController extends Controller
             // Retrieve customer data for meta parameter mapping
             $baseTable = '';
             $cols = [];
-            $custQuery = $this->buildCustomerQuery($baseTable, $cols);
+            $selectedBulan = $request->filled('bulan') ? str_pad((string)(int)$request->input('bulan'), 2, '0', STR_PAD_LEFT) : null;
+            $selectedTahun = $request->filled('tahun') ? (string)$request->input('tahun') : null;
+            $custQuery = $this->buildCustomerQuery($baseTable, $cols, $selectedBulan, $selectedTahun);
             if ($request->filled('nomor_internet')) {
                 $custQuery->where('c.nomor_internet', $request->input('nomor_internet'));
             }
@@ -1126,6 +1167,20 @@ class BroadcastController extends Controller
             'created_at'         => now(),
             'updated_at'         => now(),
         ]);
+
+
+        if ($apiSuccess && $request->filled('nomor_internet') && $this->hasTableCached('trx_billing_layanan')) {
+            $selectedBulan = $request->filled('bulan') ? str_pad((string)(int)$request->input('bulan'), 2, '0', STR_PAD_LEFT) : null;
+            $selectedTahun = $request->filled('tahun') ? (string)$request->input('tahun') : null;
+            $billQuery = DB::table('trx_billing_layanan')->where('nomor_internet', $request->input('nomor_internet'));
+            if (!empty($selectedBulan) && $selectedBulan !== 'all') {
+                $billQuery->where('bulan_tagihan', $selectedBulan);
+            }
+            if (!empty($selectedTahun) && $selectedTahun !== 'all') {
+                $billQuery->where('tahun_tagihan', $selectedTahun);
+            }
+            $billQuery->increment('notif_wa');
+        }
 
         $waUrl = 'https://wa.me/' . $cleanHp . '?text=' . urlencode($request->input('pesan'));
 
@@ -1178,7 +1233,9 @@ class BroadcastController extends Controller
 
         $baseTable = '';
         $cols = [];
-        $query = $this->buildCustomerQuery($baseTable, $cols);
+        $selectedBulan = $request->filled('bulan') ? str_pad((string)(int)$request->input('bulan'), 2, '0', STR_PAD_LEFT) : null;
+        $selectedTahun = $request->filled('tahun') ? (string)$request->input('tahun') : null;
+        $query = $this->buildCustomerQuery($baseTable, $cols, $selectedBulan, $selectedTahun);
         $query->whereIn('c.nomor_internet', $targets);
 
         $this->selectCustomerFields($query, $baseTable);
@@ -1209,6 +1266,8 @@ class BroadcastController extends Controller
                 'wa_url'             => $waUrl,
                 'kategori'           => $kategori,
                 'template_id'        => $templateId,
+                'bulan'              => $selectedBulan,
+                'tahun'              => $selectedTahun,
             ];
         }
 
@@ -1279,6 +1338,20 @@ class BroadcastController extends Controller
             'created_at'         => now(),
             'updated_at'         => now(),
         ]);
+
+        if ($apiResult['success'] && $request->filled('nomor_internet') && $this->hasTableCached('trx_billing_layanan')) {
+            $selectedBulan = $request->filled('bulan') ? str_pad((string)(int)$request->input('bulan'), 2, '0', STR_PAD_LEFT) : null;
+            $selectedTahun = $request->filled('tahun') ? (string)$request->input('tahun') : null;
+            $billQuery = DB::table('trx_billing_layanan')->where('nomor_internet', $request->input('nomor_internet'));
+            if (!empty($selectedBulan) && $selectedBulan !== 'all') {
+                $billQuery->where('bulan_tagihan', $selectedBulan);
+            }
+            if (!empty($selectedTahun) && $selectedTahun !== 'all') {
+                $billQuery->where('tahun_tagihan', $selectedTahun);
+            }
+            $billQuery->increment('notif_wa');
+        }
+
 
         return response()->json([
             'success'            => $apiResult['success'],

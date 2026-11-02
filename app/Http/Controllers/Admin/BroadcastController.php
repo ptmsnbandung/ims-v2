@@ -480,7 +480,7 @@ class BroadcastController extends Controller
         }
 
         // Join Invoice billing
-        if ($hasTrxBilling && !$hasViewBilling && $baseTable !== 'trx_billing_layanan') {
+        if ($hasTrxBilling && $baseTable !== 'trx_billing_layanan' && $baseTable !== 'view_billing_layanan') {
             if (!empty($selectedBulan) && $selectedBulan !== 'all' && !empty($selectedTahun) && $selectedTahun !== 'all') {
                 // High-performance direct indexed join when month and year are specified
                 $query->leftJoin('trx_billing_layanan as inv', function ($join) use ($selectedBulan, $selectedTahun) {
@@ -759,13 +759,22 @@ class BroadcastController extends Controller
 
         // Apply filters
         if (!empty($selectedBulan) && $selectedBulan !== 'all') {
+            $mPad = str_pad($selectedBulan, 2, '0', STR_PAD_LEFT);
             if ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('bulan_tagihan', $cols)) {
-                $query->where('c.bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
+                $query->where('c.bulan_tagihan', $mPad);
+            } elseif (in_array('last_month_billing', $cols)) {
+                $query->where(function ($q) use ($mPad, $selectedBulan) {
+                    $q->where('c.last_month_billing', $mPad)
+                      ->orWhere('c.last_month_billing', (string)(int)$selectedBulan);
+                });
             }
         }
         if ($selectedTahun !== 'all' && !empty($selectedTahun)) {
+            $yVal = (string)$selectedTahun;
             if ($baseTable === 'trx_billing_layanan' || $baseTable === 'view_billing_layanan' || in_array('tahun_tagihan', $cols)) {
-                $query->where('c.tahun_tagihan', $selectedTahun);
+                $query->where('c.tahun_tagihan', $yVal);
+            } elseif (in_array('last_year_billing', $cols)) {
+                $query->where('c.last_year_billing', $yVal);
             }
         }
 
@@ -934,9 +943,17 @@ class BroadcastController extends Controller
             }
             if ($selectedBulan !== 'all' && in_array('bulan_tagihan', $unpaidCols)) {
                 $unpaidQuery->where('bulan_tagihan', str_pad($selectedBulan, 2, '0', STR_PAD_LEFT));
+            } elseif ($selectedBulan !== 'all' && in_array('last_month_billing', $unpaidCols)) {
+                $mPad = str_pad($selectedBulan, 2, '0', STR_PAD_LEFT);
+                $unpaidQuery->where(function ($q) use ($mPad, $selectedBulan) {
+                    $q->where('last_month_billing', $mPad)
+                      ->orWhere('last_month_billing', (string)(int)$selectedBulan);
+                });
             }
             if ($selectedTahun !== 'all' && in_array('tahun_tagihan', $unpaidCols)) {
                 $unpaidQuery->where('tahun_tagihan', $selectedTahun);
+            } elseif ($selectedTahun !== 'all' && in_array('last_year_billing', $unpaidCols)) {
+                $unpaidQuery->where('last_year_billing', $selectedTahun);
             }
             return $unpaidQuery->count();
         });

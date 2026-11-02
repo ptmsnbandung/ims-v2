@@ -411,7 +411,7 @@
                             <th class="py-2.5 px-2.5 w-9 text-center">Pilih</th>
                             <th class="py-2.5 px-2.5">Nama Pelanggan</th>
                             <th class="py-2.5 px-2.5">Nomor Internet &amp; HP</th>
-                            <th class="py-2.5 px-2.5">Billing Terakhir</th>
+                            <th class="py-2.5 px-2.5">Bulan Tagihan</th>
                             <th class="py-2.5 px-2.5">Status Tagihan</th>
                             <th class="py-2.5 px-2.5 text-right">Nominal</th>
                             <th class="py-2.5 px-2.5 text-center">Aksi Kirim</th>
@@ -427,10 +427,10 @@
                         @endphp
                         @forelse($pelangganList as $item)
                             @php
-                                $lastMInt = (int) ($item->last_month_billing ?? 0);
-                                $lastYVal = trim((string)($item->last_year_billing ?? ''));
-                                $hasLastBilling = ($lastMInt > 0 || !empty($lastYVal));
-                                $lastMonthName = $monthNamesIndo[$lastMInt] ?? ($lastMInt > 0 ? 'Bulan ' . $lastMInt : '');
+                                $mVal = !empty($item->bulan_tagihan) ? (int)$item->bulan_tagihan : (int)($item->last_month_billing ?? 0);
+                                $yVal = !empty($item->tahun_tagihan) ? trim((string)$item->tahun_tagihan) : trim((string)($item->last_year_billing ?? ''));
+                                $hasBillingPeriod = ($mVal > 0 || !empty($yVal));
+                                $billingMonthName = $monthNamesIndo[$mVal] ?? ($mVal > 0 ? 'Bulan ' . $mVal : '');
                             @endphp
                             <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
                                 :class="selectedTargets.includes('{{ $item->nomor_internet }}') ? 'bg-emerald-50/60 dark:bg-emerald-950/30' : ''">
@@ -474,14 +474,14 @@
                                     </div>
                                 </td>
 
-                                <!-- 4. Last Month & Last Year Billing -->
+                                <!-- 4. Bulan Tagihan -->
                                 <td class="py-2 px-2.5 align-middle">
-                                    @if($hasLastBilling)
+                                    @if($hasBillingPeriod)
                                         <div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[10px] font-bold font-mono shadow-2xs">
                                             <svg class="w-3 h-3 text-indigo-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
                                             </svg>
-                                            <span>{{ $lastMonthName }} {{ $lastYVal }}</span>
+                                            <span>{{ $billingMonthName }} {{ $yVal }}</span>
                                         </div>
                                     @else
                                         <span class="inline-block px-1.5 py-0.2 rounded text-[9.5px] font-medium bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">

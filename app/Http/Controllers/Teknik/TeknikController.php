@@ -4164,7 +4164,62 @@ class TeknikController extends Controller
         }
 
         $paketName = $paketData ? ($paketData->nama_bandwith ?? (($paketData->nama_kategori_bandwith ?? 'Paket') . ' ' . ($paketData->nominal_bandwith ?? '') . ' Mbps')) : ($trx->nama_kategori_bandwith_baru ?? 'Paket Baru');
-        return redirect()->back()->with('success', "Layanan pelanggan {$trx->nomor_internet} berhasil di-UP/Downgrade ke {$paketName} (KD13 Success)!");
+
+        // Auto-update running unpaid monthly invoice (trx_billing_layanan) for current month
+        if ($trx->nomor_internet && $paketData && Schema::hasTable('trx_billing_layanan')) {
+            $currentMonth = str_pad((string) now()->month, 2, '0', STR_PAD_LEFT);
+            $currentYear = (string) now()->year;
+            $newHarga = (float) ($paketData->harga_bandwith ?? 0);
+
+            $runningInvoices = DB::table('trx_billing_layanan')
+                ->where('nomor_internet', $trx->nomor_internet)
+                ->whereIn('bulan_tagihan', [$currentMonth, (string) now()->month])
+                ->where('tahun_tagihan', $currentYear)
+                ->whereIn('status_bill_lay', ['11', '12', '13', '14']) // Hanya yang belum lunas (Unpaid)
+                ->get();
+
+            foreach ($runningInvoices as $bill) {
+                $potongan = (float) ($bill->potongan ?? 0);
+                $totalLayanan = max(0, $newHarga - $potongan);
+
+                DB::table('trx_billing_layanan')
+                    ->where('kode_billing_layanan', $bill->kode_billing_layanan)
+                    ->update([
+                        'kode_bandwith' => $paketData->kode_bandwith,
+                        'nominal_bandwith' => (string) ($paketData->nominal_bandwith ?? '0'),
+                        'total_layanan' => (string) $totalLayanan,
+                        'user_update' => $currentUser,
+                        'date_update' => $now,
+                    ]);
+
+                // Update detail invoice item layanan T11
+                if (Schema::hasTable('trx_billing_layanan_detail')) {
+                    DB::table('trx_billing_layanan_detail')
+                        ->where('kode_billing_layanan', $bill->kode_billing_layanan)
+                        ->where('kode_item', 'T11')
+                        ->update([
+                            'komponen' => 'LAYANAN ' . ($paketData->nama_kategori_bandwith ?? 'INTERNET') . ' ' . ($paketData->nominal_bandwith ?? '') . ' Mbps',
+                            'biaya' => (string) $newHarga,
+                            'user_update' => $currentUser,
+                        ]);
+                }
+
+                // Log audit trail
+                if (Schema::hasTable('trx_billing_layanan_log')) {
+                    DB::table('trx_billing_layanan_log')->insert([
+                        'kode_billing_lay_log' => 'LOG-' . uniqid(),
+                        'kode_billing_layanan' => $bill->kode_billing_layanan,
+                        'status_bill_lay' => $bill->status_bill_lay,
+                        'note_billing_lay' => "Nominal tagihan diperbarui otomatis karena UP/Downgrade ke {$paketName} (Rp " . number_format($newHarga, 0, ',', '.') . ") oleh {$currentUser}",
+                        'date_create' => $now,
+                        'user_create' => $currentUser,
+                        'hide' => '0',
+                    ]);
+                }
+            }
+        }
+
+        return redirect()->back()->with('success', "Layanan pelanggan {$trx->nomor_internet} berhasil di-UP/Downgrade ke {$paketName} (KD13 Success) dan tagihan berjalan otomatis diperbarui!");
     }
 
     /**

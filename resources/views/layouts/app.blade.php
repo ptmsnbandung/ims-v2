@@ -376,6 +376,7 @@
                 open: false,
                 isLoading: false,
                 isFetching: false,
+                hasLoadedOnce: false,
                 hasNewAlert: false,
                 alerts: [],
                 recoveries: [],
@@ -400,6 +401,22 @@
                     } catch (e) {
                         this.readKeys = [];
                     }
+
+                    // Hydrate dari cache localStorage agar saat berpindah halaman langsung tampil instan (0ms delay)
+                    try {
+                        const cachedRaw = localStorage.getItem('ims_noc_bell_cache');
+                        if (cachedRaw) {
+                            const cached = JSON.parse(cachedRaw);
+                            const currentUserId = '{{ auth()->id() }}';
+                            if (cached && cached.userId === currentUserId && cached.summary && (Date.now() - (cached.timestamp || 0) < 600000)) {
+                                this.alerts = cached.alerts || [];
+                                this.recoveries = cached.recoveries || [];
+                                this.intentional = cached.intentional || [];
+                                this.summary = cached.summary || this.summary;
+                                this.hasLoadedOnce = true;
+                            }
+                        }
+                    } catch (e) {}
 
                     this.fetchAlerts(true);
 
@@ -547,6 +564,7 @@
                                 this.alerts = newAlerts;
                                 this.recoveries = newRecoveries;
                                 this.hasInitializedBaseline = true;
+                                this.hasLoadedOnce = true;
                                 this.intentional = resData.data.intentional || [];
                                 this.summary = resData.data.summary || {
                                     total_active: this.alerts.length,
@@ -557,6 +575,18 @@
                                     total_up: 0,
                                     total_selesai: 0
                                 };
+
+                                // Simpan ke cache localStorage agar saat navigasi antar menu tidak kedip / loading ulang
+                                try {
+                                    localStorage.setItem('ims_noc_bell_cache', JSON.stringify({
+                                        timestamp: Date.now(),
+                                        userId: '{{ auth()->id() }}',
+                                        alerts: newAlerts,
+                                        recoveries: newRecoveries,
+                                        intentional: this.intentional,
+                                        summary: this.summary
+                                    }));
+                                } catch (e) {}
                             }
                         }
                     } catch (e) {
@@ -566,6 +596,7 @@
                     } finally {
                         clearTimeout(timeoutId);
                         this.isFetching = false;
+                        this.hasLoadedOnce = true;
                         if (!silent) this.isLoading = false;
                     }
                 },
@@ -2105,8 +2136,8 @@
 
                                 <!-- Body Notifikasi List -->
                                 <div class="max-h-[calc(100dvh-210px)] sm:max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70 select-none">
-                                    <!-- Loading State -->
-                                    <template x-if="isLoading && displayItems.length === 0">
+                                    <!-- Loading State (Jika loading manual atau inisialisasi awal tanpa data cache) -->
+                                    <template x-if="(isLoading || (!hasLoadedOnce && displayItems.length === 0))">
                                         <div class="p-6 text-center">
                                             <svg class="w-6 h-6 mx-auto animate-spin text-teal-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -2116,8 +2147,8 @@
                                         </div>
                                     </template>
 
-                                    <!-- Empty State (Semua Normal) -->
-                                    <template x-if="!isLoading && displayItems.length === 0">
+                                    <!-- Empty State (Semua Normal - Hanya jika selesai dimuat dan memang 0 isu) -->
+                                    <template x-if="!isLoading && hasLoadedOnce && displayItems.length === 0">
                                         <div class="py-9 px-5 text-center">
                                             <div class="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-2.5 shadow-xs"
                                                  style="background-color: #ecfdf5 !important; color: #10b981 !important;">

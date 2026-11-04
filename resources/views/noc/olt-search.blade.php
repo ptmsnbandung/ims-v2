@@ -71,31 +71,31 @@
         <form method="GET" action="{{ route('noc.network-olt.search') }}" class="space-y-3">
             
             <!-- Input Bar & Search Button -->
-            <div class="flex flex-col sm:flex-row items-stretch gap-2">
-                <div class="relative flex-1">
+            <div class="flex flex-col md:flex-row items-center gap-2.5">
+                <div class="relative flex-1 w-full min-w-0" style="flex: 1 1 auto;">
                     <input 
                         type="text" 
                         name="q" 
                         value="{{ $q }}" 
                         placeholder="Ketik Nama ODP (cth: MSN REOG), Nama User (cth: IRMAWATI), atau No. Internet (cth: 3511221)..." 
-                        class="w-full h-10 pl-9 pr-10 rounded-lg text-xs font-mono bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+                        class="w-full h-11 pl-10 pr-10 rounded-xl text-sm font-mono bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 shadow-xs"
                         autofocus
                     />
-                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
                     </svg>
                     @if($q !== '')
-                        <a href="{{ route('noc.network-olt.search') }}" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold" title="Hapus pencarian">
+                        <a href="{{ route('noc.network-olt.search') }}" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold" title="Hapus pencarian">
                             &times;
                         </a>
                     @endif
                 </div>
 
-                <!-- OLT Filter Dropdown -->
-                <div class="w-full sm:w-48">
+                <!-- OLT Filter Dropdown (Lebar Pas & Tidak Menghimpit Input) -->
+                <div class="w-full md:w-56 flex-shrink-0" style="width: 220px; max-width: 100%;">
                     <select 
                         name="olt_id" 
-                        class="w-full h-10 px-3 rounded-lg text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 cursor-pointer font-medium"
+                        class="w-full h-11 px-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 cursor-pointer font-medium shadow-xs"
                     >
                         <option value="">-- Semua OLT --</option>
                         @foreach($olts as $o)
@@ -109,9 +109,9 @@
                 <!-- Submit Button -->
                 <button 
                     type="submit" 
-                    class="h-10 px-5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer flex-shrink-0"
+                    class="w-full md:w-auto h-11 px-6 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer flex-shrink-0"
                 >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
                     </svg>
                     <span>Cari Data</span>
@@ -415,3 +415,4 @@
 
 </div>
 @endsection
+

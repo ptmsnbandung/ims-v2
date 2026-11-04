@@ -755,7 +755,7 @@
                     const lng = e.latlng.lng;
                     this.gpsAccuracyMeters = null;
                     if (this.gpsAccuracyLayer) this.gpsAccuracyLayer.clearLayers();
-                    this.inputCoordinates = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    this.inputCoordinates = `${lat.toFixed(7)}, ${lng.toFixed(7)}`;
                     this.reverseGeocode(lat, lng);
                     this.executeCoverageCheck();
                 });
@@ -1023,7 +1023,7 @@
                     coords = await this.geocodeAddress(this.inputCoordinates);
                     this.isSearchingLocation = false;
                     if (coords) {
-                        this.inputCoordinates = `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
+                        this.inputCoordinates = `${coords.lat.toFixed(7)}, ${coords.lng.toFixed(7)}`;
                     }
                 }
 
@@ -1034,9 +1034,6 @@
 
                 const userLat = coords.lat;
                 const userLng = coords.lng;
-
-                // Formatkan inputCoordinates dengan standar Lat, Lng presisi
-                this.inputCoordinates = `${userLat.toFixed(6)}, ${userLng.toFixed(6)}`;
 
                 // Simpan koordinat ke URL dan localStorage agar tidak pernah kembali ke default saat refresh/navigasi
                 try {
@@ -1074,26 +1071,29 @@
                 }).sort((a, b) => a.distance - b.distance);
 
                 if (odpList.length > 0) {
-                    // 2. Ambil top 6 ODP terdekat secara radius spasial
-                    const candidatePool = odpList.slice(0, 6);
-
-                    // 3. Hitung jarak rute jalan nyata (OSRM) secara paralel untuk seluruh kandidat
-                    await Promise.all(candidatePool.map(async (cand) => {
-                        const routeData = await this.fetchStreetRoute(userLat, userLng, cand.odp.lat, cand.odp.lng);
-                        if (routeData) {
-                            cand.roadDistance = routeData.distance;
-                            cand.cachedGeometry = routeData.geometry;
-                        }
-                        this.updateCoverageAssessment(cand);
-                    }));
-
-                    // 4. Urutkan ULANG ranking kandidat berdasarkan JARAK RUTE JALAN NYATA terpendek
-                    candidatePool.sort((a, b) => a.roadDistance - b.roadDistance);
-
-                    this.nearestCandidates = candidatePool.slice(0, 5);
+                    // 2. Tampilkan 5 ODP terdekat seketika (0ms delay) tanpa menunggu rute jalan OSRM
+                    this.nearestCandidates = odpList.slice(0, 5);
                     this.selectedOdpResult = this.nearestCandidates[0];
                     this.hasChecked = true;
-                    await this.drawConnectionToOdp(userLat, userLng, this.selectedOdpResult);
+                    this.drawConnectionToOdp(userLat, userLng, this.selectedOdpResult);
+
+                    // 3. Background enhancement: hitung rute jalan nyata (OSRM) secara asinkron
+                    (async () => {
+                        const candidatePool = this.nearestCandidates;
+                        await Promise.all(candidatePool.map(async (cand) => {
+                            const routeData = await this.fetchStreetRoute(userLat, userLng, cand.odp.lat, cand.odp.lng);
+                            if (routeData) {
+                                cand.roadDistance = routeData.distance;
+                                cand.cachedGeometry = routeData.geometry;
+                                this.updateCoverageAssessment(cand);
+                            }
+                        }));
+
+                        // Update rute aktif di peta jika data jalan berhasil didapatkan
+                        if (this.selectedOdpResult && this.selectedOdpResult.cachedGeometry) {
+                            this.renderActiveRoute(userLat, userLng, this.selectedOdpResult);
+                        }
+                    })();
                 }
             },
 
@@ -1186,7 +1186,7 @@
                     const newPos = e.target.getLatLng();
                     this.gpsAccuracyMeters = null;
                     if (this.gpsAccuracyLayer) this.gpsAccuracyLayer.clearLayers();
-                    this.inputCoordinates = `${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}`;
+                    this.inputCoordinates = `${newPos.lat.toFixed(7)}, ${newPos.lng.toFixed(7)}`;
                     this.reverseGeocode(newPos.lat, newPos.lng);
                     this.executeCoverageCheck();
                 });
@@ -1309,7 +1309,7 @@
                         const lng = pos.coords.longitude;
                         const accuracy = Math.round(pos.coords.accuracy || 0);
                         this.gpsAccuracyMeters = accuracy;
-                        this.inputCoordinates = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        this.inputCoordinates = `${lat.toFixed(7)}, ${lng.toFixed(7)}`;
 
                         // Gambar lingkaran margin error akurasi GPS jika akurasi > 15m
                         if (this.gpsAccuracyLayer && this.mapInstance) {

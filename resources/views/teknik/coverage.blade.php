@@ -234,12 +234,15 @@
                     </p>
                 </div>
 
-                <form @submit.prevent="executeCoverageCheck" class="space-y-2">
+                <form @submit.prevent="executeCoverageCheck()" onsubmit="event.preventDefault(); return false;" data-no-auto-search data-ajax class="space-y-2">
                     <div class="relative">
                         <input 
                             type="text" 
+                            name="coord"
                             x-model="inputCoordinates"
-                            placeholder="-6.936988, 107.5904512 atau Jl. Sukamulya Bandung" 
+                            data-no-auto-search
+                            @keydown.enter.prevent="executeCoverageCheck()"
+                            placeholder="-6.936988, 107.5904512 atau link Google Maps" 
                             class="w-full h-8.5 pl-8 pr-2.5 rounded-lg text-xs font-mono bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
                             required
                         />
@@ -261,7 +264,8 @@
                         </button>
 
                         <button 
-                            type="submit" 
+                            type="button" 
+                            @click="executeCoverageCheck()"
                             :disabled="isSearchingLocation"
                             class="h-8 px-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer shadow-xs disabled:opacity-50"
                         >
@@ -628,6 +632,20 @@
             },
 
             init() {
+                // Pulihkan koordinat dari parameter URL atau localStorage agar tidak kembali ke default
+                try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const qCoord = urlParams.get('coord');
+                    if (qCoord && qCoord.trim() !== '') {
+                        this.inputCoordinates = qCoord.trim();
+                    } else {
+                        const lastCoord = localStorage.getItem('ims_last_coverage_coord');
+                        if (lastCoord && lastCoord.trim() !== '') {
+                            this.inputCoordinates = lastCoord.trim();
+                        }
+                    }
+                } catch (e) {}
+
                 this.loadLeafletAssets();
             },
 
@@ -677,7 +695,11 @@
                 let defaultLat = -6.936988;
                 let defaultLng = 107.5904512;
 
-                if (this.allOdps && this.allOdps.length > 0) {
+                const parsedInit = this.parseCoordinates(this.inputCoordinates);
+                if (parsedInit) {
+                    defaultLat = parsedInit.lat;
+                    defaultLng = parsedInit.lng;
+                } else if (this.allOdps && this.allOdps.length > 0) {
                     defaultLat = this.allOdps[0].lat;
                     defaultLng = this.allOdps[0].lng;
                 }
@@ -805,7 +827,7 @@
                     markers.push(marker);
                 });
 
-                if (markers.length > 0 && this.mapInstance && !this.hasChecked) {
+                if (markers.length > 0 && this.mapInstance && !this.hasChecked && !this.parseCoordinates(this.inputCoordinates)) {
                     this.mapInstance.fitBounds(L.featureGroup(markers).getBounds().pad(0.15));
                 }
             },
@@ -829,15 +851,65 @@
             },
 
             parseCoordinates(input) {
-                if (!input) return null;
-                const matches = input.match(/[-+]?([0-9]*\.[0-9]+|[0-9]+)/g);
-                if (matches && matches.length >= 2) {
-                    const lat = parseFloat(matches[0]);
-                    const lng = parseFloat(matches[1]);
+                if (!input || typeof input !== 'string') return null;
+                let str = input.trim();
+
+                // 1. Ekstrak dari URL Google Maps jika input berupa link (?q=, @lat,lng, ll=)
+                const urlMatch = str.match(/[@=]([-+]?[0-9]+\.[0-9]+),\s*([-+]?[0-9]+\.[0-9]+)/);
+                if (urlMatch) {
+                    let lat = parseFloat(urlMatch[1]);
+                    let lng = parseFloat(urlMatch[2]);
+                    if (lat > 0 && lng < 0) { const t = lat; lat = lng; lng = t; }
+                    if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+                }
+
+                // 2. Format standar dengan titik desimal (misal: -6.936988, 107.5904512 atau -6.936988,107.5904512)
+                const dotMatches = str.match(/[-+]?[0-9]+\.[0-9]+/g);
+                if (dotMatches && dotMatches.length >= 2) {
+                    let lat = parseFloat(dotMatches[0]);
+                    let lng = parseFloat(dotMatches[1]);
+
+                    if (/S\b/i.test(str) && lat > 0) lat = -lat;
+                    if (/W\b/i.test(str) && lng > 0) lng = -lng;
+
+                    if (lat > 0 && lng < 0) { const t = lat; lat = lng; lng = t; }
+                    if (lat > 90 && lng <= 90) { const t = lat; lat = lng; lng = t; }
+
                     if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
                         return { lat, lng };
                     }
                 }
+
+                // 3. Format koma desimal Indonesia (misal: -6,936988, 107,5904512 atau -6,936988 107,5904512)
+                const commaCleaned = str.replace(/([0-9]+),([0-9]{3,})/g, '$1.$2');
+                const commaMatches = commaCleaned.match(/[-+]?[0-9]+\.[0-9]+/g);
+                if (commaMatches && commaMatches.length >= 2) {
+                    let lat = parseFloat(commaMatches[0]);
+                    let lng = parseFloat(commaMatches[1]);
+
+                    if (/S\b/i.test(str) && lat > 0) lat = -lat;
+                    if (/W\b/i.test(str) && lng > 0) lng = -lng;
+
+                    if (lat > 0 && lng < 0) { const t = lat; lat = lng; lng = t; }
+                    if (lat > 90 && lng <= 90) { const t = lat; lat = lng; lng = t; }
+
+                    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                        return { lat, lng };
+                    }
+                }
+
+                // 4. Fallback integer coordinates atau koordinat tanpa desimal
+                const anyNum = str.match(/[-+]?[0-9]+(?:\.[0-9]+)?/g);
+                if (anyNum && anyNum.length >= 2) {
+                    let lat = parseFloat(anyNum[0]);
+                    let lng = parseFloat(anyNum[1]);
+                    if (lat > 0 && lng < 0) { const t = lat; lat = lng; lng = t; }
+                    if (lat > 90 && lng <= 90) { const t = lat; lat = lng; lng = t; }
+                    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                        return { lat, lng };
+                    }
+                }
+
                 return null;
             },
 
@@ -956,12 +1028,28 @@
                 }
 
                 if (!coords) {
-                    alert('Format tidak valid. Masukkan koordinat Latitude, Longitude (contoh: -6.936988, 107.590451) atau nama alamat.');
+                    alert('Format tidak valid. Masukkan koordinat Latitude, Longitude (contoh: -6.936988, 107.590451), link Google Maps, atau nama alamat.');
                     return;
                 }
 
                 const userLat = coords.lat;
                 const userLng = coords.lng;
+
+                // Formatkan inputCoordinates dengan standar Lat, Lng presisi
+                this.inputCoordinates = `${userLat.toFixed(6)}, ${userLng.toFixed(6)}`;
+
+                // Simpan koordinat ke URL dan localStorage agar tidak pernah kembali ke default saat refresh/navigasi
+                try {
+                    localStorage.setItem('ims_last_coverage_coord', this.inputCoordinates);
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('coord', this.inputCoordinates);
+                    window.history.replaceState({}, '', newUrl.toString());
+                } catch (e) {}
+
+                if (!this.allOdps || this.allOdps.length === 0) {
+                    alert('Data master ODP belum tersedia di sistem.');
+                    return;
+                }
 
                 // 1. Hitung jarak garis lurus awal ke seluruh ODP master
                 const odpList = this.allOdps.map(odp => {

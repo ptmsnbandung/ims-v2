@@ -1043,10 +1043,19 @@
             async executeCoverageCheck() {
                 let coords = this.parseCoordinates(this.inputCoordinates);
                 
-                // Jika input bukan angka koordinat, coba geocoding alamat
-                if (!coords && this.inputCoordinates && this.inputCoordinates.trim().length > 3) {
+                // Jika input bukan angka koordinat, coba cari ODP atau geocoding alamat
+                if (!coords && this.inputCoordinates && this.inputCoordinates.trim().length > 2) {
                     this.isSearchingLocation = true;
-                    coords = await this.geocodeAddress(this.inputCoordinates);
+                    const queryClean = this.inputCoordinates.trim().toLowerCase();
+                    const matchedOdp = this.allOdps.find(o => 
+                        (o.name_odp && o.name_odp.toLowerCase().includes(queryClean)) ||
+                        (o.kode_odp && o.kode_odp.toLowerCase().includes(queryClean))
+                    );
+                    if (matchedOdp) {
+                        coords = { lat: matchedOdp.lat, lng: matchedOdp.lng };
+                    } else {
+                        coords = await this.geocodeAddress(this.inputCoordinates);
+                    }
                     this.isSearchingLocation = false;
                     if (coords) {
                         this.inputCoordinates = `${coords.lat.toFixed(7)}, ${coords.lng.toFixed(7)}`;
@@ -1054,12 +1063,16 @@
                 }
 
                 if (!coords) {
-                    alert('Format tidak valid. Masukkan koordinat Latitude, Longitude (contoh: -6.936988, 107.590451), link Google Maps, atau nama alamat.');
+                    alert('Format tidak valid. Masukkan koordinat Latitude, Longitude (contoh: -6.936988, 107.590451), nama jalan/alamat, atau nama ODP.');
                     return;
                 }
 
                 const userLat = coords.lat;
                 const userLng = coords.lng;
+
+                // Selalu perbarui alamat titik terpilih sesuai koordinat aktif
+                this.detectedAddressName = 'Mendeteksi alamat...';
+                this.reverseGeocode(userLat, userLng);
 
                 // Simpan koordinat ke URL dan localStorage agar tidak pernah kembali ke default saat refresh/navigasi
                 try {
@@ -1386,14 +1399,19 @@
 
             async reverseGeocode(lat, lng) {
                 try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                    const ctrl = new AbortController();
+                    const timeoutId = setTimeout(() => ctrl.abort(), 4000);
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, { signal: ctrl.signal });
+                    clearTimeout(timeoutId);
                     if (res.ok) {
                         const data = await res.json();
                         if (data && data.display_name) {
                             this.detectedAddressName = data.display_name;
+                            return;
                         }
                     }
                 } catch (e) {}
+                this.detectedAddressName = `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
             },
 
             resetMapView() {

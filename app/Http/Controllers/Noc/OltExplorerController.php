@@ -203,4 +203,196 @@ class OltExplorerController extends Controller
             'search' => $search,
         ]);
     }
+
+    /**
+     * Halaman Pencarian Terpadu OLT, PON, ODP, dan User
+     * Mencari berdasarkan nama ODP, nama user, atau nomor internet di seluruh OLT
+     */
+    public function search(Request $request): View
+    {
+        $q = trim((string) $request->input('q', ''));
+        $searchType = $request->input('type', 'all'); // 'all', 'odp', 'user', 'internet'
+        $filterOlt = $request->input('olt_id', '');
+
+        // 1. Ambil list master OLT
+        $olts = collect();
+        try {
+            if (Schema::hasTable('gomsn.olt')) {
+                $olts = DB::table('gomsn.olt')->orderBy('olt_id', 'asc')->get();
+            }
+        } catch (\Throwable $e) {
+            $olts = collect();
+        }
+
+        // Tentukan OLT target pencarian
+        $targetOlts = $olts;
+        if (!empty($filterOlt)) {
+            $targetOlts = $olts->where('olt_id', $filterOlt);
+        }
+
+        $results = collect();
+        $matchedOdps = collect();
+
+        // 2. Jika ada query pencarian, eksekusi query gabungan ke seluruh tabel OLT aktif
+        if ($q !== '') {
+            foreach ($targetOlts as $olt) {
+                $userTable = "gomsn.users{$olt->olt_id}";
+                $odpTable = "gomsn.odp{$olt->olt_id}";
+                $ponTable = "gomsn.pon{$olt->olt_id}";
+
+                if (!Schema::hasTable($userTable) || !Schema::hasTable($odpTable) || !Schema::hasTable($ponTable)) {
+                    continue;
+                }
+
+                try {
+                    $query = DB::table("{$userTable} as u")
+                        ->leftJoin("{$odpTable} as odp", 'u.odp_id', '=', 'odp.id')
+                        ->leftJoin("{$ponTable} as pon", 'odp.pon_id', '=', 'pon.id')
+                        ->select([
+                            'u.id as user_id',
+                            'u.nama_user',
+                            'u.nomor_internet',
+                            'u.keterangan',
+                            'u.olt as user_olt_tag',
+                            'odp.id as odp_id',
+                            'odp.nama_odp',
+                            'odp.port_max as odp_port_max',
+                            'odp.port_terpakai as odp_port_terpakai',
+                            'odp.latitude as odp_lat',
+                            'odp.longitude as odp_lng',
+                            'pon.id as pon_id',
+                            'pon.nama_pon',
+                            DB::raw("{$olt->olt_id} as olt_id"),
+                            DB::raw("'" . addslashes($olt->nama_olt) . "' as olt_nama")
+                        ]);
+
+                    if ($searchType === 'odp') {
+                        $query->where('odp.nama_odp', 'like', "%{$q}%");
+                    } elseif ($searchType === 'user') {
+                        $query->where('u.nama_user', 'like', "%{$q}%");
+                    } elseif ($searchType === 'internet') {
+                        $query->where('u.nomor_internet', 'like', "%{$q}%");
+                    } else {
+                        $query->where(function ($sub) use ($q) {
+                            $sub->where('u.nama_user', 'like', "%{$q}%")
+                                ->orWhere('u.nomor_internet', 'like', "%{$q}%")
+                                ->orWhere('odp.nama_odp', 'like', "%{$q}%")
+                                ->orWhere('pon.nama_pon', 'like', "%{$q}%")
+                                ->orWhere('u.keterangan', 'like', "%{$q}%");
+                        });
+                    }
+
+                    $rows = $query->limit(200)->get();
+                    $results = $results->concat($rows);
+
+                    // Ambil ODP yang cocok untuk ODP matching overview
+                    if (in_array($searchType, ['all', 'odp'])) {
+                        $odpRows = DB::table("{$odpTable} as odp")
+                            ->leftJoin("{$ponTable} as pon", 'odp.pon_id', '=', 'pon.id')
+                            ->select([
+                                'odp.id as odp_id',
+                                'odp.nama_odp',
+                                'odp.port_max',
+                                'odp.port_terpakai',
+                                'odp.latitude',
+                                'odp.longitude',
+                                'pon.id as pon_id',
+                                'pon.nama_pon',
+                                DB::raw("{$olt->olt_id} as olt_id"),
+                                DB::raw("'" . addslashes($olt->nama_olt) . "' as olt_nama")
+                            ])
+                            ->where('odp.nama_odp', 'like', "%{$q}%")
+                            ->limit(30)
+                            ->get();
+                        $matchedOdps = $matchedOdps->concat($odpRows);
+                    }
+                } catch (\Throwable $e) {
+                    continue;
+                }
+            }
+
+            // 3. Enrich data user dengan profil pelanggan (alamat, HP, id_pelanggan) dan speed billing
+            if ($results->isNotEmpty()) {
+                $userNames = $results->pluck('nama_user')->filter()->unique()->toArray();
+                $pelanggansMap = [];
+                if (!empty($userNames)) {
+                    try {
+                        $pelanggansMap = DB::table('m_pelanggan')
+                            ->select('id_pelanggan', 'nama_penduduk', 'alamat_ktp', 'nomor_hp', 'nomor_hp_2')
+                            ->whereIn('nama_penduduk', $userNames)
+                            ->get()
+                            ->keyBy(fn($p) => strtoupper(trim($p->nama_penduduk)))
+                            ->toArray();
+                    } catch (\Throwable $e) {}
+                }
+
+                $nomorInternets = $results->pluck('nomor_internet')->filter()->unique()->toArray();
+                $billingsMap = [];
+                if (!empty($nomorInternets)) {
+                    try {
+                        $billingsMap = DB::table('trx_billing_layanan')
+                            ->select('nomor_internet', 'nominal_bandwith')
+                            ->whereIn('nomor_internet', $nomorInternets)
+                            ->where('tahun_tagihan', '>=', date('Y') - 1)
+                            ->orderBy('tahun_tagihan', 'desc')
+                            ->orderBy('bulan_tagihan', 'desc')
+                            ->get()
+                            ->unique('nomor_internet')
+                            ->pluck('nominal_bandwith', 'nomor_internet')
+                            ->toArray();
+                    } catch (\Throwable $e) {}
+                }
+
+                $results = $results->map(function ($item) use ($pelanggansMap, $billingsMap) {
+                    $uName = strtoupper(trim($item->nama_user ?? ''));
+                    $pel = $pelanggansMap[$uName] ?? null;
+                    $speedVal = $billingsMap[$item->nomor_internet] ?? null;
+
+                    $item->id_pelanggan = $pel->id_pelanggan ?? null;
+                    $item->alamat = !empty($pel->alamat_ktp) ? trim($pel->alamat_ktp) : '-';
+                    $item->nomor_hp = $pel->nomor_hp ?? ($pel->nomor_hp_2 ?? '-');
+                    $item->speed = !empty($speedVal) ? "{$speedVal} Mbps" : '-';
+
+                    return $item;
+                });
+            }
+        }
+
+        // 4. Ringkasan statistik cepat
+        $stats = Cache::remember('olt_search_global_stats', 300, function () use ($olts) {
+            $totalUser = 0;
+            $totalOdp = 0;
+            $totalPon = 0;
+
+            foreach ($olts as $o) {
+                if (Schema::hasTable("gomsn.users{$o->olt_id}")) {
+                    $totalUser += DB::table("gomsn.users{$o->olt_id}")->count();
+                }
+                if (Schema::hasTable("gomsn.odp{$o->olt_id}")) {
+                    $totalOdp += DB::table("gomsn.odp{$o->olt_id}")->count();
+                }
+                if (Schema::hasTable("gomsn.pon{$o->olt_id}")) {
+                    $totalPon += DB::table("gomsn.pon{$o->olt_id}")->count();
+                }
+            }
+
+            return [
+                'total_olt' => $olts->count(),
+                'total_pon' => $totalPon,
+                'total_odp' => $totalOdp,
+                'total_user' => $totalUser,
+            ];
+        });
+
+        return view('noc.olt-search', [
+            'user' => $request->user(),
+            'olts' => $olts,
+            'q' => $q,
+            'searchType' => $searchType,
+            'filterOlt' => $filterOlt,
+            'results' => $results,
+            'matchedOdps' => $matchedOdps,
+            'stats' => $stats,
+        ]);
+    }
 }

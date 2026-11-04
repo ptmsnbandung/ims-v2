@@ -1578,13 +1578,14 @@
                     <div class="ims-nav-wrapper ims-has-flyout"
                          x-data="{ oltMenuOpen: {{ request()->routeIs('noc.network-olt*') ? 'true' : 'false' }} }"
                          @mouseenter="openFlyout($el, 'Menu OLT', [
+                             { label: 'SEARCH', url: '{{ route('noc.network-olt.search') }}', active: {{ request()->routeIs('noc.network-olt.search*') ? 'true' : 'false' }} },
                              @if(isset($sidebarOlts))
                                   @foreach($sidebarOlts as $sOlt)
                                   @php
                                       $sOltId = is_array($sOlt) ? ($sOlt['olt_id'] ?? '') : ($sOlt->olt_id ?? '');
                                       $sOltNama = is_array($sOlt) ? ($sOlt['nama_olt'] ?? '') : ($sOlt->nama_olt ?? '');
                                   @endphp
-                                  { label: 'OLT {{ $sOltId }} - {{ strtoupper($sOltNama) }}', url: '{{ route('noc.network-olt', ['olt_id' => $sOltId]) }}', active: {{ request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOltId) ? 'true' : 'false' }} },
+                                  { label: 'OLT {{ $sOltId }} - {{ strtoupper($sOltNama) }}', url: '{{ route('noc.network-olt', ['olt_id' => $sOltId]) }}', active: {{ request()->routeIs('noc.network-olt*') && !request()->routeIs('noc.network-olt.search*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOltId) ? 'true' : 'false' }} },
                                   @endforeach
                              @endif
                          ])"
@@ -1617,12 +1618,20 @@
                              x-transition:leave-start="opacity-100 translate-y-0"
                              x-transition:leave-end="opacity-0 -translate-y-1"
                              class="ims-submenu mt-1.5 ml-4 pl-3.5 border-l border-slate-800 space-y-1">
+                            
+                            <!-- 1. Menu Search di atas OLT -->
+                            <a href="{{ route('noc.network-olt.search') }}" 
+                               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ request()->routeIs('noc.network-olt.search*') ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">
+                                <span class="w-1.5 h-1.5 rounded-full border {{ request()->routeIs('noc.network-olt.search*') ? 'border-blue-400 bg-blue-400' : 'border-slate-600' }}"></span>
+                                <span class="uppercase">SEARCH</span>
+                            </a>
+
                             @if(isset($sidebarOlts) && (is_countable($sidebarOlts) ? count($sidebarOlts) > 0 : !empty($sidebarOlts)))
                                 @foreach($sidebarOlts as $sOlt)
                                     @php
                                         $sOltId = is_array($sOlt) ? ($sOlt['olt_id'] ?? '') : ($sOlt->olt_id ?? '');
                                         $sOltNama = is_array($sOlt) ? ($sOlt['nama_olt'] ?? '') : ($sOlt->nama_olt ?? '');
-                                        $isCurrentOlt = request()->routeIs('noc.network-olt*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOltId);
+                                        $isCurrentOlt = request()->routeIs('noc.network-olt*') && !request()->routeIs('noc.network-olt.search*') && ((string)request()->route('olt_id', request('olt_id', 1)) === (string)$sOltId);
                                     @endphp
                                     <a href="{{ route('noc.network-olt', ['olt_id' => $sOltId]) }}" 
                                        class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition {{ $isCurrentOlt ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-[#9CA3AF] hover:text-white hover:bg-white/5' }}">

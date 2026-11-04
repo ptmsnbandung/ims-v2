@@ -182,6 +182,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pendaftaran', fn() => redirect()->route('teknik.pendaftaran'))->name('pendaftaran');
 
         // 2. Menu OLT (Dropdown OLT -> PON -> ODP -> Users)
+        Route::get('/network-olt/search', [OltExplorerController::class, 'search'])->name('network-olt.search');
         Route::get('/network-olt/{olt_id?}', [OltExplorerController::class, 'index'])->name('network-olt');
         Route::get('/olt', [NocController::class, 'olt'])->name('olt');
         Route::get('/olt/create', [NocController::class, 'oltCreate'])->name('olt.create');

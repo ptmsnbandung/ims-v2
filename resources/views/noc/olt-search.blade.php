@@ -175,31 +175,27 @@
 
         <!-- Matched ODPs Preview (if any) -->
         @if($matchedOdps->isNotEmpty())
-            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2 shadow-2xs">
                 <div class="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-                    <span class="text-sky-500">📍</span>
+                    <span class="text-rose-500 font-bold">📍</span>
                     <span>Titik ODP yang Cocok dengan "{{ $q }}":</span>
-                    <span class="text-[10px] text-slate-500 font-mono">({{ $matchedOdps->count() }} ODP)</span>
+                    <span class="text-[10px] text-slate-500 font-mono font-bold">({{ $matchedOdps->count() }} ODP)</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     @foreach($matchedOdps as $mOdp)
-                        <div class="p-2.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                            <div class="flex items-center justify-between">
-                                <strong class="text-slate-900 dark:text-white font-bold truncate text-[11.5px]">{{ $mOdp->nama_odp }}</strong>
-                                <span class="text-[9.5px] px-1.5 py-0.5 rounded bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 font-mono font-bold">
+                        <div class="p-3 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5 shadow-2xs">
+                            <div class="flex items-center justify-between gap-1.5">
+                                <strong class="text-slate-900 dark:text-white font-bold truncate text-xs">{{ $mOdp->nama_odp }}</strong>
+                                <span class="text-[10px] px-2 py-0.5 rounded-md bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 font-mono font-bold shrink-0">
                                     OLT {{ $mOdp->olt_id }}
                                 </span>
                             </div>
-                            <div class="text-[10.5px] text-slate-500 dark:text-slate-400 truncate">
-                                🔌 {{ $mOdp->nama_pon ?: 'PON -' }}
+                            <div class="text-[11px] text-slate-600 dark:text-slate-400 truncate flex items-center gap-1 font-mono">
+                                <span>🔌</span>
+                                <span>{{ $mOdp->nama_pon ?: 'PON -' }}</span>
                             </div>
-                            <div class="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-400 font-mono pt-1 border-t border-slate-100 dark:border-slate-900">
-                                <span>Kapasitas: {{ $mOdp->port_max ?? 8 }} Port</span>
-                                @if(!empty($mOdp->latitude) && !empty($mOdp->longitude))
-                                    <a href="{{ route('teknik.coverage', ['coord' => "{$mOdp->latitude},{$mOdp->longitude}"]) }}" class="text-sky-600 dark:text-sky-400 hover:underline">
-                                        Cek Coverage &rarr;
-                                    </a>
-                                @endif
+                            <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-mono pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                                Kapasitas: <b class="text-slate-700 dark:text-slate-300">{{ $mOdp->port_max ?? 8 }} Port</b>
                             </div>
                         </div>
                     @endforeach
@@ -212,7 +208,7 @@
             <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="bg-slate-100/80 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200 dark:border-slate-800">
+                        <tr class="bg-slate-100/90 dark:bg-slate-950/90 text-slate-600 dark:text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200 dark:border-slate-800">
                             <th class="py-3 px-3 w-10 text-center">No</th>
                             <th class="py-3 px-3">Nama User (Pelanggan)</th>
                             <th class="py-3 px-3">Nomor Internet</th>
@@ -220,28 +216,28 @@
                             <th class="py-3 px-3">Port PON</th>
                             <th class="py-3 px-3">Titik ODP</th>
                             <th class="py-3 px-3">Alamat &amp; Kontak</th>
-                            <th class="py-3 px-3 text-center w-36">Aksi</th>
+                            <th class="py-3 px-3 text-center w-28">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200/80 dark:divide-slate-800/80 text-slate-800 dark:text-slate-200">
                         @foreach($results as $idx => $r)
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                                 <!-- No -->
-                                <td class="py-2.5 px-3 text-center text-slate-400 font-mono text-[11px]">
+                                <td class="py-3 px-3 text-center text-slate-400 font-mono text-[11px]">
                                     {{ $idx + 1 }}
                                 </td>
 
                                 <!-- Nama User -->
-                                <td class="py-2.5 px-3">
-                                    <div class="font-bold text-slate-900 dark:text-white leading-tight">
+                                <td class="py-3 px-3">
+                                    <div class="font-bold text-slate-900 dark:text-white leading-tight text-xs">
                                         {{ $r->nama_user ?: '-' }}
                                     </div>
-                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                    <div class="flex items-center gap-1.5 mt-1">
                                         <span class="text-[9.5px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">
                                             AKTIF
                                         </span>
                                         @if(!empty($r->speed) && $r->speed !== '-')
-                                            <span class="text-[9.5px] font-mono text-slate-500 dark:text-slate-400">
+                                            <span class="text-[9.5px] font-mono font-semibold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950 px-1.5 py-0.2 rounded border border-sky-200 dark:border-sky-800">
                                                 ⚡ {{ $r->speed }}
                                             </span>
                                         @endif
@@ -254,14 +250,14 @@
                                 </td>
 
                                 <!-- Nomor Internet -->
-                                <td class="py-2.5 px-3">
-                                    <div class="flex items-center gap-1.5 font-mono font-bold text-slate-900 dark:text-white">
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <div class="inline-flex items-center gap-1.5 font-mono font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/70 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">
                                         <span>{{ $r->nomor_internet ?: '-' }}</span>
                                         @if(!empty($r->nomor_internet))
                                             <button 
                                                 type="button" 
                                                 onclick="navigator.clipboard.writeText('{{ $r->nomor_internet }}'); alert('Nomor Internet disalin: {{ $r->nomor_internet }}')"
-                                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition" 
+                                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer" 
                                                 title="Salin Nomor Internet"
                                             >
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,54 +269,77 @@
                                 </td>
 
                                 <!-- OLT Mana -->
-                                <td class="py-2.5 px-3">
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold font-mono bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                                <td class="py-3 px-3 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono bg-sky-50 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800/80">
+                                        <span class="w-2 h-2 rounded-full bg-sky-500"></span>
                                         <span>OLT {{ $r->olt_id }}</span>
-                                        <span class="text-[10px] font-normal uppercase opacity-80">({{ $r->olt_nama }})</span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-normal">({{ strtoupper($r->olt_nama) }})</span>
                                     </span>
                                 </td>
 
                                 <!-- PON Mana -->
-                                <td class="py-2.5 px-3">
-                                    <div class="font-mono text-slate-900 dark:text-slate-100 font-semibold text-[11.5px]">
+                                <td class="py-3 px-3">
+                                    <div class="font-mono text-slate-900 dark:text-slate-100 font-bold text-xs leading-tight">
                                         {{ $r->nama_pon ?: 'PON -' }}
                                     </div>
-                                    <span class="text-[9.5px] text-slate-400 font-mono">Port ID: #{{ $r->pon_id ?: '-' }}</span>
+                                    <span class="text-[10px] text-slate-400 font-mono block mt-0.5">Port ID: #{{ $r->pon_id ?: '-' }}</span>
                                 </td>
 
                                 <!-- ODP Mana -->
-                                <td class="py-2.5 px-3">
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-sky-500">📍</span>
-                                        <strong class="text-slate-900 dark:text-white font-bold text-[11.5px]">
-                                            {{ $r->nama_odp ?: 'ODP -' }}
-                                        </strong>
+                                <td class="py-3 px-3">
+                                    <div class="flex items-center gap-1 font-bold text-slate-900 dark:text-white text-xs leading-tight">
+                                        <span class="text-rose-500">📍</span>
+                                        <span>{{ $r->nama_odp ?: 'ODP -' }}</span>
                                     </div>
-                                    <div class="text-[10px] text-slate-500 font-mono mt-0.5">
+                                    <span class="text-[10px] text-slate-500 font-mono block mt-0.5">
                                         Kapasitas: {{ $r->odp_port_max ?? 8 }} Port
-                                    </div>
+                                    </span>
                                 </td>
 
                                 <!-- Alamat & Kontak -->
-                                <td class="py-2.5 px-3 max-w-xs">
-                                    <div class="text-[11px] text-slate-700 dark:text-slate-300 truncate" title="{{ $r->alamat }}">
+                                <td class="py-3 px-3 max-w-xs">
+                                    <div class="text-[11px] text-slate-700 dark:text-slate-300 truncate font-medium" title="{{ $r->alamat }}">
                                         {{ $r->alamat ?: '-' }}
                                     </div>
-                                    <div class="text-[10.5px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
-                                        📞 {{ $r->nomor_hp ?: '-' }}
+                                    <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                                        @if(!empty($r->nomor_hp) && $r->nomor_hp !== '-')
+                                            @php
+                                                $cleanWa = preg_replace('/[^0-9]/', '', $r->nomor_hp);
+                                                if (str_starts_with($cleanWa, '0')) {
+                                                    $cleanWa = '62' . substr($cleanWa, 1);
+                                                }
+                                            @endphp
+                                            <a href="https://wa.me/{{ $cleanWa }}" target="_blank" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 hover:underline font-bold" title="Kirim WhatsApp">
+                                                <span>💬 {{ $r->nomor_hp }}</span>
+                                            </a>
+                                            <button 
+                                                type="button" 
+                                                onclick="navigator.clipboard.writeText('{{ $r->nomor_hp }}'); alert('Nomor HP disalin: {{ $r->nomor_hp }}')"
+                                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer" 
+                                                title="Salin Nomor HP"
+                                            >
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                                </svg>
+                                            </button>
+                                        @else
+                                            <span>📞 -</span>
+                                        @endif
                                     </div>
                                 </td>
 
-                                <!-- Aksi -->
-                                <td class="py-2.5 px-3 text-center">
-                                    <div class="flex items-center justify-center gap-1">
+                                <!-- Aksi (Hanya Hierarki & Profil Pelanggan) -->
+                                <td class="py-3 px-3 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
                                         <!-- Buka di Hierarki OLT -->
                                         <a 
                                             href="{{ route('noc.network-olt', ['olt_id' => $r->olt_id, 'search' => $r->nama_user]) }}"
-                                            class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10.5px] font-semibold transition inline-flex items-center gap-1"
+                                            class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition inline-flex items-center gap-1 shadow-2xs"
                                             title="Buka Hierarki OLT Explorer"
                                         >
+                                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                                            </svg>
                                             <span>Hierarki</span>
                                         </a>
 
@@ -328,21 +347,13 @@
                                         @if(!empty($r->nomor_internet))
                                             <a 
                                                 href="{{ route('teknik.pelanggan.profile', ['nomor_internet' => $r->nomor_internet]) }}"
-                                                class="px-2 py-1 rounded bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/60 dark:hover:bg-sky-900/80 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[10.5px] font-semibold transition inline-flex items-center gap-1"
+                                                class="px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 dark:bg-sky-950/60 dark:hover:bg-sky-900/80 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-xs font-bold transition inline-flex items-center gap-1 shadow-2xs"
                                                 title="Lihat Profil Detail Pelanggan"
                                             >
+                                                <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
                                                 <span>Profil</span>
-                                            </a>
-                                        @endif
-
-                                        <!-- Cek Coverage ODP -->
-                                        @if(!empty($r->odp_lat) && !empty($r->odp_lng))
-                                            <a 
-                                                href="{{ route('teknik.coverage', ['coord' => "{$r->odp_lat},{$r->odp_lng}"]) }}"
-                                                class="px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10.5px] font-semibold transition"
-                                                title="Cek Titik GIS Coverage ODP"
-                                            >
-                                                <span>GIS</span>
                                             </a>
                                         @endif
                                     </div>

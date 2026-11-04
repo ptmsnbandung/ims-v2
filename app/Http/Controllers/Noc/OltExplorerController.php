@@ -313,46 +313,90 @@ class OltExplorerController extends Controller
                 }
             }
 
-            // 3. Enrich data user dengan profil pelanggan (alamat, HP, id_pelanggan) dan speed billing
+            // 3. Enrich data user dengan nomor HP, alamat, dan bandwidth speed
             if ($results->isNotEmpty()) {
+                $nomorInternets = $results->pluck('nomor_internet')->filter()->unique()->toArray();
                 $userNames = $results->pluck('nama_user')->filter()->unique()->toArray();
+
+                // 3a. Ambil data dari view_batchjob (sumber data utama profil pelanggan & no hp aktif)
+                $batchMap = [];
+                if (!empty($nomorInternets)) {
+                    try {
+                        if (Schema::hasTable('view_batchjob')) {
+                            $batchMap = DB::table('view_batchjob')
+                                ->select('nomor_internet', 'nama_pelanggan', 'nomor_hp', 'nomor_hp_2', 'alamat_p', 'nominal_bandwith')
+                                ->whereIn('nomor_internet', $nomorInternets)
+                                ->get()
+                                ->keyBy('nomor_internet')
+                                ->toArray();
+                        }
+                    } catch (\Throwable $e) {}
+                }
+
+                // 3b. Fallback ke m_pelanggan berdasarkan nama penduduk jika nomor internet belum terdata di batchjob
                 $pelanggansMap = [];
                 if (!empty($userNames)) {
                     try {
-                        $pelanggansMap = DB::table('m_pelanggan')
-                            ->select('id_pelanggan', 'nama_penduduk', 'alamat_ktp', 'nomor_hp', 'nomor_hp_2')
-                            ->whereIn('nama_penduduk', $userNames)
-                            ->get()
-                            ->keyBy(fn($p) => strtoupper(trim($p->nama_penduduk)))
-                            ->toArray();
+                        if (Schema::hasTable('m_pelanggan')) {
+                            $pelanggansMap = DB::table('m_pelanggan')
+                                ->select('nama_penduduk', 'alamat_ktp', 'nomor_hp', 'nomor_hp_2')
+                                ->whereIn('nama_penduduk', $userNames)
+                                ->get()
+                                ->keyBy(fn($p) => strtoupper(trim($p->nama_penduduk)))
+                                ->toArray();
+                        }
                     } catch (\Throwable $e) {}
                 }
 
-                $nomorInternets = $results->pluck('nomor_internet')->filter()->unique()->toArray();
+                // 3c. Speed bandwidth dari trx_billing_layanan jika di batchjob belum ada
                 $billingsMap = [];
                 if (!empty($nomorInternets)) {
                     try {
-                        $billingsMap = DB::table('trx_billing_layanan')
-                            ->select('nomor_internet', 'nominal_bandwith')
-                            ->whereIn('nomor_internet', $nomorInternets)
-                            ->where('tahun_tagihan', '>=', date('Y') - 1)
-                            ->orderBy('tahun_tagihan', 'desc')
-                            ->orderBy('bulan_tagihan', 'desc')
-                            ->get()
-                            ->unique('nomor_internet')
-                            ->pluck('nominal_bandwith', 'nomor_internet')
-                            ->toArray();
+                        if (Schema::hasTable('trx_billing_layanan')) {
+                            $billingsMap = DB::table('trx_billing_layanan')
+                                ->select('nomor_internet', 'nominal_bandwith')
+                                ->whereIn('nomor_internet', $nomorInternets)
+                                ->where('tahun_tagihan', '>=', date('Y') - 1)
+                                ->orderBy('tahun_tagihan', 'desc')
+                                ->orderBy('bulan_tagihan', 'desc')
+                                ->get()
+                                ->unique('nomor_internet')
+                                ->pluck('nominal_bandwith', 'nomor_internet')
+                                ->toArray();
+                        }
                     } catch (\Throwable $e) {}
                 }
 
-                $results = $results->map(function ($item) use ($pelanggansMap, $billingsMap) {
+                $results = $results->map(function ($item) use ($batchMap, $pelanggansMap, $billingsMap) {
                     $uName = strtoupper(trim($item->nama_user ?? ''));
-                    $pel = $pelanggansMap[$uName] ?? null;
-                    $speedVal = $billingsMap[$item->nomor_internet] ?? null;
+                    $bInfo = $batchMap[$item->nomor_internet] ?? null;
+                    $pInfo = $pelanggansMap[$uName] ?? null;
 
-                    $item->id_pelanggan = $pel->id_pelanggan ?? null;
-                    $item->alamat = !empty($pel->alamat_ktp) ? trim($pel->alamat_ktp) : '-';
-                    $item->nomor_hp = $pel->nomor_hp ?? ($pel->nomor_hp_2 ?? '-');
+                    // Ambil no hp dari batchjob atau m_pelanggan
+                    $hp = null;
+                    if ($bInfo && !empty($bInfo->nomor_hp)) {
+                        $hp = trim($bInfo->nomor_hp);
+                    } elseif ($bInfo && !empty($bInfo->nomor_hp_2)) {
+                        $hp = trim($bInfo->nomor_hp_2);
+                    } elseif ($pInfo && !empty($pInfo->nomor_hp)) {
+                        $hp = trim($pInfo->nomor_hp);
+                    } elseif ($pInfo && !empty($pInfo->nomor_hp_2)) {
+                        $hp = trim($pInfo->nomor_hp_2);
+                    }
+
+                    // Ambil alamat dari batchjob (alamat pasang) atau m_pelanggan (alamat ktp)
+                    $alamat = null;
+                    if ($bInfo && !empty($bInfo->alamat_p)) {
+                        $alamat = trim($bInfo->alamat_p);
+                    } elseif ($pInfo && !empty($pInfo->alamat_ktp)) {
+                        $alamat = trim($pInfo->alamat_ktp);
+                    }
+
+                    // Speed
+                    $speedVal = $bInfo->nominal_bandwith ?? ($billingsMap[$item->nomor_internet] ?? null);
+
+                    $item->alamat = !empty($alamat) ? $alamat : '-';
+                    $item->nomor_hp = !empty($hp) ? $hp : '-';
                     $item->speed = !empty($speedVal) ? "{$speedVal} Mbps" : '-';
 
                     return $item;

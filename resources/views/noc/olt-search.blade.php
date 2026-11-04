@@ -70,29 +70,33 @@
     <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3.5">
         <form method="GET" action="{{ route('noc.network-olt.search') }}" class="space-y-3">
             
-            <!-- Input Bar & Search Button -->
-            <div class="flex flex-col md:flex-row items-center gap-2.5">
-                <div class="relative flex-1 w-full min-w-0" style="flex: 1 1 auto;">
+            <!-- Input Bar & Search Button (Solid Grid Layout: Rapi, Presisi & Bebas Bug Collapsing) -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
+                
+                <!-- 1. Search Input: Lebar Utama (~67% pada desktop) -->
+                <div class="md:col-span-7 lg:col-span-8 relative">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 pl-3.5 flex items-center">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
+                        </svg>
+                    </div>
                     <input 
                         type="text" 
                         name="q" 
                         value="{{ $q }}" 
-                        placeholder="Ketik Nama ODP (cth: MSN REOG), Nama User (cth: IRMAWATI), atau No. Internet (cth: 3511221)..." 
+                        placeholder="Ketik Nama ODP (cth: ENTIN), Nama User (cth: IRMAWATI), atau No. Internet (cth: 3511221)..." 
                         class="w-full h-11 pl-10 pr-10 rounded-xl text-sm font-mono bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 shadow-xs"
                         autofocus
                     />
-                    <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
-                    </svg>
                     @if($q !== '')
-                        <a href="{{ route('noc.network-olt.search') }}" class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold" title="Hapus pencarian">
+                        <a href="{{ route('noc.network-olt.search') }}" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold" title="Hapus pencarian">
                             &times;
                         </a>
                     @endif
                 </div>
 
-                <!-- OLT Filter Dropdown (Lebar Pas & Tidak Menghimpit Input) -->
-                <div class="w-full md:w-56 flex-shrink-0" style="width: 220px; max-width: 100%;">
+                <!-- 2. OLT Filter Dropdown: (~17% pada desktop) -->
+                <div class="md:col-span-3 lg:col-span-2">
                     <select 
                         name="olt_id" 
                         class="w-full h-11 px-3 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50 cursor-pointer font-medium shadow-xs"
@@ -106,16 +110,18 @@
                     </select>
                 </div>
 
-                <!-- Submit Button -->
-                <button 
-                    type="submit" 
-                    class="w-full md:w-auto h-11 px-6 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer flex-shrink-0"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
-                    </svg>
-                    <span>Cari Data</span>
-                </button>
+                <!-- 3. Submit Button: (~16% pada desktop) -->
+                <div class="md:col-span-2">
+                    <button 
+                        type="submit" 
+                        class="w-full h-11 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
+                        </svg>
+                        <span>Cari Data</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Search Type Criteria (Pills) -->
@@ -188,7 +194,7 @@
                                 🔌 {{ $mOdp->nama_pon ?: 'PON -' }}
                             </div>
                             <div class="flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-400 font-mono pt-1 border-t border-slate-100 dark:border-slate-900">
-                                <span>Port: {{ $mOdp->port_terpakai ?? 0 }} / {{ $mOdp->port_max ?? 8 }}</span>
+                                <span>Kapasitas: {{ $mOdp->port_max ?? 8 }} Port</span>
                                 @if(!empty($mOdp->latitude) && !empty($mOdp->longitude))
                                     <a href="{{ route('teknik.coverage', ['coord' => "{$mOdp->latitude},{$mOdp->longitude}"]) }}" class="text-sky-600 dark:text-sky-400 hover:underline">
                                         Cek Coverage &rarr;
@@ -292,7 +298,7 @@
                                         </strong>
                                     </div>
                                     <div class="text-[10px] text-slate-500 font-mono mt-0.5">
-                                        Kapasitas: {{ $r->odp_port_terpakai ?? 0 }}/{{ $r->odp_port_max ?? 8 }} Port
+                                        Kapasitas: {{ $r->odp_port_max ?? 8 }} Port
                                     </div>
                                 </td>
 

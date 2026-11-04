@@ -227,7 +227,7 @@ class OltExplorerController extends Controller
         // Tentukan OLT target pencarian
         $targetOlts = $olts;
         if (!empty($filterOlt)) {
-            $targetOlts = $olts->where('olt_id', $filterOlt);
+            $targetOlts = $olts->filter(fn($o) => (string)$o->olt_id === (string)$filterOlt);
         }
 
         $results = collect();
@@ -235,14 +235,12 @@ class OltExplorerController extends Controller
 
         // 2. Jika ada query pencarian, eksekusi query gabungan ke seluruh tabel OLT aktif
         if ($q !== '') {
+            $searchPattern = "%{$q}%";
+
             foreach ($targetOlts as $olt) {
                 $userTable = "gomsn.users{$olt->olt_id}";
                 $odpTable = "gomsn.odp{$olt->olt_id}";
                 $ponTable = "gomsn.pon{$olt->olt_id}";
-
-                if (!Schema::hasTable($userTable) || !Schema::hasTable($odpTable) || !Schema::hasTable($ponTable)) {
-                    continue;
-                }
 
                 try {
                     $query = DB::table("{$userTable} as u")
@@ -257,7 +255,6 @@ class OltExplorerController extends Controller
                             'odp.id as odp_id',
                             'odp.nama_odp',
                             'odp.port_max as odp_port_max',
-                            'odp.port_terpakai as odp_port_terpakai',
                             'odp.latitude as odp_lat',
                             'odp.longitude as odp_lng',
                             'pon.id as pon_id',
@@ -267,18 +264,21 @@ class OltExplorerController extends Controller
                         ]);
 
                     if ($searchType === 'odp') {
-                        $query->where('odp.nama_odp', 'like', "%{$q}%");
+                        $query->where(function ($sub) use ($searchPattern) {
+                            $sub->where('odp.nama_odp', 'like', $searchPattern)
+                                ->orWhere('pon.nama_pon', 'like', $searchPattern);
+                        });
                     } elseif ($searchType === 'user') {
-                        $query->where('u.nama_user', 'like', "%{$q}%");
+                        $query->where('u.nama_user', 'like', $searchPattern);
                     } elseif ($searchType === 'internet') {
-                        $query->where('u.nomor_internet', 'like', "%{$q}%");
+                        $query->where('u.nomor_internet', 'like', $searchPattern);
                     } else {
-                        $query->where(function ($sub) use ($q) {
-                            $sub->where('u.nama_user', 'like', "%{$q}%")
-                                ->orWhere('u.nomor_internet', 'like', "%{$q}%")
-                                ->orWhere('odp.nama_odp', 'like', "%{$q}%")
-                                ->orWhere('pon.nama_pon', 'like', "%{$q}%")
-                                ->orWhere('u.keterangan', 'like', "%{$q}%");
+                        $query->where(function ($sub) use ($searchPattern) {
+                            $sub->where('u.nama_user', 'like', $searchPattern)
+                                ->orWhere('u.nomor_internet', 'like', $searchPattern)
+                                ->orWhere('odp.nama_odp', 'like', $searchPattern)
+                                ->orWhere('pon.nama_pon', 'like', $searchPattern)
+                                ->orWhere('u.keterangan', 'like', $searchPattern);
                         });
                     }
 
@@ -293,7 +293,6 @@ class OltExplorerController extends Controller
                                 'odp.id as odp_id',
                                 'odp.nama_odp',
                                 'odp.port_max',
-                                'odp.port_terpakai',
                                 'odp.latitude',
                                 'odp.longitude',
                                 'pon.id as pon_id',
@@ -301,7 +300,10 @@ class OltExplorerController extends Controller
                                 DB::raw("{$olt->olt_id} as olt_id"),
                                 DB::raw("'" . addslashes($olt->nama_olt) . "' as olt_nama")
                             ])
-                            ->where('odp.nama_odp', 'like', "%{$q}%")
+                            ->where(function ($sub) use ($searchPattern) {
+                                $sub->where('odp.nama_odp', 'like', $searchPattern)
+                                    ->orWhere('pon.nama_pon', 'like', $searchPattern);
+                            })
                             ->limit(30)
                             ->get();
                         $matchedOdps = $matchedOdps->concat($odpRows);

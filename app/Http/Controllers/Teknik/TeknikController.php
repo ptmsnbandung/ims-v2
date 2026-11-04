@@ -4814,7 +4814,7 @@ class TeknikController extends Controller
                 ->get()
             : collect();
 
-        $initialCoord = $request->query('coord', '-6.936988, 107.5904512');
+        $initialCoord = $request->query('coord', '');
         $selectedTicketId = $request->query('ticket_id');
 
         return view('teknik.coverage', [

@@ -94,6 +94,12 @@
         .target-ground-ripple {
             animation: pulseGroundRipple 2s infinite ease-in-out;
         }
+        .google-maps-target-pin,
+        .custom-odp-pin,
+        .leaflet-div-icon {
+            background: transparent !important;
+            border: none !important;
+        }
         /* Dynamic Dual Theme for Leaflet Popups */
         .leaflet-popup-content-wrapper {
             background: #ffffff !important;
@@ -400,11 +406,12 @@
                             <div class="space-y-2 pt-1">
                                 <div class="grid grid-cols-2 gap-2">
                                     <a 
-                                        :href="'https://www.google.com/maps/dir/?api=1&destination=' + selectedOdpResult.odp.lat + ',' + selectedOdpResult.odp.lng"
+                                        :href="'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(inputCoordinates) + '&destination=' + selectedOdpResult.odp.lat + ',' + selectedOdpResult.odp.lng"
                                         target="_blank" 
                                         class="h-9 px-3 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                                        title="Buka rute navigasi dari titik target Anda ke ODP di Google Maps"
                                     >
-                                        <span>🧭 Buka Maps</span>
+                                        <span>🧭 Rute Maps</span>
                                     </a>
                                     <a 
                                         href="{{ route('teknik.pendaftaran') }}" 
@@ -414,14 +421,24 @@
                                         <span>⚡ Pasang Baru</span>
                                     </a>
                                 </div>
-                                <button 
-                                    type="button" 
-                                    @click="copyCoordinates(selectedOdpResult.odp.lat + ', ' + selectedOdpResult.odp.lng)" 
-                                    class="w-full h-8.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-                                    title="Salin Koordinat ODP"
-                                >
-                                    <span>📋 Salin Koordinat ODP</span>
-                                </button>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <a 
+                                        :href="'https://www.google.com/maps?q=' + encodeURIComponent(inputCoordinates)"
+                                        target="_blank" 
+                                        class="h-8 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer truncate"
+                                        title="Buka titik target Anda langsung di Google Maps"
+                                    >
+                                        <span>📍 Target di Maps</span>
+                                    </a>
+                                    <button 
+                                        type="button" 
+                                        @click="copyCoordinates(inputCoordinates)" 
+                                        class="h-8 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                                        title="Salin Koordinat Target"
+                                    >
+                                        <span>📋 Salin Target</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -550,6 +567,15 @@
                             title="Tampilkan / Sembunyikan Lingkaran Radius 300m"
                         >
                             ⭕ Radius
+                        </button>
+                        <button 
+                            type="button" 
+                            x-show="hasChecked"
+                            @click="focusTargetMarker()" 
+                            class="px-2 py-1 rounded-md text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 border border-rose-300 dark:border-rose-800 text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
+                            title="Fokuskan peta tepat ke Titik Target Anda (Zoom 19)"
+                        >
+                            <span>🎯 Fokus Target</span>
                         </button>
                         <button 
                             type="button" 
@@ -1216,20 +1242,23 @@
                 }
 
                 this.userMarkerLayer.bindPopup(`
-                    <div style="font-family: inherit; padding: 4px; min-width: 190px;">
+                    <div style="font-family: inherit; padding: 4px; min-width: 210px;">
                         <div style="font-size: 10px; font-weight: 800; color: #ea4335; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between;">
-                            <span>📍 LOKASI TARGET</span>
+                            <span>📍 LOKASI TARGET ANDA</span>
                             <span style="font-size: 9px; color: #64748b; font-weight: normal;">(Bisa digeser)</span>
                         </div>
-                        <div class="ims-popup-title" style="font-size: 12px; font-weight: 800; margin: 2px 0; font-family: monospace;">${userLat.toFixed(6)}, ${userLng.toFixed(6)}</div>
+                        <div class="ims-popup-title" style="font-size: 12px; font-weight: 800; margin: 3px 0; font-family: monospace;">${userLat}, ${userLng}</div>
                         <div style="font-size: 11px; color: ${result.isCovered ? '#0284c7' : '#ea4335'}; font-weight: 700; margin-top: 4px;">
                             ${result.isCovered ? '⚡ Tercover (' + result.coverageLabel + ')' : '✕ Di Luar Radius (> 300m)'}
                         </div>
                         <div class="ims-popup-muted" style="font-size: 10.5px; margin-top: 2px;">
-                            Ke <b class="ims-popup-title">${odpName}</b>: Rute Jalan ${result.roadDistance}m (Span: ${result.distance}m)
+                            Ke <b class="ims-popup-title">${odpName}</b>: ~${result.roadDistance || result.distance}m (Span: ${result.distance}m)
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <a href="https://www.google.com/maps?q=${userLat},${userLng}" target="_blank" style="display: block; text-align: center; text-decoration: none; background: #0284c7; color: #fff; padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">🌐 Buka Titik Ini di Google Maps &rarr;</a>
                         </div>
                     </div>
-                `, { offset: [0, -42] }).openPopup();
+                `, { offset: [0, -42], autoPan: false }).openPopup();
 
                 // Render Route
                 this.renderActiveRoute(userLat, userLng, result);
@@ -1286,7 +1315,17 @@
                 }).addTo(this.connectionLineLayer);
 
                 const bounds = L.latLngBounds(routeCoords);
-                this.mapInstance.fitBounds(bounds.pad(0.35), { animate: true, duration: 0.8 });
+                this.mapInstance.fitBounds(bounds.pad(0.18), { animate: true, duration: 0.6 });
+            },
+
+            focusTargetMarker() {
+                const coords = this.parseCoordinates(this.inputCoordinates);
+                if (coords && this.mapInstance) {
+                    this.mapInstance.flyTo([coords.lat, coords.lng], 19, { duration: 0.8 });
+                    if (this.userMarkerLayer) {
+                        setTimeout(() => this.userMarkerLayer.openPopup(), 500);
+                    }
+                }
             },
 
             getCurrentLocation() {

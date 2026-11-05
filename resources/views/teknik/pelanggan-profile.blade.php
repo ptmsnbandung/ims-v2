@@ -486,90 +486,139 @@
                 <div x-show="activeTab === 'log'" class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                                <th class="py-3.5 px-5">Status Order</th>
-                                <th class="py-3.5 px-5">Keterangan</th>
-                                <th class="py-3.5 px-5 min-w-[160px]">Tanggal Update</th>
-                                <th class="py-3.5 px-5 min-w-[140px]">User Update</th>
+                            <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/70 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <th class="py-3.5 px-6 w-48">Status Order</th>
+                                <th class="py-3.5 px-6">Keterangan</th>
+                                <th class="py-3.5 px-6 w-52 whitespace-nowrap">Tanggal Update</th>
+                                <th class="py-3.5 px-6 w-44 whitespace-nowrap">User Update</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800/70">
                             @forelse($logs as $log)
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                                @php
+                                    $regStatus = (string)($log->status_reg ?? '');
+                                    $badgeClass = match(true) {
+                                        in_array($regStatus, ['20']) => 'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60',
+                                        in_array($regStatus, ['21', '21.1']) => 'bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60',
+                                        in_array($regStatus, ['23', '23.1']) => 'bg-rose-50 text-rose-700 border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/60',
+                                        in_array($regStatus, ['17', '17.1', '18', '18.1', '19', '19.1']) => 'bg-blue-50 text-blue-700 border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60',
+                                        in_array($regStatus, ['11', '12', '13', '14']) => 'bg-purple-50 text-purple-700 border-purple-200/80 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800/60',
+                                        default => 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700',
+                                    };
+                                    $dotClass = match(true) {
+                                        in_array($regStatus, ['20']) => 'bg-emerald-500',
+                                        in_array($regStatus, ['21', '21.1']) => 'bg-amber-500',
+                                        in_array($regStatus, ['23', '23.1']) => 'bg-rose-500',
+                                        in_array($regStatus, ['17', '17.1', '18', '18.1', '19', '19.1']) => 'bg-blue-500',
+                                        in_array($regStatus, ['11', '12', '13', '14']) => 'bg-purple-500',
+                                        default => 'bg-slate-400',
+                                    };
+                                @endphp
+                                <tr class="hover:bg-blue-50/20 dark:hover:bg-slate-800/40 transition duration-150">
                                     
                                     <!-- 1. Status Order -->
-                                    <td class="py-4 px-5 align-top space-y-1.5">
+                                    <td class="py-4 px-6 align-top space-y-1.5">
                                         <div>
-                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide
-                                                @if(in_array($log->status_reg, ['20']))
-                                                    bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30
-                                                @elseif(in_array($log->status_reg, ['17', '17.1']))
-                                                    bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30
-                                                @elseif(in_array($log->status_reg, ['13', '13.1']))
-                                                    bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30
-                                                @elseif(in_array($log->status_reg, ['23', '23.1']))
-                                                    bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30
-                                                @else
-                                                    bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30
-                                                @endif">
-                                                {{ $log->desc_registrasi ?: 'Status #' . $log->status_reg }}
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-tight border shadow-xs whitespace-nowrap {{ $badgeClass }}">
+                                                <span class="w-1.5 h-1.5 rounded-full {{ $dotClass }} shrink-0"></span>
+                                                <span>{{ $log->desc_registrasi ?: 'Status #' . $log->status_reg }}</span>
                                             </span>
                                         </div>
                                         @if($log->date_schedule || $log->time_schedule)
-                                            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                                                {{ $log->date_schedule ? \Carbon\Carbon::parse($log->date_schedule)->translatedFormat('d F Y') : '' }}
-                                                {{ $log->time_schedule ?: '' }}
+                                            <div class="inline-flex items-center gap-1.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded border border-slate-200/70 dark:border-slate-700/60 whitespace-nowrap">
+                                                <svg class="w-3 h-3 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                                <span>
+                                                    {{ $log->date_schedule ? \Carbon\Carbon::parse($log->date_schedule)->translatedFormat('d M Y') : '' }}
+                                                    {{ $log->time_schedule ?: '' }}
+                                                </span>
                                             </div>
                                         @endif
                                     </td>
 
                                     <!-- 2. Keterangan -->
-                                    <td class="py-4 px-5 align-top space-y-1 text-slate-700 dark:text-slate-300">
-                                        <div class="font-semibold text-slate-800 dark:text-slate-100 uppercase text-[11px]">
+                                    <td class="py-4 px-6 align-top space-y-1.5 text-slate-700 dark:text-slate-300">
+                                        <div class="font-bold text-slate-900 dark:text-slate-100 uppercase text-xs tracking-tight">
                                             {{ $log->note_schedule ? 'POSTING ' . strtoupper($log->desc_registrasi) : ($log->kat_log ? 'LOG AKTIVITAS #' . $log->kat_log : 'UPDATE STATUS') }}
                                         </div>
                                         @if($log->note_schedule)
-                                            <div class="text-[11px] text-slate-600 dark:text-slate-400">
-                                                Catatan : <span class="text-slate-800 dark:text-slate-200">{{ $log->note_schedule }}</span>
+                                            <div class="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                                                <span class="font-semibold text-slate-700 dark:text-slate-300">Catatan:</span>
+                                                <span class="text-slate-800 dark:text-slate-200 font-normal ml-1">{{ $log->note_schedule }}</span>
                                             </div>
                                         @endif
                                     </td>
 
                                     <!-- 3. Tanggal Update -->
-                                    <td class="py-4 px-5 align-top text-slate-600 dark:text-slate-400 font-medium text-[11px]">
-                                        {{ \Carbon\Carbon::parse($log->date_create)->translatedFormat('d F Y H:i') }} WIB
+                                    <td class="py-4 px-6 align-top whitespace-nowrap">
+                                        <div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                                            {{ \Carbon\Carbon::parse($log->date_create)->translatedFormat('d M Y') }}
+                                        </div>
+                                        <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                            <svg class="w-3 h-3 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                            </svg>
+                                            <span>{{ \Carbon\Carbon::parse($log->date_create)->format('H:i:s') }} WIB</span>
+                                        </div>
                                     </td>
 
                                     <!-- 4. User Update -->
-                                    <td class="py-4 px-5 align-top font-semibold text-slate-800 dark:text-slate-200 uppercase text-[11px]">
-                                        {{ $log->user_create ?: 'SYSTEM' }}
+                                    <td class="py-4 px-6 align-top whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0 uppercase shadow-2xs">
+                                                {{ substr($log->user_create ?: 'S', 0, 1) }}
+                                            </div>
+                                            <span class="font-semibold text-slate-800 dark:text-slate-200 uppercase text-xs tracking-tight">
+                                                {{ $log->user_create ?: 'SYSTEM' }}
+                                            </span>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
-                                    <td class="py-4 px-5 align-top space-y-1.5">
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                                    <td class="py-4 px-6 align-top space-y-1.5">
                                         <div>
-                                            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30">
-                                                {{ $customer->desc_registrasi ?? 'Registrasi' }}
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60 shadow-xs whitespace-nowrap">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
+                                                <span>{{ $customer->desc_registrasi ?? 'Registrasi' }}</span>
                                             </span>
                                         </div>
-                                        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                                            {{ $customer->date_create ? \Carbon\Carbon::parse($customer->date_create)->translatedFormat('d F Y') : '-' }}
+                                        <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                            {{ $customer->date_create ? \Carbon\Carbon::parse($customer->date_create)->translatedFormat('d M Y') : '-' }}
                                         </div>
                                     </td>
-                                    <td class="py-4 px-5 align-top space-y-1 text-slate-700 dark:text-slate-300">
-                                        <div class="font-semibold text-slate-800 dark:text-slate-100 uppercase text-[11px]">
+                                    <td class="py-4 px-6 align-top space-y-1.5 text-slate-700 dark:text-slate-300">
+                                        <div class="font-bold text-slate-900 dark:text-slate-100 uppercase text-xs tracking-tight">
                                             REGISTRASI PELANGGAN BARU
                                         </div>
-                                        <div class="text-[11px] text-slate-600 dark:text-slate-400">
-                                            Sales : {{ $customer->nama_sales ?: '-' }}
+                                        <div class="p-2.5 rounded-lg bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                                            <span class="font-semibold text-slate-700 dark:text-slate-300">Sales:</span>
+                                            <span class="text-slate-800 dark:text-slate-200 font-normal ml-1">{{ $customer->nama_sales ?: '-' }}</span>
                                         </div>
                                     </td>
-                                    <td class="py-4 px-5 align-top text-slate-600 dark:text-slate-400 font-medium text-[11px]">
-                                        {{ $customer->date_create ? \Carbon\Carbon::parse($customer->date_create)->translatedFormat('d F Y H:i') . ' WIB' : '-' }}
+                                    <td class="py-4 px-6 align-top whitespace-nowrap">
+                                        <div class="font-semibold text-slate-800 dark:text-slate-200 text-xs">
+                                            {{ $customer->date_create ? \Carbon\Carbon::parse($customer->date_create)->translatedFormat('d M Y') : '-' }}
+                                        </div>
+                                        @if($customer->date_create)
+                                            <div class="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                                <svg class="w-3 h-3 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                                </svg>
+                                                <span>{{ \Carbon\Carbon::parse($customer->date_create)->format('H:i:s') }} WIB</span>
+                                            </div>
+                                        @endif
                                     </td>
-                                    <td class="py-4 px-5 align-top font-semibold text-slate-800 dark:text-slate-200 uppercase text-[11px]">
-                                        {{ $customer->user_create ?: 'DRAFFTER' }}
+                                    <td class="py-4 px-6 align-top whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center shrink-0 uppercase shadow-2xs">
+                                                {{ substr($customer->user_create ?: 'D', 0, 1) }}
+                                            </div>
+                                            <span class="font-semibold text-slate-800 dark:text-slate-200 uppercase text-xs tracking-tight">
+                                                {{ $customer->user_create ?: 'DRAFFTER' }}
+                                            </span>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforelse
